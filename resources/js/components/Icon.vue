@@ -1,0 +1,54 @@
+<script setup lang="ts">
+import { cn } from '@/lib/utils';
+import * as icons from 'lucide-vue-next';
+import { LucideIcon } from 'lucide-vue-next';
+import { computed } from 'vue';
+
+interface Props {
+    icon: string | LucideIcon | undefined;
+    class?: string;
+    size?: number | string;
+    color?: string;
+    strokeWidth?: number | string;
+}
+
+const props = withDefaults(defineProps<Props>(), {
+    class: '',
+    size: 16,
+    strokeWidth: 2,
+});
+
+const className = computed(() => cn('h-4 w-4', props.class));
+
+const iconComponent = computed(() => {
+    if (typeof props.icon === 'string') {
+        // Convert kebab-case to PascalCase for Lucide icons
+        const iconName = props.icon
+            .split('-')
+            .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+            .join('');
+        return (icons as Record<string, any>)[iconName];
+    }
+    return null;
+});
+</script>
+
+<template>
+    <img
+        v-if="typeof icon === 'string' && icon.startsWith('/')"
+        :src="icon"
+        :alt="typeof icon === 'string' ? icon : ''"
+        :class="props.class"
+        :style="{ width: size + 'px', height: size + 'px' }"
+        class="inline-block"
+    />
+    <component
+        v-else-if="icon"
+        :is="typeof icon === 'string' ? iconComponent : icon"
+        :class="className"
+        :size="size"
+        :stroke-width="strokeWidth"
+        :color="color"
+    />
+</template>
+
