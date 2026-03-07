@@ -7,6 +7,14 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class AttendanceStudent extends Model
 {
+    /**
+     * Attendance status codes.
+     */
+    public const STATUS_PRESENT = 'P';
+    public const STATUS_ABSENT = 'A';
+    public const STATUS_LEAVE = 'L';
+    public const STATUS_LATE = 'LT';
+
     protected $fillable = [
         'attendance_id',
         'student_id',
@@ -68,7 +76,7 @@ class AttendanceStudent extends Model
      */
     public function isPresent(): bool
     {
-        return $this->attendanceStatus?->code === 'P';
+        return $this->attendanceStatus?->code === self::STATUS_PRESENT;
     }
 
     /**
@@ -76,7 +84,7 @@ class AttendanceStudent extends Model
      */
     public function isAbsent(): bool
     {
-        return $this->attendanceStatus?->code === 'A';
+        return $this->attendanceStatus?->code === self::STATUS_ABSENT;
     }
 
     /**
@@ -84,7 +92,7 @@ class AttendanceStudent extends Model
      */
     public function isOnLeave(): bool
     {
-        return $this->attendanceStatus?->code === 'L' || $this->studentLeave !== null;
+        return $this->attendanceStatus?->code === self::STATUS_LEAVE || $this->studentLeave !== null;
     }
 
     /**
@@ -92,6 +100,6 @@ class AttendanceStudent extends Model
      */
     public function isLate(): bool
     {
-        return $this->attendanceStatus?->code === 'LT';
+        return $this->attendanceStatus?->code === self::STATUS_LATE;
     }
 }

@@ -83,15 +83,15 @@ class MenuSeeder extends Seeder
 
         
 
-        Menu::create([
-            'title' => 'Papers / Date Sheet',
-            'icon' => 'calendar',
-            'type' => 'main',
-            'order' => 3,
-            'parent_id' => $exam->id,
-            'is_active' => true,
-            'url' => '/exams/papers',
-        ]); 
+        // Menu::create([
+        //     'title' => 'Papers / Date Sheet',
+        //     'icon' => 'calendar',
+        //     'type' => 'main',
+        //     'order' => 3,
+        //     'parent_id' => $exam->id,
+        //     'is_active' => true,
+        //     'url' => '/exams/papers',
+        // ]); 
 
         // Menu::create([
         //     'title' => 'Registrations',
@@ -113,26 +113,26 @@ class MenuSeeder extends Seeder
         // ]);
 
         // Marking sub-menu under Exams
-        Menu::create([
-            'title' => 'Marking',
-            'icon' => 'edit-3',
-            'type' => 'main',
-            'order' => 4,
-            'parent_id' => $exam->id,
-            'is_active' => true,
-            'url' => '/exams/marking',
-        ]);
+        // Menu::create([
+        //     'title' => 'Marking',
+        //     'icon' => 'edit-3',
+        //     'type' => 'main',
+        //     'order' => 4,
+        //     'parent_id' => $exam->id,
+        //     'is_active' => true,
+        //     'url' => '/exams/marking',
+        // ]);
 
-        // Results sub-menu under Exams
-        Menu::create([
-            'title' => 'Results',
-            'icon' => 'bar-chart',
-            'type' => 'main',
-            'order' => 5,
-            'parent_id' => $exam->id,
-            'is_active' => true,
-            'url' => '/exams/results',
-        ]);
+        // // Results sub-menu under Exams
+        // Menu::create([
+        //     'title' => 'Results',
+        //     'icon' => 'bar-chart',
+        //     'type' => 'main',
+        //     'order' => 5,
+        //     'parent_id' => $exam->id,
+        //     'is_active' => true,
+        //     'url' => '/exams/results',
+        // ]);
         // Menu::create([
         //     'title' => 'Marking',
         //     'icon' => 'edit-3',

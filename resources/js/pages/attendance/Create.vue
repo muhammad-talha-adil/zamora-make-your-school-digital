@@ -24,7 +24,7 @@
                         <!-- Campus -->
                         <div>
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Campus</label>
-                            <select v-model="selectedCampusId" @change="onSelectionChange" class="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 text-sm">
+                            <select v-model="selectedCampusId" class="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 text-sm">
                                 <option value="">Select Campus</option>
                                 <option v-for="campus in props.campuses" :key="campus.id" :value="campus.id">{{ campus.name }}</option>
                             </select>
@@ -33,7 +33,7 @@
                         <!-- Session -->
                         <div>
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Session</label>
-                            <select v-model="selectedSessionId" @change="onSelectionChange" class="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 text-sm">
+                            <select v-model="selectedSessionId" class="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 text-sm">
                                 <option value="">Select Session</option>
                                 <option v-for="session in props.sessions" :key="session.id" :value="session.id">{{ session.name }}</option>
                             </select>
@@ -42,7 +42,7 @@
                         <!-- Class -->
                         <div>
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Class</label>
-                            <select v-model="selectedClassId" @change="onClassChange" class="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 text-sm">
+                            <select v-model="selectedClassId" @change="onSectionReset" class="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 text-sm">
                                 <option value="">Select Class</option>
                                 <option v-for="cls in props.classes" :key="cls.id" :value="cls.id">{{ cls.name }}</option>
                             </select>
@@ -68,18 +68,27 @@
                         <!-- Date -->
                         <div>
                             <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Date</label>
-                            <input v-model="selectedDate" type="date" @change="onDateChange" class="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 text-sm" />
+                            <input v-model="selectedDate" type="date" class="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 text-sm" />
                         </div>
 
-                        <!-- Load Students Button -->
-                        <div class="flex items-end">
+                        <!-- Load Students Button & Reset -->
+                        <div class="flex items-end gap-2">
                             <Button 
                                 @click="loadStudents" 
-                                :disabled="!selectedClassId || !selectedSectionId || props.isSunday || !!props.holiday"
-                                class="w-full"
+                                :disabled="!selectedClassId || props.isSunday || !!props.holiday"
+                                class="flex-1"
                             >
                                 <Icon icon="users" class="mr-1" />
                                 Load Students
+                            </Button>
+                            <Button 
+                                variant="outline" 
+                                @click="resetFilters"
+                                class="flex-1"
+                                title="Reset Filters"
+                            >
+                                <Icon icon="rotate-ccw" class="mr-1" />
+                                Reset
                             </Button>
                         </div>
                     </div>
@@ -157,7 +166,7 @@
 
             <!-- Students Table -->
             <div v-else-if="students.length > 0" class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
-                <div class="overflow-x-auto">
+                <div class="overflow-x-auto -mx-4 md:mx-0">
                     <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                         <thead class="bg-gray-50 dark:bg-gray-700">
                             <tr>
@@ -205,7 +214,7 @@
 
 <script setup lang="ts">
 import { Head, router, usePage } from '@inertiajs/vue3';
-import { reactive, computed, watch, ref } from 'vue';
+import { reactive, computed, watch, ref, onMounted } from 'vue';
 import { route } from 'ziggy-js';
 import AppLayout from '@/layouts/AppLayout.vue';
 import AttendanceFormRow from '@/components/attendance/AttendanceFormRow.vue';
@@ -227,12 +236,12 @@ const isSubmitting = computed(() => (usePage().props as any).processing || false
 const selectedCampusId = ref<number | ''>(props.selectedCampusId || '');
 const selectedSessionId = ref<number | ''>(props.selectedSessionId || '');
 const selectedClassId = ref<number | ''>(props.selectedClassId || '');
-const selectedSectionId = ref<string | number>('all');
+const selectedSectionId = ref<string | number>(props.selectedSectionId || 'all');
 const selectedDate = ref<string>(props.selectedDate || '');
 
 // Watch for prop changes and update local state
 watch(() => props.selectedSectionId, (newVal) => {
-    if (newVal !== null && newVal !== undefined && newVal !== '') {
+    if (newVal !== null && newVal !== undefined && newVal !== '' && newVal !== 'all') {
         selectedSectionId.value = String(newVal);
     } else {
         selectedSectionId.value = 'all';
@@ -280,9 +289,46 @@ watch(students, (newStudents) => {
     });
 }, { immediate: true });
 
-const onSelectionChange = () => loadStudents();
-const onClassChange = () => { selectedSectionId.value = 'all'; loadStudents(); };
-const onDateChange = () => loadStudents();
+// Load students on initial page load if URL params are present
+onMounted(() => {
+    if (props.students && props.students.length > 0) {
+        // Students already loaded from backend, just ensure formData is populated
+        formData.attendances = props.students.map((student) => {
+            const existing = student.existing_attendance;
+            return {
+                student_id: student.id,
+                id: existing?.id,
+                attendance_status_id: existing?.attendance_status_id || 0,
+                leave_type_id: existing?.leave_type_id,
+                check_in: existing?.check_in || '',
+                check_out: existing?.check_out || '',
+                remarks: existing?.remarks || '',
+            };
+        });
+    }
+});
+
+const onSectionReset = () => { 
+    selectedSectionId.value = 'all'; 
+};
+
+const resetFilters = () => {
+    // Get current date in YYYY-MM-DD format
+    const today = new Date().toISOString().split('T')[0];
+    
+    selectedCampusId.value = '';
+    selectedSessionId.value = '';
+    selectedClassId.value = '';
+    selectedSectionId.value = 'all';
+    selectedDate.value = today;
+    
+    // Navigate to attendance create page without query params
+    router.visit(route('attendance.create'), {
+        method: 'get',
+        preserveState: true,
+        replace: true,
+    });
+};
 
 const formatDate = (date: string) => {
     return new Date(date).toLocaleDateString('en-US', {
@@ -293,10 +339,14 @@ const formatDate = (date: string) => {
 };
 
 const loadStudents = () => {
-    if (!selectedClassId.value || !selectedSectionId.value) return;
+    if (!selectedClassId.value) return;
+    
     // If "all" is selected, pass empty string to load all sections
     const sectionId = selectedSectionId.value === 'all' ? '' : selectedSectionId.value;
+    
+    // Use router.visit for proper page update with new data
     router.visit(route('attendance.create'), {
+        method: 'get',
         data: { 
             campus_id: selectedCampusId.value, 
             session_id: selectedSessionId.value, 
@@ -305,6 +355,7 @@ const loadStudents = () => {
             date: selectedDate.value 
         },
         preserveState: true,
+        replace: true,
     });
 };
 

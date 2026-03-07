@@ -3,7 +3,6 @@
         <!-- Campus Filter -->
         <select
             v-model="filters.campus_id"
-            @change="applyFilters"
             class="w-full sm:w-44 md:w-48 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 text-sm min-h-10 md:min-h-11"
         >
             <option value="">All Campuses</option>
@@ -15,7 +14,6 @@
         <!-- Session Filter -->
         <select
             v-model="filters.session_id"
-            @change="applyFilters"
             class="w-full sm:w-44 md:w-48 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 text-sm min-h-10 md:min-h-11"
         >
             <option value="">All Sessions</option>
@@ -39,7 +37,6 @@
         <!-- Section Filter -->
         <select
             v-model="filters.section_id"
-            @change="applyFilters"
             class="w-full sm:w-44 md:w-48 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 text-sm min-h-10 md:min-h-11"
         >
             <option value="">All Sections</option>
@@ -52,20 +49,24 @@
         <input
             v-model="filters.date"
             type="date"
-            @change="applyFilters"
             class="w-full sm:w-44 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 text-sm min-h-10 md:min-h-11"
         />
 
         <!-- Locked Filter -->
         <select
             v-model="filters.locked"
-            @change="applyFilters"
             class="w-full sm:w-40 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 text-sm min-h-10 md:min-h-11"
         >
             <option value="">All Status</option>
             <option value="1">Locked</option>
             <option value="0">Unlocked</option>
         </select>
+
+        <!-- Load Button -->
+        <Button variant="default" size="sm" @click="applyFilters" class="min-h-10 md:min-h-11 bg-blue-600 hover:bg-blue-700">
+            <Icon icon="search" class="mr-1 h-4 w-4" />
+            Load
+        </Button>
 
         <!-- Reset Button -->
         <Button variant="outline" size="sm" @click="resetFilters" class="min-h-10 md:min-h-11">
@@ -93,16 +94,12 @@ interface Props {
 
 const props = defineProps<Props>();
 
-const emit = defineEmits<{
-    (e: 'update:filters', filters: AttendanceFilters): void;
-}>();
-
 const filters = reactive<AttendanceFilters>({
     campus_id: props.filters?.campus_id || '',
     session_id: props.filters?.session_id || '',
     class_id: props.filters?.class_id || '',
     section_id: props.filters?.section_id || '',
-    date: props.filters?.date || '',
+    date: props.filters?.date || new Date().toISOString().split('T')[0],
     locked: props.filters?.locked || '',
 });
 
@@ -116,14 +113,14 @@ const filteredSections = computed(() => {
     );
 });
 
-// Handle class change - reset section
+// Handle class change - reset section but don't apply filters
 const onClassChange = () => {
     filters.section_id = '';
-    applyFilters();
 };
 
 const buildQueryString = () => {
     const params = new URLSearchParams();
+    params.append('load', '1'); // Mark as loaded
     if (filters.campus_id) params.append('campus_id', filters.campus_id);
     if (filters.session_id) params.append('session_id', filters.session_id);
     if (filters.class_id) params.append('class_id', filters.class_id);
@@ -144,8 +141,11 @@ const resetFilters = () => {
     filters.session_id = '';
     filters.class_id = '';
     filters.section_id = '';
-    filters.date = '';
+    filters.date = new Date().toISOString().split('T')[0];
     filters.locked = '';
-    applyFilters();
+    router.visit(route('attendance.index'), {
+        preserveState: true,
+        replace: true,
+    });
 };
 </script>

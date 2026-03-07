@@ -7,6 +7,7 @@ use App\Models\Holiday;
 use App\Models\StudentLeave;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Facades\Cache;
 
 class AttendanceService
 {
@@ -16,43 +17,127 @@ class AttendanceService
     private ?array $statusIds = null;
 
     /**
+     * Cache TTL in minutes.
+     */
+    private const CACHE_TTL = 60; // 1 hour
+
+    /**
      * Check if a date is a holiday for a campus.
+     * Returns false if attendance is allowed on the holiday.
      */
     public function isHoliday(string $date, ?int $campusId = null): bool
     {
-        $holiday = Holiday::where(function ($query) use ($date, $campusId) {
-            $query->where('is_national', true)
-                ->orWhere(function ($q) use ($date, $campusId) {
-                    if ($campusId) {
-                        $q->where('campus_id', $campusId);
-                    }
-                    $q->where('start_date', '<=', $date)
-                      ->where('end_date', '>=', $date);
-                });
-        })->where('start_date', '<=', $date)
-          ->where('end_date', '>=', $date)
-          ->first();
-
+        $holiday = $this->getHoliday($date, $campusId);
+        
+        // If holiday exists but attendance is allowed, treat it as not a holiday
+        if ($holiday && $holiday->isAttendanceAllowed()) {
+            return false;
+        }
+        
         return $holiday !== null;
     }
 
     /**
      * Get holiday details for a date and campus.
+     * Uses caching for performance.
+     * Includes support for recurring holidays.
      */
     public function getHoliday(string $date, ?int $campusId = null): ?Holiday
     {
-        return Holiday::where(function ($query) use ($date, $campusId) {
-            $query->where('is_national', true)
-                ->orWhere(function ($q) use ($date, $campusId) {
-                    if ($campusId) {
-                        $q->where('campus_id', $campusId);
-                    }
-                    $q->where('start_date', '<=', $date)
-                      ->where('end_date', '>=', $date);
-                });
-        })->where('start_date', '<=', $date)
-          ->where('end_date', '>=', $date)
-          ->first();
+        $cacheKey = "holiday:{$date}:" . ($campusId ?? 'national');
+        
+        return Cache::remember($cacheKey, self::CACHE_TTL, function () use ($date, $campusId) {
+            // First check non-recurring holidays
+            $holiday = Holiday::where(function ($query) use ($date, $campusId) {
+                $query->where('is_national', true)
+                    ->orWhere(function ($q) use ($date, $campusId) {
+                        if ($campusId) {
+                            $q->where('campus_id', $campusId);
+                        }
+                        $q->where('start_date', '<=', $date)
+                          ->where('end_date', '>=', $date);
+                    });
+            })->where('start_date', '<=', $date)
+              ->where('end_date', '>=', $date)
+              ->where(function ($q) {
+                  $q->whereNull('recurrence_type')
+                    ->orWhere('recurrence_type', 'none');
+              })
+              ->first();
+
+            if ($holiday) {
+                return $holiday;
+            }
+
+            // Then check recurring holidays
+            return Holiday::where(function ($query) use ($date, $campusId) {
+                $query->where('is_national', true)
+                    ->orWhere(function ($q) use ($campusId) {
+                        if ($campusId) {
+                            $q->where('campus_id', $campusId);
+                        }
+                    });
+            })
+            ->whereNotNull('recurrence_type')
+            ->where('recurrence_type', '!=', 'none')
+            ->get()
+            ->first(function ($holiday) use ($date) {
+                return $holiday->includesDate($date);
+            });
+        });
+    }
+
+    /**
+     * Check if attendance is allowed on a specific date.
+     * Returns true if it's not a holiday OR if it's a holiday where attendance is allowed.
+     */
+    public function isAttendanceAllowed(string $date, ?int $campusId = null): bool
+    {
+        $holiday = $this->getHoliday($date, $campusId);
+        
+        // No holiday - attendance allowed
+        if (!$holiday) {
+            return true;
+        }
+        
+        // Holiday exists - check if attendance is allowed
+        return $holiday->isAttendanceAllowed();
+    }
+
+    /**
+     * Get all holidays for a date range (including recurring).
+     */
+    public function getHolidaysInRange(string $startDate, string $endDate, ?int $campusId = null): Collection
+    {
+        return Cache::remember("holidays:{$startDate}:{$endDate}:" . ($campusId ?? 'all'), self::CACHE_TTL, function () use ($startDate, $endDate, $campusId) {
+            $start = \Carbon\Carbon::parse($startDate);
+            $end = \Carbon\Carbon::parse($endDate);
+
+            // Get all active holidays (non-recurring and recurring)
+            $holidays = Holiday::where(function ($query) use ($campusId) {
+                if ($campusId) {
+                    $query->where('is_national', true)
+                        ->orWhere('campus_id', $campusId);
+                } else {
+                    $query->where('is_national', true);
+                }
+            })->where(function ($q) use ($end) {
+                $q->whereNull('recurrence_end_date')
+                  ->orWhere('recurrence_end_date', '>=', $end);
+            })->get();
+
+            // Filter holidays that fall within the date range
+            return $holidays->filter(function ($holiday) use ($start, $end) {
+                // Non-recurring holidays
+                if (!$holiday->isRecurring()) {
+                    return $holiday->end_date->greaterThanOrEqualTo($start) 
+                        && $holiday->start_date->lessThanOrEqualTo($end);
+                }
+
+                // Recurring holidays - check occurrences
+                return count($holiday->getOccurrencesInRange($start, $end)) > 0;
+            });
+        });
     }
 
     /**
@@ -73,12 +158,14 @@ class AttendanceService
     public function getStatusIds(): array
     {
         if ($this->statusIds === null) {
-            $this->statusIds = [
-                'present' => AttendanceStatus::where('code', 'P')->first()?->id,
-                'absent' => AttendanceStatus::where('code', 'A')->first()?->id,
-                'leave' => AttendanceStatus::where('code', 'L')->first()?->id,
-                'late' => AttendanceStatus::where('code', 'LT')->first()?->id,
-            ];
+            $this->statusIds = Cache::remember('attendance_status_ids', self::CACHE_TTL, function () {
+                return [
+                    'present' => AttendanceStatus::where('code', \App\Models\Attendance::STATUS_PRESENT)->first()?->id,
+                    'absent' => AttendanceStatus::where('code', \App\Models\Attendance::STATUS_ABSENT)->first()?->id,
+                    'leave' => AttendanceStatus::where('code', \App\Models\Attendance::STATUS_LEAVE)->first()?->id,
+                    'late' => AttendanceStatus::where('code', \App\Models\Attendance::STATUS_LATE)->first()?->id,
+                ];
+            });
         }
 
         return $this->statusIds;
@@ -91,6 +178,27 @@ class AttendanceService
     {
         $statusIds = $this->getStatusIds();
         return $statusIds[strtolower($code)] ?? null;
+    }
+
+    /**
+     * Get all attendance statuses (cached).
+     */
+    public function getStatuses(): Collection
+    {
+        return Cache::remember('attendance_statuses', self::CACHE_TTL, function () {
+            return AttendanceStatus::orderBy('name')->get();
+        });
+    }
+
+    /**
+     * Clear the attendance cache.
+     */
+    public function clearCache(): void
+    {
+        Cache::forget('attendance_status_ids');
+        Cache::forget('attendance_statuses');
+        // Clear holiday cache patterns
+        Cache::flush(); // In production, use pattern-based deletion
     }
 
     /**
@@ -110,16 +218,16 @@ class AttendanceService
             $code = $record->attendanceStatus?->code;
             
             switch ($code) {
-                case 'P':
+                case \App\Models\Attendance::STATUS_PRESENT:
                     $stats['present']++;
                     break;
-                case 'A':
+                case \App\Models\Attendance::STATUS_ABSENT:
                     $stats['absent']++;
                     break;
-                case 'L':
+                case \App\Models\Attendance::STATUS_LEAVE:
                     $stats['leave']++;
                     break;
-                case 'LT':
+                case \App\Models\Attendance::STATUS_LATE:
                     $stats['late']++;
                     break;
             }

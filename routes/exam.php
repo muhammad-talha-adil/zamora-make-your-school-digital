@@ -146,7 +146,7 @@ Route::prefix('exams')->name('exam.')->middleware(['web', 'auth'])->group(functi
 
     // Exam Registration Controller - API Routes
     Route::controller(ExamRegistrationController::class)->group(function () {
-        Route::get('/registrations', 'index')->name('registrations.index');
+        Route::get('/registrations/list', 'index')->name('registrations.index');
         Route::post('/registrations/generate', 'generateFromEnrollments')->name('registrations.generate');
         Route::post('/registrations', 'store')->name('registrations.store');
         Route::post('/registrations/bulk-register', 'bulkRegister')->name('registrations.bulk-register');

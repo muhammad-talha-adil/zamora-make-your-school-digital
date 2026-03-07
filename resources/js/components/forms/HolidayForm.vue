@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { router } from '@inertiajs/vue3';
-import { ref, computed } from 'vue';
+import { ref, computed, watch } from 'vue';
 import { alert } from '@/utils';
 
 // Components
@@ -28,6 +28,9 @@ interface Props {
         campus_id: number | null;
         is_national: boolean;
         description?: string;
+        recurrence_type?: string;
+        recurrence_end_date?: string;
+        is_attendance_allowed?: boolean;
     };
     campuses: Array<{
         id: number;
@@ -58,9 +61,27 @@ const form = ref({
     title: props.holiday?.title || '',
     start_date: props.holiday?.start_date || '',
     end_date: props.holiday?.end_date || '',
-    campus_id: props.holiday?.campus_id || '',
+    campus_id: props.holiday?.campus_id ?? '',
     is_national: props.holiday?.is_national ?? true,
     description: props.holiday?.description || '',
+    recurrence_type: props.holiday?.recurrence_type || 'none',
+    recurrence_end_date: props.holiday?.recurrence_end_date || '',
+    is_attendance_allowed: props.holiday?.is_attendance_allowed ?? false,
+});
+
+// Options for recurrence
+const recurrenceOptions = [
+    { value: 'none', label: 'No Recurrence' },
+    { value: 'yearly', label: 'Yearly' },
+    { value: 'monthly', label: 'Monthly' },
+    { value: 'weekly', label: 'Weekly' },
+];
+
+// Watch for national checkbox changes to reset campus
+watch(() => form.value.is_national, (newVal) => {
+    if (newVal) {
+        form.value.campus_id = '';
+    }
 });
 
 const isEditing = computed(() => !!props.holiday?.id);
@@ -74,6 +95,9 @@ const openModal = () => {
             campus_id: props.holiday.campus_id ?? '',
             is_national: props.holiday.is_national,
             description: props.holiday.description || '',
+            recurrence_type: props.holiday.recurrence_type || 'none',
+            recurrence_end_date: props.holiday.recurrence_end_date || '',
+            is_attendance_allowed: props.holiday.is_attendance_allowed ?? false,
         };
     } else {
         form.value = {
@@ -83,6 +107,9 @@ const openModal = () => {
             campus_id: '',
             is_national: true,
             description: '',
+            recurrence_type: 'none',
+            recurrence_end_date: '',
+            is_attendance_allowed: false,
         };
     }
     errors.value = {};
@@ -99,7 +126,9 @@ const submit = () => {
 
     const formData = {
         ...form.value,
-        campus_id: form.value.is_national ? null : form.value.campus_id,
+        // If national, campus_id should be null
+        // If not national and campus_id is empty, it means "all campuses"
+        campus_id: form.value.is_national ? null : (form.value.campus_id || null),
     };
 
     const url = isEditing.value
@@ -224,13 +253,55 @@ const submit = () => {
                                 class="w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white"
                                 :class="{ 'border-red-500': (errors as any).campus_id }"
                             >
-                                <option value="">Select Campus</option>
+                                <option value="">All Campuses</option>
                                 <option v-for="campus in campuses" :key="campus.id" :value="campus.id">
                                     {{ campus.name }}
                                 </option>
                             </select>
+                            <p class="text-xs text-gray-500 mt-1">Select a specific campus or "All Campuses"</p>
                             <InputError :message="(errors as any).campus_id" />
                         </div>
+
+                        <div>
+                            <Label for="recurrence_type" class="flex items-center">
+                                <Icon icon="repeat" class="mr-1 h-4 w-4" />
+                                Recurrence
+                            </Label>
+                            <select
+                                id="recurrence_type"
+                                v-model="form.recurrence_type"
+                                class="w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                            >
+                                <option v-for="option in recurrenceOptions" :key="option.value" :value="option.value">
+                                    {{ option.label }}
+                                </option>
+                            </select>
+                        </div>
+
+                        <div v-if="form.recurrence_type && form.recurrence_type !== 'none'">
+                            <Label for="recurrence_end_date" class="flex items-center">
+                                <Icon icon="calendar" class="mr-1 h-4 w-4" />
+                                Recurrence End Date
+                            </Label>
+                            <Input
+                                id="recurrence_end_date"
+                                type="date"
+                                v-model="form.recurrence_end_date"
+                            />
+                            <p class="text-xs text-gray-500 mt-1">When should this recurring holiday stop?</p>
+                        </div>
+
+                        <div class="flex items-center space-x-2">
+                            <Checkbox
+                                id="is_attendance_allowed"
+                                v-model:checked="form.is_attendance_allowed"
+                            />
+                            <Label for="is_attendance_allowed" class="flex items-center">
+                                <Icon icon="check-circle" class="mr-1 h-4 w-4" />
+                                Allow Attendance on this Holiday
+                            </Label>
+                        </div>
+                        <p class="text-xs text-gray-500 ml-6">If enabled, attendance can be marked on this holiday</p>
 
                         <div>
                             <Label for="description" class="flex items-center">

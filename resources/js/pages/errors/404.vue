@@ -25,7 +25,7 @@
                 </div>
 
                 <!-- Exception Details (for developers) -->
-                <div v-if="exception && app()->environment('local')" class="mt-4 p-4 bg-gray-100 dark:bg-gray-800 rounded-lg text-left">
+                <div v-if="exception" class="mt-4 p-4 bg-gray-100 dark:bg-gray-800 rounded-lg text-left">
                     <p class="text-xs text-gray-500 dark:text-gray-400 font-mono break-all">{{ exception }}</p>
                 </div>
             </div>

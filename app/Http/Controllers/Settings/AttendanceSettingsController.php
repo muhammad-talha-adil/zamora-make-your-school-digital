@@ -173,7 +173,15 @@ class AttendanceSettingsController extends Controller
             'campus_id' => 'nullable|exists:campuses,id',
             'is_national' => 'boolean',
             'description' => 'nullable|string',
+            'recurrence_type' => 'nullable|in:none,yearly,monthly,weekly',
+            'recurrence_end_date' => 'nullable|date|after:start_date',
+            'is_attendance_allowed' => 'boolean',
         ]);
+
+        // If national holiday, campus_id must be null
+        if ($validated['is_national'] ?? false) {
+            $validated['campus_id'] = null;
+        }
 
         Holiday::create($validated);
 
@@ -194,7 +202,15 @@ class AttendanceSettingsController extends Controller
             'campus_id' => 'nullable|exists:campuses,id',
             'is_national' => 'boolean',
             'description' => 'nullable|string',
+            'recurrence_type' => 'nullable|in:none,yearly,monthly,weekly',
+            'recurrence_end_date' => 'nullable|date|after:start_date',
+            'is_attendance_allowed' => 'boolean',
         ]);
+
+        // If national holiday, campus_id must be null
+        if ($validated['is_national'] ?? false) {
+            $validated['campus_id'] = null;
+        }
 
         $holiday->update($validated);
 

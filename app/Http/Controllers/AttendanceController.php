@@ -73,7 +73,7 @@ class AttendanceController extends Controller
 
         $campuses = Campus::orderBy('name')->get(['id', 'name']);
         $sessions = Session::where('is_active', true)->orderBy('name')->get(['id', 'name']);
-        $classes = SchoolClass::orderBy('name')->get(['id', 'name']);
+        $classes = SchoolClass::orderBy('id', 'asc')->get(['id', 'name']);
         $sections = Section::orderBy('name')->get(['id', 'name', 'class_id']);
         $attendanceStatuses = AttendanceStatus::orderBy('name')->get(['id', 'name', 'code']);
 
@@ -89,6 +89,134 @@ class AttendanceController extends Controller
     }
 
     /**
+     * Display the attendance dashboard with today's summary.
+     */
+    public function dashboard(Request $request): Response
+    {
+        $this->authorize('viewAny', Attendance::class);
+
+        $today = now()->toDateString();
+        $yesterday = now()->subDay()->toDateString();
+        
+        // Get current session and campus from request or use defaults
+        $currentSessionId = $request->filled('session_id') 
+            ? $request->session_id 
+            : Session::where('is_active', true)->first()?->id;
+        $currentCampusId = $request->filled('campus_id') ? $request->campus_id : null;
+
+        // Today's attendance summary
+        $todayQuery = Attendance::with(['class', 'section', 'attendanceStudents.attendanceStatus'])
+            ->where('attendance_date', $today);
+        
+        if ($currentCampusId) {
+            $todayQuery->where('campus_id', $currentCampusId);
+        }
+        if ($currentSessionId) {
+            $todayQuery->where('session_id', $currentSessionId);
+        }
+        
+        $todayAttendances = $todayQuery->get();
+        
+        // Calculate today's statistics
+        $todayStats = $this->calculateDashboardStats($todayAttendances);
+
+        // Yesterday's summary for comparison
+        $yesterdayQuery = Attendance::where('attendance_date', $yesterday);
+        if ($currentCampusId) {
+            $yesterdayQuery->where('campus_id', $currentCampusId);
+        }
+        if ($currentSessionId) {
+            $yesterdayQuery->where('session_id', $currentSessionId);
+        }
+        $yesterdayStats = $this->calculateDashboardStats($yesterdayQuery->get());
+
+        // Get classes with attendance status for today
+        $classSummaries = $todayAttendances->map(function ($attendance) {
+            $students = $attendance->attendanceStudents;
+            return [
+                'id' => $attendance->id,
+                'class_name' => $attendance->class?->name ?? 'N/A',
+                'section_name' => $attendance->section?->name ?? 'All',
+                'total' => $students->count(),
+                'present' => $students->where('attendanceStatus.code', 'P')->count(),
+                'absent' => $students->where('attendanceStatus.code', 'A')->count(),
+                'leave' => $students->where('attendanceStatus.code', 'L')->count(),
+                'late' => $students->where('attendanceStatus.code', 'LT')->count(),
+                'is_locked' => $attendance->is_locked,
+                'taken_by' => $attendance->takenBy?->name,
+                'attendance_date' => $attendance->attendance_date,
+            ];
+        });
+
+        // Get upcoming holidays
+        $upcomingHolidays = Holiday::where('end_date', '>=', $today)
+            ->orderBy('start_date')
+            ->limit(5)
+            ->get(['id', 'title', 'start_date', 'end_date', 'is_national']);
+
+        // Get recent attendance records
+        $recentAttendances = Attendance::with(['class', 'section'])
+            ->orderBy('attendance_date', 'desc')
+            ->limit(10)
+            ->get();
+
+        // Get quick stats - attendance taken vs total classes
+        $totalClasses = SchoolClass::count();
+        $classesWithAttendance = $todayAttendances->pluck('class_id')->unique()->count();
+
+        $campuses = Campus::orderBy('name')->get(['id', 'name']);
+        $sessions = Session::where('is_active', true)->orderBy('name')->get(['id', 'name']);
+
+        return Inertia::render('attendance/Dashboard', [
+            'todayStats' => $todayStats,
+            'yesterdayStats' => $yesterdayStats,
+            'classSummaries' => $classSummaries,
+            'upcomingHolidays' => $upcomingHolidays,
+            'recentAttendances' => $recentAttendances,
+            'totalClasses' => $totalClasses,
+            'classesWithAttendance' => $classesWithAttendance,
+            'campuses' => $campuses,
+            'sessions' => $sessions,
+            'selectedCampusId' => $currentCampusId,
+            'selectedSessionId' => $currentSessionId,
+            'today' => $today,
+        ]);
+    }
+
+    /**
+     * Calculate dashboard statistics from attendance collections.
+     */
+    private function calculateDashboardStats($attendances): array
+    {
+        $totalStudents = 0;
+        $present = 0;
+        $absent = 0;
+        $leave = 0;
+        $late = 0;
+
+        foreach ($attendances as $attendance) {
+            $students = $attendance->attendanceStudents;
+            $totalStudents += $students->count();
+            $present += $students->where('attendanceStatus.code', 'P')->count();
+            $absent += $students->where('attendanceStatus.code', 'A')->count();
+            $leave += $students->where('attendanceStatus.code', 'L')->count();
+            $late += $students->where('attendanceStatus.code', 'LT')->count();
+        }
+
+        return [
+            'total_students' => $totalStudents,
+            'present' => $present,
+            'absent' => $absent,
+            'leave' => $leave,
+            'late' => $late,
+            'attendance_percentage' => $totalStudents > 0 
+                ? round(($present / $totalStudents) * 100, 1) 
+                : 0,
+            'total_classes' => $attendances->count(),
+        ];
+    }
+
+    /**
      * Show the form for creating attendance.
      */
     public function create(Request $request): Response
@@ -97,7 +225,7 @@ class AttendanceController extends Controller
 
         $campuses = Campus::orderBy('name')->get(['id', 'name']);
         $sessions = Session::where('is_active', true)->orderBy('name')->get(['id', 'name']);
-        $classes = SchoolClass::orderBy('id')->get(['id', 'name']);
+        $classes = SchoolClass::orderBy('id', 'asc')->get(['id', 'name']);
         $sections = Section::orderBy('name')->get(['id', 'name', 'class_id']);
         $attendanceStatuses = AttendanceStatus::all();
         $leaveTypes = LeaveType::where('is_active', true)->orderBy('name')->get(['id', 'name']);
@@ -224,6 +352,7 @@ class AttendanceController extends Controller
     /**
      * Process bulk attendance with auto-leave detection and holiday checking.
      * Supports both creating new and updating existing attendance.
+     * Refactored to eliminate code duplication.
      */
     private function processBulkAttendance(array $data): Attendance
     {
@@ -231,95 +360,15 @@ class AttendanceController extends Controller
         $campusId = $data['campus_id'];
         $classId = $data['class_id'];
         $sectionId = $data['section_id'];
-
+        
         // Get status IDs from service
         $statusIds = $this->attendanceService->getStatusIds();
 
-        // For section_id = 0, it means "all sections" - we need to handle differently
+        // For section_id = 0, it means "all sections" - process each student's attendance
         if ($sectionId == 0) {
-            // Get all sections for this class
-            $sections = Section::where('class_id', $classId)->get();
-            
-            // Process each student attendance
-            foreach ($data['attendances'] as $studentAttendance) {
-                $studentId = $studentAttendance['student_id'];
-                $statusId = $studentAttendance['attendance_status_id'];
-                $checkIn = $studentAttendance['check_in'] ?? null;
-                $checkOut = $studentAttendance['check_out'] ?? null;
-                $remarks = $studentAttendance['remarks'] ?? null;
-                $leaveTypeId = $studentAttendance['leave_type_id'] ?? null;
-
-                // Get student's current section
-                $student = Student::with('currentEnrollment')->find($studentId);
-                if (!$student || !$student->currentEnrollment) {
-                    continue;
-                }
-
-                $studentSectionId = $student->currentEnrollment->section_id;
-
-                // Check if attendance record exists for this section
-                $attendance = Attendance::where('attendance_date', $attendanceDate)
-                    ->where('class_id', $classId)
-                    ->where('section_id', $studentSectionId)
-                    ->first();
-
-                // If not exists, create new attendance record
-                if (!$attendance) {
-                    $attendance = Attendance::create([
-                        'attendance_date' => $attendanceDate,
-                        'campus_id' => $campusId,
-                        'session_id' => $data['session_id'],
-                        'class_id' => $classId,
-                        'section_id' => $studentSectionId,
-                        'taken_by' => auth()->id(),
-                        'is_locked' => false,
-                    ]);
-                }
-
-                // Check if student already has attendance in this record
-                $existingRecord = AttendanceStudent::where('attendance_id', $attendance->id)
-                    ->where('student_id', $studentId)
-                    ->first();
-
-                // Auto-detect approved leaves using service
-                $studentLeaveId = null;
-                if ($statusIds['leave'] && $statusId === $statusIds['leave']) {
-                    $leave = $this->attendanceService->detectStudentLeave($studentId, $attendanceDate);
-                    $studentLeaveId = $leave?->id;
-                }
-
-                if ($existingRecord) {
-                    // Update existing record
-                    $existingRecord->update([
-                        'attendance_status_id' => $statusId,
-                        'student_leave_id' => $studentLeaveId,
-                        'leave_type_id' => $leaveTypeId,
-                        'check_in' => $checkIn,
-                        'check_out' => $checkOut,
-                        'remarks' => $remarks,
-                    ]);
-                } else {
-                    // Create new attendance student record
-                    AttendanceStudent::create([
-                        'attendance_id' => $attendance->id,
-                        'student_id' => $studentId,
-                        'attendance_status_id' => $statusId,
-                        'student_leave_id' => $studentLeaveId,
-                        'leave_type_id' => $leaveTypeId,
-                        'check_in' => $checkIn,
-                        'check_out' => $checkOut,
-                        'remarks' => $remarks,
-                    ]);
-                }
-            }
-
-            // Return any attendance record (just for returning)
-            return Attendance::where('attendance_date', $attendanceDate)
-                ->where('class_id', $classId)
-                ->first() ?? new Attendance();
+            return $this->processAllSectionsAttendance($data, $statusIds);
         }
 
-        // Original logic for single section
         // Check if attendance already exists for this date/class/section
         $existingAttendance = Attendance::where('attendance_date', $attendanceDate)
             ->where('class_id', $classId)
@@ -327,64 +376,18 @@ class AttendanceController extends Controller
             ->first();
 
         if ($existingAttendance) {
-            // Update existing attendance - process each student
-            foreach ($data['attendances'] as $studentAttendance) {
-                $studentId = $studentAttendance['student_id'];
-                $statusId = $studentAttendance['attendance_status_id'];
-                $checkIn = $studentAttendance['check_in'] ?? null;
-                $checkOut = $studentAttendance['check_out'] ?? null;
-                $remarks = $studentAttendance['remarks'] ?? null;
-                $leaveTypeId = $studentAttendance['leave_type_id'] ?? null;
-
-                // Check if student already has attendance in this record
-                $existingRecord = AttendanceStudent::where('attendance_id', $existingAttendance->id)
-                    ->where('student_id', $studentId)
-                    ->first();
-
-                // Auto-detect approved leaves using service
-                $studentLeaveId = null;
-                if ($statusIds['leave'] && $statusId === $statusIds['leave']) {
-                    $leave = $this->attendanceService->detectStudentLeave($studentId, $attendanceDate);
-                    $studentLeaveId = $leave?->id;
-                }
-
-                if ($existingRecord) {
-                    // Update existing record
-                    $existingRecord->update([
-                        'attendance_status_id' => $statusId,
-                        'student_leave_id' => $studentLeaveId,
-                        'leave_type_id' => $leaveTypeId,
-                        'check_in' => $checkIn,
-                        'check_out' => $checkOut,
-                        'remarks' => $remarks,
-                    ]);
-                } else {
-                    // Create new attendance student record
-                    AttendanceStudent::create([
-                        'attendance_id' => $existingAttendance->id,
-                        'student_id' => $studentId,
-                        'attendance_status_id' => $statusId,
-                        'student_leave_id' => $studentLeaveId,
-                        'leave_type_id' => $leaveTypeId,
-                        'check_in' => $checkIn,
-                        'check_out' => $checkOut,
-                        'remarks' => $remarks,
-                    ]);
-                }
-            }
-
-            return $existingAttendance;
+            return $this->processAttendanceUpdate($existingAttendance, $data['attendances'], $statusIds);
         }
 
-        // Check if date is a holiday using service
+        // Check if date is a holiday and throw error unless attendance is allowed
         $isHoliday = $this->attendanceService->isHoliday($attendanceDate, $campusId);
-
-        if ($isHoliday) {
-            // You may choose to throw an exception or allow recording with holiday status
-            // For now, we'll proceed but could mark all as Holiday
+        $isAttendanceAllowed = $this->attendanceService->isAttendanceAllowed($attendanceDate, $campusId);
+        
+        if ($isHoliday && !$isAttendanceAllowed) {
+            throw new \Exception('Cannot mark attendance on a holiday. Please select another date.');
         }
 
-        // Create or get attendance record
+        // Create new attendance record
         $attendance = Attendance::create([
             'attendance_date' => $attendanceDate,
             'campus_id' => $campusId,
@@ -395,15 +398,111 @@ class AttendanceController extends Controller
             'is_locked' => false,
         ]);
 
-        // Process each student attendance
+        return $this->processAttendanceCreation($attendance, $data['attendances'], $statusIds);
+    }
+
+    /**
+     * Process attendance for all sections of a class.
+     */
+    private function processAllSectionsAttendance(array $data, array $statusIds): Attendance
+    {
+        $attendanceDate = $data['attendance_date'];
+        $classId = $data['class_id'];
+        $firstAttendance = null;
+
         foreach ($data['attendances'] as $studentAttendance) {
+            $studentId = $studentAttendance['student_id'];
+            $statusId = $studentAttendance['attendance_status_id'];
+            $checkIn = $studentAttendance['check_in'] ?? null;
+            $checkOut = $studentAttendance['check_out'] ?? null;
+            $remarks = $studentAttendance['remarks'] ?? null;
+            $leaveTypeId = $studentAttendance['leave_type_id'] ?? null;
+
+            // Get student's current section
+            $student = Student::with('currentEnrollment')->find($studentId);
+            if (!$student || !$student->currentEnrollment) {
+                continue;
+            }
+
+            $studentSectionId = $student->currentEnrollment->section_id;
+
+            // Check if attendance record exists for this section
+            $attendance = Attendance::where('attendance_date', $attendanceDate)
+                ->where('class_id', $classId)
+                ->where('section_id', $studentSectionId)
+                ->first();
+
+            // If not exists, create new attendance record
+            if (!$attendance) {
+                $attendance = Attendance::create([
+                    'attendance_date' => $attendanceDate,
+                    'campus_id' => $data['campus_id'],
+                    'session_id' => $data['session_id'],
+                    'class_id' => $classId,
+                    'section_id' => $studentSectionId,
+                    'taken_by' => auth()->id(),
+                    'is_locked' => false,
+                ]);
+                
+                if ($firstAttendance === null) {
+                    $firstAttendance = $attendance;
+                }
+            }
+
+            $this->upsertStudentAttendance(
+                $attendance->id,
+                $studentId,
+                $statusId,
+                $leaveTypeId,
+                $checkIn,
+                $checkOut,
+                $remarks,
+                $statusIds,
+                $attendanceDate
+            );
+        }
+
+        return $firstAttendance ?? new Attendance();
+    }
+
+    /**
+     * Process attendance update for existing records.
+     */
+    private function processAttendanceUpdate(Attendance $attendance, array $studentAttendances, array $statusIds): Attendance
+    {
+        foreach ($studentAttendances as $studentAttendance) {
+            $this->upsertStudentAttendance(
+                $attendance->id,
+                $studentAttendance['student_id'],
+                $studentAttendance['attendance_status_id'],
+                $studentAttendance['leave_type_id'] ?? null,
+                $studentAttendance['check_in'] ?? null,
+                $studentAttendance['check_out'] ?? null,
+                $studentAttendance['remarks'] ?? null,
+                $statusIds,
+                $attendance->attendance_date
+            );
+        }
+
+        return $attendance;
+    }
+
+    /**
+     * Process attendance creation for new records.
+     */
+    private function processAttendanceCreation(Attendance $attendance, array $studentAttendances, array $statusIds): Attendance
+    {
+        foreach ($studentAttendances as $studentAttendance) {
             $studentId = $studentAttendance['student_id'];
             $statusId = $studentAttendance['attendance_status_id'];
 
             // Auto-detect approved leaves using service
             $studentLeaveId = null;
             if ($statusIds['leave'] && $statusId === $statusIds['leave']) {
-                $leave = $this->attendanceService->detectStudentLeave($studentId, $attendanceDate);
+                $leave = $this->attendanceService->detectStudentLeave(
+                    $studentId,
+                    $attendance->attendance_date
+                );
                 $studentLeaveId = $leave?->id;
             }
 
@@ -421,6 +520,58 @@ class AttendanceController extends Controller
         }
 
         return $attendance;
+    }
+
+    /**
+     * Upsert student attendance record (create or update).
+     * This is the core logic extracted to avoid duplication.
+     */
+    private function upsertStudentAttendance(
+        int $attendanceId,
+        int $studentId,
+        int $statusId,
+        ?int $leaveTypeId,
+        ?string $checkIn,
+        ?string $checkOut,
+        ?string $remarks,
+        array $statusIds,
+        string $attendanceDate
+    ): void {
+        // Check if student already has attendance in this record
+        $existingRecord = AttendanceStudent::where('attendance_id', $attendanceId)
+            ->where('student_id', $studentId)
+            ->first();
+
+        // Auto-detect approved leaves using service
+        $studentLeaveId = null;
+        if ($statusIds['leave'] && $statusId === $statusIds['leave']) {
+            $leave = $this->attendanceService->detectStudentLeave($studentId, $attendanceDate);
+            $studentLeaveId = $leave?->id;
+        }
+
+        if ($existingRecord) {
+            // Update existing record
+            $existingRecord->update([
+                'attendance_status_id' => $statusId,
+                'student_leave_id' => $studentLeaveId,
+                'leave_type_id' => $leaveTypeId,
+                'check_in' => $checkIn,
+                'check_out' => $checkOut,
+                'remarks' => $remarks,
+            ]);
+        } else {
+            // Create new attendance student record
+            AttendanceStudent::create([
+                'attendance_id' => $attendanceId,
+                'student_id' => $studentId,
+                'attendance_status_id' => $statusId,
+                'student_leave_id' => $studentLeaveId,
+                'leave_type_id' => $leaveTypeId,
+                'check_in' => $checkIn,
+                'check_out' => $checkOut,
+                'remarks' => $remarks,
+            ]);
+        }
     }
 
     /**

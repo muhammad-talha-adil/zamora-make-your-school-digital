@@ -8,6 +8,14 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Attendance extends Model
 {
+    /**
+     * Attendance status codes.
+     */
+    public const STATUS_PRESENT = 'P';
+    public const STATUS_ABSENT = 'A';
+    public const STATUS_LEAVE = 'L';
+    public const STATUS_LATE = 'LT';
+
     protected $fillable = [
         'attendance_date',
         'campus_id',
@@ -86,7 +94,7 @@ class Attendance extends Model
     {
         return $this->attendanceStudents()
             ->whereHas('attendanceStatus', function ($query) {
-                $query->where('code', 'P');
+                $query->where('code', self::STATUS_PRESENT);
             })->count();
     }
 
@@ -97,7 +105,7 @@ class Attendance extends Model
     {
         return $this->attendanceStudents()
             ->whereHas('attendanceStatus', function ($query) {
-                $query->where('code', 'A');
+                $query->where('code', self::STATUS_ABSENT);
             })->count();
     }
 
@@ -108,7 +116,7 @@ class Attendance extends Model
     {
         return $this->attendanceStudents()
             ->whereHas('attendanceStatus', function ($query) {
-                $query->where('code', 'LT');
+                $query->where('code', self::STATUS_LATE);
             })->count();
     }
 
