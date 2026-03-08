@@ -157,4 +157,90 @@ class StudentInventoryItem extends Model
     {
         return $this->discount_amount > 0 || $this->discount_percentage > 0;
     }
+
+    /**
+     * Calculate profit for this item (Sale Price - Purchase Rate) × Quantity.
+     * This shows the profit made from selling this item to student.
+     */
+    public function getProfit(): float
+    {
+        $purchaseRate = (float) ($this->purchase_rate_snapshot ?? 0);
+        $salePrice = $this->getFinalUnitPrice();
+        
+        return ($salePrice - $purchaseRate) * $this->quantity;
+    }
+
+    /**
+     * Get profit per unit.
+     */
+    public function getProfitPerUnit(): float
+    {
+        $purchaseRate = (float) ($this->purchase_rate_snapshot ?? 0);
+        $salePrice = $this->getFinalUnitPrice();
+        
+        return $salePrice - $purchaseRate;
+    }
+
+    /**
+     * Check if this item is sold at a profit.
+     */
+    public function isProfitable(): bool
+    {
+        return $this->getProfitPerUnit() > 0;
+    }
+
+    /**
+     * Calculate cost of goods sold for this item.
+     */
+    public function getCostOfGoodsSold(): float
+    {
+        $purchaseRate = (float) ($this->purchase_rate_snapshot ?? 0);
+        return $purchaseRate * $this->quantity;
+    }
+
+    /**
+     * Calculate revenue from this item.
+     */
+    public function getRevenue(): float
+    {
+        return $this->quantity * $this->getFinalUnitPrice();
+    }
+
+    /**
+     * Get profit margin percentage.
+     */
+    public function getProfitMarginPercentage(): float
+    {
+        $purchaseRate = (float) ($this->purchase_rate_snapshot ?? 0);
+        if ($purchaseRate <= 0) {
+            return 0;
+        }
+        
+        $profitPerUnit = $this->getProfitPerUnit();
+        return ($profitPerUnit / $purchaseRate) * 100;
+    }
+
+    /**
+     * Get formatted profit.
+     */
+    public function getFormattedProfitAttribute(): string
+    {
+        return number_format($this->getProfit(), 2);
+    }
+
+    /**
+     * Get formatted revenue.
+     */
+    public function getFormattedRevenueAttribute(): string
+    {
+        return number_format($this->getRevenue(), 2);
+    }
+
+    /**
+     * Get formatted cost of goods sold.
+     */
+    public function getFormattedCogsAttribute(): string
+    {
+        return number_format($this->getCostOfGoodsSold(), 2);
+    }
 }

@@ -451,4 +451,92 @@ class StudentInventory extends Model
     {
         return $this->getFirstItem()?->discount_percentage ?? 0;
     }
+
+    /**
+     * Calculate total profit from all items in this inventory assignment.
+     * Profit = (Sale Price - Purchase Rate) × Quantity for each item.
+     */
+    public function getTotalProfit(): float
+    {
+        return $this->items->sum(fn($item) => $item->getProfit());
+    }
+
+    /**
+     * Calculate total cost of goods sold for all items.
+     */
+    public function getTotalCostOfGoodsSold(): float
+    {
+        return $this->items->sum(fn($item) => $item->getCostOfGoodsSold());
+    }
+
+    /**
+     * Calculate total revenue from this inventory assignment.
+     */
+    public function getTotalRevenue(): float
+    {
+        return $this->items->sum(fn($item) => $item->getRevenue());
+    }
+
+    /**
+     * Get average profit margin percentage across all items.
+     */
+    public function getAverageProfitMargin(): float
+    {
+        $totalCost = $this->getTotalCostOfGoodsSold();
+        if ($totalCost <= 0) {
+            return 0;
+        }
+        
+        return ($this->getTotalProfit() / $totalCost) * 100;
+    }
+
+    /**
+     * Check if this inventory assignment is profitable.
+     */
+    public function isProfitable(): bool
+    {
+        return $this->getTotalProfit() > 0;
+    }
+
+    /**
+     * Get formatted total profit.
+     */
+    public function getFormattedTotalProfitAttribute(): string
+    {
+        return number_format($this->getTotalProfit(), 2);
+    }
+
+    /**
+     * Get formatted total revenue.
+     */
+    public function getFormattedTotalRevenueAttribute(): string
+    {
+        return number_format($this->getTotalRevenue(), 2);
+    }
+
+    /**
+     * Get formatted total cost of goods sold.
+     */
+    public function getFormattedTotalCogsAttribute(): string
+    {
+        return number_format($this->getTotalCostOfGoodsSold(), 2);
+    }
+
+    /**
+     * Scope for profitable inventories.
+     */
+    public function scopeProfitable($query)
+    {
+        return $query->whereHas('items', function ($q) {
+            $q->havingRaw('(SUM(unit_price_snapshot - COALESCE(purchase_rate_snapshot, 0)) * SUM(quantity)) > 0');
+        });
+    }
+
+    /**
+     * Scope for date range with profit calculation.
+     */
+    public function scopeDateRangeWithProfit($query, $fromDate, $toDate)
+    {
+        return $query->whereBetween('assigned_date', [$fromDate, $toDate]);
+    }
 }
