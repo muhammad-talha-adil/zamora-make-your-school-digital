@@ -1,0 +1,306 @@
+╔══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╗
+║                                    FEE MODULE - ENTITY RELATIONSHIP DIAGRAM                                          ║
+╚══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════╝
+
+┌─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│                                           MASTER DATA LAYER                                                          │
+└─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+┌──────────────────────┐         ┌──────────────────────┐         ┌──────────────────────┐
+│    fee_heads         │         │   discount_types     │         │   fee_fine_rules     │
+├──────────────────────┤         ├──────────────────────┤         ├──────────────────────┤
+│ id (PK)              │         │ id (PK)              │         │ id (PK)              │
+│ name                 │         │ name                 │         │ campus_id (FK)       │
+│ code (UNIQUE)        │         │ code (UNIQUE)        │         │ session_id (FK)      │
+│ category (ENUM)      │         │ value_type (ENUM)    │         │ class_id (FK)        │
+│ is_recurring         │         │ default_value        │         │ section_id (FK)      │
+│ default_frequency    │         │ description          │         │ fee_head_id (FK)     │
+│ is_optional          │         │ is_active            │         │ fine_type (ENUM)     │
+│ sort_order           │         │ timestamps           │         │ fine_value           │
+│ is_active            │         └──────────────────────┘         │ grace_days           │
+│ description          │                                           │ effective_from       │
+│ timestamps           │                                           │ effective_to         │
+│ deleted_at           │                                           │ is_active            │
+└──────────────────────┘                                           │ timestamps           │
+                                                                   └──────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│                                        FEE STRUCTURE LAYER                                                           │
+└─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+┌──────────────────────────────┐                    ┌──────────────────────────────┐
+│   fee_structures         │ 1              M   │   fee_structure_items        │
+├──────────────────────────────┤◄───────────────────┤──────────────────────────────┤
+│ id (PK)                      │                    │ id (PK)                      │
+│ title                        │                    │ fee_structure_id (FK)        │
+│ session_id (FK)              │                    │ fee_head_id (FK)             │
+│ campus_id (FK)               │                    │ amount                       │
+│ class_id (FK, nullable)      │                    │ frequency (ENUM)             │
+│ section_id (FK, nullable)    │                    │ applicable_on_admission      │
+│ is_default                   │                    │ billing_month                │
+│ effective_from               │                    │ billing_year                 │
+│ effective_to                 │                    │ starts_from_month            │
+│ status (ENUM)                │                    │ ends_at_month                │
+│ notes                        │                    │ is_optional                  │
+│ created_by (FK)              │                    │ is_transport_related         │
+│ timestamps                   │                    │ notes                        │
+│ deleted_at                   │                    │ timestamps                   │
+└──────────────────────────────┘                    └──────────────────────────────┘
+         │                                                      │
+         │ References                                           │ References
+         ▼                                                      ▼
+┌──────────────────────┐                            ┌──────────────────────┐
+│ academic_sessions    │                            │    fee_heads         │
+│ campuses             │                            └──────────────────────┘
+│ school_classes       │
+│ sections             │
+└──────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│                                    STUDENT CUSTOMIZATION LAYER                                                       │
+└─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+┌──────────────────────────────┐                    ┌──────────────────────────────┐
+│ student_fee_assignments      │                    │    student_discounts         │
+├──────────────────────────────┤                    ├──────────────────────────────┤
+│ id (PK)                      │                    │ id (PK)                      │
+│ student_id (FK)              │                    │ student_id (FK)              │
+│ student_enrollment_record_id │                    │ student_enrollment_record_id │
+│ session_id (FK)              │                    │ discount_type_id (FK)        │
+│ campus_id (FK)               │                    │ fee_head_id (FK, nullable)   │
+│ class_id (FK)                │                    │ value_type (ENUM)            │
+│ section_id (FK)              │                    │ value                        │
+│ fee_head_id (FK)             │                    │ effective_from               │
+│ assignment_type (ENUM)       │                    │ effective_to                 │
+│ value_type (ENUM)            │                    │ approval_status (ENUM)       │
+│ amount                       │                    │ approved_by (FK)             │
+│ effective_from               │                    │ reason                       │
+│ effective_to                 │                    │ timestamps                   │
+│ is_active                    │                    │ deleted_at                   │
+│ reason                       │                    └──────────────────────────────┘
+│ approved_by (FK)             │                              │
+│ timestamps                   │                              │ References
+│ deleted_at                   │                              ▼
+└──────────────────────────────┘                    ┌──────────────────────┐
+         │                                           │  discount_types      │
+         │ References                                └──────────────────────┘
+         ▼
+┌──────────────────────┐
+│    students          │
+│ student_enrollment_  │
+│    records           │
+│    fee_heads         │
+└──────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│                                         VOUCHER LAYER                                                                │
+└─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+                                    ┌──────────────────────────────┐
+                                    │   fee_vouchers           │
+                                    ├──────────────────────────────┤
+                                    │ id (PK)                      │
+                                    │ voucher_no (UNIQUE)          │
+                                    │ student_id (FK)              │
+                                    │ student_enrollment_record_id │
+                                    │ session_id (FK)              │
+                                    │ campus_id (FK)               │
+                                    │ class_id (FK)                │
+                                    │ section_id (FK)              │
+                                    │ voucher_month                │
+                                    │ voucher_year                 │
+                                    │ issue_date                   │
+                                    │ due_date                     │
+                                    │ status (ENUM)                │
+                                    │ gross_amount                 │
+                                    │ discount_amount              │
+                                    │ fine_amount                  │
+                                    │ paid_amount                  │
+                                    │ net_amount                   │
+                                    │ balance_amount               │
+                                    │ advance_adjusted_amount      │
+                                    │ notes                        │
+                                    │ generated_by (FK)            │
+                                    │ published_at                 │
+                                    │ timestamps                   │
+                                    │ deleted_at                   │
+                                    └──────────────────────────────┘
+                                              │
+                    ┌─────────────────────────┼─────────────────────────┐
+                    │                         │                         │
+                    │ 1                       │ 1                       │ 1
+                    │                         │                         │
+                    ▼ M                       ▼ M                       ▼ M
+    ┌──────────────────────────┐  ┌──────────────────────────┐  ┌──────────────────────────┐
+    │  fee_voucher_items       │  │ fee_voucher_adjustments  │  │ fee_voucher_print_logs   │
+    ├──────────────────────────┤  ├──────────────────────────┤  ├──────────────────────────┤
+    │ id (PK)                  │  │ id (PK)                  │  │ id (PK)                  │
+    │ fee_voucher_id (FK)      │  │ fee_voucher_id (FK)      │  │ fee_voucher_id (FK)      │
+    │ fee_head_id (FK)         │  │ adjustment_type (ENUM)   │  │ printed_by (FK)          │
+    │ description              │  │ amount                   │  │ printed_at               │
+    │ amount                   │  │ description              │  │ print_count              │
+    │ discount_amount          │  │ related_voucher_id (FK)  │  │ timestamps               │
+    │ fine_amount              │  │ created_by (FK)          │  └──────────────────────────┘
+    │ adjusted_amount          │  │ timestamps               │
+    │ net_amount               │  └──────────────────────────┘
+    │ source_type (ENUM)       │
+    │ reference_id             │
+    │ timestamps               │
+    └──────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│                                         PAYMENT LAYER                                                                │
+└─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+┌──────────────────────────────┐                    ┌──────────────────────────────┐
+│   fee_payments           │ 1              M   │  fee_payment_allocations     │
+├──────────────────────────────┤◄───────────────────┤──────────────────────────────┤
+│ id (PK)                      │                    │ id (PK)                      │
+│ receipt_no (UNIQUE)          │                    │ fee_payment_id (FK)          │
+│ student_id (FK)              │                    │ fee_voucher_id (FK)          │
+│ student_enrollment_record_id │                    │ allocated_amount             │
+│ payment_date                 │                    │ allocation_date              │
+│ payment_method (ENUM)        │                    │ notes                        │
+│ reference_no                 │                    │ timestamps                   │
+│ bank_name                    │                    └──────────────────────────────┘
+│ received_amount              │                              │
+│ excess_amount                │                              │ References
+│ allocated_amount             │                              ▼
+│ remaining_unallocated_amount │                    ┌──────────────────────┐
+│ status (ENUM)                │                    │  fee_vouchers    │
+│ received_by (FK)             │                    └──────────────────────┘
+│ notes                        │
+│ timestamps                   │
+│ deleted_at                   │
+└──────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│                                      ADVANCE WALLET LAYER                                                            │
+└─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+┌──────────────────────────────────────┐
+│ student_fee_wallet_transactions      │
+├──────────────────────────────────────┤
+│ id (PK)                              │
+│ student_id (FK)                      │
+│ transaction_date                     │
+│ transaction_type (ENUM)              │
+│ direction (ENUM: credit/debit)       │
+│ amount                               │
+│ reference_type                       │
+│ reference_id                         │
+│ description                          │
+│ created_by (FK)                      │
+│ timestamps                           │
+└──────────────────────────────────────┘
+         │
+         │ References
+         ▼
+┌──────────────────────┐
+│    students          │
+└──────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│                                    CORE ENTITIES (EXISTING)                                                          │
+└─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+┌──────────────────────┐         ┌──────────────────────────────┐
+│    students          │ 1   M   │ student_enrollment_records   │
+├──────────────────────┤◄────────┤──────────────────────────────┤
+│ id (PK)              │         │ id (PK)                      │
+│ user_id (FK)         │         │ student_id (FK)              │
+│ registration_no      │         │ session_id (FK)              │
+│ student_code         │         │ class_id (FK)                │
+│ admission_no         │         │ section_id (FK)              │
+│ dob                  │         │ campus_id (FK)               │
+│ gender_id (FK)       │         │ admission_date               │
+│ b_form               │         │ leave_date                   │
+│ student_status_id    │         │ student_status_id (FK)       │
+│ description          │         │ previous_enrollment_id (FK)  │
+│ admission_date       │         │ description                  │
+│ image                │         │ monthly_fee (DEPRECATED)     │
+│ timestamps           │         │ annual_fee (DEPRECATED)      │
+│ deleted_at           │         │ timestamps                   │
+└──────────────────────┘         └──────────────────────────────┘
+
+┌─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│                                      RELATIONSHIP SUMMARY                                                            │
+└─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+MASTER DATA:
+  • fee_heads (1) ──< (M) fee_structure_items
+  • fee_heads (1) ──< (M) student_fee_assignments
+  • fee_heads (1) ──< (M) student_discounts
+  • fee_heads (1) ──< (M) fee_voucher_items
+  • fee_heads (1) ──< (M) fee_fine_rules
+  • discount_types (1) ──< (M) student_discounts
+
+FEE STRUCTURES:
+  • fee_structures (1) ──< (M) fee_structure_items
+  • fee_structures (1) ──> (1) academic_sessions
+  • fee_structures (1) ──> (1) campuses
+  • fee_structures (1) ──> (0..1) school_classes
+  • fee_structures (1) ──> (0..1) sections
+
+STUDENT CUSTOMIZATION:
+  • students (1) ──< (M) student_fee_assignments
+  • students (1) ──< (M) student_discounts
+  • student_enrollment_records (1) ──< (M) student_fee_assignments
+  • student_enrollment_records (1) ──< (M) student_discounts
+
+VOUCHERS:
+  • students (1) ──< (M) fee_vouchers
+  • student_enrollment_records (1) ──< (M) fee_vouchers
+  • fee_vouchers (1) ──< (M) fee_voucher_items
+  • fee_vouchers (1) ──< (M) fee_voucher_adjustments
+  • fee_vouchers (1) ──< (M) fee_voucher_print_logs
+  • fee_vouchers (1) ──< (M) fee_payment_allocations
+
+PAYMENTS:
+  • students (1) ──< (M) fee_payments
+  • student_enrollment_records (1) ──< (M) fee_payments
+  • fee_payments (1) ──< (M) fee_payment_allocations
+
+WALLET:
+  • students (1) ──< (M) student_fee_wallet_transactions
+
+CORE:
+  • students (1) ──< (M) student_enrollment_records
+
+┌─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│                                         DATA FLOW                                                                    │
+└─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+1. SETUP PHASE:
+   fee_heads → fee_structures → fee_structure_items
+   discount_types → student_discounts
+   
+2. CUSTOMIZATION PHASE:
+   students → student_fee_assignments
+   students → student_discounts
+   
+3. VOUCHER GENERATION:
+   fee_structure_items + student_discounts + student_fee_assignments
+   → fee_vouchers → fee_voucher_items
+   
+4. PAYMENT RECORDING:
+   fee_payments → fee_payment_allocations → fee_vouchers (update)
+   
+5. ADVANCE HANDLING:
+   fee_payments (excess) → student_fee_wallet_transactions
+   student_fee_wallet_transactions → fee_vouchers (adjustment)
+
+┌─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┐
+│                                      CARDINALITY LEGEND                                                              │
+└─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────┘
+
+1   = One (exactly one)
+M   = Many (zero or more)
+0..1 = Zero or One (optional)
+(FK) = Foreign Key
+(PK) = Primary Key
+(UNIQUE) = Unique Constraint
+(ENUM) = Enumeration Type
+(DEPRECATED) = Field to be phased out
+
+═══════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
