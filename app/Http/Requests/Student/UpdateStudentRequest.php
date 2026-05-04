@@ -130,6 +130,37 @@ class UpdateStudentRequest extends FormRequest
                 'min:0',
                 'decimal:0,2',
             ],
+
+            // Fee Structure Integration Fields
+            'fee_structure_id' => [
+                'nullable',
+                'integer',
+                Rule::exists('fee_structures', 'id'),
+            ],
+            'fee_mode' => [
+                'nullable',
+                'string',
+                'in:structure,discount,manual',
+            ],
+            'custom_fee_entries' => [
+                'nullable',
+                'array',
+            ],
+            'discounts' => [
+                'nullable',
+                'array',
+            ],
+            'manual_discount_percentage' => [
+                'nullable',
+                'numeric',
+                'min:0',
+                'max:100',
+            ],
+            'manual_discount_reason' => [
+                'nullable',
+                'string',
+                'max:500',
+            ],
         ];
 
         // Enrollment rules (for active enrollment)
@@ -384,6 +415,24 @@ class UpdateStudentRequest extends FormRequest
             'b_form' => trim($this->b_form ?? ''),
             'status_description' => trim($this->status_description ?? ''),
         ]);
+
+        // Decode JSON strings sent from frontend via FormData
+        // FormData sends JSON as string, so we need to decode it before validation
+        $discounts = $this->discounts;
+        if (is_string($discounts) && !empty($discounts)) {
+            $decoded = json_decode($discounts, true);
+            if (is_array($decoded)) {
+                $this->merge(['discounts' => $decoded]);
+            }
+        }   
+
+        $customFeeEntries = $this->custom_fee_entries;
+        if (is_string($customFeeEntries) && !empty($customFeeEntries)) {
+            $decoded = json_decode($customFeeEntries, true);
+            if (is_array($decoded)) {
+                $this->merge(['custom_fee_entries' => $decoded]);
+            }
+        }
     }
 
     /**
@@ -416,6 +465,12 @@ class UpdateStudentRequest extends FormRequest
             'section_id',
             'monthly_fee',
             'annual_fee',
+            'fee_structure_id',
+            'fee_mode',
+            'custom_fee_entries',
+            'discounts',
+            'manual_discount_percentage',
+            'manual_discount_reason',
         ]);
     }
 

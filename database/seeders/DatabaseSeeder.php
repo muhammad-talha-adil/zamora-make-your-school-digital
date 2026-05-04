@@ -42,9 +42,9 @@ class DatabaseSeeder extends Seeder
             // === Students & Guardians ===
             // StudentSeeder creates users with 'student' role
             // GuardianSeeder creates users with 'guardian' role
-            StudentSeeder::class,
-            GuardianSeeder::class,
-            StudentGuardianSeeder::class,
+            // StudentSeeder::class,
+            // GuardianSeeder::class,
+            // StudentGuardianSeeder::class,
 
             // === Holidays ===
             HolidaysSeeder::class,
@@ -52,22 +52,26 @@ class DatabaseSeeder extends Seeder
             // === Attendance ===
             AttendanceStatusesSeeder::class,
             LeaveTypesSeeder::class,
+            AttendanceSeeder::class,
 
             // === Exam Management ===
             ExamTypeSeeder::class,
             GradeSystemSeeder::class,
+
+            // === Fee Management ===
+            FeeHeadSeeder::class,
+            DiscountTypeSeeder::class,
+            FineRuleSeeder::class,
 
             // === Theme & UI ===
             ThemePalettesSeeder::class,
             ThemeSettingsSeeder::class,
             MenuSeeder::class,
 
-            // === Inventory ===
+            // === Inventory (InventorySeeder handles the order) ===
             InventorySeeder::class,
 
-
-
-            // Other Seeders
+            // === Other Seeders ===
             ReasonSeeder::class,
         ]);
     }

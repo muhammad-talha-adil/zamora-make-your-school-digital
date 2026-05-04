@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 
 class StudentEnrollmentRecord extends Model
@@ -21,6 +22,12 @@ class StudentEnrollmentRecord extends Model
         'description',
         'monthly_fee',
         'annual_fee',
+        // Fee structure integration
+        'fee_structure_id',
+        'fee_mode',
+        'custom_fee_entries',
+        'manual_discount_percentage',
+        'manual_discount_reason',
     ];
 
     protected $casts = [
@@ -28,6 +35,8 @@ class StudentEnrollmentRecord extends Model
         'leave_date' => 'date',
         'monthly_fee' => 'decimal:2',
         'annual_fee' => 'decimal:2',
+        'custom_fee_entries' => 'array',
+        'manual_discount_percentage' => 'decimal:2',
     ];
 
     /**
@@ -140,5 +149,45 @@ class StudentEnrollmentRecord extends Model
     public function scopeBySection($query, $sectionId)
     {
         return $query->where('section_id', $sectionId);
+    }
+
+    /**
+     * Get fee vouchers for this enrollment.
+     */
+    public function feeVouchers(): HasMany
+    {
+        return $this->hasMany(\App\Models\Fee\FeeVoucher::class);
+    }
+
+    /**
+     * Get fee payments for this enrollment.
+     */
+    public function feePayments(): HasMany
+    {
+        return $this->hasMany(\App\Models\Fee\FeePayment::class);
+    }
+
+    /**
+     * Get fee assignments for this enrollment.
+     */
+    public function feeAssignments(): HasMany
+    {
+        return $this->hasMany(\App\Models\Fee\StudentFeeAssignment::class);
+    }
+
+    /**
+     * Get discounts for this enrollment.
+     */
+    public function discounts(): HasMany
+    {
+        return $this->hasMany(\App\Models\Fee\StudentDiscount::class);
+    }
+
+    /**
+     * Get the fee structure for this enrollment.
+     */
+    public function feeStructure(): BelongsTo
+    {
+        return $this->belongsTo(\App\Models\Fee\FeeStructure::class, 'fee_structure_id');
     }
 }

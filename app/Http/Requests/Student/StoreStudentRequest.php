@@ -161,6 +161,85 @@ class StoreStudentRequest extends FormRequest
                 'decimal:0,2',
             ],
 
+            // NEW: Fee Structure Integration Fields
+            'fee_structure_id' => [
+                'nullable',
+                'integer',
+                Rule::exists('fee_structures', 'id'),
+            ],
+            'fee_mode' => [
+                'nullable',
+                'string',
+                'in:structure,discount,manual',
+            ],
+            'custom_fee_entries' => [
+                'nullable',
+                'array',
+            ],
+            'custom_fee_entries.*.fee_head_id' => [
+                'required_with:custom_fee_entries',
+                'integer',
+                Rule::exists('fee_heads', 'id'),
+            ],
+            'custom_fee_entries.*.amount' => [
+                'required_with:custom_fee_entries',
+                'numeric',
+                'min:0',
+            ],
+            'discounts' => [
+                'nullable',
+                'array',
+            ],
+            'discounts.*.discount_type_id' => [
+                'required_with:discounts',
+                'integer',
+                Rule::exists('discount_types', 'id'),
+            ],
+            'discounts.*.fee_head_id' => [
+                'required_with:discounts',
+                'integer',
+                Rule::exists('fee_heads', 'id'),
+            ],
+            'discounts.*.value' => [
+                'required_with:discounts',
+                'numeric',
+                'min:0',
+            ],
+            'discounts.*.value_type' => [
+                'required_with:discounts',
+                'string',
+                'in:fixed,percent',
+            ],
+            'manual_discount_percentage' => [
+                'nullable',
+                'numeric',
+                'min:0',
+                'max:100',
+            ],
+            'manual_discount_reason' => [
+                'nullable',
+                'string',
+                'max:500',
+            ],
+
+            // Admission fee info
+            'admission_fee' => [
+                'nullable',
+                'numeric',
+                'min:0',
+                'decimal:0,2',
+            ],
+            'payment_status' => [
+                'nullable',
+                'string',
+                'in:pending,paid,waived',
+            ],
+            'fee_notes' => [
+                'nullable',
+                'string',
+                'max:500',
+            ],
+
             // Enrollment info (required)
             'campus_id' => [
                 'required',
@@ -369,6 +448,21 @@ class StoreStudentRequest extends FormRequest
             'b_form' => 'B-Form/CNIC',
             'monthly_fee' => 'monthly fee',
             'annual_fee' => 'annual fee',
+            'fee_structure_id' => 'fee structure',
+            'fee_mode' => 'fee mode',
+            'custom_fee_entries' => 'custom fee entries',
+            'custom_fee_entries.*.fee_head_id' => 'fee head',
+            'custom_fee_entries.*.amount' => 'custom amount',
+            'discounts' => 'discounts',
+            'discounts.*.discount_type_id' => 'discount type',
+            'discounts.*.fee_head_id' => 'discount fee head',
+            'discounts.*.value' => 'discount value',
+            'discounts.*.value_type' => 'discount value type',
+            'manual_discount_percentage' => 'discount percentage',
+            'manual_discount_reason' => 'discount reason',
+            'admission_fee' => 'admission fee',
+            'payment_status' => 'payment status',
+            'fee_notes' => 'fee notes',
             'campus_id' => 'campus',
             'session_id' => 'academic session',
             'class_id' => 'class',
@@ -410,5 +504,23 @@ class StoreStudentRequest extends FormRequest
             'other_phone' => trim($this->other_phone ?? ''),
             'other_cnic' => trim($this->other_cnic ?? ''),
         ]);
+
+        // Decode JSON strings sent from frontend via FormData
+        // FormData sends JSON as string, so we need to decode it before validation
+        $discounts = $this->discounts;
+        if (is_string($discounts) && !empty($discounts)) {
+            $decoded = json_decode($discounts, true);
+            if (is_array($decoded)) {
+                $this->merge(['discounts' => $decoded]);
+            }
+        }
+
+        $customFeeEntries = $this->custom_fee_entries;
+        if (is_string($customFeeEntries) && !empty($customFeeEntries)) {
+            $decoded = json_decode($customFeeEntries, true);
+            if (is_array($decoded)) {
+                $this->merge(['custom_fee_entries' => $decoded]);
+            }
+        }
     }
 }

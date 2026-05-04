@@ -9,12 +9,14 @@ return new class extends Migration
     /**
      * Run the migrations.
      */
-    public function up(): void
+     public function up(): void
     {
-        Schema::table('student_inventory_return_items', function (Blueprint $table) {
-            $table->foreignId('reason_id')->nullable()->constrained('reasons')->nullOnDelete();
-            $table->string('custom_reason', 500)->nullable()->after('reason_id');
-        });
+        if (!Schema::hasColumn('student_inventory_return_items', 'reason_id')) {
+            Schema::table('student_inventory_return_items', function (Blueprint $table) {
+                $table->foreignId('reason_id')->nullable()->constrained('reasons')->nullOnDelete();
+                $table->string('custom_reason', 500)->nullable()->after('reason_id');
+            });
+        }
     }
 
     /**

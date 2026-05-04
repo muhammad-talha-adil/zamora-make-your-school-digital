@@ -148,7 +148,10 @@ const selectedItem = computed(() => {
     if (props.valueType === 'id') {
       return item.id === props.modelValue
     }
-    return item.name === props.modelValue
+    // For 'name' valueType, match against the display text
+    // Use displayKey if specified, otherwise use name
+    const displayProperty = props.displayKey || 'name'
+    return item[displayProperty] === props.modelValue || getItemDisplayText(item) === props.modelValue
   })
 })
 
@@ -218,6 +221,12 @@ const onFocus = () => {
 const onBlur = () => {
   window.setTimeout(() => {
     isOpen.value = false
+    // If user typed a custom value (query has content) and no dropdown item was selected,
+    // emit the typed query as the model value to capture custom titles not in database
+    if (query.value.trim() && !selectedItem.value) {
+      const value = props.valueType === 'id' ? query.value : query.value
+      emit('update:modelValue', value)
+    }
   }, 150)
 }
 

@@ -9,11 +9,13 @@ return new class extends Migration
     /**
      * Run the migrations.
      */
-    public function up(): void
+     public function up(): void
     {
-        Schema::table('fee_vouchers', function (Blueprint $table) {
-            $table->json('previous_voucher_ids')->nullable()->after('balance_amount');
-        });
+        if (!Schema::hasColumn('fee_vouchers', 'previous_voucher_ids')) {
+            Schema::table('fee_vouchers', function (Blueprint $table) {
+                $table->json('previous_voucher_ids')->nullable()->after('balance_amount');
+            });
+        }
     }
 
     /**

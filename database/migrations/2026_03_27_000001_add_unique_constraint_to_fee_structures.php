@@ -61,9 +61,24 @@ return new class extends Migration
         }
 
         // Now add the unique constraint
-        Schema::table('fee_structures', function (Blueprint $table) {
-            $table->unique(['session_id', 'campus_id', 'class_id', 'section_id', 'title'], 'fee_structures_unique_scope');
-        });
+        $hasUnique = false;
+        try {
+            $indexes = DB::select('SHOW INDEXES FROM fee_structures');
+            foreach ($indexes as $index) {
+                if ($index->Key_name === 'fee_structures_unique_scope') {
+                    $hasUnique = true;
+                    break;
+                }
+            }
+        } catch (\Exception $e) {
+            $hasUnique = false;
+        }
+        
+        if (!$hasUnique) {
+            Schema::table('fee_structures', function (Blueprint $table) {
+                $table->unique(['session_id', 'campus_id', 'class_id', 'section_id', 'title'], 'fee_structures_unique_scope');
+            });
+        }
     }
 
     public function down(): void

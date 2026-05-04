@@ -255,29 +255,16 @@
                             ></textarea>
                         </div>
 
-                        <!-- Monthly Fee -->
-                        <div class="space-y-2">
-                            <Label for="monthly_fee">Monthly Fee</Label>
-                            <Input
-                                id="monthly_fee"
-                                v-model.number="form.monthly_fee"
-                                type="number"
-                                min="0"
-                                step="0.01"
-                                placeholder="0.00"
-                            />
-                        </div>
-
-                        <!-- Annual Fee -->
-                        <div class="space-y-2">
-                            <Label for="annual_fee">Annual Fee</Label>
-                            <Input
-                                id="annual_fee"
-                                v-model.number="form.annual_fee"
-                                type="number"
-                                min="0"
-                                step="0.01"
-                                placeholder="0.00"
+                        <!-- Tuition Fees Section - Using FeeStructureSelector Component -->
+                        <div class="col-span-full">
+                            <Label class="text-lg font-semibold mb-3 block">Tuition Fees</Label>
+                            <FeeStructureSelector
+                                ref="feeStructureSelector"
+                                :class-id="form.class_id"
+                                :session-id="form.session_id"
+                                :campus-id="form.campus_id"
+                                :section-id="form.section_id"
+                                :enrollment="studentData?.current_enrollment"
                             />
                         </div>
 
@@ -562,6 +549,7 @@ import { Label } from '@/components/ui/label';
 import InputError from '@/components/InputError.vue';
 import Icon from '@/components/Icon.vue';
 import { useStudentForm } from '@/composables/useStudentForm';
+import FeeStructureSelector from '@/components/students/FeeStructureSelector.vue';
 import { alert } from '@/utils/alert';
 
 interface Props {
@@ -589,7 +577,15 @@ interface Props {
             cnic: string;
             pivot?: { relation_id: number };
         }>;
-        current_enrollment?: { monthly_fee: number; annual_fee: number };
+        current_enrollment?: {
+            monthly_fee: number;
+            annual_fee: number;
+            fee_structure_id?: number | null;
+            fee_mode?: string | null;
+            custom_fee_entries?: Array<{ fee_head_id: number; amount: number }> | null;
+            manual_discount_percentage?: number | null;
+            manual_discount_reason?: string | null;
+        };
     };
     campuses: Array<{ id: number; name: string }>;
     sessions: Array<{ id: number; name: string }>;
@@ -641,6 +637,9 @@ const {
 
 const errors = ref<Record<string, string>>({});
 
+// Fee Structure Selector Ref
+const feeStructureSelector = ref<InstanceType<typeof FeeStructureSelector> | null>(null);
+
 // Setup watchers to clear validation errors when user corrects input
 const setupErrorClearWatchers = () => {
     // Student info fields
@@ -690,6 +689,10 @@ onMounted(() => {
 
 // Guardian lookup loading state
 const guardianLookupLoading = ref(false);
+
+// ==================== FEE STRUCTURE IS NOW HANDLED BY FeeStructureSelector COMPONENT ====================
+// All fee structure logic is now encapsulated in the FeeStructureSelector.vue component
+// See FeeStructureSelector component at: @/components/students/FeeStructureSelector.vue
 
 // Combined handler for father phone input
 const onFatherPhoneInput = (event: Event) => {
@@ -789,11 +792,11 @@ const submitForm = () => {
         validationErrors.father_phone = 'Invalid phone format. Use 0300-1234567';
     }
 
-    // Validate email if provided
-    if (form.value.father_email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.value.father_email)) {
+    // Validate email if provided (only if not empty)
+    if (form.value.father_email && form.value.father_email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.value.father_email.trim())) {
         validationErrors.father_email = 'Invalid email format';
     }
-    if (form.value.other_email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.value.other_email)) {
+    if (form.value.other_email && form.value.other_email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.value.other_email.trim())) {
         validationErrors.other_email = 'Invalid email format';
     }
 
@@ -871,6 +874,26 @@ const submitForm = () => {
     if (linkedGuardianId.value) {
         formData.set('guardian_id', String(linkedGuardianId.value));
     }
+
+    // ==================== FEE STRUCTURE DATA ====================
+    const feeStructureRef = feeStructureSelector.value;
+    if (feeStructureRef?.feeStructure) {
+        formData.set('fee_structure_id', String(feeStructureRef.feeStructure.id));
+        formData.set('fee_mode', feeStructureRef.feeMode || 'structure');
+        
+        // If discount mode, send the applied discounts
+        if (feeStructureRef.feeMode === 'discount' && feeStructureRef.appliedDiscounts?.length > 0) {
+            formData.set('discounts', JSON.stringify(feeStructureRef.appliedDiscounts));
+            formData.set('manual_discount_percentage', String(feeStructureRef.appliedDiscounts[0]?.value || 0));
+        }
+        
+        // If manual mode, send the custom fee entries
+        if (feeStructureRef.feeMode === 'manual' && feeStructureRef.manualFeeEntries?.length > 0) {
+            formData.set('custom_fee_entries', JSON.stringify(feeStructureRef.manualFeeEntries));
+            formData.set('manual_discount_reason', feeStructureRef.manualReason || '');
+        }
+    }
+    // ==================== END FEE STRUCTURE DATA ====================
 
     router.post(route('students.update', props.student.id), formData, {
         headers: { 'Content-Type': 'multipart/form-data' },

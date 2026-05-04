@@ -44,7 +44,10 @@ return new class extends Migration
             $table->integer('quantity')->default(0);
             $table->decimal('unit_price', 12, 2)->default(0);
             $table->decimal('total_amount', 12, 2)->default(0);
-            $table->text('item_snapshot')->nullable(); // JSON snapshot of item at return time
+            $table->decimal('return_price', 12, 2)->nullable()->comment('Return price for refund');
+            $table->foreignId('reason_id')->nullable()->constrained('reasons')->nullOnDelete();
+            $table->text('item_snapshot')->nullable();
+            $table->text('notes')->nullable();
             $table->timestamps();
 
             $table->index(['return_id', 'inventory_item_id']);

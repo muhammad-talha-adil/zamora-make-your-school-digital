@@ -178,7 +178,7 @@ class MenuSeeder extends Seeder
             'title' => 'Attendance',
             'icon' => 'calendar-check',
             'type' => 'main',
-            'order' => 5,
+            'order' => 4,
             'is_active' => true,
         ]);
 
@@ -221,6 +221,77 @@ class MenuSeeder extends Seeder
             'parent_id' => $attendance->id,
             'is_active' => true,
             'url' => '/attendance/settings',
+        ]);
+
+        // ==================== FEE MENU ====================
+        $fee = Menu::create([
+            'title' => 'Fee Management',
+            'icon' => 'banknote',
+            'type' => 'main',
+            'order' => 5,
+            'is_active' => true,
+        ]);
+
+        // Fee child menus - PRIMARY (Main Tasks - shown in sidebar)
+        Menu::create([
+            'title' => 'Dashboard',
+            'icon' => 'layout-dashboard',
+            'type' => 'main',
+            'order' => 1,
+            'parent_id' => $fee->id,
+            'is_active' => true,
+            'url' => '/fee/dashboard',
+        ]);
+
+        Menu::create([
+            'title' => 'Fee Structures',
+            'icon' => 'layers',
+            'type' => 'main',
+            'order' => 2,
+            'parent_id' => $fee->id,
+            'is_active' => true,
+            'url' => '/fee/structures',
+        ]);
+
+        Menu::create([
+            'title' => 'Vouchers',
+            'icon' => 'file-text',
+            'type' => 'main',
+            'order' => 4,
+            'parent_id' => $fee->id,
+            'is_active' => true,
+            'url' => '/fee/vouchers',
+        ]);
+
+        Menu::create([
+            'title' => 'Payments',
+            'icon' => 'credit-card',
+            'type' => 'main',
+            'order' => 5,
+            'parent_id' => $fee->id,
+            'is_active' => true,
+            'url' => '/fee/payments',
+        ]);
+
+        Menu::create([
+            'title' => 'Reports',
+            'icon' => 'bar-chart',
+            'type' => 'main',
+            'order' => 7,
+            'parent_id' => $fee->id,
+            'is_active' => true,
+            'url' => '/fee/reports',
+        ]);
+
+        // Settings (leads to /fee/settings which contains Fee Heads, Discount Types, Fine Rules)
+        Menu::create([
+            'title' => 'Settings',
+            'icon' => 'settings',
+            'type' => 'main',
+            'order' => 8,
+            'parent_id' => $fee->id,
+            'is_active' => true,
+            'url' => '/fee/settings',
         ]);
 
         // ==================== INVENTORY MENU ====================
@@ -271,6 +342,115 @@ class MenuSeeder extends Seeder
             'parent_id' => $inventory->id,
             'is_active' => true,
             'url' => '/inventory/student-manage',
+        ]);
+
+        // ==================== FINANCE MENU ====================
+        $finance = Menu::create([
+            'title' => 'Finance',
+            'icon' => 'wallet',
+            'type' => 'main',
+            'order' => 7,
+            'is_active' => true,
+        ]);
+
+        // Finance child menus
+        Menu::create([
+            'title' => 'Dashboard',
+            'icon' => 'layout-dashboard',
+            'type' => 'main',
+            'order' => 1,
+            'parent_id' => $finance->id,
+            'is_active' => true,
+            'url' => '/finance',
+        ]);
+
+        Menu::create([
+            'title' => 'Transactions',
+            'icon' => 'list',
+            'type' => 'main',
+            'order' => 2,
+            'parent_id' => $finance->id,
+            'is_active' => true,
+            'url' => '/finance/transactions',
+        ]);
+
+        Menu::create([
+            'title' => 'Receive Payment',
+            'icon' => 'arrow-down-circle',
+            'type' => 'main',
+            'order' => 3,
+            'parent_id' => $finance->id,
+            'is_active' => true,
+            'url' => '/finance/receive-payment',
+        ]);
+
+        Menu::create([
+            'title' => 'Make Payment',
+            'icon' => 'arrow-up-circle',
+            'type' => 'main',
+            'order' => 4,
+            'parent_id' => $finance->id,
+            'is_active' => true,
+            'url' => '/finance/make-payment',
+        ]);
+
+        Menu::create([
+            'title' => 'Categories',
+            'icon' => 'folder',
+            'type' => 'main',
+            'order' => 5,
+            'parent_id' => $finance->id,
+            'is_active' => true,
+            'url' => '/finance/categories',
+        ]);
+
+        Menu::create([
+            'title' => 'Payment Methods',
+            'icon' => 'credit-card',
+            'type' => 'main',
+            'order' => 6,
+            'parent_id' => $finance->id,
+            'is_active' => true,
+            'url' => '/finance/payment-methods',
+        ]);
+
+        $financeReports = Menu::create([
+            'title' => 'Reports',
+            'icon' => 'bar-chart',
+            'type' => 'main',
+            'order' => 7,
+            'parent_id' => $finance->id,
+            'is_active' => true,
+        ]);
+
+        Menu::create([
+            'title' => 'Cash Book',
+            'icon' => 'book',
+            'type' => 'main',
+            'order' => 1,
+            'parent_id' => $financeReports->id,
+            'is_active' => true,
+            'url' => '/finance/reports/cash-book',
+        ]);
+
+        Menu::create([
+            'title' => 'Income Statement',
+            'icon' => 'trending-up',
+            'type' => 'main',
+            'order' => 2,
+            'parent_id' => $financeReports->id,
+            'is_active' => true,
+            'url' => '/finance/reports/income',
+        ]);
+
+        Menu::create([
+            'title' => 'Expense Statement',
+            'icon' => 'trending-down',
+            'type' => 'main',
+            'order' => 3,
+            'parent_id' => $financeReports->id,
+            'is_active' => true,
+            'url' => '/finance/reports/expense',
         ]);
 
         // Footer navigation items

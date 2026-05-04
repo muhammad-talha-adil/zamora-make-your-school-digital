@@ -400,105 +400,14 @@
                     </div>
                 </div>
 
-                <!-- Admission Fee Card -->
-                <div
-                    class="rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-800"
-                >
-                    <h2
-                        class="mb-4 flex items-center gap-2 text-lg font-semibold text-gray-900 dark:text-white"
-                    >
-                        <Icon icon="dollar-sign" class="h-5 w-5 text-primary" />
-                        Admission Fee
-                    </h2>
-
-                    <div
-                        class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3"
-                    >
-                        <!-- Admission Fee Amount -->
-                        <div class="space-y-2">
-                            <Label for="admission_fee">Admission Fee</Label>
-                            <Input
-                                id="admission_fee"
-                                v-model.number="form.admission_fee"
-                                type="number"
-                                min="0"
-                                step="0.01"
-                                placeholder="0.00"
-                            />
-                        </div>
-
-                        <!-- Payment Status -->
-                        <div class="space-y-2">
-                            <Label for="payment_status">Payment Status</Label>
-                            <select
-                                id="payment_status"
-                                v-model="form.payment_status"
-                                class="h-11 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
-                            >
-                                <option value="pending">Pending</option>
-                                <option value="paid">Paid</option>
-                                <option value="waived">Waived</option>
-                            </select>
-                        </div>
-
-                        <!-- Fee Notes -->
-                        <div class="space-y-2">
-                            <Label for="fee_notes">Notes</Label>
-                            <Input
-                                id="fee_notes"
-                                v-model="form.fee_notes"
-                                type="text"
-                                placeholder="Fee notes..."
-                            />
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Tuition Fees Card -->
-                <div
-                    class="rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-800"
-                >
-                    <h2
-                        class="mb-4 flex items-center gap-2 text-lg font-semibold text-gray-900 dark:text-white"
-                    >
-                        <Icon icon="credit-card" class="h-5 w-5 text-primary" />
-                        Tuition Fees
-                    </h2>
-
-                    <div
-                        class="grid grid-cols-1 gap-4 md:grid-cols-2 lg:grid-cols-3"
-                    >
-                        <!-- Monthly Fee -->
-                        <div class="space-y-2">
-                            <Label for="monthly_fee">Monthly Fee</Label>
-                            <Input
-                                id="monthly_fee"
-                                v-model.number="form.monthly_fee"
-                                type="number"
-                                min="0"
-                                step="0.01"
-                                placeholder="0.00"
-                                :class="{ 'border-red-500': errors.monthly_fee }"
-                            />
-                            <InputError :message="errors.monthly_fee" />
-                        </div>
-
-                        <!-- Annual Fee -->
-                        <div class="space-y-2">
-                            <Label for="annual_fee">Annual Fee</Label>
-                            <Input
-                                id="annual_fee"
-                                v-model.number="form.annual_fee"
-                                type="number"
-                                min="0"
-                                step="0.01"
-                                placeholder="0.00"
-                                :class="{ 'border-red-500': errors.annual_fee }"
-                            />
-                            <InputError :message="errors.annual_fee" />
-                        </div>
-                    </div>
-                </div>
+                <!-- Tuition Fees Card - Using FeeStructureSelector Component -->
+                <FeeStructureSelector
+                    ref="feeStructureSelector"
+                    :class-id="form.class_id"
+                    :session-id="form.session_id"
+                    :campus-id="form.campus_id"
+                    :section-id="form.section_id"
+                />
 
                 <!-- Father Information Card (Primary Guardian) -->
                 <div
@@ -805,7 +714,13 @@ import axios from 'axios';
 import { computed, onMounted, ref, watch } from 'vue';
 import { route } from 'ziggy-js';
 import { useStudentForm } from '@/composables/useStudentForm';
+import FeeStructureSelector from '@/components/students/FeeStructureSelector.vue';
 import { alert } from '@/utils/alert';
+
+// ==================== FEE STRUCTURE IS NOW HANDLED BY FeeStructureSelector COMPONENT ====================
+// All fee structure logic is now encapsulated in the FeeStructureSelector.vue component
+
+// Watch for class/session/campus changes to fetch fee structure - MOVED to onMounted
 
 interface Props {
     campuses: Array<{ id: number; name: string }>;
@@ -898,6 +813,9 @@ const generatedEmailPreview = computed(() => {
 });
 
 const errors = ref<Record<string, string>>({});
+
+// Fee Structure Selector Ref
+const feeStructureSelector = ref<InstanceType<typeof FeeStructureSelector> | null>(null);
 
 // Guardian lookup loading state
 const guardianLookupLoading = ref(false);
@@ -1057,11 +975,11 @@ const submitForm = () => {
         validationErrors.father_phone = 'Invalid phone format. Use 0300-1234567';
     }
 
-    // Validate email if provided
-    if (form.value.father_email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.value.father_email)) {
+    // Validate email if provided (only if not empty)
+    if (form.value.father_email && form.value.father_email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.value.father_email.trim())) {
         validationErrors.father_email = 'Invalid email format';
     }
-    if (form.value.other_email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.value.other_email)) {
+    if (form.value.other_email && form.value.other_email.trim() && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.value.other_email.trim())) {
         validationErrors.other_email = 'Invalid email format';
     }
 
@@ -1162,6 +1080,34 @@ const submitForm = () => {
     if (linkedGuardianId.value) {
         formData.set('guardian_id', String(linkedGuardianId.value));
     }
+
+    // ==================== FEE STRUCTURE DATA ====================
+    const feeStructureRef = feeStructureSelector.value;
+    if (feeStructureRef?.feeStructure) {
+        formData.set('fee_structure_id', String(feeStructureRef.feeStructure.id));
+        formData.set('fee_mode', feeStructureRef.feeMode || 'structure');
+        
+        // If discount mode and has applied discounts, send them
+        if (feeStructureRef.feeMode === 'discount' && feeStructureRef.appliedDiscounts?.length > 0) {
+            formData.set('discounts', JSON.stringify(feeStructureRef.appliedDiscounts));
+        }
+        
+        // If manual mode, send the custom fee entries
+        if (feeStructureRef.feeMode === 'manual' && feeStructureRef.manualFeeEntries?.length > 0) {
+            formData.set('custom_fee_entries', JSON.stringify(feeStructureRef.manualFeeEntries));
+            formData.set('manual_discount_reason', feeStructureRef.manualReason || '');
+            
+            // Calculate overall discount percentage (average)
+            const totalDiscount = feeStructureRef.manualFeeEntries.reduce((sum: number, entry: any) => {
+                return sum + (entry.discount_percentage || 0);
+            }, 0);
+            const avgDiscount = feeStructureRef.manualFeeEntries.length > 0 
+                ? Math.round(totalDiscount / feeStructureRef.manualFeeEntries.length) 
+                : 0;
+            formData.set('manual_discount_percentage', String(avgDiscount));
+        }
+    }
+    // ==================== END FEE STRUCTURE DATA ====================
 
     router.post(route('students.store'), formData, {
         headers: {

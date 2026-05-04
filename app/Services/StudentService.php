@@ -171,6 +171,12 @@ class StudentService
             $studentData['current_enrollment'] = [
                 'monthly_fee' => $currentEnrollment->monthly_fee,
                 'annual_fee' => $currentEnrollment->annual_fee,
+                // NEW: Fee structure integration fields
+                'fee_structure_id' => $currentEnrollment->fee_structure_id,
+                'fee_mode' => $currentEnrollment->fee_mode,
+                'custom_fee_entries' => $currentEnrollment->custom_fee_entries,
+                'manual_discount_percentage' => $currentEnrollment->manual_discount_percentage,
+                'manual_discount_reason' => $currentEnrollment->manual_discount_reason,
             ];
         } else {
             $studentData['campus_id'] = null;
@@ -238,6 +244,31 @@ class StudentService
 
         return [
             'student' => $student,
+        ];
+    }
+
+    /**
+     * Get data for print admission form.
+     */
+    public function getPrintData(Student $student): array
+    {
+        $student->load([
+            'user',
+            'gender',
+            'studentStatus',
+            'studentGuardians.guardian.user',
+            'studentGuardians.relation',
+            'enrollmentRecords.studentStatus',
+            'enrollmentRecords.session',
+            'enrollmentRecords.class',
+            'enrollmentRecords.section',
+            'enrollmentRecords.campus',
+            'enrollmentRecords.feeStructure.items.feeHead',
+        ]);
+
+        return [
+            'student' => $student,
+            'school' => \App\Models\School::first(),
         ];
     }
 

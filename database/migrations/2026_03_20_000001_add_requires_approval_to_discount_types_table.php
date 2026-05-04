@@ -8,17 +8,19 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('discount_types', function (Blueprint $table) {
-            if (!Schema::hasColumn('discount_types', 'requires_approval')) {
+        if (!Schema::hasColumn('discount_types', 'requires_approval')) {
+            Schema::table('discount_types', function (Blueprint $table) {
                 $table->boolean('requires_approval')->default(false)->after('is_active');
-            }
-        });
+            });
+        }
     }
 
     public function down(): void
     {
-        Schema::table('discount_types', function (Blueprint $table) {
-            $table->dropColumn('requires_approval');
-        });
+        if (Schema::hasColumn('discount_types', 'requires_approval')) {
+            Schema::table('discount_types', function (Blueprint $table) {
+                $table->dropColumn('requires_approval');
+            });
+        }
     }
 };

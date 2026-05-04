@@ -1,5 +1,7 @@
-import { ref, computed, watch, onMounted } from 'vue';
+import { ref, computed, watch } from 'vue';
 import { useFormatters } from './useFormatters';
+import axios from 'axios';
+import { route } from 'ziggy-js';
 
 // Common interface definitions
 export interface SectionType {
@@ -78,7 +80,7 @@ export function useStudentForm(
     } = {}
 ) {
     const { formatPhone, formatCnic, calculateAge } = useFormatters();
-    const { activeStatusId = 1, admissionNo = '', isEdit = false, todayDate = new Date().toISOString().split('T')[0] } = options;
+    const { activeStatusId = 1, admissionNo = '',  todayDate = new Date().toISOString().split('T')[0] } = options;
 
     // Processing state
     const processing = ref(false);
@@ -104,6 +106,9 @@ export function useStudentForm(
         address: string;
     } | null>(null);
     const linkedGuardianId = ref<number | null>(null);
+
+    // Fee loading state
+    const feeLoading = ref(false);
 
     // Get Father relation ID
     const fatherRelationId = computed(() => {
@@ -172,9 +177,6 @@ export function useStudentForm(
         image: null as File | null,
         monthly_fee: 0,
         annual_fee: 0,
-        admission_fee: 0,
-        payment_status: 'pending',
-        fee_notes: '',
         father_name: '',
         father_email: '',
         father_phone: '',
@@ -189,6 +191,46 @@ export function useStudentForm(
         father_address: '',
         other_relation_id: '',
     });
+
+    // Fetch fee structure for selected class
+    const fetchFeeStructure = async () => {
+        const classId = form.value.class_id;
+        const sessionId = form.value.session_id;
+        const campusId = form.value.campus_id;
+        const sectionId = form.value.section_id;
+
+        // Need at least class, session and campus to fetch fee
+        if (!classId || !sessionId || !campusId) {
+            return;
+        }
+
+        feeLoading.value = true;
+
+        try {
+            const response = await axios.get(route('fee.structures.by-scope'), {
+                params: {
+                    session_id: sessionId,
+                    campus_id: campusId,
+                    class_id: classId,
+                    section_id: sectionId || null
+                }
+            });
+
+            if (response.data.success) {
+                const feeData = response.data.data;
+                // Only auto-populate if fees are not already manually set
+                if (form.value.monthly_fee === 0 || form.value.annual_fee === 0) {
+                    form.value.monthly_fee = feeData.monthly_fee || 0;
+                    form.value.annual_fee = feeData.annual_fee || 0;
+                }
+            }
+        } catch (error) {
+            console.error('Error fetching fee structure:', error);
+            // Silently fail - don't disrupt the form
+        } finally {
+            feeLoading.value = false;
+        }
+    };
 
     // Phone formatting handlers
     const handleFatherPhoneInput = (event: Event) => {
@@ -306,19 +348,15 @@ export function useStudentForm(
         form.value.father_address = '';
     };
 
-    // Class watcher setup
+    // Class watcher setup - with fee auto-population
     const setupClassWatcher = (processingRef: import('vue').Ref<boolean>) => {
         watch(
-            () => form.value.class_id,
-            (newClassId, oldClassId) => {
+            [() => form.value.class_id, () => form.value.session_id, () => form.value.campus_id],
+            ([newClassId, newSessionId, newCampusId], [oldClassId, oldSessionId, oldCampusId]) => {
                 if (processingRef.value) return;
 
-                if (!newClassId) {
-                    form.value.section_id = '';
-                    return;
-                }
-
-                if (oldClassId && newClassId !== oldClassId) {
+                // Handle section selection based on class
+                if (newClassId && newClassId !== oldClassId) {
                     const classId = parseInt(newClassId.toString());
                     const classSections = (props.sections as SectionType[]).filter(
                         (s) => s.class_id === classId
@@ -330,6 +368,17 @@ export function useStudentForm(
                         form.value.section_id = String(classSections[0].id);
                     } else {
                         form.value.section_id = '';
+                    }
+
+                    // Fetch fee structure when class changes
+                    fetchFeeStructure();
+                }
+
+                // Also fetch if session or campus changes
+                if ((newSessionId && newSessionId !== oldSessionId) || 
+                    (newCampusId && newCampusId !== oldCampusId)) {
+                    if (newClassId) {
+                        fetchFeeStructure();
                     }
                 }
             }
@@ -429,6 +478,7 @@ export function useStudentForm(
         phoneError,
         siblingMatch,
         linkedGuardianId,
+        feeLoading,
         fatherRelationId,
         otherRelations,
         campuses,

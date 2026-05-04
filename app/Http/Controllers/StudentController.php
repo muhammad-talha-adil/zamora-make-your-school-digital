@@ -416,4 +416,21 @@ class StudentController extends Controller
 
         return $this->service->import($request);
     }
+
+    /**
+     * Print admission form for a student.
+     *
+     * @param Student $student
+     * @return \Illuminate\Http\Response
+     *
+     * @throws \Illuminate\Auth\Access\AuthorizationException
+     */
+    public function print(Student $student)
+    {
+        Gate::authorize('view', $student);
+
+        $data = $this->service->getPrintData($student);
+
+        return response()->view('students.print', $data)->header('Content-Type', 'text/html');
+    }
 }

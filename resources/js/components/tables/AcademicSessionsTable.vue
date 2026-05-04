@@ -15,9 +15,9 @@ interface Props {
 const props = defineProps<Props>();
 
 // Emits
-const emit = defineEmits<{
-    saved: [];
-}>();
+// const emit = defineEmits<{
+//     saved: [];
+// }>();
 
 const showTrashed = ref(false);
 const statusFilter = ref('');
@@ -112,6 +112,36 @@ const forceDeleteSession = (session: any) => {
                         alert.error(
                             'Failed to permanently delete session. Please try again.',
                         );
+                    },
+                });
+            }
+        });
+};
+
+const activateSession = (session: any) => {
+    // Find the currently active session
+    const activeSession = sessionsData.value.find((s: any) => s.is_active === true);
+    
+    let confirmMessage = `Are you sure you want to activate "${session.name}"?`;
+    let confirmTitle = 'Activate Session';
+    
+    if (activeSession && activeSession.id !== session.id) {
+        confirmMessage = `Activating "${session.name}" will automatically deactivate "${activeSession.name}".\n\nDo you want to continue?`;
+        confirmTitle = 'Switch Active Session';
+    }
+    
+    alert
+        .confirm(confirmMessage, confirmTitle)
+        .then((result) => {
+            if (result.isConfirmed) {
+                router.patch(`/settings/sessions/${session.id}/activate`, {}, {
+                    preserveScroll: true,
+                    onSuccess: () => {
+                        alert.success(`"${session.name}" is now the active session!`);
+                        fetchSessions();
+                    },
+                    onError: () => {
+                        alert.error('Failed to activate session. Please try again.');
                     },
                 });
             }
@@ -233,6 +263,14 @@ const forceDeleteSession = (session: any) => {
                                     >
                                         <Icon icon="edit" class="mr-1" />Edit
                                     </AcademicSessionForm>
+                                    <Button
+                                        v-if="!session.is_active"
+                                        variant="default"
+                                        size="sm"
+                                        @click="activateSession(session)"
+                                    >
+                                        <Icon icon="check-circle" class="mr-1" />Activate
+                                    </Button>
                                     <Button
                                         variant="destructive"
                                         size="sm"

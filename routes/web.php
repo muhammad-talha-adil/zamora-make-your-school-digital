@@ -1,7 +1,7 @@
 <?php
 
-use App\Http\Controllers\CacheController;
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\DB;
 use Inertia\Inertia;
 
 // Public Routes
@@ -29,15 +29,6 @@ Route::get('/inventory', function () {
     return Inertia::render('inventory/Index');
 })->middleware($d)->name('inventory.index');
 
-// Cache Clear Routes - Available to all authenticated users (removed local environment restriction)
-Route::prefix('cache')->name('cache.')->middleware($d)->group(function () {
-    Route::get('/', [CacheController::class, 'index'])->name('clear.index');
-    Route::post('/clear', [CacheController::class, 'clear'])->name('clear');
-    Route::post('/clear/backend', [CacheController::class, 'clearBackend'])->name('clear.backend');
-    Route::post('/clear/frontend', [CacheController::class, 'clearFrontend'])->name('clear.frontend');
-    Route::post('/rebuild', [CacheController::class, 'rebuild'])->name('rebuild');
-});
-
 // Include Settings Routes
 require __DIR__.'/settings.php';
 
@@ -55,3 +46,66 @@ require __DIR__.'/attendance.php';
 
 // Include Exam Routes
 require __DIR__.'/exam.php';
+
+// Include Finance Routes
+require __DIR__.'/finance.php';
+
+// Include Artisan Commands Routes (Local Environment Only)
+require __DIR__.'/commands.php';
+
+// Artisan Commands UI Page (Local Environment Only)
+if (app()->environment('local')) {
+    Route::get('/artisan', function () {
+        // Get list of available seeders
+        $seeders = [];
+        $seederPath = database_path('seeders');
+        if (is_dir($seederPath)) {
+            $files = scandir($seederPath);
+            foreach ($files as $file) {
+                if (pathinfo($file, PATHINFO_EXTENSION) === 'php') {
+                    $seeders[] = pathinfo($file, PATHINFO_FILENAME);
+                }
+            }
+        }
+        
+        // Get pending migrations (not yet migrated)
+        $pendingMigrations = [];
+        $migratedMigrations = [];
+        
+        try {
+            // Get all migration files
+            $migrationPath = database_path('migrations');
+            $migrationFiles = [];
+            
+            if (is_dir($migrationPath)) {
+                $files = scandir($migrationPath);
+                foreach ($files as $file) {
+                    if (pathinfo($file, PATHINFO_EXTENSION) === 'php') {
+                        $migrationFiles[] = pathinfo($file, PATHINFO_FILENAME);
+                    }
+                }
+            }
+            
+            // Get already migrated migrations
+            $migrated = DB::table('migrations')->pluck('migration')->toArray();
+            
+            // Find pending migrations
+            foreach ($migrationFiles as $file) {
+                if (!in_array($file, $migrated)) {
+                    $pendingMigrations[] = $file;
+                }
+            }
+            
+            $pendingMigrations = array_values($pendingMigrations);
+        } catch (\Exception $e) {
+            // Table might not exist yet
+            $pendingMigrations = [];
+        }
+        
+        return Inertia::render('ArtisanCommands', [
+            'seeders' => $seeders,
+            'pendingMigrations' => $pendingMigrations,
+        ]);
+    })->name('artisan.ui');
+}
+

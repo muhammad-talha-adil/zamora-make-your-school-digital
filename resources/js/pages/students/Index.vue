@@ -166,6 +166,9 @@
                         <Button variant="outline" size="sm" @click="router.visit(route('students.edit', student.id))" class="flex-1">
                             <Icon icon="edit" class="mr-1" />Edit
                         </Button>
+                        <Button variant="outline" size="sm" @click="printStudent(student)" class="flex-1">
+                            <Icon icon="printer" class="mr-1" />Print
+                        </Button>
                     </div>
                 </div>
                 <div v-if="props.tableStudents.data.length === 0" class="text-center py-8 text-gray-500">
@@ -259,6 +262,9 @@
                                         </Button>
                                         <Button variant="outline" size="sm" @click="router.visit(route('students.edit', student.id))" class="min-h-8">
                                             <Icon icon="edit" class="mr-1 h-3 w-3" />Edit
+                                        </Button>
+                                        <Button variant="outline" size="sm" @click="printStudent(student)" class="min-h-8">
+                                            <Icon icon="printer" class="mr-1 h-3 w-3" />Print
                                         </Button>
                                         <Button variant="outline" size="sm" @click="openStatusModal(student)" class="min-h-8 text-red-600 hover:text-red-700">
                                             <Icon icon="trash-2" class="mr-1 h-3 w-3" />Delete
@@ -486,6 +492,11 @@ const handleStatusModalClosed = () => {
 // Safe accessor for student enrollment with fallback to empty object
 const getEnrollment = (student: any) => {
     return student.current_enrollment || {};
+};
+
+// Print student admission form
+const printStudent = (student: { id: number; registration_no: string }) => {
+    window.open(route('students.print', student.id), '_blank');
 };
 
 // Get primary guardian or first guardian if no primary

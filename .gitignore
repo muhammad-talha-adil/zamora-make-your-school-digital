@@ -1,28 +1,45 @@
+## Runtime, dependencies, and build artifacts
 /.phpunit.cache
+/.phpunit.result.cache
 /bootstrap/ssr
 /node_modules
+/vendor
 /public/build
 /public/hot
 /public/storage
 /storage/*.key
 /storage/pail
+
+## Generated frontend route/action helpers
 /resources/js/actions
 /resources/js/routes
 /resources/js/wayfinder
-/vendor
-.DS_Store
-.env
-.env.backup
-.env.production
-.phpactor.json
-.phpunit.result.cache
+
+## Environment and secrets
+/.env
+/.env.*
+!/.env.example
+/auth.json
+
+## Local archives and backups
+/*.zip
+
+## Tooling caches and logs
+/.phpactor.json
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+## Local VM / editor config
 Homestead.json
 Homestead.yaml
-npm-debug.log
-yarn-error.log
-/auth.json
 /.fleet
 /.idea
 /.nova
 /.vscode
 /.zed
+
+## OS files
+.DS_Store
+Thumbs.db

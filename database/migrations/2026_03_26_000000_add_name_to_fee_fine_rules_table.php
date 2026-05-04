@@ -6,11 +6,13 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-    public function up(): void
+     public function up(): void
     {
-        Schema::table('fee_fine_rules', function (Blueprint $table) {
-            $table->string('name', 100)->after('id');
-        });
+        if (!Schema::hasColumn('fee_fine_rules', 'name')) {
+            Schema::table('fee_fine_rules', function (Blueprint $table) {
+                $table->string('name', 100)->after('id');
+            });
+        }
     }
 
     public function down(): void

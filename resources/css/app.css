@@ -103,3 +103,32 @@
         cursor: pointer;
     }
 }
+
+/* Print-specific styles for fee vouchers */
+@media print {
+    .no-print {
+        display: none !important;
+    }
+    
+    body {
+        font-size: 12pt;
+        -webkit-print-color-adjust: exact;
+        print-color-adjust: exact;
+    }
+    
+    .print-container,
+    .Print-container {
+        padding: 0 !important;
+        margin: 0 !important;
+    }
+    
+    /* Ensure each voucher starts on a new page for batch printing */
+    .voucher-page {
+        page-break-after: always;
+    }
+    
+    /* Hide navigation, sidebar, etc. when printing */
+    nav, header, footer, .sidebar {
+        display: none !important;
+    }
+}

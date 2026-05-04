@@ -99,6 +99,10 @@ Route::prefix('students')->name('students.')->middleware($middleware)->group(fun
     Route::post('/{student}/restore', [StudentController::class, 'restore'])
         ->name('restore')
         ->middleware('throttle:60,1');
+
+    // Print admission form
+    Route::get('/{student}/print', [StudentController::class, 'print'])
+        ->name('print');
 });
 
 /*

@@ -14,6 +14,11 @@ use App\Models\StudentEnrollmentRecord;
 use App\Models\StudentGuardian;
 use App\Models\StudentStatus;
 use App\Models\User;
+use App\Models\Fee\FeeHead;
+use App\Models\Fee\StudentFeeAssignment;
+use App\Models\Fee\StudentDiscount;
+use App\Models\Fee\DiscountType;
+use App\Enums\Fee\ApprovalStatus;
 use App\Services\GuardianService;
 use App\Services\StudentUserService;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
@@ -293,11 +298,11 @@ class StudentRepository
             ]);
 
             // 5. Create enrollment record
-            StudentEnrollmentRecord::create([
+            $enrollment = StudentEnrollmentRecord::create([
                 'student_id' => $student->id,
                 'session_id' => $data['session_id'],
                 'class_id' => $data['class_id'],
-                'section_id' => $data['section_id'],
+                'section_id' => $data['section_id'] ?? null,
                 'campus_id' => $data['campus_id'],
                 'admission_date' => now()->toDateString(),
                 'leave_date' => null,
@@ -305,9 +310,23 @@ class StudentRepository
                 'previous_enrollment_id' => null,
                 'monthly_fee' => $data['monthly_fee'] ?? 0,
                 'annual_fee' => $data['annual_fee'] ?? 0,
+                // New fee structure integration fields
+                'fee_structure_id' => $data['fee_structure_id'] ?? null,
+                'fee_mode' => $data['fee_mode'] ?? null,
+                'custom_fee_entries' => $data['custom_fee_entries'] ?? null,
+                'manual_discount_percentage' => $data['manual_discount_percentage'] ?? null,
+                'manual_discount_reason' => $data['manual_discount_reason'] ?? null,
             ]);
 
-            // 6. Handle Father Guardian
+            // 7. Create student fee assignments for custom fees set at admission
+            $this->createFeeAssignmentsFromAdmission($enrollment, $data);
+
+            // 8. Create student discounts if fee_mode is 'discount' or 'manual'
+            if (in_array($data['fee_mode'] ?? null, ['discount', 'manual']) && !empty($data['discounts'])) {
+                $this->createDiscountsFromAdmission($enrollment, $data);
+            }
+
+            // 8. Handle Father Guardian
             $fatherGuardian = $this->handleFatherGuardian($data, $student);
 
             // 7. Handle Mother Guardian if provided
@@ -439,7 +458,22 @@ class StudentRepository
                     'student_status_id' => $data['student_status_id'],
                     'monthly_fee' => $data['monthly_fee'] ?? 0,
                     'annual_fee' => $data['annual_fee'] ?? 0,
+                    // NEW: Fee structure integration fields
+                    'fee_structure_id' => $data['fee_structure_id'] ?? null,
+                    'fee_mode' => $data['fee_mode'] ?? 'structure',
+                    'custom_fee_entries' => $data['custom_fee_entries'] ?? null,
+                    'manual_discount_percentage' => $data['manual_discount_percentage'] ?? null,
+                    'manual_discount_reason' => $data['manual_discount_reason'] ?? null,
                 ]);
+
+                // Handle discounts update
+                if (in_array($data['fee_mode'] ?? 'structure', ['discount', 'manual']) && !empty($data['discounts'])) {
+                    // Remove existing discounts for this enrollment
+                    $currentEnrollment->discounts()->delete();
+                    
+                    // Create new discounts
+                    $this->createDiscountsFromAdmission($currentEnrollment, $data);
+                }
             } else {
                 StudentEnrollmentRecord::create([
                     'student_id' => $student->id,
@@ -451,6 +485,14 @@ class StudentRepository
                     'leave_date' => null,
                     'student_status_id' => $data['student_status_id'],
                     'previous_enrollment_id' => null,
+                    'monthly_fee' => $data['monthly_fee'] ?? 0,
+                    'annual_fee' => $data['annual_fee'] ?? 0,
+                    // NEW: Fee structure integration fields
+                    'fee_structure_id' => $data['fee_structure_id'] ?? null,
+                    'fee_mode' => $data['fee_mode'] ?? 'structure',
+                    'custom_fee_entries' => $data['custom_fee_entries'] ?? null,
+                    'manual_discount_percentage' => $data['manual_discount_percentage'] ?? null,
+                    'manual_discount_reason' => $data['manual_discount_reason'] ?? null,
                 ]);
             }
 
@@ -688,6 +730,121 @@ class StudentRepository
     }
 
     /**
+     * Create student fee assignments from admission custom fees.
+     * This ensures custom monthly/annual fees set at admission are used in voucher generation.
+     */
+    private function createFeeAssignmentsFromAdmission(StudentEnrollmentRecord $enrollment, array $data): void
+    {
+        // Get or create Monthly and Annual fee heads
+        $monthlyFeeHead = FeeHead::where('code', 'MONTHLY_TUITION')->first();
+        $annualFeeHead = FeeHead::where('code', 'ANNUAL')->first();
+        
+        // If custom monthly fee is set and different from structure, create assignment
+        if (!empty($data['monthly_fee']) && $monthlyFeeHead) {
+            // Check if there's an existing active custom assignment
+            $existingMonthlyAssignment = StudentFeeAssignment::where('student_id', $enrollment->student_id)
+                ->where('fee_head_id', $monthlyFeeHead->id)
+                ->where('assignment_type', 'custom')
+                ->where('is_active', true)
+                ->first();
+
+            if (!$existingMonthlyAssignment) {
+                StudentFeeAssignment::create([
+                    'student_id' => $enrollment->student_id,
+                    'student_enrollment_record_id' => $enrollment->id,
+                    'session_id' => $enrollment->session_id,
+                    'campus_id' => $enrollment->campus_id,
+                    'class_id' => $enrollment->class_id,
+                    'section_id' => $enrollment->section_id,
+                    'fee_head_id' => $monthlyFeeHead->id,
+                    'assignment_type' => 'custom',
+                    'value_type' => 'fixed',
+                    'amount' => $data['monthly_fee'],
+                    'effective_from' => $enrollment->admission_date,
+                    'is_active' => true,
+                    'reason' => 'Set at admission',
+                    'created_by' => auth()->id(),
+                ]);
+            }
+        }
+
+        // If custom annual fee is set and different from structure, create assignment
+        if (!empty($data['annual_fee']) && $annualFeeHead) {
+            $existingAnnualAssignment = StudentFeeAssignment::where('student_id', $enrollment->student_id)
+                ->where('fee_head_id', $annualFeeHead->id)
+                ->where('assignment_type', 'custom')
+                ->where('is_active', true)
+                ->first();
+
+            if (!$existingAnnualAssignment) {
+                StudentFeeAssignment::create([
+                    'student_id' => $enrollment->student_id,
+                    'student_enrollment_record_id' => $enrollment->id,
+                    'session_id' => $enrollment->session_id,
+                    'campus_id' => $enrollment->campus_id,
+                    'class_id' => $enrollment->class_id,
+                    'section_id' => $enrollment->section_id,
+                    'fee_head_id' => $annualFeeHead->id,
+                    'assignment_type' => 'custom',
+                    'value_type' => 'fixed',
+                    'amount' => $data['annual_fee'],
+                    'effective_from' => $enrollment->admission_date,
+                    'is_active' => true,
+                    'reason' => 'Set at admission',
+                    'created_by' => auth()->id(),
+                ]);
+            }
+        }
+
+        Log::info('Fee assignments created from admission', [
+            'student_id' => $enrollment->student_id,
+            'enrollment_id' => $enrollment->id,
+            'monthly_fee' => $data['monthly_fee'] ?? null,
+            'annual_fee' => $data['annual_fee'] ?? null,
+        ]);
+    }
+
+    /**
+     * Create student discounts from admission fee discounts.
+     * This handles applying discount types to students.
+     */
+    private function createDiscountsFromAdmission(StudentEnrollmentRecord $enrollment, array $data): void
+    {
+        $discounts = $data['discounts'] ?? [];
+
+        foreach ($discounts as $discountData) {
+            // Get the discount type to check if it requires approval
+            $discountTypeId = $discountData['discount_type_id'] ?? null;
+            $requiresApproval = false;
+            
+            if ($discountTypeId) {
+                $discountType = DiscountType::find($discountTypeId);
+                $requiresApproval = $discountType?->requires_approval ?? false;
+            }
+
+            StudentDiscount::create([
+                'student_id' => $enrollment->student_id,
+                'student_enrollment_record_id' => $enrollment->id,
+                'discount_type_id' => $discountTypeId,
+                'fee_head_id' => $discountData['fee_head_id'] ?? null,
+                'value_type' => $discountData['value_type'] ?? 'percent',
+                'value' => $discountData['value'] ?? 0,
+                'effective_from' => $enrollment->admission_date ?? now()->toDateString(),
+                'effective_to' => null,
+                'approval_status' => $requiresApproval ? ApprovalStatus::PENDING : ApprovalStatus::APPROVED,
+                'approved_by' => $requiresApproval ? null : auth()->id(),
+                'reason' => 'Applied at admission',
+            ]);
+        }
+
+        Log::info('Discounts created from admission', [
+            'student_id' => $enrollment->student_id,
+            'enrollment_id' => $enrollment->id,
+            'discounts_count' => count($discounts),
+        ]);
+    }
+
+    /**
      * Get lookup data for forms (campuses, classes, etc.).
      */
     public function getLookupData(): array
@@ -696,7 +853,7 @@ class StudentRepository
             return [
                 'campuses' => Campus::orderBy('name')->get(['id', 'name']),
                 'sessions' => Session::where('is_active', true)->orderBy('name')->get(['id', 'name']),
-                'classes' => SchoolClass::orderBy('name')->get(['id', 'name']),
+                'classes' => SchoolClass::orderBy('id', 'ASC')->get(['id', 'name']),
                 'sections' => Section::orderBy('name')->get(['id', 'name', 'class_id']),
                 'genders' => Gender::orderBy('name')->get(['id', 'name']),
                 'relations' => Relation::orderBy('name')->get(['id', 'name']),

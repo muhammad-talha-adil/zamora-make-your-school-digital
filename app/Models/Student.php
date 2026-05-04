@@ -109,13 +109,7 @@ class Student extends Model
         return $this->hasMany(StudentInventory::class);
     }
 
-    /**
-     * Get admission fees for the student.
-     */
-    public function admissionFees(): HasMany
-    {
-        return $this->hasMany(AdmissionFee::class);
-    }
+
 
     /**
      * Get primary guardian (father or mother)
@@ -183,5 +177,61 @@ class Student extends Model
     public function attendanceSummaries(): HasMany
     {
         return $this->hasMany(AttendanceSummary::class);
+    }
+
+    /**
+     * Get the student's fee vouchers.
+     */
+    public function feeVouchers(): HasMany
+    {
+        return $this->hasMany(\App\Models\Fee\FeeVoucher::class);
+    }
+
+    /**
+     * Get the student's fee payments.
+     */
+    public function feePayments(): HasMany
+    {
+        return $this->hasMany(\App\Models\Fee\FeePayment::class);
+    }
+
+    /**
+     * Get the student's fee assignments (overrides, discounts, etc.).
+     */
+    public function feeAssignments(): HasMany
+    {
+        return $this->hasMany(\App\Models\Fee\StudentFeeAssignment::class);
+    }
+
+    /**
+     * Get the student's discounts.
+     */
+    public function discounts(): HasMany
+    {
+        return $this->hasMany(\App\Models\Fee\StudentDiscount::class);
+    }
+
+    /**
+     * Get the student's wallet transactions.
+     */
+    public function walletTransactions(): HasMany
+    {
+        return $this->hasMany(\App\Models\Fee\StudentFeeWalletTransaction::class);
+    }
+
+    /**
+     * Get student's current wallet balance.
+     */
+    public function getWalletBalanceAttribute(): float
+    {
+        $credits = $this->walletTransactions()
+            ->where('direction', \App\Enums\Fee\WalletDirection::CREDIT)
+            ->sum('amount');
+        
+        $debits = $this->walletTransactions()
+            ->where('direction', \App\Enums\Fee\WalletDirection::DEBIT)
+            ->sum('amount');
+        
+        return $credits - $debits;
     }
 }

@@ -13,20 +13,22 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('holidays', function (Blueprint $table) {
-            // Recurring holiday support
-            $table->enum('recurrence_type', ['none', 'yearly', 'monthly', 'weekly'])
-                ->default('none')
-                ->after('description');
-            $table->date('recurrence_end_date')
-                ->nullable()
-                ->after('recurrence_type');
-            
-            // Allow attendance on holiday
-            $table->boolean('is_attendance_allowed')
-                ->default(false)
-                ->after('recurrence_end_date');
-        });
+        if (!Schema::hasColumn('holidays', 'recurrence_type')) {
+            Schema::table('holidays', function (Blueprint $table) {
+                // Recurring holiday support
+                $table->enum('recurrence_type', ['none', 'yearly', 'monthly', 'weekly'])
+                    ->default('none')
+                    ->after('description');
+                $table->date('recurrence_end_date')
+                    ->nullable()
+                    ->after('recurrence_type');
+                
+                // Allow attendance on holiday
+                $table->boolean('is_attendance_allowed')
+                    ->default(false)
+                    ->after('recurrence_end_date');
+            });
+        }
     }
 
     /**
@@ -34,12 +36,14 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::table('holidays', function (Blueprint $table) {
-            $table->dropColumn([
-                'recurrence_type',
-                'recurrence_end_date',
-                'is_attendance_allowed',
-            ]);
-        });
+        if (Schema::hasColumn('holidays', 'recurrence_type')) {
+            Schema::table('holidays', function (Blueprint $table) {
+                $table->dropColumn([
+                    'recurrence_type',
+                    'recurrence_end_date',
+                    'is_attendance_allowed',
+                ]);
+            });
+        }
     }
 };

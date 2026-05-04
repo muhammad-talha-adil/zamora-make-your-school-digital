@@ -9,11 +9,13 @@ return new class extends Migration
     /**
      * Run the migrations.
      */
-    public function up(): void
+     public function up(): void
     {
-        Schema::table('student_inventory_return_items', function (Blueprint $table) {
-            $table->decimal('return_price', 10, 2)->nullable()->after('total_amount');
-        });
+        if (!Schema::hasColumn('student_inventory_return_items', 'return_price')) {
+            Schema::table('student_inventory_return_items', function (Blueprint $table) {
+                $table->decimal('return_price', 10, 2)->nullable()->after('total_amount');
+            });
+        }
     }
 
     /**

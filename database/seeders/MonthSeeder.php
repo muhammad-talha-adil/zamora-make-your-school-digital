@@ -5,8 +5,17 @@ namespace Database\Seeders;
 use App\Models\Month;
 use Illuminate\Database\Seeder;
 
+/**
+ * Month Seeder
+ * 
+ * Seeds the months table with all 12 months.
+ * This is required for the fee module to work properly.
+ */
 class MonthSeeder extends Seeder
 {
+    /**
+     * Run the database seeds.
+     */
     public function run(): void
     {
         $months = [
@@ -25,7 +34,12 @@ class MonthSeeder extends Seeder
         ];
 
         foreach ($months as $month) {
-            Month::create($month);
+            Month::firstOrCreate(
+                ['month_number' => $month['month_number']],
+                ['name' => $month['name']]
+            );
         }
+
+        $this->command->info('Months table seeded successfully!');
     }
 }
