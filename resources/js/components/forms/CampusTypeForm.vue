@@ -21,7 +21,7 @@ const props = defineProps<Props>();
 
 // Emits
 const emit = defineEmits<{
-    saved: [];
+    saved: [campusType?: { id: number; name: string }];
     cancel: [];
 }>();
 
@@ -51,7 +51,7 @@ const submit = () => {
             onSuccess: () => {
                 alert.success('Campus type updated successfully!');
                 resetForm();
-                emit('saved');
+                emit('saved', { id: props.campusType!.id, name: form.value.name });
             },
             onError: (err) => {
                 errors.value = err;
@@ -62,13 +62,20 @@ const submit = () => {
             },
         });
     } else {
-        // Create
+        // Create new campus type
         router.post('/settings/campus-types', form.value, {
             preserveScroll: true,
-            onSuccess: () => {
+            onSuccess: (page: any) => {
                 alert.success('Campus type created successfully!');
+                // Try to get the newly created campus type from flash data
+                const newCampusType = page?.props?.flash?.campusType;
                 resetForm();
-                emit('saved');
+                if (newCampusType && newCampusType.id) {
+                    emit('saved', { id: newCampusType.id, name: newCampusType.name });
+                } else {
+                    // Fallback if server didn't return the campus type
+                    emit('saved');
+                }
             },
             onError: (err) => {
                 errors.value = err;

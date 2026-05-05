@@ -3,10 +3,9 @@
 namespace App\Http\Controllers\Exam;
 
 use App\Http\Controllers\Controller;
+use App\Models\Campus;
 use App\Models\Exam\Exam;
 use App\Models\Exam\ExamResultHeader;
-use App\Models\Exam\ExamResultLine;
-use App\Models\Campus;
 use App\Models\SchoolClass;
 use App\Models\Section;
 use Illuminate\Http\Request;
@@ -34,18 +33,18 @@ class ExamResultController extends Controller
     public function getFilterOptions(Request $request)
     {
         $examId = $request->query('exam_id');
-        
-        if (!$examId) {
+
+        if (! $examId) {
             return response()->json([
                 'campuses' => Campus::all(),
                 'classes' => SchoolClass::all(),
                 'sections' => Section::all(),
             ]);
         }
-        
+
         // Get unique campuses, classes, sections that have results for this exam
         $resultHeaders = ExamResultHeader::where('exam_id', $examId);
-        
+
         $campuses = ExamResultHeader::where('exam_id', $examId)
             ->whereNotNull('campus_id')
             ->with('campus')
@@ -54,7 +53,7 @@ class ExamResultController extends Controller
             ->filter()
             ->unique('id')
             ->values();
-            
+
         $classes = ExamResultHeader::where('exam_id', $examId)
             ->whereNotNull('class_id')
             ->with('class')
@@ -63,7 +62,7 @@ class ExamResultController extends Controller
             ->filter()
             ->unique('id')
             ->values();
-            
+
         $sections = ExamResultHeader::where('exam_id', $examId)
             ->whereNotNull('section_id')
             ->with('section')
@@ -72,7 +71,7 @@ class ExamResultController extends Controller
             ->filter()
             ->unique('id')
             ->values();
-            
+
         return response()->json([
             'campuses' => $campuses,
             'classes' => $classes,
@@ -98,7 +97,7 @@ class ExamResultController extends Controller
         $classId = $classId === 'all' || $classId === '' || $classId === null ? null : $classId;
         $sectionId = $sectionId === 'all' || $sectionId === '' || $sectionId === null ? null : $sectionId;
 
-        if (!$examId) {
+        if (! $examId) {
             return response()->json([
                 'success' => false,
                 'message' => 'Exam ID is required',
@@ -131,6 +130,7 @@ class ExamResultController extends Controller
         // Get total count before pagination for sorting
         $allResults = $query->get()->map(function ($header) {
             $totalMaxMarks = $header->examResultLines->sum('total_marks_snapshot');
+
             return [
                 'id' => $header->id,
                 'student' => $header->student?->user?->name,
@@ -149,7 +149,7 @@ class ExamResultController extends Controller
 
         // Sort by percentage descending
         $sortedResults = $allResults->sortByDesc('percentage')->values();
-        
+
         // Get top 5 toppers (from all results, not just current page)
         $toppers = $sortedResults->take(5);
 
@@ -158,7 +158,7 @@ class ExamResultController extends Controller
         $perPage = min(max(intval($perPage), 1), 100); // Clamp between 1 and 100
         $totalPages = ceil($total / $perPage);
         $currentPage = min(max(intval($page), 1), max($totalPages, 1));
-        
+
         $paginatedResults = $sortedResults->forPage($currentPage, $perPage)->values();
 
         // Build pagination response
@@ -191,7 +191,7 @@ class ExamResultController extends Controller
     private function generatePaginationLinks(int $currentPage, int $totalPages): array
     {
         $links = [];
-        
+
         // Previous page link
         $links[] = [
             'url' => $currentPage > 1 ? $currentPage - 1 : null,

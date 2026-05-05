@@ -1,38 +1,39 @@
 <script setup lang="ts">
 import AcademicSessionForm from '@/components/forms/AcademicSessionForm.vue';
-import { Button } from '@/components/ui';
 import Icon from '@/components/Icon.vue';
+import { Button } from '@/components/ui/button';
 import { alert, formatDate } from '@/utils';
-import { router } from '@inertiajs/vue3';
 import axios from 'axios';
 import { ref, watch } from 'vue';
+import { route } from 'ziggy-js';
 
-// Props
 interface Props {
-    sessions: any; // Paginated response
+    sessions: any;
 }
 
 const props = defineProps<Props>();
+const EMPTY_VALUE = '-';
 
-// Emits
-// const emit = defineEmits<{
-//     saved: [];
-// }>();
-
-const showTrashed = ref(false);
 const statusFilter = ref('');
 const perPage = ref(10);
-const sessionsData = ref(props.sessions.data || []);
-const pagination = ref(props.sessions);
+const sessionsData = ref(props.sessions?.data || []);
+const pagination = ref(props.sessions || { data: [], links: [], from: 0, to: 0, total: 0 });
 
-const toggleTrashed = () => {
-    showTrashed.value = !showTrashed.value;
-    fetchSessions();
-};
+const statusOptions = [
+    { id: '', name: 'All' },
+    { id: 'active', name: 'Active' },
+    { id: 'inactive', name: 'Inactive' },
+];
 
-const fetchSessions = (page = 1) => {
+const perPageOptions = [
+    { id: 10, name: '10' },
+    { id: 25, name: '25' },
+    { id: 50, name: '50' },
+    { id: 100, name: '100' },
+];
+
+const fetchSessions = (page = pagination.value?.current_page || 1) => {
     const params = new URLSearchParams({
-        trashed: showTrashed.value ? '1' : '0',
         per_page: perPage.value.toString(),
         page: page.toString(),
     });
@@ -41,111 +42,107 @@ const fetchSessions = (page = 1) => {
         params.append('status', statusFilter.value);
     }
 
-    axios.get(`/settings/sessions?${params}`).then((response) => {
+    axios.get(`${route('sessions.all')}?${params}`).then((response) => {
         sessionsData.value = response.data.data;
         pagination.value = response.data;
     });
 };
 
-watch([statusFilter, perPage], () => {
-    fetchSessions();
-});
+const getRowNumber = (index: number) =>
+    ((pagination.value?.from || 1) - 1) + index + 1;
 
-// Watch for props changes (e.g., after form submissions)
-watch(() => props.sessions, (newSessions) => {
-    sessionsData.value = newSessions.data || [];
-    pagination.value = newSessions;
-}, { deep: true });
+const getPageFromUrl = (url: string | null) => {
+    if (!url) {
+        return null;
+    }
 
-const deleteSession = (session: any) => {
-    alert
-        .confirm(
-            `Are you sure you want to delete "${session.name}"? This action cannot be undone.`,
-            'Delete Session',
-        )
-        .then((result) => {
-            if (result.isConfirmed) {
-                router.delete(`/settings/sessions/${session.id}`, {
-                    preserveScroll: true,
-                    onSuccess: () => {
-                        alert.success('Session deleted successfully!');
-                        fetchSessions();
-                    },
-                    onError: () => {
-                        alert.error(
-                            'Failed to delete session. Please try again.',
-                        );
-                    },
-                });
-            }
-        });
+    const page = new URL(url, window.location.origin).searchParams.get('page');
+    return page ? Number.parseInt(page, 10) : 1;
 };
 
-const restoreSession = (session: any) => {
-    router.patch(`/settings/sessions/${session.id}/restore`, {}, {
-        preserveScroll: true,
-        onSuccess: () => {
-            alert.success('Session restored successfully!');
-            fetchSessions();
-        },
-        onError: () => {
-            alert.error('Failed to restore session. Please try again.');
-        },
+const getYearsLabel = (session: any) => {
+    if (session.start_year && session.end_year) {
+        return `${session.start_year}-${session.end_year}`;
+    }
+
+    if (session.start_date && session.end_date) {
+        return `${new Date(session.start_date).getFullYear()}-${new Date(session.end_date).getFullYear()}`;
+    }
+
+    return EMPTY_VALUE;
+};
+
+const getDurationLabel = (session: any) => {
+    if (!session.start_date || !session.end_date) {
+        return EMPTY_VALUE;
+    }
+
+    return `${formatDate(session.start_date)} to ${formatDate(session.end_date)}`;
+};
+
+watch([statusFilter, perPage], () => {
+    fetchSessions(1);
+});
+
+watch(
+    () => props.sessions,
+    (newSessions) => {
+        sessionsData.value = newSessions.data || [];
+        pagination.value = newSessions;
+    },
+    { deep: true },
+);
+
+const handleSaved = () => {
+    fetchSessions(pagination.value?.current_page || 1);
+};
+
+const deleteSession = (session: any) => {
+    alert.confirm(
+        `Are you sure you want to delete "${session.name}"?`,
+        'Delete Session',
+    ).then((result) => {
+        if (result.isConfirmed) {
+            axios.delete(route('sessions.destroy', session.id), {
+                headers: { Accept: 'application/json' },
+            }).then(() => {
+                alert.success('Session deleted successfully!');
+                fetchSessions(pagination.value?.current_page || 1);
+            }).catch(() => {
+                alert.error('Failed to delete session. Please try again.');
+            });
+        }
     });
 };
 
-const forceDeleteSession = (session: any) => {
-    alert
-        .confirm(
-            `Are you sure you want to permanently delete "${session.name}"? This action cannot be undone.`,
-            'Permanently Delete Session',
-        )
-        .then((result) => {
-            if (result.isConfirmed) {
-                router.delete(`/settings/sessions/${session.id}/force`, {
-                    preserveScroll: true,
-                    onSuccess: () => {
-                        alert.success('Session permanently deleted successfully!');
-                        fetchSessions();
-                    },
-                    onError: () => {
-                        alert.error(
-                            'Failed to permanently delete session. Please try again.',
-                        );
-                    },
-                });
-            }
-        });
+const activateSession = (session: any) => {
+    axios.patch(route('sessions.activate', session.id), {}, {
+        headers: { Accept: 'application/json' },
+    }).then(() => {
+        alert.success('Session activated successfully!');
+        fetchSessions(pagination.value?.current_page || 1);
+    }).catch(() => {
+        alert.error('Failed to activate session. Please try again.');
+    });
 };
 
-const activateSession = (session: any) => {
-    // Find the currently active session
-    const activeSession = sessionsData.value.find((s: any) => s.is_active === true);
-    
-    let confirmMessage = `Are you sure you want to activate "${session.name}"?`;
-    let confirmTitle = 'Activate Session';
-    
-    if (activeSession && activeSession.id !== session.id) {
-        confirmMessage = `Activating "${session.name}" will automatically deactivate "${activeSession.name}".\n\nDo you want to continue?`;
-        confirmTitle = 'Switch Active Session';
-    }
-    
-    alert
-        .confirm(confirmMessage, confirmTitle)
-        .then((result) => {
-            if (result.isConfirmed) {
-                router.patch(`/settings/sessions/${session.id}/activate`, {}, {
-                    preserveScroll: true,
-                    onSuccess: () => {
-                        alert.success(`"${session.name}" is now the active session!`);
-                        fetchSessions();
-                    },
-                    onError: () => {
-                        alert.error('Failed to activate session. Please try again.');
-                    },
-                });
-            }
-        });
+const inactivateSession = (session: any) => {
+    alert.confirm(
+        `Are you sure you want to deactivate "${session.name}"?`,
+        'Deactivate Session',
+        'Yes, deactivate it!',
+    ).then((result) => {
+        if (result.isConfirmed) {
+            axios.patch(route('sessions.inactivate', session.id), {}, {
+                headers: { Accept: 'application/json' },
+            }).then(() => {
+                alert.success('Session deactivated successfully!');
+                fetchSessions(pagination.value?.current_page || 1);
+            }).catch(() => {
+                alert.error('Failed to deactivate session. Please try again.');
+            });
+        }
+    });
 };
 </script>
 
@@ -153,22 +150,14 @@ const activateSession = (session: any) => {
     <div class="space-y-4">
         <div class="flex justify-between items-center">
             <div class="flex gap-2">
-                <select v-model="statusFilter" class="w-32 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 text-sm">
-                    <option value="">All</option>
-                    <option value="active">Active</option>
-                    <option value="inactive">Inactive</option>
+                <select v-model="statusFilter" class="rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 text-sm min-h-10 w-32">
+                    <option v-for="option in statusOptions" :key="option.id" :value="option.id">
+                        {{ option.name }}
+                    </option>
                 </select>
             </div>
             <div class="flex gap-2">
-                <AcademicSessionForm @saved="fetchSessions" />
-                <Button
-                    :variant="showTrashed ? 'ghost' : 'default'"
-                    size="sm"
-                    @click="toggleTrashed"
-                >
-                    <Icon :icon="showTrashed ? 'arrow-left' : 'eye'" class="mr-1" />
-                    {{ showTrashed ? 'Back' : 'Deleted Sessions' }}
-                </Button>
+                <AcademicSessionForm @saved="handleSaved" />
             </div>
         </div>
         <div class="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-900">
@@ -176,40 +165,22 @@ const activateSession = (session: any) => {
                 <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                     <thead class="bg-gray-50 dark:bg-gray-800">
                         <tr>
-                            <th
-                                scope="col"
-                                class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300"
-                            >
+                            <th scope="col" class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">
                                 #
                             </th>
-                            <th
-                                scope="col"
-                                class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300"
-                            >
+                            <th scope="col" class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">
                                 Session Name
                             </th>
-                            <th
-                                scope="col"
-                                class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300"
-                            >
+                            <th scope="col" class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">
                                 Years
                             </th>
-                            <th
-                                scope="col"
-                                class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300"
-                            >
+                            <th scope="col" class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">
                                 Duration
                             </th>
-                            <th
-                                scope="col"
-                                class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300"
-                            >
+                            <th scope="col" class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">
                                 Status
                             </th>
-                            <th
-                                scope="col"
-                                class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300"
-                            >
+                            <th scope="col" class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">
                                 Actions
                             </th>
                         </tr>
@@ -222,7 +193,7 @@ const activateSession = (session: any) => {
                         >
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <div class="text-sm text-gray-600 dark:text-gray-300">
-                                    {{ (index as number) + 1 }}
+                                    {{ getRowNumber(index as number) }}
                                 </div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
@@ -232,12 +203,12 @@ const activateSession = (session: any) => {
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <div class="text-sm text-gray-600 dark:text-gray-300">
-                                    {{ session.start_year }}-{{ session.end_year }}
+                                    {{ getYearsLabel(session) }}
                                 </div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <div class="text-sm text-gray-600 dark:text-gray-300">
-                                    {{ formatDate(session.start_date) }} to {{ formatDate(session.end_date) }}
+                                    {{ getDurationLabel(session) }}
                                 </div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
@@ -253,23 +224,31 @@ const activateSession = (session: any) => {
                                 </span>
                             </td>
                             <td class="px-6 py-4 text-sm font-medium whitespace-nowrap">
-                                <div class="flex space-x-2" v-if="!showTrashed">
+                                <div class="flex space-x-2">
                                     <AcademicSessionForm
                                         :session="session"
                                         trigger="Edit"
                                         variant="outline"
                                         size="sm"
-                                        @saved="fetchSessions"
+                                        @saved="handleSaved"
                                     >
                                         <Icon icon="edit" class="mr-1" />Edit
                                     </AcademicSessionForm>
                                     <Button
-                                        v-if="!session.is_active"
+                                        v-if="session.is_active"
+                                        variant="outline"
+                                        size="sm"
+                                        @click="inactivateSession(session)"
+                                    >
+                                        <Icon icon="pause" class="mr-1" />Inactive
+                                    </Button>
+                                    <Button
+                                        v-else
                                         variant="default"
                                         size="sm"
                                         @click="activateSession(session)"
                                     >
-                                        <Icon icon="check-circle" class="mr-1" />Activate
+                                        <Icon icon="check" class="mr-1" />Active
                                     </Button>
                                     <Button
                                         variant="destructive"
@@ -277,22 +256,6 @@ const activateSession = (session: any) => {
                                         @click="deleteSession(session)"
                                     >
                                         <Icon icon="trash" class="mr-1" />Delete
-                                    </Button>
-                                </div>
-                                <div class="flex space-x-2" v-else>
-                                    <Button
-                                        variant="default"
-                                        size="sm"
-                                        @click="restoreSession(session)"
-                                    >
-                                        <Icon icon="refresh" class="mr-1" />Restore
-                                    </Button>
-                                    <Button
-                                        variant="destructive"
-                                        size="sm"
-                                        @click="forceDeleteSession(session)"
-                                    >
-                                        <Icon icon="x" class="mr-1" />Force Delete
                                     </Button>
                                 </div>
                             </td>
@@ -306,21 +269,20 @@ const activateSession = (session: any) => {
                 <div class="text-sm text-gray-600">
                     Showing {{ pagination.from }} to {{ pagination.to }} of {{ pagination.total }} entries
                 </div>
-                <select v-model="perPage" class="w-20 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-2 py-1 text-sm">
-                    <option value="10">10</option>
-                    <option value="25">25</option>
-                    <option value="50">50</option>
-                    <option value="100">100</option>
+                <select v-model="perPage" class="rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 text-sm min-h-10 w-20">
+                    <option v-for="option in perPageOptions" :key="option.id" :value="option.id">
+                        {{ option.name }}
+                    </option>
                 </select>
             </div>
             <div class="flex gap-1">
                 <Button
                     v-for="link in pagination.links"
-                    :key="link.label"
+                    :key="`${link.label}-${link.url || 'disabled'}`"
                     :variant="link.active ? 'default' : 'outline'"
                     size="sm"
                     :disabled="!link.url"
-                    @click="link.url ? fetchSessions(parseInt(link.url.match(/page=(\d+)/)?.[1] || '1')) : null"
+                    @click="link.url ? fetchSessions(getPageFromUrl(link.url) || 1) : null"
                 >
                     <span v-html="link.label"></span>
                 </Button>

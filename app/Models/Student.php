@@ -2,12 +2,18 @@
 
 namespace App\Models;
 
+use App\Enums\Fee\WalletDirection;
+use App\Models\Fee\FeePayment;
+use App\Models\Fee\FeeVoucher;
+use App\Models\Fee\StudentDiscount;
+use App\Models\Fee\StudentFeeAssignment;
+use App\Models\Fee\StudentFeeWalletTransaction;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Student extends Model
 {
@@ -64,7 +70,7 @@ class Student extends Model
      */
     public function getNameAttribute(): string
     {
-        return $this->user?->name ?? 'Student #' . $this->registration_no;
+        return $this->user?->name ?? 'Student #'.$this->registration_no;
     }
 
     /**
@@ -84,7 +90,7 @@ class Student extends Model
             ->active()
             ->with('class')
             ->first();
-        
+
         return $enrollment?->class?->name;
     }
 
@@ -97,7 +103,7 @@ class Student extends Model
             ->active()
             ->with('section')
             ->first();
-        
+
         return $enrollment?->section?->name;
     }
 
@@ -108,8 +114,6 @@ class Student extends Model
     {
         return $this->hasMany(StudentInventory::class);
     }
-
-
 
     /**
      * Get primary guardian (father or mother)
@@ -184,7 +188,7 @@ class Student extends Model
      */
     public function feeVouchers(): HasMany
     {
-        return $this->hasMany(\App\Models\Fee\FeeVoucher::class);
+        return $this->hasMany(FeeVoucher::class);
     }
 
     /**
@@ -192,7 +196,7 @@ class Student extends Model
      */
     public function feePayments(): HasMany
     {
-        return $this->hasMany(\App\Models\Fee\FeePayment::class);
+        return $this->hasMany(FeePayment::class);
     }
 
     /**
@@ -200,7 +204,7 @@ class Student extends Model
      */
     public function feeAssignments(): HasMany
     {
-        return $this->hasMany(\App\Models\Fee\StudentFeeAssignment::class);
+        return $this->hasMany(StudentFeeAssignment::class);
     }
 
     /**
@@ -208,7 +212,7 @@ class Student extends Model
      */
     public function discounts(): HasMany
     {
-        return $this->hasMany(\App\Models\Fee\StudentDiscount::class);
+        return $this->hasMany(StudentDiscount::class);
     }
 
     /**
@@ -216,7 +220,7 @@ class Student extends Model
      */
     public function walletTransactions(): HasMany
     {
-        return $this->hasMany(\App\Models\Fee\StudentFeeWalletTransaction::class);
+        return $this->hasMany(StudentFeeWalletTransaction::class);
     }
 
     /**
@@ -225,13 +229,13 @@ class Student extends Model
     public function getWalletBalanceAttribute(): float
     {
         $credits = $this->walletTransactions()
-            ->where('direction', \App\Enums\Fee\WalletDirection::CREDIT)
+            ->where('direction', WalletDirection::CREDIT)
             ->sum('amount');
-        
+
         $debits = $this->walletTransactions()
-            ->where('direction', \App\Enums\Fee\WalletDirection::DEBIT)
+            ->where('direction', WalletDirection::DEBIT)
             ->sum('amount');
-        
+
         return $credits - $debits;
     }
 }

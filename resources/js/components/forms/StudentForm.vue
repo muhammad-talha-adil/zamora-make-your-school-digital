@@ -140,7 +140,7 @@ const submit = () => {
         // Update
         router.put(`/students/${props.student.id}`, form.value, {
             preserveScroll: true,
-            onSuccess: (response) => {
+            onSuccess: () => {
                 alert.success('Student updated successfully!');
                 open.value = false;
                 resetForm();
@@ -158,7 +158,7 @@ const submit = () => {
         // Create
         router.post('/students', form.value, {
             preserveScroll: true,
-            onSuccess: (response) => {
+            onSuccess: () => {
                 alert.success('Student created successfully!');
                 open.value = false;
                 resetForm();

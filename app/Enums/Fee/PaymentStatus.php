@@ -4,7 +4,7 @@ namespace App\Enums\Fee;
 
 /**
  * Payment Status Enum
- * 
+ *
  * Tracks the status of a payment transaction.
  */
 enum PaymentStatus: string
@@ -18,7 +18,7 @@ enum PaymentStatus: string
      */
     public function label(): string
     {
-        return match($this) {
+        return match ($this) {
             self::PENDING => 'Pending',
             self::POSTED => 'Posted',
             self::REVERSED => 'Reversed',

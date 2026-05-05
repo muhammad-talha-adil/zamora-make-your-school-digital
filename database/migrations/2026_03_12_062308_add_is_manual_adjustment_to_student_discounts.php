@@ -11,7 +11,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        if (!Schema::hasColumn('student_discounts', 'is_manual_adjustment')) {
+        if (! Schema::hasColumn('student_discounts', 'is_manual_adjustment')) {
             Schema::table('student_discounts', function (Blueprint $table) {
                 // Flag to identify manual adjustments created during admission
                 // These should NOT appear in the regular discount options list

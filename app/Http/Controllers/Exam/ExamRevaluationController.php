@@ -3,9 +3,9 @@
 namespace App\Http\Controllers\Exam;
 
 use App\Http\Controllers\Controller;
-use App\Models\Exam\ExamRevaluationRequest;
-use App\Models\Exam\Exam;
 use App\Models\Campus;
+use App\Models\Exam\Exam;
+use App\Models\Exam\ExamRevaluationRequest;
 use App\Models\SchoolClass;
 use Illuminate\Http\Request;
 use Inertia\Inertia;

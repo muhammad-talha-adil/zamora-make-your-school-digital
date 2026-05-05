@@ -4,7 +4,7 @@ namespace App\Enums\Fee;
 
 /**
  * Value Type Enum
- * 
+ *
  * Defines whether a value is fixed amount or percentage.
  */
 enum ValueType: string
@@ -17,7 +17,7 @@ enum ValueType: string
      */
     public function label(): string
     {
-        return match($this) {
+        return match ($this) {
             self::FIXED => 'Fixed Amount',
             self::PERCENT => 'Percentage',
         };

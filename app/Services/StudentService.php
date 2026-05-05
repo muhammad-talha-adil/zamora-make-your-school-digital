@@ -2,15 +2,13 @@
 
 namespace App\Services;
 
-use App\Http\Resources\StudentResource;
+use App\Models\School;
 use App\Models\Section;
 use App\Models\Student;
 use App\Repositories\StudentRepository;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Log;
-use Inertia\Response;
 
 class StudentService
 {
@@ -59,9 +57,9 @@ class StudentService
             // Get current enrollment
             $enrollment = $student->enrollmentRecords
                 ->sortByDesc('admission_date')
-                ->first(fn($r) => $r->leave_date === null);
+                ->first(fn ($r) => $r->leave_date === null);
 
-            if (!$enrollment) {
+            if (! $enrollment) {
                 $enrollment = $student->enrollmentRecords->sortByDesc('admission_date')->first();
             }
 
@@ -135,9 +133,9 @@ class StudentService
         // Get the current active enrollment or most recent enrollment
         $currentEnrollment = $student->enrollmentRecords
             ->sortByDesc('admission_date')
-            ->first(fn($r) => $r->leave_date === null);
+            ->first(fn ($r) => $r->leave_date === null);
 
-        if (!$currentEnrollment) {
+        if (! $currentEnrollment) {
             $currentEnrollment = $student->enrollmentRecords->sortByDesc('admission_date')->first();
         }
 
@@ -268,7 +266,7 @@ class StudentService
 
         return [
             'student' => $student,
-            'school' => \App\Models\School::first(),
+            'school' => School::first(),
         ];
     }
 
@@ -289,6 +287,7 @@ class StudentService
     public function getSectionsByClass(int $classId): JsonResponse
     {
         $sections = $this->repository->getSectionsByClass($classId);
+
         return response()->json($sections);
     }
 

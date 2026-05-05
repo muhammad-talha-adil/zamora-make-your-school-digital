@@ -25,17 +25,17 @@ class AppServiceProvider extends ServiceProvider
     {
         // Register AttendanceService as a singleton
         $this->app->singleton(AttendanceService::class, function ($app) {
-            return new AttendanceService();
+            return new AttendanceService;
         });
 
         // Register StudentUserService
         $this->app->singleton(StudentUserService::class, function ($app) {
-            return new StudentUserService();
+            return new StudentUserService;
         });
 
         // Register GuardianService
         $this->app->singleton(GuardianService::class, function ($app) {
-            return new GuardianService();
+            return new GuardianService;
         });
 
         // Register StudentRepository

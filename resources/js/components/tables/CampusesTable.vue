@@ -1,12 +1,11 @@
 <script setup lang="ts">
 import CampusForm from '@/components/forms/CampusForm.vue';
 import { Button } from '@/components/ui/button';
-import { ComboboxInput } from '@/components/ui/combobox';
 import Icon from '@/components/Icon.vue';
 import { alert } from '@/utils';
-import { router } from '@inertiajs/vue3';
 import axios from 'axios';
 import { ref, watch } from 'vue';
+import { route } from 'ziggy-js';
 
 // Props
 interface Props {
@@ -24,7 +23,7 @@ const emit = defineEmits<{
     saved: [];
 }>();
 
-const showInactive = ref(false);
+// const showInactive = ref(false); // REMOVED
 const statusFilter = ref('');
 const perPage = ref(10);
 const campusesData = ref(props.campuses?.data || []);
@@ -51,24 +50,17 @@ watch(() => props.campusTypes, (newTypes) => {
     }
 }, { immediate: true, deep: true });
 
-const toggleInactive = () => {
-    showInactive.value = !showInactive.value;
-    fetchCampuses();
-};
-
 const fetchCampuses = (page = 1) => {
     const params = new URLSearchParams({
         per_page: perPage.value.toString(),
         page: page.toString(),
     });
 
-    if (showInactive.value) {
-        params.append('status', 'inactive');
-    } else if (statusFilter.value) {
+    if (statusFilter.value) {
         params.append('status', statusFilter.value);
     }
 
-    axios.get(`/settings/campuses?${params}`).then((response) => {
+    axios.get(`${route('campuses.all')}?${params}`).then((response) => {
         campusesData.value = response.data.data;
         pagination.value = response.data;
     });
@@ -95,59 +87,55 @@ const handleSaved = () => {
 const deleteCampus = (campus: any) => {
     alert
         .confirm(
-            `Are you sure you want to deactivate "${campus.name}"?`,
-            'Deactivate Campus',
+            `Are you sure you want to delete "${campus.name}"?`, 'Delete Campus',
         )
         .then((result) => {
             if (result.isConfirmed) {
-                router.patch(`/settings/campuses/${campus.id}/deactivate`, {}, {
-                    preserveScroll: true,
-                    onSuccess: () => {
-                        alert.success('Campus deactivated successfully!');
-                        fetchCampuses();
-                    },
-                    onError: () => {
-                        alert.error(
-                            'Failed to deactivate campus. Please try again.',
-                        );
-                    },
+                axios.delete(route('campuses.destroy', campus.id), {
+                    headers: { 'Accept': 'application/json' }
+                }).then(() => {
+                    alert.success('Campus deleted successfully!');
+                    fetchCampuses();
+                }).catch(() => {
+                    alert.error('Failed to delete campus. Please try again.');
                 });
             }
         });
 };
 
-const restoreCampus = (campus: any) => {
-    router.patch(`/settings/campuses/${campus.id}/activate`, {}, {
-        preserveScroll: true,
-        onSuccess: () => {
-            alert.success('Campus activated successfully!');
-            fetchCampuses();
-        },
-        onError: () => {
-            alert.error('Failed to activate campus. Please try again.');
-        },
+const activateCampus = (campus: any) => {
+    axios.patch(route('campuses.activate', campus.id), {}, {
+        headers: { 'Accept': 'application/json' }
+    }).then(() => {
+        alert.success('Campus activated successfully!');
+        const idx = campusesData.value.findIndex((c: any) => c.id === campus.id);
+        if (idx !== -1) {
+            campusesData.value.splice(idx, 1, { ...campusesData.value[idx], is_active: true });
+        }
+    }).catch(() => {
+        alert.error('Failed to activate campus. Please try again.');
     });
 };
 
-const forceDeleteCampus = (campus: any) => {
+const inactivateCampus = (campus: any) => {
     alert
         .confirm(
-            `Are you sure you want to delete "${campus.name}"? This action cannot be undone.`,
-            'Delete Campus',
+            `Are you sure you want to deactivate "${campus.name}"?`,
+            'Deactivate Campus',
+            'Yes, deactivate it!',
         )
         .then((result) => {
             if (result.isConfirmed) {
-                router.delete(`/settings/campuses/${campus.id}`, {
-                    preserveScroll: true,
-                    onSuccess: () => {
-                        alert.success('Campus deleted successfully!');
-                        fetchCampuses();
-                    },
-                    onError: () => {
-                        alert.error(
-                            'Failed to delete campus. Please try again.',
-                        );
-                    },
+                axios.patch(route('campuses.inactivate', campus.id), {}, {
+                    headers: { 'Accept': 'application/json' }
+                }).then(() => {
+                    alert.success('Campus deactivated successfully!');
+                    const idx = campusesData.value.findIndex((c: any) => c.id === campus.id);
+                    if (idx !== -1) {
+                        campusesData.value.splice(idx, 1, { ...campusesData.value[idx], is_active: false });
+                    }
+                }).catch(() => {
+                    alert.error('Failed to deactivate campus. Please try again.');
                 });
             }
         });
@@ -158,28 +146,17 @@ const forceDeleteCampus = (campus: any) => {
     <div class="space-y-4">
         <div class="flex justify-between items-center">
             <div class="flex gap-2">
-                <ComboboxInput
-                    v-model="statusFilter"
-                    placeholder="All"
-                    :initial-items="statusOptions"
-                    value-type="id"
-                    class="w-32"
-                    :disabled="showInactive"
-                />
+                <select v-model="statusFilter" class="rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 text-sm min-h-10 w-32">
+                    <option v-for="option in statusOptions" :key="option.id" :value="option.id">
+                        {{ option.name }}
+                    </option>
+                </select>
             </div>
             <div class="flex gap-2">
                 <CampusForm
                     :campus-types="campusTypesLoaded"
                     @saved="handleSaved"
                 />
-                <Button
-                    :variant="showInactive ? 'ghost' : 'default'"
-                    size="sm"
-                    @click="toggleInactive"
-                >
-                    <Icon :icon="showInactive ? 'arrow-left' : 'eye'" class="mr-1" />
-                    {{ showInactive ? 'Back' : 'Inactive Campuses' }}
-                </Button>
             </div>
         </div>
         <div class="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-900">
@@ -210,6 +187,12 @@ const forceDeleteCampus = (campus: any) => {
                                 class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300"
                             >
                                 Address
+                            </th>
+                            <th
+                                scope="col"
+                                class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300"
+                            >
+                                Status
                             </th>
                             <th
                                 scope="col"
@@ -252,8 +235,20 @@ const forceDeleteCampus = (campus: any) => {
                                     {{ campus.address || '—' }}
                                 </div>
                             </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span
+                                    :class="[
+                                        'inline-flex rounded-full px-2 py-1 text-xs font-semibold',
+                                        campus.is_active
+                                            ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
+                                            : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
+                                    ]"
+                                >
+                                    {{ campus.is_active ? 'Active' : 'Inactive' }}
+                                </span>
+                            </td>
                             <td class="px-6 py-4 text-sm font-medium whitespace-nowrap">
-                                <div class="flex space-x-2" v-if="!showInactive">
+                                <div class="flex space-x-2">
                                     <CampusForm
                                         :campus="campus"
                                         :campus-types="campusTypesLoaded"
@@ -265,27 +260,27 @@ const forceDeleteCampus = (campus: any) => {
                                         <Icon icon="edit" class="mr-1" />Edit
                                     </CampusForm>
                                     <Button
+                                        v-if="campus.is_active"
+                                        variant="outline"
+                                        size="sm"
+                                        @click="inactivateCampus(campus)"
+                                    >
+                                        <Icon icon="pause" class="mr-1" />Inactive
+                                    </Button>
+                                    <Button
+                                        v-else
+                                        variant="default"
+                                        size="sm"
+                                        @click="activateCampus(campus)"
+                                    >
+                                        <Icon icon="check" class="mr-1" />Active
+                                    </Button>
+                                    <Button
                                         variant="destructive"
                                         size="sm"
                                         @click="deleteCampus(campus)"
                                     >
                                         <Icon icon="trash" class="mr-1" />Delete
-                                    </Button>
-                                </div>
-                                <div class="flex space-x-2" v-else>
-                                    <Button
-                                        variant="default"
-                                        size="sm"
-                                        @click="restoreCampus(campus)"
-                                    >
-                                        <Icon icon="refresh" class="mr-1" />Activate
-                                    </Button>
-                                    <Button
-                                        variant="destructive"
-                                        size="sm"
-                                        @click="forceDeleteCampus(campus)"
-                                    >
-                                        <Icon icon="x" class="mr-1" />Delete
                                     </Button>
                                 </div>
                             </td>
@@ -299,13 +294,11 @@ const forceDeleteCampus = (campus: any) => {
                 <div class="text-sm text-gray-600">
                     Showing {{ pagination.from }} to {{ pagination.to }} of {{ pagination.total }} entries
                 </div>
-                <ComboboxInput
-                    v-model="perPage"
-                    placeholder="10"
-                    :initial-items="perPageOptions"
-                    value-type="id"
-                    class="w-20"
-                />
+                <select v-model="perPage" class="rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 text-sm min-h-10 w-20">
+                    <option v-for="option in perPageOptions" :key="option.id" :value="option.id">
+                        {{ option.name }}
+                    </option>
+                </select>
             </div>
             <div class="flex gap-1">
                 <Button

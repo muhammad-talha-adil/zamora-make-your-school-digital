@@ -3,12 +3,10 @@
 namespace App\Http\Controllers\Fee;
 
 use App\Http\Controllers\Controller;
+use App\Models\Fee\FeeHead;
 use App\Models\Fee\FeeStructure;
 use App\Models\Fee\FeeStructureItem;
-use App\Models\Fee\FeeHead;
-use App\Models\Month;
 use Illuminate\Http\Request;
-use Inertia\Inertia;
 
 class FeeStructureItemController extends Controller
 {
@@ -29,13 +27,13 @@ class FeeStructureItemController extends Controller
         ]);
 
         $validated['fee_structure_id'] = $structure->id;
-        
+
         // Auto-set frequency from FeeHead if not provided
         if (empty($validated['frequency'])) {
             $feeHead = FeeHead::find($validated['fee_head_id']);
             $validated['frequency'] = $feeHead?->default_frequency ?? 'monthly';
         }
-        
+
         $validated['is_optional'] = $validated['is_optional'] ?? false;
         $validated['applicable_on_admission'] = $validated['applicable_on_admission'] ?? true;
 
@@ -65,7 +63,7 @@ class FeeStructureItemController extends Controller
             $feeHead = FeeHead::find($validated['fee_head_id']);
             $validated['frequency'] = $feeHead?->default_frequency ?? 'monthly';
         }
-        
+
         $validated['is_optional'] = $validated['is_optional'] ?? false;
         $validated['applicable_on_admission'] = $validated['applicable_on_admission'] ?? true;
 

@@ -26,6 +26,8 @@ class Session extends Model
         'name',
         'description',
         'is_active',
+        'start_year',
+        'end_year',
         'start_date',
         'end_date',
     ];
@@ -37,6 +39,8 @@ class Session extends Model
      */
     protected $casts = [
         'is_active' => 'boolean',
+        'start_year' => 'integer',
+        'end_year' => 'integer',
         'start_date' => 'date',
         'end_date' => 'date',
         'created_at' => 'datetime',

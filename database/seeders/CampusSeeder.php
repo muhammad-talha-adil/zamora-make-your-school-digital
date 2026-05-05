@@ -10,7 +10,7 @@ class CampusSeeder extends Seeder
 {
     /**
      * Run the database seeds.
-     * 
+     *
      * Seeds exactly 2 campuses: Main Branch, Second Branch
      */
     public function run(): void
@@ -20,7 +20,7 @@ class CampusSeeder extends Seeder
             ['name' => 'Main'],
             ['is_active' => true]
         );
-        
+
         $branchType = CampusType::firstOrCreate(
             ['name' => 'Branch'],
             ['is_active' => true]

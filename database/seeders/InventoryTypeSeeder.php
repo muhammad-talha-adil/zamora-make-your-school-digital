@@ -21,7 +21,7 @@ class InventoryTypeSeeder extends Seeder
 
         foreach ($campuses as $index => $campus) {
             $inventoryTypes = $this->getInventoryTypes();
-            
+
             foreach ($inventoryTypes as $type) {
                 InventoryType::firstOrCreate(
                     [

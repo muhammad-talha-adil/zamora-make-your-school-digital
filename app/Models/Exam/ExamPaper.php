@@ -2,6 +2,10 @@
 
 namespace App\Models\Exam;
 
+use App\Models\Campus;
+use App\Models\SchoolClass;
+use App\Models\Section;
+use App\Models\Subject;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -49,7 +53,7 @@ class ExamPaper extends Model
      */
     public function campus(): BelongsTo
     {
-        return $this->belongsTo(\App\Models\Campus::class);
+        return $this->belongsTo(Campus::class);
     }
 
     /**
@@ -57,7 +61,7 @@ class ExamPaper extends Model
      */
     public function class(): BelongsTo
     {
-        return $this->belongsTo(\App\Models\SchoolClass::class, 'class_id');
+        return $this->belongsTo(SchoolClass::class, 'class_id');
     }
 
     /**
@@ -65,7 +69,7 @@ class ExamPaper extends Model
      */
     public function section(): BelongsTo
     {
-        return $this->belongsTo(\App\Models\Section::class)->withDefault();
+        return $this->belongsTo(Section::class)->withDefault();
     }
 
     /**
@@ -73,7 +77,7 @@ class ExamPaper extends Model
      */
     public function subject(): BelongsTo
     {
-        return $this->belongsTo(\App\Models\Subject::class);
+        return $this->belongsTo(Subject::class);
     }
 
     /**

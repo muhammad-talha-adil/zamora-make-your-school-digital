@@ -87,6 +87,7 @@ class InvoiceItem extends Model
         } elseif ($this->item_type === 'inventory') {
             return $this->studentInventory();
         }
+
         return null;
     }
 

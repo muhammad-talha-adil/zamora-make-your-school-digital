@@ -77,7 +77,7 @@ watch(() => props.open, (isOpen) => {
 const fetchCampusTypes = () => {
     loading.value = true;
     axios.get('/settings/campus-types/all').then((response) => {
-        allCampusTypes.value = response.data.campusTypes || [];
+        allCampusTypes.value = Array.isArray(response.data) ? response.data : response.data.campusTypes || [];
         updatePaginatedData();
     }).catch((error) => {
         console.error('Failed to fetch campus types:', error);
@@ -132,9 +132,15 @@ const submit = () => {
         router.post('/settings/campus-types', form.value, {
             preserveScroll: true,
             onSuccess: (page: any) => {
-                const newId = page.props?.campusType?.id;
+                // The created campus type is flashed to session as 'campusType'
+                const newCampusType = page?.props?.flash?.campusType;
                 alert.success('Campus type created successfully!');
-                emit('saved', { id: newId, name: form.value.name });
+                if (newCampusType && newCampusType.id) {
+                    emit('saved', { id: newCampusType.id, name: newCampusType.name });
+                } else {
+                    // Fallback: emit without data
+                    emit('saved');
+                }
                 form.value.name = '';
                 errors.value = {};
                 fetchCampusTypes();

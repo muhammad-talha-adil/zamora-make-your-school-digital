@@ -17,7 +17,7 @@ return new class extends Migration
             $table->foreignId('voucher_id')->nullable()->constrained('fee_vouchers')->onDelete('set null');
             $table->text('notes')->nullable();
             $table->timestamps();
-            
+
             // Prevent duplicate entries for the same student and fee head
             $table->unique(['student_id', 'fee_head_id']);
         });

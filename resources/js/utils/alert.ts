@@ -49,7 +49,7 @@ export const alert = {
         });
     },
 
-    confirm: (message: string, title = 'Are you sure?') => {
+    confirm: (message: string, title = 'Are you sure?', confirmText = 'Yes, delete it!') => {
         return Swal.fire({
             title,
             text: message,
@@ -57,7 +57,7 @@ export const alert = {
             showCancelButton: true,
             confirmButtonColor: '#d33',
             cancelButtonColor: '#3085d6',
-            confirmButtonText: 'Yes, delete it!',
+            confirmButtonText: confirmText,
             customClass: {
                 popup: 'swal2-popup',
                 confirmButton: 'swal2-confirm',

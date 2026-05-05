@@ -5,8 +5,8 @@ namespace App\Http\Controllers\Settings;
 use App\Http\Controllers\Controller;
 use App\Models\ThemePalette;
 use App\Models\ThemeSetting;
-use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -14,16 +14,12 @@ class ThemeSettingsController extends Controller
 {
     public function index(): Response
     {
-        $user = auth()->user()->load('roles');
-        $allowedRoles = ['developer', 'school_owner', 'super_admin'];
-        $userRoles = $user->roles->pluck('name')->toArray();
-        if (!array_intersect($allowedRoles, $userRoles)) {
-            abort(403, 'Unauthorized');
-        }
+        $this->authorizeUser();
 
         $palettes = ThemePalette::with('colors')->where('is_active', true)->get()->groupBy('mode');
         $settings = ThemeSetting::all()->keyBy('mode')->map(function ($setting) {
             $setting->colors_json = is_array($setting->colors_json) ? $setting->colors_json : json_decode($setting->colors_json, true) ?? [];
+
             return $setting;
         });
 
@@ -58,10 +54,20 @@ class ThemeSettingsController extends Controller
 
     private function authorizeUser(): void
     {
-        $user = auth()->user()->load('roles');
-        $allowedRoles = ['developer', 'school_owner', 'super_admin'];
-        $userRoles = $user->roles->pluck('name')->toArray();
-        if (!array_intersect($allowedRoles, $userRoles)) {
+        $user = auth()->user();
+
+        $allowedRoleSlugs = ['developer', 'owner', 'school_owner', 'super_admin'];
+
+        $userRoleSlugs = $user->userRoles()
+            ->where('is_active', true)
+            ->whereHas('role')
+            ->with('role:id,slug')
+            ->get()
+            ->pluck('role.slug')
+            ->filter()
+            ->all();
+
+        if (! array_intersect($allowedRoleSlugs, $userRoleSlugs)) {
             abort(403, 'Unauthorized');
         }
     }

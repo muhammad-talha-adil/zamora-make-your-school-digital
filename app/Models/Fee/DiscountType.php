@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 /**
  * Discount Type Model
- * 
+ *
  * Master table for standard discount/concession types.
  */
 class DiscountType extends Model

@@ -3,8 +3,8 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Role extends Model
 {
@@ -45,7 +45,8 @@ class Role extends Model
     public function hasAllModulePermissions(string $module): bool
     {
         $modulePermissions = $this->permissions->where('module', $module);
-        return $modulePermissions->count() > 0 && 
+
+        return $modulePermissions->count() > 0 &&
                $modulePermissions->count() === Permission::where('module', $module)->count();
     }
 }

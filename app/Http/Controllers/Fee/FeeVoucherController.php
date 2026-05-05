@@ -4,10 +4,10 @@ namespace App\Http\Controllers\Fee;
 
 use App\Http\Controllers\Controller;
 use App\Models\Campus;
-use App\Models\Fee\FeeVoucher;
-use App\Models\Fee\FeeVoucherItem;
 use App\Models\Fee\FeeHead;
 use App\Models\Fee\FeeStructure;
+use App\Models\Fee\FeeVoucher;
+use App\Models\Fee\FeeVoucherItem;
 use App\Models\Month;
 use App\Models\School;
 use App\Models\SchoolClass;
@@ -54,10 +54,10 @@ class FeeVoucherController extends Controller
 
         if ($request->filled('search')) {
             $query->where(function ($q) use ($request) {
-                $q->where('voucher_no', 'like', '%' . $request->search . '%')
+                $q->where('voucher_no', 'like', '%'.$request->search.'%')
                     ->orWhereHas('student', function ($sq) use ($request) {
-                        $sq->where('name', 'like', '%' . $request->search . '%')
-                            ->orWhere('registration_number', 'like', '%' . $request->search . '%');
+                        $sq->where('name', 'like', '%'.$request->search.'%')
+                            ->orWhere('registration_number', 'like', '%'.$request->search.'%');
                     });
             });
         }
@@ -131,10 +131,10 @@ class FeeVoucherController extends Controller
 
         if ($request->filled('search')) {
             $query->where(function ($q) use ($request) {
-                $q->where('voucher_no', 'like', '%' . $request->search . '%')
+                $q->where('voucher_no', 'like', '%'.$request->search.'%')
                     ->orWhereHas('student', function ($sq) use ($request) {
-                        $sq->where('name', 'like', '%' . $request->search . '%')
-                            ->orWhere('registration_number', 'like', '%' . $request->search . '%');
+                        $sq->where('name', 'like', '%'.$request->search.'%')
+                            ->orWhere('registration_number', 'like', '%'.$request->search.'%');
                     });
             });
         }
@@ -331,11 +331,11 @@ class FeeVoucherController extends Controller
         ]);
 
         $voucherService = app(VoucherGenerationService::class);
-        
+
         // Get month numbers from month IDs
         $months = Month::whereIn('id', $validated['month_ids'])->get();
         $monthNumbers = $months->pluck('month_number')->toArray();
-        
+
         $filters = [
             'session_id' => $validated['session_id'],
             'campus_id' => $validated['campus_id'],
@@ -344,28 +344,28 @@ class FeeVoucherController extends Controller
             'include_previous_unpaid' => $validated['include_previous_unpaid'] ?? false,
             'custom_fee_heads' => $validated['custom_fee_heads'] ?? [],
         ];
-        
+
         // Remove null values
-        $filters = array_filter($filters, fn($value) => $value !== null);
-        
+        $filters = array_filter($filters, fn ($value) => $value !== null);
+
         $totalGenerated = 0;
         $totalSkipped = 0;
         $allErrors = [];
-        
+
         // Sort month numbers to process in order
         sort($monthNumbers);
-        
+
         foreach ($monthNumbers as $monthNumber) {
             $result = $voucherService->generateMonthlyVouchers(
                 $monthNumber,
                 $validated['year'],
                 $filters
             );
-            
+
             $totalGenerated += $result['generated'];
             $totalSkipped += $result['skipped'];
-            
-            if (!empty($result['errors'])) {
+
+            if (! empty($result['errors'])) {
                 $allErrors = array_merge($allErrors, $result['errors']);
             }
         }
@@ -375,9 +375,9 @@ class FeeVoucherController extends Controller
                 ->with('success', "Generated {$totalGenerated} vouchers. Skipped {$totalSkipped} existing vouchers.");
         }
 
-        return back()->with('warning', 
-            "Generated {$totalGenerated} vouchers. {$totalSkipped} skipped. " . 
-            count($allErrors) . " errors occurred."
+        return back()->with('warning',
+            "Generated {$totalGenerated} vouchers. {$totalSkipped} skipped. ".
+            count($allErrors).' errors occurred.'
         );
     }
 
@@ -470,10 +470,10 @@ class FeeVoucherController extends Controller
      */
     public function printBatch(Request $request)
     {
-        $voucherIds = $request->voucher_ids 
-            ? explode(',', $request->voucher_ids) 
+        $voucherIds = $request->voucher_ids
+            ? explode(',', $request->voucher_ids)
             : [];
-        
+
         if (empty($voucherIds)) {
             return redirect()->route('fee.vouchers.index')
                 ->with('error', 'No vouchers selected for printing');
@@ -520,7 +520,7 @@ class FeeVoucherController extends Controller
     public function getByStudent(Request $request)
     {
         $request->validate([
-            'student_id' => 'required|exists:students,id'
+            'student_id' => 'required|exists:students,id',
         ]);
 
         $vouchers = FeeVoucher::where('student_id', $request->student_id)
@@ -558,7 +558,7 @@ class FeeVoucherController extends Controller
         $query = FeeVoucher::where('status', 'overdue')
             ->orWhere(function ($q) {
                 $q->where('due_date', '<', now()->toDateString())
-                  ->whereIn('status', ['unpaid', 'partial']);
+                    ->whereIn('status', ['unpaid', 'partial']);
             })
             ->with(['student', 'voucherMonth', 'campus']);
 
@@ -621,7 +621,7 @@ class FeeVoucherController extends Controller
         }
 
         $feeHead = FeeHead::find($validated['fee_head_id']);
-        
+
         $voucher->items()->create([
             'fee_head_id' => $validated['fee_head_id'],
             'description' => $validated['description'] ?? $feeHead->name,

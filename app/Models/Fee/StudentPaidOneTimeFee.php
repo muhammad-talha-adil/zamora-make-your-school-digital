@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
  * StudentPaidOneTimeFee Model
- * 
+ *
  * Tracks which one-time fees (like Admission Fee, Enrollment Fee)
  * have been paid by each student.
  * This prevents duplicate charges for readmitted students.

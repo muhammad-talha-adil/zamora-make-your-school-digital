@@ -11,13 +11,13 @@ class StudentUserService
 {
     /**
      * Create a user account for a student with proper username generation and role assignment.
-     * 
+     *
      * Username Format: STU-{student_code}
      * Example: STU-000001
      *
-     * @param string $studentName The student's full name
-     * @param string|null $studentEmail Optional email provided by student
-     * @param string $studentCode The student's unique system code (e.g., STU-000001)
+     * @param  string  $studentName  The student's full name
+     * @param  string|null  $studentEmail  Optional email provided by student
+     * @param  string  $studentCode  The student's unique system code (e.g., STU-000001)
      * @return User The created user model
      */
     public function createStudentUser(string $studentName, ?string $studentEmail, string $studentCode): User
@@ -51,9 +51,6 @@ class StudentUserService
      *
      * Format: STU-{student_code}
      * Example: STU-000001
-     *
-     * @param string $studentCode
-     * @return string
      */
     public function generateStudentUsername(string $studentCode): string
     {
@@ -61,21 +58,21 @@ class StudentUserService
         if (Str::startsWith($studentCode, 'STU-')) {
             return $studentCode;
         }
-        
-        return 'STU-' . $studentCode;
+
+        return 'STU-'.$studentCode;
     }
 
     /**
      * Generate a secure random password for student accounts.
      *
-     * @param int $length Password length
+     * @param  int  $length  Password length
      * @return string Generated password
      */
     public function generateSecurePassword(int $length = 12): string
     {
         $characters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*';
         $password = '';
-        
+
         // Ensure at least one of each required character type
         $password .= chr(rand(97, 122)); // lowercase
         $password .= chr(rand(65, 90));   // uppercase
@@ -93,18 +90,14 @@ class StudentUserService
 
     /**
      * Generate a unique email address for the student.
-     *
-     * @param string $studentName
-     * @param string|null $providedEmail
-     * @return string
      */
     protected function generateUniqueEmail(string $studentName, ?string $providedEmail): string
     {
         // If a valid email is provided, use it (with duplicate handling)
-        if (!empty($providedEmail) && filter_var($providedEmail, FILTER_VALIDATE_EMAIL)) {
+        if (! empty($providedEmail) && filter_var($providedEmail, FILTER_VALIDATE_EMAIL)) {
             $baseEmail = strtolower(trim($providedEmail));
 
-            if (!$this->emailExists($baseEmail)) {
+            if (! $this->emailExists($baseEmail)) {
                 return $baseEmail;
             }
 
@@ -113,9 +106,9 @@ class StudentUserService
 
         // Generate email from student name
         $processedName = preg_replace('/\s+/', '', strtolower($studentName));
-        $baseEmail = $processedName . '@school.com';
+        $baseEmail = $processedName.'@school.com';
 
-        if (!$this->emailExists($baseEmail)) {
+        if (! $this->emailExists($baseEmail)) {
             return $baseEmail;
         }
 
@@ -124,9 +117,6 @@ class StudentUserService
 
     /**
      * Check if an email already exists in the users table.
-     *
-     * @param string $email
-     * @return bool
      */
     protected function emailExists(string $email): bool
     {
@@ -135,9 +125,6 @@ class StudentUserService
 
     /**
      * Create a unique email by appending incremental numbers.
-     *
-     * @param string $baseEmail
-     * @return string
      */
     protected function createUniqueEmail(string $baseEmail): string
     {
@@ -147,8 +134,8 @@ class StudentUserService
         $domain = $emailParts[1] ?? 'school.com';
 
         while (true) {
-            $newEmail = $username . $counter . '@' . $domain;
-            if (!$this->emailExists($newEmail)) {
+            $newEmail = $username.$counter.'@'.$domain;
+            if (! $this->emailExists($newEmail)) {
                 return $newEmail;
             }
             $counter++;
@@ -157,15 +144,12 @@ class StudentUserService
 
     /**
      * Assign the student role to a user.
-     *
-     * @param User $user
-     * @return UserRole
      */
     protected function assignStudentRole(User $user): UserRole
     {
         $studentRole = Role::where('name', 'student')->first();
 
-        if (!$studentRole) {
+        if (! $studentRole) {
             $studentRole = Role::create([
                 'name' => 'student',
                 'slug' => 'student',
@@ -185,33 +169,27 @@ class StudentUserService
 
     /**
      * Check if a student user account exists for a given student code.
-     *
-     * @param string $studentCode
-     * @return bool
      */
     public function studentUserExists(string $studentCode): bool
     {
         $username = $this->generateStudentUsername($studentCode);
+
         return User::where('username', $username)->exists();
     }
 
     /**
      * Get the student user by student code.
-     *
-     * @param string $studentCode
-     * @return User|null
      */
     public function getStudentUserByStudentCode(string $studentCode): ?User
     {
         $username = $this->generateStudentUsername($studentCode);
+
         return User::where('username', $username)->first();
     }
 
     /**
      * Get the student user by admission number (legacy support).
      *
-     * @param string $admissionNo
-     * @return User|null
      * @deprecated Use getStudentUserByStudentCode instead
      */
     public function getStudentUserByAdmissionNo(string $admissionNo): ?User

@@ -4,8 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class PurchasePayment extends Model
 {
@@ -69,7 +69,7 @@ class PurchasePayment extends Model
     public static function generatePaymentNumber(): string
     {
         $year = date('Y');
-        
+
         // Get the last payment for this year
         $lastPayment = static::whereYear('created_at', $year)
             ->orderBy('id', 'desc')
@@ -81,7 +81,7 @@ class PurchasePayment extends Model
             $counter = 1;
         }
 
-        return 'PP-' . $year . '-' . str_pad($counter, 4, '0', STR_PAD_LEFT);
+        return 'PP-'.$year.'-'.str_pad($counter, 4, '0', STR_PAD_LEFT);
     }
 
     /**
@@ -137,8 +137,8 @@ class PurchasePayment extends Model
      */
     public function scopeDateRange($query, $fromDate, $toDate)
     {
-        return $query->when($fromDate, fn($q) => $q->whereDate('payment_date', '>=', $fromDate))
-            ->when($toDate, fn($q) => $q->whereDate('payment_date', '<=', $toDate));
+        return $query->when($fromDate, fn ($q) => $q->whereDate('payment_date', '>=', $fromDate))
+            ->when($toDate, fn ($q) => $q->whereDate('payment_date', '<=', $toDate));
     }
 
     /**

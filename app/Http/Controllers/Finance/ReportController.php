@@ -3,9 +3,8 @@
 namespace App\Http\Controllers\Finance;
 
 use App\Http\Controllers\Controller;
-use App\Models\Ledger\Ledger;
 use App\Models\Campus;
-use App\Models\Ledger\LedgerCategory;
+use App\Models\Ledger\Ledger;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 

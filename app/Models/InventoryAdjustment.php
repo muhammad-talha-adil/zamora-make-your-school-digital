@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class InventoryAdjustment extends Model
@@ -52,13 +53,15 @@ class InventoryAdjustment extends Model
      * Adjustment type constants.
      */
     public const TYPE_ADD = 'add';
+
     public const TYPE_SUBTRACT = 'subtract';
+
     public const TYPE_SET = 'set';
 
     /**
      * Get the campus that owns the adjustment.
      */
-    public function campus(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    public function campus(): BelongsTo
     {
         return $this->belongsTo(Campus::class);
     }
@@ -66,7 +69,7 @@ class InventoryAdjustment extends Model
     /**
      * Get the inventory item for this adjustment.
      */
-    public function inventoryItem(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    public function inventoryItem(): BelongsTo
     {
         return $this->belongsTo(InventoryItem::class);
     }
@@ -74,7 +77,7 @@ class InventoryAdjustment extends Model
     /**
      * Get the user who created this adjustment.
      */
-    public function user(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
@@ -108,8 +111,8 @@ class InventoryAdjustment extends Model
      */
     public function scopeDateRange($query, $fromDate, $toDate)
     {
-        return $query->when($fromDate, fn($q) => $q->whereDate('created_at', '>=', $fromDate))
-            ->when($toDate, fn($q) => $q->whereDate('created_at', '<=', $toDate));
+        return $query->when($fromDate, fn ($q) => $q->whereDate('created_at', '>=', $fromDate))
+            ->when($toDate, fn ($q) => $q->whereDate('created_at', '<=', $toDate));
     }
 
     /**
@@ -131,8 +134,8 @@ class InventoryAdjustment extends Model
     public function getQuantityChange(): string
     {
         return match ($this->type) {
-            self::TYPE_ADD => '+' . number_format($this->quantity),
-            self::TYPE_SUBTRACT => '-' . number_format($this->quantity),
+            self::TYPE_ADD => '+'.number_format($this->quantity),
+            self::TYPE_SUBTRACT => '-'.number_format($this->quantity),
             self::TYPE_SET => number_format($this->quantity),
             default => number_format($this->quantity),
         };

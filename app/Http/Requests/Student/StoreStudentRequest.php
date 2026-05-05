@@ -2,11 +2,13 @@
 
 namespace App\Http\Requests\Student;
 
-use App\Models\Relation;
+use App\Models\Guardian;
+use App\Models\Section;
+use Carbon\Carbon;
+use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
-use Illuminate\Validation\Rules\Password;
 
 class StoreStudentRequest extends FormRequest
 {
@@ -79,7 +81,7 @@ class StoreStudentRequest extends FormRequest
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     * @return array<string, ValidationRule|array<mixed>|string>
      */
     public function rules(): array
     {
@@ -115,7 +117,7 @@ class StoreStudentRequest extends FormRequest
                 'before:today',
                 // Ensure student is at least 3 years old and not more than 25 years old
                 function ($attribute, $value, $fail) {
-                    $dob = \Carbon\Carbon::parse($value);
+                    $dob = Carbon::parse($value);
                     $minAge = 3;
                     $maxAge = 25;
 
@@ -300,13 +302,13 @@ class StoreStudentRequest extends FormRequest
                     if (empty($value)) {
                         return;
                     }
-                    
+
                     // Skip uniqueness check if guardian_id is provided (linking existing guardian)
-                    if (!empty($this->guardian_id)) {
+                    if (! empty($this->guardian_id)) {
                         return;
                     }
-                    
-                    $exists = \App\Models\Guardian::where('cnic', $value)->exists();
+
+                    $exists = Guardian::where('cnic', $value)->exists();
                     if ($exists) {
                         $fail('This CNIC has already been registered for another guardian.');
                     }
@@ -354,8 +356,8 @@ class StoreStudentRequest extends FormRequest
                     if (empty($value)) {
                         return;
                     }
-                    
-                    $exists = \App\Models\Guardian::where('cnic', $value)->exists();
+
+                    $exists = Guardian::where('cnic', $value)->exists();
                     if ($exists) {
                         $fail('This CNIC has already been registered for another guardian.');
                     }
@@ -376,10 +378,10 @@ class StoreStudentRequest extends FormRequest
     {
         $validator->after(function ($validator) {
             // Cross-field validation: Phone numbers must be unique across guardians
-            $fatherPhone = !empty($this->father_phone)
+            $fatherPhone = ! empty($this->father_phone)
                 ? preg_replace('/\D/', '', $this->father_phone)
                 : null;
-            $otherPhone = !empty($this->other_phone)
+            $otherPhone = ! empty($this->other_phone)
                 ? preg_replace('/\D/', '', $this->other_phone)
                 : null;
 
@@ -393,8 +395,8 @@ class StoreStudentRequest extends FormRequest
             }
 
             // Validate section_id based on class sections
-            if (!empty($this->class_id) && $this->section_id === null) {
-                $sectionCount = \App\Models\Section::where('class_id', $this->class_id)->count();
+            if (! empty($this->class_id) && $this->section_id === null) {
+                $sectionCount = Section::where('class_id', $this->class_id)->count();
                 if ($sectionCount > 0) {
                     $validator->errors()->add(
                         'section_id',
@@ -404,12 +406,12 @@ class StoreStudentRequest extends FormRequest
             }
 
             // Validate that section belongs to the selected class
-            if (!empty($this->class_id) && !empty($this->section_id)) {
-                $sectionExists = \App\Models\Section::where('id', $this->section_id)
+            if (! empty($this->class_id) && ! empty($this->section_id)) {
+                $sectionExists = Section::where('id', $this->section_id)
                     ->where('class_id', $this->class_id)
                     ->exists();
 
-                if (!$sectionExists) {
+                if (! $sectionExists) {
                     $validator->errors()->add(
                         'section_id',
                         'The selected section does not belong to the selected class.'
@@ -419,15 +421,15 @@ class StoreStudentRequest extends FormRequest
 
             // Log validation completion
             if ($validator->errors()->isEmpty()) {
-            Log::info('StoreStudentRequest validation passed', [
-                'user_id' => auth()->id(),
-                'admission_no' => $this->admission_no,
-            ]);
+                Log::info('StoreStudentRequest validation passed', [
+                    'user_id' => auth()->id(),
+                    'admission_no' => $this->admission_no,
+                ]);
             } else {
-            Log::warning('StoreStudentRequest validation failed', [
-                'user_id' => auth()->id(),
-                'errors' => $validator->errors()->toArray(),
-            ]);
+                Log::warning('StoreStudentRequest validation failed', [
+                    'user_id' => auth()->id(),
+                    'errors' => $validator->errors()->toArray(),
+                ]);
             }
         });
     }
@@ -474,12 +476,12 @@ class StoreStudentRequest extends FormRequest
             'father_cnic' => "father's CNIC",
             'father_occupation' => "father's occupation",
             'father_address' => "father's address",
-            'father_relation_id' => "relationship to father/guardian",
+            'father_relation_id' => 'relationship to father/guardian',
             'other_name' => "other guardian's name",
             'other_email' => "other guardian's email",
             'other_phone' => "other guardian's phone",
             'other_cnic' => "other guardian's CNIC",
-            'other_relation_id' => "relationship to other guardian",
+            'other_relation_id' => 'relationship to other guardian',
         ];
     }
 
@@ -508,7 +510,7 @@ class StoreStudentRequest extends FormRequest
         // Decode JSON strings sent from frontend via FormData
         // FormData sends JSON as string, so we need to decode it before validation
         $discounts = $this->discounts;
-        if (is_string($discounts) && !empty($discounts)) {
+        if (is_string($discounts) && ! empty($discounts)) {
             $decoded = json_decode($discounts, true);
             if (is_array($decoded)) {
                 $this->merge(['discounts' => $decoded]);
@@ -516,7 +518,7 @@ class StoreStudentRequest extends FormRequest
         }
 
         $customFeeEntries = $this->custom_fee_entries;
-        if (is_string($customFeeEntries) && !empty($customFeeEntries)) {
+        if (is_string($customFeeEntries) && ! empty($customFeeEntries)) {
             $decoded = json_decode($customFeeEntries, true);
             if (is_array($decoded)) {
                 $this->merge(['custom_fee_entries' => $decoded]);

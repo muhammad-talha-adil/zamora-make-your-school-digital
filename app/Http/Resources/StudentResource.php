@@ -14,7 +14,6 @@ class StudentResource extends JsonResource
     /**
      * Transform the resource into an array.
      *
-     * @param Request $request
      * @return array<string, mixed>
      */
     public function toArray(Request $request): array
@@ -29,13 +28,13 @@ class StudentResource extends JsonResource
             'dob' => $this->dob?->toIso8601String(),
             'dob_formatted' => $this->dob?->format('Y-m-d'),
             'age' => $this->dob ? now()->diffInYears($this->dob) : null,
-            'gender' => $this->whenLoaded('gender', fn() => [
+            'gender' => $this->whenLoaded('gender', fn () => [
                 'id' => $this->gender->id,
                 'name' => $this->gender->name,
             ]),
             'gender_id' => $this->gender_id,
             'b_form' => $this->b_form,
-            'status' => $this->whenLoaded('studentStatus', fn() => [
+            'status' => $this->whenLoaded('studentStatus', fn () => [
                 'id' => $this->studentStatus->id,
                 'name' => $this->studentStatus->name,
             ]),
@@ -47,11 +46,11 @@ class StudentResource extends JsonResource
             'image_url' => $this->image ? asset('storage/'.$this->image) : null,
 
             // Current enrollment information
-            'current_enrollment' => $this->whenLoaded('currentEnrollment', fn() => new StudentEnrollmentResource($this->currentEnrollment)),
+            'current_enrollment' => $this->whenLoaded('currentEnrollment', fn () => new StudentEnrollmentResource($this->currentEnrollment)),
             'current_enrollment_data' => $this->whenLoaded('enrollmentRecords', function () {
                 $enrollment = $this->enrollmentRecords
                     ->sortByDesc('admission_date')
-                    ->first(fn($r) => $r->leave_date === null);
+                    ->first(fn ($r) => $r->leave_date === null);
 
                 if ($enrollment) {
                     return [
@@ -80,14 +79,15 @@ class StudentResource extends JsonResource
             }),
 
             // Guardian information
-            'guardians' => $this->whenLoaded('studentGuardians', fn() => StudentGuardianResource::collection($this->studentGuardians)),
+            'guardians' => $this->whenLoaded('studentGuardians', fn () => StudentGuardianResource::collection($this->studentGuardians)),
             'primary_guardian' => $this->whenLoaded('studentGuardians', function () {
                 $primaryGuardian = $this->studentGuardians->where('is_primary', true)->first();
+
                 return $primaryGuardian ? new StudentGuardianResource($primaryGuardian) : null;
             }),
 
             // Enrollment history
-            'enrollment_history' => $this->whenLoaded('enrollmentRecords', fn() => StudentEnrollmentResource::collection(
+            'enrollment_history' => $this->whenLoaded('enrollmentRecords', fn () => StudentEnrollmentResource::collection(
                 $this->enrollmentRecords->sortByDesc('admission_date')
             )),
 
@@ -104,7 +104,6 @@ class StudentResource extends JsonResource
     /**
      * Get additional data that should be returned with the resource array.
      *
-     * @param Request $request
      * @return array<string, mixed>
      */
     public function with(Request $request): array

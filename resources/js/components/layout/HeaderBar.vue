@@ -28,7 +28,7 @@
   </header>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { Bars3Icon } from '@heroicons/vue/24/outline'
 import { useSidebar } from '../../composables/useSidebar'
 import { usePage } from '@inertiajs/vue3'

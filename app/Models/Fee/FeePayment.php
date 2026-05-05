@@ -4,6 +4,7 @@ namespace App\Models\Fee;
 
 use App\Enums\Fee\PaymentMethod;
 use App\Enums\Fee\PaymentStatus;
+use App\Models\Campus;
 use App\Models\Student;
 use App\Models\StudentEnrollmentRecord;
 use App\Models\User;
@@ -14,7 +15,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
  * Fee Payment Model
- * 
+ *
  * Payment receipt header - records actual money received.
  */
 class FeePayment extends Model
@@ -64,7 +65,7 @@ class FeePayment extends Model
      */
     public function campus(): BelongsTo
     {
-        return $this->belongsTo(\App\Models\Campus::class);
+        return $this->belongsTo(Campus::class);
     }
 
     /**

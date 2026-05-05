@@ -52,14 +52,14 @@ class Reason extends Model
     public static function findOrCreate(string $name): self
     {
         $reason = self::where('name', $name)->first();
-        
-        if (!$reason) {
+
+        if (! $reason) {
             $reason = self::create([
                 'name' => $name,
                 'is_active' => true,
             ]);
         }
-        
+
         return $reason;
     }
 }

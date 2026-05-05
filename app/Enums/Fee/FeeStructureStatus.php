@@ -4,7 +4,7 @@ namespace App\Enums\Fee;
 
 /**
  * Fee Structure Status Enum
- * 
+ *
  * Tracks the lifecycle status of a fee structure.
  */
 enum FeeStructureStatus: string
@@ -18,7 +18,7 @@ enum FeeStructureStatus: string
      */
     public function label(): string
     {
-        return match($this) {
+        return match ($this) {
             self::DRAFT => 'Draft',
             self::ACTIVE => 'Active',
             self::INACTIVE => 'Inactive',

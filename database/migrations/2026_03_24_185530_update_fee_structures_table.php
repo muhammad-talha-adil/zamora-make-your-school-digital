@@ -18,7 +18,7 @@ return new class extends Migration
             $table->string('status')->default('active')->after('effective_to');
             $table->text('notes')->nullable()->after('status');
             $table->foreignId('created_by')->nullable()->constrained('users')->onDelete('set null')->after('notes');
-            
+
             // Drop old columns that are no longer needed
             $table->dropForeign(['fee_type_id']);
             $table->dropColumn('fee_type_id');
@@ -36,7 +36,7 @@ return new class extends Migration
             $table->decimal('amount', 10, 2)->nullable();
             $table->integer('due_day_of_month')->nullable();
             $table->boolean('is_active')->default(true);
-            
+
             // Drop new columns
             $table->dropForeign(['section_id']);
             $table->dropForeign(['created_by']);

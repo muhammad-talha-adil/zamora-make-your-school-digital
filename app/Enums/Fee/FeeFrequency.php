@@ -4,7 +4,7 @@ namespace App\Enums\Fee;
 
 /**
  * Fee Frequency Enum
- * 
+ *
  * Defines how often a fee is charged.
  */
 enum FeeFrequency: string
@@ -18,7 +18,7 @@ enum FeeFrequency: string
      */
     public function label(): string
     {
-        return match($this) {
+        return match ($this) {
             self::MONTHLY => 'Monthly',
             self::YEARLY => 'Yearly',
             self::ONCE => 'One Time',

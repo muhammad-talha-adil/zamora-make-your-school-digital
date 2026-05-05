@@ -5,7 +5,6 @@ namespace Database\Seeders;
 use App\Models\Campus;
 use App\Models\ReturnModel;
 use App\Models\StudentInventory;
-use App\Models\StudentInventoryItem;
 use Illuminate\Database\Seeder;
 
 class ReturnSeeder extends Seeder
@@ -33,13 +32,13 @@ class ReturnSeeder extends Seeder
                 if (rand(0, 1)) { // 50% chance of return
                     // Get the first item from the inventory
                     $firstItem = $studentInventory->items()->first();
-                    
-                    if (!$firstItem) {
+
+                    if (! $firstItem) {
                         continue;
                     }
 
                     $returnQuantity = rand(1, $firstItem->quantity - $firstItem->returned_quantity);
-                    
+
                     if ($returnQuantity > 0) {
                         // Create the return record
                         $return = ReturnModel::create([
@@ -71,7 +70,7 @@ class ReturnSeeder extends Seeder
 
                         // Update the returned quantity in the student inventory item
                         $firstItem->returned_quantity = $firstItem->returned_quantity + $returnQuantity;
-                        
+
                         // Update status based on return quantity
                         if ($firstItem->returned_quantity >= $firstItem->quantity) {
                             $firstItem->status = 'returned';
@@ -80,7 +79,7 @@ class ReturnSeeder extends Seeder
                             $firstItem->status = 'partial_return';
                             $studentInventory->status = 'partial_return';
                         }
-                        
+
                         $firstItem->save();
                         $studentInventory->save();
                     }

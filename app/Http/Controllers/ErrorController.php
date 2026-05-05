@@ -15,7 +15,7 @@ class ErrorController extends Controller
     public function notFound(Request $request): Response
     {
         $exception = $request->query('exception', '');
-        
+
         return Inertia::render('errors/404', [
             'message' => 'The requested page was not found.',
             'exception' => App::environment('local') ? $exception : null,
@@ -51,7 +51,7 @@ class ErrorController extends Controller
     public function serverError(Request $request): Response
     {
         $exception = $request->query('exception', '');
-        
+
         return Inertia::render('errors/500', [
             'message' => 'An unexpected error occurred. Please try again later.',
             'exception' => App::environment('local') ? $exception : null,

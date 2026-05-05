@@ -3,16 +3,16 @@
 namespace App\Http\Controllers\Exam;
 
 use App\Http\Controllers\Controller;
-use App\Http\Requests\Exam\SaveMarksRequest;
+use App\Models\Campus;
+use App\Models\Exam\Exam;
 use App\Models\Exam\ExamPaper;
 use App\Models\Exam\ExamResultHeader;
 use App\Models\Exam\ExamResultLine;
-use App\Models\Exam\Exam;
 use App\Models\Exam\GradeSystem;
-use App\Models\Campus;
 use App\Models\SchoolClass;
 use App\Models\Section;
 use App\Models\Student;
+use App\Models\StudentEnrollmentRecord;
 use App\Services\Exam\ExamMarkingService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -156,23 +156,23 @@ class ExamMarkingController extends Controller
                 $q->where('section_id', $sectionId);
             } elseif ($classId) {
                 // For "All Sections", only show students in sections that have papers
-                if (!empty($paperSectionIds)) {
+                if (! empty($paperSectionIds)) {
                     $q->whereIn('section_id', $paperSectionIds);
                 }
                 // Also filter by class
                 $q->where('class_id', $classId);
             } else {
                 // No class specified - filter by classes that have papers
-                if (!empty($paperClassIds)) {
+                if (! empty($paperClassIds)) {
                     $q->whereIn('class_id', $paperClassIds);
                 }
             }
         })->with([
-                    'user',
-                    'enrollmentRecords.campus',
-                    'enrollmentRecords.class',
-                    'enrollmentRecords.section'
-                ]);
+            'user',
+            'enrollmentRecords.campus',
+            'enrollmentRecords.class',
+            'enrollmentRecords.section',
+        ]);
 
         $students = $studentsQuery->get();
 
@@ -190,9 +190,9 @@ class ExamMarkingController extends Controller
         if ($gradeSystemId) {
             $gradeSystem = GradeSystem::with('gradeSystemItems')->find($gradeSystemId);
         }
-        
+
         // Fall back to default or active grade system
-        if (!$gradeSystem) {
+        if (! $gradeSystem) {
             $gradeSystem = GradeSystem::where('is_default', true)
                 ->orWhere('is_active', true)
                 ->first();
@@ -200,7 +200,7 @@ class ExamMarkingController extends Controller
                 $gradeSystem->load('gradeSystemItems');
             }
         }
-        
+
         $gradeItems = $gradeSystem?->gradeSystemItems ?? [];
 
         // Build response
@@ -224,7 +224,7 @@ class ExamMarkingController extends Controller
                     'is_absent' => $studentMarks?->is_absent ?? false,
                 ];
 
-                if ($obtained !== null && !($studentMarks?->is_absent ?? false)) {
+                if ($obtained !== null && ! ($studentMarks?->is_absent ?? false)) {
                     $totalObtained += $obtained;
                     $totalMaxMarks += $paper->total_marks;
                 }
@@ -261,7 +261,7 @@ class ExamMarkingController extends Controller
         });
 
         return response()->json([
-            'papers' => $papers->map(fn($p) => [
+            'papers' => $papers->map(fn ($p) => [
                 'id' => $p->id,
                 'subject' => $p->subject?->name,
                 'total_marks' => $p->total_marks,
@@ -297,7 +297,7 @@ class ExamMarkingController extends Controller
         $marksData = $validated['marks'];
 
         // Get enrollment info
-        $enrollment = \App\Models\StudentEnrollmentRecord::find($enrollmentId);
+        $enrollment = StudentEnrollmentRecord::find($enrollmentId);
 
         // Get or create result header
         $header = ExamResultHeader::firstOrCreate(
@@ -380,7 +380,7 @@ class ExamMarkingController extends Controller
         $totalMaxMarks = 0;
 
         foreach ($lines as $line) {
-            if (!$line->is_absent && $line->obtained_marks !== null) {
+            if (! $line->is_absent && $line->obtained_marks !== null) {
                 $totalObtained += $line->obtained_marks;
                 $totalMaxMarks += $line->total_marks_snapshot;
             }
@@ -417,6 +417,7 @@ class ExamMarkingController extends Controller
     {
         $header = ExamResultHeader::findOrFail($resultHeaderId);
         $header->update(['status' => 'submitted']);
+
         return response()->json(['message' => 'Submitted for verification successfully', 'data' => $header]);
     }
 
@@ -427,6 +428,7 @@ class ExamMarkingController extends Controller
     {
         $header = ExamResultHeader::findOrFail($resultHeaderId);
         $header->update(['status' => 'draft']);
+
         return response()->json(['message' => 'Result reopened successfully', 'data' => $header]);
     }
 
@@ -437,6 +439,7 @@ class ExamMarkingController extends Controller
     {
         $header = ExamResultHeader::findOrFail($resultHeaderId);
         $header->update(['is_locked' => true]);
+
         return response()->json(['message' => 'Student result locked successfully', 'data' => $header]);
     }
 
@@ -450,7 +453,7 @@ class ExamMarkingController extends Controller
         $classId = $request->query('class_id');
         $sectionId = $request->query('section_id');
 
-        if (empty($query) || !$examId || !$classId) {
+        if (empty($query) || ! $examId || ! $classId) {
             return response()->json([]);
         }
 

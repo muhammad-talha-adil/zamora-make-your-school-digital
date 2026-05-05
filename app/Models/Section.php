@@ -17,6 +17,7 @@ class Section extends Model
      */
     protected $fillable = [
         'name',
+        'code',
         'description',
         'is_active',
         'class_id',
@@ -39,6 +40,6 @@ class Section extends Model
      */
     public function schoolClass()
     {
-        return $this->belongsTo(SchoolClass::class);
+        return $this->belongsTo(SchoolClass::class, 'class_id');
     }
 }

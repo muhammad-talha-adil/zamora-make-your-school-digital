@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\ThemeSetting;
 use Closure;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\View;
@@ -12,7 +13,7 @@ class HandleAppearance
     /**
      * Handle an incoming request.
      *
-     * @param  \Closure(\Illuminate\Http\Request): (\Symfony\Component\HttpFoundation\Response)  $next
+     * @param  Closure(Request): (Response)  $next
      */
     public function handle(Request $request, Closure $next): Response
     {
@@ -21,7 +22,7 @@ class HandleAppearance
 
         // Determine mode for theme
         $mode = $appearance === 'system' ? 'light' : $appearance;
-        $theme = \App\Models\ThemeSetting::where('mode', $mode)->first();
+        $theme = ThemeSetting::where('mode', $mode)->first();
         View::share('theme', $theme);
         View::share('theme_mode', $mode);
 

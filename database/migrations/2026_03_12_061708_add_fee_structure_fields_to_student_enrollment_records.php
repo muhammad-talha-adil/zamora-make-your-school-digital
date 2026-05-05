@@ -9,9 +9,9 @@ return new class extends Migration
     /**
      * Run the migrations.
      */
-     public function up(): void
+    public function up(): void
     {
-        if (!Schema::hasColumn('student_enrollment_records', 'fee_structure_id')) {
+        if (! Schema::hasColumn('student_enrollment_records', 'fee_structure_id')) {
             Schema::table('student_enrollment_records', function (Blueprint $table) {
                 // Link to fee structure
                 $table->foreignId('fee_structure_id')

@@ -6,9 +6,9 @@ use Illuminate\Support\Facades\Schema;
 
 /**
  * Discount Types Migration
- * 
+ *
  * Master table for standard discount/concession types offered by the school.
- * 
+ *
  * Examples:
  * - Sibling Discount: 10% off for 2nd child, 20% off for 3rd child
  * - Merit Scholarship: 50% off for top performers
@@ -22,21 +22,21 @@ return new class extends Migration
     {
         Schema::create('discount_types', function (Blueprint $table) {
             $table->id();
-            
+
             // Basic information
             $table->string('name', 100); // e.g., "Sibling Discount", "Merit Scholarship"
             $table->string('code', 50)->unique(); // e.g., "SIBLING", "MERIT"
-            
+
             // Default value configuration
             $table->enum('value_type', ['fixed', 'percent'])->default('percent');
             $table->decimal('default_value', 10, 2)->nullable(); // Default discount amount/percentage
-            
+
             // Description and status
             $table->text('description')->nullable();
             $table->boolean('is_active')->default(true)->index();
-            
+
             $table->timestamps();
-            
+
             // Indexes
             $table->index('code');
         });

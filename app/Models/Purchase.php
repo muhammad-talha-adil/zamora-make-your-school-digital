@@ -4,6 +4,9 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Purchase extends Model
@@ -21,7 +24,9 @@ class Purchase extends Model
      * Payment status constants.
      */
     public const PAYMENT_STATUS_UNPAID = 'unpaid';
+
     public const PAYMENT_STATUS_PARTIAL = 'partial';
+
     public const PAYMENT_STATUS_PAID = 'paid';
 
     /**
@@ -80,7 +85,7 @@ class Purchase extends Model
     public static function generatePurchaseId(): string
     {
         $year = date('Y');
-        
+
         // Get the last purchase for this year
         $lastPurchase = static::whereYear('created_at', $year)
             ->orderBy('id', 'desc')
@@ -92,13 +97,13 @@ class Purchase extends Model
             $counter = 1;
         }
 
-        return 'PR-' . $year . '-' . str_pad($counter, 4, '0', STR_PAD_LEFT);
+        return 'PR-'.$year.'-'.str_pad($counter, 4, '0', STR_PAD_LEFT);
     }
 
     /**
      * Get the campus that owns the purchase.
      */
-    public function campus(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    public function campus(): BelongsTo
     {
         return $this->belongsTo(Campus::class);
     }
@@ -106,7 +111,7 @@ class Purchase extends Model
     /**
      * Get the supplier for this purchase.
      */
-    public function supplier(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    public function supplier(): BelongsTo
     {
         return $this->belongsTo(Supplier::class);
     }
@@ -114,7 +119,7 @@ class Purchase extends Model
     /**
      * Get the purchase items for this purchase.
      */
-    public function purchaseItems(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function purchaseItems(): HasMany
     {
         return $this->hasMany(PurchaseItem::class);
     }
@@ -122,7 +127,7 @@ class Purchase extends Model
     /**
      * Get the inventory items for this purchase.
      */
-    public function inventoryItems(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    public function inventoryItems(): BelongsToMany
     {
         return $this->belongsToMany(InventoryItem::class, 'inventory_purchase_items')
             ->withPivot(['quantity', 'purchase_rate', 'total', 'item_snapshot'])
@@ -152,7 +157,7 @@ class Purchase extends Model
      */
     public function getCancellationReason(): ?string
     {
-        if (!$this->isCancelled()) {
+        if (! $this->isCancelled()) {
             return null;
         }
 
@@ -167,7 +172,7 @@ class Purchase extends Model
     /**
      * Get the payments for this purchase.
      */
-    public function payments(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function payments(): HasMany
     {
         return $this->hasMany(PurchasePayment::class);
     }
@@ -201,7 +206,7 @@ class Purchase extends Model
      */
     public function isPartialPaid(): bool
     {
-        return !$this->isFullyPaid() && !$this->isUnpaid();
+        return ! $this->isFullyPaid() && ! $this->isUnpaid();
     }
 
     /**
@@ -209,10 +214,11 @@ class Purchase extends Model
      */
     public function isOverdue(): bool
     {
-        if (!$this->due_date) {
+        if (! $this->due_date) {
             return false;
         }
-        return !$this->isFullyPaid() && $this->due_date->isPast();
+
+        return ! $this->isFullyPaid() && $this->due_date->isPast();
     }
 
     /**
@@ -235,7 +241,7 @@ class Purchase extends Model
     {
         if ($this->isFullyPaid()) {
             $this->payment_status = self::PAYMENT_STATUS_PAID;
-            if (!$this->payment_date) {
+            if (! $this->payment_date) {
                 $this->payment_date = now();
             }
         } elseif (($this->paid_amount ?? 0) > 0) {
@@ -320,7 +326,7 @@ class Purchase extends Model
      */
     public function scopeDateRange($query, $fromDate, $toDate)
     {
-        return $query->when($fromDate, fn($q) => $q->whereDate('purchase_date', '>=', $fromDate))
-            ->when($toDate, fn($q) => $q->whereDate('purchase_date', '<=', $toDate));
+        return $query->when($fromDate, fn ($q) => $q->whereDate('purchase_date', '>=', $fromDate))
+            ->when($toDate, fn ($q) => $q->whereDate('purchase_date', '<=', $toDate));
     }
 }

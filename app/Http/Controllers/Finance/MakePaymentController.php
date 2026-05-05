@@ -3,12 +3,12 @@
 namespace App\Http\Controllers\Finance;
 
 use App\Http\Controllers\Controller;
-use App\Services\FinanceService;
-use App\Models\Purchase;
 use App\Models\Campus;
-use App\Models\Supplier;
 use App\Models\Ledger\LedgerCategory;
 use App\Models\Ledger\PaymentMethod;
+use App\Models\Purchase;
+use App\Models\Supplier;
+use App\Services\FinanceService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -30,12 +30,12 @@ class MakePaymentController extends Controller
             // Search purchases
             $purchases = Purchase::with(['supplier', 'campus'])
                 ->where('payment_status', '!=', 'paid')
-                ->where('purchase_id', 'like', '%' . $request->search . '%')
+                ->where('purchase_id', 'like', '%'.$request->search.'%')
                 ->limit(10)
                 ->get();
-            
+
             // Or search suppliers
-            $suppliers = Supplier::where('name', 'like', '%' . $request->search . '%')
+            $suppliers = Supplier::where('name', 'like', '%'.$request->search.'%')
                 ->limit(10)
                 ->get(['id', 'name', 'email', 'phone']);
         }
@@ -61,11 +61,11 @@ class MakePaymentController extends Controller
         ]);
 
         $purchase = Purchase::findOrFail($validated['purchase_id']);
-        
+
         // Update purchase (existing business logic)
         $purchase->paid_amount += $validated['amount'];
-        $purchase->payment_status = $purchase->paid_amount >= $purchase->total_amount 
-            ? 'paid' 
+        $purchase->payment_status = $purchase->paid_amount >= $purchase->total_amount
+            ? 'paid'
             : 'partial';
         $purchase->save();
 
@@ -78,7 +78,7 @@ class MakePaymentController extends Controller
             'reference_type' => 'App\\Models\\Purchase',
             'reference_id' => $validated['purchase_id'],
             'transaction_date' => $validated['transaction_date'],
-            'description' => $validated['description'] ?? 'Payment for ' . $purchase->purchase_id,
+            'description' => $validated['description'] ?? 'Payment for '.$purchase->purchase_id,
             'campus_id' => $purchase->campus_id,
         ]);
 

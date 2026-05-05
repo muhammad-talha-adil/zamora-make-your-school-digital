@@ -12,8 +12,11 @@ class Attendance extends Model
      * Attendance status codes.
      */
     public const STATUS_PRESENT = 'P';
+
     public const STATUS_ABSENT = 'A';
+
     public const STATUS_LEAVE = 'L';
+
     public const STATUS_LATE = 'LT';
 
     protected $fillable = [

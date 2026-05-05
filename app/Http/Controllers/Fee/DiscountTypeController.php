@@ -72,7 +72,7 @@ class DiscountTypeController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:100',
-            'code' => 'required|string|max:50|unique:discount_types,code,' . $discountType->id,
+            'code' => 'required|string|max:50|unique:discount_types,code,'.$discountType->id,
             'default_value_type' => 'required|in:fixed,percent',
             'default_value' => 'required|numeric|min:0',
             'requires_approval' => 'boolean',
@@ -99,6 +99,21 @@ class DiscountTypeController extends Controller
 
         return redirect()->route('fee.discount-types.index')
             ->with('success', 'Discount type deleted successfully.');
+    }
+
+    /**
+     * Toggle the active status of the specified discount type.
+     */
+    public function toggleActive(DiscountType $discountType)
+    {
+        $discountType->is_active = ! $discountType->is_active;
+        $discountType->save();
+
+        return response()->json([
+            'success' => true,
+            'data' => $discountType,
+            'message' => $discountType->is_active ? 'Discount type activated successfully.' : 'Discount type deactivated successfully.',
+        ]);
     }
 
     /**

@@ -16,7 +16,8 @@ class UpdateFeeHeadRequest extends FormRequest
 
     public function rules(): array
     {
-        $feeHeadId = $this->route('fee_head');
+        $feeHead = $this->route('feeHead');
+        $feeHeadId = is_object($feeHead) ? $feeHead->id : $feeHead;
 
         return [
             'name' => ['required', 'string', 'max:100'],

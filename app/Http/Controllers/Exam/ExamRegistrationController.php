@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Exam\StoreRegistrationRequest;
 use App\Models\Exam\Exam;
 use App\Models\Exam\ExamStudentRegistration;
-use App\Models\Campus;
 use App\Models\SchoolClass;
 use App\Models\Section;
 use App\Services\Exam\ExamRegistrationService;
@@ -32,8 +31,8 @@ class ExamRegistrationController extends Controller
         $classId = $request->get('class_id');
 
         $registrations = ExamStudentRegistration::with(['student.user', 'exam', 'class', 'section'])
-            ->when($examId, fn($q) => $q->where('exam_id', $examId))
-            ->when($classId, fn($q) => $q->where('class_id', $classId))
+            ->when($examId, fn ($q) => $q->where('exam_id', $examId))
+            ->when($classId, fn ($q) => $q->where('class_id', $classId))
             ->get();
 
         return Inertia::render('Exam/Registrations/Index', [
@@ -54,11 +53,11 @@ class ExamRegistrationController extends Controller
     public function index(Request $request)
     {
         $examId = $request->get('exam_id');
-        
+
         $registrations = ExamStudentRegistration::with(['student.user', 'exam', 'class', 'section'])
-            ->when($examId, fn($q) => $q->where('exam_id', $examId))
+            ->when($examId, fn ($q) => $q->where('exam_id', $examId))
             ->get();
-            
+
         return response()->json(['data' => $registrations]);
     }
 
@@ -78,7 +77,7 @@ class ExamRegistrationController extends Controller
             $validated['class_id'] ?? null,
             $validated['section_id'] ?? null
         );
-        
+
         return response()->json(['message' => "Generated {$count} registrations successfully"]);
     }
 
@@ -88,6 +87,7 @@ class ExamRegistrationController extends Controller
     public function store(StoreRegistrationRequest $request)
     {
         $registration = $this->registrationService->registerStudent($request->validated());
+
         return response()->json(['message' => 'Registration created successfully', 'data' => $registration], 201);
     }
 
@@ -109,7 +109,7 @@ class ExamRegistrationController extends Controller
         $classId = $validated['class_id'] ?? null;
         $sectionId = $validated['section_id'] ?? null;
         $now = now();
-        
+
         $registrations = [];
         foreach ($studentIds as $studentId) {
             $registrations[] = [
@@ -124,6 +124,7 @@ class ExamRegistrationController extends Controller
         }
 
         ExamStudentRegistration::insert($registrations);
+
         return response()->json(['message' => 'Students registered successfully', 'count' => count($registrations)], 201);
     }
 
@@ -134,6 +135,7 @@ class ExamRegistrationController extends Controller
     {
         $registration = ExamStudentRegistration::findOrFail($id);
         $registration = $this->registrationService->withdraw($registration);
+
         return response()->json(['message' => 'Registration withdrawn successfully', 'data' => $registration]);
     }
 }

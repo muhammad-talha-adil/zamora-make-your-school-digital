@@ -78,6 +78,7 @@ class InventoryType extends Model
         if ($this->campus_id === null) {
             return 'All Campuses';
         }
+
         return $this->campus?->name ?? 'Unknown';
     }
 
@@ -106,7 +107,7 @@ class InventoryType extends Model
     {
         return $query->where(function ($q) use ($campusId) {
             $q->where('campus_id', $campusId)
-              ->orWhereNull('campus_id');
+                ->orWhereNull('campus_id');
         });
     }
 
@@ -131,6 +132,6 @@ class InventoryType extends Model
      */
     public function scopeSearch($query, $search)
     {
-        return $query->whereRaw('LOWER(name) LIKE ?', ['%' . strtolower($search) . '%']);
+        return $query->whereRaw('LOWER(name) LIKE ?', ['%'.strtolower($search).'%']);
     }
 }

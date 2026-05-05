@@ -4,11 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\Student\StoreStudentRequest;
 use App\Http\Requests\Student\UpdateStudentRequest;
-use App\Http\Resources\StudentResource;
 use App\Models\Student;
-use App\Policies\StudentPolicy;
 use App\Repositories\StudentRepository;
 use App\Services\StudentService;
+use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -40,10 +39,8 @@ class StudentController extends Controller
     /**
      * Display a listing of students.
      *
-     * @param Request $request
-     * @return InertiaResponse
      *
-     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @throws AuthorizationException
      */
     public function index(Request $request): InertiaResponse
     {
@@ -63,10 +60,8 @@ class StudentController extends Controller
     /**
      * Display a listing of students (API endpoint).
      *
-     * @param Request $request
-     * @return JsonResponse
      *
-     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @throws AuthorizationException
      */
     public function apiIndex(Request $request): JsonResponse
     {
@@ -78,9 +73,8 @@ class StudentController extends Controller
     /**
      * Show the form for creating a new student.
      *
-     * @return InertiaResponse
      *
-     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @throws AuthorizationException
      */
     public function create(): InertiaResponse
     {
@@ -98,10 +92,8 @@ class StudentController extends Controller
     /**
      * Store a newly created student in storage.
      *
-     * @param StoreStudentRequest $request
-     * @return RedirectResponse
      *
-     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @throws AuthorizationException
      */
     public function store(StoreStudentRequest $request): RedirectResponse
     {
@@ -126,7 +118,7 @@ class StudentController extends Controller
             ]);
 
             return redirect()->back()
-                ->with('error', 'Failed to admit student: ' . $e->getMessage())
+                ->with('error', 'Failed to admit student: '.$e->getMessage())
                 ->withInput();
         }
     }
@@ -134,10 +126,8 @@ class StudentController extends Controller
     /**
      * Display the specified student.
      *
-     * @param Student $student
-     * @return InertiaResponse
      *
-     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @throws AuthorizationException
      */
     public function show(Student $student): InertiaResponse
     {
@@ -156,10 +146,8 @@ class StudentController extends Controller
     /**
      * Show the form for editing the specified student.
      *
-     * @param Student $student
-     * @return InertiaResponse
      *
-     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @throws AuthorizationException
      */
     public function edit(Student $student): InertiaResponse
     {
@@ -178,11 +166,8 @@ class StudentController extends Controller
     /**
      * Update the specified student in storage.
      *
-     * @param UpdateStudentRequest $request
-     * @param Student $student
-     * @return RedirectResponse
      *
-     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @throws AuthorizationException
      */
     public function update(UpdateStudentRequest $request, Student $student): RedirectResponse
     {
@@ -208,7 +193,7 @@ class StudentController extends Controller
             ]);
 
             return redirect()->back()
-                ->with('error', 'Failed to update student: ' . $e->getMessage())
+                ->with('error', 'Failed to update student: '.$e->getMessage())
                 ->withInput();
         }
     }
@@ -216,11 +201,8 @@ class StudentController extends Controller
     /**
      * Change student status (leave or re-admission).
      *
-     * @param UpdateStudentRequest $request
-     * @param Student $student
-     * @return RedirectResponse
      *
-     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @throws AuthorizationException
      */
     public function changeStatus(UpdateStudentRequest $request, Student $student): RedirectResponse
     {
@@ -236,7 +218,7 @@ class StudentController extends Controller
             $validated = $request->validatedForStatusChange();
             $this->service->changeStatus($student, $validated);
 
-            $message = !empty($validated['is_reactivation'])
+            $message = ! empty($validated['is_reactivation'])
                 ? 'Student has been re-admitted successfully.'
                 : 'Student status has been updated and their account has been deactivated.';
 
@@ -250,18 +232,15 @@ class StudentController extends Controller
             ]);
 
             return redirect()->back()
-                ->with('error', 'Failed to update student status: ' . $e->getMessage());
+                ->with('error', 'Failed to update student status: '.$e->getMessage());
         }
     }
 
     /**
      * Re-admit a previously left student.
      *
-     * @param UpdateStudentRequest $request
-     * @param Student $student
-     * @return RedirectResponse
      *
-     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @throws AuthorizationException
      */
     public function readmit(UpdateStudentRequest $request, Student $student): RedirectResponse
     {
@@ -287,17 +266,15 @@ class StudentController extends Controller
             ]);
 
             return redirect()->back()
-                ->with('error', 'Failed to re-admit student: ' . $e->getMessage());
+                ->with('error', 'Failed to re-admit student: '.$e->getMessage());
         }
     }
 
     /**
      * Remove the specified student from storage (soft delete).
      *
-     * @param Student $student
-     * @return RedirectResponse
      *
-     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @throws AuthorizationException
      */
     public function destroy(Student $student): RedirectResponse
     {
@@ -322,17 +299,15 @@ class StudentController extends Controller
             ]);
 
             return redirect()->back()
-                ->with('error', 'Failed to delete student: ' . $e->getMessage());
+                ->with('error', 'Failed to delete student: '.$e->getMessage());
         }
     }
 
     /**
      * Restore a soft-deleted student.
      *
-     * @param Student $student
-     * @return RedirectResponse
      *
-     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @throws AuthorizationException
      */
     public function restore(Student $student): RedirectResponse
     {
@@ -357,15 +332,12 @@ class StudentController extends Controller
             ]);
 
             return redirect()->back()
-                ->with('error', 'Failed to restore student: ' . $e->getMessage());
+                ->with('error', 'Failed to restore student: '.$e->getMessage());
         }
     }
 
     /**
      * Get sections by class for dropdown.
-     *
-     * @param Request $request
-     * @return JsonResponse
      */
     public function getSectionsByClass(Request $request): JsonResponse
     {
@@ -378,9 +350,6 @@ class StudentController extends Controller
 
     /**
      * Get guardian by phone number for sibling admission.
-     *
-     * @param Request $request
-     * @return JsonResponse
      */
     public function getGuardianByPhone(Request $request): JsonResponse
     {
@@ -390,10 +359,8 @@ class StudentController extends Controller
     /**
      * Export students data.
      *
-     * @param Request $request
-     * @return JsonResponse
      *
-     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @throws AuthorizationException
      */
     public function export(Request $request): JsonResponse
     {
@@ -405,10 +372,8 @@ class StudentController extends Controller
     /**
      * Import students from file.
      *
-     * @param Request $request
-     * @return JsonResponse
      *
-     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @throws AuthorizationException
      */
     public function import(Request $request): JsonResponse
     {
@@ -420,10 +385,9 @@ class StudentController extends Controller
     /**
      * Print admission form for a student.
      *
-     * @param Student $student
-     * @return \Illuminate\Http\Response
+     * @return Response
      *
-     * @throws \Illuminate\Auth\Access\AuthorizationException
+     * @throws AuthorizationException
      */
     public function print(Student $student)
     {

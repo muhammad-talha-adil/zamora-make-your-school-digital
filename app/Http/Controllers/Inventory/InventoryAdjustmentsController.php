@@ -8,7 +8,9 @@ use App\Models\InventoryAdjustment;
 use App\Models\InventoryItem;
 use App\Models\InventoryStock;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Inertia\Response;
 
 class InventoryAdjustmentsController extends Controller
@@ -23,15 +25,15 @@ class InventoryAdjustmentsController extends Controller
 
         return inertia('inventory/Adjustments/Index', [
             'adjustments' => InventoryAdjustment::with(['campus:id,name', 'inventoryItem:id,name', 'user:id,name'])
-                ->when($campusId, fn($q) => $q->where('campus_id', $campusId))
-                ->when($itemId, fn($q) => $q->where('inventory_item_id', $itemId))
-                ->when($request->get('type'), fn($q) => $q->where('type', $request->get('type')))
-                ->when($request->get('from_date'), fn($q) => $q->whereDate('created_at', '>=', $request->get('from_date')))
-                ->when($request->get('to_date'), fn($q) => $q->whereDate('created_at', '<=', $request->get('to_date')))
+                ->when($campusId, fn ($q) => $q->where('campus_id', $campusId))
+                ->when($itemId, fn ($q) => $q->where('inventory_item_id', $itemId))
+                ->when($request->get('type'), fn ($q) => $q->where('type', $request->get('type')))
+                ->when($request->get('from_date'), fn ($q) => $q->whereDate('created_at', '>=', $request->get('from_date')))
+                ->when($request->get('to_date'), fn ($q) => $q->whereDate('created_at', '<=', $request->get('to_date')))
                 ->orderBy('created_at', 'desc')
                 ->paginate(20),
             'campuses' => Campus::orderBy('name')->get(),
-            'inventoryItems' => InventoryItem::when($campusId, fn($q) => $q->where('campus_id', $campusId))
+            'inventoryItems' => InventoryItem::when($campusId, fn ($q) => $q->where('campus_id', $campusId))
                 ->where('is_active', true)
                 ->orderBy('name')
                 ->get(),
@@ -52,16 +54,16 @@ class InventoryAdjustmentsController extends Controller
     {
         $campusId = $request->get('campus_id');
 
-        if (!$campusId) {
+        if (! $campusId) {
             return response()->json(['error' => 'campus_id is required'], 422);
         }
 
         $adjustments = InventoryAdjustment::with(['campus:id,name', 'inventoryItem:id,name'])
-            ->when($campusId, fn($q) => $q->where('campus_id', $campusId))
-            ->when($request->get('item_id'), fn($q) => $q->where('inventory_item_id', $request->get('item_id')))
-            ->when($request->get('type'), fn($q) => $q->where('type', $request->get('type')))
-            ->when($request->get('from_date'), fn($q) => $q->whereDate('created_at', '>=', $request->get('from_date')))
-            ->when($request->get('to_date'), fn($q) => $q->whereDate('created_at', '<=', $request->get('to_date')))
+            ->when($campusId, fn ($q) => $q->where('campus_id', $campusId))
+            ->when($request->get('item_id'), fn ($q) => $q->where('inventory_item_id', $request->get('item_id')))
+            ->when($request->get('type'), fn ($q) => $q->where('type', $request->get('type')))
+            ->when($request->get('from_date'), fn ($q) => $q->whereDate('created_at', '>=', $request->get('from_date')))
+            ->when($request->get('to_date'), fn ($q) => $q->whereDate('created_at', '<=', $request->get('to_date')))
             ->orderBy('created_at', 'desc')
             ->limit($request->get('limit', 50))
             ->get();
@@ -74,7 +76,7 @@ class InventoryAdjustmentsController extends Controller
      *
      * REDIRECTED: Now uses modal on dashboard instead of separate page.
      */
-    public function create(Request $request): \Illuminate\Http\RedirectResponse
+    public function create(Request $request): RedirectResponse
     {
         return redirect()->route('inventory.adjustments.index');
     }
@@ -94,7 +96,7 @@ class InventoryAdjustmentsController extends Controller
         ]);
 
         try {
-            \DB::transaction(function () use ($request) {
+            DB::transaction(function () use ($request) {
                 // Get or create stock record
                 $stock = InventoryStock::firstOrCreate(
                     [
@@ -146,7 +148,7 @@ class InventoryAdjustmentsController extends Controller
             return redirect()->route('inventory.adjustments.index')
                 ->with('success', 'Stock adjustment created successfully. Stock has been updated.');
         } catch (\Exception $e) {
-            return back()->with('error', 'Failed to create adjustment: ' . $e->getMessage());
+            return back()->with('error', 'Failed to create adjustment: '.$e->getMessage());
         }
     }
 
@@ -157,7 +159,7 @@ class InventoryAdjustmentsController extends Controller
     {
         /** @var InventoryAdjustment $adjustment */
         $adjustment = InventoryAdjustment::where('id', $adjustment->id)
-            ->when($request->get('campus_id'), fn($q) => $q->where('campus_id', $request->get('campus_id')))
+            ->when($request->get('campus_id'), fn ($q) => $q->where('campus_id', $request->get('campus_id')))
             ->firstOrFail();
 
         return inertia('inventory/Adjustments/Show', [
@@ -171,11 +173,11 @@ class InventoryAdjustmentsController extends Controller
     public function destroy(Request $request, InventoryAdjustment $adjustment)
     {
         $adjustment = InventoryAdjustment::where('id', $adjustment->id)
-            ->when($request->get('campus_id'), fn($q) => $q->where('campus_id', $request->get('campus_id')))
+            ->when($request->get('campus_id'), fn ($q) => $q->where('campus_id', $request->get('campus_id')))
             ->firstOrFail();
 
         try {
-            \DB::transaction(function () use ($adjustment) {
+            DB::transaction(function () use ($adjustment) {
                 // Revert stock
                 $stock = InventoryStock::where('campus_id', $adjustment->campus_id)
                     ->where('inventory_item_id', $adjustment->inventory_item_id)
@@ -202,7 +204,7 @@ class InventoryAdjustmentsController extends Controller
 
             return back()->with('success', 'Adjustment deleted and stock reverted successfully.');
         } catch (\Exception $e) {
-            return back()->with('error', 'Failed to delete adjustment: ' . $e->getMessage());
+            return back()->with('error', 'Failed to delete adjustment: '.$e->getMessage());
         }
     }
 
@@ -213,7 +215,7 @@ class InventoryAdjustmentsController extends Controller
     {
         $campusId = $request->get('campus_id');
 
-        if (!$campusId) {
+        if (! $campusId) {
             return response()->json(['error' => 'campus_id is required'], 422);
         }
 
@@ -221,14 +223,14 @@ class InventoryAdjustmentsController extends Controller
 
         $additions = InventoryAdjustment::where('campus_id', $campusId)
             ->where('type', 'add')
-            ->when($request->get('from_date'), fn($q) => $q->whereDate('created_at', '>=', $request->get('from_date')))
-            ->when($request->get('to_date'), fn($q) => $q->whereDate('created_at', '<=', $request->get('to_date')))
+            ->when($request->get('from_date'), fn ($q) => $q->whereDate('created_at', '>=', $request->get('from_date')))
+            ->when($request->get('to_date'), fn ($q) => $q->whereDate('created_at', '<=', $request->get('to_date')))
             ->count();
 
         $subtractions = InventoryAdjustment::where('campus_id', $campusId)
             ->where('type', 'subtract')
-            ->when($request->get('from_date'), fn($q) => $q->whereDate('created_at', '>=', $request->get('from_date')))
-            ->when($request->get('to_date'), fn($q) => $q->whereDate('created_at', '<=', $request->get('to_date')))
+            ->when($request->get('from_date'), fn ($q) => $q->whereDate('created_at', '>=', $request->get('from_date')))
+            ->when($request->get('to_date'), fn ($q) => $q->whereDate('created_at', '<=', $request->get('to_date')))
             ->count();
 
         return response()->json([

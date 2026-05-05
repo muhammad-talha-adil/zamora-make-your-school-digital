@@ -3,11 +3,11 @@
 namespace App\Http\Controllers\Settings;
 
 use App\Http\Controllers\Controller;
-use App\Models\LeaveType;
-use App\Models\Holiday;
 use App\Models\Campus;
-use Illuminate\Http\Request;
+use App\Models\Holiday;
+use App\Models\LeaveType;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -21,7 +21,7 @@ class AttendanceSettingsController extends Controller
         $this->authorize('settings.manage');
 
         $leaveTypes = LeaveType::orderBy('id', 'desc')->paginate(10);
-        
+
         // Only show current and future holidays (past holidays are handled separately)
         $holidays = Holiday::with('campus')
             ->where('end_date', '>=', now()->toDateString())
@@ -31,6 +31,7 @@ class AttendanceSettingsController extends Controller
         // Add is_past flag to each holiday
         $holidays->getCollection()->transform(function ($holiday) {
             $holiday->is_past = $holiday->end_date < now()->toDateString();
+
             return $holiday;
         });
 
@@ -86,6 +87,7 @@ class AttendanceSettingsController extends Controller
         // Add is_past flag to each holiday
         $holidays->getCollection()->transform(function ($holiday) {
             $holiday->is_past = $holiday->end_date < now()->toDateString();
+
             return $holiday;
         });
 
@@ -137,7 +139,7 @@ class AttendanceSettingsController extends Controller
         $this->authorize('settings.manage');
 
         $validated = $request->validate([
-            'name' => 'required|string|max:255|unique:leave_types,name,' . $leaveType->id,
+            'name' => 'required|string|max:255|unique:leave_types,name,'.$leaveType->id,
             'description' => 'nullable|string',
             'is_active' => 'boolean',
         ]);

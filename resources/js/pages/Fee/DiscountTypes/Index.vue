@@ -7,6 +7,7 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import type { BreadcrumbItem } from '@/types';
 import { Button } from '@/components/ui/button';
 import Icon from '@/components/Icon.vue';
+import axios from 'axios';
 
 interface DiscountType {
     id: number;
@@ -39,20 +40,53 @@ const formatValue = (type: string, value: number) => {
     return new Intl.NumberFormat('en-US', { style: 'currency', currency: 'PKR' }).format(value);
 };
 
+const toggleActiveStatus = (discountType: DiscountType) => {
+    const newStatus = !discountType.is_active;
+    const actionText = newStatus ? 'activate' : 'deactivate';
+    const confirmButtonText = newStatus ? 'Yes, activate it!' : 'Yes, deactivate it!';
+
+    alert
+        .confirm(
+            `Are you sure you want to ${actionText} "${discountType.name}"?`,
+            actionText.charAt(0).toUpperCase() + actionText.slice(1) + ' Discount Type',
+            confirmButtonText,
+        )
+        .then((result) => {
+            if (result.isConfirmed) {
+                axios.post(route('fee.discount-types.toggle-active', discountType.id), {}, {
+                    headers: { 'Accept': 'application/json' }
+                }).then(() => {
+                    alert.success(newStatus ? 'Discount type activated successfully.' : 'Discount type deactivated successfully.');
+                    const idx = discountTypesData.value.findIndex((d) => d.id === discountType.id);
+                    if (idx !== -1) {
+                        discountTypesData.value.splice(idx, 1, { ...discountTypesData.value[idx], is_active: newStatus });
+                    }
+                }).catch(() => {
+                    alert.error('Failed to update status. Please try again.');
+                });
+            }
+        });
+};
+
 const deleteDiscountType = (discountType: DiscountType) => {
-    if (!confirm(`Are you sure you want to delete "${discountType.name}"? This action cannot be undone.`)) {
-        return;
-    }
-    
-    router.delete(route('fee.discount-types.destroy', discountType.id), {
-        onSuccess: () => {
-            // Successfully deleted
-            discountTypesData.value = discountTypesData.value.filter(d => d.id !== discountType.id);
-        },
-        onError: () => {
-            alert.error('Failed to delete discount type. It may be in use.');
-        }
-    });
+    alert
+        .confirm(
+            `Are you sure you want to delete "${discountType.name}"? This action cannot be undone.`,
+            'Delete Discount Type',
+            'Yes, delete it!',
+        )
+        .then((result) => {
+            if (result.isConfirmed) {
+                axios.delete(route('fee.discount-types.destroy', discountType.id), {
+                    headers: { 'Accept': 'application/json' }
+                }).then(() => {
+                    alert.success('Discount type deleted successfully!');
+                    discountTypesData.value = discountTypesData.value.filter(d => d.id !== discountType.id);
+                }).catch(() => {
+                    alert.error('Failed to delete discount type. It may be in use.');
+                });
+            }
+        });
 };
 </script>
 
@@ -100,6 +134,15 @@ const deleteDiscountType = (discountType: DiscountType) => {
                     <div class="flex gap-2 pt-2">
                         <Button variant="outline" size="sm" @click="router.visit(route('fee.discount-types.edit', discountType.id))">
                             <Icon icon="edit" class="mr-1" />Edit
+                        </Button>
+                        <Button
+                            :variant="discountType.is_active ? 'default' : 'outline'"
+                            :class="discountType.is_active ? 'bg-green-600 hover:bg-green-700' : 'text-green-600 border-green-600 hover:bg-green-50 dark:hover:bg-green-900/20'"
+                            size="sm"
+                            @click="toggleActiveStatus(discountType)"
+                        >
+                            <Icon :icon="discountType.is_active ? 'toggle-left' : 'toggle-right'" class="mr-1" />
+                            {{ discountType.is_active ? 'Deactivate' : 'Activate' }}
                         </Button>
                     </div>
                 </div>
@@ -167,6 +210,15 @@ const deleteDiscountType = (discountType: DiscountType) => {
                                     <div class="flex gap-2 justify-end">
                                         <Button variant="outline" size="sm" @click="router.visit(route('fee.discount-types.edit', discountType.id))">
                                             <Icon icon="edit" class="mr-1 h-3 w-3" />Edit
+                                        </Button>
+                                        <Button
+                                            :variant="discountType.is_active ? 'default' : 'outline'"
+                                            :class="discountType.is_active ? 'bg-green-600 hover:bg-green-700' : 'text-green-600 border-green-600 hover:bg-green-50 dark:hover:bg-green-900/20'"
+                                            size="sm"
+                                            @click="toggleActiveStatus(discountType)"
+                                        >
+                                            <Icon :icon="discountType.is_active ? 'toggle-left' : 'toggle-right'" class="mr-1 h-3 w-3" />
+                                            {{ discountType.is_active ? 'Deactivate' : 'Activate' }}
                                         </Button>
                                         <Button variant="destructive" size="sm" @click="deleteDiscountType(discountType)">
                                             <Icon icon="trash-2" class="mr-1 h-3 w-3" />Delete

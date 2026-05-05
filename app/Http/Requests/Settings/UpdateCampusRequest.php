@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Settings;
 
+use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
 class UpdateCampusRequest extends FormRequest
@@ -17,12 +18,12 @@ class UpdateCampusRequest extends FormRequest
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     * @return array<string, ValidationRule|array<mixed>|string>
      */
     public function rules(): array
     {
         return [
-            'name' => 'required|string|max:255|unique:campuses,name,' . $this->route('campus')->id,
+            'name' => 'required|string|max:255|unique:campuses,name,'.$this->route('campus')->id,
             'address' => 'nullable|string',
             'is_active' => 'boolean',
             'campus_type_id' => 'required|exists:campus_types,id',

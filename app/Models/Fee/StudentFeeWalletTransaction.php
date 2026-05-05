@@ -11,7 +11,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
  * Student Fee Wallet Transaction Model
- * 
+ *
  * Advance fee / credit wallet ledger for students.
  */
 class StudentFeeWalletTransaction extends Model

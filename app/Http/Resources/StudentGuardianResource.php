@@ -14,7 +14,6 @@ class StudentGuardianResource extends JsonResource
     /**
      * Transform the resource into an array.
      *
-     * @param Request $request
      * @return array<string, mixed>
      */
     public function toArray(Request $request): array
@@ -23,7 +22,7 @@ class StudentGuardianResource extends JsonResource
             'id' => $this->id,
             'student_id' => $this->student_id,
             'guardian_id' => $this->guardian_id,
-            'guardian' => $this->whenLoaded('guardian', fn() => [
+            'guardian' => $this->whenLoaded('guardian', fn () => [
                 'id' => $this->guardian->id,
                 'name' => $this->guardian->user?->name,
                 'email' => $this->guardian->user?->email,
@@ -32,7 +31,7 @@ class StudentGuardianResource extends JsonResource
                 'occupation' => $this->guardian->occupation,
                 'address' => $this->guardian->address,
             ]),
-            'relation' => $this->whenLoaded('relation', fn() => [
+            'relation' => $this->whenLoaded('relation', fn () => [
                 'id' => $this->relation->id,
                 'name' => $this->relation->name,
             ]),

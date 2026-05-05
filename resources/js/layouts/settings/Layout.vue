@@ -4,6 +4,6 @@
   </div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 // Settings layout with responsive container
 </script>

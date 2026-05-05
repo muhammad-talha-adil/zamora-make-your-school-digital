@@ -2,15 +2,15 @@
 
 namespace App\Services\Fee;
 
+use App\Enums\Fee\ValueType;
 use App\Enums\Fee\VoucherItemSource;
 use App\Enums\Fee\VoucherStatus;
-use App\Enums\Fee\ValueType;
+use App\Models\Fee\FeeHead;
 use App\Models\Fee\FeeStructure;
 use App\Models\Fee\FeeVoucher;
-use App\Models\Fee\FeeHead;
 use App\Models\Fee\StudentPaidOneTimeFee;
-use App\Models\StudentEnrollmentRecord;
 use App\Models\Month;
+use App\Models\StudentEnrollmentRecord;
 use App\Traits\Fee\HasMonthHelpers;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -26,8 +26,8 @@ class VoucherGenerationService
     {
         return DB::transaction(function () use ($monthNumber, $year, $filters) {
             $monthId = self::getMonthIdByNumber($monthNumber);
-            
-            if (!$monthId) {
+
+            if (! $monthId) {
                 throw new \Exception('Invalid month number');
             }
 
@@ -35,16 +35,16 @@ class VoucherGenerationService
                 ->with(['student', 'session', 'campus', 'class', 'section', 'feeStructure', 'feeStructure.items']);
 
             // Apply filters - session is required now
-            if (!empty($filters['session_id'])) {
+            if (! empty($filters['session_id'])) {
                 $query->where('session_id', $filters['session_id']);
             }
-            if (!empty($filters['campus_id'])) {
+            if (! empty($filters['campus_id'])) {
                 $query->where('campus_id', $filters['campus_id']);
             }
-            if (!empty($filters['class_id'])) {
+            if (! empty($filters['class_id'])) {
                 $query->where('class_id', $filters['class_id']);
             }
-            if (!empty($filters['section_id'])) {
+            if (! empty($filters['section_id'])) {
                 $query->where('section_id', $filters['section_id']);
             }
 
@@ -52,7 +52,7 @@ class VoucherGenerationService
             $generated = 0;
             $skipped = 0;
             $errors = [];
-            
+
             // Get custom fee heads for this generation
             $customFeeHeads = $filters['custom_fee_heads'] ?? [];
             $includePreviousUnpaid = $filters['include_previous_unpaid'] ?? false;
@@ -67,13 +67,14 @@ class VoucherGenerationService
 
                     if ($exists) {
                         $skipped++;
+
                         continue;
                     }
 
                     $this->generateVoucherForStudent(
-                        $enrollment, 
-                        $monthId, 
-                        $monthNumber, 
+                        $enrollment,
+                        $monthId,
+                        $monthNumber,
                         $year,
                         $customFeeHeads,
                         $includePreviousUnpaid
@@ -114,7 +115,7 @@ class VoucherGenerationService
         bool $includePreviousUnpaid = false
     ): FeeVoucher {
         // Validate enrollment is still active
-        if (!$enrollment->isActive()) {
+        if (! $enrollment->isActive()) {
             throw new \Exception('Student enrollment is not active');
         }
 
@@ -127,7 +128,7 @@ class VoucherGenerationService
         $structure = $this->getApplicableFeeStructure($enrollment);
 
         // Skip students without a fee structure (neither directly assigned nor available for class/campus)
-        if (!$structure) {
+        if (! $structure) {
             throw new \Exception('No fee structure found for this student');
         }
 
@@ -161,7 +162,7 @@ class VoucherGenerationService
         }
 
         // Store previous voucher IDs if any
-        if (!empty($previousVoucherIds)) {
+        if (! empty($previousVoucherIds)) {
             $voucher->update(['previous_voucher_ids' => $previousVoucherIds]);
         }
 
@@ -183,8 +184,8 @@ class VoucherGenerationService
     ): array {
         // Get the month ID for the current month number
         $currentMonthId = self::getMonthIdByNumber($currentMonthNumber);
-        
-        if (!$currentMonthId) {
+
+        if (! $currentMonthId) {
             return [];
         }
 
@@ -194,7 +195,7 @@ class VoucherGenerationService
                 $query->where('voucher_year', '<', $currentYear)
                     ->orWhere(function ($q) use ($currentMonthId, $currentYear) {
                         $q->where('voucher_year', '=', $currentYear)
-                          ->where('voucher_month_id', '<', $currentMonthId);
+                            ->where('voucher_month_id', '<', $currentMonthId);
                     });
             })
             ->whereIn('status', [VoucherStatus::UNPAID, VoucherStatus::PARTIAL])
@@ -213,8 +214,8 @@ class VoucherGenerationService
         if ($totalPreviousBalance > 0) {
             // Create a previous balance item
             $previousBalanceHead = FeeHead::where('code', 'PREVIOUS_BALANCE')->first();
-            
-            if (!$previousBalanceHead) {
+
+            if (! $previousBalanceHead) {
                 // Create the previous balance fee head if it doesn't exist
                 $previousBalanceHead = FeeHead::create([
                     'name' => 'Previous Balance',
@@ -272,7 +273,9 @@ class VoucherGenerationService
             ->effectiveOn(now())
             ->first();
 
-        if ($structure) return $structure;
+        if ($structure) {
+            return $structure;
+        }
 
         // 3. Try class-specific
         $structure = FeeStructure::active()
@@ -284,7 +287,9 @@ class VoucherGenerationService
             ->effectiveOn(now())
             ->first();
 
-        if ($structure) return $structure;
+        if ($structure) {
+            return $structure;
+        }
 
         // 4. Try campus-wide
         return FeeStructure::active()
@@ -303,7 +308,7 @@ class VoucherGenerationService
      */
     protected function generateVoucherNumber(int $year, int $campusId): string
     {
-        return DB::transaction(function () use ($year, $campusId) {
+        return DB::transaction(function () use ($year) {
             $lastVoucher = FeeVoucher::where('voucher_year', $year)
                 ->lockForUpdate()
                 ->orderBy('id', 'desc')
@@ -311,7 +316,7 @@ class VoucherGenerationService
 
             $nextNumber = $lastVoucher ? ((int) substr($lastVoucher->voucher_no, -6)) + 1 : 1;
 
-            return 'FV-' . $year . '-' . str_pad($nextNumber, 6, '0', STR_PAD_LEFT);
+            return 'FV-'.$year.'-'.str_pad($nextNumber, 6, '0', STR_PAD_LEFT);
         });
     }
 
@@ -332,7 +337,7 @@ class VoucherGenerationService
         $paidFeeHeadIds = $this->getPaidFeeHeadIds($enrollment);
 
         // Check if this is the first voucher of the session for one-time fees
-        $firstVoucherOfSession = !$this->hasExistingVouchers($enrollment);
+        $firstVoucherOfSession = ! $this->hasExistingVouchers($enrollment);
 
         // If we have a fee structure, use it
         if ($structure && $structure->items->isNotEmpty()) {
@@ -340,17 +345,17 @@ class VoucherGenerationService
             $sessionStartMonth = $enrollment->session->start_date ?? now();
             $firstMonthOfSession = (int) date('n', strtotime($sessionStartMonth));
             $isFirstMonth = $firstMonthOfSession == $monthNumber;
-            
+
             foreach ($structure->items as $item) {
                 // Check frequency - skip if yearly and not first month
-                if ($item->frequency === 'yearly' && !$isFirstMonth) {
+                if ($item->frequency === 'yearly' && ! $isFirstMonth) {
                     continue;
                 }
-                
+
                 // NEW: Handle "once" frequency - only add on first voucher of session
                 if ($item->frequency === 'once') {
                     // Only add if this is the first voucher of the session
-                    if (!$firstVoucherOfSession) {
+                    if (! $firstVoucherOfSession) {
                         continue;
                     }
                     // Also check if already paid (for readmitted students)
@@ -358,9 +363,9 @@ class VoucherGenerationService
                         continue;
                     }
                 }
-                
+
                 // Check if item is applicable for this month based on month range
-                if ($item->frequency !== 'once' && !$item->isApplicableForMonth($monthNumber)) {
+                if ($item->frequency !== 'once' && ! $item->isApplicableForMonth($monthNumber)) {
                     continue;
                 }
 
@@ -372,6 +377,7 @@ class VoucherGenerationService
                         'fee_head' => $item->feeHead->name,
                         'voucher_month' => $monthNumber,
                     ]);
+
                     continue;
                 }
 
@@ -386,7 +392,7 @@ class VoucherGenerationService
 
                 $voucher->items()->create([
                     'fee_head_id' => $item->fee_head_id,
-                    'description' => $item->feeHead->name . ($item->frequency === 'once' ? ' (One Time)' : ' - ' . self::getMonthNameByNumber($monthNumber) . ' ' . $voucher->voucher_year),
+                    'description' => $item->feeHead->name.($item->frequency === 'once' ? ' (One Time)' : ' - '.self::getMonthNameByNumber($monthNumber).' '.$voucher->voucher_year),
                     'amount' => $amount,
                     'discount_amount' => $discount,
                     'net_amount' => $amount - $discount,
@@ -421,7 +427,7 @@ class VoucherGenerationService
     protected function getPaidFeeHeadIds(StudentEnrollmentRecord $enrollment): array
     {
         $paidFeeHeadIds = [];
-        
+
         // Get all paid vouchers for this student in this session
         $paidVouchers = FeeVoucher::where('student_id', $enrollment->student_id)
             ->where('session_id', $enrollment->session_id)
@@ -432,7 +438,7 @@ class VoucherGenerationService
         foreach ($paidVouchers as $voucher) {
             foreach ($voucher->items as $item) {
                 // Track which fee heads have been paid
-                if (!in_array($item->fee_head_id, $paidFeeHeadIds)) {
+                if (! in_array($item->fee_head_id, $paidFeeHeadIds)) {
                     $paidFeeHeadIds[] = $item->fee_head_id;
                 }
             }
@@ -441,7 +447,7 @@ class VoucherGenerationService
         // Also check the StudentPaidOneTimeFee table for one-time fees
         $oneTimeFees = StudentPaidOneTimeFee::where('student_id', $enrollment->student_id)->get();
         foreach ($oneTimeFees as $otf) {
-            if (!in_array($otf->fee_head_id, $paidFeeHeadIds)) {
+            if (! in_array($otf->fee_head_id, $paidFeeHeadIds)) {
                 $paidFeeHeadIds[] = $otf->fee_head_id;
             }
         }
@@ -469,18 +475,19 @@ class VoucherGenerationService
                     'student_id' => $voucher->student_id,
                     'fee_head_id' => $customFee['fee_head_id'],
                 ]);
+
                 continue;
             }
 
             $feeHead = FeeHead::find($customFee['fee_head_id']);
-            
-            if (!$feeHead) {
+
+            if (! $feeHead) {
                 continue;
             }
 
             $voucher->items()->create([
                 'fee_head_id' => $customFee['fee_head_id'],
-                'description' => $feeHead->name . ' - ' . $monthName . ' ' . $voucher->voucher_year,
+                'description' => $feeHead->name.' - '.$monthName.' '.$voucher->voucher_year,
                 'quantity' => 1,
                 'unit_price' => $customFee['amount'],
                 'amount' => $customFee['amount'],
@@ -512,7 +519,7 @@ class VoucherGenerationService
         $isFirstMonth = date('n', strtotime($sessionStartMonth)) == $monthNumber;
 
         // Add monthly tuition fee (skip if already paid)
-        if ($monthlyFeeHead && !in_array($monthlyFeeHead->id, $paidFeeHeadIds)) {
+        if ($monthlyFeeHead && ! in_array($monthlyFeeHead->id, $paidFeeHeadIds)) {
             // Check for custom amount first, then fall back to enrollment
             $customMonthlyAmount = $this->getCustomAmountForFeeHead($customAssignments, $monthlyFeeHead->id);
             $monthlyAmount = $customMonthlyAmount ?? $enrollment->monthly_fee ?? 0;
@@ -522,7 +529,7 @@ class VoucherGenerationService
 
                 $voucher->items()->create([
                     'fee_head_id' => $monthlyFeeHead->id,
-                    'description' => $monthlyFeeHead->name . ' - ' . self::getMonthNameByNumber($monthNumber) . ' ' . $voucher->voucher_year,
+                    'description' => $monthlyFeeHead->name.' - '.self::getMonthNameByNumber($monthNumber).' '.$voucher->voucher_year,
                     'amount' => $monthlyAmount,
                     'discount_amount' => $discount,
                     'net_amount' => $monthlyAmount - $discount,
@@ -533,7 +540,7 @@ class VoucherGenerationService
         }
 
         // Add annual fee (only in first month of session and if not already paid)
-        if ($annualFeeHead && $isFirstMonth && !in_array($annualFeeHead->id, $paidFeeHeadIds)) {
+        if ($annualFeeHead && $isFirstMonth && ! in_array($annualFeeHead->id, $paidFeeHeadIds)) {
             $customAnnualAmount = $this->getCustomAmountForFeeHead($customAssignments, $annualFeeHead->id);
             $annualAmount = $customAnnualAmount ?? $enrollment->annual_fee ?? 0;
 
@@ -542,7 +549,7 @@ class VoucherGenerationService
 
                 $voucher->items()->create([
                     'fee_head_id' => $annualFeeHead->id,
-                    'description' => $annualFeeHead->name . ' - ' . $voucher->voucher_year,
+                    'description' => $annualFeeHead->name.' - '.$voucher->voucher_year,
                     'amount' => $annualAmount,
                     'discount_amount' => $discount,
                     'net_amount' => $annualAmount - $discount,
@@ -571,11 +578,11 @@ class VoucherGenerationService
             ->feeAssignments()
             ->where('is_active', true)
             ->where('assignment_type', 'custom')
-            ->where(function ($query) use ($enrollment) {
+            ->where(function ($query) {
                 $query->whereNull('effective_from')
                     ->orWhere('effective_from', '<=', now()->toDateString());
             })
-            ->where(function ($query) use ($enrollment) {
+            ->where(function ($query) {
                 $query->whereNull('effective_to')
                     ->orWhere('effective_to', '>=', now()->toDateString());
             })
@@ -591,8 +598,10 @@ class VoucherGenerationService
     {
         if (isset($assignments[$feeHeadId])) {
             $assignment = $assignments[$feeHeadId];
+
             return (float) $assignment['amount'];
         }
+
         return null;
     }
 
@@ -604,9 +613,9 @@ class VoucherGenerationService
         $query = $student->discounts()
             ->approved()
             ->effectiveOn(now())
-            ->where(function($q) use ($feeHeadId) {
+            ->where(function ($q) use ($feeHeadId) {
                 $q->whereNull('fee_head_id')
-                  ->orWhere('fee_head_id', $feeHeadId);
+                    ->orWhere('fee_head_id', $feeHeadId);
             });
 
         // Filter by enrollment if provided
@@ -616,7 +625,7 @@ class VoucherGenerationService
 
         $discount = $query->first();
 
-        if (!$discount) {
+        if (! $discount) {
             return 0;
         }
 
@@ -635,9 +644,9 @@ class VoucherGenerationService
         $query = $student->discounts()
             ->approved()
             ->effectiveOn(now())
-            ->where(function($q) use ($structureItem) {
+            ->where(function ($q) use ($structureItem) {
                 $q->whereNull('fee_head_id')
-                  ->orWhere('fee_head_id', $structureItem->fee_head_id);
+                    ->orWhere('fee_head_id', $structureItem->fee_head_id);
             });
 
         // Filter by enrollment if provided
@@ -647,7 +656,7 @@ class VoucherGenerationService
 
         $discount = $query->first();
 
-        if (!$discount) {
+        if (! $discount) {
             return 0;
         }
 

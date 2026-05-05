@@ -2,20 +2,20 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
     /**
      * Run the migrations.
-     * 
+     *
      * This is a CONSOLIDATED migration that:
      * 1. Creates student_inventory_records (parent table)
      * 2. Creates student_inventory_items (child table)
      * 3. Migrates data from old student_inventory table
      * 4. Updates inventory_returns to reference new structure
-     * 
+     *
      * Previously this was split across multiple files which caused issues.
      */
     public function up(): void
@@ -84,18 +84,18 @@ return new class extends Migration
             if ($oldRecords->count() > 0) {
                 // Group old records by student + date to create parent records
                 $grouped = $oldRecords->groupBy(function ($item) {
-                    return $item->student_id . '-' . $item->assigned_date;
+                    return $item->student_id.'-'.$item->assigned_date;
                 });
 
                 foreach ($grouped as $group) {
                     $firstItem = $group->first();
-                    
+
                     // Generate student_inventory_id
                     $year = date('Y', strtotime($firstItem->assigned_date));
                     $count = DB::table('student_inventory_records')
                         ->whereYear('created_at', $year)
                         ->count() + 1;
-                    $studentInventoryId = 'SI-' . $year . '-' . str_pad($count, 4, '0', STR_PAD_LEFT);
+                    $studentInventoryId = 'SI-'.$year.'-'.str_pad($count, 4, '0', STR_PAD_LEFT);
 
                     // Calculate totals from items in this group
                     $totalAmount = $group->sum(function ($item) {
@@ -105,6 +105,7 @@ return new class extends Migration
                         $lineTotal = ($item->quantity ?? 0) * ($item->unit_price_snapshot ?? 0);
                         $discountAmount = $item->discount_amount ?? 0;
                         $discountPercentage = $item->discount_percentage ?? 0;
+
                         return $discountAmount + ($lineTotal * $discountPercentage / 100);
                     });
                     $finalAmount = $totalAmount - $totalDiscount;
@@ -168,7 +169,7 @@ return new class extends Migration
         // Step 4: Update inventory_returns to reference new structure
         if (Schema::hasTable('inventory_returns')) {
             // Add foreign key to student_inventory_items
-            if (!Schema::hasColumn('inventory_returns', 'student_inventory_item_id')) {
+            if (! Schema::hasColumn('inventory_returns', 'student_inventory_item_id')) {
                 Schema::table('inventory_returns', function (Blueprint $table) {
                     $table->foreignId('student_inventory_item_id')
                         ->nullable()

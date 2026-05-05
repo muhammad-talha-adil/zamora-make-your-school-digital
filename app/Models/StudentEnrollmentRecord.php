@@ -2,6 +2,11 @@
 
 namespace App\Models;
 
+use App\Models\Fee\FeePayment;
+use App\Models\Fee\FeeStructure;
+use App\Models\Fee\FeeVoucher;
+use App\Models\Fee\StudentDiscount;
+use App\Models\Fee\StudentFeeAssignment;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -156,7 +161,7 @@ class StudentEnrollmentRecord extends Model
      */
     public function feeVouchers(): HasMany
     {
-        return $this->hasMany(\App\Models\Fee\FeeVoucher::class);
+        return $this->hasMany(FeeVoucher::class);
     }
 
     /**
@@ -164,7 +169,7 @@ class StudentEnrollmentRecord extends Model
      */
     public function feePayments(): HasMany
     {
-        return $this->hasMany(\App\Models\Fee\FeePayment::class);
+        return $this->hasMany(FeePayment::class);
     }
 
     /**
@@ -172,7 +177,7 @@ class StudentEnrollmentRecord extends Model
      */
     public function feeAssignments(): HasMany
     {
-        return $this->hasMany(\App\Models\Fee\StudentFeeAssignment::class);
+        return $this->hasMany(StudentFeeAssignment::class);
     }
 
     /**
@@ -180,7 +185,7 @@ class StudentEnrollmentRecord extends Model
      */
     public function discounts(): HasMany
     {
-        return $this->hasMany(\App\Models\Fee\StudentDiscount::class);
+        return $this->hasMany(StudentDiscount::class);
     }
 
     /**
@@ -188,6 +193,6 @@ class StudentEnrollmentRecord extends Model
      */
     public function feeStructure(): BelongsTo
     {
-        return $this->belongsTo(\App\Models\Fee\FeeStructure::class, 'fee_structure_id');
+        return $this->belongsTo(FeeStructure::class, 'fee_structure_id');
     }
 }

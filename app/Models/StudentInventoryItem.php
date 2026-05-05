@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class StudentInventoryItem extends Model
@@ -61,7 +62,7 @@ class StudentInventoryItem extends Model
     /**
      * Get the student inventory record that owns this item.
      */
-    public function studentInventoryRecord(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    public function studentInventoryRecord(): BelongsTo
     {
         return $this->belongsTo(StudentInventory::class, 'student_inventory_record_id');
     }
@@ -69,7 +70,7 @@ class StudentInventoryItem extends Model
     /**
      * Get the campus that owns the student inventory.
      */
-    public function campus(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    public function campus(): BelongsTo
     {
         return $this->belongsTo(Campus::class);
     }
@@ -77,7 +78,7 @@ class StudentInventoryItem extends Model
     /**
      * Get the student that owns the inventory.
      */
-    public function student(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    public function student(): BelongsTo
     {
         return $this->belongsTo(Student::class);
     }
@@ -85,7 +86,7 @@ class StudentInventoryItem extends Model
     /**
      * Get the inventory item for this student inventory.
      */
-    public function inventoryItem(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    public function inventoryItem(): BelongsTo
     {
         return $this->belongsTo(InventoryItem::class);
     }
@@ -93,7 +94,7 @@ class StudentInventoryItem extends Model
     /**
      * Get the invoice for this student inventory.
      */
-    public function invoice(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    public function invoice(): BelongsTo
     {
         return $this->belongsTo(Invoice::class);
     }
@@ -166,7 +167,7 @@ class StudentInventoryItem extends Model
     {
         $purchaseRate = (float) ($this->purchase_rate_snapshot ?? 0);
         $salePrice = $this->getFinalUnitPrice();
-        
+
         return ($salePrice - $purchaseRate) * $this->quantity;
     }
 
@@ -177,7 +178,7 @@ class StudentInventoryItem extends Model
     {
         $purchaseRate = (float) ($this->purchase_rate_snapshot ?? 0);
         $salePrice = $this->getFinalUnitPrice();
-        
+
         return $salePrice - $purchaseRate;
     }
 
@@ -195,6 +196,7 @@ class StudentInventoryItem extends Model
     public function getCostOfGoodsSold(): float
     {
         $purchaseRate = (float) ($this->purchase_rate_snapshot ?? 0);
+
         return $purchaseRate * $this->quantity;
     }
 
@@ -215,8 +217,9 @@ class StudentInventoryItem extends Model
         if ($purchaseRate <= 0) {
             return 0;
         }
-        
+
         $profitPerUnit = $this->getProfitPerUnit();
+
         return ($profitPerUnit / $purchaseRate) * 100;
     }
 

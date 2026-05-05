@@ -2,8 +2,11 @@
 
 namespace App\Services;
 
+use App\Models\Attendance;
 use App\Models\AttendanceStatus;
+use App\Models\AttendanceStudent;
 use App\Models\Holiday;
+use App\Models\Student;
 use App\Models\StudentLeave;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
@@ -28,12 +31,12 @@ class AttendanceService
     public function isHoliday(string $date, ?int $campusId = null): bool
     {
         $holiday = $this->getHoliday($date, $campusId);
-        
+
         // If holiday exists but attendance is allowed, treat it as not a holiday
         if ($holiday && $holiday->isAttendanceAllowed()) {
             return false;
         }
-        
+
         return $holiday !== null;
     }
 
@@ -44,8 +47,8 @@ class AttendanceService
      */
     public function getHoliday(string $date, ?int $campusId = null): ?Holiday
     {
-        $cacheKey = "holiday:{$date}:" . ($campusId ?? 'national');
-        
+        $cacheKey = "holiday:{$date}:".($campusId ?? 'national');
+
         return Cache::remember($cacheKey, self::CACHE_TTL, function () use ($date, $campusId) {
             // First check non-recurring holidays
             $holiday = Holiday::where(function ($query) use ($date, $campusId) {
@@ -55,22 +58,22 @@ class AttendanceService
                             $q->where('campus_id', $campusId);
                         }
                         $q->where('start_date', '<=', $date)
-                          ->where('end_date', '>=', $date);
+                            ->where('end_date', '>=', $date);
                     });
             })->where('start_date', '<=', $date)
-              ->where('end_date', '>=', $date)
-              ->where(function ($q) {
-                  $q->whereNull('recurrence_type')
-                    ->orWhere('recurrence_type', 'none');
-              })
-              ->first();
+                ->where('end_date', '>=', $date)
+                ->where(function ($q) {
+                    $q->whereNull('recurrence_type')
+                        ->orWhere('recurrence_type', 'none');
+                })
+                ->first();
 
             if ($holiday) {
                 return $holiday;
             }
 
             // Then check recurring holidays
-            return Holiday::where(function ($query) use ($date, $campusId) {
+            return Holiday::where(function ($query) use ($campusId) {
                 $query->where('is_national', true)
                     ->orWhere(function ($q) use ($campusId) {
                         if ($campusId) {
@@ -78,12 +81,12 @@ class AttendanceService
                         }
                     });
             })
-            ->whereNotNull('recurrence_type')
-            ->where('recurrence_type', '!=', 'none')
-            ->get()
-            ->first(function ($holiday) use ($date) {
-                return $holiday->includesDate($date);
-            });
+                ->whereNotNull('recurrence_type')
+                ->where('recurrence_type', '!=', 'none')
+                ->get()
+                ->first(function ($holiday) use ($date) {
+                    return $holiday->includesDate($date);
+                });
         });
     }
 
@@ -94,12 +97,12 @@ class AttendanceService
     public function isAttendanceAllowed(string $date, ?int $campusId = null): bool
     {
         $holiday = $this->getHoliday($date, $campusId);
-        
+
         // No holiday - attendance allowed
-        if (!$holiday) {
+        if (! $holiday) {
             return true;
         }
-        
+
         // Holiday exists - check if attendance is allowed
         return $holiday->isAttendanceAllowed();
     }
@@ -109,9 +112,9 @@ class AttendanceService
      */
     public function getHolidaysInRange(string $startDate, string $endDate, ?int $campusId = null): Collection
     {
-        return Cache::remember("holidays:{$startDate}:{$endDate}:" . ($campusId ?? 'all'), self::CACHE_TTL, function () use ($startDate, $endDate, $campusId) {
-            $start = \Carbon\Carbon::parse($startDate);
-            $end = \Carbon\Carbon::parse($endDate);
+        return Cache::remember("holidays:{$startDate}:{$endDate}:".($campusId ?? 'all'), self::CACHE_TTL, function () use ($startDate, $endDate, $campusId) {
+            $start = Carbon::parse($startDate);
+            $end = Carbon::parse($endDate);
 
             // Get all active holidays (non-recurring and recurring)
             $holidays = Holiday::where(function ($query) use ($campusId) {
@@ -123,14 +126,14 @@ class AttendanceService
                 }
             })->where(function ($q) use ($end) {
                 $q->whereNull('recurrence_end_date')
-                  ->orWhere('recurrence_end_date', '>=', $end);
+                    ->orWhere('recurrence_end_date', '>=', $end);
             })->get();
 
             // Filter holidays that fall within the date range
             return $holidays->filter(function ($holiday) use ($start, $end) {
                 // Non-recurring holidays
-                if (!$holiday->isRecurring()) {
-                    return $holiday->end_date->greaterThanOrEqualTo($start) 
+                if (! $holiday->isRecurring()) {
+                    return $holiday->end_date->greaterThanOrEqualTo($start)
                         && $holiday->start_date->lessThanOrEqualTo($end);
                 }
 
@@ -160,10 +163,10 @@ class AttendanceService
         if ($this->statusIds === null) {
             $this->statusIds = Cache::remember('attendance_status_ids', self::CACHE_TTL, function () {
                 return [
-                    'present' => AttendanceStatus::where('code', \App\Models\Attendance::STATUS_PRESENT)->first()?->id,
-                    'absent' => AttendanceStatus::where('code', \App\Models\Attendance::STATUS_ABSENT)->first()?->id,
-                    'leave' => AttendanceStatus::where('code', \App\Models\Attendance::STATUS_LEAVE)->first()?->id,
-                    'late' => AttendanceStatus::where('code', \App\Models\Attendance::STATUS_LATE)->first()?->id,
+                    'present' => AttendanceStatus::where('code', Attendance::STATUS_PRESENT)->first()?->id,
+                    'absent' => AttendanceStatus::where('code', Attendance::STATUS_ABSENT)->first()?->id,
+                    'leave' => AttendanceStatus::where('code', Attendance::STATUS_LEAVE)->first()?->id,
+                    'late' => AttendanceStatus::where('code', Attendance::STATUS_LATE)->first()?->id,
                 ];
             });
         }
@@ -177,6 +180,7 @@ class AttendanceService
     public function getStatusId(string $code): ?int
     {
         $statusIds = $this->getStatusIds();
+
         return $statusIds[strtolower($code)] ?? null;
     }
 
@@ -216,18 +220,18 @@ class AttendanceService
 
         foreach ($records as $record) {
             $code = $record->attendanceStatus?->code;
-            
+
             switch ($code) {
-                case \App\Models\Attendance::STATUS_PRESENT:
+                case Attendance::STATUS_PRESENT:
                     $stats['present']++;
                     break;
-                case \App\Models\Attendance::STATUS_ABSENT:
+                case Attendance::STATUS_ABSENT:
                     $stats['absent']++;
                     break;
-                case \App\Models\Attendance::STATUS_LEAVE:
+                case Attendance::STATUS_LEAVE:
                     $stats['leave']++;
                     break;
-                case \App\Models\Attendance::STATUS_LATE:
+                case Attendance::STATUS_LATE:
                     $stats['late']++;
                     break;
             }
@@ -273,7 +277,7 @@ class AttendanceService
     public function markAllStudents(array &$studentAttendances, string $statusCode): void
     {
         $statusId = $this->getStatusId($statusCode);
-        
+
         if ($statusId) {
             foreach ($studentAttendances as &$attendance) {
                 $attendance['attendance_status_id'] = $statusId;
@@ -286,10 +290,10 @@ class AttendanceService
      */
     public function getEligibleStudents($classId, $sectionId = null, ?int $sessionId = null, ?int $campusId = null, ?string $date = null)
     {
-        $query = \App\Models\Student::with(['user:id,name', 'currentEnrollment.class', 'currentEnrollment.section', 'studentLeaves'])
+        $query = Student::with(['user:id,name', 'currentEnrollment.class', 'currentEnrollment.section', 'studentLeaves'])
             ->whereHas('currentEnrollment', function ($q) use ($classId, $sectionId, $sessionId, $campusId) {
                 $q->where('class_id', $classId)
-                  ->whereNull('leave_date');
+                    ->whereNull('leave_date');
 
                 // Only filter by section if a specific section is selected (not null/empty for "all sections")
                 if ($sectionId !== null && $sectionId !== '' && $sectionId !== 'all') {
@@ -311,20 +315,20 @@ class AttendanceService
         // If a date is provided, load existing attendance records for that date
         $existingAttendance = [];
         if ($date) {
-            $attendanceRecords = \App\Models\AttendanceStudent::with(['attendanceStatus', 'studentLeave'])
+            $attendanceRecords = AttendanceStudent::with(['attendanceStatus', 'studentLeave'])
                 ->whereHas('attendance', function ($q) use ($date, $classId, $sectionId, $sessionId, $campusId) {
                     $q->where('attendance_date', $date)
-                      ->where('class_id', $classId);
-                    
+                        ->where('class_id', $classId);
+
                     // Filter by section if a specific section is selected
                     if ($sectionId !== null && $sectionId !== '' && $sectionId !== 'all') {
                         $q->where('section_id', $sectionId);
                     }
-                    
+
                     if ($sessionId) {
                         $q->where('session_id', $sessionId);
                     }
-                    
+
                     if ($campusId) {
                         $q->where('campus_id', $campusId);
                     }
@@ -348,14 +352,14 @@ class AttendanceService
 
         return $students->map(function ($student) use ($existingAttendance) {
             // Get name from user relationship or fallback to Student #
-            $studentName = 'Student #' . $student->registration_no;
-            if ($student->user && !empty($student->user->name)) {
+            $studentName = 'Student #'.$student->registration_no;
+            if ($student->user && ! empty($student->user->name)) {
                 $studentName = $student->user->name;
             }
-            
+
             // Check if this student has existing attendance
             $existingRecord = $existingAttendance[$student->id] ?? null;
-            
+
             return [
                 'id' => $student->id,
                 'registration_no' => $student->registration_no,

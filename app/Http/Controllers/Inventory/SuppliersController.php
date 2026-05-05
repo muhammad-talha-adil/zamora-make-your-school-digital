@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Campus;
 use App\Models\Supplier;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Response;
 
@@ -20,9 +21,9 @@ class SuppliersController extends Controller
 
         return inertia('inventory/Suppliers/Index', [
             'suppliers' => Supplier::with(['campus:id,name'])
-                ->when($campusId, fn($q) => $q->where('campus_id', $campusId))
-                ->when($request->get('search'), fn($q) => $q->search($request->get('search')))
-                ->when($request->get('active_only'), fn($q) => $q->where('is_active', true))
+                ->when($campusId, fn ($q) => $q->where('campus_id', $campusId))
+                ->when($request->get('search'), fn ($q) => $q->search($request->get('search')))
+                ->when($request->get('active_only'), fn ($q) => $q->where('is_active', true))
                 ->orderBy('name')
                 ->paginate(20),
             'campuses' => Campus::orderBy('name')->get(),
@@ -48,9 +49,9 @@ class SuppliersController extends Controller
 
         $suppliersQuery = Supplier::with(['campus:id,name'])
             ->select(['id', 'name', 'contact_person', 'phone', 'email', 'campus_id', 'is_active'])
-            ->when($campusId, fn($q) => $q->where('campus_id', $campusId))
-            ->when($request->get('search'), fn($q) => $q->search($request->get('search')))
-            ->when($request->get('active_only') !== 'false', fn($q) => $q->where('is_active', true))
+            ->when($campusId, fn ($q) => $q->where('campus_id', $campusId))
+            ->when($request->get('search'), fn ($q) => $q->search($request->get('search')))
+            ->when($request->get('active_only') !== 'false', fn ($q) => $q->where('is_active', true))
             ->orderBy('name');
 
         // Use pagination
@@ -65,7 +66,7 @@ class SuppliersController extends Controller
                 'total' => $paginator->total(),
                 'from' => $paginator->firstItem(),
                 'to' => $paginator->lastItem(),
-            ]
+            ],
         ]);
     }
 
@@ -74,9 +75,9 @@ class SuppliersController extends Controller
      *
      * REDIRECTED: Now uses modal on dashboard instead of separate page.
      */
-    public function create(Request $request): \Illuminate\Http\RedirectResponse
+    public function create(Request $request): RedirectResponse
     {
-        return redirect()->to("/inventory?modal=inventory-supplier-form&action=create");
+        return redirect()->to('/inventory?modal=inventory-supplier-form&action=create');
     }
 
     /**
@@ -103,10 +104,11 @@ class SuppliersController extends Controller
                 $campusId = null;
             } elseif (is_numeric($campusId)) {
                 // Verify the campus exists if it's a numeric ID
-                if (!Campus::where('id', $campusId)->exists()) {
+                if (! Campus::where('id', $campusId)->exists()) {
                     if ($request->expectsJson()) {
                         return response()->json(['error' => 'Invalid campus selected'], 422);
                     }
+
                     return back()->with('error', 'Invalid campus selected');
                 }
             }
@@ -121,9 +123,10 @@ class SuppliersController extends Controller
                 if ($allCampusExists) {
                     if ($request->expectsJson()) {
                         return response()->json([
-                            'error' => 'A supplier with this name already exists for All Campuses. You cannot create a specific campus supplier with the same name.'
+                            'error' => 'A supplier with this name already exists for All Campuses. You cannot create a specific campus supplier with the same name.',
                         ], 422);
                     }
+
                     return back()->with('error', 'A supplier with this name already exists for All Campuses. You cannot create a specific campus supplier with the same name.')
                         ->withInput();
                 }
@@ -147,7 +150,7 @@ class SuppliersController extends Controller
                     'supplier' => [
                         'id' => $supplier->id,
                         'name' => $supplier->name,
-                    ]
+                    ],
                 ]);
             }
 
@@ -155,9 +158,10 @@ class SuppliersController extends Controller
                 ->with('success', 'Supplier created successfully.');
         } catch (\Exception $e) {
             if ($request->expectsJson()) {
-                return response()->json(['error' => 'Failed to create supplier: ' . $e->getMessage()], 500);
+                return response()->json(['error' => 'Failed to create supplier: '.$e->getMessage()], 500);
             }
-            return back()->with('error', 'Failed to create supplier: ' . $e->getMessage());
+
+            return back()->with('error', 'Failed to create supplier: '.$e->getMessage());
         }
     }
 
@@ -166,10 +170,10 @@ class SuppliersController extends Controller
      *
      * REDIRECTED: Now uses modal on dashboard instead of separate page.
      */
-    public function edit(Request $request, Supplier $supplier): \Illuminate\Http\RedirectResponse
+    public function edit(Request $request, Supplier $supplier): RedirectResponse
     {
         $supplier = Supplier::where('id', $supplier->id)
-            ->when($request->get('campus_id'), fn($q) => $q->where('campus_id', $request->get('campus_id')))
+            ->when($request->get('campus_id'), fn ($q) => $q->where('campus_id', $request->get('campus_id')))
             ->firstOrFail();
 
         return redirect()->to("/inventory?modal=inventory-supplier-form&action=edit&id={$supplier->id}");
@@ -188,7 +192,7 @@ class SuppliersController extends Controller
 
         /** @var Supplier $supplier */
         $supplier = Supplier::where('id', $supplier->id)
-            ->when($campusId, fn($q) => $q->where('campus_id', $campusId))
+            ->when($campusId, fn ($q) => $q->where('campus_id', $campusId))
             ->firstOrFail();
 
         $request->validate([
@@ -221,9 +225,10 @@ class SuppliersController extends Controller
                 if ($existsInCampus) {
                     if ($request->expectsJson()) {
                         return response()->json([
-                            'errors' => ['name' => ['A supplier with this name already exists for this campus']]
+                            'errors' => ['name' => ['A supplier with this name already exists for this campus']],
                         ], 422);
                     }
+
                     return back()->with('error', 'A supplier with this name already exists for this campus')
                         ->withInput();
                 }
@@ -239,9 +244,10 @@ class SuppliersController extends Controller
                 if ($allCampusExists) {
                     if ($request->expectsJson()) {
                         return response()->json([
-                            'errors' => ['name' => ['A supplier with this name already exists for All Campuses. You cannot create a specific campus supplier with the same name.']]
+                            'errors' => ['name' => ['A supplier with this name already exists for All Campuses. You cannot create a specific campus supplier with the same name.']],
                         ], 422);
                     }
+
                     return back()->with('error', 'A supplier with this name already exists for All Campuses. You cannot create a specific campus supplier with the same name.')
                         ->withInput();
                 }
@@ -265,7 +271,7 @@ class SuppliersController extends Controller
                     'supplier' => [
                         'id' => $supplier->id,
                         'name' => $supplier->name,
-                    ]
+                    ],
                 ]);
             }
 
@@ -273,9 +279,10 @@ class SuppliersController extends Controller
                 ->with('success', 'Supplier updated successfully.');
         } catch (\Exception $e) {
             if ($request->expectsJson()) {
-                return response()->json(['error' => 'Failed to update supplier: ' . $e->getMessage()], 500);
+                return response()->json(['error' => 'Failed to update supplier: '.$e->getMessage()], 500);
             }
-            return back()->with('error', 'Failed to update supplier: ' . $e->getMessage());
+
+            return back()->with('error', 'Failed to update supplier: '.$e->getMessage());
         }
     }
 
@@ -286,7 +293,7 @@ class SuppliersController extends Controller
     {
         /** @var Supplier $supplier */
         $supplier = Supplier::where('id', $supplier->id)
-            ->when($request->get('campus_id'), fn($q) => $q->where('campus_id', $request->get('campus_id')))
+            ->when($request->get('campus_id'), fn ($q) => $q->where('campus_id', $request->get('campus_id')))
             ->firstOrFail();
 
         if ($supplier->purchases()->exists()) {
@@ -305,7 +312,7 @@ class SuppliersController extends Controller
     {
         /** @var Supplier $supplier */
         $supplier = Supplier::where('id', $supplier->id)
-            ->when($request->get('campus_id'), fn($q) => $q->where('campus_id', $request->get('campus_id')))
+            ->when($request->get('campus_id'), fn ($q) => $q->where('campus_id', $request->get('campus_id')))
             ->firstOrFail();
 
         $supplier->update(['is_active' => false]);
@@ -320,7 +327,7 @@ class SuppliersController extends Controller
     {
         /** @var Supplier $supplier */
         $supplier = Supplier::where('id', $supplier->id)
-            ->when($request->get('campus_id'), fn($q) => $q->where('campus_id', $request->get('campus_id')))
+            ->when($request->get('campus_id'), fn ($q) => $q->where('campus_id', $request->get('campus_id')))
             ->firstOrFail();
 
         $supplier->update(['is_active' => true]);
@@ -335,13 +342,13 @@ class SuppliersController extends Controller
     {
         /** @var Supplier $supplier */
         $supplier = Supplier::where('id', $supplier->id)
-            ->when($request->get('campus_id'), fn($q) => $q->where('campus_id', $request->get('campus_id')))
+            ->when($request->get('campus_id'), fn ($q) => $q->where('campus_id', $request->get('campus_id')))
             ->firstOrFail();
 
         return inertia('inventory/Suppliers/Show', [
             'supplier' => $supplier->load([
                 'campus',
-                'purchases' => fn($q) => $q->orderBy('purchase_date', 'desc')->limit(10)
+                'purchases' => fn ($q) => $q->orderBy('purchase_date', 'desc')->limit(10),
             ]),
             'summary' => [
                 'total_purchases' => $supplier->purchases()->count(),
@@ -368,38 +375,38 @@ class SuppliersController extends Controller
         if ($isAllCampus) {
             // Check if name exists in ANY campus (excluding current supplier)
             $exists = Supplier::whereRaw('LOWER(name) = LOWER(?)', [$name])
-                ->when($excludeId, fn($q) => $q->where('id', '!=', $excludeId))
+                ->when($excludeId, fn ($q) => $q->where('id', '!=', $excludeId))
                 ->exists();
 
             return response()->json([
                 'exists' => $exists,
                 'message' => $exists ? 'A supplier with this name already exists' : null,
-                'is_all_campus_conflict' => false
+                'is_all_campus_conflict' => false,
             ]);
         } else {
             // Check if name exists in the specific campus
-            if (!is_numeric($campusId) || !Campus::where('id', $campusId)->exists()) {
+            if (! is_numeric($campusId) || ! Campus::where('id', $campusId)->exists()) {
                 return response()->json(['exists' => false, 'message' => 'Invalid campus']);
             }
 
             // Check if name exists in the specific campus
             $existsInCampus = Supplier::where('campus_id', $campusId)
                 ->whereRaw('LOWER(name) = LOWER(?)', [$name])
-                ->when($excludeId, fn($q) => $q->where('id', '!=', $excludeId))
+                ->when($excludeId, fn ($q) => $q->where('id', '!=', $excludeId))
                 ->exists();
 
             // Also check if there's an "All Campuses" supplier with the same name
             $existsInAllCampuses = Supplier::whereNull('campus_id')
                 ->whereRaw('LOWER(name) = LOWER(?)', [$name])
-                ->when($excludeId, fn($q) => $q->where('id', '!=', $excludeId))
+                ->when($excludeId, fn ($q) => $q->where('id', '!=', $excludeId))
                 ->exists();
 
             return response()->json([
                 'exists' => $existsInCampus || $existsInAllCampuses,
-                'message' => $existsInAllCampuses 
+                'message' => $existsInAllCampuses
                     ? 'A supplier with this name already exists for All Campuses. You cannot create a specific campus supplier with the same name.'
                     : ($existsInCampus ? 'A supplier with this name already exists for this campus' : null),
-                'is_all_campus_conflict' => $existsInAllCampuses
+                'is_all_campus_conflict' => $existsInAllCampuses,
             ]);
         }
     }

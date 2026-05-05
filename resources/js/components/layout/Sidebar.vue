@@ -75,10 +75,10 @@
   ></div>
 </template>
 
-<script setup>
+<script setup lang="ts">
 import { ref } from 'vue'
 import { Link } from '@inertiajs/vue3'
-import { HomeIcon, UserGroupIcon, CurrencyDollarIcon, BookOpenIcon, UserIcon, XMarkIcon, SettingsIcon, ChevronDownIcon } from '@heroicons/vue/24/outline'
+import { XMarkIcon, SettingsIcon, ChevronDownIcon } from '@heroicons/vue/24/outline'
 import { useSidebar } from '../../composables/useSidebar'
 import { mainNavItems, footerNavItems } from '../../menu'
 

@@ -9,7 +9,9 @@ use App\Models\InventoryStock;
 use App\Models\ReturnModel;
 use App\Models\StudentInventory;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Inertia\Response;
 
 class InventoryReturnsController extends Controller
@@ -30,14 +32,18 @@ class InventoryReturnsController extends Controller
         return inertia('inventory/Returns/Index', [
             'returns' => ReturnModel::with([
                 'campus:id,name',
-                'studentInventory.student' => function ($q) { $q->select('id', 'registration_no'); },
-                'studentInventory.student.user' => function ($q) { $q->select('id', 'name'); },
-                'studentInventory.items:id,name'
+                'studentInventory.student' => function ($q) {
+                    $q->select('id', 'registration_no');
+                },
+                'studentInventory.student.user' => function ($q) {
+                    $q->select('id', 'name');
+                },
+                'studentInventory.items:id,name',
             ])
-                ->when($campusId, fn($q) => $q->where('campus_id', $campusId))
-                ->when($studentId, fn($q) => $q->whereHas('studentInventory', fn($q) => $q->where('student_id', $studentId)))
-                ->when($request->get('from_date'), fn($q) => $q->whereDate('return_date', '>=', $request->get('from_date')))
-                ->when($request->get('to_date'), fn($q) => $q->whereDate('return_date', '<=', $request->get('to_date')))
+                ->when($campusId, fn ($q) => $q->where('campus_id', $campusId))
+                ->when($studentId, fn ($q) => $q->whereHas('studentInventory', fn ($q) => $q->where('student_id', $studentId)))
+                ->when($request->get('from_date'), fn ($q) => $q->whereDate('return_date', '>=', $request->get('from_date')))
+                ->when($request->get('to_date'), fn ($q) => $q->whereDate('return_date', '<=', $request->get('to_date')))
                 ->orderBy('return_date', 'desc')
                 ->paginate(20),
             'campuses' => Campus::orderBy('name')->get(),
@@ -62,14 +68,14 @@ class InventoryReturnsController extends Controller
         $campusId = $request->get('campus_id');
         $studentId = $request->get('student_id');
 
-        if (!$campusId) {
+        if (! $campusId) {
             return response()->json([
                 'error' => 'campus_id is required',
                 'message' => 'Please provide a campus_id filter for multi-campus safety.',
             ], 422);
         }
 
-        if (!Campus::where('id', $campusId)->exists()) {
+        if (! Campus::where('id', $campusId)->exists()) {
             return response()->json([
                 'error' => 'Invalid campus_id',
                 'message' => 'The specified campus does not exist.',
@@ -78,13 +84,17 @@ class InventoryReturnsController extends Controller
 
         $returns = ReturnModel::with([
             'campus:id,name',
-            'studentInventory.student' => function ($q) { $q->select('id', 'registration_no'); },
-            'studentInventory.student.user' => function ($q) { $q->select('id', 'name'); }
+            'studentInventory.student' => function ($q) {
+                $q->select('id', 'registration_no');
+            },
+            'studentInventory.student.user' => function ($q) {
+                $q->select('id', 'name');
+            },
         ])
             ->where('campus_id', $campusId)
-            ->when($studentId, fn($q) => $q->whereHas('studentInventory', fn($q) => $q->where('student_id', $studentId)))
-            ->when($request->get('from_date'), fn($q) => $q->whereDate('return_date', '>=', $request->get('from_date')))
-            ->when($request->get('to_date'), fn($q) => $q->whereDate('return_date', '<=', $request->get('to_date')))
+            ->when($studentId, fn ($q) => $q->whereHas('studentInventory', fn ($q) => $q->where('student_id', $studentId)))
+            ->when($request->get('from_date'), fn ($q) => $q->whereDate('return_date', '>=', $request->get('from_date')))
+            ->when($request->get('to_date'), fn ($q) => $q->whereDate('return_date', '<=', $request->get('to_date')))
             ->orderBy('return_date', 'desc')
             ->limit($request->get('limit', 50))
             ->get()
@@ -123,7 +133,7 @@ class InventoryReturnsController extends Controller
     {
         $campusId = $request->get('campus_id');
 
-        if (!$campusId) {
+        if (! $campusId) {
             return response()->json(['error' => 'campus_id is required'], 422);
         }
 
@@ -135,7 +145,7 @@ class InventoryReturnsController extends Controller
         $thisMonthQuantity = $query->thisMonth()->sum('quantity');
 
         $allReturns = $query->get();
-        $totalValue = $allReturns->sum(fn($r) => $r->getTotalValue());
+        $totalValue = $allReturns->sum(fn ($r) => $r->getTotalValue());
 
         return response()->json([
             'totals' => [
@@ -157,7 +167,7 @@ class InventoryReturnsController extends Controller
      *
      * REDIRECTED: Now uses modal on dashboard instead of separate page.
      */
-    public function create(Request $request): \Illuminate\Http\RedirectResponse
+    public function create(Request $request): RedirectResponse
     {
         return redirect()->route('inventory.returns.index');
     }
@@ -175,18 +185,18 @@ class InventoryReturnsController extends Controller
         $validated = $request->validated();
 
         $studentInventory = StudentInventory::where('id', $validated['student_inventory_id'])
-            ->when($validated['campus_id'] ?? null, fn($q) => $q->where('campus_id', $validated['campus_id']))
+            ->when($validated['campus_id'] ?? null, fn ($q) => $q->where('campus_id', $validated['campus_id']))
             ->firstOrFail();
 
         $maxReturnable = $studentInventory->remainingQuantity();
         if ($validated['quantity'] > $maxReturnable) {
             return back()->withErrors([
-                'quantity' => 'Return quantity (' . $validated['quantity'] . ') cannot exceed remaining quantity (' . $maxReturnable . ').',
+                'quantity' => 'Return quantity ('.$validated['quantity'].') cannot exceed remaining quantity ('.$maxReturnable.').',
             ]);
         }
 
         try {
-            \DB::transaction(function () use ($studentInventory, $validated) {
+            DB::transaction(function () use ($studentInventory, $validated) {
                 // Update or create stock using helper method
                 $stock = InventoryStock::firstOrCreate(
                     [
@@ -231,7 +241,7 @@ class InventoryReturnsController extends Controller
             return redirect()->route('inventory.returns.index')
                 ->with('success', 'Return processed successfully.');
         } catch (\Exception $e) {
-            return back()->with('error', 'Failed to process return: ' . $e->getMessage());
+            return back()->with('error', 'Failed to process return: '.$e->getMessage());
         }
     }
 
@@ -244,7 +254,7 @@ class InventoryReturnsController extends Controller
     {
         /** @var ReturnModel $return */
         $return = ReturnModel::where('id', $return->id)
-            ->when($request->get('campus_id'), fn($q) => $q->where('campus_id', $request->get('campus_id')))
+            ->when($request->get('campus_id'), fn ($q) => $q->where('campus_id', $request->get('campus_id')))
             ->firstOrFail();
 
         return inertia('inventory/ReturnShow', [
@@ -259,7 +269,7 @@ class InventoryReturnsController extends Controller
     {
         /** @var ReturnModel $return */
         $return = ReturnModel::where('id', $return->id)
-            ->when($request->get('campus_id'), fn($q) => $q->where('campus_id', $request->get('campus_id')))
+            ->when($request->get('campus_id'), fn ($q) => $q->where('campus_id', $request->get('campus_id')))
             ->firstOrFail();
 
         $return->delete();
@@ -273,7 +283,7 @@ class InventoryReturnsController extends Controller
     public function restore(Request $request, $id)
     {
         $return = ReturnModel::withTrashed()
-            ->when($request->get('campus_id'), fn($q) => $q->where('campus_id', $request->get('campus_id')))
+            ->when($request->get('campus_id'), fn ($q) => $q->where('campus_id', $request->get('campus_id')))
             ->findOrFail($id);
 
         $return->restore();
@@ -289,7 +299,7 @@ class InventoryReturnsController extends Controller
         $campusId = $request->get('campus_id');
 
         $return = ReturnModel::with(['campus', 'studentInventory.student', 'studentInventory.inventoryItem'])
-            ->when($campusId, fn($q) => $q->where('campus_id', $campusId))
+            ->when($campusId, fn ($q) => $q->where('campus_id', $campusId))
             ->findOrFail($id);
 
         $stock = InventoryStock::where('campus_id', $return->campus_id)

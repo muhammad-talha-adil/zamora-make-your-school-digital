@@ -93,7 +93,7 @@ class PurchaseItem extends Model
      */
     public function isSnapshotStale(): bool
     {
-        if (!$this->item_snapshot) {
+        if (! $this->item_snapshot) {
             return false;
         }
 

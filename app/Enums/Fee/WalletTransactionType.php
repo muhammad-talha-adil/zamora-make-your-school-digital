@@ -4,7 +4,7 @@ namespace App\Enums\Fee;
 
 /**
  * Wallet Transaction Type Enum
- * 
+ *
  * Defines types of transactions in student fee wallet (advance payments).
  */
 enum WalletTransactionType: string
@@ -20,7 +20,7 @@ enum WalletTransactionType: string
      */
     public function label(): string
     {
-        return match($this) {
+        return match ($this) {
             self::ADVANCE_DEPOSIT => 'Advance Deposit',
             self::VOUCHER_ADJUSTMENT => 'Voucher Adjustment',
             self::REFUND => 'Refund',

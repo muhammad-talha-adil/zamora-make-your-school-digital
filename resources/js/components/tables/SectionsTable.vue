@@ -1,59 +1,37 @@
 <script setup lang="ts">
 import SectionForm from '@/components/forms/SectionForm.vue';
-import { Button } from '@/components/ui/button';
 import Icon from '@/components/Icon.vue';
+import { Button } from '@/components/ui/button';
 import { alert } from '@/utils';
-import { router } from '@inertiajs/vue3';
 import axios from 'axios';
 import { ref, watch } from 'vue';
 
-// Props
 interface Props {
-    sections: any; // Paginated response
+    sections: any;
     schoolClasses?: { id: number; name: string }[];
 }
 
 const props = defineProps<Props>();
+const EMPTY_VALUE = '-';
 
-// Emits
-const emit = defineEmits<{
-    saved: [];
-}>();
-
-const showInactive = ref(false);
 const statusFilter = ref('');
+const classFilter = ref('');
 const perPage = ref(10);
 const sectionsData = ref(props.sections.data || []);
 const pagination = ref(props.sections);
 
-const statusOptions = [
-    { id: '', name: 'All' },
-    { id: 'active', name: 'Active' },
-    { id: 'inactive', name: 'Inactive' },
-];
-
-const perPageOptions = [
-    { id: 10, name: '10' },
-    { id: 25, name: '25' },
-    { id: 50, name: '50' },
-    { id: 100, name: '100' },
-];
-
-const toggleInactive = () => {
-    showInactive.value = !showInactive.value;
-    fetchSections();
-};
-
-const fetchSections = (page = 1) => {
+const fetchSections = (page = pagination.value?.current_page || 1) => {
     const params = new URLSearchParams({
         per_page: perPage.value.toString(),
         page: page.toString(),
     });
 
-    if (showInactive.value) {
-        params.append('status', 'inactive');
-    } else if (statusFilter.value) {
+    if (statusFilter.value) {
         params.append('status', statusFilter.value);
+    }
+
+    if (classFilter.value) {
+        params.append('class_id', classFilter.value);
     }
 
     axios.get(`/settings/sections/all?${params}`).then((response) => {
@@ -62,75 +40,83 @@ const fetchSections = (page = 1) => {
     });
 };
 
-watch([statusFilter, perPage], () => {
-    fetchSections();
+const getRowNumber = (index: number) =>
+    ((pagination.value?.from || 1) - 1) + index + 1;
+
+const getPageFromUrl = (url: string | null) => {
+    if (!url) {
+        return null;
+    }
+
+    const page = new URL(url, window.location.origin).searchParams.get('page');
+    return page ? Number.parseInt(page, 10) : 1;
+};
+
+watch([statusFilter, classFilter, perPage], () => {
+    fetchSections(1);
 });
 
-// Watch for props changes (e.g., after form submissions)
-watch(() => props.sections, (newSections) => {
-    sectionsData.value = newSections.data || [];
-    pagination.value = newSections;
-}, { deep: true });
+watch(
+    () => props.sections,
+    (newSections) => {
+        sectionsData.value = newSections.data || [];
+        pagination.value = newSections;
+    },
+    { deep: true },
+);
 
 const inactivateSection = (section: any) => {
     alert
         .confirm(
             `Are you sure you want to deactivate "${section.name}"?`,
             'Deactivate Section',
+            'Yes, deactivate it!',
         )
         .then((result) => {
             if (result.isConfirmed) {
-                router.patch(`/settings/sections/${section.id}/inactivate`, {}, {
-                    preserveScroll: true,
-                    onSuccess: () => {
-                        alert.success('Section deactivated successfully!');
-                        fetchSections();
-                    },
-                    onError: () => {
-                        alert.error(
-                            'Failed to deactivate section. Please try again.',
-                        );
-                    },
+                axios.patch(`/settings/sections/${section.id}/inactivate`, {}, {
+                    headers: { Accept: 'application/json' },
+                }).then(() => {
+                    alert.success('Section deactivated successfully!');
+                    fetchSections(pagination.value?.current_page || 1);
+                }).catch(() => {
+                    alert.error('Failed to deactivate section. Please try again.');
                 });
             }
         });
 };
 
 const activateSection = (section: any) => {
-    router.patch(`/settings/sections/${section.id}/activate`, {}, {
-        preserveScroll: true,
-        onSuccess: () => {
-            alert.success('Section activated successfully!');
-            fetchSections();
-        },
-        onError: () => {
-            alert.error('Failed to activate section. Please try again.');
-        },
+    axios.patch(`/settings/sections/${section.id}/activate`, {}, {
+        headers: { Accept: 'application/json' },
+    }).then(() => {
+        alert.success('Section activated successfully!');
+        fetchSections(pagination.value?.current_page || 1);
+    }).catch(() => {
+        alert.error('Failed to activate section. Please try again.');
     });
 };
 
-const forceDeleteSection = (section: any) => {
-    alert
-        .confirm(
-            `Are you sure you want to permanently delete "${section.name}"? This action cannot be undone.`,
-            'Delete Section',
-        )
-        .then((result) => {
-            if (result.isConfirmed) {
-                router.delete(`/settings/sections/${section.id}/force`, {
-                    preserveScroll: true,
-                    onSuccess: () => {
-                        alert.success('Section permanently deleted successfully!');
-                        fetchSections();
-                    },
-                    onError: () => {
-                        alert.error(
-                            'Failed to permanently delete section. Please try again.',
-                        );
-                    },
-                });
-            }
-        });
+const deleteSection = (section: any) => {
+    alert.confirm(
+        `Are you sure you want to delete "${section.name}"?`,
+        'Delete Section',
+    ).then((result) => {
+        if (result.isConfirmed) {
+            axios.delete(`/settings/sections/${section.id}`, {
+                headers: { Accept: 'application/json' },
+            }).then(() => {
+                alert.success('Section deleted successfully!');
+                fetchSections(pagination.value?.current_page || 1);
+            }).catch(() => {
+                alert.error('Failed to delete section. Please try again.');
+            });
+        }
+    });
+};
+
+const handleSaved = () => {
+    fetchSections(pagination.value?.current_page || 1);
 };
 </script>
 
@@ -138,22 +124,20 @@ const forceDeleteSection = (section: any) => {
     <div class="space-y-4">
         <div class="flex justify-between items-center">
             <div class="flex gap-2">
-                <select v-model="statusFilter" class="w-32 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 text-sm">
+                <select v-model="classFilter" class="rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 text-sm min-h-10 w-40">
+                    <option value="">All Classes</option>
+                    <option v-for="schoolClass in schoolClasses" :key="schoolClass.id" :value="schoolClass.id">
+                        {{ schoolClass.name }}
+                    </option>
+                </select>
+                <select v-model="statusFilter" class="rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 text-sm min-h-10 w-32">
                     <option value="">All</option>
                     <option value="active">Active</option>
                     <option value="inactive">Inactive</option>
                 </select>
             </div>
             <div class="flex gap-2">
-                <SectionForm :school-classes="schoolClasses" @saved="fetchSections" />
-                <Button
-                    :variant="showInactive ? 'ghost' : 'default'"
-                    size="sm"
-                    @click="toggleInactive"
-                >
-                    <Icon :icon="showInactive ? 'arrow-left' : 'eye'" class="mr-1" />
-                    {{ showInactive ? 'Back' : 'Inactive Sections' }}
-                </Button>
+                <SectionForm :school-classes="schoolClasses" @saved="handleSaved" />
             </div>
         </div>
         <div class="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-900">
@@ -161,46 +145,25 @@ const forceDeleteSection = (section: any) => {
                 <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                     <thead class="bg-gray-50 dark:bg-gray-800">
                         <tr>
-                            <th
-                                scope="col"
-                                class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300"
-                            >
+                            <th scope="col" class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">
                                 #
                             </th>
-                            <th
-                                scope="col"
-                                class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300"
-                            >
+                            <th scope="col" class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">
                                 Section Name
                             </th>
-                            <th
-                                scope="col"
-                                class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300"
-                            >
+                            <th scope="col" class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">
                                 Class
                             </th>
-                            <th
-                                scope="col"
-                                class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300"
-                            >
+                            <th scope="col" class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">
                                 Code
                             </th>
-                            <th
-                                scope="col"
-                                class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300"
-                            >
+                            <th scope="col" class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">
                                 Description
                             </th>
-                            <th
-                                scope="col"
-                                class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300"
-                            >
+                            <th scope="col" class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">
                                 Status
                             </th>
-                            <th
-                                scope="col"
-                                class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300"
-                            >
+                            <th scope="col" class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">
                                 Actions
                             </th>
                         </tr>
@@ -213,7 +176,7 @@ const forceDeleteSection = (section: any) => {
                         >
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <div class="text-sm text-gray-600 dark:text-gray-300">
-                                    {{ (index as number) + 1 }}
+                                    {{ getRowNumber(index as number) }}
                                 </div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
@@ -223,17 +186,17 @@ const forceDeleteSection = (section: any) => {
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <div class="text-sm text-gray-600 dark:text-gray-300">
-                                    {{ section.school_class?.name || '—' }}
+                                    {{ section.school_class?.name || EMPTY_VALUE }}
                                 </div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <div class="text-sm text-gray-600 dark:text-gray-300">
-                                    {{ section.code || '—' }}
+                                    {{ section.code || EMPTY_VALUE }}
                                 </div>
                             </td>
                             <td class="px-6 py-4">
                                 <div class="max-w-xs truncate text-sm text-gray-600 dark:text-gray-300">
-                                    {{ section.description || '—' }}
+                                    {{ section.description || EMPTY_VALUE }}
                                 </div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
@@ -249,27 +212,27 @@ const forceDeleteSection = (section: any) => {
                                 </span>
                             </td>
                             <td class="px-6 py-4 text-sm font-medium whitespace-nowrap">
-                                <div class="flex space-x-2" v-if="!showInactive">
+                                <div class="flex space-x-2">
                                     <SectionForm
                                         :section="section"
                                         :school-classes="schoolClasses"
                                         trigger="Edit"
                                         variant="outline"
                                         size="sm"
-                                        @saved="fetchSections"
+                                        @saved="handleSaved"
                                     >
                                         <Icon icon="edit" class="mr-1" />Edit
                                     </SectionForm>
                                     <Button
-                                        variant="destructive"
+                                        v-if="section.is_active"
+                                        variant="outline"
                                         size="sm"
                                         @click="inactivateSection(section)"
                                     >
-                                        <Icon icon="trash" class="mr-1" />Delete
+                                        <Icon icon="pause" class="mr-1" />Inactive
                                     </Button>
-                                </div>
-                                <div class="flex space-x-2" v-else>
                                     <Button
+                                        v-else
                                         variant="default"
                                         size="sm"
                                         @click="activateSection(section)"
@@ -279,9 +242,9 @@ const forceDeleteSection = (section: any) => {
                                     <Button
                                         variant="destructive"
                                         size="sm"
-                                        @click="forceDeleteSection(section)"
+                                        @click="deleteSection(section)"
                                     >
-                                        <Icon icon="x" class="mr-1" />Delete
+                                        <Icon icon="trash" class="mr-1" />Delete
                                     </Button>
                                 </div>
                             </td>
@@ -305,11 +268,11 @@ const forceDeleteSection = (section: any) => {
             <div class="flex gap-1">
                 <Button
                     v-for="link in pagination.links"
-                    :key="link.label"
+                    :key="`${link.label}-${link.url || 'disabled'}`"
                     :variant="link.active ? 'default' : 'outline'"
                     size="sm"
                     :disabled="!link.url"
-                    @click="link.url ? fetchSections(parseInt(link.url.match(/page=(\d+)/)?.[1] || '1')) : null"
+                    @click="link.url ? fetchSections(getPageFromUrl(link.url) || 1) : null"
                 >
                     <span v-html="link.label"></span>
                 </Button>

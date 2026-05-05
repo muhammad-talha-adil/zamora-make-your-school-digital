@@ -2,8 +2,8 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
@@ -11,7 +11,7 @@ return new class extends Migration
     {
         // First, let's check if there are any duplicate records
         // and handle them before adding the unique constraint
-        
+
         // Get all records with their counts grouped by the unique fields
         $duplicates = DB::table('fee_structures')
             ->select('session_id', 'campus_id', 'class_id', 'section_id', 'title', DB::raw('COUNT(*) as count'))
@@ -29,11 +29,11 @@ return new class extends Migration
                     ->where('campus_id', $dup->campus_id)
                     ->where(function ($q) use ($dup) {
                         $q->where('class_id', $dup->class_id)
-                          ->orWhereNull('class_id');
+                            ->orWhereNull('class_id');
                     })
                     ->where(function ($q) use ($dup) {
                         $q->where('section_id', $dup->section_id)
-                          ->orWhereNull('section_id');
+                            ->orWhereNull('section_id');
                     })
                     ->where('title', $dup->title)
                     ->orderBy('created_at')
@@ -47,11 +47,11 @@ return new class extends Migration
                         ->where('campus_id', $dup->campus_id)
                         ->where(function ($q) use ($dup) {
                             $q->where('class_id', $dup->class_id)
-                              ->orWhereNull('class_id');
+                                ->orWhereNull('class_id');
                         })
                         ->where(function ($q) use ($dup) {
                             $q->where('section_id', $dup->section_id)
-                              ->orWhereNull('section_id');
+                                ->orWhereNull('section_id');
                         })
                         ->where('title', $dup->title)
                         ->whereNotIn('id', $idsToKeep)
@@ -70,11 +70,11 @@ return new class extends Migration
                     break;
                 }
             }
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             $hasUnique = false;
         }
-        
-        if (!$hasUnique) {
+
+        if (! $hasUnique) {
             Schema::table('fee_structures', function (Blueprint $table) {
                 $table->unique(['session_id', 'campus_id', 'class_id', 'section_id', 'title'], 'fee_structures_unique_scope');
             });

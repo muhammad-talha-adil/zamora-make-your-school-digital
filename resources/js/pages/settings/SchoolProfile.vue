@@ -18,6 +18,7 @@ interface Props {
     campusTypes: any;
     school: any;
     classes: any;
+    allClasses: Array<{ id: number; name: string }>;
     sections: any;
     sessions: any;
     subjects: any;
@@ -53,7 +54,7 @@ const activeTab = ref('school-info');
                 </div>
 
                 <!-- Tabs -->
-                <div class="border-b border-gray-200 dark:border-gray-700 overflow-x-auto">
+                <div class="border-b border-gray-200 dark:border-gray-700 overflow-x-auto overflow-hidden">
                     <nav class="-mb-px flex space-x-4 md:space-x-8 min-w-0">
                         <button
                             @click="activeTab = 'school-info'"
@@ -155,7 +156,7 @@ const activeTab = ref('school-info');
 
                 <!-- Sections Tab -->
                 <div v-if="activeTab === 'sections'">
-                    <SectionsTable :sections="sections" :school-classes="classes.data" />
+                    <SectionsTable :sections="sections" :school-classes="allClasses" />
                 </div>
 
                 <!-- Sessions Tab -->

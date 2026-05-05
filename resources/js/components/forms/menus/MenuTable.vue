@@ -9,6 +9,7 @@ interface Menu {
     type: string;
     order: number;
     is_active: boolean;
+    deleted_at?: string | null;
 }
 
 interface Pagination {
@@ -24,18 +25,17 @@ interface Pagination {
     per_page?: number;
 }
 
-interface Props {
+defineProps<{
     menusData: Menu[];
     pagination: Pagination;
     showInactive: boolean;
     hasManageMenusPermission: boolean;
-}
-
-const props = defineProps<Props>();
+}>();
 
 const emit = defineEmits<{
     (e: 'edit', menu: Menu): void;
     (e: 'toggleActive', menu: Menu): void;
+    (e: 'delete', menu: Menu): void;
     (e: 'restore', menu: Menu): void;
     (e: 'forceDelete', menu: Menu): void;
     (e: 'fetchMenus', page: number): void;
@@ -51,7 +51,7 @@ const handlePageClick = (link: { url: string | null; label: string; active: bool
 };
 
 const updatePerPage = (value: number) => {
-    emit('update:perPage', value);
+    emit('update:perPage', Number(value));
 };
 </script>
 
@@ -86,7 +86,7 @@ const updatePerPage = (value: number) => {
                         <tr v-for="(menu, index) in menusData" :key="menu.id" class="transition-colors hover:bg-gray-50 dark:hover:bg-gray-800">
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <div class="text-sm text-gray-600 dark:text-gray-300">
-                                    {{ (index as number) + 1 }}
+                                    {{ pagination.from ? pagination.from + index : (index as number) + 1 }}
                                 </div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
@@ -123,6 +123,14 @@ const updatePerPage = (value: number) => {
                                         <Icon :icon="menu.is_active ? 'eye-off' : 'eye'" class="mr-1" />
                                         {{ menu.is_active ? 'Inactivate' : 'Activate' }}
                                     </Button>
+                                    <Button
+                                        variant="secondary"
+                                        size="sm"
+                                        title="Delete Menu"
+                                        @click="emit('delete', menu)"
+                                    >
+                                        <Icon icon="trash-2" class="mr-1" />Delete
+                                    </Button>
                                 </div>
                                 <div class="flex space-x-2" v-else>
                                     <Button
@@ -149,8 +157,8 @@ const updatePerPage = (value: number) => {
 
         <div class="flex justify-between items-center">
             <div class="flex items-center gap-4">
-                <div class="text-sm text-gray-600">
-                    Showing {{ pagination.from }} to {{ pagination.to }} of {{ pagination.total }} entries
+                <div class="text-sm text-gray-600 dark:text-gray-300">
+                    Showing {{ pagination.from || 0 }} to {{ pagination.to || 0 }} of {{ pagination.total || 0 }} entries
                 </div>
                 <select 
                     :value="pagination.per_page || 10" 

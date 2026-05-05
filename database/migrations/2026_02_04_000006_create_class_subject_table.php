@@ -8,7 +8,7 @@ return new class extends Migration
 {
     /**
      * Run the migrations.
-     * 
+     *
      * Consolidated from:
      * - 2026_02_04_000006_create_class_subject_table.php
      * - 2026_02_16_000001_add_section_id_to_class_subject_table.php

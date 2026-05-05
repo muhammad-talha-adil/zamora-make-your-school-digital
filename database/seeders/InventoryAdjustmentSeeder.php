@@ -54,7 +54,7 @@ class InventoryAdjustmentSeeder extends Seeder
                 $type = $adjustmentTypes[array_rand($adjustmentTypes)];
                 $quantity = rand(1, 20);
                 $previousQuantity = rand(50, 200);
-                
+
                 // Calculate new quantity based on type
                 $newQuantity = match ($type) {
                     InventoryAdjustment::TYPE_ADD => $previousQuantity + $quantity,
@@ -74,7 +74,7 @@ class InventoryAdjustmentSeeder extends Seeder
                     'previous_quantity' => $previousQuantity,
                     'new_quantity' => $newQuantity,
                     'reason' => $reasons[array_rand($reasons)],
-                    'reference_number' => 'ADJ-' . date('Y') . '-' . str_pad(($i + 1), 4, '0', STR_PAD_LEFT),
+                    'reference_number' => 'ADJ-'.date('Y').'-'.str_pad(($i + 1), 4, '0', STR_PAD_LEFT),
                 ]);
             }
         }

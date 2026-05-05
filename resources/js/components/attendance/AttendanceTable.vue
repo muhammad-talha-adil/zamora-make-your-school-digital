@@ -3,7 +3,7 @@
         <!-- Mobile Card View -->
         <div class="block lg:hidden space-y-3">
             <div
-                v-for="(attendance, index) in props.attendances.data"
+                v-for="attendance in props.attendances.data"
                 :key="attendance.id"
                 class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 space-y-3"
             >
@@ -135,7 +135,9 @@
                 Showing {{ props.attendances.from }} to {{ props.attendances.to }} of {{ props.attendances.total }} entries
             </div>
             <div class="flex flex-wrap gap-1">
-                <Link v-for="link in props.attendances.links" :key="link.label" :href="link.url || '#'" :class="['px-3 py-2 text-sm rounded-md transition-colors min-h-10 flex items-center justify-center', link.active ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-300 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600']" preserve-state v-html="link.label" />
+                <Link v-for="link in props.attendances.links" :key="link.label" :href="link.url || '#'" :class="['px-3 py-2 text-sm rounded-md transition-colors min-h-10 flex items-center justify-center', link.active ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-300 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600']" preserve-state>
+                    <span v-html="link.label"></span>
+                </Link>
             </div>
         </div>
     </div>

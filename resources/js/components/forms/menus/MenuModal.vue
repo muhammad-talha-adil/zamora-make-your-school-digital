@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { computed, ref } from 'vue';
-import { Form, useForm } from '@inertiajs/vue3';
+import { computed, watch } from 'vue';
+import { useForm } from '@inertiajs/vue3';
 import InputError from '@/components/InputError.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -40,6 +40,7 @@ const props = defineProps<Props>();
 
 const emit = defineEmits<{
     'update:open': [value: boolean];
+    saved: [];
 }>();
 
 const typeOptions = [
@@ -55,8 +56,6 @@ const action = computed(() => {
     }
 });
 
-const method = computed(() => props.mode === 'create' ? 'post' : 'patch');
-
 const title = computed(() => props.mode === 'create' ? 'Create Menu' : 'Edit Menu');
 
 const description = computed(() =>
@@ -68,14 +67,59 @@ const description = computed(() =>
 const buttonText = computed(() => props.mode === 'create' ? 'Create Menu' : 'Update Menu');
 
 const form = useForm({
-    title: props.mode === 'edit' ? props.menu?.title || '' : '',
-    icon: props.mode === 'edit' ? props.menu?.icon || '' : '',
-    url: props.mode === 'edit' ? props.menu?.url || '' : '',
-    parent_id: props.mode === 'edit' ? props.menu?.parent_id || null : null,
-    order: props.mode === 'edit' ? props.menu?.order || 0 : 0,
-    type: props.mode === 'edit' ? props.menu?.type || 'main' : 'main',
-    is_active: props.mode === 'edit' ? props.menu?.is_active ?? true : true,
+    title: '',
+    icon: '',
+    url: '',
+    parent_id: null as number | null,
+    order: 0,
+    type: 'main',
+    is_active: true,
 });
+
+const syncForm = () => {
+    form.defaults({
+        title: props.mode === 'edit' ? props.menu?.title || '' : '',
+        icon: props.mode === 'edit' ? props.menu?.icon || '' : '',
+        url: props.mode === 'edit' ? props.menu?.url || '' : '',
+        parent_id: props.mode === 'edit' ? props.menu?.parent_id || null : null,
+        order: props.mode === 'edit' ? props.menu?.order || 0 : 0,
+        type: props.mode === 'edit' ? props.menu?.type || 'main' : 'main',
+        is_active: props.mode === 'edit' ? props.menu?.is_active ?? true : true,
+    });
+    form.reset();
+    form.clearErrors();
+};
+
+watch(
+    () => [props.open, props.mode, props.menu?.id],
+    () => {
+        if (props.open) {
+            syncForm();
+        }
+    },
+    { immediate: true },
+);
+
+const closeModal = () => {
+    emit('update:open', false);
+};
+
+const submitForm = () => {
+    const requestOptions = {
+        preserveScroll: true,
+        onSuccess: () => {
+            emit('saved');
+            closeModal();
+        },
+    };
+
+    if (props.mode === 'create') {
+        form.post(action.value, requestOptions);
+        return;
+    }
+
+    form.patch(action.value, requestOptions);
+};
 </script>
 
 <template>
@@ -88,13 +132,7 @@ const form = useForm({
                 </DialogDescription>
             </DialogHeader>
 
-            <Form
-                :form="form"
-                :action="action"
-                :method="method"
-                @success="emit('update:open', false)"
-                v-slot="{ errors, processing }"
-            >
+            <form @submit.prevent="submitForm">
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-6">
                     <div class="grid gap-2">
                         <Label for="title">Title</Label>
@@ -106,7 +144,7 @@ const form = useForm({
                             required
                             placeholder="Menu title"
                         />
-                        <InputError class="mt-2" :message="errors.title" />
+                        <InputError class="mt-2" :message="form.errors.title" />
                     </div>
 
                     <div class="grid gap-2">
@@ -118,7 +156,7 @@ const form = useForm({
                             :default-value="''"
                             placeholder="Icon name (optional)"
                         />
-                        <InputError class="mt-2" :message="errors.icon" />
+                        <InputError class="mt-2" :message="form.errors.icon" />
                     </div>
 
                     <div class="grid gap-2">
@@ -130,7 +168,7 @@ const form = useForm({
                             :default-value="''"
                             placeholder="External URL (optional)"
                         />
-                        <InputError class="mt-2" :message="errors.url" />
+                        <InputError class="mt-2" :message="form.errors.url" />
                     </div>
 
                     <div class="grid gap-2">
@@ -144,7 +182,7 @@ const form = useForm({
                             :default-value="null"
                             value-type="id"
                         />
-                        <InputError class="mt-2" :message="errors.parent_id" />
+                        <InputError class="mt-2" :message="form.errors.parent_id" />
                     </div>
 
                     <div class="grid gap-2">
@@ -157,7 +195,7 @@ const form = useForm({
                             :default-value="0"
                             placeholder="0"
                         />
-                        <InputError class="mt-2" :message="errors.order" />
+                        <InputError class="mt-2" :message="form.errors.order" />
                     </div>
 
                     <div class="grid gap-2">
@@ -171,7 +209,7 @@ const form = useForm({
                             :default-value="'main'"
                             value-type="id"
                         />
-                        <InputError class="mt-2" :message="errors.type" />
+                        <InputError class="mt-2" :message="form.errors.type" />
                     </div>
 
                     <div class="flex items-center space-x-2 col-span-full">
@@ -181,14 +219,14 @@ const form = useForm({
                 </div>
 
                 <DialogFooter>
-                    <Button type="button" variant="secondary" @click="emit('update:open', false)">
+                    <Button type="button" variant="secondary" @click="closeModal">
                         Cancel
                     </Button>
-                    <Button :disabled="processing">
+                    <Button type="submit" :disabled="form.processing">
                         {{ buttonText }}
                     </Button>
                 </DialogFooter>
-            </Form>
+            </form>
         </DialogContent>
     </Dialog>
 </template>

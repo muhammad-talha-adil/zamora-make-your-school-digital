@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref } from 'vue';
+import { ref, onMounted } from 'vue';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -44,12 +44,13 @@ const editingCampusType = ref<{
 
 const showTrashed = ref(false);
 const campusTypesData = ref(props.campusTypes);
+const loadingTypes = ref(false);
 
 // Methods
-const refreshCampusTypes = () => {
-    // Reload the page to refresh campus types list
-    window.location.reload();
-};
+// Fetch campus types on mount
+onMounted(() => {
+    fetchCampusTypes();
+});
 
 const toggleTrashed = () => {
     showTrashed.value = !showTrashed.value;
@@ -57,9 +58,12 @@ const toggleTrashed = () => {
 };
 
 const fetchCampusTypes = () => {
+    loadingTypes.value = true;
     const trashed = showTrashed.value ? '1' : '0';
     axios.get(`/settings/campus-types?trashed=${trashed}`).then((response) => {
         campusTypesData.value = response.data;
+    }).finally(() => {
+        loadingTypes.value = false;
     });
 };
 
@@ -67,8 +71,9 @@ const editCampusType = (campusType: { id: number; name: string }) => {
     editingCampusType.value = campusType;
 };
 
-const addCampusType = () => {
+const onFormCancel = () => {
     editingCampusType.value = undefined;
+    open.value = false;
 };
 
 const deleteCampusType = (campusType: { id: number; name: string }) => {
@@ -103,13 +108,13 @@ const restoreCampusType = (campusType: { id: number; name: string }) => {
 
 const forceDeleteCampusType = (campusType: { id: number; name: string }) => {
     alert.confirm(`Are you sure you want to permanently delete "${campusType.name}"? This action cannot be undone.`, 'Permanently Delete Campus Type').then((result) => {
-        if (result.isConfirmed) {
-            router.delete(`/settings/campus-types/${campusType.id}/force`, {
-                preserveScroll: true,
-                onSuccess: () => {
-                    alert.success('Campus type permanently deleted successfully!');
-                    fetchCampusTypes();
-                },
+    if (result.isConfirmed) {
+        router.delete(`/settings/campus-types/${campusType.id}/force-delete`, {
+            preserveScroll: true,
+            onSuccess: () => {
+                alert.success('Campus type permanently deleted successfully!');
+                fetchCampusTypes();
+            },
                 onError: () => {
                     alert.error('Failed to permanently delete campus type. Please try again.');
                 },
@@ -154,36 +159,52 @@ const onFormCancel = () => {
                     />
                 </div>
 
-                <!-- Table -->
-                <div class="space-y-4">
-                    <div class="flex justify-end">
-                        <Button
-                            :variant="showTrashed ? 'ghost' : 'default'"
-                            size="sm"
-                            @click="toggleTrashed"
-                        >
-                            <Icon :icon="showTrashed ? 'arrow-left' : 'eye'" class="mr-1" />
-                            {{ showTrashed ? 'Back' : 'Deleted Campus Types' }}
-                        </Button>
-                    </div>
-                    <div class="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden shadow-sm">
-                        <div class="overflow-x-auto">
-                            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                                <thead class="bg-gray-50 dark:bg-gray-800">
-                                    <tr>
-                                        <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">#</th>
-                                        <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">Name</th>
-                                        <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">Actions</th>
-                                    </tr>
-                                </thead>
-                                <tbody class="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
-                                    <tr v-for="(campusType, index) in campusTypesData" :key="campusType.id" class="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
-                                        <td class="px-6 py-4 whitespace-nowrap">
-                                            <div class="text-sm text-gray-600 dark:text-gray-300">{{ index + 1 }}</div>
-                                        </td>
-                                        <td class="px-6 py-4 whitespace-nowrap">
-                                            <div class="text-sm font-medium text-gray-900 dark:text-white">{{ campusType.name }}</div>
-                                        </td>
+                 <!-- Table -->
+                 <div class="space-y-4">
+                     <div class="flex justify-end">
+                         <Button
+                             :variant="showTrashed ? 'ghost' : 'default'"
+                             size="sm"
+                             @click="toggleTrashed"
+                         >
+                             <Icon :icon="showTrashed ? 'arrow-left' : 'eye'" class="mr-1" />
+                             {{ showTrashed ? 'Back' : 'Deleted Campus Types' }}
+                         </Button>
+                     </div>
+                     <div class="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden shadow-sm">
+                         <div class="overflow-x-auto">
+                             <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                                 <thead class="bg-gray-50 dark:bg-gray-800">
+                                     <tr>
+                                         <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">#</th>
+                                         <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">Name</th>
+                                         <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">Actions</th>
+                                     </tr>
+                                 </thead>
+                                 <tbody class="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
+                                     <tr v-if="loadingTypes">
+                                         <td colspan="3" class="px-6 py-8 text-center">
+                                             <div class="flex items-center justify-center">
+                                                 <Icon icon="loader" class="h-6 w-6 animate-spin text-muted-foreground mr-2" />
+                                                 <span class="text-sm text-muted-foreground">Loading campus types...</span>
+                                             </div>
+                                         </td>
+                                     </tr>
+                                     <tr v-else-if="campusTypesData.length === 0">
+                                         <td colspan="3" class="px-6 py-8 text-center">
+                                             <div class="text-center text-muted-foreground">
+                                                 <Icon icon="inbox" class="h-10 w-10 mx-auto mb-3 opacity-50" />
+                                                 <p class="text-sm font-medium">No campus types found</p>
+                                             </div>
+                                         </td>
+                                     </tr>
+                                     <tr v-for="(campusType, index) in campusTypesData" :key="campusType.id" class="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+                                         <td class="px-6 py-4 whitespace-nowrap">
+                                             <div class="text-sm text-gray-600 dark:text-gray-300">{{ index + 1 }}</div>
+                                         </td>
+                                         <td class="px-6 py-4 whitespace-nowrap">
+                                             <div class="text-sm font-medium text-gray-900 dark:text-white">{{ campusType.name }}</div>
+                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
                                             <div class="flex space-x-2" v-if="!showTrashed">
                                                 <Button variant="outline" size="sm" @click="editCampusType(campusType)">

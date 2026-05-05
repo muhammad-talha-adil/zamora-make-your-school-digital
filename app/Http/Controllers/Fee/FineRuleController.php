@@ -2,13 +2,15 @@
 
 namespace App\Http\Controllers\Fee;
 
+use App\Enums\Fee\FineType;
 use App\Http\Controllers\Controller;
-use App\Models\Fee\FeeFineRule;
 use App\Models\Campus;
-use App\Models\Session;
+use App\Models\Fee\FeeFineRule;
+use App\Models\Fee\FeeHead;
 use App\Models\SchoolClass;
 use App\Models\Section;
-use App\Models\Fee\FeeHead;
+use App\Models\Session;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -18,6 +20,28 @@ class FineRuleController extends Controller
      * Display a listing of fine rules.
      */
     public function index(Request $request)
+    {
+        $transformedRules = $this->getTransformedRules($request);
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'fineRules' => $transformedRules,
+            ]);
+        }
+
+        return Inertia::render('Fee/Settings/FineRules', [
+            'fineRules' => $transformedRules,
+            'campuses' => Campus::select('id', 'name')->orderBy('name')->get(),
+            'sessions' => Session::select('id', 'name')->orderBy('start_date', 'desc')->get(),
+            'classes' => SchoolClass::select('id', 'name')->orderBy('name')->get(),
+            'sections' => Section::select('id', 'name', 'class_id')->orderBy('name')->get(),
+            'feeHeads' => FeeHead::active()->select('id', 'name')->orderBy('name')->get(),
+            'filters' => $request->only(['campus_id', 'session_id', 'class_id', 'is_active', 'search']),
+        ]);
+    }
+
+    protected function getTransformedRules(Request $request)
     {
         $query = FeeFineRule::with(['campus', 'session', 'schoolClass', 'section', 'feeHead']);
 
@@ -39,13 +63,13 @@ class FineRuleController extends Controller
         }
 
         if ($request->filled('search')) {
-            $query->where('name', 'like', '%' . $request->search . '%');
+            $query->where('name', 'like', '%'.$request->search.'%');
         }
 
         $fineRules = $query->latest()->get();
 
         // Transform for frontend
-        $transformedRules = $fineRules->map(function ($rule) {
+        return $fineRules->map(function ($rule) {
             return [
                 'id' => $rule->id,
                 'name' => $rule->name,
@@ -55,8 +79,8 @@ class FineRuleController extends Controller
                 'section_id' => $rule->section_id,
                 'fee_head_id' => $rule->fee_head_id,
                 'grace_days' => $rule->grace_days,
-                'fine_type' => $rule->fine_type instanceof \App\Enums\Fee\FineType 
-                    ? $rule->fine_type->value 
+                'fine_type' => $rule->fine_type instanceof FineType
+                    ? $rule->fine_type->value
                     : $rule->fine_type,
                 'fine_value' => (float) $rule->fine_value,
                 'effective_from' => $rule->effective_from?->toDateString(),
@@ -69,16 +93,6 @@ class FineRuleController extends Controller
                 'feeHead' => $rule->feeHead ? ['id' => $rule->feeHead->id, 'name' => $rule->feeHead->name] : null,
             ];
         });
-
-        return Inertia::render('Fee/Settings/FineRules', [
-            'fineRules' => $transformedRules,
-            'campuses' => Campus::select('id', 'name')->orderBy('name')->get(),
-            'sessions' => Session::select('id', 'name')->orderBy('start_date', 'desc')->get(),
-            'classes' => SchoolClass::select('id', 'name')->orderBy('name')->get(),
-            'sections' => Section::select('id', 'name', 'class_id')->orderBy('name')->get(),
-            'feeHeads' => FeeHead::active()->select('id', 'name')->orderBy('name')->get(),
-            'filters' => $request->only(['campus_id', 'session_id', 'class_id', 'is_active', 'search']),
-        ]);
     }
 
     /**
@@ -101,7 +115,15 @@ class FineRuleController extends Controller
             'is_active' => 'boolean',
         ]);
 
-        FeeFineRule::create($validated);
+        $rule = FeeFineRule::create($validated);
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Fine rule created successfully.',
+                'fineRule' => $rule->fresh(),
+            ]);
+        }
 
         return back()->with('success', 'Fine rule created successfully.');
     }
@@ -128,15 +150,30 @@ class FineRuleController extends Controller
 
         $fineRule->update($validated);
 
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Fine rule updated successfully.',
+                'fineRule' => $fineRule->fresh(),
+            ]);
+        }
+
         return back()->with('success', 'Fine rule updated successfully.');
     }
 
     /**
      * Remove the specified fine rule.
      */
-    public function destroy(FeeFineRule $fineRule)
+    public function destroy(Request $request, FeeFineRule $fineRule)
     {
         $fineRule->delete();
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Fine rule deleted successfully.',
+            ]);
+        }
 
         return back()->with('success', 'Fine rule deleted successfully.');
     }
@@ -144,10 +181,14 @@ class FineRuleController extends Controller
     /**
      * Toggle fine rule status.
      */
-    public function toggleStatus(FeeFineRule $fineRule)
+    public function toggleStatus(Request $request, FeeFineRule $fineRule): JsonResponse
     {
-        $fineRule->update(['is_active' => !$fineRule->is_active]);
+        $fineRule->update(['is_active' => ! $fineRule->is_active]);
 
-        return back()->with('success', 'Fine rule status updated successfully.');
+        return response()->json([
+            'success' => true,
+            'message' => 'Fine rule status updated successfully.',
+            'fineRule' => $fineRule->fresh(),
+        ]);
     }
 }

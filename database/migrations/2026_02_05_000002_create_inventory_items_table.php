@@ -8,9 +8,9 @@ return new class extends Migration
 {
     /**
      * Run the migrations.
-     * 
+     *
      * Consolidated migration for inventory_items table.
-     * Includes all columns: id, campus_id, inventory_type_id, name, description, 
+     * Includes all columns: id, campus_id, inventory_type_id, name, description,
      * is_active, sku, barcode, qr_code, timestamps, softDeletes
      * (purchase_rate and sale_rate were removed later)
      */

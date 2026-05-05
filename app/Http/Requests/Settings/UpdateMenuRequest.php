@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Settings;
 
+use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -18,18 +19,18 @@ class UpdateMenuRequest extends FormRequest
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     * @return array<string, ValidationRule|array<mixed>|string>
      */
     public function rules(): array
     {
-        $menuId = $this->route('id');
+        $menu = $this->route('menu');
+        $menuId = is_object($menu) ? $menu->id : $menu;
 
         return [
             'title' => 'required|string|max:255',
             'icon' => 'nullable|string|max:255',
-            'path' => 'required|string|max:255',
             'url' => 'nullable|string|max:255',
-            'is_active' => 'boolean',
+            'is_active' => 'nullable|boolean',
             'parent_id' => [
                 'nullable',
                 'exists:menus,id',

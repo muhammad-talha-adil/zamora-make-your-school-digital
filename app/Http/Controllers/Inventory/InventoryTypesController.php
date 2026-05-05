@@ -6,9 +6,9 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Inventory\StoreInventoryTypeRequest;
 use App\Http\Requests\Inventory\UpdateInventoryTypeRequest;
 use App\Models\Campus;
-use App\Models\InventoryItem;
 use App\Models\InventoryType;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Response;
 
@@ -29,8 +29,8 @@ class InventoryTypesController extends Controller
 
         $query = InventoryType::with(['campus:id,name'])
             ->withCount('inventoryItems')
-            ->when($campusId, fn($q) => $q->forCampus($campusId))
-            ->when($status === 'inactive', fn($q) => $q->withoutGlobalScope('active')->where('is_active', false))
+            ->when($campusId, fn ($q) => $q->forCampus($campusId))
+            ->when($status === 'inactive', fn ($q) => $q->withoutGlobalScope('active')->where('is_active', false))
             ->orderBy('name');
 
         return inertia('inventory/InventoryTypes/Index', [
@@ -45,7 +45,7 @@ class InventoryTypesController extends Controller
     /**
      * Show the form for creating a new inventory type.
      */
-    public function create(Request $request): \Illuminate\Http\RedirectResponse
+    public function create(Request $request): RedirectResponse
     {
         return redirect()->route('inventory.types.index');
     }
@@ -59,12 +59,12 @@ class InventoryTypesController extends Controller
     {
         try {
             $data = $request->validated();
-            
+
             // Convert 'all' to null for "all campuses" functionality
             if (isset($data['campus_id']) && $data['campus_id'] === 'all') {
                 $data['campus_id'] = null;
             }
-            
+
             InventoryType::create($data);
 
             return redirect()->to('/inventory/settings')
@@ -77,11 +77,11 @@ class InventoryTypesController extends Controller
     /**
      * Show the form for editing the specified inventory type.
      */
-    public function edit(Request $request, InventoryType $inventoryType): \Illuminate\Http\RedirectResponse
+    public function edit(Request $request, InventoryType $inventoryType): RedirectResponse
     {
         /** @var InventoryType $inventoryType */
         $type = InventoryType::where('id', $inventoryType->id)
-            ->when($request->get('campus_id'), fn($q) => $q->where('campus_id', $request->get('campus_id')))
+            ->when($request->get('campus_id'), fn ($q) => $q->where('campus_id', $request->get('campus_id')))
             ->firstOrFail();
 
         return redirect()->to("/inventory/types/{$type->id}/edit?campus_id={$type->campus_id}");
@@ -96,17 +96,17 @@ class InventoryTypesController extends Controller
     {
         /** @var InventoryType $inventoryType */
         $inventoryType = InventoryType::where('id', $inventoryType->id)
-            ->when($request->get('campus_id'), fn($q) => $q->where('campus_id', $request->get('campus_id')))
+            ->when($request->get('campus_id'), fn ($q) => $q->where('campus_id', $request->get('campus_id')))
             ->firstOrFail();
 
         try {
             $data = $request->validated();
-            
+
             // Convert 'all' to null for "all campuses" functionality
             if (isset($data['campus_id']) && $data['campus_id'] === 'all') {
                 $data['campus_id'] = null;
             }
-            
+
             $inventoryType->update($data);
 
             return redirect()->to('/inventory/settings')
@@ -126,7 +126,7 @@ class InventoryTypesController extends Controller
     {
         /** @var InventoryType $inventoryType */
         $inventoryType = InventoryType::where('id', $inventoryType->id)
-            ->when($request->get('campus_id'), fn($q) => $q->where('campus_id', $request->get('campus_id')))
+            ->when($request->get('campus_id'), fn ($q) => $q->where('campus_id', $request->get('campus_id')))
             ->firstOrFail();
 
         // Perform soft delete
@@ -144,7 +144,7 @@ class InventoryTypesController extends Controller
     {
         /** @var InventoryType $inventoryType */
         $inventoryType = InventoryType::where('id', $inventoryType->id)
-            ->when($request->get('campus_id'), fn($q) => $q->where('campus_id', $request->get('campus_id')))
+            ->when($request->get('campus_id'), fn ($q) => $q->where('campus_id', $request->get('campus_id')))
             ->firstOrFail();
 
         $inventoryType->update(['is_active' => false]);
@@ -161,7 +161,7 @@ class InventoryTypesController extends Controller
     {
         /** @var InventoryType $inventoryType */
         $inventoryType = InventoryType::where('id', $inventoryType->id)
-            ->when($request->get('campus_id'), fn($q) => $q->where('campus_id', $request->get('campus_id')))
+            ->when($request->get('campus_id'), fn ($q) => $q->where('campus_id', $request->get('campus_id')))
             ->firstOrFail();
 
         $inventoryType->update(['is_active' => true]);
@@ -189,7 +189,7 @@ class InventoryTypesController extends Controller
         $typesQuery = InventoryType::with(['campus:id,name'])
             ->select(['id', 'name', 'campus_id', 'is_active'])
             ->when($query, function ($q) use ($query) {
-                $q->whereRaw('LOWER(name) LIKE ?', ['%' . strtolower($query) . '%']);
+                $q->whereRaw('LOWER(name) LIKE ?', ['%'.strtolower($query).'%']);
             })
             ->when($campusId, function ($q) use ($campusId) {
                 $q->forCampus($campusId);
@@ -230,10 +230,10 @@ class InventoryTypesController extends Controller
 
         $query = InventoryType::with(['campus:id,name'])
             ->withCount('inventoryItems')
-            ->when($campusId, fn($q) => $q->forCampus($campusId))
-            ->when($search, fn($q) => $q->whereRaw('LOWER(name) LIKE ?', ['%' . strtolower($search) . '%']))
-            ->when($status === 'active', fn($q) => $q->where('is_active', true))
-            ->when($status === 'inactive', fn($q) => $q->withoutGlobalScope('active')->where('is_active', false));
+            ->when($campusId, fn ($q) => $q->forCampus($campusId))
+            ->when($search, fn ($q) => $q->whereRaw('LOWER(name) LIKE ?', ['%'.strtolower($search).'%']))
+            ->when($status === 'active', fn ($q) => $q->where('is_active', true))
+            ->when($status === 'inactive', fn ($q) => $q->withoutGlobalScope('active')->where('is_active', false));
 
         $types = $query
             ->orderBy('name')
@@ -274,38 +274,38 @@ class InventoryTypesController extends Controller
         $isAllCampus = ($campusId === null || $campusId === 'all');
         $name = $request->name;
         $excludeId = $request->exclude_id;
-        
+
         if ($isAllCampus) {
             // Check if name exists in ANY campus (excluding current type)
             $exists = InventoryType::whereRaw('LOWER(name) = LOWER(?)', [$name])
-                ->when($excludeId, fn($q) => $q->where('id', '!=', $excludeId))
+                ->when($excludeId, fn ($q) => $q->where('id', '!=', $excludeId))
                 ->exists();
-            
+
             return response()->json([
                 'exists' => $exists,
-                'is_all_campus_conflict' => false
+                'is_all_campus_conflict' => false,
             ]);
         } else {
             // Check if name exists in the specific campus
-            if (!is_numeric($campusId) || !Campus::where('id', $campusId)->exists()) {
+            if (! is_numeric($campusId) || ! Campus::where('id', $campusId)->exists()) {
                 return response()->json(['exists' => false, 'message' => 'Invalid campus']);
             }
-            
+
             // Check if name exists in the specific campus
             $existsInCampus = InventoryType::where('campus_id', $campusId)
                 ->whereRaw('LOWER(name) = LOWER(?)', [$name])
-                ->when($excludeId, fn($q) => $q->where('id', '!=', $excludeId))
+                ->when($excludeId, fn ($q) => $q->where('id', '!=', $excludeId))
                 ->exists();
-            
+
             // Also check if there's an "All Campuses" type with the same name
             $existsInAllCampuses = InventoryType::whereNull('campus_id')
                 ->whereRaw('LOWER(name) = LOWER(?)', [$name])
-                ->when($excludeId, fn($q) => $q->where('id', '!=', $excludeId))
+                ->when($excludeId, fn ($q) => $q->where('id', '!=', $excludeId))
                 ->exists();
-            
+
             return response()->json([
                 'exists' => $existsInCampus || $existsInAllCampuses,
-                'is_all_campus_conflict' => $existsInAllCampuses
+                'is_all_campus_conflict' => $existsInAllCampuses,
             ]);
         }
     }
@@ -324,12 +324,12 @@ class InventoryTypesController extends Controller
             $q->select(['id', 'name', 'inventory_type_id', 'campus_id'])
                 ->orderBy('name');
         }])
-            ->when($campusId, fn($q) => $q->forCampus($campusId))
+            ->when($campusId, fn ($q) => $q->forCampus($campusId))
             ->findOrFail($id);
 
         return response()->json([
             'type' => $type,
-            'items' => $type->inventoryItems->map(fn($item) => [
+            'items' => $type->inventoryItems->map(fn ($item) => [
                 'id' => $item->id,
                 'name' => $item->name,
             ]),

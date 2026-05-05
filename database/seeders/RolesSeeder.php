@@ -4,7 +4,6 @@ namespace Database\Seeders;
 
 use App\Models\Permission;
 use App\Models\Role;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
 class RolesSeeder extends Seeder
@@ -102,7 +101,7 @@ class RolesSeeder extends Seeder
                 'campus_admin' => $role->permissions()->sync(Permission::whereIn('key', [
                     'students.view', 'students.edit', 'fees.view', 'fees.collect',
                     'attendance.view', 'attendance.mark', 'exams.view', 'exams.manage',
-                    'settings.manage'
+                    'settings.manage',
                 ])->pluck('id')->toArray()),
                 'accountant' => $role->permissions()->sync(Permission::whereIn('key', ['fees.view', 'fees.collect'])->pluck('id')->toArray()),
                 'teacher' => $role->permissions()->sync(Permission::whereIn('key', ['attendance.view', 'attendance.mark', 'exams.view'])->pluck('id')->toArray()),

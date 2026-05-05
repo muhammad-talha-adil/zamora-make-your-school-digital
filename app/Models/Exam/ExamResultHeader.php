@@ -2,6 +2,10 @@
 
 namespace App\Models\Exam;
 
+use App\Models\Campus;
+use App\Models\SchoolClass;
+use App\Models\Section;
+use App\Models\Student;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -43,7 +47,7 @@ class ExamResultHeader extends Model
      */
     public function campus(): BelongsTo
     {
-        return $this->belongsTo(\App\Models\Campus::class);
+        return $this->belongsTo(Campus::class);
     }
 
     /**
@@ -51,7 +55,7 @@ class ExamResultHeader extends Model
      */
     public function class(): BelongsTo
     {
-        return $this->belongsTo(\App\Models\SchoolClass::class, 'class_id');
+        return $this->belongsTo(SchoolClass::class, 'class_id');
     }
 
     /**
@@ -59,7 +63,7 @@ class ExamResultHeader extends Model
      */
     public function section(): BelongsTo
     {
-        return $this->belongsTo(\App\Models\Section::class)->withDefault();
+        return $this->belongsTo(Section::class)->withDefault();
     }
 
     /**
@@ -67,7 +71,7 @@ class ExamResultHeader extends Model
      */
     public function student(): BelongsTo
     {
-        return $this->belongsTo(\App\Models\Student::class);
+        return $this->belongsTo(Student::class);
     }
 
     /**
@@ -114,19 +118,19 @@ class ExamResultHeader extends Model
     public function recalculateTotals(): void
     {
         $lines = $this->examResultLines;
-        
+
         $totalObtained = $lines
             ->where('is_absent', false)
             ->where('is_exempt', false)
             ->sum('obtained_marks');
-        
+
         $totalMax = $lines
             ->where('is_absent', false)
             ->where('is_exempt', false)
             ->sum('total_marks_snapshot');
-        
+
         $percentage = $totalMax > 0 ? round(($totalObtained / $totalMax) * 100, 2) : null;
-        
+
         $this->update([
             'total_obtained_cache' => $totalObtained,
             'overall_percentage_cache' => $percentage,

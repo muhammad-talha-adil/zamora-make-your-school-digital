@@ -9,7 +9,6 @@ import {
     DialogTitle,
     DialogTrigger,
 } from '@/components/ui/dialog';
-import Icon from '@/components/Icon.vue';
 
 // Props
 interface Props {
@@ -21,7 +20,7 @@ interface Props {
     trigger?: string;
 }
 
-const props = withDefaults(defineProps<Props>(), {
+withDefaults(defineProps<Props>(), {
     trigger: 'View Months',
 });
 

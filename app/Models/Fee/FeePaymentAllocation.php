@@ -7,7 +7,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
  * Fee Payment Allocation Model
- * 
+ *
  * Allocates one payment across one or multiple vouchers.
  */
 class FeePaymentAllocation extends Model

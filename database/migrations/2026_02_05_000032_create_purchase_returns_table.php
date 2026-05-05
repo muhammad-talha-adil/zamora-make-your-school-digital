@@ -8,7 +8,7 @@ return new class extends Migration
 {
     /**
      * Run the migrations.
-     * 
+     *
      * Consolidated migration for purchase_returns and purchase_return_items tables.
      * Includes all alterations:
      * - Original: campus_id, purchase_id, supplier_id, user_id, return_number, etc.

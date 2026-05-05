@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
  * Fee Voucher Item Model
- * 
+ *
  * Line items breakdown for each voucher.
  */
 class FeeVoucherItem extends Model

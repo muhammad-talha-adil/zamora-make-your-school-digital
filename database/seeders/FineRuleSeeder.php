@@ -2,8 +2,11 @@
 
 namespace Database\Seeders;
 
+use App\Models\Campus;
 use App\Models\Fee\FeeFineRule;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
+use App\Models\Fee\FeeHead;
+use App\Models\SchoolClass;
+use App\Models\Session;
 use Illuminate\Database\Seeder;
 
 class FineRuleSeeder extends Seeder
@@ -14,13 +17,14 @@ class FineRuleSeeder extends Seeder
     public function run(): void
     {
         // Get campus and session IDs for seeding
-        $campuses = \App\Models\Campus::all();
-        $sessions = \App\Models\Session::all();
-        $classes = \App\Models\SchoolClass::all();
-        $feeHeads = \App\Models\Fee\FeeHead::all();
+        $campuses = Campus::all();
+        $sessions = Session::all();
+        $classes = SchoolClass::all();
+        $feeHeads = FeeHead::all();
 
         if ($campuses->isEmpty() || $sessions->isEmpty()) {
             $this->command->warn('No campuses or sessions found. Please seed campuses and sessions first.');
+
             return;
         }
 
@@ -37,8 +41,8 @@ class FineRuleSeeder extends Seeder
                 'grace_days' => 5,
                 'fine_type' => 'fixed_per_day',
                 'fine_value' => 50.00,
-                'effective_from' => $currentYear . '-01-01',
-                'effective_to' => $currentYear . '-12-31',
+                'effective_from' => $currentYear.'-01-01',
+                'effective_to' => $currentYear.'-12-31',
                 'is_active' => true,
             ],
             // Global rule - Percentage based
@@ -52,8 +56,8 @@ class FineRuleSeeder extends Seeder
                 'grace_days' => 10,
                 'fine_type' => 'percent',
                 'fine_value' => 2.00,
-                'effective_from' => $currentYear . '-01-01',
-                'effective_to' => $currentYear . '-12-31',
+                'effective_from' => $currentYear.'-01-01',
+                'effective_to' => $currentYear.'-12-31',
                 'is_active' => true,
             ],
             // Fixed one-time fine
@@ -67,8 +71,8 @@ class FineRuleSeeder extends Seeder
                 'grace_days' => 3,
                 'fine_type' => 'fixed_once',
                 'fine_value' => 500.00,
-                'effective_from' => $currentYear . '-01-01',
-                'effective_to' => $currentYear . '-12-31',
+                'effective_from' => $currentYear.'-01-01',
+                'effective_to' => $currentYear.'-12-31',
                 'is_active' => true,
             ],
         ];
@@ -86,8 +90,8 @@ class FineRuleSeeder extends Seeder
                 'grace_days' => 7,
                 'fine_type' => 'fixed_per_day',
                 'fine_value' => 25.00,
-                'effective_from' => $currentYear . '-01-01',
-                'effective_to' => $currentYear . '-12-31',
+                'effective_from' => $currentYear.'-01-01',
+                'effective_to' => $currentYear.'-12-31',
                 'is_active' => true,
             ];
         }
@@ -104,8 +108,8 @@ class FineRuleSeeder extends Seeder
                 'grace_days' => 3,
                 'fine_type' => 'fixed_per_day',
                 'fine_value' => 30.00,
-                'effective_from' => $currentYear . '-01-01',
-                'effective_to' => $currentYear . '-12-31',
+                'effective_from' => $currentYear.'-01-01',
+                'effective_to' => $currentYear.'-12-31',
                 'is_active' => true,
             ];
         }
@@ -123,8 +127,8 @@ class FineRuleSeeder extends Seeder
                 'grace_days' => 5,
                 'fine_type' => 'fixed_per_day',
                 'fine_value' => 100.00,
-                'effective_from' => $currentYear . '-01-01',
-                'effective_to' => $currentYear . '-12-31',
+                'effective_from' => $currentYear.'-01-01',
+                'effective_to' => $currentYear.'-12-31',
                 'is_active' => true,
             ];
         }
@@ -134,6 +138,6 @@ class FineRuleSeeder extends Seeder
         }
 
         $this->command->info('Fine rules seeded successfully!');
-        $this->command->info('Created ' . count($fineRules) . ' fine rules.');
+        $this->command->info('Created '.count($fineRules).' fine rules.');
     }
 }

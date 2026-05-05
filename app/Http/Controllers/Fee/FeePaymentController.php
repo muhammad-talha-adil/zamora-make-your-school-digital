@@ -6,10 +6,12 @@ use App\Http\Controllers\Controller;
 use App\Models\Campus;
 use App\Models\Fee\FeePayment;
 use App\Models\Fee\FeeVoucher;
+use App\Models\Student;
 use App\Services\FinanceService;
 use Illuminate\Http\Request;
-use Inertia\Inertia;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
+use Inertia\Inertia;
 
 class FeePaymentController extends Controller
 {
@@ -40,10 +42,10 @@ class FeePaymentController extends Controller
 
         if ($request->filled('search')) {
             $query->where(function ($q) use ($request) {
-                $q->where('receipt_no', 'like', '%' . $request->search . '%')
+                $q->where('receipt_no', 'like', '%'.$request->search.'%')
                     ->orWhereHas('student', function ($sq) use ($request) {
-                        $sq->where('name', 'like', '%' . $request->search . '%')
-                            ->orWhere('registration_number', 'like', '%' . $request->search . '%');
+                        $sq->where('name', 'like', '%'.$request->search.'%')
+                            ->orWhere('registration_number', 'like', '%'.$request->search.'%');
                     });
             });
         }
@@ -98,10 +100,10 @@ class FeePaymentController extends Controller
 
         return DB::transaction(function () use ($validated) {
             // Get student enrollment to determine campus
-            $student = \App\Models\Student::with('currentEnrollment')->findOrFail($validated['student_id']);
+            $student = Student::with('currentEnrollment')->findOrFail($validated['student_id']);
             $enrollment = $student->currentEnrollment;
-            
-            if (!$enrollment) {
+
+            if (! $enrollment) {
                 throw new \Exception('Student has no active enrollment');
             }
 
@@ -135,24 +137,24 @@ class FeePaymentController extends Controller
             foreach ($validated['vouchers'] as $voucherData) {
                 $voucher = FeeVoucher::findOrFail($voucherData['voucher_id']);
                 $amountToAllocate = $voucherData['amount'];
-                
+
                 // Auto-allocate to previous vouchers if this voucher has previous_voucher_ids
                 $previousVoucherIds = $voucher->previous_voucher_ids ?? [];
-                
-                if (!empty($previousVoucherIds) && is_array($previousVoucherIds)) {
+
+                if (! empty($previousVoucherIds) && is_array($previousVoucherIds)) {
                     // Get previous vouchers that still have balance
                     $previousVouchers = FeeVoucher::whereIn('id', $previousVoucherIds)
                         ->whereIn('status', ['unpaid', 'partial'])
                         ->get();
-                    
+
                     foreach ($previousVouchers as $previousVoucher) {
                         if ($amountToAllocate <= 0) {
                             break;
                         }
-                        
+
                         $previousBalance = $previousVoucher->balance_amount;
                         $allocationToPrevious = min($amountToAllocate, $previousBalance);
-                        
+
                         if ($allocationToPrevious > 0) {
                             // Create allocation for previous voucher
                             $payment->allocations()->create([
@@ -160,25 +162,25 @@ class FeePaymentController extends Controller
                                 'allocated_amount' => $allocationToPrevious,
                                 'allocation_date' => $validated['payment_date'],
                             ]);
-                            
+
                             // Update previous voucher
                             $previousVoucher->paid_amount += $allocationToPrevious;
                             $previousVoucher->balance_amount = $previousVoucher->net_amount - $previousVoucher->paid_amount;
-                            
+
                             if ($previousVoucher->balance_amount <= 0) {
                                 $previousVoucher->status = 'paid';
                             } elseif ($previousVoucher->paid_amount > 0) {
                                 $previousVoucher->status = 'partial';
                             }
-                            
+
                             $previousVoucher->save();
-                            
+
                             // Reduce amount available for current voucher
                             $amountToAllocate -= $allocationToPrevious;
                         }
                     }
                 }
-                
+
                 // Create allocation for current voucher (remaining amount)
                 if ($amountToAllocate > 0) {
                     $payment->allocations()->create([
@@ -190,13 +192,13 @@ class FeePaymentController extends Controller
                     // Update current voucher
                     $voucher->paid_amount += $amountToAllocate;
                     $voucher->balance_amount = $voucher->net_amount - $voucher->paid_amount;
-                    
+
                     if ($voucher->balance_amount <= 0) {
                         $voucher->status = 'paid';
                     } elseif ($voucher->paid_amount > 0) {
                         $voucher->status = 'partial';
                     }
-                    
+
                     $voucher->save();
                 }
             }
@@ -215,11 +217,11 @@ class FeePaymentController extends Controller
     protected function createFinanceLedgerEntry(FeePayment $payment, float $amount, int $campusId): void
     {
         try {
-            $financeService = new FinanceService();
-            
+            $financeService = new FinanceService;
+
             // Get student for description
             $student = $payment->student;
-            
+
             // Map payment method to finance payment method
             $paymentMethodMap = [
                 'cash' => 'Cash',
@@ -229,11 +231,11 @@ class FeePaymentController extends Controller
                 'easypaisa' => 'EasyPaisa',
                 'cheque' => 'Cheque',
             ];
-            
+
             $financeService->createIncomeTransaction([
                 'transaction_date' => $payment->payment_date,
                 'amount' => $amount,
-                'description' => 'Fee Payment - Receipt: ' . $payment->receipt_no . ' - Student: ' . ($student ? $student->name : 'N/A'),
+                'description' => 'Fee Payment - Receipt: '.$payment->receipt_no.' - Student: '.($student ? $student->name : 'N/A'),
                 'reference_type' => FeePayment::class,
                 'reference_id' => $payment->id,
                 'category_id' => 1, // Tuition Fee (ID 1 from ledger_categories)
@@ -245,7 +247,7 @@ class FeePaymentController extends Controller
             ]);
         } catch (\Exception $e) {
             // Log error but don't fail the payment
-            \Log::error('Failed to create finance ledger entry: ' . $e->getMessage());
+            Log::error('Failed to create finance ledger entry: '.$e->getMessage());
         }
     }
 
@@ -256,7 +258,7 @@ class FeePaymentController extends Controller
     {
         return DB::transaction(function () use ($campusId) {
             $today = now()->format('Ymd');
-            
+
             $lastPayment = FeePayment::where('receipt_no', 'like', "RCP-{$campusId}-{$today}%")
                 ->lockForUpdate()
                 ->orderBy('id', 'desc')
@@ -264,7 +266,7 @@ class FeePaymentController extends Controller
 
             $nextNumber = $lastPayment ? ((int) substr($lastPayment->receipt_no, -4)) + 1 : 1;
 
-            return 'RCP-' . $campusId . '-' . $today . '-' . str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
+            return 'RCP-'.$campusId.'-'.$today.'-'.str_pad($nextNumber, 4, '0', STR_PAD_LEFT);
         });
     }
 

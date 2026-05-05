@@ -8,7 +8,7 @@ return new class extends Migration
 {
     /**
      * Run the migrations.
-     * 
+     *
      * Consolidated migration for attendance_students table.
      * Includes leave_type_id column.
      */

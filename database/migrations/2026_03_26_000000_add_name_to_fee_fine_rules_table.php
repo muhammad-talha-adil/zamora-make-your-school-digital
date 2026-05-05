@@ -6,9 +6,9 @@ use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
-     public function up(): void
+    public function up(): void
     {
-        if (!Schema::hasColumn('fee_fine_rules', 'name')) {
+        if (! Schema::hasColumn('fee_fine_rules', 'name')) {
             Schema::table('fee_fine_rules', function (Blueprint $table) {
                 $table->string('name', 100)->after('id');
             });

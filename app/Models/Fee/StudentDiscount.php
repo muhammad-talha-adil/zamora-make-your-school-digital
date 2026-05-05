@@ -3,7 +3,6 @@
 namespace App\Models\Fee;
 
 use App\Enums\Fee\ApprovalStatus;
-use App\Enums\Fee\ValueType;
 use App\Models\Student;
 use App\Models\StudentEnrollmentRecord;
 use App\Models\User;
@@ -13,7 +12,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
  * Student Discount Model
- * 
+ *
  * Formal student-level discounts linked to discount types.
  */
 class StudentDiscount extends Model
@@ -105,5 +104,4 @@ class StudentDiscount extends Model
                     ->orWhere('effective_to', '>=', $date);
             });
     }
-
 }

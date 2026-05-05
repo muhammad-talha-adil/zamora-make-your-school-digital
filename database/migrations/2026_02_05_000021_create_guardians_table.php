@@ -8,7 +8,7 @@ return new class extends Migration
 {
     /**
      * Run the migrations.
-     * 
+     *
      * Consolidated from:
      * - 2026_02_05_000021_create_guardians_table.php
      * - 2026_02_09_000001_add_occupation_address_to_guardians_table.php

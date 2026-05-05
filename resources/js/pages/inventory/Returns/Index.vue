@@ -1,12 +1,11 @@
 <script setup lang="ts">
 import { Head } from '@inertiajs/vue3';
-import { alert, formatCurrency } from '@/utils';
+import { formatCurrency } from '@/utils';
 import { ref, watch } from 'vue';
 import axios from 'axios';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { Button } from '@/components/ui/button';
 import Icon from '@/components/Icon.vue';
-import { Badge } from '@/components/ui/badge';
 import type { BreadcrumbItem } from '@/types';
 
 interface Props {

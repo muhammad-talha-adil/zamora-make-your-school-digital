@@ -2,6 +2,9 @@
 
 namespace App\Http\Requests\Inventory;
 
+use App\Models\Campus;
+use App\Models\InventoryType;
+use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
 class StoreInventoryTypeRequest extends FormRequest
@@ -17,7 +20,7 @@ class StoreInventoryTypeRequest extends FormRequest
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     * @return array<string, ValidationRule|array<mixed>|string>
      */
     public function rules(): array
     {
@@ -53,22 +56,24 @@ class StoreInventoryTypeRequest extends FormRequest
             }
 
             // Validate campus_id exists in database
-            if (!is_numeric($campusId) || !\App\Models\Campus::where('id', $campusId)->exists()) {
+            if (! is_numeric($campusId) || ! Campus::where('id', $campusId)->exists()) {
                 $validator->errors()->add('campus_id', 'The selected campus id is invalid.');
+
                 return;
             }
 
             // Check for duplicate name within the specific campus
-            if (\App\Models\InventoryType::where('campus_id', $campusId)
+            if (InventoryType::where('campus_id', $campusId)
                 ->where('name', $name)
                 ->exists()) {
                 $validator->errors()->add('name', 'An inventory type with this name already exists for the selected campus.');
+
                 return;
             }
 
             // Also check if there's an "All Campuses" type with the same name
             // If "All Campuses" type exists, no specific campus can have the same name
-            if (\App\Models\InventoryType::whereNull('campus_id')
+            if (InventoryType::whereNull('campus_id')
                 ->whereRaw('LOWER(name) = LOWER(?)', [trim($name)])
                 ->exists()) {
                 $validator->errors()->add('name', 'An inventory type with this name already exists for All Campuses. Cannot create duplicate for specific campus.');

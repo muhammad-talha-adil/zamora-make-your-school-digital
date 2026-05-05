@@ -12,7 +12,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
  * Fee Fine Rule Model
- * 
+ *
  * Late payment fine rules.
  */
 class FeeFineRule extends Model
@@ -91,7 +91,7 @@ class FeeFineRule extends Model
 
         $effectiveDays = $daysLate - $this->grace_days;
 
-        return match($this->fine_type) {
+        return match ($this->fine_type) {
             FineType::FIXED_PER_DAY => $this->fine_value * $effectiveDays,
             FineType::FIXED_ONCE => $this->fine_value,
             FineType::PERCENT => ($voucherAmount * $this->fine_value) / 100,

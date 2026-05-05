@@ -30,18 +30,18 @@ class StudentInventorySeeder extends Seeder
 
         foreach ($campuses as $campus) {
             $campusStudents = $students->where('campus_id', $campus->id);
-            
+
             if ($campusStudents->isEmpty()) {
                 continue;
             }
 
             $numAssignments = rand(5, 8);
-            
+
             $assignedStudents = $campusStudents->random(min($numAssignments, $campusStudents->count()));
 
             foreach ($assignedStudents as $student) {
                 $numItems = rand(1, 3);
-                
+
                 $items = InventoryItem::where('campus_id', $campus->id)
                     ->inRandomOrder()
                     ->limit($numItems)
@@ -57,7 +57,7 @@ class StudentInventorySeeder extends Seeder
 
                 // Create inventory items first
                 $inventoryItemsData = [];
-                
+
                 foreach ($items as $item) {
                     $quantity = rand(1, 3);
                     $unitPrice = rand(200, 1000); // Random unit price

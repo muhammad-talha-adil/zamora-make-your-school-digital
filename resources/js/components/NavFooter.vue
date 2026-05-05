@@ -10,7 +10,7 @@ import {
     SidebarMenuSubItem,
 } from '@/components/ui/sidebar';
 import { toUrl } from '@/lib/utils';
-import { type NavItem, MenuItem } from '@/types';
+import { type MenuItem } from '@/types';
 import Icon from '@/components/Icon.vue';
 
 interface Props {
@@ -66,4 +66,3 @@ defineProps<Props>();
         </SidebarGroupContent>
     </SidebarGroup>
 </template>
-

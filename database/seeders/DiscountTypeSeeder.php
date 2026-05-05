@@ -3,7 +3,6 @@
 namespace Database\Seeders;
 
 use App\Models\Fee\DiscountType;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
 class DiscountTypeSeeder extends Seeder
@@ -93,6 +92,6 @@ class DiscountTypeSeeder extends Seeder
         }
 
         $this->command->info('Discount types seeded successfully!');
-        $this->command->info('Created ' . count($discountTypes) . ' discount types.');
+        $this->command->info('Created '.count($discountTypes).' discount types.');
     }
 }

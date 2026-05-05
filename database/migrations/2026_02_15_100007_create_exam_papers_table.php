@@ -8,11 +8,11 @@ return new class extends Migration
 {
     /**
      * Run the migrations.
-     * 
+     *
      * Consolidated from:
      * - 2026_02_15_100007_create_exam_papers_table.php
      * - 2026_02_15_100014_update_exam_papers_for_scope_based_design.php
-     * 
+     *
      * Note: This uses the scope-based design (exam_id + campus/class/section) instead of exam_group_id
      */
     public function up(): void

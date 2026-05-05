@@ -4,7 +4,10 @@ namespace App\Exceptions;
 
 use Illuminate\Foundation\Exceptions\Handler as ExceptionHandler;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\App;
 use Inertia\Inertia;
+use Psr\Log\LogLevel;
+use Symfony\Component\HttpFoundation\Response;
 use Symfony\Component\HttpKernel\Exception\HttpException;
 use Throwable;
 
@@ -13,7 +16,7 @@ class Handler extends ExceptionHandler
     /**
      * A list of exception types with their corresponding custom log levels.
      *
-     * @var array<class-string<\Throwable>, \Psr\Log\LogLevel::*>
+     * @var array<class-string<Throwable>, LogLevel::*>
      */
     protected $levels = [
         //
@@ -22,7 +25,7 @@ class Handler extends ExceptionHandler
     /**
      * A list of the exception types that are not reported.
      *
-     * @var array<int, class-string<\Throwable>>
+     * @var array<int, class-string<Throwable>>
      */
     protected $dontReport = [
         //
@@ -59,8 +62,8 @@ class Handler extends ExceptionHandler
             return $this->prepareJsonResponse($request, $e);
         }
 
-        // For Inertia requests, render error pages
-        if (Inertia::isInertiaRequest()) {
+        // For regular web and Inertia requests, render Vue error pages
+        if ($request->isMethod('get') || Inertia::isInertiaRequest()) {
             return $this->renderInertiaError($request, $e);
         }
 
@@ -71,41 +74,60 @@ class Handler extends ExceptionHandler
     /**
      * Render Inertia error pages.
      */
-    protected function renderInertiaError(Request $request, Throwable $e): \Symfony\Component\HttpFoundation\Response
+    protected function renderInertiaError(Request $request, Throwable $e): Response
     {
         $exception = $e instanceof HttpException ? $e : null;
         $statusCode = $exception ? $exception->getStatusCode() : 500;
-        $exceptionMessage = $exception ? $exception->getMessage() : $e->getMessage();
+        $exceptionMessage = $exception?->getMessage() ?: $e->getMessage();
 
-        // Encode exception for URL passing
-        $encodedException = urlencode($e->getMessage() . "\n" . $e->getTraceAsString());
+        $encodedException = App::environment('local')
+            ? $e->getMessage()."\n".$e->getTraceAsString()
+            : null;
 
         switch ($statusCode) {
+            case 401:
+                return Inertia::render('errors/401', [
+                    'message' => $exceptionMessage ?: 'Authentication is required to access this page.',
+                    'status' => 401,
+                ])->toResponse($request)->setStatusCode(401);
+
             case 404:
                 return Inertia::render('errors/404', [
-                    'message' => 'The requested page was not found.',
+                    'message' => $exceptionMessage ?: 'The requested page was not found.',
                     'exception' => $encodedException,
                     'status' => 404,
                 ])->toResponse($request)->setStatusCode(404);
 
             case 419:
                 return Inertia::render('errors/419', [
-                    'message' => 'Page expired due to session timeout.',
+                    'message' => $exceptionMessage ?: 'Page expired due to session timeout.',
                     'status' => 419,
                 ])->toResponse($request)->setStatusCode(419);
 
             case 403:
                 return Inertia::render('errors/403', [
-                    'message' => 'You do not have permission to access this page.',
+                    'message' => $exceptionMessage ?: 'You do not have permission to access this page.',
                     'status' => 403,
                 ])->toResponse($request)->setStatusCode(403);
+
+            case 429:
+                return Inertia::render('errors/429', [
+                    'message' => $exceptionMessage ?: 'Too many requests. Please slow down and try again shortly.',
+                    'status' => 429,
+                ])->toResponse($request)->setStatusCode(429);
+
+            case 503:
+                return Inertia::render('errors/503', [
+                    'message' => $exceptionMessage ?: 'The service is temporarily unavailable.',
+                    'status' => 503,
+                ])->toResponse($request)->setStatusCode(503);
 
             case 500:
             default:
                 return Inertia::render('errors/500', [
-                    'message' => 'An unexpected error occurred.',
+                    'message' => $exceptionMessage ?: 'An unexpected error occurred.',
                     'exception' => $encodedException,
-                    'status' => 500,
+                    'status' => $statusCode,
                 ])->toResponse($request)->setStatusCode($statusCode);
         }
     }

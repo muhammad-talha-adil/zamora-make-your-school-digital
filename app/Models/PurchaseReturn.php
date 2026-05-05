@@ -4,6 +4,9 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class PurchaseReturn extends Model
@@ -50,7 +53,7 @@ class PurchaseReturn extends Model
     /**
      * Get the campus that owns the return.
      */
-    public function campus(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    public function campus(): BelongsTo
     {
         return $this->belongsTo(Campus::class);
     }
@@ -58,7 +61,7 @@ class PurchaseReturn extends Model
     /**
      * Get the original purchase.
      */
-    public function purchase(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    public function purchase(): BelongsTo
     {
         return $this->belongsTo(Purchase::class);
     }
@@ -66,7 +69,7 @@ class PurchaseReturn extends Model
     /**
      * Get the supplier.
      */
-    public function supplier(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    public function supplier(): BelongsTo
     {
         return $this->belongsTo(Supplier::class);
     }
@@ -74,7 +77,7 @@ class PurchaseReturn extends Model
     /**
      * Get the user who created this return.
      */
-    public function user(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
     }
@@ -82,7 +85,7 @@ class PurchaseReturn extends Model
     /**
      * Get the return items.
      */
-    public function items(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function items(): HasMany
     {
         return $this->hasMany(PurchaseReturnItem::class);
     }
@@ -90,7 +93,7 @@ class PurchaseReturn extends Model
     /**
      * Get the inventory items through return items.
      */
-    public function inventoryItems(): \Illuminate\Database\Eloquent\Relations\BelongsToMany
+    public function inventoryItems(): BelongsToMany
     {
         return $this->belongsToMany(InventoryItem::class, 'purchase_return_items')
             ->withPivot(['quantity', 'unit_price', 'total', 'item_snapshot', 'reason'])
@@ -118,7 +121,7 @@ class PurchaseReturn extends Model
     public static function generatePurchaseReturnId(): string
     {
         $year = date('Y');
-        
+
         // Get the last return for this year
         $lastReturn = static::whereYear('created_at', $year)
             ->orderBy('id', 'desc')
@@ -130,7 +133,7 @@ class PurchaseReturn extends Model
             $counter = 1;
         }
 
-        return 'RET-' . $year . '-' . str_pad($counter, 4, '0', STR_PAD_LEFT);
+        return 'RET-'.$year.'-'.str_pad($counter, 4, '0', STR_PAD_LEFT);
     }
 
     /**
@@ -141,14 +144,14 @@ class PurchaseReturn extends Model
         $prefix = 'RET';
         $year = now()->year;
         $month = now()->format('m');
-        
+
         $lastReturn = self::where('campus_id', $campus->id)
             ->whereYear('created_at', now()->year)
             ->whereMonth('created_at', now()->month)
             ->max('id');
-        
+
         $sequence = str_pad(($lastReturn ?? 0) + 1, 4, '0', STR_PAD_LEFT);
-        
+
         return sprintf('%s-%s%s-%s', $prefix, $year, $month, $sequence);
     }
 
@@ -173,8 +176,8 @@ class PurchaseReturn extends Model
      */
     public function scopeDateRange($query, $fromDate, $toDate)
     {
-        return $query->when($fromDate, fn($q) => $q->whereDate('return_date', '>=', $fromDate))
-            ->when($toDate, fn($q) => $q->whereDate('return_date', '<=', $toDate));
+        return $query->when($fromDate, fn ($q) => $q->whereDate('return_date', '>=', $fromDate))
+            ->when($toDate, fn ($q) => $q->whereDate('return_date', '<=', $toDate));
     }
 
     /**

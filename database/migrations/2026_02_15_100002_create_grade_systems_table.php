@@ -8,7 +8,7 @@ return new class extends Migration
 {
     /**
      * Run the migrations.
-     * 
+     *
      * Consolidated from:
      * - 2026_02_15_100002_create_grade_systems_table.php
      * - 2026_02_15_100018_add_is_active_to_grade_systems_table.php

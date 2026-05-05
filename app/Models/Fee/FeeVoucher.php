@@ -4,6 +4,7 @@ namespace App\Models\Fee;
 
 use App\Enums\Fee\VoucherStatus;
 use App\Models\Campus;
+use App\Models\Month;
 use App\Models\SchoolClass;
 use App\Models\Section;
 use App\Models\Session;
@@ -17,7 +18,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
  * Fee Voucher Model
- * 
+ *
  * Voucher/challan header - the core transaction document.
  */
 class FeeVoucher extends Model
@@ -130,7 +131,7 @@ class FeeVoucher extends Model
      */
     public function voucherMonth(): BelongsTo
     {
-        return $this->belongsTo(\App\Models\Month::class, 'voucher_month_id');
+        return $this->belongsTo(Month::class, 'voucher_month_id');
     }
 
     /**
@@ -170,7 +171,7 @@ class FeeVoucher extends Model
      */
     public function payments()
     {
-        return $this->hasManyThrough(\App\Models\Fee\FeePayment::class, FeePaymentAllocation::class, 'fee_voucher_id', 'id', 'id', 'fee_payment_id');
+        return $this->hasManyThrough(FeePayment::class, FeePaymentAllocation::class, 'fee_voucher_id', 'id', 'id', 'fee_payment_id');
     }
 
     /**
@@ -186,7 +187,7 @@ class FeeVoucher extends Model
      */
     public function isOverdue(): bool
     {
-        return $this->status === VoucherStatus::OVERDUE 
+        return $this->status === VoucherStatus::OVERDUE
             || ($this->due_date < now() && $this->balance_amount > 0);
     }
 

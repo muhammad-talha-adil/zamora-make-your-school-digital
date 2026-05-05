@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { ref } from 'vue'
 import { router } from '@inertiajs/vue3'
 
 interface GradeScale {

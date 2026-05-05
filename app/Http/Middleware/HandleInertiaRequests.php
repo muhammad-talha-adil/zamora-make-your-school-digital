@@ -3,6 +3,8 @@
 namespace App\Http\Middleware;
 
 use App\Models\Menu;
+use App\Models\School;
+use App\Models\ThemeSetting;
 use Illuminate\Http\Request;
 use Inertia\Middleware;
 
@@ -37,12 +39,13 @@ class HandleInertiaRequests extends Middleware
     public function share(Request $request): array
     {
         $mode = $this->getMode($request);
-        $themes = \App\Models\ThemeSetting::all()->keyBy('mode')->map(function ($setting) {
+        $themes = ThemeSetting::all()->keyBy('mode')->map(function ($setting) {
             $setting->colors_json = is_array($setting->colors_json) ? $setting->colors_json : json_decode($setting->colors_json, true) ?? [];
+
             return $setting;
         });
 
-        $school = \App\Models\School::first();
+        $school = School::first();
 
         $allMenus = Menu::active()->orderBy('type')->orderBy('order')->get();
         $menuData = [
@@ -80,6 +83,7 @@ class HandleInertiaRequests extends Middleware
     {
         return $parentMenus->map(function ($menu) use ($allMenus) {
             $children = $allMenus->where('parent_id', $menu->id);
+
             return [
                 'id' => $menu->id,
                 'title' => $menu->title,

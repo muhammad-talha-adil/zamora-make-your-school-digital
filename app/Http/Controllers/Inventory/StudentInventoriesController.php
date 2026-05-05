@@ -11,7 +11,6 @@ use App\Models\InventoryStock;
 use App\Models\InventoryType;
 use App\Models\PurchaseItem;
 use App\Models\ReturnModel;
-use App\Models\SchoolClass;
 use App\Models\Section;
 use App\Models\Student;
 use App\Models\StudentEnrollmentRecord;
@@ -21,6 +20,7 @@ use App\Models\StudentInventoryReturn;
 use App\Models\StudentInventoryReturnItem;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class StudentInventoriesController extends Controller
 {
@@ -41,19 +41,23 @@ class StudentInventoriesController extends Controller
         return inertia('inventory/StudentInventories/Index', [
             'studentInventories' => StudentInventory::with([
                 'campus:id,name',
-                'student' => function ($q) { $q->select('id', 'registration_no'); },
-                'student.user' => function ($q) { $q->select('id', 'name'); },
-                'items.inventoryItem:id,name'
+                'student' => function ($q) {
+                    $q->select('id', 'registration_no');
+                },
+                'student.user' => function ($q) {
+                    $q->select('id', 'name');
+                },
+                'items.inventoryItem:id,name',
             ])
-                ->when($campusId, fn($q) => $q->where('campus_id', $campusId))
-                ->when($studentId, fn($q) => $q->where('student_id', $studentId))
-                ->when($request->get('status'), fn($q) => $q->where('status', $request->get('status')))
+                ->when($campusId, fn ($q) => $q->where('campus_id', $campusId))
+                ->when($studentId, fn ($q) => $q->where('student_id', $studentId))
+                ->when($request->get('status'), fn ($q) => $q->where('status', $request->get('status')))
                 ->orderBy('assigned_date', 'desc')
                 ->paginate(20),
             'campuses' => Campus::orderBy('name')->get(),
             'students' => Student::whereHas('enrollmentRecords', function ($query) use ($campusId) {
-                    $query->where('campus_id', $campusId);
-                })
+                $query->where('campus_id', $campusId);
+            })
                 ->orderBy('registration_no')
                 ->get(),
             'filters' => [
@@ -78,14 +82,14 @@ class StudentInventoriesController extends Controller
         $campusId = $request->get('campus_id');
         $studentId = $request->get('student_id');
 
-        if (!$campusId) {
+        if (! $campusId) {
             return response()->json([
                 'error' => 'campus_id is required',
                 'message' => 'Please provide a campus_id filter for multi-campus safety.',
             ], 422);
         }
 
-        if (!Campus::where('id', $campusId)->exists()) {
+        if (! Campus::where('id', $campusId)->exists()) {
             return response()->json([
                 'error' => 'Invalid campus_id',
                 'message' => 'The specified campus does not exist.',
@@ -94,17 +98,21 @@ class StudentInventoriesController extends Controller
 
         $inventories = StudentInventory::with([
             'campus:id,name',
-            'student' => function ($q) { $q->select('id', 'registration_no'); },
-            'student.user' => function ($q) { $q->select('id', 'name'); },
+            'student' => function ($q) {
+                $q->select('id', 'registration_no');
+            },
+            'student.user' => function ($q) {
+                $q->select('id', 'name');
+            },
             'items.inventoryItem:id,name',
             'class:id,name',
-            'section:id,name'
+            'section:id,name',
         ])
             ->where('campus_id', $campusId)
-            ->when($studentId, fn($q) => $q->where('student_id', $studentId))
-            ->when($request->get('status'), fn($q) => $q->where('status', $request->get('status')))
-            ->when($request->get('from_date'), fn($q) => $q->whereDate('assigned_date', '>=', $request->get('from_date')))
-            ->when($request->get('to_date'), fn($q) => $q->whereDate('assigned_date', '<=', $request->get('to_date')))
+            ->when($studentId, fn ($q) => $q->where('student_id', $studentId))
+            ->when($request->get('status'), fn ($q) => $q->where('status', $request->get('status')))
+            ->when($request->get('from_date'), fn ($q) => $q->whereDate('assigned_date', '>=', $request->get('from_date')))
+            ->when($request->get('to_date'), fn ($q) => $q->whereDate('assigned_date', '<=', $request->get('to_date')))
             ->orderBy('assigned_date', 'desc')
             ->limit($request->get('limit', 50))
             ->get()
@@ -141,7 +149,7 @@ class StudentInventoriesController extends Controller
                             'remaining_quantity' => $item->remainingQuantity(),
                             'inventory_item' => $item->inventoryItem ? [
                                 'id' => $item->inventoryItem->id,
-                                'name' => $item->inventoryItem->name
+                                'name' => $item->inventoryItem->name,
                             ] : null,
                         ];
                     }),
@@ -160,14 +168,14 @@ class StudentInventoriesController extends Controller
         $campusId = $request->get('campus_id');
         $search = $request->get('q', '');
 
-        if (!$campusId) {
+        if (! $campusId) {
             return response()->json(['error' => 'campus_id is required'], 422);
         }
 
         // Get students through their active enrollment records for the campus
         $students = Student::whereHas('enrollmentRecords', function ($query) use ($campusId) {
-                $query->where('campus_id', $campusId)->active();
-            })
+            $query->where('campus_id', $campusId)->active();
+        })
             ->where(function ($query) use ($search) {
                 if ($search) {
                     $query->where('registration_no', 'like', "%{$search}%")
@@ -188,16 +196,16 @@ class StudentInventoriesController extends Controller
                 $enrollment = $student->enrollmentRecords->first();
                 $className = $enrollment?->class?->name ?? '';
                 $sectionName = $enrollment?->section?->name ?? '';
-                
+
                 // Format: "Ali - Five - A"
                 $displayName = $student->name;
                 if ($className) {
-                    $displayName .= ' - ' . $className;
+                    $displayName .= ' - '.$className;
                 }
                 if ($sectionName) {
-                    $displayName .= ' - ' . $sectionName;
+                    $displayName .= ' - '.$sectionName;
                 }
-                
+
                 return [
                     'id' => $student->id,
                     'name' => $student->name,
@@ -222,14 +230,14 @@ class StudentInventoriesController extends Controller
         $typeId = $request->get('type_id');
         $search = $request->get('q', '');
 
-        if (!$campusId) {
+        if (! $campusId) {
             return response()->json(['error' => 'campus_id is required'], 422);
         }
 
         $items = InventoryItem::where('campus_id', $campusId)
             ->where('is_active', true)
-            ->when($typeId, fn($q) => $q->where('inventory_type_id', $typeId))
-            ->when($search, fn($q) => $q->where('name', 'like', "%{$search}%"))
+            ->when($typeId, fn ($q) => $q->where('inventory_type_id', $typeId))
+            ->when($search, fn ($q) => $q->where('name', 'like', "%{$search}%"))
             ->orderBy('name')
             ->limit(50)
             ->get()
@@ -238,12 +246,12 @@ class StudentInventoriesController extends Controller
                 $stock = InventoryStock::where('inventory_item_id', $item->id)
                     ->where('campus_id', $campusId)
                     ->first();
-                
+
                 // Get the latest sale_rate from purchase items
-                $purchaseItem = \App\Models\PurchaseItem::where('inventory_item_id', $item->id)
+                $purchaseItem = PurchaseItem::where('inventory_item_id', $item->id)
                     ->orderBy('id', 'desc')
                     ->first();
-                
+
                 return [
                     'id' => $item->id,
                     'name' => $item->name,
@@ -265,7 +273,7 @@ class StudentInventoriesController extends Controller
     {
         $campusId = $request->get('campus_id');
 
-        if (!$campusId) {
+        if (! $campusId) {
             return response()->json(['error' => 'campus_id is required'], 422);
         }
 
@@ -286,7 +294,7 @@ class StudentInventoriesController extends Controller
     {
         $campusId = $request->get('campus_id');
 
-        if (!$campusId) {
+        if (! $campusId) {
             return response()->json([
                 'error' => 'campus_id is required',
             ], 422);
@@ -351,17 +359,23 @@ class StudentInventoriesController extends Controller
     public function createReturn(Request $request, StudentInventory $studentInventory)
     {
         $studentInventory = StudentInventory::where('id', $studentInventory->id)
-            ->when($request->get('campus_id'), fn($q) => $q->where('campus_id', $request->get('campus_id')))
+            ->when($request->get('campus_id'), fn ($q) => $q->where('campus_id', $request->get('campus_id')))
             ->firstOrFail();
 
         $studentInventory->load([
-            'campus:id,name', 
-            'student' => function ($q) { $q->select('id', 'registration_no', 'user_id'); },
-            'student.user' => function ($q) { $q->select('id', 'name'); },
-            'student.enrollmentRecords' => function ($q) { $q->active()->with(['class:id,name', 'section:id,name']); },
+            'campus:id,name',
+            'student' => function ($q) {
+                $q->select('id', 'registration_no', 'user_id');
+            },
+            'student.user' => function ($q) {
+                $q->select('id', 'name');
+            },
+            'student.enrollmentRecords' => function ($q) {
+                $q->active()->with(['class:id,name', 'section:id,name']);
+            },
             'items.inventoryItem:id,name',
             'class',
-            'section'
+            'section',
         ]);
 
         return inertia('inventory/StudentInventories/ReturnCreate', [
@@ -383,13 +397,13 @@ class StudentInventoriesController extends Controller
                 'items' => $studentInventory->items->map(function ($item) {
                     // If unit_price_snapshot is 0 or null, try to get from PurchaseItem
                     $unitPrice = $item->unit_price_snapshot;
-                    if (!$unitPrice || $unitPrice == 0) {
+                    if (! $unitPrice || $unitPrice == 0) {
                         $purchaseItem = PurchaseItem::where('inventory_item_id', $item->inventory_item_id)
                             ->orderBy('id', 'desc')
                             ->first();
                         $unitPrice = $purchaseItem?->sale_rate ?? 0;
                     }
-                    
+
                     return [
                         'id' => $item->id,
                         'inventory_item_id' => $item->inventory_item_id,
@@ -423,12 +437,12 @@ class StudentInventoriesController extends Controller
         $validated = $request->validated();
 
         try {
-            \DB::transaction(function () use ($validated, &$studentInventoryRecord) {
+            DB::transaction(function () use ($validated, &$studentInventoryRecord) {
                 // Get student's current class and section from enrollment
                 $enrollment = StudentEnrollmentRecord::where('student_id', $validated['student_id'])
                     ->active()
                     ->first();
-                
+
                 $studentClassId = $enrollment?->class_id;
                 $studentSectionId = $enrollment?->section_id;
 
@@ -463,20 +477,20 @@ class StudentInventoriesController extends Controller
                         ->lockForUpdate()
                         ->first();
 
-                    if (!$stock || !$stock->isAvailable($quantity)) {
+                    if (! $stock || ! $stock->isAvailable($quantity)) {
                         throw new \Exception('Insufficient stock available for item.');
                     }
 
                     $item = InventoryItem::findOrFail($inventoryItemId);
-                    
+
                     // Get the latest sale_rate from purchase items
                     $purchaseItem = PurchaseItem::where('inventory_item_id', $inventoryItemId)
                         ->orderBy('id', 'desc')
                         ->first();
-                    
+
                     $unitPrice = $purchaseItem?->sale_rate ?? 0;
                     $purchaseRate = $purchaseItem?->purchase_rate ?? 0;
-                    
+
                     $lineTotal = $quantity * $unitPrice;
                     $lineDiscount = $discountAmount + ($lineTotal * $discountPercentage / 100);
 
@@ -513,12 +527,12 @@ class StudentInventoriesController extends Controller
                     $discountPercentage = $itemData['discount_percentage'] ?? 0;
 
                     $item = InventoryItem::findOrFail($inventoryItemId);
-                    
+
                     // Get the latest rates from purchase items
                     $purchaseItem = PurchaseItem::where('inventory_item_id', $inventoryItemId)
                         ->orderBy('id', 'desc')
                         ->first();
-                    
+
                     $unitPrice = $purchaseItem?->sale_rate ?? 0;
                     $purchaseRate = $purchaseItem?->purchase_rate ?? 0;
 
@@ -551,7 +565,7 @@ class StudentInventoriesController extends Controller
             return redirect()->route('inventory.student-manage')
                 ->with('success', 'Inventory assigned to student successfully.');
         } catch (\Exception $e) {
-            return back()->with('error', 'Failed to assign inventory: ' . $e->getMessage());
+            return back()->with('error', 'Failed to assign inventory: '.$e->getMessage());
         }
     }
 
@@ -592,10 +606,10 @@ class StudentInventoriesController extends Controller
         ]);
 
         try {
-            \DB::transaction(function () use ($validated) {
+            DB::transaction(function () use ($validated) {
                 // Get the student inventory record
                 $record = StudentInventory::findOrFail($validated['student_inventory_record_id']);
-                
+
                 // Calculate totals
                 $totalQuantity = 0;
                 $totalAmount = 0;
@@ -603,17 +617,17 @@ class StudentInventoriesController extends Controller
 
                 foreach ($validated['items'] as $itemData) {
                     $studentInventoryItem = StudentInventoryItem::findOrFail($itemData['student_inventory_item_id']);
-                    
+
                     // Validate return quantity
                     $maxReturnable = $studentInventoryItem->remainingQuantity();
                     if ($itemData['quantity'] > $maxReturnable) {
-                        throw new \Exception('Return quantity for item "' . $studentInventoryItem->item_name_snapshot . '" exceeds remaining quantity (' . $maxReturnable . ').');
+                        throw new \Exception('Return quantity for item "'.$studentInventoryItem->item_name_snapshot.'" exceeds remaining quantity ('.$maxReturnable.').');
                     }
 
                     $quantity = $itemData['quantity'];
                     // Use return_price if provided, otherwise use the original unit price
-                    $unitPrice = isset($itemData['return_price']) && $itemData['return_price'] > 0 
-                        ? $itemData['return_price'] 
+                    $unitPrice = isset($itemData['return_price']) && $itemData['return_price'] > 0
+                        ? $itemData['return_price']
                         : ($studentInventoryItem->unit_price_snapshot ?? 0);
                     $lineTotal = $quantity * $unitPrice;
 
@@ -656,7 +670,7 @@ class StudentInventoriesController extends Controller
 
                 // Determine status
                 $allItems = $record->items;
-                $hasRemaining = $allItems->contains(fn($item) => $item->remainingQuantity() > 0);
+                $hasRemaining = $allItems->contains(fn ($item) => $item->remainingQuantity() > 0);
                 $status = $hasRemaining ? 'partial_return' : 'returned';
 
                 // Create parent return record
@@ -716,7 +730,7 @@ class StudentInventoriesController extends Controller
     {
         /** @var StudentInventory $studentInventory */
         $studentInventory = StudentInventory::where('id', $studentInventory->id)
-            ->when($request->get('campus_id'), fn($q) => $q->where('campus_id', $request->get('campus_id')))
+            ->when($request->get('campus_id'), fn ($q) => $q->where('campus_id', $request->get('campus_id')))
             ->firstOrFail();
 
         $validated = $request->validated();
@@ -726,12 +740,12 @@ class StudentInventoriesController extends Controller
         $maxReturnable = $studentInventory->remainingQuantity();
         if ($returnQuantity > $maxReturnable) {
             return back()->withErrors([
-                'quantity' => 'Return quantity (' . $returnQuantity . ') cannot exceed remaining quantity (' . $maxReturnable . ').',
+                'quantity' => 'Return quantity ('.$returnQuantity.') cannot exceed remaining quantity ('.$maxReturnable.').',
             ]);
         }
 
         try {
-            \DB::transaction(function () use ($studentInventory, $returnQuantity, $validated) {
+            DB::transaction(function () use ($studentInventory, $returnQuantity, $validated) {
                 // Get or create stock record (available_quantity is auto-calculated)
                 $stock = InventoryStock::firstOrCreate(
                     [
@@ -770,7 +784,7 @@ class StudentInventoriesController extends Controller
             return redirect()->route('inventory.student-manage')
                 ->with('success', 'Return processed successfully.');
         } catch (\Exception $e) {
-            return back()->with('error', 'Failed to process return: ' . $e->getMessage());
+            return back()->with('error', 'Failed to process return: '.$e->getMessage());
         }
     }
 
@@ -783,14 +797,14 @@ class StudentInventoriesController extends Controller
     {
         $campusId = $request->get('campus_id');
 
-        if (!$campusId) {
+        if (! $campusId) {
             return response()->json(['error' => 'campus_id is required'], 422);
         }
 
         // Get students through their student inventories for the campus
         $students = Student::whereHas('studentInventories', function ($q) use ($campusId) {
-                $q->where('campus_id', $campusId);
-            })
+            $q->where('campus_id', $campusId);
+        })
             ->with(['studentInventories' => function ($q) use ($campusId) {
                 $q->where('campus_id', $campusId)
                     ->with(['inventoryItem:id,name'])
@@ -830,7 +844,7 @@ class StudentInventoriesController extends Controller
     {
         /** @var StudentInventory $studentInventory */
         $studentInventory = StudentInventory::where('id', $studentInventory->id)
-            ->when($request->get('campus_id'), fn($q) => $q->where('campus_id', $request->get('campus_id')))
+            ->when($request->get('campus_id'), fn ($q) => $q->where('campus_id', $request->get('campus_id')))
             ->firstOrFail();
 
         $quantity = (int) $request->get('quantity', 0);
@@ -846,7 +860,7 @@ class StudentInventoriesController extends Controller
             'discount_info' => $studentInventory->getDiscountInfo(),
             'message' => $isAvailable
                 ? 'Return is allowed.'
-                : 'Cannot return more than remaining quantity (' . $maxReturnable . ').',
+                : 'Cannot return more than remaining quantity ('.$maxReturnable.').',
         ]);
     }
 
@@ -857,17 +871,23 @@ class StudentInventoriesController extends Controller
     {
         /** @var StudentInventory $studentInventory */
         $studentInventory = StudentInventory::where('id', $studentInventory->id)
-            ->when($request->get('campus_id'), fn($q) => $q->where('campus_id', $request->get('campus_id')))
+            ->when($request->get('campus_id'), fn ($q) => $q->where('campus_id', $request->get('campus_id')))
             ->firstOrFail();
 
         $studentInventory->load([
-            'campus:id,name', 
-            'student' => function ($q) { $q->select('id', 'registration_no', 'user_id'); },
-            'student.user' => function ($q) { $q->select('id', 'name'); },
-            'student.enrollmentRecords' => function ($q) { $q->active()->with(['class:id,name', 'section:id,name']); },
+            'campus:id,name',
+            'student' => function ($q) {
+                $q->select('id', 'registration_no', 'user_id');
+            },
+            'student.user' => function ($q) {
+                $q->select('id', 'name');
+            },
+            'student.enrollmentRecords' => function ($q) {
+                $q->active()->with(['class:id,name', 'section:id,name']);
+            },
             'items.inventoryItem:id,name',
             'class',
-            'section'
+            'section',
         ]);
 
         return inertia('inventory/StudentInventories/Show', [
@@ -902,7 +922,7 @@ class StudentInventoriesController extends Controller
                         'total_value' => $item->totalValue(),
                         'inventory_item' => $item->inventoryItem ? [
                             'id' => $item->inventoryItem->id,
-                            'name' => $item->inventoryItem->name
+                            'name' => $item->inventoryItem->name,
                         ] : null,
                     ];
                 }),
@@ -916,27 +936,27 @@ class StudentInventoriesController extends Controller
     public function showReturn(Request $request, StudentInventoryReturn $studentInventoryReturn)
     {
         $studentInventoryReturn = StudentInventoryReturn::where('id', $studentInventoryReturn->id)
-            ->when($request->get('campus_id'), fn($q) => $q->where('campus_id', $request->get('campus_id')))
+            ->when($request->get('campus_id'), fn ($q) => $q->where('campus_id', $request->get('campus_id')))
             ->firstOrFail();
 
         $studentInventoryReturn->load([
-            'campus:id,name', 
+            'campus:id,name',
             'studentInventoryRecord' => function ($q) {
-                $q->with(['student' => function ($sq) { 
-                    $sq->select('id', 'registration_no', 'user_id'); 
+                $q->with(['student' => function ($sq) {
+                    $sq->select('id', 'registration_no', 'user_id');
                 }]);
             },
             'studentInventoryRecord.student.user:id,name',
             'studentInventoryRecord.class:id,name',
             'studentInventoryRecord.section:id,name',
-            'items'
+            'items',
         ]);
 
         // Get student from the inventory record (most reliable source)
         $student = $studentInventoryReturn->studentInventoryRecord?->student;
-        
+
         // Fallback: try direct student relationship
-        if (!$student) {
+        if (! $student) {
             $studentInventoryReturn->load('student.user:id,name');
             $student = $studentInventoryReturn->student;
         }
@@ -948,7 +968,7 @@ class StudentInventoriesController extends Controller
                 'campus_id' => $studentInventoryReturn->campus_id,
                 'campus_name' => $studentInventoryReturn->campus?->name,
                 'student_id' => $studentInventoryReturn->student_id,
-                'student_name' => $student?->name ?? 'Student #' . $studentInventoryReturn->student?->registration_no,
+                'student_name' => $student?->name ?? 'Student #'.$studentInventoryReturn->student?->registration_no,
                 'registration_number' => $student?->registration_no ?? $studentInventoryReturn->student?->registration_no,
                 'total_quantity' => $studentInventoryReturn->total_quantity,
                 'total_amount' => $studentInventoryReturn->total_amount,
@@ -980,7 +1000,7 @@ class StudentInventoriesController extends Controller
     {
         /** @var StudentInventory $studentInventory */
         $studentInventory = StudentInventory::where('id', $studentInventory->id)
-            ->when($request->get('campus_id'), fn($q) => $q->where('campus_id', $request->get('campus_id')))
+            ->when($request->get('campus_id'), fn ($q) => $q->where('campus_id', $request->get('campus_id')))
             ->firstOrFail();
 
         $studentInventory->delete();
@@ -994,7 +1014,7 @@ class StudentInventoriesController extends Controller
     public function restore(Request $request, $id)
     {
         $studentInventory = StudentInventory::withTrashed()
-            ->when($request->get('campus_id'), fn($q) => $q->where('campus_id', $request->get('campus_id')))
+            ->when($request->get('campus_id'), fn ($q) => $q->where('campus_id', $request->get('campus_id')))
             ->findOrFail($id);
 
         $studentInventory->restore();

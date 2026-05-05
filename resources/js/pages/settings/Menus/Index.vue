@@ -39,12 +39,12 @@ const props = defineProps<Props>();
 
 const page = usePage();
 
-// Check if user has menus.manage permission
+// Check if user has settings.manage permission
 const hasManageMenusPermission = computed(() => {
     const roles = (page.props.auth?.user?.roles as any[]) || [];
     return roles.some((role: any) => 
         role.permissions?.some((perm: any) => 
-            perm.key === 'menus.manage'
+            perm.key === 'settings.manage'
         )
     );
 });
@@ -54,7 +54,7 @@ const modalMode = ref<'create' | 'edit'>('create');
 const selectedMenu = ref<any>(null);
 
 // Filter states
-const showInactive = ref(false);
+const showDeleted = ref(false);
 const statusFilter = ref('');
 const perPage = ref(10);
 const menusData = ref(props.tableMenus.data || []);
@@ -78,8 +78,8 @@ const fetchMenus = (pageNum = 1) => {
         page: pageNum.toString(),
     });
 
-    if (showInactive.value) {
-        params.append('status', 'inactive');
+    if (showDeleted.value) {
+        params.append('trashed', '1');
     } else if (statusFilter.value) {
         params.append('status', statusFilter.value);
     }
@@ -138,7 +138,7 @@ const toggleActive = (menu: any) => {
 const deleteMenu = (menu: any) => {
     alert
         .confirm(
-            `Are you sure you want to delete "${menu.title}"?`,
+            `Are you sure you want to delete "${menu.title}"? You can restore it later from deleted menus.`,
             'Delete Menu',
         )
         .then((result) => {
@@ -178,7 +178,7 @@ const forceDeleteMenu = (menu: any) => {
         )
         .then((result) => {
             if (result.isConfirmed) {
-                router.delete(`/settings/menus/${menu.id}/force`, {
+                router.delete(`/settings/menus/${menu.id}/force-delete`, {
                     preserveScroll: true,
                     onSuccess: () => {
                         alert.success('Menu permanently deleted successfully!');
@@ -192,8 +192,9 @@ const forceDeleteMenu = (menu: any) => {
         });
 };
 
-const toggleInactive = () => {
-    showInactive.value = !showInactive.value;
+const toggleDeleted = () => {
+    showDeleted.value = !showDeleted.value;
+    statusFilter.value = '';
     fetchMenus();
 };
 
@@ -229,12 +230,12 @@ onMounted(() => {
                             Add Menu
                         </Button>
                         <Button
-                            :variant="showInactive ? 'ghost' : 'default'"
+                            :variant="showDeleted ? 'ghost' : 'default'"
                             size="sm"
-                            @click="toggleInactive"
+                            @click="toggleDeleted"
                         >
-                            <Icon :icon="showInactive ? 'arrow-left' : 'eye'" class="mr-1" />
-                            {{ showInactive ? 'Back' : 'Inactive Menus' }}
+                            <Icon :icon="showDeleted ? 'arrow-left' : 'trash-2'" class="mr-1" />
+                            {{ showDeleted ? 'Back' : 'Deleted Menus' }}
                         </Button>
                     </div>
                 </div>
@@ -242,10 +243,11 @@ onMounted(() => {
                 <MenuTable
                     :menus-data="menusData"
                     :pagination="pagination"
-                    :show-inactive="showInactive"
+                    :show-inactive="showDeleted"
                     :has-manage-menus-permission="hasManageMenusPermission"
                     @edit="openEditModal"
                     @toggle-active="toggleActive"
+                    @delete="deleteMenu"
                     @restore="restoreMenu"
                     @force-delete="forceDeleteMenu"
                     @fetch-menus="fetchMenus"
@@ -260,6 +262,7 @@ onMounted(() => {
             :mode="modalMode"
             :menu="selectedMenu"
             :parent-menus="modalMode === 'create' ? props.parentMenus : filteredParentMenus"
+            @saved="fetchMenus()"
         />
     </AppLayout>
 </template>

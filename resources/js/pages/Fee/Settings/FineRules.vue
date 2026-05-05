@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import { Head, router } from '@inertiajs/vue3';
+import { Head } from '@inertiajs/vue3';
 import { ref, computed, watch } from 'vue';
 import { route } from 'ziggy-js';
+import axios from 'axios';
 import AppLayout from '@/layouts/AppLayout.vue';
 import type { BreadcrumbItem } from '@/types';
 import { Button } from '@/components/ui/button';
@@ -57,16 +58,20 @@ const breadcrumbItems: BreadcrumbItem[] = [
 const showCreateModal = ref(false);
 const editingRule = ref<FineRule | null>(null);
 const isSubmitting = ref(false);
+const fineRulesData = ref<FineRule[]>(props.fineRules || []);
+const isLoading = ref(false);
 
 // Form errors
 const formErrors = ref<Record<string, string>>({});
 
 // Filter states
-const filterCampus = ref<string>('');
-const filterSession = ref<string>('');
-const filterClass = ref<string>('');
-const filterActive = ref<string>('');
-const searchQuery = ref('');
+const filterCampus = ref<string>(props.filters?.campus_id ? String(props.filters.campus_id) : '');
+const filterSession = ref<string>(props.filters?.session_id ? String(props.filters.session_id) : '');
+const filterClass = ref<string>(props.filters?.class_id ? String(props.filters.class_id) : '');
+const filterActive = ref<string>(
+    props.filters?.is_active === true ? 'true' : props.filters?.is_active === false ? 'false' : '',
+);
+const searchQuery = ref(props.filters?.search || '');
 
 // Form data
 const form = ref({
@@ -163,17 +168,42 @@ const validateForm = (): boolean => {
     return isValid;
 };
 
-// Watch filter changes and apply
-watch([filterCampus, filterSession, filterClass, filterActive, searchQuery], () => {
-    const query: Record<string, string> = {};
-    
-    if (filterCampus.value) query.campus_id = filterCampus.value;
-    if (filterSession.value) query.session_id = filterSession.value;
-    if (filterClass.value) query.class_id = filterClass.value;
-    if (filterActive.value) query.is_active = filterActive.value;
-    if (searchQuery.value) query.search = searchQuery.value;
-    
-    router.get(route('fee.settings.fine-rules'), query, { replace: true });
+let searchDebounceTimer: ReturnType<typeof setTimeout> | null = null;
+
+const fetchFineRules = () => {
+    const params: Record<string, string> = {};
+
+    if (filterCampus.value) params.campus_id = filterCampus.value;
+    if (filterSession.value) params.session_id = filterSession.value;
+    if (filterClass.value) params.class_id = filterClass.value;
+    if (filterActive.value !== '') params.is_active = filterActive.value;
+    if (searchQuery.value.trim()) params.search = searchQuery.value.trim();
+
+    isLoading.value = true;
+
+    axios.get(route('fee.settings.fine-rules'), {
+        params,
+        headers: {
+            Accept: 'application/json',
+            'X-Requested-With': 'XMLHttpRequest',
+        },
+    }).then((response) => {
+        fineRulesData.value = response.data.fineRules || [];
+    }).finally(() => {
+        isLoading.value = false;
+    });
+};
+
+watch([filterCampus, filterSession, filterClass, filterActive], fetchFineRules);
+
+watch(searchQuery, () => {
+    if (searchDebounceTimer) {
+        clearTimeout(searchDebounceTimer);
+    }
+
+    searchDebounceTimer = window.setTimeout(() => {
+        fetchFineRules();
+    }, 300);
 });
 
 const resetForm = () => {
@@ -255,42 +285,66 @@ const submitForm = () => {
     };
 
     if (editingRule.value) {
-        router.put(route('fee.settings.fine-rules.update', editingRule.value.id), data, {
-            onSuccess: () => {
-                isSubmitting.value = false;
-                closeModal();
+        axios.put(route('fee.settings.fine-rules.update', editingRule.value.id), data, {
+            headers: {
+                Accept: 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
             },
-            onError: (errors) => {
-                isSubmitting.value = false;
-                // Handle server-side errors
-                formErrors.value = errors;
-            },
+        }).then(() => {
+            closeModal();
+            fetchFineRules();
+        }).catch((error) => {
+            formErrors.value = error.response?.data?.errors || {};
+        }).finally(() => {
+            isSubmitting.value = false;
         });
     } else {
-        router.post(route('fee.settings.fine-rules.store'), data, {
-            onSuccess: () => {
-                isSubmitting.value = false;
-                closeModal();
+        axios.post(route('fee.settings.fine-rules.store'), data, {
+            headers: {
+                Accept: 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
             },
-            onError: (errors) => {
-                isSubmitting.value = false;
-                // Handle server-side errors
-                formErrors.value = errors;
-            },
+        }).then(() => {
+            closeModal();
+            fetchFineRules();
+        }).catch((error) => {
+            formErrors.value = error.response?.data?.errors || {};
+        }).finally(() => {
+            isSubmitting.value = false;
         });
     }
 };
 
 const deleteRule = (rule: FineRule) => {
     if (confirm(`Are you sure you want to delete "${rule.name}"?`)) {
-        router.delete(route('fee.settings.fine-rules.destroy', rule.id));
+        axios.delete(route('fee.settings.fine-rules.destroy', rule.id), {
+            headers: {
+                Accept: 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+            },
+        }).then(() => {
+            fetchFineRules();
+        });
     }
 };
 
 const toggleStatus = (rule: FineRule) => {
-    router.put(route('fee.settings.fine-rules.update', rule.id), {
-        ...rule,
-        is_active: !rule.is_active,
+    axios.patch(route('fee.settings.fine-rules.toggle-status', rule.id), {}, {
+        headers: {
+            Accept: 'application/json',
+            'X-Requested-With': 'XMLHttpRequest',
+        },
+    }).then((response) => {
+        const updatedRule = response.data.fineRule;
+
+        fineRulesData.value = fineRulesData.value.map((item) =>
+            item.id === updatedRule.id
+                ? {
+                    ...item,
+                    is_active: updatedRule.is_active,
+                }
+                : item,
+        );
     });
 };
 
@@ -407,6 +461,7 @@ const fineTypeOptions = [
                     <table class="w-full text-sm">
                         <thead class="bg-gray-50 dark:bg-gray-700">
                             <tr>
+                                <th class="text-left py-3 px-4 text-gray-500 dark:text-gray-400">Sr#</th>
                                 <th class="text-left py-3 px-4 text-gray-500 dark:text-gray-400">Name</th>
                                 <th class="text-left py-3 px-4 text-gray-500 dark:text-gray-400">Scope</th>
                                 <th class="text-left py-3 px-4 text-gray-500 dark:text-gray-400">Grace Days</th>
@@ -419,7 +474,8 @@ const fineTypeOptions = [
                             </tr>
                         </thead>
                         <tbody>
-                            <tr v-for="rule in props.fineRules" :key="rule.id" class="border-t border-gray-200 dark:border-gray-700">
+                            <tr v-for="(rule, index) in fineRulesData" :key="rule.id" class="border-t border-gray-200 dark:border-gray-700">
+                                <td class="py-3 px-4 text-gray-600 dark:text-gray-300">{{ index + 1 }}</td>
                                 <td class="py-3 px-4 text-gray-900 dark:text-white font-medium">{{ rule.name }}</td>
                                 <td class="py-3 px-4 text-gray-600 dark:text-gray-300">
                                     <div class="text-xs">
@@ -449,6 +505,13 @@ const fineTypeOptions = [
                                 </td>
                                 <td class="py-3 px-4 text-center">
                                     <div class="flex justify-center gap-2">
+                                        <Button
+                                            :variant="rule.is_active ? 'outline' : 'default'"
+                                            size="sm"
+                                            @click="toggleStatus(rule)"
+                                        >
+                                            {{ rule.is_active ? 'Inactive' : 'Active' }}
+                                        </Button>
                                         <Button variant="outline" size="sm" @click="openEditModal(rule)">
                                             Edit
                                         </Button>
@@ -460,7 +523,10 @@ const fineTypeOptions = [
                             </tr>
                         </tbody>
                     </table>
-                    <div v-if="props.fineRules.length === 0" class="text-center text-gray-500 dark:text-gray-400 py-8">
+                    <div v-if="isLoading" class="text-center text-gray-500 dark:text-gray-400 py-8">
+                        Loading fine rules...
+                    </div>
+                    <div v-else-if="fineRulesData.length === 0" class="text-center text-gray-500 dark:text-gray-400 py-8">
                         No fine rules configured yet. Click "Add Fine Rule" to create one.
                     </div>
                 </div>

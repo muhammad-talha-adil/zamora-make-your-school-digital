@@ -163,7 +163,6 @@ export function initializeTheme() {
     }
 
     // Initialize theme from saved preference or default to system...
-    const savedAppearance = getStoredAppearance();
     // Note: updateTheme will be called in useAppearance onMounted when props are available
 
     // Set up system theme change listener...

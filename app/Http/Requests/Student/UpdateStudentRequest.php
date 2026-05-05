@@ -2,7 +2,12 @@
 
 namespace App\Http\Requests\Student;
 
+use App\Models\Section;
 use App\Models\Student;
+use App\Models\StudentEnrollmentRecord;
+use App\Models\StudentStatus;
+use Carbon\Carbon;
+use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Validation\Rule;
@@ -61,7 +66,7 @@ class UpdateStudentRequest extends FormRequest
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     * @return array<string, ValidationRule|array<mixed>|string>
      */
     public function rules(): array
     {
@@ -87,7 +92,7 @@ class UpdateStudentRequest extends FormRequest
                 'date',
                 'before:today',
                 function ($attribute, $value, $fail) {
-                    $dob = \Carbon\Carbon::parse($value);
+                    $dob = Carbon::parse($value);
                     $minAge = 3;
                     $maxAge = 25;
 
@@ -315,7 +320,7 @@ class UpdateStudentRequest extends FormRequest
     {
         // Validate section based on class sections
         if ($this->filled('class_id')) {
-            $sectionCount = \App\Models\Section::where('class_id', $this->class_id)->count();
+            $sectionCount = Section::where('class_id', $this->class_id)->count();
             if ($sectionCount > 0 && empty($this->section_id)) {
                 $validator->errors()->add(
                     'section_id',
@@ -326,11 +331,11 @@ class UpdateStudentRequest extends FormRequest
 
         // Validate that section belongs to the selected class
         if ($this->filled('class_id') && $this->filled('section_id')) {
-            $sectionExists = \App\Models\Section::where('id', $this->section_id)
+            $sectionExists = Section::where('id', $this->section_id)
                 ->where('class_id', $this->class_id)
                 ->exists();
 
-            if (!$sectionExists) {
+            if (! $sectionExists) {
                 $validator->errors()->add(
                     'section_id',
                     'The selected section does not belong to the selected class.'
@@ -340,15 +345,15 @@ class UpdateStudentRequest extends FormRequest
 
         // Validate that the student can be re-activated if status is changing
         if ($this->filled('student_status_id')) {
-            $currentStatus = \App\Models\StudentStatus::find($this->student_status_id);
+            $currentStatus = StudentStatus::find($this->student_status_id);
             if ($currentStatus && strtolower($currentStatus->name) === 'active') {
                 // Check if there's already an active enrollment
                 if ($studentId) {
-                    $hasActiveEnrollment = \App\Models\StudentEnrollmentRecord::where('student_id', $studentId)
+                    $hasActiveEnrollment = StudentEnrollmentRecord::where('student_id', $studentId)
                         ->whereNull('leave_date')
                         ->exists();
 
-                    if (!$hasActiveEnrollment) {
+                    if (! $hasActiveEnrollment) {
                         // Warn that student has no active enrollment
                         Log::warning('Student being activated without active enrollment', [
                             'student_id' => $studentId,
@@ -393,7 +398,7 @@ class UpdateStudentRequest extends FormRequest
     {
         // Normalize the action parameter
         $action = $this->input('action', 'update');
-        
+
         // Map old action names to new ones for backward compatibility
         $actionMap = [
             'status' => 'change_status',
@@ -419,15 +424,15 @@ class UpdateStudentRequest extends FormRequest
         // Decode JSON strings sent from frontend via FormData
         // FormData sends JSON as string, so we need to decode it before validation
         $discounts = $this->discounts;
-        if (is_string($discounts) && !empty($discounts)) {
+        if (is_string($discounts) && ! empty($discounts)) {
             $decoded = json_decode($discounts, true);
             if (is_array($decoded)) {
                 $this->merge(['discounts' => $decoded]);
             }
-        }   
+        }
 
         $customFeeEntries = $this->custom_fee_entries;
-        if (is_string($customFeeEntries) && !empty($customFeeEntries)) {
+        if (is_string($customFeeEntries) && ! empty($customFeeEntries)) {
             $decoded = json_decode($customFeeEntries, true);
             if (is_array($decoded)) {
                 $this->merge(['custom_fee_entries' => $decoded]);

@@ -4,9 +4,9 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class StudentInventoryReturn extends Model
 {
@@ -56,7 +56,7 @@ class StudentInventoryReturn extends Model
     public static function generateReturnId(): string
     {
         $year = date('Y');
-        
+
         // Get the last return for this year
         $lastReturn = static::whereYear('created_at', $year)
             ->orderBy('id', 'desc')
@@ -68,7 +68,7 @@ class StudentInventoryReturn extends Model
             $counter = 1;
         }
 
-        return 'SIR-' . $year . '-' . str_pad($counter, 4, '0', STR_PAD_LEFT);
+        return 'SIR-'.$year.'-'.str_pad($counter, 4, '0', STR_PAD_LEFT);
     }
 
     /**
@@ -136,7 +136,7 @@ class StudentInventoryReturn extends Model
      */
     public function scopeDateRange($query, $fromDate, $toDate)
     {
-        return $query->when($fromDate, fn($q) => $q->whereDate('return_date', '>=', $fromDate))
-            ->when($toDate, fn($q) => $q->whereDate('return_date', '<=', $toDate));
+        return $query->when($fromDate, fn ($q) => $q->whereDate('return_date', '>=', $fromDate))
+            ->when($toDate, fn ($q) => $q->whereDate('return_date', '<=', $toDate));
     }
 }

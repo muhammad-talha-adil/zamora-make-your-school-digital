@@ -29,7 +29,7 @@ class ExamMarkingService
         }
 
         $gradeSystem = $this->getActiveGradeSystem();
-        if (!$gradeSystem) {
+        if (! $gradeSystem) {
             return null;
         }
 
@@ -84,7 +84,7 @@ class ExamMarkingService
 
                 // Calculate percentage
                 $percentage = null;
-                if (!$isAbsent && !$isExempt && $obtainedMarks !== null && $paper->total_marks > 0) {
+                if (! $isAbsent && ! $isExempt && $obtainedMarks !== null && $paper->total_marks > 0) {
                     $percentage = round(($obtainedMarks / $paper->total_marks) * 100, 2);
                 }
 
@@ -122,7 +122,9 @@ class ExamMarkingService
 
         foreach ($headerIds as $headerId) {
             $header = ExamResultHeader::find($headerId);
-            if (!$header) continue;
+            if (! $header) {
+                continue;
+            }
 
             // Get all result lines for this header
             $lines = $header->examResultLines;
@@ -146,10 +148,10 @@ class ExamMarkingService
             // Determine status
             $status = 'draft';
             $hasUnmarked = $lines->contains(function ($line) {
-                return $line->obtained_marks === null && !$line->is_absent && !$line->is_exempt;
+                return $line->obtained_marks === null && ! $line->is_absent && ! $line->is_exempt;
             });
 
-            if (!$hasUnmarked) {
+            if (! $hasUnmarked) {
                 $status = 'submitted';
             }
 

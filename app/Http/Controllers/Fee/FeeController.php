@@ -7,8 +7,6 @@ use App\Models\FeeStructure;
 use App\Models\FeeType;
 use App\Models\Invoice;
 use App\Models\Payment;
-use App\Models\SchoolClass;
-use App\Models\Session;
 use App\Models\StudentFee;
 use App\Models\User;
 use App\Services\FeeService;
@@ -36,7 +34,7 @@ class FeeController extends Controller
     {
         $campusId = $request->input('campus_id');
 
-        if (!$campusId) {
+        if (! $campusId) {
             return response()->json([
                 'success' => false,
                 'message' => 'Campus ID is required',
@@ -86,9 +84,10 @@ class FeeController extends Controller
             ], 201);
         } catch (\Exception $e) {
             DB::rollBack();
+
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to create fee type: ' . $e->getMessage(),
+                'message' => 'Failed to create fee type: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -100,7 +99,7 @@ class FeeController extends Controller
     {
         $feeType = FeeType::with('campus')->find($id);
 
-        if (!$feeType) {
+        if (! $feeType) {
             return response()->json([
                 'success' => false,
                 'message' => 'Fee type not found',
@@ -121,7 +120,7 @@ class FeeController extends Controller
     {
         $feeType = FeeType::find($id);
 
-        if (!$feeType) {
+        if (! $feeType) {
             return response()->json([
                 'success' => false,
                 'message' => 'Fee type not found',
@@ -154,9 +153,10 @@ class FeeController extends Controller
             ]);
         } catch (\Exception $e) {
             DB::rollBack();
+
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to update fee type: ' . $e->getMessage(),
+                'message' => 'Failed to update fee type: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -168,7 +168,7 @@ class FeeController extends Controller
     {
         $feeType = FeeType::find($id);
 
-        if (!$feeType) {
+        if (! $feeType) {
             return response()->json([
                 'success' => false,
                 'message' => 'Fee type not found',
@@ -202,9 +202,10 @@ class FeeController extends Controller
             ]);
         } catch (\Exception $e) {
             DB::rollBack();
+
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to delete fee type: ' . $e->getMessage(),
+                'message' => 'Failed to delete fee type: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -216,7 +217,7 @@ class FeeController extends Controller
     {
         $feeType = FeeType::withTrashed()->find($id);
 
-        if (!$feeType || !$feeType->trashed()) {
+        if (! $feeType || ! $feeType->trashed()) {
             return response()->json([
                 'success' => false,
                 'message' => 'Fee type not found or not deleted',
@@ -236,9 +237,10 @@ class FeeController extends Controller
             ]);
         } catch (\Exception $e) {
             DB::rollBack();
+
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to restore fee type: ' . $e->getMessage(),
+                'message' => 'Failed to restore fee type: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -250,7 +252,7 @@ class FeeController extends Controller
     {
         $campusId = $request->input('campus_id');
 
-        if (!$campusId) {
+        if (! $campusId) {
             return response()->json([
                 'success' => false,
                 'message' => 'Campus ID is required',
@@ -277,7 +279,7 @@ class FeeController extends Controller
     {
         $feeType = FeeType::find($id);
 
-        if (!$feeType) {
+        if (! $feeType) {
             return response()->json([
                 'success' => false,
                 'message' => 'Fee type not found',
@@ -287,7 +289,7 @@ class FeeController extends Controller
         DB::beginTransaction();
 
         try {
-            $feeType->update(['is_active' => !$feeType->is_active]);
+            $feeType->update(['is_active' => ! $feeType->is_active]);
             DB::commit();
 
             return response()->json([
@@ -297,9 +299,10 @@ class FeeController extends Controller
             ]);
         } catch (\Exception $e) {
             DB::rollBack();
+
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to toggle status: ' . $e->getMessage(),
+                'message' => 'Failed to toggle status: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -317,15 +320,19 @@ class FeeController extends Controller
         $sessionId = $request->input('session_id');
         $classId = $request->input('class_id');
 
-        if (!$campusId) {
+        if (! $campusId) {
             return response()->json(['success' => false, 'message' => 'Campus ID is required'], 400);
         }
 
         $query = FeeStructure::with(['campus', 'session', 'schoolClass', 'feeType'])
             ->where('campus_id', $campusId);
 
-        if ($sessionId) $query->where('session_id', $sessionId);
-        if ($classId) $query->where('class_id', $classId);
+        if ($sessionId) {
+            $query->where('session_id', $sessionId);
+        }
+        if ($classId) {
+            $query->where('class_id', $classId);
+        }
 
         $feeStructures = $query->orderBy('name')->get();
 
@@ -389,7 +396,8 @@ class FeeController extends Controller
             ], 201);
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(['success' => false, 'message' => 'Failed to create: ' . $e->getMessage()], 500);
+
+            return response()->json(['success' => false, 'message' => 'Failed to create: '.$e->getMessage()], 500);
         }
     }
 
@@ -400,7 +408,7 @@ class FeeController extends Controller
     {
         $feeStructure = FeeStructure::with(['campus', 'session', 'schoolClass', 'feeType'])->find($id);
 
-        if (!$feeStructure) {
+        if (! $feeStructure) {
             return response()->json(['success' => false, 'message' => 'Fee structure not found'], 404);
         }
 
@@ -414,7 +422,7 @@ class FeeController extends Controller
     {
         $feeStructure = FeeStructure::find($id);
 
-        if (!$feeStructure) {
+        if (! $feeStructure) {
             return response()->json(['success' => false, 'message' => 'Fee structure not found'], 404);
         }
 
@@ -436,7 +444,8 @@ class FeeController extends Controller
             ]);
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(['success' => false, 'message' => 'Failed to update: ' . $e->getMessage()], 500);
+
+            return response()->json(['success' => false, 'message' => 'Failed to update: '.$e->getMessage()], 500);
         }
     }
 
@@ -447,14 +456,14 @@ class FeeController extends Controller
     {
         $feeStructure = FeeStructure::find($id);
 
-        if (!$feeStructure) {
+        if (! $feeStructure) {
             return response()->json(['success' => false, 'message' => 'Fee structure not found'], 404);
         }
 
         DB::beginTransaction();
 
         try {
-            $feeStructure->update(['is_active' => !$feeStructure->is_active]);
+            $feeStructure->update(['is_active' => ! $feeStructure->is_active]);
             DB::commit();
 
             return response()->json([
@@ -463,7 +472,8 @@ class FeeController extends Controller
             ]);
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(['success' => false, 'message' => 'Failed to toggle: ' . $e->getMessage()], 500);
+
+            return response()->json(['success' => false, 'message' => 'Failed to toggle: '.$e->getMessage()], 500);
         }
     }
 
@@ -474,7 +484,7 @@ class FeeController extends Controller
     {
         $feeStructure = FeeStructure::find($id);
 
-        if (!$feeStructure) {
+        if (! $feeStructure) {
             return response()->json(['success' => false, 'message' => 'Fee structure not found'], 404);
         }
 
@@ -487,7 +497,8 @@ class FeeController extends Controller
             return response()->json(['success' => true, 'message' => 'Fee structure deleted']);
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(['success' => false, 'message' => 'Failed to delete: ' . $e->getMessage()], 500);
+
+            return response()->json(['success' => false, 'message' => 'Failed to delete: '.$e->getMessage()], 500);
         }
     }
 
@@ -549,7 +560,8 @@ class FeeController extends Controller
             ], 201);
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(['success' => false, 'message' => 'Failed: ' . $e->getMessage()], 500);
+
+            return response()->json(['success' => false, 'message' => 'Failed: '.$e->getMessage()], 500);
         }
     }
 
@@ -577,7 +589,7 @@ class FeeController extends Controller
                 'class_name' => $class->name ?? 'Unknown',
                 'total_fee' => $structures->sum('amount'),
                 'fee_types_count' => $structures->count(),
-                'fee_types' => $structures->map(fn($fs) => [
+                'fee_types' => $structures->map(fn ($fs) => [
                     'id' => $fs->feeType->id,
                     'name' => $fs->feeType->name,
                     'amount' => $fs->amount,
@@ -599,7 +611,7 @@ class FeeController extends Controller
     {
         $campusId = $request->input('campus_id');
 
-        if (!$campusId) {
+        if (! $campusId) {
             return response()->json(['success' => false, 'message' => 'Campus ID is required'], 400);
         }
 
@@ -696,7 +708,8 @@ class FeeController extends Controller
             ], 201);
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(['success' => false, 'message' => 'Failed: ' . $e->getMessage()], 500);
+
+            return response()->json(['success' => false, 'message' => 'Failed: '.$e->getMessage()], 500);
         }
     }
 
@@ -745,6 +758,7 @@ class FeeController extends Controller
 
                 if ($existingFee) {
                     $skipped[] = ['fee_type' => $fs->feeType->name, 'reason' => 'Already assigned'];
+
                     continue;
                 }
 
@@ -771,11 +785,12 @@ class FeeController extends Controller
             return response()->json([
                 'success' => true,
                 'data' => ['created_count' => count($created), 'skipped' => $skipped],
-                'message' => count($created) . ' fees assigned',
+                'message' => count($created).' fees assigned',
             ], 201);
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(['success' => false, 'message' => 'Failed: ' . $e->getMessage()], 500);
+
+            return response()->json(['success' => false, 'message' => 'Failed: '.$e->getMessage()], 500);
         }
     }
 
@@ -819,6 +834,7 @@ class FeeController extends Controller
 
         $byFeeType = $studentFees->groupBy('fee_type_id')->map(function ($items, $feeTypeId) {
             $feeType = $items->first()->feeType;
+
             return [
                 'fee_type_id' => $feeTypeId,
                 'fee_type_name' => $feeType->name ?? 'Unknown',
@@ -846,7 +862,7 @@ class FeeController extends Controller
     {
         $studentFee = StudentFee::find($id);
 
-        if (!$studentFee) {
+        if (! $studentFee) {
             return response()->json(['success' => false, 'message' => 'Student fee not found'], 404);
         }
 
@@ -866,7 +882,8 @@ class FeeController extends Controller
             ]);
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(['success' => false, 'message' => 'Failed: ' . $e->getMessage()], 500);
+
+            return response()->json(['success' => false, 'message' => 'Failed: '.$e->getMessage()], 500);
         }
     }
 
@@ -877,7 +894,7 @@ class FeeController extends Controller
     {
         $studentFee = StudentFee::find($id);
 
-        if (!$studentFee) {
+        if (! $studentFee) {
             return response()->json(['success' => false, 'message' => 'Student fee not found'], 404);
         }
 
@@ -895,7 +912,8 @@ class FeeController extends Controller
             return response()->json(['success' => true, 'message' => 'Student fee deleted']);
         } catch (\Exception $e) {
             DB::rollBack();
-            return response()->json(['success' => false, 'message' => 'Failed: ' . $e->getMessage()], 500);
+
+            return response()->json(['success' => false, 'message' => 'Failed: '.$e->getMessage()], 500);
         }
     }
 
@@ -910,7 +928,7 @@ class FeeController extends Controller
     {
         $campusId = $request->input('campus_id');
 
-        if (!$campusId) {
+        if (! $campusId) {
             return response()->json(['success' => false, 'message' => 'Campus ID is required'], 400);
         }
 
@@ -959,7 +977,7 @@ class FeeController extends Controller
                 'message' => 'Invoice created successfully',
             ], 201);
         } catch (\Exception $e) {
-            return response()->json(['success' => false, 'message' => 'Failed to create invoice: ' . $e->getMessage()], 500);
+            return response()->json(['success' => false, 'message' => 'Failed to create invoice: '.$e->getMessage()], 500);
         }
     }
 
@@ -983,7 +1001,7 @@ class FeeController extends Controller
 
             return response()->json(['success' => true, 'data' => $preview]);
         } catch (\Exception $e) {
-            return response()->json(['success' => false, 'message' => 'Failed: ' . $e->getMessage()], 500);
+            return response()->json(['success' => false, 'message' => 'Failed: '.$e->getMessage()], 500);
         }
     }
 
@@ -998,10 +1016,10 @@ class FeeController extends Controller
             'student',
             'invoiceItems.feeType',
             'invoiceItems.studentInventory',
-            'payments'
+            'payments',
         ])->find($id);
 
-        if (!$invoice) {
+        if (! $invoice) {
             return response()->json(['success' => false, 'message' => 'Invoice not found'], 404);
         }
 
@@ -1015,7 +1033,7 @@ class FeeController extends Controller
     {
         $invoice = Invoice::find($id);
 
-        if (!$invoice) {
+        if (! $invoice) {
             return response()->json(['success' => false, 'message' => 'Invoice not found'], 404);
         }
 
@@ -1028,7 +1046,7 @@ class FeeController extends Controller
                 'message' => 'Invoice cancelled successfully',
             ]);
         } catch (\Exception $e) {
-            return response()->json(['success' => false, 'message' => 'Failed to cancel: ' . $e->getMessage()], 500);
+            return response()->json(['success' => false, 'message' => 'Failed to cancel: '.$e->getMessage()], 500);
         }
     }
 
@@ -1043,12 +1061,12 @@ class FeeController extends Controller
     {
         $campusId = $request->input('campus_id');
 
-        if (!$campusId) {
+        if (! $campusId) {
             return response()->json(['success' => false, 'message' => 'Campus ID is required'], 400);
         }
 
         $query = Payment::with(['invoice.student', 'invoice'])
-            ->whereHas('invoice', fn($q) => $q->where('campus_id', $campusId));
+            ->whereHas('invoice', fn ($q) => $q->where('campus_id', $campusId));
 
         if ($startDate = $request->input('start_date')) {
             $query->whereDate('payment_date', '>=', $startDate);
@@ -1061,10 +1079,10 @@ class FeeController extends Controller
             ->orderBy('created_at', 'desc')
             ->paginate($request->input('per_page', 20));
 
-        $byMode = Payment::whereHas('invoice', fn($q) => $q->where('campus_id', $campusId))
+        $byMode = Payment::whereHas('invoice', fn ($q) => $q->where('campus_id', $campusId))
             ->get()
             ->groupBy('payment_mode')
-            ->map(fn($items) => ['count' => $items->count(), 'total' => $items->sum('amount')]);
+            ->map(fn ($items) => ['count' => $items->count(), 'total' => $items->sum('amount')]);
 
         return response()->json([
             'success' => true,
@@ -1098,7 +1116,7 @@ class FeeController extends Controller
                 'message' => 'Payment recorded successfully',
             ], 201);
         } catch (\Exception $e) {
-            return response()->json(['success' => false, 'message' => 'Failed: ' . $e->getMessage()], 500);
+            return response()->json(['success' => false, 'message' => 'Failed: '.$e->getMessage()], 500);
         }
     }
 
@@ -1131,10 +1149,10 @@ class FeeController extends Controller
             'invoice.campus',
             'invoice.student',
             'invoice.session',
-            'invoice.payments'
+            'invoice.payments',
         ])->find($id);
 
-        if (!$payment) {
+        if (! $payment) {
             return response()->json(['success' => false, 'message' => 'Payment not found'], 404);
         }
 
@@ -1144,7 +1162,7 @@ class FeeController extends Controller
             'success' => true,
             'data' => [
                 'receipt' => [
-                    'receipt_number' => 'RCP' . str_pad($payment->id, 6, '0', STR_PAD_LEFT),
+                    'receipt_number' => 'RCP'.str_pad($payment->id, 6, '0', STR_PAD_LEFT),
                     'payment_date' => $payment->payment_date,
                     'invoice_number' => $payment->invoice->invoice_number,
                     'student' => $payment->invoice->student,

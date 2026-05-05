@@ -27,8 +27,8 @@ class MonthController extends Controller
         $query = trim(request()->get('q', ''));
 
         $months = Month::when($query, function ($q) use ($query) {
-                $q->whereRaw('LOWER(name) LIKE ?', ['%' . strtolower($query) . '%']);
-            })
+            $q->whereRaw('LOWER(name) LIKE ?', ['%'.strtolower($query).'%']);
+        })
             ->orderBy('month_number')
             ->get()
             ->map(function ($month) {

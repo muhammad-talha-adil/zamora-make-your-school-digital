@@ -174,7 +174,7 @@ class InventoryItem extends Model
      */
     public function scopeSearch($query, $search)
     {
-        return $query->whereRaw('LOWER(name) LIKE ?', ['%' . strtolower($search) . '%']);
+        return $query->whereRaw('LOWER(name) LIKE ?', ['%'.strtolower($search).'%']);
     }
 
     /**

@@ -7,10 +7,9 @@ use App\Models\Campus;
 use App\Models\SchoolClass;
 use App\Models\Section;
 use App\Models\Subject;
-use Illuminate\Http\Request;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
-use Inertia\Inertia;
 
 class ClassSubjectController extends Controller
 {
@@ -41,11 +40,11 @@ class ClassSubjectController extends Controller
 
         // Get currently assigned subjects for the selected class-section
         $assignedSubjects = [];
-        
+
         if ($classId) {
             $query = DB::table('class_subject')
                 ->where('class_id', $classId);
-            
+
             if ($sectionId) {
                 $query->where('section_id', $sectionId);
             } else {
@@ -88,7 +87,7 @@ class ClassSubjectController extends Controller
         $sectionId = $request->get('section_id');
         $isAllSections = $request->get('is_all_sections', false);
 
-        if (!$classId) {
+        if (! $classId) {
             return response()->json(['assigned_subjects' => []]);
         }
 
@@ -96,6 +95,7 @@ class ClassSubjectController extends Controller
         if ($isAllSections) {
             $assignedSubjects = DB::table('class_subject')
                 ->where('class_id', $classId)
+                ->distinct()
                 ->pluck('subject_id')
                 ->toArray();
         } else {
@@ -119,7 +119,7 @@ class ClassSubjectController extends Controller
     /**
      * Save subject-class-section assignments.
      */
-    public function store(Request $request)
+    public function store(Request $request): JsonResponse
     {
         $this->authorize('settings.manage');
 
@@ -164,7 +164,7 @@ class ClassSubjectController extends Controller
                     }
                 }
 
-                if (!empty($insertData)) {
+                if (! empty($insertData)) {
                     DB::table('class_subject')->insert($insertData);
                 }
             } else {
@@ -184,7 +184,7 @@ class ClassSubjectController extends Controller
                 // Add new assignments
                 $now = now();
                 $insertData = [];
-                
+
                 foreach ($subjectIds as $subjectId) {
                     $insertData[] = [
                         'class_id' => $classId,
@@ -195,28 +195,26 @@ class ClassSubjectController extends Controller
                     ];
                 }
 
-                if (!empty($insertData)) {
+                if (! empty($insertData)) {
                     DB::table('class_subject')->insert($insertData);
                 }
             }
 
             DB::commit();
 
-            // Return Inertia response with success message
-            return Inertia::render('settings/SchoolProfile', [
-                'flash' => [
-                    'success' => $isAllSections ? 'Subjects assigned to all sections successfully' : 'Subjects assigned successfully',
-                ],
+            return response()->json([
+                'success' => true,
+                'message' => $isAllSections
+                    ? 'Subjects assigned to all sections successfully.'
+                    : 'Subjects assigned successfully.',
             ]);
         } catch (\Exception $e) {
             DB::rollBack();
 
-            // Return Inertia response with error
-            return Inertia::render('settings/SchoolProfile', [
-                'flash' => [
-                    'error' => 'Failed to assign subjects: ' . $e->getMessage(),
-                ],
-            ]);
+            return response()->json([
+                'success' => false,
+                'message' => 'Failed to assign subjects: '.$e->getMessage(),
+            ], 422);
         }
     }
 }

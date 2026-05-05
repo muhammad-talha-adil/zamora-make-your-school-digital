@@ -7,7 +7,6 @@ use App\Http\Requests\Settings\StoreSectionRequest;
 use App\Http\Requests\Settings\UpdateSectionRequest;
 use App\Models\SchoolClass;
 use App\Models\Section;
-use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -32,7 +31,7 @@ class SectionController extends Controller
      */
     public function apiIndex()
     {
-        $query = Section::with('schoolClass')->query();
+        $query = Section::with('schoolClass');
 
         // Handle status filter
         $status = request()->get('status');
@@ -40,6 +39,12 @@ class SectionController extends Controller
             $query->where('is_active', true);
         } elseif ($status === 'inactive') {
             $query->where('is_active', false);
+        }
+
+        // Handle class_id filter
+        $classId = request()->get('class_id');
+        if ($classId) {
+            $query->where('class_id', $classId);
         }
 
         // Handle trashed filter
@@ -71,13 +76,111 @@ class SectionController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(StoreSectionRequest $request): RedirectResponse
+    public function store(StoreSectionRequest $request)
     {
         $validated = $request->validated();
 
         Section::create($validated);
 
+        if (request()->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Section created successfully.',
+            ]);
+        }
+
         return redirect()->route('sections.index')->with('success', 'Section created successfully.');
+    }
+
+    /**
+     * Update the specified resource in storage.
+     */
+    public function update(UpdateSectionRequest $request, Section $section)
+    {
+        $validated = $request->validated();
+
+        $section->update($validated);
+
+        if (request()->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Section updated successfully.',
+            ]);
+        }
+
+        return redirect()->route('sections.index')->with('success', 'Section updated successfully.');
+    }
+
+    /**
+     * Remove the specified resource from storage (soft delete).
+     */
+    public function destroy(Section $section)
+    {
+        $section->delete();
+
+        if (request()->expectsJson()) {
+            return response()->json(['success' => true]);
+        }
+
+        return redirect()->route('sections.index')->with('success', 'Section deleted successfully.');
+    }
+
+    /**
+     * Inactivate the specified resource.
+     */
+    public function inactivate(Section $section)
+    {
+        $section->update(['is_active' => false]);
+
+        if (request()->expectsJson()) {
+            return response()->json(['success' => true]);
+        }
+
+        return redirect()->route('sections.index')->with('success', 'Section inactivated successfully.');
+    }
+
+    /**
+     * Activate the specified resource.
+     */
+    public function activate(Section $section)
+    {
+        $section->update(['is_active' => true]);
+
+        if (request()->expectsJson()) {
+            return response()->json(['success' => true]);
+        }
+
+        return redirect()->route('sections.index')->with('success', 'Section activated successfully.');
+    }
+
+    /**
+     * Restore the specified resource from trash.
+     */
+    public function restore(int $id)
+    {
+        $section = Section::onlyTrashed()->findOrFail($id);
+        $section->restore();
+
+        if (request()->expectsJson()) {
+            return response()->json(['success' => true]);
+        }
+
+        return redirect()->route('sections.index')->with('success', 'Section restored successfully.');
+    }
+
+    /**
+     * Permanently delete the specified resource.
+     */
+    public function forceDelete(int $id)
+    {
+        $section = Section::onlyTrashed()->findOrFail($id);
+        $section->forceDelete();
+
+        if (request()->expectsJson()) {
+            return response()->json(['success' => true]);
+        }
+
+        return redirect()->route('sections.index')->with('success', 'Section permanently deleted.');
     }
 
     /**
@@ -91,69 +194,5 @@ class SectionController extends Controller
             'section' => $section->load('schoolClass'),
             'schoolClasses' => $schoolClasses,
         ]);
-    }
-
-    /**
-     * Update the specified resource in storage.
-     */
-    public function update(UpdateSectionRequest $request, Section $section): RedirectResponse
-    {
-        $validated = $request->validated();
-
-        $section->update($validated);
-
-        return redirect()->route('sections.index')->with('success', 'Section updated successfully.');
-    }
-
-    /**
-     * Remove the specified resource from storage (soft delete).
-     */
-    public function destroy(Section $section): RedirectResponse
-    {
-        $section->delete();
-
-        return redirect()->route('sections.index')->with('success', 'Section deleted successfully.');
-    }
-
-    /**
-     * Inactivate the specified resource.
-     */
-    public function inactivate(Section $section): RedirectResponse
-    {
-        $section->update(['is_active' => false]);
-
-        return redirect()->route('sections.index')->with('success', 'Section inactivated successfully.');
-    }
-
-    /**
-     * Activate the specified resource.
-     */
-    public function activate(Section $section): RedirectResponse
-    {
-        $section->update(['is_active' => true]);
-
-        return redirect()->route('sections.index')->with('success', 'Section activated successfully.');
-    }
-
-    /**
-     * Restore the specified resource from trash.
-     */
-    public function restore(int $id): RedirectResponse
-    {
-        $section = Section::onlyTrashed()->findOrFail($id);
-        $section->restore();
-
-        return redirect()->route('sections.index')->with('success', 'Section restored successfully.');
-    }
-
-    /**
-     * Permanently delete the specified resource.
-     */
-    public function forceDelete(int $id): RedirectResponse
-    {
-        $section = Section::onlyTrashed()->findOrFail($id);
-        $section->forceDelete();
-
-        return redirect()->route('sections.index')->with('success', 'Section permanently deleted.');
     }
 }

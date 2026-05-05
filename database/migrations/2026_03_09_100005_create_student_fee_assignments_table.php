@@ -6,11 +6,11 @@ use Illuminate\Support\Facades\Schema;
 
 /**
  * Student Fee Assignments Migration
- * 
+ *
  * Student-specific fee overrides, extra charges, waivers, or custom settings.
  * This table allows individual students to have different fee amounts than
  * the standard fee structure.
- * 
+ *
  * Use Cases:
  * - Override: Student pays 6000 instead of standard 5000 for tuition
  * - Discount: Student gets 1000 PKR off transport fee
@@ -23,49 +23,49 @@ return new class extends Migration
     {
         Schema::create('student_fee_assignments', function (Blueprint $table) {
             $table->id();
-            
+
             // Student reference
             $table->foreignId('student_id')
                 ->constrained('students')
                 ->onDelete('cascade');
-            
+
             $table->foreignId('student_enrollment_record_id')
                 ->constrained('student_enrollment_records')
                 ->onDelete('cascade');
-            
+
             // Scope (cached from enrollment for performance)
             $table->foreignId('session_id')
                 ->constrained('academic_sessions')
                 ->onDelete('restrict');
-            
+
             $table->foreignId('campus_id')
                 ->constrained('campuses')
                 ->onDelete('restrict');
-            
+
             $table->foreignId('class_id')
                 ->constrained('school_classes')
                 ->onDelete('restrict');
-            
+
             $table->foreignId('section_id')
                 ->constrained('sections')
                 ->onDelete('restrict');
-            
+
             // Fee head being overridden
             $table->foreignId('fee_head_id')
                 ->constrained('fee_heads')
                 ->onDelete('restrict');
-            
+
             // Assignment details
             $table->enum('assignment_type', ['override', 'discount', 'extra_charge', 'waiver'])
                 ->index();
-            
+
             $table->enum('value_type', ['fixed', 'percent'])->default('fixed');
             $table->decimal('amount', 12, 2); // Amount or percentage value
-            
+
             // Effective date range
             $table->date('effective_from');
             $table->date('effective_to')->nullable();
-            
+
             // Status and approval
             $table->boolean('is_active')->default(true)->index();
             $table->text('reason')->nullable(); // Why this assignment?
@@ -73,10 +73,10 @@ return new class extends Migration
                 ->nullable()
                 ->constrained('users')
                 ->nullOnDelete();
-            
+
             $table->timestamps();
             $table->softDeletes();
-            
+
             // Indexes for performance (with custom short names)
             $table->index(['student_id', 'is_active'], 'idx_assign_student_active');
             $table->index(['student_enrollment_record_id', 'is_active'], 'idx_assign_enroll_active');

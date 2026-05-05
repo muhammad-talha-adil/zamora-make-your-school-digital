@@ -22,10 +22,10 @@ class InventoryItemSeeder extends Seeder
 
         foreach ($campuses as $campus) {
             $inventoryTypes = InventoryType::where('campus_id', $campus->id)->get();
-            
+
             foreach ($inventoryTypes as $index => $type) {
                 $items = $this->getItemsForType($type->name, $index + 1);
-                
+
                 foreach ($items as $item) {
                     InventoryItem::firstOrCreate(
                         [
@@ -305,7 +305,7 @@ class InventoryItemSeeder extends Seeder
 
         return $items[$type] ?? [
             [
-                'name' => "{$type} Item " . $index,
+                'name' => "{$type} Item ".$index,
                 'description' => "Sample {$type} item",
                 'is_active' => true,
             ],

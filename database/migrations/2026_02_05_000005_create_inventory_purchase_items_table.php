@@ -8,7 +8,7 @@ return new class extends Migration
 {
     /**
      * Run the migrations.
-     * 
+     *
      * Consolidated migration for inventory_purchase_items table.
      * Includes sale_rate column.
      */

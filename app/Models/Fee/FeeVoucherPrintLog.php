@@ -8,7 +8,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
  * Fee Voucher Print Log Model
- * 
+ *
  * Tracks voucher/challan print history for audit purposes.
  */
 class FeeVoucherPrintLog extends Model

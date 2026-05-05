@@ -6,19 +6,20 @@ use App\Models\Guardian;
 use App\Models\Role;
 use App\Models\User;
 use App\Models\UserRole;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Str;
 
 class GuardianService
 {
     /**
      * Create a user account for a guardian with proper username generation and role assignment.
-     * 
+     *
      * Username Format: GRD-{last_6_digits_of_phone}
      * Example: GRD-123456
      *
-     * @param Guardian $guardian The guardian model instance
-     * @param string $guardianName The guardian's full name
-     * @param string|null $guardianEmail Optional email provided by guardian
+     * @param  Guardian  $guardian  The guardian model instance
+     * @param  string  $guardianName  The guardian's full name
+     * @param  string|null  $guardianEmail  Optional email provided by guardian
      * @return User The created user model
      */
     public function createGuardianUser(Guardian $guardian, string $guardianName, ?string $guardianEmail): User
@@ -54,14 +55,14 @@ class GuardianService
     /**
      * Find a guardian by phone number or create a new one with user account.
      *
-     * @param string|null $phone The phone number to search for
-     * @param array $data Guardian data (name, email, cnic, occupation, address)
+     * @param  string|null  $phone  The phone number to search for
+     * @param  array  $data  Guardian data (name, email, cnic, occupation, address)
      * @return Guardian The found or newly created guardian
      */
     public function findOrCreateByPhone(?string $phone, array $data): Guardian
     {
         // Clean the phone number
-        $cleanPhone = !empty($phone) ? preg_replace('/[^0-9]/', '', $phone) : null;
+        $cleanPhone = ! empty($phone) ? preg_replace('/[^0-9]/', '', $phone) : null;
 
         // Try to find existing guardian by phone
         if ($cleanPhone) {
@@ -88,8 +89,7 @@ class GuardianService
     /**
      * Create a new guardian without phone number lookup.
      *
-     * @param array $data Guardian data
-     * @return Guardian
+     * @param  array  $data  Guardian data
      */
     public function createGuardian(array $data): Guardian
     {
@@ -111,15 +111,12 @@ class GuardianService
      *
      * Format: GRD-{last_6_digits_of_phone}
      * Example: GRD-123456
-     *
-     * @param string|null $phone
-     * @return string
      */
     public function generateGuardianUsername(?string $phone): string
     {
         // If no phone provided, generate a random username
         if (empty($phone)) {
-            return 'GRD-' . strtoupper(Str::random(8));
+            return 'GRD-'.strtoupper(Str::random(8));
         }
 
         // Extract last 6 digits from phone number
@@ -131,20 +128,20 @@ class GuardianService
             $last6Digits = str_pad($last6Digits, 6, '0', STR_PAD_LEFT);
         }
 
-        return 'GRD-' . $last6Digits;
+        return 'GRD-'.$last6Digits;
     }
 
     /**
      * Generate a secure random password for guardian accounts.
      *
-     * @param int $length Password length
+     * @param  int  $length  Password length
      * @return string Generated password
      */
     public function generateSecurePassword(int $length = 12): string
     {
         $characters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*';
         $password = '';
-        
+
         // Ensure at least one of each required character type
         $password .= chr(rand(97, 122)); // lowercase
         $password .= chr(rand(65, 90));   // uppercase
@@ -162,18 +159,14 @@ class GuardianService
 
     /**
      * Generate a unique email address for the guardian.
-     *
-     * @param string $guardianName
-     * @param string|null $providedEmail
-     * @return string
      */
     protected function generateUniqueEmail(string $guardianName, ?string $providedEmail): string
     {
         // If a valid email is provided, use it (with duplicate handling)
-        if (!empty($providedEmail) && filter_var($providedEmail, FILTER_VALIDATE_EMAIL)) {
+        if (! empty($providedEmail) && filter_var($providedEmail, FILTER_VALIDATE_EMAIL)) {
             $baseEmail = strtolower(trim($providedEmail));
 
-            if (!$this->emailExists($baseEmail)) {
+            if (! $this->emailExists($baseEmail)) {
                 return $baseEmail;
             }
 
@@ -182,9 +175,9 @@ class GuardianService
 
         // Generate email from guardian name
         $processedName = preg_replace('/\s+/', '', strtolower($guardianName));
-        $baseEmail = $processedName . '@school.com';
+        $baseEmail = $processedName.'@school.com';
 
-        if (!$this->emailExists($baseEmail)) {
+        if (! $this->emailExists($baseEmail)) {
             return $baseEmail;
         }
 
@@ -193,9 +186,6 @@ class GuardianService
 
     /**
      * Check if an email already exists in the users table.
-     *
-     * @param string $email
-     * @return bool
      */
     protected function emailExists(string $email): bool
     {
@@ -204,9 +194,6 @@ class GuardianService
 
     /**
      * Create a unique email by appending incremental numbers.
-     *
-     * @param string $baseEmail
-     * @return string
      */
     protected function createUniqueEmail(string $baseEmail): string
     {
@@ -216,8 +203,8 @@ class GuardianService
         $domain = $emailParts[1] ?? 'school.com';
 
         while (true) {
-            $newEmail = $username . $counter . '@' . $domain;
-            if (!$this->emailExists($newEmail)) {
+            $newEmail = $username.$counter.'@'.$domain;
+            if (! $this->emailExists($newEmail)) {
                 return $newEmail;
             }
             $counter++;
@@ -226,15 +213,12 @@ class GuardianService
 
     /**
      * Assign the guardian role to a user.
-     *
-     * @param User $user
-     * @return UserRole
      */
     protected function assignGuardianRole(User $user): UserRole
     {
         $guardianRole = Role::where('name', 'guardian')->first();
 
-        if (!$guardianRole) {
+        if (! $guardianRole) {
             $guardianRole = Role::create([
                 'name' => 'guardian',
                 'slug' => 'guardian',
@@ -254,38 +238,34 @@ class GuardianService
 
     /**
      * Check if a guardian user account exists for a given phone number.
-     *
-     * @param string|null $phone
-     * @return bool
      */
     public function guardianUserExists(?string $phone): bool
     {
         $username = $this->generateGuardianUsername($phone);
+
         return User::where('username', $username)->exists();
     }
 
     /**
      * Get the guardian user by phone number.
-     *
-     * @param string|null $phone
-     * @return User|null
      */
     public function getGuardianUserByPhone(?string $phone): ?User
     {
         $username = $this->generateGuardianUsername($phone);
+
         return User::where('username', $username)->first();
     }
 
     /**
      * Get all guardian users (for reporting purposes).
      *
-     * @return \Illuminate\Database\Eloquent\Collection
+     * @return Collection
      */
     public function getAllGuardianUsers()
     {
         $guardianRole = Role::where('name', 'guardian')->first();
-        
-        if (!$guardianRole) {
+
+        if (! $guardianRole) {
             return collect();
         }
 
@@ -296,10 +276,6 @@ class GuardianService
 
     /**
      * Update an existing guardian with new data.
-     *
-     * @param Guardian $guardian
-     * @param array $data
-     * @return Guardian
      */
     public function updateGuardian(Guardian $guardian, array $data): Guardian
     {

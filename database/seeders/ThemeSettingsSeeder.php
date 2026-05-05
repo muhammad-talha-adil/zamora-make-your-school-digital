@@ -2,10 +2,9 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
-use Illuminate\Database\Seeder;
 use App\Models\ThemePalette;
 use App\Models\ThemeSetting;
+use Illuminate\Database\Seeder;
 
 class ThemeSettingsSeeder extends Seeder
 {

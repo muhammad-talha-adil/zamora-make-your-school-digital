@@ -269,16 +269,6 @@ const removeItem = (index: number) => {
     form.purchase_items.splice(index, 1);
 };
 
-const resetForm = () => {
-    form.campus_id = '';
-    form.supplier_id = null;
-    form.purchase_date = new Date().toISOString().split('T')[0];
-    form.note = '';
-    form.purchase_items = [];
-    errors.value = {};
-    idempotencyKey.value = null;
-};
-
 const goBack = () => {
     router.visit('/inventory/purchases-manage');
 };

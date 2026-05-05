@@ -10,7 +10,7 @@ class SectionSeeder extends Seeder
 {
     /**
      * Run the database seeds.
-     * 
+     *
      * Creates 2-4 sections per class (A, B, C, D).
      * Sections will be displayed as Class-Section (e.g., Two-A, Eight-C)
      * by combining class name with section name in the UI or accessor.
@@ -21,6 +21,7 @@ class SectionSeeder extends Seeder
 
         if ($classes->isEmpty()) {
             $this->command->warn('No classes found. Please run SchoolClassSeeder first.');
+
             return;
         }
 
@@ -40,7 +41,7 @@ class SectionSeeder extends Seeder
 
             for ($i = 0; $i < $numSections; $i++) {
                 $sectionName = $sectionNames[$i];
-                
+
                 Section::updateOrCreate(
                     [
                         'name' => $sectionName,
@@ -48,6 +49,7 @@ class SectionSeeder extends Seeder
                     ],
                     [
                         'description' => "Section {$sectionName} for Class {$class->name}",
+                        'code' => "{$class->code}-{$sectionName}",
                         'is_active' => true,
                     ]
                 );

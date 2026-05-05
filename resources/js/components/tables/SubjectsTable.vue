@@ -1,29 +1,23 @@
 <script setup lang="ts">
 import SubjectForm from '@/components/forms/SubjectForm.vue';
-import { Button } from '@/components/ui/button';
 import Icon from '@/components/Icon.vue';
+import { Button } from '@/components/ui/button';
 import { alert } from '@/utils';
-import { router } from '@inertiajs/vue3';
 import axios from 'axios';
 import { ref, watch } from 'vue';
+import { route } from 'ziggy-js';
 
-// Props
 interface Props {
-    subjects: any; // Paginated response
+    subjects: any;
 }
 
 const props = defineProps<Props>();
+const EMPTY_VALUE = '-';
 
-// Emits
-const emit = defineEmits<{
-    saved: [];
-}>();
-
-const showInactive = ref(false);
 const statusFilter = ref('');
 const perPage = ref(10);
-const subjectsData = ref(props.subjects.data || []);
-const pagination = ref(props.subjects);
+const subjectsData = ref(props.subjects?.data || []);
+const pagination = ref(props.subjects || { data: [], links: [], from: 0, to: 0, total: 0 });
 
 const statusOptions = [
     { id: '', name: 'All' },
@@ -38,98 +32,97 @@ const perPageOptions = [
     { id: 100, name: '100' },
 ];
 
-const toggleInactive = () => {
-    showInactive.value = !showInactive.value;
-    fetchSubjects();
-};
-
-const fetchSubjects = (page = 1) => {
+const fetchSubjects = (page = pagination.value?.current_page || 1) => {
     const params = new URLSearchParams({
         per_page: perPage.value.toString(),
         page: page.toString(),
     });
 
-    if (showInactive.value) {
-        params.append('status', 'inactive');
-    } else if (statusFilter.value) {
+    if (statusFilter.value) {
         params.append('status', statusFilter.value);
     }
 
-    axios.get(`/settings/subjects/all?${params}`).then((response) => {
+    axios.get(`${route('subjects.all')}?${params}`).then((response) => {
         subjectsData.value = response.data.data;
         pagination.value = response.data;
     });
 };
 
-watch([statusFilter, perPage], () => {
-    fetchSubjects();
-});
+const getRowNumber = (index: number) =>
+    ((pagination.value?.from || 1) - 1) + index + 1;
 
-// Watch for props changes (e.g., after form submissions)
-watch(() => props.subjects, (newSubjects) => {
-    subjectsData.value = newSubjects.data || [];
-    pagination.value = newSubjects;
-}, { deep: true });
+const getPageFromUrl = (url: string | null) => {
+    if (!url) {
+        return null;
+    }
 
-const inactivateSubject = (subject: any) => {
-    alert
-        .confirm(
-            `Are you sure you want to deactivate "${subject.name}"?`,
-            'Deactivate Subject',
-        )
-        .then((result) => {
-            if (result.isConfirmed) {
-                router.patch(`/settings/subjects/${subject.id}/inactivate`, {}, {
-                    preserveScroll: true,
-                    onSuccess: () => {
-                        alert.success('Subject deactivated successfully!');
-                        fetchSubjects();
-                    },
-                    onError: () => {
-                        alert.error(
-                            'Failed to deactivate subject. Please try again.',
-                        );
-                    },
-                });
-            }
-        });
+    const page = new URL(url, window.location.origin).searchParams.get('page');
+    return page ? Number.parseInt(page, 10) : 1;
 };
 
-const activateSubject = (subject: any) => {
-    router.patch(`/settings/subjects/${subject.id}/activate`, {}, {
-        preserveScroll: true,
-        onSuccess: () => {
-            alert.success('Subject activated successfully!');
-            fetchSubjects();
-        },
-        onError: () => {
-            alert.error('Failed to activate subject. Please try again.');
-        },
+watch([statusFilter, perPage], () => {
+    fetchSubjects(1);
+});
+
+watch(
+    () => props.subjects,
+    (newSubjects) => {
+        subjectsData.value = newSubjects.data || [];
+        pagination.value = newSubjects;
+    },
+    { deep: true },
+);
+
+const handleSaved = () => {
+    fetchSubjects(pagination.value?.current_page || 1);
+};
+
+const deleteSubject = (subject: any) => {
+    alert.confirm(
+        `Are you sure you want to delete "${subject.name}"?`,
+        'Delete Subject',
+    ).then((result) => {
+        if (result.isConfirmed) {
+            axios.delete(route('subjects.destroy', subject.id), {
+                headers: { Accept: 'application/json' },
+            }).then(() => {
+                alert.success('Subject deleted successfully!');
+                fetchSubjects(pagination.value?.current_page || 1);
+            }).catch(() => {
+                alert.error('Failed to delete subject. Please try again.');
+            });
+        }
     });
 };
 
-const forceDeleteSubject = (subject: any) => {
-    alert
-        .confirm(
-            `Are you sure you want to permanently delete "${subject.name}"? This action cannot be undone.`,
-            'Delete Subject',
-        )
-        .then((result) => {
-            if (result.isConfirmed) {
-                router.delete(`/settings/subjects/${subject.id}/force`, {
-                    preserveScroll: true,
-                    onSuccess: () => {
-                        alert.success('Subject permanently deleted successfully!');
-                        fetchSubjects();
-                    },
-                    onError: () => {
-                        alert.error(
-                            'Failed to permanently delete subject. Please try again.',
-                        );
-                    },
-                });
-            }
-        });
+const activateSubject = (subject: any) => {
+    axios.patch(route('subjects.activate', subject.id), {}, {
+        headers: { Accept: 'application/json' },
+    }).then(() => {
+        alert.success('Subject activated successfully!');
+        fetchSubjects(pagination.value?.current_page || 1);
+    }).catch(() => {
+        alert.error('Failed to activate subject. Please try again.');
+    });
+};
+
+const inactivateSubject = (subject: any) => {
+    alert.confirm(
+        `Are you sure you want to deactivate "${subject.name}"?`,
+        'Deactivate Subject',
+        'Yes, deactivate it!',
+    ).then((result) => {
+        if (result.isConfirmed) {
+            axios.patch(route('subjects.inactivate', subject.id), {}, {
+                headers: { Accept: 'application/json' },
+            }).then(() => {
+                alert.success('Subject deactivated successfully!');
+                fetchSubjects(pagination.value?.current_page || 1);
+            }).catch(() => {
+                alert.error('Failed to deactivate subject. Please try again.');
+            });
+        }
+    });
 };
 </script>
 
@@ -137,22 +130,14 @@ const forceDeleteSubject = (subject: any) => {
     <div class="space-y-4">
         <div class="flex justify-between items-center">
             <div class="flex gap-2">
-                <select v-model="statusFilter" class="w-32 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 text-sm">
-                    <option value="">All</option>
-                    <option value="active">Active</option>
-                    <option value="inactive">Inactive</option>
+                <select v-model="statusFilter" class="rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 text-sm min-h-10 w-32">
+                    <option v-for="option in statusOptions" :key="option.id" :value="option.id">
+                        {{ option.name }}
+                    </option>
                 </select>
             </div>
             <div class="flex gap-2">
-                <SubjectForm @saved="fetchSubjects" />
-                <Button
-                    :variant="showInactive ? 'ghost' : 'default'"
-                    size="sm"
-                    @click="toggleInactive"
-                >
-                    <Icon :icon="showInactive ? 'arrow-left' : 'eye'" class="mr-1" />
-                    {{ showInactive ? 'Back' : 'Inactive Subjects' }}
-                </Button>
+                <SubjectForm @saved="handleSaved" />
             </div>
         </div>
         <div class="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-900">
@@ -160,40 +145,22 @@ const forceDeleteSubject = (subject: any) => {
                 <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                     <thead class="bg-gray-50 dark:bg-gray-800">
                         <tr>
-                            <th
-                                scope="col"
-                                class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300"
-                            >
+                            <th scope="col" class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">
                                 #
                             </th>
-                            <th
-                                scope="col"
-                                class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300"
-                            >
+                            <th scope="col" class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">
                                 Subject Name
                             </th>
-                            <th
-                                scope="col"
-                                class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300"
-                            >
+                            <th scope="col" class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">
                                 Code
                             </th>
-                            <th
-                                scope="col"
-                                class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300"
-                            >
+                            <th scope="col" class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">
                                 Description
                             </th>
-                            <th
-                                scope="col"
-                                class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300"
-                            >
+                            <th scope="col" class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">
                                 Status
                             </th>
-                            <th
-                                scope="col"
-                                class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300"
-                            >
+                            <th scope="col" class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">
                                 Actions
                             </th>
                         </tr>
@@ -206,7 +173,7 @@ const forceDeleteSubject = (subject: any) => {
                         >
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <div class="text-sm text-gray-600 dark:text-gray-300">
-                                    {{ (index as number) + 1 }}
+                                    {{ getRowNumber(index as number) }}
                                 </div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
@@ -216,12 +183,12 @@ const forceDeleteSubject = (subject: any) => {
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <div class="text-sm text-gray-600 dark:text-gray-300">
-                                    {{ subject.code || '—' }}
+                                    {{ subject.code || subject.short_name || EMPTY_VALUE }}
                                 </div>
                             </td>
                             <td class="px-6 py-4">
                                 <div class="max-w-xs truncate text-sm text-gray-600 dark:text-gray-300">
-                                    {{ subject.description || '—' }}
+                                    {{ subject.description || EMPTY_VALUE }}
                                 </div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
@@ -237,38 +204,38 @@ const forceDeleteSubject = (subject: any) => {
                                 </span>
                             </td>
                             <td class="px-6 py-4 text-sm font-medium whitespace-nowrap">
-                                <div class="flex space-x-2" v-if="!showInactive">
+                                <div class="flex space-x-2">
                                     <SubjectForm
                                         :subject="subject"
                                         trigger="Edit"
                                         variant="outline"
                                         size="sm"
-                                        @saved="fetchSubjects"
+                                        @saved="handleSaved"
                                     >
                                         <Icon icon="edit" class="mr-1" />Edit
                                     </SubjectForm>
                                     <Button
-                                        variant="destructive"
+                                        v-if="subject.is_active"
+                                        variant="outline"
                                         size="sm"
                                         @click="inactivateSubject(subject)"
                                     >
-                                        <Icon icon="trash" class="mr-1" />Delete
+                                        <Icon icon="pause" class="mr-1" />Inactive
                                     </Button>
-                                </div>
-                                <div class="flex space-x-2" v-else>
                                     <Button
+                                        v-else
                                         variant="default"
                                         size="sm"
                                         @click="activateSubject(subject)"
                                     >
-                                        <Icon icon="check" class="mr-1" />Activate
+                                        <Icon icon="check" class="mr-1" />Active
                                     </Button>
                                     <Button
                                         variant="destructive"
                                         size="sm"
-                                        @click="forceDeleteSubject(subject)"
+                                        @click="deleteSubject(subject)"
                                     >
-                                        <Icon icon="x" class="mr-1" />Delete
+                                        <Icon icon="trash" class="mr-1" />Delete
                                     </Button>
                                 </div>
                             </td>
@@ -282,21 +249,20 @@ const forceDeleteSubject = (subject: any) => {
                 <div class="text-sm text-gray-600">
                     Showing {{ pagination.from }} to {{ pagination.to }} of {{ pagination.total }} entries
                 </div>
-                <select v-model="perPage" class="w-20 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-2 py-1 text-sm">
-                    <option value="10">10</option>
-                    <option value="25">25</option>
-                    <option value="50">50</option>
-                    <option value="100">100</option>
+                <select v-model="perPage" class="rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 text-sm min-h-10 w-20">
+                    <option v-for="option in perPageOptions" :key="option.id" :value="option.id">
+                        {{ option.name }}
+                    </option>
                 </select>
             </div>
             <div class="flex gap-1">
                 <Button
                     v-for="link in pagination.links"
-                    :key="link.label"
+                    :key="`${link.label}-${link.url || 'disabled'}`"
                     :variant="link.active ? 'default' : 'outline'"
                     size="sm"
                     :disabled="!link.url"
-                    @click="link.url ? fetchSubjects(parseInt(link.url.match(/page=(\d+)/)?.[1] || '1')) : null"
+                    @click="link.url ? fetchSubjects(getPageFromUrl(link.url) || 1) : null"
                 >
                     <span v-html="link.label"></span>
                 </Button>

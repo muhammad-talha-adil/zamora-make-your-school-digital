@@ -280,7 +280,7 @@ fetchStudentInventories();
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-900">
-                            <tr v-for="(returnItem, index) in returnsData" :key="returnItem.id" class="hover:bg-gray-50 dark:hover:bg-gray-800">
+                            <tr v-for="returnItem in returnsData" :key="returnItem.id" class="hover:bg-gray-50 dark:hover:bg-gray-800">
                                 <td class="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">{{ returnItem.return_id || 'N/A' }}</td>
                                 <td class="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
                                     {{ returnItem.student_name || returnItem.student?.name || 'N/A' }}

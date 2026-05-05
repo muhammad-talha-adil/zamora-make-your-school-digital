@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
  * Fee Head Model
- * 
+ *
  * Master table for all fee heads (Tuition, Admission, Transport, Fine, etc.)
  */
 class FeeHead extends Model

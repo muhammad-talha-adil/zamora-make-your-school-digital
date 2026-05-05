@@ -4,7 +4,7 @@ namespace App\Enums\Fee;
 
 /**
  * Adjustment Type Enum
- * 
+ *
  * Defines types of voucher-level adjustments.
  */
 enum AdjustmentType: string
@@ -20,7 +20,7 @@ enum AdjustmentType: string
      */
     public function label(): string
     {
-        return match($this) {
+        return match ($this) {
             self::ARREARS => 'Arrears/Previous Balance',
             self::ADVANCE => 'Advance Payment',
             self::WAIVER => 'Waiver',

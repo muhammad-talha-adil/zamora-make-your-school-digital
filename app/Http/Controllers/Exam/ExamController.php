@@ -69,7 +69,7 @@ class ExamController extends Controller
     {
         $exam = Exam::findOrFail($id);
         $examData = $exam->toArray();
-        
+
         // Format dates for the form (Y-m-d for HTML date input)
         $examData['start_date'] = $exam->start_date ? $exam->start_date->format('Y-m-d') : '';
         $examData['end_date'] = $exam->end_date ? $exam->end_date->format('Y-m-d') : '';
@@ -88,6 +88,7 @@ class ExamController extends Controller
     {
         $filters = $request->all();
         $exams = $this->examService->list($filters);
+
         return response()->json(['data' => $exams]);
     }
 
@@ -97,6 +98,7 @@ class ExamController extends Controller
     public function store(StoreExamRequest $request)
     {
         $exam = $this->examService->create($request->validated());
+
         return to_route('exam.index-page')->with('success', 'Exam created successfully!');
     }
 
@@ -106,6 +108,7 @@ class ExamController extends Controller
     public function show($id)
     {
         $exam = Exam::findOrFail($id);
+
         return response()->json(['data' => $exam]);
     }
 
@@ -116,6 +119,7 @@ class ExamController extends Controller
     {
         $exam = Exam::findOrFail($id);
         $exam = $this->examService->update($exam, $request->validated());
+
         return to_route('exam.index-page')->with('success', 'Exam updated successfully!');
     }
 
@@ -130,6 +134,7 @@ class ExamController extends Controller
 
         $exam = Exam::findOrFail($id);
         $exam = $this->examService->changeStatus($exam, $request->status);
+
         return response()->json(['message' => 'Status changed successfully', 'data' => $exam]);
     }
 
@@ -142,6 +147,7 @@ class ExamController extends Controller
         $exam->update([
             'published_at' => now(),
         ]);
+
         return response()->json(['message' => 'Exam published successfully', 'data' => $exam]);
     }
 
@@ -155,6 +161,7 @@ class ExamController extends Controller
             'is_locked' => true,
             'locked_at' => now(),
         ]);
+
         return response()->json(['message' => 'Exam locked successfully', 'data' => $exam]);
     }
 
@@ -168,6 +175,7 @@ class ExamController extends Controller
             'is_locked' => false,
             'locked_at' => null,
         ]);
+
         return response()->json(['message' => 'Exam unlocked successfully', 'data' => $exam]);
     }
 
@@ -178,6 +186,7 @@ class ExamController extends Controller
     {
         $exam = Exam::findOrFail($id);
         $this->examService->delete($exam);
+
         return response()->json(['message' => 'Exam deleted successfully']);
     }
 }

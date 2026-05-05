@@ -181,8 +181,9 @@
                                     : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-300'
                             ]"
                             preserve-state
-                            v-html="link.label"
-                        />
+                        >
+                            <span v-html="link.label"></span>
+                        </Link>
                     </div>
                 </div>
             </div>

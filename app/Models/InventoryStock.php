@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class InventoryStock extends Model
@@ -56,7 +58,7 @@ class InventoryStock extends Model
     /**
      * Get the campus that owns the inventory stock.
      */
-    public function campus(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    public function campus(): BelongsTo
     {
         return $this->belongsTo(Campus::class);
     }
@@ -64,7 +66,7 @@ class InventoryStock extends Model
     /**
      * Get the inventory item that owns the stock.
      */
-    public function inventoryItem(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    public function inventoryItem(): BelongsTo
     {
         return $this->belongsTo(InventoryItem::class);
     }
@@ -72,7 +74,7 @@ class InventoryStock extends Model
     /**
      * Get the student inventories for this stock.
      */
-    public function studentInventories(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function studentInventories(): HasMany
     {
         return $this->hasMany(StudentInventory::class, 'inventory_item_id', 'inventory_item_id')
             ->where('campus_id', $this->campus_id);
@@ -110,6 +112,7 @@ class InventoryStock extends Model
     public function setLowStockThreshold(int $threshold): self
     {
         $this->low_stock_threshold = $threshold;
+
         return $this;
     }
 
@@ -180,7 +183,7 @@ class InventoryStock extends Model
      */
     public function reserveStock(int $quantity): bool
     {
-        if (!$this->isAvailable($quantity)) {
+        if (! $this->isAvailable($quantity)) {
             return false;
         }
 
@@ -251,7 +254,7 @@ class InventoryStock extends Model
      */
     public function deductForAssignment(int $quantity): bool
     {
-        if (!$this->isAvailable($quantity)) {
+        if (! $this->isAvailable($quantity)) {
             return false;
         }
 

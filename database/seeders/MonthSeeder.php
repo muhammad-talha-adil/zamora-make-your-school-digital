@@ -7,7 +7,7 @@ use Illuminate\Database\Seeder;
 
 /**
  * Month Seeder
- * 
+ *
  * Seeds the months table with all 12 months.
  * This is required for the fee module to work properly.
  */

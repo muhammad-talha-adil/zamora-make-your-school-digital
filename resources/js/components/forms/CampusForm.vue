@@ -100,12 +100,21 @@ const submit = () => {
                 router.reload({ only: ['campuses', 'campusTypes'] });
             },
             onError: (err) => {
-                errors.value = err as Record<string, string>;
-                if (Object.keys(errors.value).length > 0) {
+                // Inertia validation errors are in err.errors
+                const errorResponse = err as any;
+                if (errorResponse?.errors) {
+                    errors.value = Object.fromEntries(
+                        Object.entries(errorResponse.errors).map(([key, value]) => [
+                            key,
+                            Array.isArray(value) ? value[0] : (value as string),
+                        ])
+                    );
                     const firstError = Object.values(errors.value)[0];
-                    alert.error(firstError);
+                    if (firstError) {
+                        alert.error(firstError);
+                    }
                 } else {
-                    alert.error('Failed to update campus. Please check the errors.');
+                    alert.error(err instanceof Error ? err.message : 'Failed to update campus. Please try again.');
                 }
             },
             onFinish: () => {
@@ -124,12 +133,24 @@ const submit = () => {
                 router.reload({ only: ['campuses', 'campusTypes'] });
             },
             onError: (err) => {
-                errors.value = err as Record<string, string>;
-                if (Object.keys(errors.value).length > 0) {
+                // Inertia validation errors are in err.errors
+                const errorResponse = err as any;
+                if (errorResponse?.errors) {
+                    // Flatten array errors to first message per field
+                    errors.value = Object.fromEntries(
+                        Object.entries(errorResponse.errors).map(([key, value]) => [
+                            key,
+                            Array.isArray(value) ? value[0] : (value as string),
+                        ])
+                    );
+                    // Show first error as alert for visibility
                     const firstError = Object.values(errors.value)[0];
-                    alert.error(firstError);
+                    if (firstError) {
+                        alert.error(firstError);
+                    }
                 } else {
-                    alert.error('Failed to create campus. Please check the errors.');
+                    // Non-validation error (500, network, etc)
+                    alert.error(err instanceof Error ? err.message : 'Failed to create campus. Please try again.');
                 }
             },
             onFinish: () => {
@@ -157,7 +178,11 @@ const openCampusTypeModal = () => {
     showCampusTypeModal.value = true;
 };
 
-const handleCampusTypeSaved = (campusType: { id: number; name: string }) => {
+const handleCampusTypeSaved = (campusType: { id: number; name: string } | undefined) => {
+    if (!campusType) {
+        showCampusTypeModal.value = false;
+        return;
+    }
     // Add the new campus type to the list if not exists
     const exists = props.campusTypes.find(t => t.id === campusType.id);
     if (!exists && campusType.id) {
@@ -213,40 +238,39 @@ const handleCampusTypeSaved = (campusType: { id: number; name: string }) => {
                         <InputError :message="errors.name" />
                     </div>
 
-                    <!-- Campus Type -->
-                    <div class="space-y-2">
-                        <Label for="campusType" class="flex items-center gap-2">
-                            <div class="p-1 bg-muted rounded">
-                                <Icon icon="tag" class="h-3.5 w-3.5 text-muted-foreground" />
-                            </div>
-                            Campus Type <span class="text-red-500">*</span>
-                        </Label>
-                        <div class="flex gap-2">
-                            <div class="relative flex-1">
-                                <ComboboxInput
-                                    id="campusType"
-                                    v-model="form.campus_type_id"
-                                    placeholder="Search campus types..."
-                                    :search-url="'/settings/campus-types'"
-                                    :initial-items="props.campusTypes.map(type => ({ id: type.id, name: type.name }))"
-                                    value-type="id"
-                                    class=" h-11"
-                                />
-                                <!-- <Icon icon="tag" class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" /> -->
-                            </div>
-                            <Button
-                                type="button"
-                                variant="outline"
-                                size="icon"
-                                @click="openCampusTypeModal"
-                                title="Manage Campus Types"
-                                class="h-11 w-11"
-                            >
-                                <Icon icon="settings" class="h-4 w-4" />
-                            </Button>
-                        </div>
-                        <InputError :message="errors.campus_type_id" />
-                    </div>
+                         <!-- Campus Type -->
+                         <div class="space-y-2">
+                             <Label for="campusType" class="flex items-center gap-2">
+                                 <div class="p-1 bg-muted rounded">
+                                     <Icon icon="tag" class="h-3.5 w-3.5 text-muted-foreground" />
+                                 </div>
+                                 Campus Type <span class="text-red-500">*</span>
+                             </Label>
+                             <div class="flex gap-2">
+                                 <div class="relative flex-1">
+                                 <ComboboxInput
+                                     id="campusType"
+                                     v-model="form.campus_type_id"
+                                     placeholder="Search campus types..."
+                                     :search-url="'/settings/campus-types/all'"
+                                     :initial-items="props.campusTypes.map(type => ({ id: type.id, name: type.name }))"
+                                     value-type="id"
+                                     class="h-11"
+                                 />
+                                 </div>
+                                 <Button
+                                     type="button"
+                                     variant="outline"
+                                     size="icon"
+                                     @click="openCampusTypeModal"
+                                     title="Manage Campus Types"
+                                     class="h-11 w-11"
+                                 >
+                                     <Icon icon="settings" class="h-4 w-4" />
+                                 </Button>
+                             </div>
+                             <InputError :message="errors.campus_type_id" />
+                         </div>
 
                     <!-- Address -->
                     <div class="space-y-2">

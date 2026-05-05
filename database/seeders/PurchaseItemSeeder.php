@@ -2,7 +2,6 @@
 
 namespace Database\Seeders;
 
-use App\Models\PurchaseItem;
 use Illuminate\Database\Seeder;
 
 // This seeder is handled within PurchaseSeeder for data consistency

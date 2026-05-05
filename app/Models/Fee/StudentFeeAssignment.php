@@ -17,7 +17,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
  * Student Fee Assignment Model
- * 
+ *
  * Student-specific fee overrides, extra charges, waivers, or custom settings.
  */
 class StudentFeeAssignment extends Model

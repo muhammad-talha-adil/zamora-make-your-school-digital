@@ -69,6 +69,16 @@ class FeeHeadService
     }
 
     /**
+     * Toggle active status of fee head
+     */
+    public function toggleActive(FeeHead $feeHead): bool
+    {
+        return $this->repository->update($feeHead, [
+            'is_active' => ! $feeHead->is_active,
+        ]);
+    }
+
+    /**
      * Delete fee head
      */
     public function delete(FeeHead $feeHead): bool
@@ -81,7 +91,7 @@ class FeeHeadService
      */
     private function getCategories(): array
     {
-        return collect(FeeHeadCategory::cases())->map(fn($case) => [
+        return collect(FeeHeadCategory::cases())->map(fn ($case) => [
             'value' => $case->value,
             'label' => $case->label(),
         ])->toArray();

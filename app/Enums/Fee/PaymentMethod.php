@@ -4,7 +4,7 @@ namespace App\Enums\Fee;
 
 /**
  * Payment Method Enum
- * 
+ *
  * Defines available payment methods in Pakistani schools.
  */
 enum PaymentMethod: string
@@ -21,7 +21,7 @@ enum PaymentMethod: string
      */
     public function label(): string
     {
-        return match($this) {
+        return match ($this) {
             self::CASH => 'Cash',
             self::BANK => 'Bank Transfer',
             self::ONLINE => 'Online Payment',
@@ -36,7 +36,7 @@ enum PaymentMethod: string
      */
     public function requiresReference(): bool
     {
-        return match($this) {
+        return match ($this) {
             self::CASH => false,
             default => true,
         };

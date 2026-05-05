@@ -12,7 +12,9 @@ use App\Models\PurchaseReturnItem;
 use App\Models\Reason;
 use App\Models\Supplier;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Inertia\Response;
 
 class PurchaseReturnsController extends Controller
@@ -27,14 +29,14 @@ class PurchaseReturnsController extends Controller
 
         return inertia('inventory/PurchaseReturns/Index', [
             'returns' => PurchaseReturn::with(['campus:id,name', 'supplier:id,name', 'user:id,name'])
-                ->when($campusId, fn($q) => $q->where('campus_id', $campusId))
-                ->when($supplierId, fn($q) => $q->where('supplier_id', $supplierId))
-                ->when($request->get('from_date'), fn($q) => $q->whereDate('return_date', '>=', $request->get('from_date')))
-                ->when($request->get('to_date'), fn($q) => $q->whereDate('return_date', '<=', $request->get('to_date')))
+                ->when($campusId, fn ($q) => $q->where('campus_id', $campusId))
+                ->when($supplierId, fn ($q) => $q->where('supplier_id', $supplierId))
+                ->when($request->get('from_date'), fn ($q) => $q->whereDate('return_date', '>=', $request->get('from_date')))
+                ->when($request->get('to_date'), fn ($q) => $q->whereDate('return_date', '<=', $request->get('to_date')))
                 ->orderBy('return_date', 'desc')
                 ->paginate(20),
             'campuses' => Campus::orderBy('name')->get(),
-            'suppliers' => Supplier::when($campusId, fn($q) => $q->where('campus_id', $campusId))
+            'suppliers' => Supplier::when($campusId, fn ($q) => $q->where('campus_id', $campusId))
                 ->where('is_active', true)
                 ->orderBy('name')
                 ->get(),
@@ -61,14 +63,14 @@ class PurchaseReturnsController extends Controller
 
         $returnsQuery = PurchaseReturn::with(['campus:id,name', 'supplier:id,name', 'items.inventoryItem:id,name'])
             ->select(['id', 'purchase_return_id', 'supplier_id', 'return_date', 'total_amount', 'campus_id', 'created_at'])
-            ->when($campusId, fn($q) => $q->where('campus_id', $campusId))
-            ->when($request->get('supplier_id'), fn($q) => $q->where('supplier_id', $request->get('supplier_id')))
-            ->when($request->get('q'), fn($q) => $q->where(function($query) use ($request) {
-                $query->where('purchase_return_id', 'like', '%' . $request->get('q') . '%')
-                    ->orWhereHas('supplier', fn($q) => $q->where('name', 'like', '%' . $request->get('q') . '%'));
+            ->when($campusId, fn ($q) => $q->where('campus_id', $campusId))
+            ->when($request->get('supplier_id'), fn ($q) => $q->where('supplier_id', $request->get('supplier_id')))
+            ->when($request->get('q'), fn ($q) => $q->where(function ($query) use ($request) {
+                $query->where('purchase_return_id', 'like', '%'.$request->get('q').'%')
+                    ->orWhereHas('supplier', fn ($q) => $q->where('name', 'like', '%'.$request->get('q').'%'));
             }))
-            ->when($request->get('from_date'), fn($q) => $q->whereDate('return_date', '>=', $request->get('from_date')))
-            ->when($request->get('to_date'), fn($q) => $q->whereDate('return_date', '<=', $request->get('to_date')))
+            ->when($request->get('from_date'), fn ($q) => $q->whereDate('return_date', '>=', $request->get('from_date')))
+            ->when($request->get('to_date'), fn ($q) => $q->whereDate('return_date', '<=', $request->get('to_date')))
             ->orderBy('return_date', 'desc');
 
         // Use pagination
@@ -82,7 +84,7 @@ class PurchaseReturnsController extends Controller
                     ->filter()
                     ->take(3)
                     ->implode(', ');
-                
+
                 $moreItemsCount = $return->items->count() - 3;
                 if ($moreItemsCount > 0) {
                     $itemNames .= " (+{$moreItemsCount} more)";
@@ -90,7 +92,7 @@ class PurchaseReturnsController extends Controller
 
                 // Calculate total from items if total_amount is 0 or null
                 $totalAmount = $return->total_amount;
-                if (!$totalAmount || $totalAmount == 0) {
+                if (! $totalAmount || $totalAmount == 0) {
                     $totalAmount = $return->items->sum('total');
                 }
 
@@ -122,7 +124,7 @@ class PurchaseReturnsController extends Controller
                 'total' => $paginator->total(),
                 'from' => $paginator->firstItem(),
                 'to' => $paginator->lastItem(),
-            ]
+            ],
         ]);
     }
 
@@ -134,7 +136,7 @@ class PurchaseReturnsController extends Controller
         $reasons = Reason::active()
             ->orderBy('name')
             ->get();
-        
+
         return response()->json($reasons);
     }
 
@@ -144,14 +146,14 @@ class PurchaseReturnsController extends Controller
     public function getSuppliers(Request $request): JsonResponse
     {
         $campusId = $request->get('campus_id');
-        
+
         $suppliers = Supplier::query()
-            ->when($campusId, fn($q) => $q->where('campus_id', $campusId)->orWhereNull('campus_id'))
-            ->when(!$campusId, fn($q) => $q->whereNull('campus_id'))
+            ->when($campusId, fn ($q) => $q->where('campus_id', $campusId)->orWhereNull('campus_id'))
+            ->when(! $campusId, fn ($q) => $q->whereNull('campus_id'))
             ->where('is_active', true)
             ->orderBy('name')
             ->get(['id', 'name', 'campus_id']);
-        
+
         return response()->json($suppliers);
     }
 
@@ -162,15 +164,15 @@ class PurchaseReturnsController extends Controller
     {
         $campusId = $request->get('campus_id');
         $supplierId = $request->get('supplier_id');
-        
+
         $purchases = Purchase::query()
             ->with(['supplier:id,name', 'purchaseItems:id,inventory_item_id,quantity,purchase_rate'])
-            ->when($campusId, fn($q) => $q->where('campus_id', $campusId))
-            ->when($supplierId, fn($q) => $q->where('supplier_id', $supplierId))
+            ->when($campusId, fn ($q) => $q->where('campus_id', $campusId))
+            ->when($supplierId, fn ($q) => $q->where('supplier_id', $supplierId))
             ->orderBy('purchase_date', 'desc')
             ->limit(50)
             ->get(['id', 'campus_id', 'supplier_id', 'purchase_date', 'total_amount']);
-        
+
         // Transform purchases to include formatted data
         $transformed = $purchases->map(function ($purchase) {
             return [
@@ -180,12 +182,12 @@ class PurchaseReturnsController extends Controller
                 'supplier' => $purchase->supplier,
                 'purchase_date' => $purchase->purchase_date,
                 'total_amount' => $purchase->total_amount,
-                'display_text' => 'PUR-' . str_pad($purchase->id, 4, '0', STR_PAD_LEFT) . ' | ' . 
-                    ($purchase->supplier?->name ?? 'N/A') . ' | ' . 
+                'display_text' => 'PUR-'.str_pad($purchase->id, 4, '0', STR_PAD_LEFT).' | '.
+                    ($purchase->supplier?->name ?? 'N/A').' | '.
                     (new \DateTime($purchase->purchase_date))->format('d M Y'),
             ];
         });
-        
+
         return response()->json($transformed);
     }
 
@@ -194,7 +196,7 @@ class PurchaseReturnsController extends Controller
      *
      * REDIRECTED: Now uses modal on dashboard instead of separate page.
      */
-    public function create(Request $request): \Illuminate\Http\RedirectResponse
+    public function create(Request $request): RedirectResponse
     {
         return redirect()->route('inventory.purchase-returns.index');
     }
@@ -205,7 +207,7 @@ class PurchaseReturnsController extends Controller
     public function getPurchaseItems(Request $request, Purchase $purchase): JsonResponse
     {
         $purchase = Purchase::where('id', $purchase->id)
-            ->when($request->get('campus_id'), fn($q) => $q->where('campus_id', $request->get('campus_id')))
+            ->when($request->get('campus_id'), fn ($q) => $q->where('campus_id', $request->get('campus_id')))
             ->with(['purchaseItems.inventoryItem:id,name', 'supplier:id,name'])
             ->firstOrFail();
 
@@ -217,7 +219,7 @@ class PurchaseReturnsController extends Controller
 
             $quantityPurchased = $item->quantity;
             $currentStock = $stock?->quantity ?? 0;
-            
+
             // Calculate available for return: can't return more than purchased
             // and can't return more than current stock
             $availableForReturn = min($quantityPurchased, $currentStock);
@@ -264,9 +266,9 @@ class PurchaseReturnsController extends Controller
         ]);
 
         try {
-            \DB::transaction(function () use ($request) {
+            DB::transaction(function () use ($request) {
                 $campus = Campus::findOrFail($request->campus_id);
-                
+
                 // Create purchase return
                 $return = PurchaseReturn::create([
                     'campus_id' => $request->campus_id,
@@ -292,15 +294,15 @@ class PurchaseReturnsController extends Controller
                     // Handle reason - either use existing reason_id or create new one from custom_reason
                     $reasonId = null;
                     $reasonText = null;
-                    
-                    if (!empty($item['reason_id'])) {
+
+                    if (! empty($item['reason_id'])) {
                         $reasonId = $item['reason_id'];
-                    } elseif (!empty($item['custom_reason'])) {
+                    } elseif (! empty($item['custom_reason'])) {
                         // Create or find the custom reason
                         $reason = Reason::findOrCreate($item['custom_reason']);
                         $reasonId = $reason->id;
                         $reasonText = $item['custom_reason'];
-                    } elseif (!empty($item['reason'])) {
+                    } elseif (! empty($item['reason'])) {
                         // Legacy support for text-only reason
                         $reasonText = $item['reason'];
                     }
@@ -347,7 +349,7 @@ class PurchaseReturnsController extends Controller
 
             return response()->json(['success' => true, 'message' => 'Purchase return created successfully. Stock has been updated.']);
         } catch (\Exception $e) {
-            return response()->json(['success' => false, 'message' => 'Failed to create purchase return: ' . $e->getMessage()], 500);
+            return response()->json(['success' => false, 'message' => 'Failed to create purchase return: '.$e->getMessage()], 500);
         }
     }
 
@@ -357,7 +359,7 @@ class PurchaseReturnsController extends Controller
     public function update(Request $request, PurchaseReturn $purchaseReturn)
     {
         $purchaseReturn = PurchaseReturn::where('id', $purchaseReturn->id)
-            ->when($request->get('campus_id'), fn($q) => $q->where('campus_id', $request->get('campus_id')))
+            ->when($request->get('campus_id'), fn ($q) => $q->where('campus_id', $request->get('campus_id')))
             ->firstOrFail();
 
         $request->validate([
@@ -368,7 +370,7 @@ class PurchaseReturnsController extends Controller
         ]);
 
         try {
-            \DB::transaction(function () use ($request, $purchaseReturn) {
+            DB::transaction(function () use ($request, $purchaseReturn) {
                 // First, reverse old stock for existing return items
                 foreach ($purchaseReturn->items as $oldItem) {
                     $stock = InventoryStock::where('campus_id', $purchaseReturn->campus_id)
@@ -399,14 +401,14 @@ class PurchaseReturnsController extends Controller
                     // Handle reason
                     $reasonId = null;
                     $reasonText = null;
-                    
-                    if (!empty($item['reason_id'])) {
+
+                    if (! empty($item['reason_id'])) {
                         $reasonId = $item['reason_id'];
-                    } elseif (!empty($item['custom_reason'])) {
+                    } elseif (! empty($item['custom_reason'])) {
                         $reason = Reason::findOrCreate($item['custom_reason']);
                         $reasonId = $reason->id;
                         $reasonText = $item['custom_reason'];
-                    } elseif (!empty($item['reason'])) {
+                    } elseif (! empty($item['reason'])) {
                         $reasonText = $item['reason'];
                     }
 
@@ -456,7 +458,7 @@ class PurchaseReturnsController extends Controller
 
             return response()->json(['success' => true, 'message' => 'Purchase return updated successfully.']);
         } catch (\Exception $e) {
-            return response()->json(['success' => false, 'message' => 'Failed to update purchase return: ' . $e->getMessage()], 500);
+            return response()->json(['success' => false, 'message' => 'Failed to update purchase return: '.$e->getMessage()], 500);
         }
     }
 
@@ -467,7 +469,7 @@ class PurchaseReturnsController extends Controller
     {
         /** @var PurchaseReturn $purchaseReturn */
         $purchaseReturn = PurchaseReturn::where('id', $purchaseReturn->id)
-            ->when($request->get('campus_id'), fn($q) => $q->where('campus_id', $request->get('campus_id')))
+            ->when($request->get('campus_id'), fn ($q) => $q->where('campus_id', $request->get('campus_id')))
             ->firstOrFail();
 
         return inertia('inventory/PurchaseReturns/Show', [
@@ -481,11 +483,11 @@ class PurchaseReturnsController extends Controller
     public function destroy(Request $request, PurchaseReturn $purchaseReturn)
     {
         $purchaseReturn = PurchaseReturn::where('id', $purchaseReturn->id)
-            ->when($request->get('campus_id'), fn($q) => $q->where('campus_id', $request->get('campus_id')))
+            ->when($request->get('campus_id'), fn ($q) => $q->where('campus_id', $request->get('campus_id')))
             ->firstOrFail();
 
         try {
-            \DB::transaction(function () use ($purchaseReturn) {
+            DB::transaction(function () use ($purchaseReturn) {
                 // Reverse stock changes
                 foreach ($purchaseReturn->items as $item) {
                     $stock = InventoryStock::where('campus_id', $purchaseReturn->campus_id)
@@ -503,7 +505,7 @@ class PurchaseReturnsController extends Controller
 
             return back()->with('success', 'Purchase return deleted successfully. Stock has been reverted.');
         } catch (\Exception $e) {
-            return back()->with('error', 'Failed to delete purchase return: ' . $e->getMessage());
+            return back()->with('error', 'Failed to delete purchase return: '.$e->getMessage());
         }
     }
 }

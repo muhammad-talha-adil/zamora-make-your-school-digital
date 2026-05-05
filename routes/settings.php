@@ -3,20 +3,19 @@
 use App\Http\Controllers\Settings\CampusController;
 use App\Http\Controllers\Settings\CampusTypeController;
 use App\Http\Controllers\Settings\ClassSubjectController;
+use App\Http\Controllers\Settings\ExamTypeController;
 use App\Http\Controllers\Settings\MenuController;
 use App\Http\Controllers\Settings\MonthController;
-use App\Http\Controllers\Settings\SchoolClassController;
-use App\Http\Controllers\Settings\SectionController;
-use App\Http\Controllers\Settings\SessionController;
-use App\Http\Controllers\Settings\ExamTypeController;
-use App\Http\Controllers\Settings\SubjectController;
 use App\Http\Controllers\Settings\PasswordController;
 use App\Http\Controllers\Settings\ProfileController;
+use App\Http\Controllers\Settings\SchoolClassController;
 use App\Http\Controllers\Settings\SchoolController;
+use App\Http\Controllers\Settings\SectionController;
+use App\Http\Controllers\Settings\SessionController;
+use App\Http\Controllers\Settings\SubjectController;
 use App\Http\Controllers\Settings\ThemeSettingsController;
 use App\Http\Controllers\Settings\TwoFactorAuthenticationController;
 use Illuminate\Support\Facades\Route;
-use Inertia\Inertia;
 
 Route::middleware(['auth'])->group(function () {
     // Redirect settings to profile
@@ -91,6 +90,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
 
     // Sessions Routes
     Route::get('settings/sessions', [SessionController::class, 'index'])->name('sessions.index');
+    Route::get('settings/sessions/all', [SessionController::class, 'index'])->name('sessions.all');
     Route::get('settings/sessions/create', [SessionController::class, 'create'])->name('sessions.create');
     Route::post('settings/sessions', [SessionController::class, 'store'])->name('sessions.store');
     Route::get('settings/sessions/{session}/edit', [SessionController::class, 'edit'])->name('sessions.edit');

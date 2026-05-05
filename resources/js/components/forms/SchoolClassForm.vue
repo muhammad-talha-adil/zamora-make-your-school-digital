@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { router } from '@inertiajs/vue3';
-import { ref } from 'vue';
+import axios from 'axios';
+import { ref, watch } from 'vue';
 import { alert } from '@/utils';
 
 // Components
@@ -8,13 +8,12 @@ import InputError from '@/components/InputError.vue';
 import { Button, type ButtonVariants } from '@/components/ui/button';
 import {
     Dialog,
-    DialogClose,
-    DialogContent,
     DialogDescription,
-    DialogFooter,
+    DialogContent,
     DialogHeader,
     DialogTitle,
     DialogTrigger,
+    DialogClose,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -45,19 +44,33 @@ const emit = defineEmits<{
     saved: [];
 }>();
 
-// Form data
-const form = ref({
+const getInitialForm = () => ({
     name: props.schoolClass?.name || '',
     code: props.schoolClass?.code || '',
     description: props.schoolClass?.description || '',
-    is_active: props.schoolClass?.is_active ?? true,
 });
+
+const form = ref(getInitialForm());
 
 const errors = ref<Record<string, string>>({});
 const processing = ref(false);
 
 // Dialog
 const open = ref(false);
+
+// Watch for prop changes to populate form
+watch(() => props.schoolClass, () => {
+    form.value = getInitialForm();
+    errors.value = {};
+}, { immediate: true });
+
+// Watch for open state to reset form when modal opens
+watch(open, (isOpen) => {
+    if (isOpen) {
+        form.value = getInitialForm();
+        errors.value = {};
+    }
+});
 
 // Methods
 const submit = () => {
@@ -68,65 +81,67 @@ const submit = () => {
         name: form.value.name,
         code: form.value.code,
         description: form.value.description,
-        is_active: form.value.is_active ? 1 : 0,
     };
 
     if (props.schoolClass) {
-        // Update
-        router.put(`/settings/school-classes/${props.schoolClass.id}`, formData, {
-            preserveScroll: true,
-            onSuccess: () => {
+        axios.patch(`/settings/school-classes/${props.schoolClass.id}`, formData, {
+            headers: { Accept: 'application/json' },
+        }).then(() => {
                 alert.success('Class updated successfully!');
                 open.value = false;
                 resetForm();
                 emit('saved');
-            },
-            onError: (err) => {
-                errors.value = err as Record<string, string>;
-                if (Object.keys(errors.value).length > 0) {
+            }).catch((err) => {
+                const errorResponse = err.response?.data;
+                if (errorResponse?.errors) {
+                    errors.value = Object.fromEntries(
+                        Object.entries(errorResponse.errors).map(([key, value]) => [
+                            key,
+                            Array.isArray(value) ? value[0] : (value as string),
+                        ])
+                    );
                     const firstError = Object.values(errors.value)[0];
-                    alert.error(firstError);
+                    if (firstError) {
+                        alert.error(firstError);
+                    }
                 } else {
-                    alert.error('Failed to update class. Please check the errors.');
+                    alert.error(err instanceof Error ? err.message : 'Failed to update class. Please try again.');
                 }
-            },
-            onFinish: () => {
+            }).finally(() => {
                 processing.value = false;
-            },
-        });
+            });
     } else {
-        // Create
-        router.post('/settings/school-classes', formData, {
-            preserveScroll: true,
-            onSuccess: () => {
+        axios.post('/settings/school-classes', formData, {
+            headers: { Accept: 'application/json' },
+        }).then(() => {
                 alert.success('Class created successfully!');
                 open.value = false;
                 resetForm();
                 emit('saved');
-            },
-            onError: (err) => {
-                errors.value = err as Record<string, string>;
-                if (Object.keys(errors.value).length > 0) {
+            }).catch((err) => {
+                const errorResponse = err.response?.data;
+                if (errorResponse?.errors) {
+                    errors.value = Object.fromEntries(
+                        Object.entries(errorResponse.errors).map(([key, value]) => [
+                            key,
+                            Array.isArray(value) ? value[0] : (value as string),
+                        ])
+                    );
                     const firstError = Object.values(errors.value)[0];
-                    alert.error(firstError);
+                    if (firstError) {
+                        alert.error(firstError);
+                    }
                 } else {
-                    alert.error('Failed to create class. Please check the errors.');
+                    alert.error(err instanceof Error ? err.message : 'Failed to create class. Please try again.');
                 }
-            },
-            onFinish: () => {
+            }).finally(() => {
                 processing.value = false;
-            },
-        });
+            });
     }
 };
 
 const resetForm = () => {
-    form.value = {
-        name: '',
-        code: '',
-        description: '',
-        is_active: true,
-    };
+    form.value = getInitialForm();
     errors.value = {};
 };
 </script>
@@ -158,18 +173,18 @@ const resetForm = () => {
                         <Input
                             id="name"
                             v-model="form.name"
-                            placeholder="Enter class name"
+                            placeholder='e.g., "Class 10", "Grade 11"'
                             :class="{ 'border-red-500': errors.name }"
                         />
                         <InputError :message="errors.name" />
                     </div>
 
                     <div class="grid gap-2">
-                        <Label for="code">Code</Label>
+                        <Label for="code">Code <span class="text-red-500">*</span></Label>
                         <Input
                             id="code"
                             v-model="form.code"
-                            placeholder="Enter class code"
+                            placeholder='e.g., "CLS-001", "GRD-10"'
                             :class="{ 'border-red-500': errors.code }"
                         />
                         <InputError :message="errors.code" />
@@ -184,16 +199,6 @@ const resetForm = () => {
                             :class="{ 'border-red-500': errors.description }"
                         />
                         <InputError :message="errors.description" />
-                    </div>
-
-                    <div class="flex items-center space-x-2">
-                        <input
-                            id="is_active"
-                            v-model="form.is_active"
-                            type="checkbox"
-                            class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500"
-                        />
-                        <Label for="is_active">Active</Label>
                     </div>
                 </div>
 

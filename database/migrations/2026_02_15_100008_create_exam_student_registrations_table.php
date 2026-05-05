@@ -8,11 +8,11 @@ return new class extends Migration
 {
     /**
      * Run the migrations.
-     * 
+     *
      * Consolidated from:
      * - 2026_02_15_100008_create_exam_student_registrations_table.php
      * - 2026_02_15_100015_update_exam_student_registrations_for_exam_link.php
-     * 
+     *
      * Note: This uses direct exam linking (exam_id + campus/class/section) instead of exam_group_id
      */
     public function up(): void

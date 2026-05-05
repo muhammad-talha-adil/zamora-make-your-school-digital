@@ -4,7 +4,7 @@ namespace App\Enums\Fee;
 
 /**
  * Assignment Type Enum
- * 
+ *
  * Defines types of student-specific fee assignments/overrides.
  */
 enum AssignmentType: string
@@ -19,7 +19,7 @@ enum AssignmentType: string
      */
     public function label(): string
     {
-        return match($this) {
+        return match ($this) {
             self::OVERRIDE => 'Fee Override',
             self::DISCOUNT => 'Discount',
             self::EXTRA_CHARGE => 'Extra Charge',

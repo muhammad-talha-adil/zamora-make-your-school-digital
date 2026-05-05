@@ -6,7 +6,6 @@ use App\Models\Attendance;
 use App\Models\AttendanceStatus;
 use App\Models\AttendanceStudent;
 use App\Models\Student;
-use App\Models\StudentEnrollmentRecord;
 use Illuminate\Database\Seeder;
 
 class AttendanceSeeder extends Seeder
@@ -25,7 +24,7 @@ class AttendanceSeeder extends Seeder
         $leaveStatus = AttendanceStatus::where('code', 'L')->first();
         $lateStatus = AttendanceStatus::where('code', 'LT')->first();
 
-        if (!$presentStatus || !$absentStatus) {
+        if (! $presentStatus || ! $absentStatus) {
             return; // Skip if statuses not created yet
         }
 
@@ -73,7 +72,7 @@ class AttendanceSeeder extends Seeder
             ]);
 
             // Create attendance for each student with varied statuses
-            $students->each(function ($student, $index) use ($attendance, $presentStatus, $absentStatus, $leaveStatus, $lateStatus, $i) {
+            $students->each(function ($student, $index) use ($attendance, $presentStatus, $absentStatus, $leaveStatus, $lateStatus) {
                 // Create varied attendance patterns
                 $statuses = [$presentStatus, $absentStatus, $lateStatus];
                 $status = $statuses[$index % 3];

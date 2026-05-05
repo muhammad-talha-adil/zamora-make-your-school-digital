@@ -18,7 +18,7 @@ class CategoryController extends Controller
         }
 
         if ($request->filled('search')) {
-            $query->where('name', 'like', '%' . $request->search . '%');
+            $query->where('name', 'like', '%'.$request->search.'%');
         }
 
         $categories = $query->orderBy('type')->orderBy('name')->get();

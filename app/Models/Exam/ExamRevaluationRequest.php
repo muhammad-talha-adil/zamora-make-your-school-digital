@@ -2,6 +2,7 @@
 
 namespace App\Models\Exam;
 
+use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -31,7 +32,7 @@ class ExamRevaluationRequest extends Model
      */
     public function requestedBy(): BelongsTo
     {
-        return $this->belongsTo(\App\Models\User::class, 'requested_by');
+        return $this->belongsTo(User::class, 'requested_by');
     }
 
     /**

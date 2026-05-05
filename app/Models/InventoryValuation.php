@@ -4,12 +4,12 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
  * Inventory Valuation Model
- * 
+ *
  * Tracks the value of inventory at different points in time.
  * Supports weighted average cost method for inventory valuation.
  */
@@ -61,9 +61,13 @@ class InventoryValuation extends Model
      * Valuation method constants.
      */
     public const METHOD_WEIGHTED_AVERAGE = 'weighted_average';
+
     public const METHOD_FIFO = 'fifo';
+
     public const METHOD_LIFO = 'lifo';
+
     public const METHOD_PURCHASE_cost = 'purchase_cost';
+
     public const METHOD_SALE_PRICE = 'sale_price';
 
     /**
@@ -134,8 +138,8 @@ class InventoryValuation extends Model
      */
     public function scopeDateRange($query, $fromDate, $toDate)
     {
-        return $query->when($fromDate, fn($q) => $q->whereDate('valuation_date', '>=', $fromDate))
-            ->when($toDate, fn($q) => $q->whereDate('valuation_date', '<=', $toDate));
+        return $query->when($fromDate, fn ($q) => $q->whereDate('valuation_date', '>=', $fromDate))
+            ->when($toDate, fn ($q) => $q->whereDate('valuation_date', '<=', $toDate));
     }
 
     /**
@@ -148,7 +152,7 @@ class InventoryValuation extends Model
 
     /**
      * Calculate weighted average cost for an item.
-     * 
+     *
      * Formula: (Total Quantity × Current Average) + (New Quantity × New Rate) / (Total Quantity + New Quantity)
      */
     public static function calculateWeightedAverage(int $campusId, int $itemId, int $newQuantity, float $newRate): float
@@ -158,7 +162,7 @@ class InventoryValuation extends Model
             ->latest()
             ->first();
 
-        if (!$lastValuation) {
+        if (! $lastValuation) {
             return $newRate;
         }
 
@@ -168,6 +172,7 @@ class InventoryValuation extends Model
         }
 
         $totalValue = ($lastValuation->quantity * $lastValuation->unit_cost) + ($newQuantity * $newRate);
+
         return $totalValue / $totalQuantity;
     }
 
@@ -203,14 +208,14 @@ class InventoryValuation extends Model
     public static function getCurrentValue(int $campusId): float
     {
         $stocks = InventoryStock::forCampus($campusId)->get();
-        
+
         $totalValue = 0;
         foreach ($stocks as $stock) {
             $latestValuation = self::forCampus($campusId)
                 ->forItem($stock->inventory_item_id)
                 ->latest()
                 ->first();
-            
+
             $unitCost = $latestValuation?->unit_cost ?? 0;
             $totalValue += $stock->quantity * $unitCost;
         }
@@ -227,7 +232,7 @@ class InventoryValuation extends Model
             ->forItem($itemId)
             ->first();
 
-        if (!$stock || $stock->quantity <= 0) {
+        if (! $stock || $stock->quantity <= 0) {
             return 0;
         }
 
@@ -237,6 +242,7 @@ class InventoryValuation extends Model
             ->first();
 
         $unitCost = $latestValuation?->unit_cost ?? 0;
+
         return $stock->quantity * $unitCost;
     }
 }

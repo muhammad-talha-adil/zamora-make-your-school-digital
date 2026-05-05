@@ -8,7 +8,7 @@ return new class extends Migration
 {
     /**
      * Run the migrations.
-     * 
+     *
      * Consolidated migration for inventory_stocks table.
      * Includes expiry_date column.
      */

@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class ReturnModel extends Model
@@ -54,7 +55,7 @@ class ReturnModel extends Model
     /**
      * Get the campus that owns the return.
      */
-    public function campus(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    public function campus(): BelongsTo
     {
         return $this->belongsTo(Campus::class);
     }
@@ -62,7 +63,7 @@ class ReturnModel extends Model
     /**
      * Get the student inventory that owns the return.
      */
-    public function studentInventory(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    public function studentInventory(): BelongsTo
     {
         return $this->belongsTo(StudentInventory::class, 'student_inventory_id');
     }
@@ -88,7 +89,7 @@ class ReturnModel extends Model
      */
     public function inventoryStock(): ?InventoryStock
     {
-        if (!$this->studentInventory) {
+        if (! $this->studentInventory) {
             return null;
         }
 
@@ -181,7 +182,7 @@ class ReturnModel extends Model
      */
     public function isSnapshotStale(): bool
     {
-        if (!$this->item_snapshot) {
+        if (! $this->item_snapshot) {
             return false;
         }
 
@@ -196,7 +197,7 @@ class ReturnModel extends Model
      */
     public function isPartialReturn(): bool
     {
-        if (!$this->studentInventory) {
+        if (! $this->studentInventory) {
             return false;
         }
 
@@ -208,7 +209,7 @@ class ReturnModel extends Model
      */
     public function completesReturn(): bool
     {
-        if (!$this->studentInventory) {
+        if (! $this->studentInventory) {
             return false;
         }
 
@@ -228,7 +229,7 @@ class ReturnModel extends Model
      */
     public function scopeForStudent($query, int $studentId)
     {
-        return $query->whereHas('studentInventory', fn($q) => $q->where('student_id', $studentId));
+        return $query->whereHas('studentInventory', fn ($q) => $q->where('student_id', $studentId));
     }
 
     /**
@@ -236,8 +237,8 @@ class ReturnModel extends Model
      */
     public function scopeDateRange($query, $fromDate, $toDate)
     {
-        return $query->when($fromDate, fn($q) => $q->whereDate('return_date', '>=', $fromDate))
-            ->when($toDate, fn($q) => $q->whereDate('return_date', '<=', $toDate));
+        return $query->when($fromDate, fn ($q) => $q->whereDate('return_date', '>=', $fromDate))
+            ->when($toDate, fn ($q) => $q->whereDate('return_date', '<=', $toDate));
     }
 
     /**

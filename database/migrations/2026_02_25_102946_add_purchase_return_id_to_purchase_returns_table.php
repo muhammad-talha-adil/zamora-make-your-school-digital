@@ -8,13 +8,13 @@ return new class extends Migration
 {
     /**
      * Run the migrations.
-     * 
+     *
      * Adds purchase_return_id column to purchase_returns table.
      * This is similar to purchase_id in inventory_purchases table.
      */
-     public function up(): void
+    public function up(): void
     {
-        if (!Schema::hasColumn('purchase_returns', 'purchase_return_id')) {
+        if (! Schema::hasColumn('purchase_returns', 'purchase_return_id')) {
             Schema::table('purchase_returns', function (Blueprint $table) {
                 $table->string('purchase_return_id')->nullable()->unique()->after('id');
                 $table->index('purchase_return_id');

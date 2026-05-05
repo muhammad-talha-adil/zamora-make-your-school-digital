@@ -8,6 +8,7 @@ use App\Models\SchoolClass;
 use App\Models\Section;
 use App\Models\Session;
 use App\Models\User;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -15,7 +16,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
  * Fee Structure Model
- * 
+ *
  * Header/master fee plan for a campus/session/class/section scope.
  */
 class FeeStructure extends Model
@@ -166,16 +167,16 @@ class FeeStructure extends Model
      */
     public function isEffectiveOn($date): bool
     {
-        $date = $date instanceof \Carbon\Carbon ? $date->toDateString() : $date;
-        
+        $date = $date instanceof Carbon ? $date->toDateString() : $date;
+
         if ($this->effective_from && $this->effective_from->toDateString() > $date) {
             return false;
         }
-        
+
         if ($this->effective_to && $this->effective_to->toDateString() < $date) {
             return false;
         }
-        
+
         return true;
     }
 }

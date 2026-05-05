@@ -3,12 +3,13 @@
 namespace App\Models\Fee;
 
 use App\Enums\Fee\FeeFrequency;
+use App\Models\Month;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
  * Fee Structure Item Model
- * 
+ *
  * Detail lines for fee structures with amounts and billing rules.
  */
 class FeeStructureItem extends Model
@@ -61,7 +62,7 @@ class FeeStructureItem extends Model
      */
     public function billingMonth(): BelongsTo
     {
-        return $this->belongsTo(\App\Models\Month::class, 'billing_month_id');
+        return $this->belongsTo(Month::class, 'billing_month_id');
     }
 
     /**
@@ -69,7 +70,7 @@ class FeeStructureItem extends Model
      */
     public function startsFromMonth(): BelongsTo
     {
-        return $this->belongsTo(\App\Models\Month::class, 'starts_from_month_id');
+        return $this->belongsTo(Month::class, 'starts_from_month_id');
     }
 
     /**
@@ -77,7 +78,7 @@ class FeeStructureItem extends Model
      */
     public function endsAtMonth(): BelongsTo
     {
-        return $this->belongsTo(\App\Models\Month::class, 'ends_at_month_id');
+        return $this->belongsTo(Month::class, 'ends_at_month_id');
     }
 
     /**
@@ -86,7 +87,7 @@ class FeeStructureItem extends Model
     public function isApplicableForMonth(int $monthNumber): bool
     {
         // If no month range specified, assume always applicable
-        if (!$this->starts_from_month_id && !$this->ends_at_month_id) {
+        if (! $this->starts_from_month_id && ! $this->ends_at_month_id) {
             return true;
         }
 

@@ -1,12 +1,13 @@
 <?php
+
 use App\Http\Controllers\Exam\ExamController;
+use App\Http\Controllers\Exam\ExamDashboardController;
+use App\Http\Controllers\Exam\ExamMarkingController;
 use App\Http\Controllers\Exam\ExamPaperController;
 use App\Http\Controllers\Exam\ExamRegistrationController;
-use App\Http\Controllers\Exam\ExamMarkingController;
 use App\Http\Controllers\Exam\ExamResultController;
 use App\Http\Controllers\Exam\ExamRevaluationController;
 use App\Http\Controllers\Exam\ExamSettingsController;
-use App\Http\Controllers\Exam\ExamDashboardController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('exams')->name('exam.')->middleware(['web', 'auth'])->group(function () {
@@ -130,14 +131,14 @@ Route::prefix('exams')->name('exam.')->middleware(['web', 'auth'])->group(functi
         Route::post('/papers/clash-check', 'clashCheck')->name('papers.clash-check');
         Route::patch('/papers/{id}/cancel', 'cancel')->name('papers.cancel');
         Route::delete('/papers/{id}', 'destroy')->name('papers.destroy');
-        
+
         // New routes for enhanced Add Paper workflow
         Route::get('/papers/sections-by-class', 'getSectionsByClass')->name('papers.sections-by-class');
         Route::get('/papers/papers-or-subjects', 'getPapersOrSubjects')->name('papers.papers-or-subjects');
         Route::get('/papers/subjects-by-class', 'getSubjectsByClassAndSection')->name('papers.subjects-by-class');
         Route::post('/papers/store-single', 'storeSinglePaper')->name('papers.store-single');
         Route::post('/papers/store-bulk', 'storeBulkPapers')->name('papers.store-bulk');
-        
+
         // Date validation routes
         Route::get('/papers/exam-date-range', 'getExamDateRange')->name('papers.exam-date-range');
         Route::post('/papers/validate-date', 'validatePaperDate')->name('papers.validate-date');

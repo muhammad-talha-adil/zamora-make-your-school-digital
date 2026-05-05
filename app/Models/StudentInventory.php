@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class StudentInventory extends Model
@@ -56,7 +58,9 @@ class StudentInventory extends Model
      * Status constants.
      */
     public const STATUS_ASSIGNED = 'assigned';
+
     public const STATUS_PARTIAL_RETURN = 'partial_return';
+
     public const STATUS_RETURNED = 'returned';
 
     /**
@@ -80,7 +84,7 @@ class StudentInventory extends Model
     public static function generateStudentInventoryId(): string
     {
         $year = date('Y');
-        
+
         // Get the last student inventory for this year
         $lastInventory = static::whereYear('created_at', $year)
             ->orderBy('id', 'desc')
@@ -92,13 +96,13 @@ class StudentInventory extends Model
             $counter = 1;
         }
 
-        return 'SI-' . $year . '-' . str_pad($counter, 4, '0', STR_PAD_LEFT);
+        return 'SI-'.$year.'-'.str_pad($counter, 4, '0', STR_PAD_LEFT);
     }
 
     /**
      * Get the campus that owns the student inventory.
      */
-    public function campus(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    public function campus(): BelongsTo
     {
         return $this->belongsTo(Campus::class);
     }
@@ -106,7 +110,7 @@ class StudentInventory extends Model
     /**
      * Get the student that owns the inventory.
      */
-    public function student(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    public function student(): BelongsTo
     {
         return $this->belongsTo(Student::class);
     }
@@ -114,7 +118,7 @@ class StudentInventory extends Model
     /**
      * Get the inventory items for this student inventory.
      */
-    public function items(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function items(): HasMany
     {
         return $this->hasMany(StudentInventoryItem::class, 'student_inventory_record_id');
     }
@@ -122,7 +126,7 @@ class StudentInventory extends Model
     /**
      * Get the inventory items (alias for items).
      */
-    public function inventoryItems(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function inventoryItems(): HasMany
     {
         return $this->hasMany(StudentInventoryItem::class, 'student_inventory_record_id');
     }
@@ -130,12 +134,12 @@ class StudentInventory extends Model
     /**
      * Get the first inventory item (for backward compatibility).
      */
-    public function inventoryItem(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    public function inventoryItem(): BelongsTo
     {
         return $this->belongsTo(InventoryItem::class, 'inventory_item_id');
     }
 
-    public function class(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    public function class(): BelongsTo
     {
         return $this->belongsTo(SchoolClass::class, 'student_class_id');
     }
@@ -143,7 +147,7 @@ class StudentInventory extends Model
     /**
      * Get the student's section at time of assignment.
      */
-    public function section(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    public function section(): BelongsTo
     {
         return $this->belongsTo(Section::class, 'student_section_id');
     }
@@ -151,7 +155,7 @@ class StudentInventory extends Model
     /**
      * Get the invoice for this student inventory.
      */
-    public function invoice(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    public function invoice(): BelongsTo
     {
         return $this->belongsTo(Invoice::class);
     }
@@ -199,7 +203,7 @@ class StudentInventory extends Model
     /**
      * Get all return records for this inventory.
      */
-    public function returns(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function returns(): HasMany
     {
         return $this->hasMany(ReturnModel::class, 'student_inventory_id');
     }
@@ -257,8 +261,8 @@ class StudentInventory extends Model
      */
     public function scopeDateRange($query, $fromDate, $toDate)
     {
-        return $query->when($fromDate, fn($q) => $q->whereDate('assigned_date', '>=', $fromDate))
-            ->when($toDate, fn($q) => $q->whereDate('assigned_date', '<=', $toDate));
+        return $query->when($fromDate, fn ($q) => $q->whereDate('assigned_date', '>=', $fromDate))
+            ->when($toDate, fn ($q) => $q->whereDate('assigned_date', '<=', $toDate));
     }
 
     /**
@@ -301,7 +305,7 @@ class StudentInventory extends Model
     public function getDiscountInfo(): array
     {
         $firstItem = $this->getFirstItem();
-        if (!$firstItem) {
+        if (! $firstItem) {
             return [
                 'has_discount' => false,
                 'discount_amount' => 0,
@@ -329,7 +333,7 @@ class StudentInventory extends Model
      */
     public function totalValue(): float
     {
-        return $this->items->sum(fn($item) => $item->totalValue());
+        return $this->items->sum(fn ($item) => $item->totalValue());
     }
 
     /**
@@ -337,7 +341,7 @@ class StudentInventory extends Model
      */
     public function remainingValue(): float
     {
-        return $this->items->sum(fn($item) => $item->remainingQuantity() * $item->getFinalUnitPrice());
+        return $this->items->sum(fn ($item) => $item->remainingQuantity() * $item->getFinalUnitPrice());
     }
 
     /**
@@ -345,7 +349,7 @@ class StudentInventory extends Model
      */
     public function hasDiscount(): bool
     {
-        return $this->items->contains(fn($item) => $item->hasDiscount());
+        return $this->items->contains(fn ($item) => $item->hasDiscount());
     }
 
     /**
@@ -377,7 +381,7 @@ class StudentInventory extends Model
      */
     public function getTotalDiscountAmount(): float
     {
-        return $this->items->sum(fn($item) => $item->getDiscountPerUnit() * $item->quantity);
+        return $this->items->sum(fn ($item) => $item->getDiscountPerUnit() * $item->quantity);
     }
 
     /**
@@ -385,7 +389,7 @@ class StudentInventory extends Model
      */
     public function getTotalOriginalValue(): float
     {
-        return $this->items->sum(fn($item) => $item->getTotalOriginalValue());
+        return $this->items->sum(fn ($item) => $item->getTotalOriginalValue());
     }
 
     /**
@@ -458,7 +462,7 @@ class StudentInventory extends Model
      */
     public function getTotalProfit(): float
     {
-        return $this->items->sum(fn($item) => $item->getProfit());
+        return $this->items->sum(fn ($item) => $item->getProfit());
     }
 
     /**
@@ -466,7 +470,7 @@ class StudentInventory extends Model
      */
     public function getTotalCostOfGoodsSold(): float
     {
-        return $this->items->sum(fn($item) => $item->getCostOfGoodsSold());
+        return $this->items->sum(fn ($item) => $item->getCostOfGoodsSold());
     }
 
     /**
@@ -474,7 +478,7 @@ class StudentInventory extends Model
      */
     public function getTotalRevenue(): float
     {
-        return $this->items->sum(fn($item) => $item->getRevenue());
+        return $this->items->sum(fn ($item) => $item->getRevenue());
     }
 
     /**
@@ -486,7 +490,7 @@ class StudentInventory extends Model
         if ($totalCost <= 0) {
             return 0;
         }
-        
+
         return ($this->getTotalProfit() / $totalCost) * 100;
     }
 

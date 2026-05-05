@@ -51,7 +51,7 @@ class PurchaseReturnSeeder extends Seeder
                     'return_date' => $returnDate,
                     'total_amount' => 0,
                     'note' => 'Purchase return for defective/damaged items',
-                    'return_number' => 'RET-' . $campus->id . '-' . str_pad(($i + 1), 4, '0', STR_PAD_LEFT),
+                    'return_number' => 'RET-'.$campus->id.'-'.str_pad(($i + 1), 4, '0', STR_PAD_LEFT),
                 ]);
 
                 // Get some items from the original purchase to return

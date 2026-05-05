@@ -3,17 +3,18 @@
 namespace App\Models\Ledger;
 
 use App\Models\Campus;
-use App\Models\User;
 use App\Models\Student;
 use App\Models\Supplier;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Ledger extends Model
 {
     use SoftDeletes;
+
     protected $table = 'ledgers';
 
     protected $fillable = [

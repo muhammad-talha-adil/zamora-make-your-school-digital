@@ -5,10 +5,20 @@ use App\Http\Controllers\Inventory\InventoryItemsController;
 use App\Http\Controllers\Inventory\InventoryReturnsController;
 use App\Http\Controllers\Inventory\InventoryStocksController;
 use App\Http\Controllers\Inventory\InventoryTypesController;
-use App\Http\Controllers\Inventory\PurchasesController;
 use App\Http\Controllers\Inventory\PurchaseReturnsController;
+use App\Http\Controllers\Inventory\PurchasesController;
 use App\Http\Controllers\Inventory\StudentInventoriesController;
 use App\Http\Controllers\Inventory\SuppliersController;
+use App\Models\Campus;
+use App\Models\InventoryItem;
+use App\Models\InventoryStock;
+use App\Models\InventoryType;
+use App\Models\Purchase;
+use App\Models\PurchaseReturn;
+use App\Models\Student;
+use App\Models\StudentInventory;
+use App\Models\StudentInventoryReturn;
+use App\Models\Supplier;
 use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
@@ -21,17 +31,17 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/inventory/settings', function () {
         return Inertia::render('inventory/InventorySettings', [
             // Global scope automatically applies where('is_active', true) and whereNull('deleted_at')
-            'inventoryTypes' => \App\Models\InventoryType::with(['campus:id,name'])
+            'inventoryTypes' => InventoryType::with(['campus:id,name'])
                 ->select('id', 'name', 'campus_id', 'is_active', 'created_at')
                 ->withCount('inventoryItems')
                 ->orderBy('name')
                 ->paginate(20),
             // Global scope automatically applies where('is_active', true) and whereNull('deleted_at')
-            'inventoryItems' => \App\Models\InventoryItem::with(['campus:id,name', 'inventoryType:id,name'])
+            'inventoryItems' => InventoryItem::with(['campus:id,name', 'inventoryType:id,name'])
                 ->withCount('inventoryStock')
                 ->orderBy('name')
                 ->paginate(20),
-            'campuses' => \App\Models\Campus::orderBy('name')->get(),
+            'campuses' => Campus::orderBy('name')->get(),
         ]);
     })->name('inventory.settings');
 
@@ -39,10 +49,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Items & Stock - Tabs: Types | Items | Stocks | Adjustments
     Route::get('/inventory/items-stock', function () {
         // Get paginated stocks with transformed data
-        $stocks = \App\Models\InventoryStock::with(['campus:id,name', 'inventoryItem:id,name', 'inventoryItem.inventoryType:id,name'])
+        $stocks = InventoryStock::with(['campus:id,name', 'inventoryItem:id,name', 'inventoryItem.inventoryType:id,name'])
             ->orderBy('updated_at', 'desc')
             ->paginate(20);
-        
+
         // Transform to match the format used by the API
         $stocks->getCollection()->transform(function ($stock) {
             return [
@@ -62,33 +72,33 @@ Route::middleware(['auth', 'verified'])->group(function () {
         });
 
         return Inertia::render('inventory/ItemsStock', [
-            'inventoryTypes' => \App\Models\InventoryType::with(['campus:id,name'])
+            'inventoryTypes' => InventoryType::with(['campus:id,name'])
                 ->select('id', 'name', 'campus_id', 'is_active', 'created_at')
                 ->withCount('inventoryItems')
                 ->orderBy('name')
                 ->paginate(20),
-            'inventoryItems' => \App\Models\InventoryItem::with(['campus:id,name', 'inventoryType:id,name'])
+            'inventoryItems' => InventoryItem::with(['campus:id,name', 'inventoryType:id,name'])
                 ->withCount('inventoryStock')
                 ->orderBy('name')
                 ->paginate(20),
             'inventoryStocks' => $stocks,
-            'campuses' => \App\Models\Campus::orderBy('name')->get(),
+            'campuses' => Campus::orderBy('name')->get(),
         ]);
     })->name('inventory.items-stock');
 
     // Purchases - Tabs: Purchases | Suppliers | Purchase Returns
     Route::get('/inventory/purchases-manage', function () {
         return Inertia::render('inventory/PurchasesManage', [
-            'purchases' => \App\Models\Purchase::with(['campus:id,name', 'supplier:id,name'])
+            'purchases' => Purchase::with(['campus:id,name', 'supplier:id,name'])
                 ->orderBy('purchase_date', 'desc')
                 ->paginate(20),
-            'suppliers' => \App\Models\Supplier::with(['campus:id,name'])
+            'suppliers' => Supplier::with(['campus:id,name'])
                 ->orderBy('name')
                 ->paginate(20),
-            'purchaseReturns' => \App\Models\PurchaseReturn::with(['campus:id,name', 'supplier:id,name'])
+            'purchaseReturns' => PurchaseReturn::with(['campus:id,name', 'supplier:id,name'])
                 ->orderBy('return_date', 'desc')
                 ->paginate(20),
-            'campuses' => \App\Models\Campus::orderBy('name')->get(),
+            'campuses' => Campus::orderBy('name')->get(),
         ]);
     })->name('inventory.purchases-manage');
 
@@ -102,13 +112,14 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Student Inventory - Tabs: Assigned Items | Returns
     Route::get('/inventory/student-manage', function () {
         // Get paginated student inventories with transformed student data
-        $studentInventories = \App\Models\StudentInventory::with(['campus:id,name', 'student', 'items', 'items.inventoryItem:id,name'])
+        $studentInventories = StudentInventory::with(['campus:id,name', 'student', 'items', 'items.inventoryItem:id,name'])
             ->orderBy('assigned_date', 'desc')
             ->paginate(20);
-        
+
         // Transform the student data
         $studentInventories->getCollection()->transform(function ($si) {
             $totalQuantity = $si->items->sum('quantity');
+
             return [
                 'id' => $si->id,
                 'student_inventory_id' => $si->student_inventory_id,
@@ -143,12 +154,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
         });
 
         // Get paginated returns with transformed student data (using new StudentInventoryReturn model)
-        $returns = \App\Models\StudentInventoryReturn::with(['campus:id,name', 'student', 'studentInventoryRecord', 'items'])
+        $returns = StudentInventoryReturn::with(['campus:id,name', 'student', 'studentInventoryRecord', 'items'])
             ->orderBy('return_date', 'desc')
             ->paginate(20);
-        
+
         $returns->getCollection()->transform(function ($r) {
             $studentInventory = $r->studentInventoryRecord;
+
             return [
                 'id' => $r->id,
                 'return_id' => $r->return_id,
@@ -182,9 +194,9 @@ Route::middleware(['auth', 'verified'])->group(function () {
         return Inertia::render('inventory/StudentManage', [
             'studentInventories' => $studentInventories,
             'returns' => $returns,
-            'campuses' => \App\Models\Campus::orderBy('name')->get(),
-            'students' => \App\Models\Student::with('user:id,name')->orderBy('registration_no')->get()->map(fn($s) => ['id' => $s->id, 'name' => $s->name, 'registration_number' => $s->registration_no]),
-            'inventoryItems' => \App\Models\InventoryItem::select('id', 'name', 'description')->where('is_active', true)->orderBy('name')->get(),
+            'campuses' => Campus::orderBy('name')->get(),
+            'students' => Student::with('user:id,name')->orderBy('registration_no')->get()->map(fn ($s) => ['id' => $s->id, 'name' => $s->name, 'registration_number' => $s->registration_no]),
+            'inventoryItems' => InventoryItem::select('id', 'name', 'description')->where('is_active', true)->orderBy('name')->get(),
         ]);
     })->name('inventory.student-manage');
 
@@ -261,13 +273,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/all', [PurchasesController::class, 'getAll'])->name('all');
         Route::get('/create', function () {
             return Inertia::render('inventory/PurchaseCreate', [
-                'campuses' => \App\Models\Campus::orderBy('name')->get(),
-                'suppliers' => \App\Models\Supplier::where('is_active', true)->orderBy('name')->get(['id', 'name', 'campus_id']),
+                'campuses' => Campus::orderBy('name')->get(),
+                'suppliers' => Supplier::where('is_active', true)->orderBy('name')->get(['id', 'name', 'campus_id']),
             ]);
         })->name('create');
         Route::get('/{purchase}/edit', function ($id) {
-            $purchase = \App\Models\Purchase::with(['campus:id,name', 'supplier:id,name', 'purchaseItems.inventoryItem:id,name'])->findOrFail($id);
-            
+            $purchase = Purchase::with(['campus:id,name', 'supplier:id,name', 'purchaseItems.inventoryItem:id,name'])->findOrFail($id);
+
             $items = $purchase->purchaseItems->map(function ($item) {
                 return [
                     'id' => $item->id,
@@ -281,10 +293,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
                     ] : null,
                 ];
             });
-            
+
             return Inertia::render('inventory/PurchaseCreate', [
-                'campuses' => \App\Models\Campus::orderBy('name')->get(),
-                'suppliers' => \App\Models\Supplier::where('is_active', true)->orderBy('name')->get(['id', 'name', 'campus_id']),
+                'campuses' => Campus::orderBy('name')->get(),
+                'suppliers' => Supplier::where('is_active', true)->orderBy('name')->get(['id', 'name', 'campus_id']),
                 'purchase' => [
                     'id' => $purchase->id,
                     'campus_id' => $purchase->campus_id,
@@ -316,13 +328,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/purchases', [PurchaseReturnsController::class, 'getPurchases'])->name('purchases');
         Route::get('/create', function () {
             return Inertia::render('inventory/PurchaseReturnCreate', [
-                'campuses' => \App\Models\Campus::orderBy('name')->get(),
+                'campuses' => Campus::orderBy('name')->get(),
             ]);
         })->name('create');
         Route::get('/{purchaseReturn}/edit', function ($id) {
-            $return = \App\Models\PurchaseReturn::with(['campus:id,name', 'supplier:id,name', 'purchase:id,purchase_id,supplier_id,campus_id,purchase_date,total_amount', 'items.inventoryItem:id,name', 'items.reason:id,name'])
+            $return = PurchaseReturn::with(['campus:id,name', 'supplier:id,name', 'purchase:id,purchase_id,supplier_id,campus_id,purchase_date,total_amount', 'items.inventoryItem:id,name', 'items.reason:id,name'])
                 ->findOrFail($id);
-            
+
             $items = $return->items->map(function ($item) {
                 return [
                     'id' => $item->id,
@@ -338,17 +350,17 @@ Route::middleware(['auth', 'verified'])->group(function () {
                     ] : null,
                 ];
             });
-            
+
             // Build display text for the original purchase
             $purchaseDisplayText = null;
             if ($return->purchase) {
-                $purchaseDisplayText = $return->purchase->purchase_id . ' | ' . 
-                    ($return->supplier?->name ?? 'N/A') . ' | ' . 
-                    (new \DateTime($return->purchase->purchase_date))->format('d M Y');
+                $purchaseDisplayText = $return->purchase->purchase_id.' | '.
+                    ($return->supplier?->name ?? 'N/A').' | '.
+                    (new DateTime($return->purchase->purchase_date))->format('d M Y');
             }
-            
+
             return Inertia::render('inventory/PurchaseReturnCreate', [
-                'campuses' => \App\Models\Campus::orderBy('name')->get(),
+                'campuses' => Campus::orderBy('name')->get(),
                 'return' => [
                     'id' => $return->id,
                     'campus_id' => $return->campus_id,

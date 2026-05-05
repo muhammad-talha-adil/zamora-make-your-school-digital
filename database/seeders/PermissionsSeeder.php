@@ -3,7 +3,6 @@
 namespace Database\Seeders;
 
 use App\Models\Permission;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
 class PermissionsSeeder extends Seeder
@@ -19,7 +18,7 @@ class PermissionsSeeder extends Seeder
                 'key' => 'students.view',
                 'module' => 'students',
                 'label' => 'View Students',
-                'description' => 'Can view student information'
+                'description' => 'Can view student information',
             ],
             ['key' => 'students.edit', 'module' => 'students', 'label' => 'Edit Students', 'description' => 'Can edit student information'],
             ['key' => 'fees.view', 'module' => 'fees', 'label' => 'View Fees', 'description' => 'Can view fee records'],
@@ -43,4 +42,4 @@ class PermissionsSeeder extends Seeder
             Permission::firstOrCreate(['key' => $perm['key']], $perm);
         }
     }
-}   
+}

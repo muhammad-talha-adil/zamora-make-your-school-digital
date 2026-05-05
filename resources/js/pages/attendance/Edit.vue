@@ -77,7 +77,7 @@ import AttendanceFormRow from '@/components/attendance/AttendanceFormRow.vue';
 import Icon from '@/components/Icon.vue';
 import { Button } from '@/components/ui/button';
 import type { BreadcrumbItem } from '@/types';
-import type { AttendanceEditProps, StudentAttendanceFormData } from '@/types/attendance';
+import type { AttendanceEditProps } from '@/types/attendance';
 
 const props = defineProps<AttendanceEditProps>();
 

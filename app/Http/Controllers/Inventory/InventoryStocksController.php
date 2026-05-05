@@ -8,6 +8,7 @@ use App\Models\InventoryItem;
 use App\Models\InventoryStock;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
 class InventoryStocksController extends Controller
 {
@@ -27,10 +28,10 @@ class InventoryStocksController extends Controller
 
         return inertia('inventory/Stocks/Index', [
             'inventoryStocks' => InventoryStock::with(['campus:id,name', 'inventoryItem:id,name', 'inventoryItem.inventoryType:id,name'])
-                ->when($campusId, fn($q) => $q->where('campus_id', $campusId))
-                ->when($itemId, fn($q) => $q->where('inventory_item_id', $itemId))
+                ->when($campusId, fn ($q) => $q->where('campus_id', $campusId))
+                ->when($itemId, fn ($q) => $q->where('inventory_item_id', $itemId))
                 ->when($request->get('low_stock_only'), function ($q) {
-                    $q->whereHas('inventoryItem', fn($sq) => $sq->where('is_active', true));
+                    $q->whereHas('inventoryItem', fn ($sq) => $sq->where('is_active', true));
                 })
                 ->orderBy('updated_at', 'desc')
                 ->paginate($perPage),
@@ -59,7 +60,7 @@ class InventoryStocksController extends Controller
         $perPage = $request->get('per_page', 25);
 
         // Default to first campus if no campus_id provided
-        if (!$campusId) {
+        if (! $campusId) {
             $firstCampus = Campus::first();
             if ($firstCampus) {
                 $campusId = $firstCampus->id;
@@ -68,10 +69,10 @@ class InventoryStocksController extends Controller
 
         $stocks = InventoryStock::with(['campus:id,name', 'inventoryItem:id,name'])
             ->select(['id', 'campus_id', 'inventory_item_id', 'quantity', 'reserved_quantity', 'available_quantity', 'low_stock_threshold', 'updated_at'])
-            ->when($campusId, fn($q) => $q->where('campus_id', $campusId))
-            ->when($itemId, fn($q) => $q->where('inventory_item_id', $itemId))
+            ->when($campusId, fn ($q) => $q->where('campus_id', $campusId))
+            ->when($itemId, fn ($q) => $q->where('inventory_item_id', $itemId))
             ->when($lowStockOnly, function ($q) {
-                $q->having('available_quantity', '<', \DB::raw('COALESCE(low_stock_threshold, 10)'));
+                $q->having('available_quantity', '<', DB::raw('COALESCE(low_stock_threshold, 10)'));
             })
             ->orderBy('updated_at', 'desc')
             ->paginate($perPage)
@@ -107,7 +108,7 @@ class InventoryStocksController extends Controller
         $typeId = $request->get('inventory_type_id');
 
         // Default to first campus if no campus_id provided
-        if (!$campusId) {
+        if (! $campusId) {
             $firstCampus = Campus::first();
             if ($firstCampus) {
                 $campusId = $firstCampus->id;
@@ -115,9 +116,9 @@ class InventoryStocksController extends Controller
         }
 
         $stocks = InventoryStock::with(['campus:id,name', 'inventoryItem:id,name', 'inventoryItem.inventoryType:id,name'])
-            ->when($campusId, fn($q) => $q->where('campus_id', $campusId))
-            ->when($typeId, fn($q) => $q->whereHas('inventoryItem', fn($iq) => $iq->where('inventory_type_id', $typeId)))
-            ->whereHas('inventoryItem', fn($q) => $q->where('is_active', true))
+            ->when($campusId, fn ($q) => $q->where('campus_id', $campusId))
+            ->when($typeId, fn ($q) => $q->whereHas('inventoryItem', fn ($iq) => $iq->where('inventory_type_id', $typeId)))
+            ->whereHas('inventoryItem', fn ($q) => $q->where('is_active', true))
             ->orderBy('available_quantity', 'asc')
             ->limit(100)
             ->get()
@@ -139,7 +140,7 @@ class InventoryStocksController extends Controller
                     'stock_until_low' => max(0, $available - $stockThreshold),
                 ];
             })
-            ->filter(fn($s) => $s['is_low_stock'])
+            ->filter(fn ($s) => $s['is_low_stock'])
             ->values();
 
         return response()->json([
@@ -166,14 +167,14 @@ class InventoryStocksController extends Controller
         $requiredQuantity = (int) $request->get('quantity', 0);
 
         // Default to first campus if no campus_id provided
-        if (!$campusId) {
+        if (! $campusId) {
             $firstCampus = Campus::first();
             if ($firstCampus) {
                 $campusId = $firstCampus->id;
             }
         }
 
-        if (!$itemId) {
+        if (! $itemId) {
             return response()->json([
                 'available' => false,
                 'message' => 'Item is required.',
@@ -184,7 +185,7 @@ class InventoryStocksController extends Controller
             ->where('campus_id', $campusId)
             ->first();
 
-        if (!$item) {
+        if (! $item) {
             return response()->json([
                 'available' => false,
                 'message' => 'Inventory item not found or does not belong to the specified campus.',
@@ -212,7 +213,7 @@ class InventoryStocksController extends Controller
             'low_stock_threshold' => $stock?->low_stock_threshold ?? 10,
             'message' => $isAvailable
                 ? 'Stock is available.'
-                : 'Insufficient stock. Required: ' . $requiredQuantity . ', Available: ' . $availableQuantity,
+                : 'Insufficient stock. Required: '.$requiredQuantity.', Available: '.$availableQuantity,
         ]);
     }
 
@@ -233,11 +234,11 @@ class InventoryStocksController extends Controller
 
         /** @var InventoryStock $stock */
         $stock = InventoryStock::where('id', $id)
-            ->when($campusId, fn($q) => $q->where('campus_id', $campusId))
+            ->when($campusId, fn ($q) => $q->where('campus_id', $campusId))
             ->firstOrFail();
 
         try {
-            \DB::transaction(function () use ($stock, $request) {
+            DB::transaction(function () use ($stock, $request) {
                 $stock->quantity = $request->quantity;
                 $stock->reserved_quantity = min($stock->reserved_quantity ?? 0, $stock->quantity);
                 // available_quantity is a generated column, don't set it
@@ -260,7 +261,7 @@ class InventoryStocksController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to update stock: ' . $e->getMessage(),
+                'message' => 'Failed to update stock: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -278,7 +279,7 @@ class InventoryStocksController extends Controller
         $campusId = $request->get('campus_id');
 
         // Default to first campus if no campus_id provided
-        if (!$campusId) {
+        if (! $campusId) {
             $firstCampus = Campus::first();
             if ($firstCampus) {
                 $campusId = $firstCampus->id;
@@ -291,7 +292,7 @@ class InventoryStocksController extends Controller
             ->firstOrFail();
 
         try {
-            \DB::transaction(function () use ($stock, $request) {
+            DB::transaction(function () use ($stock, $request) {
                 $stock->reserveStock($request->quantity);
             });
 
@@ -308,7 +309,7 @@ class InventoryStocksController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to reserve stock: ' . $e->getMessage(),
+                'message' => 'Failed to reserve stock: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -326,7 +327,7 @@ class InventoryStocksController extends Controller
         $campusId = $request->get('campus_id');
 
         // Default to first campus if no campus_id provided
-        if (!$campusId) {
+        if (! $campusId) {
             $firstCampus = Campus::first();
             if ($firstCampus) {
                 $campusId = $firstCampus->id;
@@ -339,7 +340,7 @@ class InventoryStocksController extends Controller
             ->firstOrFail();
 
         try {
-            \DB::transaction(function () use ($stock, $request) {
+            DB::transaction(function () use ($stock, $request) {
                 $stock->releaseStock($request->quantity);
             });
 
@@ -356,7 +357,7 @@ class InventoryStocksController extends Controller
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,
-                'message' => 'Failed to release stock: ' . $e->getMessage(),
+                'message' => 'Failed to release stock: '.$e->getMessage(),
             ], 500);
         }
     }
@@ -374,7 +375,7 @@ class InventoryStocksController extends Controller
 
         /** @var InventoryStock $stock */
         $stock = InventoryStock::where('id', $id)
-            ->when($campusId, fn($q) => $q->where('campus_id', $campusId))
+            ->when($campusId, fn ($q) => $q->where('campus_id', $campusId))
             ->firstOrFail();
 
         $stock->low_stock_threshold = $request->low_stock_threshold;
@@ -400,7 +401,7 @@ class InventoryStocksController extends Controller
         $campusId = $request->get('campus_id');
 
         // Default to first campus if no campus_id provided
-        if (!$campusId) {
+        if (! $campusId) {
             $firstCampus = Campus::first();
             if ($firstCampus) {
                 $campusId = $firstCampus->id;
@@ -409,14 +410,14 @@ class InventoryStocksController extends Controller
 
         $stocks = InventoryStock::with(['inventoryItem:id,name'])
             ->where('campus_id', $campusId)
-            ->whereHas('inventoryItem', fn($q) => $q->where('is_active', true))
+            ->whereHas('inventoryItem', fn ($q) => $q->where('is_active', true))
             ->get();
 
         $totalItems = $stocks->count();
         $totalQuantity = $stocks->sum('quantity');
         $totalAvailable = $stocks->sum('available_quantity');
-        $lowStockItems = $stocks->filter(fn($s) => $s->isLowStock())->count();
-        $outOfStockItems = $stocks->filter(fn($s) => $s->isOutOfStock())->count();
+        $lowStockItems = $stocks->filter(fn ($s) => $s->isLowStock())->count();
+        $outOfStockItems = $stocks->filter(fn ($s) => $s->isOutOfStock())->count();
 
         return response()->json([
             'totals' => [

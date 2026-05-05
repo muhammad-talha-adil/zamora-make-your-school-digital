@@ -2,10 +2,10 @@
 
 namespace App\Models;
 
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\HasMany;
-use Carbon\Carbon;
+use Illuminate\Support\Facades\Cache;
 
 class Holiday extends Model
 {
@@ -13,8 +13,11 @@ class Holiday extends Model
      * Recurrence types.
      */
     public const RECURRENCE_NONE = 'none';
+
     public const RECURRENCE_YEARLY = 'yearly';
+
     public const RECURRENCE_MONTHLY = 'monthly';
+
     public const RECURRENCE_WEEKLY = 'weekly';
 
     protected $fillable = [
@@ -102,8 +105,8 @@ class Holiday extends Model
      */
     private function checkRecurringDate(Carbon $date): bool
     {
-        $recurrenceEnd = $this->recurrence_end_date 
-            ? Carbon::parse($this->recurrence_end_date) 
+        $recurrenceEnd = $this->recurrence_end_date
+            ? Carbon::parse($this->recurrence_end_date)
             : $date->addYears(10); // Default to 10 years if not set
 
         if ($date->greaterThan($recurrenceEnd)) {
@@ -140,7 +143,7 @@ class Holiday extends Model
 
         // Handle recurring holidays
         if ($this->isRecurring()) {
-            $recurrenceEnd = $this->recurrence_end_date 
+            $recurrenceEnd = $this->recurrence_end_date
                 ? Carbon::parse($this->recurrence_end_date)->min($end)
                 : $end;
 
@@ -204,7 +207,7 @@ class Holiday extends Model
         foreach ($cacheKeys as $pattern) {
             // Use Cache::flush() for pattern in production
             // For now, we'll clear all caches
-            \Illuminate\Support\Facades\Cache::flush();
+            Cache::flush();
         }
     }
 }

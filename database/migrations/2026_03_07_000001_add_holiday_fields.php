@@ -13,7 +13,7 @@ return new class extends Migration
      */
     public function up(): void
     {
-        if (!Schema::hasColumn('holidays', 'recurrence_type')) {
+        if (! Schema::hasColumn('holidays', 'recurrence_type')) {
             Schema::table('holidays', function (Blueprint $table) {
                 // Recurring holiday support
                 $table->enum('recurrence_type', ['none', 'yearly', 'monthly', 'weekly'])
@@ -22,7 +22,7 @@ return new class extends Migration
                 $table->date('recurrence_end_date')
                     ->nullable()
                     ->after('recurrence_type');
-                
+
                 // Allow attendance on holiday
                 $table->boolean('is_attendance_allowed')
                     ->default(false)

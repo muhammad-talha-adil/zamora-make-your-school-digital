@@ -17,6 +17,7 @@ class SchoolClass extends Model
      */
     protected $fillable = [
         'name',
+        'code',
         'description',
         'is_active',
     ];

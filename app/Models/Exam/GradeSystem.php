@@ -2,6 +2,8 @@
 
 namespace App\Models\Exam;
 
+use App\Models\Campus;
+use App\Models\Session;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -37,7 +39,7 @@ class GradeSystem extends Model
      */
     public function campus(): BelongsTo
     {
-        return $this->belongsTo(\App\Models\Campus::class, 'campus_id');
+        return $this->belongsTo(Campus::class, 'campus_id');
     }
 
     /**
@@ -45,7 +47,7 @@ class GradeSystem extends Model
      */
     public function session(): BelongsTo
     {
-        return $this->belongsTo(\App\Models\Session::class, 'session_id');
+        return $this->belongsTo(Session::class, 'session_id');
     }
 
     /**

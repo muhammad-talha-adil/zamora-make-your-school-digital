@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import axios from 'axios';
 import { alert } from '@/utils';
-import { ref, computed, reactive, watch } from 'vue';
+import { ref, computed, reactive } from 'vue';
 
 // Components
 import InputError from '@/components/InputError.vue';

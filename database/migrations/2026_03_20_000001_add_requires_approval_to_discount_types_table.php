@@ -8,7 +8,7 @@ return new class extends Migration
 {
     public function up(): void
     {
-        if (!Schema::hasColumn('discount_types', 'requires_approval')) {
+        if (! Schema::hasColumn('discount_types', 'requires_approval')) {
             Schema::table('discount_types', function (Blueprint $table) {
                 $table->boolean('requires_approval')->default(false)->after('is_active');
             });

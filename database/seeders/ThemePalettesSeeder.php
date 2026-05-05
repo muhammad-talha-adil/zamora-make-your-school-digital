@@ -2,9 +2,9 @@
 
 namespace Database\Seeders;
 
-use Illuminate\Database\Seeder;
 use App\Models\ThemePalette;
 use App\Models\ThemePaletteColor;
+use Illuminate\Database\Seeder;
 
 class ThemePalettesSeeder extends Seeder
 {

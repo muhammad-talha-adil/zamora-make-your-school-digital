@@ -1,7 +1,7 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Route;
 use Inertia\Inertia;
 
 // Public Routes
@@ -67,16 +67,16 @@ if (app()->environment('local')) {
                 }
             }
         }
-        
+
         // Get pending migrations (not yet migrated)
         $pendingMigrations = [];
         $migratedMigrations = [];
-        
+
         try {
             // Get all migration files
             $migrationPath = database_path('migrations');
             $migrationFiles = [];
-            
+
             if (is_dir($migrationPath)) {
                 $files = scandir($migrationPath);
                 foreach ($files as $file) {
@@ -85,27 +85,26 @@ if (app()->environment('local')) {
                     }
                 }
             }
-            
+
             // Get already migrated migrations
             $migrated = DB::table('migrations')->pluck('migration')->toArray();
-            
+
             // Find pending migrations
             foreach ($migrationFiles as $file) {
-                if (!in_array($file, $migrated)) {
+                if (! in_array($file, $migrated)) {
                     $pendingMigrations[] = $file;
                 }
             }
-            
+
             $pendingMigrations = array_values($pendingMigrations);
-        } catch (\Exception $e) {
+        } catch (Exception $e) {
             // Table might not exist yet
             $pendingMigrations = [];
         }
-        
+
         return Inertia::render('ArtisanCommands', [
             'seeders' => $seeders,
             'pendingMigrations' => $pendingMigrations,
         ]);
     })->name('artisan.ui');
 }
-

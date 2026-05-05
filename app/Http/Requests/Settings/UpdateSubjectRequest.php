@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Settings;
 
+use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 
 class UpdateSubjectRequest extends FormRequest
@@ -17,13 +18,14 @@ class UpdateSubjectRequest extends FormRequest
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     * @return array<string, ValidationRule|array<mixed>|string>
      */
     public function rules(): array
     {
         return [
-            'name' => 'required|string|max:255|unique:subjects,name,' . $this->route('subject')->id,
+            'name' => 'required|string|max:255|unique:subjects,name,'.$this->route('subject')->id,
             'short_name' => 'nullable|string|max:50',
+            'code' => 'nullable|string|max:255|unique:subjects,code,'.$this->route('subject')->id,
             'description' => 'nullable|string',
             'is_active' => 'boolean',
         ];

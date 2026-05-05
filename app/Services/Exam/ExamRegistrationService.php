@@ -2,6 +2,7 @@
 
 namespace App\Services\Exam;
 
+use App\Models\Exam\Exam;
 use App\Models\Exam\ExamStudentRegistration;
 use App\Models\StudentEnrollmentRecord;
 use Illuminate\Support\Facades\DB;
@@ -15,7 +16,7 @@ class ExamRegistrationService
     {
         return DB::transaction(function () use ($examId, $classId, $sectionId, $campusId) {
             // Get exam to find session
-            $exam = \App\Models\Exam\Exam::findOrFail($examId);
+            $exam = Exam::findOrFail($examId);
             $sessionId = $exam->session_id;
 
             $enrollmentQuery = StudentEnrollmentRecord::where('session_id', $sessionId)
@@ -41,7 +42,7 @@ class ExamRegistrationService
             $now = now();
 
             foreach ($enrollments as $enrollment) {
-                if (!in_array($enrollment->student_id, $existingRegistrations)) {
+                if (! in_array($enrollment->student_id, $existingRegistrations)) {
                     $registrations[] = [
                         'exam_id' => $examId,
                         'student_id' => $enrollment->student_id,
@@ -56,7 +57,7 @@ class ExamRegistrationService
                 }
             }
 
-            if (!empty($registrations)) {
+            if (! empty($registrations)) {
                 ExamStudentRegistration::insert($registrations);
             }
 
@@ -75,6 +76,7 @@ class ExamRegistrationService
     {
         return DB::transaction(function () use ($registration) {
             $registration->update(['status' => 'withdrawn']);
+
             return $registration->fresh();
         });
     }

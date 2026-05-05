@@ -20,7 +20,6 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
 import { Button } from '@/components/ui/button';
 import {
     Dialog,
@@ -40,7 +39,7 @@ interface Props {
     confirmVariant?: 'default' | 'destructive' | 'outline' | 'secondary' | 'ghost' | 'link';
 }
 
-const props = withDefaults(defineProps<Props>(), {
+withDefaults(defineProps<Props>(), {
     confirmText: 'Confirm',
     cancelText: 'Cancel',
     confirmVariant: 'default',

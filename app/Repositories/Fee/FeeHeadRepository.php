@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Cache;
 class FeeHeadRepository
 {
     private const CACHE_KEY = 'fee_heads';
+
     private const CACHE_TTL = 3600;
 
     /**
@@ -19,26 +20,29 @@ class FeeHeadRepository
     {
         $query = FeeHead::query();
 
-        if (!empty($filters['search'])) {
+        if (! empty($filters['search'])) {
             $query->where(function ($q) use ($filters) {
-                $q->where('name', 'like', '%' . $filters['search'] . '%')
-                    ->orWhere('code', 'like', '%' . $filters['search'] . '%');
+                $q->where('name', 'like', '%'.$filters['search'].'%')
+                    ->orWhere('code', 'like', '%'.$filters['search'].'%');
             });
         }
 
-        if (!empty($filters['category'])) {
+        if (! empty($filters['category'])) {
             $query->where('category', $filters['category']);
         }
 
         if (isset($filters['is_active'])) {
-            $query->where('is_active', $filters['is_active']);
+            $boolVal = filter_var($filters['is_active'], FILTER_VALIDATE_BOOLEAN);
+            $query->where('is_active', $boolVal);
         }
 
         if (isset($filters['is_optional'])) {
             $query->where('is_optional', $filters['is_optional']);
         }
 
-        return $query->ordered()->paginate($perPage);
+        $result = $query->ordered()->paginate($perPage);
+
+        return $result;
     }
 
     /**
@@ -47,9 +51,9 @@ class FeeHeadRepository
     public function getAllActive(): Collection
     {
         return Cache::remember(
-            self::CACHE_KEY . '.active',
+            self::CACHE_KEY.'.active',
             self::CACHE_TTL,
-            fn() => FeeHead::active()->ordered()->get()
+            fn () => FeeHead::active()->ordered()->get()
         );
     }
 
@@ -59,9 +63,9 @@ class FeeHeadRepository
     public function getForDropdown(): array
     {
         return Cache::remember(
-            self::CACHE_KEY . '.dropdown',
+            self::CACHE_KEY.'.dropdown',
             self::CACHE_TTL,
-            fn() => FeeHead::active()->ordered()->pluck('name', 'id')->toArray()
+            fn () => FeeHead::active()->ordered()->pluck('name', 'id')->toArray()
         );
     }
 
@@ -71,6 +75,7 @@ class FeeHeadRepository
     public function getNextAvailableOrder(): int
     {
         $maxOrder = FeeHead::max('sort_order');
+
         return ($maxOrder ?? 0) + 1;
     }
 
@@ -80,7 +85,7 @@ class FeeHeadRepository
     public function create(array $data): FeeHead
     {
         // If no sort_order provided or is null, auto-assign next available order
-        if (!isset($data['sort_order']) || $data['sort_order'] === '' || $data['sort_order'] === null) {
+        if (! isset($data['sort_order']) || $data['sort_order'] === '' || $data['sort_order'] === null) {
             $data['sort_order'] = $this->getNextAvailableOrder();
         } else {
             // If specific order is provided, shift all existing orders >= requested order
@@ -91,6 +96,7 @@ class FeeHeadRepository
 
         $feeHead = FeeHead::create($data);
         $this->clearCache();
+
         return $feeHead;
     }
 
@@ -135,6 +141,7 @@ class FeeHeadRepository
 
         $updated = $feeHead->update($data);
         $this->clearCache();
+
         return $updated;
     }
 
@@ -145,6 +152,7 @@ class FeeHeadRepository
     {
         $deleted = $feeHead->delete();
         $this->clearCache();
+
         return $deleted;
     }
 
@@ -153,7 +161,7 @@ class FeeHeadRepository
      */
     public function clearCache(): void
     {
-        Cache::forget(self::CACHE_KEY . '.active');
-        Cache::forget(self::CACHE_KEY . '.dropdown');
+        Cache::forget(self::CACHE_KEY.'.active');
+        Cache::forget(self::CACHE_KEY.'.dropdown');
     }
 }

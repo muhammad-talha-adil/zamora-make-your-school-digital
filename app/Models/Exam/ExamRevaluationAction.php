@@ -2,6 +2,7 @@
 
 namespace App\Models\Exam;
 
+use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -33,6 +34,6 @@ class ExamRevaluationAction extends Model
      */
     public function actionBy(): BelongsTo
     {
-        return $this->belongsTo(\App\Models\User::class, 'action_by');
+        return $this->belongsTo(User::class, 'action_by');
     }
 }

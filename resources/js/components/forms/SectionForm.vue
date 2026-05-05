@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { router } from '@inertiajs/vue3';
-import { ref } from 'vue';
+import axios from 'axios';
+import { ref, watch } from 'vue';
 import { alert } from '@/utils';
 
 // Components
@@ -49,13 +49,14 @@ const emit = defineEmits<{
 }>();
 
 // Form data
-const form = ref({
+const getInitialForm = () => ({
     name: props.section?.name || '',
     code: props.section?.code || '',
     description: props.section?.description || '',
-    is_active: props.section?.is_active ?? true,
     class_id: props.section?.class_id || '',
 });
+
+const form = ref(getInitialForm());
 
 const errors = ref<Record<string, string>>({});
 const processing = ref(false);
@@ -63,7 +64,13 @@ const processing = ref(false);
 // Dialog
 const open = ref(false);
 
-// Methods
+watch(open, (isOpen) => {
+    if (isOpen) {
+        form.value = getInitialForm();
+        errors.value = {};
+    }
+});
+
 const submit = () => {
     processing.value = true;
     errors.value = {};
@@ -72,67 +79,54 @@ const submit = () => {
         name: form.value.name,
         code: form.value.code,
         description: form.value.description,
-        is_active: form.value.is_active ? 1 : 0,
         class_id: form.value.class_id,
     };
 
     if (props.section) {
         // Update
-        router.put(`/settings/sections/${props.section.id}`, formData, {
-            preserveScroll: true,
-            onSuccess: () => {
+        axios.patch(`/settings/sections/${props.section.id}`, formData, {
+            headers: { Accept: 'application/json' },
+        }).then(() => {
                 alert.success('Section updated successfully!');
                 open.value = false;
                 resetForm();
                 emit('saved');
-            },
-            onError: (err) => {
-                errors.value = err as Record<string, string>;
+            }).catch((error) => {
+                errors.value = error.response?.data?.errors ?? {};
                 if (Object.keys(errors.value).length > 0) {
                     const firstError = Object.values(errors.value)[0];
                     alert.error(firstError);
                 } else {
                     alert.error('Failed to update section. Please check the errors.');
                 }
-            },
-            onFinish: () => {
+            }).finally(() => {
                 processing.value = false;
-            },
-        });
+            });
     } else {
         // Create
-        router.post('/settings/sections', formData, {
-            preserveScroll: true,
-            onSuccess: () => {
+        axios.post('/settings/sections', formData, {
+            headers: { Accept: 'application/json' },
+        }).then(() => {
                 alert.success('Section created successfully!');
                 open.value = false;
                 resetForm();
                 emit('saved');
-            },
-            onError: (err) => {
-                errors.value = err as Record<string, string>;
+            }).catch((error) => {
+                errors.value = error.response?.data?.errors ?? {};
                 if (Object.keys(errors.value).length > 0) {
                     const firstError = Object.values(errors.value)[0];
                     alert.error(firstError);
                 } else {
                     alert.error('Failed to create section. Please check the errors.');
                 }
-            },
-            onFinish: () => {
+            }).finally(() => {
                 processing.value = false;
-            },
-        });
+            });
     }
 };
 
 const resetForm = () => {
-    form.value = {
-        name: '',
-        code: '',
-        description: '',
-        is_active: true,
-        class_id: '',
-    };
+    form.value = getInitialForm();
     errors.value = {};
 };
 </script>
@@ -210,15 +204,6 @@ const resetForm = () => {
                         <InputError :message="errors.description" />
                     </div>
 
-                    <div class="flex items-center space-x-2">
-                        <input
-                            id="is_active"
-                            v-model="form.is_active"
-                            type="checkbox"
-                            class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500"
-                        />
-                        <Label for="is_active">Active</Label>
-                    </div>
                 </div>
 
                 <DialogFooter>

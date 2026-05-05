@@ -1,8 +1,8 @@
 <template>
   <div
     @click="$emit('select', palette.id)"
-    class="relative cursor-pointer rounded-xl border-2 p-4 transition-all hover:shadow-md"
-    :class="selected ? 'border-indigo-500 ring-2 ring-indigo-200 shadow-sm' : 'border-gray-200 hover:border-gray-300'"
+    class="relative cursor-pointer rounded-xl border-2 bg-white/90 p-4 transition-all hover:shadow-md dark:bg-gray-900/80"
+    :class="selected ? 'border-indigo-500 ring-2 ring-indigo-200 shadow-sm dark:ring-indigo-500/30' : 'border-gray-200 hover:border-gray-300 dark:border-gray-700 dark:hover:border-gray-500'"
   >
     <div class="flex space-x-1 mb-3">
       <div

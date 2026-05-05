@@ -4,7 +4,7 @@ namespace App\Enums\Fee;
 
 /**
  * Wallet Direction Enum
- * 
+ *
  * Defines direction of wallet transaction (credit or debit).
  */
 enum WalletDirection: string
@@ -17,7 +17,7 @@ enum WalletDirection: string
      */
     public function label(): string
     {
-        return match($this) {
+        return match ($this) {
             self::CREDIT => 'Credit',
             self::DEBIT => 'Debit',
         };

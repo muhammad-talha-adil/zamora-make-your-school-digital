@@ -2,9 +2,10 @@
 
 namespace App\Http\Requests\Inventory;
 
+use App\Models\StudentEnrollmentRecord;
+use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
-use App\Models\StudentEnrollmentRecord;
 
 class StoreStudentInventoryRequest extends FormRequest
 {
@@ -19,7 +20,7 @@ class StoreStudentInventoryRequest extends FormRequest
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     * @return array<string, ValidationRule|array<mixed>|string>
      */
     public function rules(): array
     {
@@ -33,8 +34,8 @@ class StoreStudentInventoryRequest extends FormRequest
                         ->where('campus_id', $this->campus_id)
                         ->active()
                         ->exists();
-                    
-                    if (!$hasEnrollment) {
+
+                    if (! $hasEnrollment) {
                         $fail('The selected student must have an active enrollment in this campus.');
                     }
                 },

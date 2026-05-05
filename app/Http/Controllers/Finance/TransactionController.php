@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Finance;
 
 use App\Http\Controllers\Controller;
-use App\Models\Ledger\Ledger;
 use App\Models\Campus;
+use App\Models\Ledger\Ledger;
 use App\Models\Ledger\LedgerCategory;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -37,8 +37,8 @@ class TransactionController extends Controller
 
         if ($request->filled('search')) {
             $query->where(function ($q) use ($request) {
-                $q->where('ledger_number', 'like', '%' . $request->search . '%')
-                    ->orWhere('description', 'like', '%' . $request->search . '%');
+                $q->where('ledger_number', 'like', '%'.$request->search.'%')
+                    ->orWhere('description', 'like', '%'.$request->search.'%');
             });
         }
 

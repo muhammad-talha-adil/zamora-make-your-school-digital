@@ -13,9 +13,9 @@
       @mouseenter="onMouseEnter"
       @mouseleave="onMouseLeave"
     >
-      <div class="flex flex-col h-full">
+      <div class="flex h-full flex-col">
         <!-- Sidebar Header -->
-        <div :class="['border-b flex items-center justify-between', (collapsed && !tempExpand) ? 'p-2' : 'p-4']" :style="{ borderColor: 'var(--sidebar-text)' }">
+        <div :class="['border-b flex items-center justify-between shrink-0', (collapsed && !tempExpand) ? 'p-2' : 'p-4']" :style="{ borderColor: 'var(--sidebar-text)' }">
           <AppLogo v-if="!collapsed || tempExpand" />
           <div v-else class="flex aspect-square size-8 items-center justify-center rounded-md bg-sidebar-primary text-sidebar-primary-foreground">
             <AppLogoIcon class="size-5 fill-current text-white dark:text-black" />
@@ -30,143 +30,149 @@
           </button>
         </div>
 
-        <!-- Navigation Links -->
-        <nav :class="['flex-1 py-6 space-y-2', (collapsed && !tempExpand) ? 'px-2' : 'px-4']">
-          <template v-for="item in mainNavItems" :key="item.title">
-            <div v-if="item.children && item.children.length > 0" class="space-y-1">
-              <button
-                @click="toggleMenu(item.title)"
-                :class="['flex items-center justify-between w-full py-2 text-sm font-medium rounded-md transition-colors', (collapsed && !tempExpand) ? 'px-2' : 'px-4']"
-                :style="{ color: 'var(--sidebar-text)' }"
-              >
-                <div class="flex items-center">
-                  <Icon :icon="item.icon" :size="20" :class="(!collapsed || tempExpand) ? 'mr-3' : ''" />
-                  <span v-if="!collapsed || tempExpand">{{ item.title }}</span>
+        <div class="sidebar-scroll flex-1 min-h-0 overflow-y-auto overflow-x-hidden">
+          <div class="flex min-h-full flex-col">
+            <!-- Navigation Links -->
+            <nav :class="['flex-1 py-6 space-y-2', (collapsed && !tempExpand) ? 'px-2' : 'px-4']">
+              <template v-for="item in mainNavItems" :key="item.title">
+                <div v-if="item.children && item.children.length > 0" class="space-y-1">
+                  <button
+                    @click="toggleMenu(menuKey('main', item.title))"
+                    :class="['flex items-center justify-between w-full py-2 text-sm font-medium rounded-md transition-colors', (collapsed && !tempExpand) ? 'px-2' : 'px-4']"
+                    :style="{ color: 'var(--sidebar-text)' }"
+                  >
+                    <div class="flex items-center">
+                      <Icon :icon="item.icon" :size="20" :class="(!collapsed || tempExpand) ? 'mr-3' : ''" />
+                      <span v-if="!collapsed || tempExpand">{{ item.title }}</span>
+                    </div>
+                    <ChevronDown
+                      v-if="!collapsed || tempExpand"
+                      class="w-4 h-4 transition-transform duration-200"
+                      :class="{ 'rotate-180': isMenuOpen(menuKey('main', item.title)) }"
+                    />
+                  </button>
+                  <div
+                    v-if="!collapsed || tempExpand"
+                    v-show="isMenuOpen(menuKey('main', item.title))"
+                    class="space-y-1 pt-1"
+                  >
+                    <Link
+                      v-for="child in item.children"
+                      :key="child.title"
+                      :href="child.href"
+                      :class="[
+                        'flex items-center gap-2 px-8 py-2 text-sm font-medium rounded-md transition-colors ml-4',
+                      ]"
+                      :style="{
+                        backgroundColor: currentUrl === child.href ? 'var(--sidebar-active-bg)' : 'transparent',
+                        color: currentUrl === child.href ? 'var(--sidebar-active-text)' : 'var(--sidebar-text)',
+                      }"
+                    >
+                      <Icon v-if="child.icon" :icon="child.icon" :size="16" />
+                      <span v-if="!collapsed || tempExpand">{{ child.title }}</span>
+                    </Link>
+                  </div>
                 </div>
-                <ChevronDown
-                  v-if="!collapsed || tempExpand"
-                  class="w-4 h-4 transition-transform duration-200"
-                  :class="{ 'rotate-180': openMenus[item.title] }"
-                />
-              </button>
-              <div
-                v-if="!collapsed || tempExpand"
-                class="overflow-hidden transition-all duration-300 ease-in-out"
-                :class="{ 'max-h-0 opacity-0': !openMenus[item.title], 'max-h-96 opacity-100': openMenus[item.title] }"
-              >
                 <Link
-                  v-for="child in item.children"
-                  :key="child.title"
-                  :href="child.href"
+                  v-else
+                  :href="item.href"
                   :class="[
-                    'flex items-center px-8 py-2 text-sm font-medium rounded-md transition-colors ml-4',
+                    'flex items-center py-2 text-sm font-medium rounded-md transition-colors',
+                    (collapsed && !tempExpand) ? 'px-2' : 'px-4'
                   ]"
                   :style="{
-                    backgroundColor: currentUrl === child.href ? 'var(--sidebar-active-bg)' : 'transparent',
-                    color: currentUrl === child.href ? 'var(--sidebar-active-text)' : 'var(--sidebar-text)',
+                    backgroundColor: currentUrl === item.href ? 'var(--sidebar-active-bg)' : 'transparent',
+                    color: currentUrl === item.href ? 'var(--sidebar-active-text)' : 'var(--sidebar-text)',
                   }"
                 >
-                  <span v-if="!collapsed || tempExpand">{{ child.title }}</span>
+                  <Icon :icon="item.icon" :size="20" :class="(!collapsed || tempExpand) ? 'mr-3' : ''" />
+                  <span v-if="!collapsed || tempExpand">{{ item.title }}</span>
                 </Link>
-              </div>
-            </div>
-            <Link
-              v-else
-              :href="item.href"
-              :class="[
-                'flex items-center py-2 text-sm font-medium rounded-md transition-colors',
-                (collapsed && !tempExpand) ? 'px-2' : 'px-4'
-              ]"
-              :style="{
-                backgroundColor: currentUrl === item.href ? 'var(--sidebar-active-bg)' : 'transparent',
-                color: currentUrl === item.href ? 'var(--sidebar-active-text)' : 'var(--sidebar-text)',
-              }"
-            >
-              <Icon :icon="item.icon" :size="20" :class="(!collapsed || tempExpand) ? 'mr-3' : ''" />
-              <span v-if="!collapsed || tempExpand">{{ item.title }}</span>
-            </Link>
-          </template>
-        </nav>
+              </template>
+            </nav>
 
-        <!-- Bottom Menu -->
-        <div :class="['py-4 border-t space-y-2', (collapsed && !tempExpand) ? 'px-2' : 'px-4']" :style="{ borderColor: 'var(--sidebar-text)' }">
-          <template v-for="item in footerNavItems" :key="item.title">
-            <div v-if="item.children && item.children.length > 0" class="space-y-1">
-              <button
-                @click="toggleMenu(item.title)"
-                :class="['flex items-center justify-between w-full py-2 text-sm font-medium rounded-md transition-colors', (collapsed && !tempExpand) ? 'px-2' : 'px-4']"
-                :style="{ color: 'var(--sidebar-text)' }"
-              >
-                <div class="flex items-center">
-                  <Icon :icon="item.icon" :size="20" :class="(!collapsed || tempExpand) ? 'mr-3' : ''" />
-                  <span v-if="!collapsed || tempExpand">{{ item.title }}</span>
+            <!-- Bottom Menu -->
+            <div :class="['mt-auto py-4 border-t space-y-2', (collapsed && !tempExpand) ? 'px-2' : 'px-4']" :style="{ borderColor: 'var(--sidebar-text)' }">
+              <template v-for="item in footerNavItems" :key="item.title">
+                <div v-if="item.children && item.children.length > 0" class="space-y-1">
+                  <button
+                    @click="toggleMenu(menuKey('footer', item.title))"
+                    :class="['flex items-center justify-between w-full py-2 text-sm font-medium rounded-md transition-colors', (collapsed && !tempExpand) ? 'px-2' : 'px-4']"
+                    :style="{ color: 'var(--sidebar-text)' }"
+                  >
+                    <div class="flex items-center">
+                      <Icon :icon="item.icon" :size="20" :class="(!collapsed || tempExpand) ? 'mr-3' : ''" />
+                      <span v-if="!collapsed || tempExpand">{{ item.title }}</span>
+                    </div>
+                    <ChevronDown
+                      v-if="!collapsed || tempExpand"
+                      class="w-4 h-4 transition-transform duration-200"
+                      :class="{ 'rotate-180': isMenuOpen(menuKey('footer', item.title)) }"
+                    />
+                  </button>
+                  <div
+                    v-if="!collapsed || tempExpand"
+                    v-show="isMenuOpen(menuKey('footer', item.title))"
+                    class="space-y-1 pt-1"
+                  >
+                    <Link
+                      v-for="child in item.children"
+                      :key="child.title"
+                      :href="child.href"
+                      :class="[
+                        'flex items-center gap-2 px-8 py-2 text-sm font-medium rounded-md transition-colors ml-4',
+                      ]"
+                      :style="{
+                        backgroundColor: currentUrl === child.href ? 'var(--sidebar-active-bg)' : 'transparent',
+                        color: currentUrl === child.href ? 'var(--sidebar-active-text)' : 'var(--sidebar-text)',
+                      }"
+                    >
+                      <Icon v-if="child.icon" :icon="child.icon" :size="16" />
+                      <span v-if="!collapsed || tempExpand">{{ child.title }}</span>
+                    </Link>
+                  </div>
                 </div>
-                <ChevronDown
-                  v-if="!collapsed || tempExpand"
-                  class="w-4 h-4 transition-transform duration-200"
-                  :class="{ 'rotate-180': openMenus[item.title] }"
-                />
-              </button>
-              <div
-                v-if="!collapsed || tempExpand"
-                class="overflow-hidden transition-all duration-300 ease-in-out"
-                :class="{ 'max-h-0 opacity-0': !openMenus[item.title], 'max-h-96 opacity-100': openMenus[item.title] }"
-              >
-                <Link
-                  v-for="child in item.children"
-                  :key="child.title"
-                  :href="child.href"
+                <component
+                  v-else
+                  :is="(item.href as string).startsWith('http') ? 'a' : Link"
+                  :href="item.href"
+                  :target="(item.href as string).startsWith('http') ? '_blank' : undefined"
+                  :method="(item.href as string) === '/logout' ? 'post' : undefined"
+                  :as="(item.href as string) === '/logout' ? 'button' : undefined"
                   :class="[
-                    'flex items-center px-8 py-2 text-sm font-medium rounded-md transition-colors ml-4',
+                    'flex items-center py-2 text-sm font-medium rounded-md transition-colors w-full',
+                    (collapsed && !tempExpand) ? 'px-2' : 'px-4'
                   ]"
                   :style="{
-                    backgroundColor: currentUrl === child.href ? 'var(--sidebar-active-bg)' : 'transparent',
-                    color: currentUrl === child.href ? 'var(--sidebar-active-text)' : 'var(--sidebar-text)',
+                    backgroundColor: currentUrl === item.href ? 'var(--sidebar-active-bg)' : 'transparent',
+                    color: currentUrl === item.href ? 'var(--sidebar-active-text)' : 'var(--sidebar-text)',
                   }"
                 >
-                  <span v-if="!collapsed || tempExpand">{{ child.title }}</span>
-                </Link>
-              </div>
+                  <Icon :icon="item.icon as string" :size="20" :class="(!collapsed || tempExpand) ? 'mr-3' : ''" />
+                  <span v-if="!collapsed || tempExpand">{{ item.title }}</span>
+                </component>
+              </template>
+              <button
+                @click="toggleTheme"
+                :class="['flex items-center py-2 text-sm font-medium rounded-md transition-colors w-full', (collapsed && !tempExpand) ? 'px-2' : 'px-4']"
+                :style="{ color: 'var(--sidebar-text)' }"
+              >
+                <Sun v-if="resolvedAppearance === 'light'" :class="['w-5 h-5', (!collapsed || tempExpand) ? 'mr-3' : '']" />
+                <Moon v-else :class="['w-5 h-5', (!collapsed || tempExpand) ? 'mr-3' : '']" />
+                <span v-if="!collapsed || tempExpand">{{ resolvedAppearance === 'light' ? 'Dark Mode' : 'Light Mode' }}</span>
+              </button>
+              <Link
+                href="/logout"
+                method="post"
+                as="button"
+                :class="['flex items-center py-2 text-sm font-medium rounded-md transition-colors w-full', (collapsed && !tempExpand) ? 'px-2' : 'px-4']"
+                :style="{ color: 'var(--sidebar-text)' }"
+              >
+                <LogOut :class="['w-5 h-5', (!collapsed || tempExpand) ? 'mr-3' : '']" />
+                <span v-if="!collapsed || tempExpand">Logout</span>
+              </Link>
             </div>
-            <component
-              v-else
-              :is="(item.href as string).startsWith('http') ? 'a' : Link"
-              :href="item.href"
-              :target="(item.href as string).startsWith('http') ? '_blank' : undefined"
-              :method="(item.href as string) === '/logout' ? 'post' : undefined"
-              :as="(item.href as string) === '/logout' ? 'button' : undefined"
-              :class="[
-                'flex items-center py-2 text-sm font-medium rounded-md transition-colors w-full',
-                (collapsed && !tempExpand) ? 'px-2' : 'px-4'
-              ]"
-              :style="{
-                backgroundColor: currentUrl === item.href ? 'var(--sidebar-active-bg)' : 'transparent',
-                color: currentUrl === item.href ? 'var(--sidebar-active-text)' : 'var(--sidebar-text)',
-              }"
-            >
-              <Icon :icon="item.icon as string" :size="20" :class="(!collapsed || tempExpand) ? 'mr-3' : ''" />
-              <span v-if="!collapsed || tempExpand">{{ item.title }}</span>
-            </component>
-          </template>
-          <button
-            @click="toggleTheme"
-            :class="['flex items-center py-2 text-sm font-medium rounded-md transition-colors w-full', (collapsed && !tempExpand) ? 'px-2' : 'px-4']"
-            :style="{ color: 'var(--sidebar-text)' }"
-          >
-            <Sun v-if="resolvedAppearance === 'light'" :class="['w-5 h-5', (!collapsed || tempExpand) ? 'mr-3' : '']" />
-            <Moon v-else :class="['w-5 h-5', (!collapsed || tempExpand) ? 'mr-3' : '']" />
-            <span v-if="!collapsed || tempExpand">{{ resolvedAppearance === 'light' ? 'Dark Mode' : 'Light Mode' }}</span>
-          </button>
-          <Link
-            href="/logout"
-            method="post"
-            as="button"
-            :class="['flex items-center py-2 text-sm font-medium rounded-md transition-colors w-full', (collapsed && !tempExpand) ? 'px-2' : 'px-4']"
-            :style="{ color: 'var(--sidebar-text)' }"
-          >
-            <LogOut :class="['w-5 h-5', (!collapsed || tempExpand) ? 'mr-3' : '']" />
-            <span v-if="!collapsed || tempExpand">Logout</span>
-          </Link>
+          </div>
         </div>
       </div>
     </aside>
@@ -225,7 +231,7 @@
 <script setup lang="ts">
 import { ref, watch, onMounted, computed } from 'vue'
 import { Link, usePage } from '@inertiajs/vue3'
-import { Home, Settings, Sun, Moon, LogOut, ChevronDown, X, Menu, LayoutGrid, Users, User, Palette, Building, Cog } from 'lucide-vue-next'
+import { Sun, Moon, LogOut, ChevronDown, X, Menu } from 'lucide-vue-next'
 import { useAppearance } from '../../composables/useAppearance'
 import FooterBar from './FooterBar.vue'
 import AppLogo from '../AppLogo.vue'
@@ -236,10 +242,10 @@ import type { MenuItem } from '../../types'
 const isOpen = ref(false)
 const collapsed = ref(false)
 const tempExpand = ref(false)
-const openMenus = ref<Record<string, boolean>>({})
+const activeMenuKey = ref<string | null>(null)
 
 const toggleMenu = (key: string) => {
-  openMenus.value[key] = !openMenus.value[key]
+  activeMenuKey.value = activeMenuKey.value === key ? null : key
 }
 
 const page = usePage()
@@ -253,11 +259,29 @@ const mainNavItems = computed<MenuItem[]>(() => {
 })
 const footerNavItems = computed<MenuItem[]>(() => pageProps.value.menus?.footer || [])
 
-const userRoles = computed(() => (pageProps.value.auth?.user?.roles as any[])?.map((r: any) => r.name) || [])
-const canAccessAppearance = computed(() => {
-  const allowedRoles = ['developer', 'school_owner', 'super_admin']
-  return allowedRoles.some(role => userRoles.value.includes(role))
-})
+const menuKey = (group: 'main' | 'footer', title: string) => `${group}:${title}`
+
+const isMenuOpen = (key: string) => activeMenuKey.value === key
+
+const syncOpenMenuWithCurrentRoute = () => {
+  const groups: Array<{ group: 'main' | 'footer'; items: MenuItem[] }> = [
+    { group: 'main', items: mainNavItems.value },
+    { group: 'footer', items: footerNavItems.value },
+  ]
+
+  for (const { group, items } of groups) {
+    const matchedItem = items.find((item) =>
+      item.children?.some((child) => child.href === currentUrl.value),
+    )
+
+    if (matchedItem) {
+      activeMenuKey.value = menuKey(group, matchedItem.title)
+      return
+    }
+  }
+
+  activeMenuKey.value = null
+}
 
 const toggleSidebar = () => {
   if (window.innerWidth < 768) {
@@ -302,9 +326,39 @@ const applyTheme = () => {
 
 onMounted(() => {
   applyTheme()
+  syncOpenMenuWithCurrentRoute()
 })
 
 watch(resolvedAppearance, () => {
   applyTheme()
 })
+
+watch([mainNavItems, footerNavItems, currentUrl], () => {
+  syncOpenMenuWithCurrentRoute()
+})
 </script>
+
+<style scoped>
+.sidebar-scroll {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in srgb, var(--sidebar-text) 32%, transparent) transparent;
+}
+
+.sidebar-scroll::-webkit-scrollbar {
+  width: 10px;
+}
+
+.sidebar-scroll::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.sidebar-scroll::-webkit-scrollbar-thumb {
+  background-color: color-mix(in srgb, var(--sidebar-text) 32%, transparent);
+  border-radius: 9999px;
+  border: 2px solid color-mix(in srgb, var(--sidebar-bg) 85%, transparent);
+}
+
+.sidebar-scroll::-webkit-scrollbar-thumb:hover {
+  background-color: color-mix(in srgb, var(--sidebar-text) 48%, transparent);
+}
+</style>

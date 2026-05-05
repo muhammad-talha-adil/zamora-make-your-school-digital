@@ -4,7 +4,7 @@ namespace App\Enums\Fee;
 
 /**
  * Voucher Status Enum
- * 
+ *
  * Tracks the lifecycle status of a fee voucher/challan.
  */
 enum VoucherStatus: string
@@ -21,7 +21,7 @@ enum VoucherStatus: string
      */
     public function label(): string
     {
-        return match($this) {
+        return match ($this) {
             self::UNPAID => 'Unpaid',
             self::PARTIAL => 'Partially Paid',
             self::PAID => 'Paid',
@@ -36,7 +36,7 @@ enum VoucherStatus: string
      */
     public function color(): string
     {
-        return match($this) {
+        return match ($this) {
             self::UNPAID => 'yellow',
             self::PARTIAL => 'blue',
             self::PAID => 'green',

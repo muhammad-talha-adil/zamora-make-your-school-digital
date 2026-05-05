@@ -4,6 +4,8 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Supplier extends Model
@@ -46,7 +48,7 @@ class Supplier extends Model
     /**
      * Get the campus that owns the supplier.
      */
-    public function campus(): \Illuminate\Database\Eloquent\Relations\BelongsTo
+    public function campus(): BelongsTo
     {
         return $this->belongsTo(Campus::class);
     }
@@ -59,13 +61,14 @@ class Supplier extends Model
         if ($this->campus_id === null) {
             return 'All Campuses';
         }
+
         return $this->campus?->name ?? 'Unknown';
     }
 
     /**
      * Get the purchases for this supplier.
      */
-    public function purchases(): \Illuminate\Database\Eloquent\Relations\HasMany
+    public function purchases(): HasMany
     {
         return $this->hasMany(Purchase::class);
     }
@@ -117,9 +120,9 @@ class Supplier extends Model
     {
         return $query->where(function ($q) use ($search) {
             $q->where('name', 'LIKE', "%{$search}%")
-              ->orWhere('contact_person', 'LIKE', "%{$search}%")
-              ->orWhere('phone', 'LIKE', "%{$search}%")
-              ->orWhere('email', 'LIKE', "%{$search}%");
+                ->orWhere('contact_person', 'LIKE', "%{$search}%")
+                ->orWhere('phone', 'LIKE', "%{$search}%")
+                ->orWhere('email', 'LIKE', "%{$search}%");
         });
     }
 }

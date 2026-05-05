@@ -8,7 +8,7 @@ return new class extends Migration
 {
     /**
      * Run the migrations.
-     * 
+     *
      * Consolidated migration for suppliers table.
      * Includes campus_id as nullable (can be null for multi-campus suppliers).
      */

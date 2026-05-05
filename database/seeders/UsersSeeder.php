@@ -12,7 +12,7 @@ class UsersSeeder extends Seeder
 {
     /**
      * Run the database seeds.
-     * 
+     *
      * Creates admin and system users.
      * Does NOT create student/guardian accounts - those are created by their respective seeders.
      */

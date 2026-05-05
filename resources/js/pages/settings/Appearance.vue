@@ -1,8 +1,7 @@
 <script setup lang="ts">
 import { Head, useForm } from '@inertiajs/vue3';
-import { ref, computed } from 'vue';
+import { ref } from 'vue';
 
-import HeadingSmall from '@/components/HeadingSmall.vue';
 import { type BreadcrumbItem } from '@/types';
 
 import AppLayout from '@/layouts/AppLayout.vue';
@@ -26,8 +25,6 @@ const breadcrumbItems: BreadcrumbItem[] = [
     },
 ];
 
-const previewMode = ref('light');
-
 const lightForm = useForm({
     selected_palette_id: props.settings.light?.selected_palette_id || null,
     colors: props.settings.light?.colors_json || {},
@@ -37,14 +34,6 @@ const darkForm = useForm({
     selected_palette_id: props.settings.dark?.selected_palette_id || null,
     colors: props.settings.dark?.colors_json || {},
 });
-
-const slots = [
-    'sidebar_bg', 'sidebar_text', 'sidebar_active_bg', 'sidebar_active_text',
-    'header_bg', 'header_text', 'content_bg', 'content_text',
-    'card_bg', 'card_text'
-];
-
-const textSlots = ['sidebar_text', 'sidebar_active_text', 'header_text', 'content_text', 'card_text'];
 
 const safeTextColors = [
     '#000000', '#FFFFFF', '#374151', '#F3F4F6', '#1F2937', '#E5E7EB'
@@ -99,6 +88,9 @@ function submitForm(mode: string) {
     const url = mode === 'light' ? '/settings/appearance/light' : '/settings/appearance/dark';
     form.post(url, {
         preserveScroll: true,
+        onSuccess: () => {
+            window.location.reload();
+        },
     });
 }
 </script>
@@ -109,24 +101,24 @@ function submitForm(mode: string) {
 
         <SettingsLayout>
             <div class="space-y-8">
-                <div class="flex items-center justify-between">
+                <div class="flex items-center justify-between gap-4">
                     <div>
                         <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Appearance</h1>
                         <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">Manage Light and Dark mode color themes for the dashboard.</p>
                     </div>
-                    <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-red-100 text-red-800">
+                    <span class="inline-flex items-center rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-medium text-red-800 dark:bg-red-500/15 dark:text-red-200">
                         Admin Only
                     </span>
                 </div>
 
                 <!-- Tabs -->
-                <div class="border-b border-gray-200">
+                <div class="border-b border-gray-200 dark:border-gray-700">
                     <nav class="-mb-px flex space-x-8">
                         <button
                             @click="activeTab = 'light'"
                             :class="[
                                 activeTab === 'light'
-                                    ? 'border-indigo-500 text-indigo-600'
+                                    ? 'border-indigo-500 text-indigo-600 dark:text-indigo-400'
                                     : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300',
                                 'whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm'
                             ]"
@@ -137,7 +129,7 @@ function submitForm(mode: string) {
                             @click="activeTab = 'dark'"
                             :class="[
                                 activeTab === 'dark'
-                                    ? 'border-indigo-500 text-indigo-600'
+                                    ? 'border-indigo-500 text-indigo-600 dark:text-indigo-400'
                                     : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300',
                                 'whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm'
                             ]"
@@ -247,7 +239,7 @@ function submitForm(mode: string) {
                         </div>
 
                         <!-- Advanced Settings -->
-                        <details class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700">
+                        <details class="rounded-xl border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-900">
                             <summary class="cursor-pointer p-6 text-sm font-semibold hover:bg-gray-50 dark:hover:bg-gray-800 rounded-t-xl text-gray-900 dark:text-white">Advanced Customization</summary>
                             <div class="p-6 pt-0 space-y-6">
                                 <ColorGroup
@@ -364,7 +356,7 @@ function submitForm(mode: string) {
                         </div>
 
                         <!-- Advanced Settings -->
-                        <details class="bg-white dark:bg-gray-900 rounded-xl border border-gray-200 dark:border-gray-700">
+                        <details class="rounded-xl border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-900">
                             <summary class="cursor-pointer p-6 text-sm font-semibold hover:bg-gray-50 dark:hover:bg-gray-800 rounded-t-xl text-gray-900 dark:text-white">Advanced Customization</summary>
                             <div class="p-6 pt-0 space-y-6">
                                 <ColorGroup
@@ -382,19 +374,19 @@ function submitForm(mode: string) {
                 </div>
 
                 <!-- Bottom Actions -->
-                <div class=" bottom-0 bg-white dark:bg-gray-900 border-t border-gray-200 dark:border-gray-700 p-4 -mx-4">
+                <div class="-mx-4 border-t border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-900">
                     <div class="flex justify-between items-center">
                         <button
                             type="button"
                             @click="selectPalette(activeTab, activeTab === 'light' ? lightForm.selected_palette_id : darkForm.selected_palette_id)"
-                            class="inline-flex items-center px-4 py-2 bg-gray-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-gray-700"
+                            class="inline-flex items-center rounded-md border border-transparent bg-gray-600 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white hover:bg-gray-700"
                         >
                             Reset to Palette
                         </button>
                         <button
                             @click="submitForm(activeTab)"
                             :disabled="(activeTab === 'light' ? lightForm.processing : darkForm.processing)"
-                            class="inline-flex items-center px-6 py-2 bg-indigo-600 border border-transparent rounded-md font-semibold text-xs text-white uppercase tracking-widest hover:bg-indigo-700"
+                            class="inline-flex items-center rounded-md border border-transparent bg-indigo-600 px-6 py-2 text-xs font-semibold uppercase tracking-widest text-white hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-60"
                         >
                             Save {{ activeTab === 'light' ? 'Light' : 'Dark' }} Mode
                         </button>

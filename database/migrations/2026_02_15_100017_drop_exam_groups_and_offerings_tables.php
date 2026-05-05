@@ -14,7 +14,7 @@ return new class extends Migration
     {
         // Drop exam_groups table first (depends on exam_offerings)
         Schema::dropIfExists('exam_groups');
-        
+
         // Then drop exam_offerings table
         Schema::dropIfExists('exam_offerings');
     }
@@ -37,12 +37,12 @@ return new class extends Migration
             $table->unsignedBigInteger('locked_by')->nullable();
             $table->timestamps();
             $table->softDeletes();
-            
+
             $table->foreign('exam_id')->references('id')->on('exams')->onDelete('cascade');
             $table->foreign('campus_id')->references('id')->on('campuses')->onDelete('cascade');
             $table->foreign('grade_system_id')->references('id')->on('grade_systems')->onDelete('set null');
         });
-        
+
         // Recreate exam_groups table
         Schema::create('exam_groups', function ($table) {
             $table->bigIncrements('id');
@@ -52,7 +52,7 @@ return new class extends Migration
             $table->enum('status', ['active', 'inactive'])->default('active');
             $table->timestamps();
             $table->softDeletes();
-            
+
             $table->foreign('exam_offering_id')->references('id')->on('exam_offerings')->onDelete('cascade');
             $table->foreign('class_id')->references('id')->on('school_classes')->onDelete('cascade');
             $table->foreign('section_id')->references('id')->on('sections')->onDelete('cascade');

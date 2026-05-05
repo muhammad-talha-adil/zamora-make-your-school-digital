@@ -14,13 +14,12 @@ use App\Models\User;
 use App\Models\UserRole;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Str;
 
 class StudentSeeder extends Seeder
 {
     /**
      * Run the database seeds.
-     * 
+     *
      * Generates 25+ students per class per section per campus.
      * Students are linked to campus, class, and section via enrollment records.
      * Uses Faker with Pakistani locale for realistic data.
@@ -35,15 +34,17 @@ class StudentSeeder extends Seeder
         $campuses = Campus::where('is_active', true)->get();
         $currentSession = Session::where('is_active', true)->first();
 
-        if (!$maleGender || !$femaleGender || !$activeStatus || $campuses->isEmpty() || !$currentSession) {
+        if (! $maleGender || ! $femaleGender || ! $activeStatus || $campuses->isEmpty() || ! $currentSession) {
             $this->command->warn('Required data missing (genders, status, campuses, or session). Skipping student seeding.');
+
             return;
         }
 
         $classes = SchoolClass::where('is_active', true)->get();
-        
+
         if ($classes->isEmpty()) {
             $this->command->warn('No classes found. Skipping student seeding.');
+
             return;
         }
 
@@ -55,9 +56,10 @@ class StudentSeeder extends Seeder
 
         foreach ($classes as $class) {
             $sections = Section::where('class_id', $class->id)->where('is_active', true)->get();
-            
+
             if ($sections->isEmpty()) {
                 $this->command->warn("No sections found for class {$class->name}. Skipping.");
+
                 continue;
             }
 
@@ -75,11 +77,11 @@ class StudentSeeder extends Seeder
                         $studentsPerSection,
                         $studentCounter
                     );
-                    
+
                     $studentCounter += $studentsPerSection;
                 }
             }
-            
+
             $this->command->info("Completed seeding for class {$class->name}");
         }
 
@@ -108,22 +110,22 @@ class StudentSeeder extends Seeder
             $counter++;
             $gender = rand(0, 1) ? $maleGender : $femaleGender;
             $isMale = $gender->name === 'Male';
-            
+
             // Generate unique student code and admission number
-            $studentCode = 'STU-' . str_pad($counter, 6, '0', STR_PAD_LEFT);
-            $admissionNo = 'ADM-' . date('Y') . '-' . str_pad($counter, 5, '0', STR_PAD_LEFT);
-            
+            $studentCode = 'STU-'.str_pad($counter, 6, '0', STR_PAD_LEFT);
+            $admissionNo = 'ADM-'.date('Y').'-'.str_pad($counter, 5, '0', STR_PAD_LEFT);
+
             // Generate realistic Pakistani names
             $firstName = $this->getRandomFirstName($isMale);
             $lastName = $this->getRandomLastName();
-            $fullName = $firstName . ' ' . $lastName;
-            $email = strtolower($firstName . '.' . $lastName . $counter . '@student.com');
-            
+            $fullName = $firstName.' '.$lastName;
+            $email = strtolower($firstName.'.'.$lastName.$counter.'@student.com');
+
             // Create user data
             $userData = [
                 'name' => $fullName,
                 'email' => $email,
-                'username' => strtolower($firstName . '_' . $lastName . $counter),
+                'username' => strtolower($firstName.'_'.$lastName.$counter),
                 'password' => Hash::make('123456'),
                 'is_active' => true,
                 'email_verified_at' => now(),
@@ -139,7 +141,7 @@ class StudentSeeder extends Seeder
             // Calculate date of birth based on class (assuming 5-17 years old)
             $ageRange = $this->getAgeRangeForClass($class->name);
             $dob = now()->subYears(rand($ageRange['min'], $ageRange['max']))->subDays(rand(0, 365));
-            
+
             // Student data
             $studentData = [
                 'user_id' => $user->id,
@@ -172,7 +174,7 @@ class StudentSeeder extends Seeder
 
         // Create enrollment records for each student
         $students = Student::whereIn('user_id', $userIds)->get();
-        
+
         /** @var Student $student */
         foreach ($students as $student) {
             $student->enrollmentRecords()->create([
@@ -232,17 +234,17 @@ class StudentSeeder extends Seeder
     private function getRandomFirstName(bool $isMale): string
     {
         $maleNames = [
-            'Muhammad', 'Ahmed', 'Ali', 'Hassan', 'Hussain', 'Omar', 'Farhan', 'Bilal', 
+            'Muhammad', 'Ahmed', 'Ali', 'Hassan', 'Hussain', 'Omar', 'Farhan', 'Bilal',
             'Saad', 'Hamza', 'Imran', 'Kashif', 'Naveed', 'Rashid', 'Tariq', 'Zahid',
             'Akram', 'Asad', 'Faisal', 'Haroon', 'Junaid', 'Kamran', 'Liaquat', 'Majid',
-            'Noman', 'Osama', 'Qamar', 'Rizwan', 'Saeed', 'Umer', 'Waqas', 'Yousuf', 'Zubair'
+            'Noman', 'Osama', 'Qamar', 'Rizwan', 'Saeed', 'Umer', 'Waqas', 'Yousuf', 'Zubair',
         ];
-        
+
         $femaleNames = [
             'Ayesha', 'Fatima', 'Mariam', 'Hira', 'Sana', 'Zainab', 'Amna', 'Sofia',
             'Maryam', 'Iqra', 'Sara', 'Kainat', 'Nida', 'Rabia', 'Saima', 'Sumaira',
             'Tehreem', 'Urooj', 'Wajeeha', 'Yusra', 'Zara', 'Alina', 'Bushra', 'Fizza',
-            'Hafsa', 'Javeria', 'Kinza', 'Laraib', 'Minahil', 'Nimra', 'Maryam', 'Warda'
+            'Hafsa', 'Javeria', 'Kinza', 'Laraib', 'Minahil', 'Nimra', 'Maryam', 'Warda',
         ];
 
         return $isMale ? $maleNames[array_rand($maleNames)] : $femaleNames[array_rand($femaleNames)];
@@ -257,7 +259,7 @@ class StudentSeeder extends Seeder
             'Khan', 'Ali', 'Hussain', 'Mahmood', 'Rashid', 'Malik', 'Sheikh', 'Butt',
             'Hassan', 'Ahmed', 'Saeed', 'Naeem', 'Akhtar', 'Qadir', 'Sattar', 'Haider',
             'Shah', 'Qureshi', 'Abbas', 'Baig', 'Chaudhry', 'Dar', 'Gill', 'Hussaini',
-            'Iqbal', 'Jaffar', 'Kiani', 'Lodhi', 'Mughal', 'Nawaz', 'Osmani', 'Pirzada'
+            'Iqbal', 'Jaffar', 'Kiani', 'Lodhi', 'Mughal', 'Nawaz', 'Osmani', 'Pirzada',
         ];
 
         return $lastNames[array_rand($lastNames)];
@@ -271,6 +273,7 @@ class StudentSeeder extends Seeder
         $prefix = rand(1, 99);
         $middle = rand(1000000, 9999999);
         $suffix = rand(0, 9);
+
         return sprintf('%02d-%07d-%d', $prefix, $middle, $suffix);
     }
 }

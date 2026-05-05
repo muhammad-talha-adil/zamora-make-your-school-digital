@@ -2,7 +2,12 @@
 
 namespace App\Repositories;
 
+use App\Enums\Fee\ApprovalStatus;
 use App\Models\Campus;
+use App\Models\Fee\DiscountType;
+use App\Models\Fee\FeeHead;
+use App\Models\Fee\StudentDiscount;
+use App\Models\Fee\StudentFeeAssignment;
 use App\Models\Gender;
 use App\Models\Guardian;
 use App\Models\Relation;
@@ -14,20 +19,15 @@ use App\Models\StudentEnrollmentRecord;
 use App\Models\StudentGuardian;
 use App\Models\StudentStatus;
 use App\Models\User;
-use App\Models\Fee\FeeHead;
-use App\Models\Fee\StudentFeeAssignment;
-use App\Models\Fee\StudentDiscount;
-use App\Models\Fee\DiscountType;
-use App\Enums\Fee\ApprovalStatus;
 use App\Services\GuardianService;
 use App\Services\StudentUserService;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Http\File;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 
 class StudentRepository
 {
@@ -35,7 +35,9 @@ class StudentRepository
      * Cache keys for student-related data.
      */
     private const CACHE_KEY_STUDENTS = 'students.list';
+
     private const CACHE_KEY_DROPDOWNS = 'students.dropdowns';
+
     private const CACHE_TTL = 3600; // 1 hour
 
     /**
@@ -68,13 +70,13 @@ class StudentRepository
     {
         // Get current page from request if not provided
         $page = $page ?? request()->get('page', 1);
-        $cacheKey = self::CACHE_KEY_STUDENTS . ':' . md5(json_encode($filters) . $perPage . $page);
+        $cacheKey = self::CACHE_KEY_STUDENTS.':'.md5(json_encode($filters).$perPage.$page);
 
         return Cache::remember($cacheKey, self::CACHE_TTL, function () use ($filters, $perPage) {
             $query = Student::with(self::WITH_RELATIONS);
 
             // Filter by enrollment's campus
-            if (!empty($filters['campus_id'])) {
+            if (! empty($filters['campus_id'])) {
                 $query->whereHas('enrollmentRecords', function ($q) use ($filters) {
                     $q->where('campus_id', $filters['campus_id'])
                         ->whereNull('leave_date');
@@ -82,7 +84,7 @@ class StudentRepository
             }
 
             // Filter by enrollment's class
-            if (!empty($filters['class_id'])) {
+            if (! empty($filters['class_id'])) {
                 $query->whereHas('enrollmentRecords', function ($q) use ($filters) {
                     $q->where('class_id', $filters['class_id'])
                         ->whereNull('leave_date');
@@ -90,7 +92,7 @@ class StudentRepository
             }
 
             // Filter by enrollment's section
-            if (!empty($filters['section_id'])) {
+            if (! empty($filters['section_id'])) {
                 $query->whereHas('enrollmentRecords', function ($q) use ($filters) {
                     $q->where('section_id', $filters['section_id'])
                         ->whereNull('leave_date');
@@ -98,17 +100,17 @@ class StudentRepository
             }
 
             // Filter by gender
-            if (!empty($filters['gender_id'])) {
+            if (! empty($filters['gender_id'])) {
                 $query->where('gender_id', $filters['gender_id']);
             }
 
             // Filter by status
-            if (!empty($filters['status'])) {
+            if (! empty($filters['status'])) {
                 $query->where('student_status_id', $filters['status']);
             }
 
             // Search by name, registration_no, admission_no, guardian name, guardian phone
-            if (!empty($filters['search'])) {
+            if (! empty($filters['search'])) {
                 $search = $filters['search'];
                 $query->where(function ($q) use ($search) {
                     $q->where('registration_no', 'like', "%{$search}%")
@@ -140,18 +142,18 @@ class StudentRepository
      */
     public function getForDropdown(array $filters = []): Collection
     {
-        $cacheKey = self::CACHE_KEY_DROPDOWNS . ':' . md5(json_encode($filters));
+        $cacheKey = self::CACHE_KEY_DROPDOWNS.':'.md5(json_encode($filters));
 
         return Cache::remember($cacheKey, 1800, function () use ($filters) { // 30 minutes
             $query = Student::with(['user:id,name', 'currentEnrollment']);
 
-            if (!empty($filters['campus_id'])) {
+            if (! empty($filters['campus_id'])) {
                 $query->whereHas('currentEnrollment', function ($q) use ($filters) {
                     $q->where('campus_id', $filters['campus_id']);
                 });
             }
 
-            if (!empty($filters['class_id'])) {
+            if (! empty($filters['class_id'])) {
                 $query->whereHas('currentEnrollment', function ($q) use ($filters) {
                     $q->where('class_id', $filters['class_id']);
                 });
@@ -198,7 +200,8 @@ class StudentRepository
     {
         $lastStudent = Student::orderBy('id', 'desc')->first();
         $nextNumber = $lastStudent ? (int) substr($lastStudent->admission_no, 4) + 1 : 1;
-        return 'ADM-' . str_pad($nextNumber, 5, '0', STR_PAD_LEFT);
+
+        return 'ADM-'.str_pad($nextNumber, 5, '0', STR_PAD_LEFT);
     }
 
     /**
@@ -209,7 +212,8 @@ class StudentRepository
         $maxStudentCode = Student::where('student_code', 'like', 'STU-%')
             ->max('student_code');
         $nextNumber = $maxStudentCode ? (int) str_replace('STU-', '', $maxStudentCode) + 1 : 1;
-        return 'STU-' . str_pad($nextNumber, 6, '0', STR_PAD_LEFT);
+
+        return 'STU-'.str_pad($nextNumber, 6, '0', STR_PAD_LEFT);
     }
 
     /**
@@ -218,7 +222,8 @@ class StudentRepository
     public function generateRegistrationNumber(): string
     {
         $maxId = Student::max('id') ?? 0;
-        return 'REG-' . date('Y') . '-' . str_pad($maxId + 1, 5, '0', STR_PAD_LEFT);
+
+        return 'REG-'.date('Y').'-'.str_pad($maxId + 1, 5, '0', STR_PAD_LEFT);
     }
 
     /**
@@ -227,29 +232,29 @@ class StudentRepository
      */
     private function handleImageUpload($imageFile, string $studentName, string $studentCode): ?string
     {
-        if (!$imageFile) {
+        if (! $imageFile) {
             return null;
         }
 
         // Sanitize student name for filename
         $sanitizedName = preg_replace('/[^a-zA-Z0-9]/', '_', strtolower(trim($studentName)));
         $sanitizedName = preg_replace('/_+/', '_', $sanitizedName);
-        
+
         // Get file extension
         $extension = $imageFile->getClientOriginalExtension();
-        
+
         // Create filename: studentname_studentcode.extension
-        $filename = $sanitizedName . '_' . $studentCode . '.' . $extension;
-        
+        $filename = $sanitizedName.'_'.$studentCode.'.'.$extension;
+
         // Ensure the students directory exists
         $directory = 'students';
-        if (!Storage::disk('public')->exists($directory)) {
+        if (! Storage::disk('public')->exists($directory)) {
             Storage::disk('public')->makeDirectory($directory);
         }
-        
+
         // Store in public/students directory
         $path = $imageFile->storeAs($directory, $filename, 'public');
-        
+
         return $path;
     }
 
@@ -322,7 +327,7 @@ class StudentRepository
             $this->createFeeAssignmentsFromAdmission($enrollment, $data);
 
             // 8. Create student discounts if fee_mode is 'discount' or 'manual'
-            if (in_array($data['fee_mode'] ?? null, ['discount', 'manual']) && !empty($data['discounts'])) {
+            if (in_array($data['fee_mode'] ?? null, ['discount', 'manual']) && ! empty($data['discounts'])) {
                 $this->createDiscountsFromAdmission($enrollment, $data);
             }
 
@@ -330,12 +335,12 @@ class StudentRepository
             $fatherGuardian = $this->handleFatherGuardian($data, $student);
 
             // 7. Handle Mother Guardian if provided
-            if (!empty($data['mother_name'])) {
+            if (! empty($data['mother_name'])) {
                 $this->handleMotherGuardian($data, $student);
             }
 
             // 8. Handle Other Guardian if provided
-            if (!empty($data['other_name'])) {
+            if (! empty($data['other_name'])) {
                 $this->handleOtherGuardian($data, $student);
             }
 
@@ -356,13 +361,13 @@ class StudentRepository
     private function handleFatherGuardian(array $data, Student $student): Guardian
     {
         // Check if guardian_id is provided (linking existing guardian)
-        if (!empty($data['guardian_id'])) {
+        if (! empty($data['guardian_id'])) {
             $fatherGuardian = Guardian::find($data['guardian_id']);
-            if (!$fatherGuardian) {
+            if (! $fatherGuardian) {
                 throw new \RuntimeException('Guardian not found for the given ID');
             }
         } else {
-            $fatherPhone = !empty($data['father_phone']) ? $data['father_phone'] : null;
+            $fatherPhone = ! empty($data['father_phone']) ? $data['father_phone'] : null;
             $fatherGuardian = $this->guardianService->findOrCreateByPhone($fatherPhone, [
                 'name' => $data['father_name'],
                 'email' => $data['father_email'] ?? null,
@@ -389,7 +394,7 @@ class StudentRepository
      */
     private function handleMotherGuardian(array $data, Student $student): void
     {
-        $motherPhone = (!empty($data['mother_phone_different']) && !empty($data['mother_phone']))
+        $motherPhone = (! empty($data['mother_phone_different']) && ! empty($data['mother_phone']))
             ? $data['mother_phone']
             : null;
 
@@ -467,10 +472,10 @@ class StudentRepository
                 ]);
 
                 // Handle discounts update
-                if (in_array($data['fee_mode'] ?? 'structure', ['discount', 'manual']) && !empty($data['discounts'])) {
+                if (in_array($data['fee_mode'] ?? 'structure', ['discount', 'manual']) && ! empty($data['discounts'])) {
                     // Remove existing discounts for this enrollment
                     $currentEnrollment->discounts()->delete();
-                    
+
                     // Create new discounts
                     $this->createDiscountsFromAdmission($currentEnrollment, $data);
                 }
@@ -497,7 +502,7 @@ class StudentRepository
             }
 
             // 4. Update guardians if provided
-            if (!empty($data['guardians'])) {
+            if (! empty($data['guardians'])) {
                 foreach ($data['guardians'] as $guardianData) {
                     if (isset($guardianData['id'])) {
                         $studentGuardian = StudentGuardian::where('student_id', $student->id)
@@ -536,15 +541,16 @@ class StudentRepository
         $studentName = $student->user?->name ?? $student->student_code;
 
         // Check if image should be removed
-        if (!empty($data['remove_image'])) {
+        if (! empty($data['remove_image'])) {
             // Delete old image
             $this->deleteImage($student->image);
             $student->update(['image' => null]);
+
             return;
         }
 
         // Check if new image is uploaded
-        if (!empty($data['image']) && $data['image'] instanceof \Illuminate\Http\File) {
+        if (! empty($data['image']) && $data['image'] instanceof File) {
             // Delete old image if exists
             $this->deleteImage($student->image);
 
@@ -560,7 +566,7 @@ class StudentRepository
     public function changeStatus(Student $student, array $data): Student
     {
         DB::transaction(function () use ($student, $data) {
-            if (!empty($data['is_reactivation'])) {
+            if (! empty($data['is_reactivation'])) {
                 // Re-admission
                 $this->handleReactivation($student, $data);
             } else {
@@ -594,7 +600,7 @@ class StudentRepository
         $sectionId = $data['section_id'] ?? $lastEnrollment?->section_id;
         $campusId = $data['campus_id'] ?? $lastEnrollment?->campus_id;
 
-        if (!$sessionId || !$classId || !$sectionId) {
+        if (! $sessionId || ! $classId || ! $sectionId) {
             throw new \RuntimeException('Session, class, and section are required for re-admission');
         }
 
@@ -709,13 +715,13 @@ class StudentRepository
     {
         // Normalize phone number by removing all non-digit characters
         $cleanPhone = preg_replace('/\D/', '', $phone);
-        
+
         // Try exact match first (most common case), then partial matches
         $guardian = Guardian::where('phone', $cleanPhone)
-            ->orWhere('phone', 'LIKE', '%' . $cleanPhone)
+            ->orWhere('phone', 'LIKE', '%'.$cleanPhone)
             ->with(['user:id,name,email', 'students'])
             ->first();
-        
+
         return $guardian;
     }
 
@@ -738,9 +744,9 @@ class StudentRepository
         // Get or create Monthly and Annual fee heads
         $monthlyFeeHead = FeeHead::where('code', 'MONTHLY_TUITION')->first();
         $annualFeeHead = FeeHead::where('code', 'ANNUAL')->first();
-        
+
         // If custom monthly fee is set and different from structure, create assignment
-        if (!empty($data['monthly_fee']) && $monthlyFeeHead) {
+        if (! empty($data['monthly_fee']) && $monthlyFeeHead) {
             // Check if there's an existing active custom assignment
             $existingMonthlyAssignment = StudentFeeAssignment::where('student_id', $enrollment->student_id)
                 ->where('fee_head_id', $monthlyFeeHead->id)
@@ -748,7 +754,7 @@ class StudentRepository
                 ->where('is_active', true)
                 ->first();
 
-            if (!$existingMonthlyAssignment) {
+            if (! $existingMonthlyAssignment) {
                 StudentFeeAssignment::create([
                     'student_id' => $enrollment->student_id,
                     'student_enrollment_record_id' => $enrollment->id,
@@ -769,14 +775,14 @@ class StudentRepository
         }
 
         // If custom annual fee is set and different from structure, create assignment
-        if (!empty($data['annual_fee']) && $annualFeeHead) {
+        if (! empty($data['annual_fee']) && $annualFeeHead) {
             $existingAnnualAssignment = StudentFeeAssignment::where('student_id', $enrollment->student_id)
                 ->where('fee_head_id', $annualFeeHead->id)
                 ->where('assignment_type', 'custom')
                 ->where('is_active', true)
                 ->first();
 
-            if (!$existingAnnualAssignment) {
+            if (! $existingAnnualAssignment) {
                 StudentFeeAssignment::create([
                     'student_id' => $enrollment->student_id,
                     'student_enrollment_record_id' => $enrollment->id,
@@ -816,7 +822,7 @@ class StudentRepository
             // Get the discount type to check if it requires approval
             $discountTypeId = $discountData['discount_type_id'] ?? null;
             $requiresApproval = false;
-            
+
             if ($discountTypeId) {
                 $discountType = DiscountType::find($discountTypeId);
                 $requiresApproval = $discountType?->requires_approval ?? false;
@@ -873,7 +879,7 @@ class StudentRepository
     /**
      * Chunk students for large dataset processing.
      */
-    public function chunkForProcessing(int $chunkSize = 100, callable $callback): void
+    public function chunkForProcessing(int $chunkSize, callable $callback): void
     {
         Student::with(['user', 'enrollmentRecords'])
             ->chunkById($chunkSize, $callback);

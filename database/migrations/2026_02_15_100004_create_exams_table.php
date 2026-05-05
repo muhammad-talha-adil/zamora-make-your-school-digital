@@ -4,10 +4,11 @@ use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Support\Facades\Schema;
 
-return new class extends Migration {
+return new class extends Migration
+{
     /**
      * Run the migrations.
-     * 
+     *
      * Consolidated from:
      * - 2026_02_15_100004_create_exams_table.php
      * - 2026_02_15_100013_add_publish_and_lock_fields_to_exams_table.php

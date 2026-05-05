@@ -3,17 +3,17 @@
 namespace App\Http\Controllers\Exam;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Exam\BulkCreateExamPaperRequest;
 use App\Http\Requests\Exam\StoreExamPaperRequest;
 use App\Http\Requests\Exam\UpdateExamPaperRequest;
-use App\Http\Requests\Exam\BulkCreateExamPaperRequest;
-use App\Models\Exam\ExamPaper;
-use App\Models\Exam\Exam;
 use App\Models\Campus;
+use App\Models\Exam\Exam;
+use App\Models\Exam\ExamPaper;
 use App\Models\SchoolClass;
 use App\Models\Section;
 use App\Models\Subject;
-use App\Models\ClassSubject;
 use App\Services\Exam\ExamPaperService;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -36,8 +36,8 @@ class ExamPaperController extends Controller
         $classId = $request->get('class_id');
 
         $papers = ExamPaper::with(['exam', 'subject', 'class', 'section', 'campus'])
-            ->when($examId, fn($q) => $q->where('exam_id', $examId))
-            ->when($classId, fn($q) => $q->where('class_id', $classId))
+            ->when($examId, fn ($q) => $q->where('exam_id', $examId))
+            ->when($classId, fn ($q) => $q->where('class_id', $classId))
             ->orderBy('paper_date')
             ->get();
 
@@ -92,11 +92,11 @@ class ExamPaperController extends Controller
     public function index(Request $request)
     {
         $examId = $request->get('exam_id');
-        
+
         $papers = ExamPaper::with(['exam', 'subject', 'class', 'section', 'campus'])
-            ->when($examId, fn($q) => $q->where('exam_id', $examId))
+            ->when($examId, fn ($q) => $q->where('exam_id', $examId))
             ->get();
-            
+
         return response()->json(['data' => $papers]);
     }
 
@@ -106,10 +106,10 @@ class ExamPaperController extends Controller
     public function store(StoreExamPaperRequest $request)
     {
         $validated = $request->validated();
-        
+
         // Scope validation
         $scopeType = $validated['scope_type'];
-        
+
         if ($scopeType === 'SCHOOL') {
             $validated['campus_id'] = null;
             $validated['class_id'] = null;
@@ -117,9 +117,9 @@ class ExamPaperController extends Controller
         } elseif ($scopeType === 'CLASS') {
             $validated['section_id'] = null;
         }
-        
+
         $paper = ExamPaper::create($validated);
-        
+
         return response()->json(['message' => 'Exam paper created successfully', 'data' => $paper], 201);
     }
 
@@ -130,10 +130,10 @@ class ExamPaperController extends Controller
     {
         $paper = ExamPaper::findOrFail($id);
         $validated = $request->validated();
-        
+
         // Scope validation
         $scopeType = $validated['scope_type'] ?? $paper->scope_type;
-        
+
         if ($scopeType === 'SCHOOL') {
             $validated['campus_id'] = null;
             $validated['class_id'] = null;
@@ -141,9 +141,9 @@ class ExamPaperController extends Controller
         } elseif ($scopeType === 'CLASS') {
             $validated['section_id'] = null;
         }
-        
+
         $paper->update($validated);
-        
+
         return response()->json(['message' => 'Exam paper updated successfully', 'data' => $paper]);
     }
 
@@ -155,10 +155,10 @@ class ExamPaperController extends Controller
         $validated = $request->validated();
         $examId = $validated['exam_id'];
         $scopeType = $validated['scope_type'];
-        
+
         $papers = [];
         $now = now();
-        
+
         foreach ($validated['papers'] as $paper) {
             $paperData = [
                 'exam_id' => $examId,
@@ -173,7 +173,7 @@ class ExamPaperController extends Controller
                 'created_at' => $now,
                 'updated_at' => $now,
             ];
-            
+
             // Add scope-specific fields
             if ($scopeType === 'SCHOOL') {
                 $paperData['campus_id'] = null;
@@ -188,12 +188,12 @@ class ExamPaperController extends Controller
                 $paperData['section_id'] = $validated['section_id'] ?? null;
                 $paperData['campus_id'] = $validated['campus_id'] ?? null;
             }
-            
+
             $papers[] = $paperData;
         }
 
         ExamPaper::insert($papers);
-        
+
         return response()->json(['message' => 'Exam papers created successfully', 'count' => count($papers)], 201);
     }
 
@@ -244,6 +244,7 @@ class ExamPaperController extends Controller
     {
         $paper = ExamPaper::findOrFail($id);
         $paper->update(['status' => 'cancelled']);
+
         return response()->json(['message' => 'Exam paper cancelled successfully', 'data' => $paper]);
     }
 
@@ -254,6 +255,7 @@ class ExamPaperController extends Controller
     {
         $paper = ExamPaper::findOrFail($id);
         $paper->delete();
+
         return response()->json(['message' => 'Exam paper deleted successfully']);
     }
 
@@ -263,13 +265,13 @@ class ExamPaperController extends Controller
     public function getSectionsByClass(Request $request)
     {
         $classId = $request->get('class_id');
-        
-        if (!$classId) {
+
+        if (! $classId) {
             return response()->json(['sections' => []]);
         }
-        
+
         $sections = Section::where('class_id', $classId)->orderBy('name')->get();
-        
+
         return response()->json(['sections' => $sections]);
     }
 
@@ -289,16 +291,16 @@ class ExamPaperController extends Controller
         $excludeExisting = $request->get('exclude_existing', false);
 
         // Validate required parameters
-        if (!$classId) {
+        if (! $classId) {
             return response()->json([
                 'type' => 'error',
                 'message' => 'Class is required to load subjects or papers.',
-                'data' => []
+                'data' => [],
             ], 422);
         }
 
         // If exam is selected, check for existing papers (unless exclude_existing is true)
-        if ($examId && !$excludeExisting) {
+        if ($examId && ! $excludeExisting) {
             $papersQuery = ExamPaper::with(['exam', 'subject', 'class', 'section', 'campus'])
                 ->where('exam_id', $examId)
                 ->where('class_id', $classId);
@@ -315,10 +317,10 @@ class ExamPaperController extends Controller
             if ($sectionId) {
                 $papersQuery->where(function ($q) use ($sectionId) {
                     $q->where('section_id', $sectionId)
-                      ->orWhere(function ($subQ) {
-                          $subQ->whereNull('section_id')
-                               ->where('scope_type', 'CLASS');
-                      });
+                        ->orWhere(function ($subQ) {
+                            $subQ->whereNull('section_id')
+                                ->where('scope_type', 'CLASS');
+                        });
                 });
             } else {
                 // No specific section - show CLASS level papers only
@@ -331,7 +333,7 @@ class ExamPaperController extends Controller
                 return response()->json([
                     'type' => 'papers',
                     'data' => $papers,
-                    'message' => 'Existing papers found for this combination.'
+                    'message' => 'Existing papers found for this combination.',
                 ]);
             }
         }
@@ -355,7 +357,7 @@ class ExamPaperController extends Controller
                 })
                 ->pluck('subject_id')
                 ->toArray();
-            
+
             $subjectQuery->whereNotIn('id', $existingSubjectIds);
         }
 
@@ -378,7 +380,7 @@ class ExamPaperController extends Controller
         return response()->json([
             'type' => 'subjects',
             'data' => $subjectsData,
-            'message' => 'No existing papers found. Showing subjects for the selected class and section.'
+            'message' => 'No existing papers found. Showing subjects for the selected class and section.',
         ]);
     }
 
@@ -391,7 +393,7 @@ class ExamPaperController extends Controller
         $sectionId = $request->get('section_id');
         $campusId = $request->get('campus_id');
 
-        if (!$classId) {
+        if (! $classId) {
             return response()->json(['subjects' => []]);
         }
 
@@ -413,17 +415,17 @@ class ExamPaperController extends Controller
     public function getExamDateRange(Request $request)
     {
         $examId = $request->get('exam_id');
-        
-        if (!$examId) {
+
+        if (! $examId) {
             return response()->json(['message' => 'Exam ID is required.'], 422);
         }
-        
+
         $dateRange = $this->paperService->getExamDateRange($examId);
-        
-        if (!$dateRange) {
+
+        if (! $dateRange) {
             return response()->json(['message' => 'Exam not found.'], 404);
         }
-        
+
         return response()->json($dateRange);
     }
 
@@ -436,12 +438,12 @@ class ExamPaperController extends Controller
             'exam_id' => 'required|exists:exams,id',
             'paper_date' => 'required|date',
         ]);
-        
+
         $result = $this->paperService->validatePaperDate(
             $validated['exam_id'],
             $validated['paper_date']
         );
-        
+
         return response()->json($result);
     }
 
@@ -458,7 +460,7 @@ class ExamPaperController extends Controller
             'section_id' => 'nullable|exists:sections,id',
             'campus_id' => 'nullable|exists:campuses,id',
         ]);
-        
+
         $result = $this->paperService->checkDateOverlap(
             $validated['exam_id'],
             $validated['paper_date'],
@@ -467,7 +469,7 @@ class ExamPaperController extends Controller
             $validated['section_id'] ?? null,
             $validated['campus_id'] ?? null
         );
-        
+
         return response()->json($result);
     }
 
@@ -512,16 +514,16 @@ class ExamPaperController extends Controller
             'passing_marks.numeric' => 'Passing marks must be a number.',
             'passing_marks.min' => 'Passing marks cannot be negative.',
         ]);
-        
+
         // Validate paper date is within exam date range
         $dateValidation = $this->paperService->validatePaperDate($validated['exam_id'], $validated['paper_date']);
-        if (!$dateValidation['valid']) {
+        if (! $dateValidation['valid']) {
             return response()->json([
                 'message' => $dateValidation['message'],
                 'error' => 'invalid_date',
             ], 422);
         }
-        
+
         // Check for date overlap
         $overlapResult = $this->paperService->checkDateOverlap(
             $validated['exam_id'],
@@ -531,15 +533,15 @@ class ExamPaperController extends Controller
             $validated['section_id'] ?? null,
             $validated['campus_id'] ?? null
         );
-        
+
         if ($overlapResult['has_overlap']) {
             return response()->json([
                 'message' => $overlapResult['message'],
                 'error' => 'date_overlap',
-                'overlapping_papers' => $overlapResult['overlapping_papers']
+                'overlapping_papers' => $overlapResult['overlapping_papers'],
             ], 422);
         }
-        
+
         // Scope validation
         if ($validated['scope_type'] === 'SCHOOL') {
             $validated['campus_id'] = null;
@@ -548,7 +550,7 @@ class ExamPaperController extends Controller
         } elseif ($validated['scope_type'] === 'CLASS') {
             $validated['section_id'] = null;
         }
-        
+
         // Check for hierarchical conflicts: SECTION scope vs CLASS scope
         // If trying to create a SECTION paper, check if CLASS paper already exists
         if ($validated['scope_type'] === 'SECTION') {
@@ -562,17 +564,17 @@ class ExamPaperController extends Controller
                 })
                 ->where('status', '!=', 'cancelled')
                 ->first();
-                
+
             if ($classLevelPaper) {
                 return response()->json([
                     'message' => 'A paper for this subject already exists at CLASS level (All Sections). Please edit or remove the class-level paper first, or select a different subject.',
                     'error' => 'hierarchy_conflict',
                     'existing_paper' => $classLevelPaper,
-                    'conflict_type' => 'class_level_exists'
+                    'conflict_type' => 'class_level_exists',
                 ], 422);
             }
         }
-        
+
         // If trying to create a CLASS paper, check if any SECTION papers already exist
         if ($validated['scope_type'] === 'CLASS') {
             $sectionPapers = ExamPaper::where('exam_id', $validated['exam_id'])
@@ -585,17 +587,17 @@ class ExamPaperController extends Controller
                 })
                 ->where('status', '!=', 'cancelled')
                 ->get();
-                
+
             if ($sectionPapers->isNotEmpty()) {
                 return response()->json([
                     'message' => 'Papers for this subject already exist at SECTION level. Please remove them before creating a class-level paper, or select specific sections instead.',
                     'error' => 'hierarchy_conflict',
                     'existing_papers' => $sectionPapers,
-                    'conflict_type' => 'section_level_exists'
+                    'conflict_type' => 'section_level_exists',
                 ], 422);
             }
         }
-        
+
         // Check if paper already exists for this exact combination (Duplicate check)
         $existingPaper = ExamPaper::where('exam_id', $validated['exam_id'])
             ->where('subject_id', $validated['subject_id'])
@@ -604,16 +606,16 @@ class ExamPaperController extends Controller
             ->where('campus_id', $validated['campus_id'])
             ->where('status', '!=', 'cancelled')
             ->first();
-            
+
         if ($existingPaper) {
             return response()->json([
                 'message' => 'A paper for this subject already exists in the selected exam, campus, class, and section combination.',
                 'error' => 'duplicate',
                 'exists' => true,
-                'paper' => $existingPaper
+                'paper' => $existingPaper,
             ], 422);
         }
-        
+
         // Check for schedule clash (time-based overlap)
         $hasClash = $this->paperService->checkClash(
             $validated['exam_id'],
@@ -630,15 +632,15 @@ class ExamPaperController extends Controller
             return response()->json([
                 'message' => 'Schedule conflict: There is already an exam scheduled at this time for the same class/section.',
                 'error' => 'clash',
-                'has_clash' => true
+                'has_clash' => true,
             ], 422);
         }
-        
+
         $paper = ExamPaper::create($validated);
-        
+
         return response()->json([
             'message' => 'Exam paper created successfully',
-            'data' => $paper
+            'data' => $paper,
         ], 201);
     }
 
@@ -683,14 +685,14 @@ class ExamPaperController extends Controller
             'papers.*.passing_marks.numeric' => 'Passing marks must be a number.',
             'papers.*.passing_marks.min' => 'Passing marks cannot be negative.',
         ]);
-        
+
         $examId = $validated['exam_id'];
         $scopeType = $validated['scope_type'];
         $classId = $validated['class_id'];
         $sectionId = $validated['section_id'] ?? null;
         $campusId = $validated['campus_id'] ?? null;
         $papers = $validated['papers'];
-        
+
         // Check for hierarchical conflicts before processing bulk papers
         // If trying to create CLASS papers, check if SECTION papers already exist
         if ($scopeType === 'CLASS') {
@@ -704,17 +706,17 @@ class ExamPaperController extends Controller
                 ->where('status', '!=', 'cancelled')
                 ->pluck('subject_id')
                 ->toArray();
-                
-            if (!empty($existingSectionPapers)) {
+
+            if (! empty($existingSectionPapers)) {
                 return response()->json([
                     'message' => 'Cannot create class-level papers: Section-level papers already exist for some subjects. Please remove them first.',
                     'error' => 'hierarchy_conflict',
                     'conflict_type' => 'section_level_exists',
-                    'conflicting_subject_ids' => $existingSectionPapers
+                    'conflicting_subject_ids' => $existingSectionPapers,
                 ], 422);
             }
         }
-        
+
         // If trying to create SECTION papers, check if CLASS papers exist
         if ($scopeType === 'SECTION') {
             $existingClassPapers = ExamPaper::where('exam_id', $examId)
@@ -727,43 +729,44 @@ class ExamPaperController extends Controller
                 ->where('status', '!=', 'cancelled')
                 ->pluck('subject_id')
                 ->toArray();
-                
-            if (!empty($existingClassPapers)) {
+
+            if (! empty($existingClassPapers)) {
                 return response()->json([
                     'message' => 'Cannot create section-level papers: Class-level papers already exist for some subjects. Please remove them first.',
                     'error' => 'hierarchy_conflict',
                     'conflict_type' => 'class_level_exists',
-                    'conflicting_subject_ids' => $existingClassPapers
+                    'conflicting_subject_ids' => $existingClassPapers,
                 ], 422);
             }
         }
-        
+
         // Get exam date range for validation
         $exam = Exam::find($examId);
         $examStartDate = $exam->start_date;
         $examEndDate = $exam->end_date;
-        
+
         $createdPapers = [];
         $skippedPapers = [];
         $clashedPapers = [];
         $invalidDatePapers = [];
         $dateOverlapPapers = [];
         $now = now();
-        
+
         foreach ($papers as $paper) {
             // Validate paper date is within exam date range
-            $paperDateObj = \Carbon\Carbon::parse($paper['paper_date']);
-            
+            $paperDateObj = Carbon::parse($paper['paper_date']);
+
             if ($paperDateObj->lt($examStartDate) || $paperDateObj->gt($examEndDate)) {
                 $invalidDatePapers[] = [
                     'subject_id' => $paper['subject_id'],
                     'reason' => "Paper date must be between {$examStartDate->format('Y-m-d')} and {$examEndDate->format('Y-m-d')}.",
                     'error' => 'invalid_date',
-                    'paper_date' => $paper['paper_date']
+                    'paper_date' => $paper['paper_date'],
                 ];
+
                 continue;
             }
-            
+
             // Check for date overlap
             $overlapResult = $this->paperService->checkDateOverlap(
                 $examId,
@@ -773,17 +776,18 @@ class ExamPaperController extends Controller
                 $sectionId,
                 $campusId
             );
-            
+
             if ($overlapResult['has_overlap']) {
                 $dateOverlapPapers[] = [
                     'subject_id' => $paper['subject_id'],
                     'reason' => $overlapResult['message'],
                     'error' => 'date_overlap',
-                    'paper_date' => $paper['paper_date']
+                    'paper_date' => $paper['paper_date'],
                 ];
+
                 continue;
             }
-            
+
             // Check if paper already exists (Duplicate check)
             $existingPaper = ExamPaper::where('exam_id', $examId)
                 ->where('subject_id', $paper['subject_id'])
@@ -792,17 +796,18 @@ class ExamPaperController extends Controller
                 ->where('campus_id', $campusId)
                 ->where('status', '!=', 'cancelled')
                 ->first();
-                
+
             if ($existingPaper) {
                 $skippedPapers[] = [
                     'subject_id' => $paper['subject_id'],
                     'reason' => 'A paper for this subject already exists in the selected exam, campus, class, and section combination.',
                     'error' => 'duplicate',
-                    'existing_paper' => $existingPaper
+                    'existing_paper' => $existingPaper,
                 ];
+
                 continue;
             }
-            
+
             // Check for schedule clash (time-based overlap)
             $hasClash = $this->paperService->checkClash(
                 $examId,
@@ -822,11 +827,12 @@ class ExamPaperController extends Controller
                     'error' => 'clash',
                     'paper_date' => $paper['paper_date'],
                     'start_time' => $paper['start_time'],
-                    'end_time' => $paper['end_time']
+                    'end_time' => $paper['end_time'],
                 ];
+
                 continue;
             }
-            
+
             $paperData = [
                 'exam_id' => $examId,
                 'subject_id' => $paper['subject_id'],
@@ -840,7 +846,7 @@ class ExamPaperController extends Controller
                 'created_at' => $now,
                 'updated_at' => $now,
             ];
-            
+
             // Add scope-specific fields
             if ($scopeType === 'SCHOOL') {
                 $paperData['campus_id'] = null;
@@ -855,15 +861,15 @@ class ExamPaperController extends Controller
                 $paperData['section_id'] = $sectionId;
                 $paperData['campus_id'] = $campusId;
             }
-            
+
             $createdPapers[] = $paperData;
         }
-        
+
         // Insert all papers at once
-        if (!empty($createdPapers)) {
+        if (! empty($createdPapers)) {
             ExamPaper::insert($createdPapers);
         }
-        
+
         return response()->json([
             'message' => 'Exam papers processed successfully',
             'created_count' => count($createdPapers),
@@ -875,7 +881,7 @@ class ExamPaperController extends Controller
             'skipped' => $skippedPapers,
             'clashed' => $clashedPapers,
             'invalid_dates' => $invalidDatePapers,
-            'date_overlaps' => $dateOverlapPapers
+            'date_overlaps' => $dateOverlapPapers,
         ], 201);
     }
 }

@@ -2,18 +2,16 @@
 
 namespace App\Services;
 
-use App\Models\Purchase;
-use App\Models\PurchasePayment;
-use App\Models\StudentInventory;
-use App\Models\StudentInventoryItem;
 use App\Models\InventoryStock;
 use App\Models\InventoryValuation;
+use App\Models\Purchase;
+use App\Models\StudentInventory;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
 /**
  * Inventory Financial Summary Service
- * 
+ *
  * Provides comprehensive financial reports for inventory including:
  * - Purchase expenses
  * - Sales revenue
@@ -54,7 +52,7 @@ class InventoryFinancialSummary
             'total_paid_amount' => $totalPaidAmount,
             'total_due_amount' => $totalDueAmount,
             'by_status' => $byStatus,
-            'purchases' => $purchases->map(fn($p) => [
+            'purchases' => $purchases->map(fn ($p) => [
                 'id' => $p->id,
                 'purchase_id' => $p->purchase_id,
                 'purchase_date' => $p->purchase_date?->format('Y-m-d'),
@@ -98,13 +96,13 @@ class InventoryFinancialSummary
         // Calculate profit
         $totalCostOfGoodsSold = 0;
         $totalProfit = 0;
-        
+
         foreach ($sales as $sale) {
             foreach ($sale->items as $item) {
                 $purchaseRate = (float) ($item->purchase_rate_snapshot ?? 0);
                 $salePrice = $item->getFinalUnitPrice();
                 $quantity = $item->quantity;
-                
+
                 $totalCostOfGoodsSold += $purchaseRate * $quantity;
                 $totalProfit += ($salePrice - $purchaseRate) * $quantity;
             }
@@ -182,13 +180,13 @@ class InventoryFinancialSummary
             'unpaid_count' => $unpaidPurchases->count(),
             'partial_count' => $partialPurchases->count(),
             'overdue_count' => $overduePurchases->count(),
-            'unpaid_purchases' => $unpaidPurchases->map(fn($p) => [
+            'unpaid_purchases' => $unpaidPurchases->map(fn ($p) => [
                 'purchase_id' => $p->purchase_id,
                 'supplier_name' => $p->supplier?->name,
                 'amount' => $p->total_amount,
                 'due_date' => $p->due_date?->format('Y-m-d'),
             ]),
-            'overdue_purchases' => $overduePurchases->map(fn($p) => [
+            'overdue_purchases' => $overduePurchases->map(fn ($p) => [
                 'purchase_id' => $p->purchase_id,
                 'supplier_name' => $p->supplier?->name,
                 'amount' => $p->due_amount,
@@ -321,7 +319,7 @@ class InventoryFinancialSummary
                 'purchase_due' => $monthPurchases->sum('due_amount'),
                 'sales_count' => $monthSales->count(),
                 'sales_amount' => $monthSales->sum('final_amount'),
-                'sales_profit' => $monthSales->sum(fn($s) => $s->getTotalProfit()),
+                'sales_profit' => $monthSales->sum(fn ($s) => $s->getTotalProfit()),
             ],
             'inventory' => [
                 'total_items' => $valuation['total_items'],

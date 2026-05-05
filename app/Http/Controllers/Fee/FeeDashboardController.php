@@ -3,11 +3,9 @@
 namespace App\Http\Controllers\Fee;
 
 use App\Http\Controllers\Controller;
-use App\Models\Fee\FeeVoucher;
 use App\Models\Fee\FeePayment;
-use Illuminate\Http\Request;
+use App\Models\Fee\FeeVoucher;
 use Inertia\Inertia;
-use Illuminate\Support\Facades\DB;
 
 class FeeDashboardController extends Controller
 {

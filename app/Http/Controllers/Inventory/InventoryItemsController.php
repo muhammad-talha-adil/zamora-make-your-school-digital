@@ -12,9 +12,10 @@ use App\Models\InventoryType;
 use App\Models\Purchase;
 use App\Models\StudentInventory;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Inertia\Response;
 use Illuminate\Support\Facades\DB;
+use Inertia\Response;
 
 class InventoryItemsController extends Controller
 {
@@ -32,14 +33,14 @@ class InventoryItemsController extends Controller
 
         $query = InventoryItem::with(['campus', 'inventoryType'])
             ->withCount('inventoryStock')
-            ->when($campusId, fn($q) => $q->where('campus_id', $campusId))
-            ->when($status === 'inactive', fn($q) => $q->withoutGlobalScope('active')->where('is_active', false))
+            ->when($campusId, fn ($q) => $q->where('campus_id', $campusId))
+            ->when($status === 'inactive', fn ($q) => $q->withoutGlobalScope('active')->where('is_active', false))
             ->orderBy('name');
 
         return inertia('inventory/Items/Index', [
             'inventoryItems' => $query->paginate($perPage),
             'campuses' => Campus::orderBy('name')->get(),
-            'inventoryTypes' => InventoryType::when($campusId, fn($q) => $q->where('campus_id', $campusId))
+            'inventoryTypes' => InventoryType::when($campusId, fn ($q) => $q->where('campus_id', $campusId))
                 ->orderBy('name')
                 ->get(),
             'filters' => [
@@ -53,7 +54,7 @@ class InventoryItemsController extends Controller
      *
      * REDIRECTED: Now uses modal on dashboard instead of separate page.
      */
-    public function create(Request $request): \Illuminate\Http\RedirectResponse
+    public function create(Request $request): RedirectResponse
     {
         return redirect()->route('inventory.items.index');
     }
@@ -70,7 +71,7 @@ class InventoryItemsController extends Controller
     {
         // IMPROVEMENT: Use DB transaction for atomic operation
         try {
-            \DB::transaction(function () use ($request, &$inventoryItem) {
+            DB::transaction(function () use ($request, &$inventoryItem) {
                 $inventoryItem = InventoryItem::create($request->validated());
 
                 // IMPROVEMENT: Optionally create initial stock record atomically
@@ -98,12 +99,12 @@ class InventoryItemsController extends Controller
      *
      * REDIRECTED: Now uses modal on dashboard instead of separate page.
      */
-    public function edit(Request $request, InventoryItem $inventoryItem): \Illuminate\Http\RedirectResponse
+    public function edit(Request $request, InventoryItem $inventoryItem): RedirectResponse
     {
         // Scope to campus for multi-campus safety
         /** @var InventoryItem $inventoryItem */
         $item = InventoryItem::where('id', $inventoryItem->id)
-            ->when($request->get('campus_id'), fn($q) => $q->where('campus_id', $request->get('campus_id')))
+            ->when($request->get('campus_id'), fn ($q) => $q->where('campus_id', $request->get('campus_id')))
             ->firstOrFail();
 
         return redirect()->to("/inventory?modal=inventory-items-form&action=edit&id={$item->id}");
@@ -119,12 +120,12 @@ class InventoryItemsController extends Controller
         // IMPROVEMENT: Scope to campus for multi-campus safety
         /** @var InventoryItem $inventoryItem */
         $inventoryItem = InventoryItem::where('id', $inventoryItem->id)
-            ->when($request->get('campus_id'), fn($q) => $q->where('campus_id', $request->get('campus_id')))
+            ->when($request->get('campus_id'), fn ($q) => $q->where('campus_id', $request->get('campus_id')))
             ->firstOrFail();
 
         // IMPROVEMENT: Use DB transaction for atomic operation
         try {
-            \DB::transaction(function () use ($request, $inventoryItem) {
+            DB::transaction(function () use ($request, $inventoryItem) {
                 $inventoryItem->update($request->validated());
             });
 
@@ -146,7 +147,7 @@ class InventoryItemsController extends Controller
         // IMPROVEMENT: Scope to campus for multi-campus safety
         /** @var InventoryItem $inventoryItem */
         $inventoryItem = InventoryItem::where('id', $inventoryItem->id)
-            ->when($request->get('campus_id'), fn($q) => $q->where('campus_id', $request->get('campus_id')))
+            ->when($request->get('campus_id'), fn ($q) => $q->where('campus_id', $request->get('campus_id')))
             ->firstOrFail();
 
         // Perform soft delete
@@ -165,7 +166,7 @@ class InventoryItemsController extends Controller
         // IMPROVEMENT: Scope to campus for multi-campus safety
         /** @var InventoryItem $inventoryItem */
         $inventoryItem = InventoryItem::where('id', $inventoryItem->id)
-            ->when($request->get('campus_id'), fn($q) => $q->where('campus_id', $request->get('campus_id')))
+            ->when($request->get('campus_id'), fn ($q) => $q->where('campus_id', $request->get('campus_id')))
             ->firstOrFail();
 
         $inventoryItem->update(['is_active' => false]);
@@ -183,7 +184,7 @@ class InventoryItemsController extends Controller
         // IMPROVEMENT: Scope to campus for multi-campus safety
         /** @var InventoryItem $inventoryItem */
         $inventoryItem = InventoryItem::where('id', $inventoryItem->id)
-            ->when($request->get('campus_id'), fn($q) => $q->where('campus_id', $request->get('campus_id')))
+            ->when($request->get('campus_id'), fn ($q) => $q->where('campus_id', $request->get('campus_id')))
             ->firstOrFail();
 
         $inventoryItem->update(['is_active' => true]);
@@ -212,7 +213,7 @@ class InventoryItemsController extends Controller
         $supplierId = $request->get('supplier_id'); // Filter by supplier (items purchased from this supplier)
 
         // Default to first campus if no campus_id provided
-        if (!$campusId) {
+        if (! $campusId) {
             $firstCampus = Campus::first();
             if ($firstCampus) {
                 $campusId = $firstCampus->id;
@@ -223,7 +224,7 @@ class InventoryItemsController extends Controller
         $itemsQuery = InventoryItem::with(['campus:id,name', 'inventoryType:id,name'])
             ->select(['id', 'name', 'description', 'campus_id', 'inventory_type_id', 'is_active'])
             ->when($query, function ($q) use ($query) {
-                $q->whereRaw('LOWER(name) LIKE ?', ['%' . strtolower($query) . '%']);
+                $q->whereRaw('LOWER(name) LIKE ?', ['%'.strtolower($query).'%']);
             })
             ->when($campusId, function ($q) use ($campusId) {
                 $q->where('campus_id', $campusId);
@@ -278,10 +279,10 @@ class InventoryItemsController extends Controller
 
         $query = InventoryItem::with(['campus:id,name', 'inventoryType:id,name'])
             ->withCount('inventoryStock')
-            ->when($campusId, fn($q) => $q->where('campus_id', $campusId))
-            ->when($search, fn($q) => $q->whereRaw('LOWER(name) LIKE ?', ['%' . strtolower($search) . '%']))
-            ->when($status === 'active', fn($q) => $q->where('is_active', true))
-            ->when($status === 'inactive', fn($q) => $q->withoutGlobalScope('active')->where('is_active', false));
+            ->when($campusId, fn ($q) => $q->where('campus_id', $campusId))
+            ->when($search, fn ($q) => $q->whereRaw('LOWER(name) LIKE ?', ['%'.strtolower($search).'%']))
+            ->when($status === 'active', fn ($q) => $q->where('is_active', true))
+            ->when($status === 'inactive', fn ($q) => $q->withoutGlobalScope('active')->where('is_active', false));
 
         $items = $query
             ->orderBy('name')
@@ -316,7 +317,7 @@ class InventoryItemsController extends Controller
 
         // IMPROVEMENT: Scope to campus for multi-campus safety
         $item = InventoryItem::with(['campus', 'inventoryType', 'inventoryStock'])
-            ->when($campusId, fn($q) => $q->where('campus_id', $campusId))
+            ->when($campusId, fn ($q) => $q->where('campus_id', $campusId))
             ->findOrFail($id);
 
         return response()->json([
@@ -347,7 +348,7 @@ class InventoryItemsController extends Controller
         $exists = InventoryItem::where('campus_id', $request->campus_id)
             ->where('inventory_type_id', $request->inventory_type_id)
             ->where('name', $request->name)
-            ->when($request->exclude_id, fn($q) => $q->where('id', '!=', $request->exclude_id))
+            ->when($request->exclude_id, fn ($q) => $q->where('id', '!=', $request->exclude_id))
             ->exists();
 
         return response()->json(['exists' => $exists]);
@@ -364,7 +365,7 @@ class InventoryItemsController extends Controller
         $threshold = $request->get('threshold', 10);
 
         $items = InventoryItem::with(['campus', 'inventoryType'])
-            ->when($campusId, fn($q) => $q->where('campus_id', $campusId))
+            ->when($campusId, fn ($q) => $q->where('campus_id', $campusId))
             ->where('is_active', true)
             ->whereHas('inventoryStock', function ($q) use ($threshold) {
                 $q->having('available_quantity', '<', $threshold);
@@ -396,20 +397,20 @@ class InventoryItemsController extends Controller
         $campusId = $request->get('campus_id');
 
         // Get stats - global scope ensures only active, non-deleted items
-        $typesCount = InventoryType::when($campusId, fn($q) => $q->where('campus_id', $campusId))->count();
-        $itemsCount = InventoryItem::when($campusId, fn($q) => $q->where('campus_id', $campusId))->count();
-        
-        $stocks = InventoryStock::when($campusId, fn($q) => $q->where('campus_id', $campusId))
-            ->whereHas('inventoryItem', fn($q) => $q->where('is_active', true))
+        $typesCount = InventoryType::when($campusId, fn ($q) => $q->where('campus_id', $campusId))->count();
+        $itemsCount = InventoryItem::when($campusId, fn ($q) => $q->where('campus_id', $campusId))->count();
+
+        $stocks = InventoryStock::when($campusId, fn ($q) => $q->where('campus_id', $campusId))
+            ->whereHas('inventoryItem', fn ($q) => $q->where('is_active', true))
             ->get();
-        
+
         $totalStock = $stocks->sum('quantity');
         $availableStock = $stocks->sum('available_quantity');
-        $lowStockStocks = $stocks->filter(fn($s) => $s->isLowStock());
+        $lowStockStocks = $stocks->filter(fn ($s) => $s->isLowStock());
         $lowStockItems = $lowStockStocks->count();
-        
+
         // Get actual low stock items with details
-        $lowStockItemsList = $lowStockStocks->map(fn($s) => [
+        $lowStockItemsList = $lowStockStocks->map(fn ($s) => [
             'id' => $s->id,
             'item_id' => $s->inventory_item_id,
             'item_name' => $s->inventoryItem?->name ?? 'Unknown',
@@ -417,37 +418,37 @@ class InventoryItemsController extends Controller
             'low_stock_threshold' => $s->low_stock_threshold ?? 10,
             'campus_name' => $s->campus?->name,
         ])->take(10);
-        
-        $purchasesCount = Purchase::when($campusId, fn($q) => $q->where('campus_id', $campusId))->count();
-        $totalPurchaseValue = Purchase::when($campusId, fn($q) => $q->where('campus_id', $campusId))->sum('total_amount');
-        
-        $studentInventories = StudentInventory::when($campusId, fn($q) => $q->where('campus_id', $campusId))->get();
+
+        $purchasesCount = Purchase::when($campusId, fn ($q) => $q->where('campus_id', $campusId))->count();
+        $totalPurchaseValue = Purchase::when($campusId, fn ($q) => $q->where('campus_id', $campusId))->sum('total_amount');
+
+        $studentInventories = StudentInventory::when($campusId, fn ($q) => $q->where('campus_id', $campusId))->get();
         $assignedItems = $studentInventories->count();
         $pendingReturns = $studentInventories->whereIn('status', ['assigned', 'partial_return'])->count();
 
         // Get recent activities from actual data
         $recentPurchases = Purchase::with(['campus:id,name', 'supplier:id,name'])
-            ->when($campusId, fn($q) => $q->where('campus_id', $campusId))
+            ->when($campusId, fn ($q) => $q->where('campus_id', $campusId))
             ->orderBy('created_at', 'desc')
             ->limit(5)
             ->get()
-            ->map(fn($p) => [
+            ->map(fn ($p) => [
                 'id' => $p->id,
                 'type' => 'purchase',
-                'description' => 'New purchase from ' . ($p->supplier?->name ?? 'N/A'),
+                'description' => 'New purchase from '.($p->supplier?->name ?? 'N/A'),
                 'date' => $p->purchase_date,
                 'created_at' => $p->created_at,
             ]);
 
         $recentAssignments = StudentInventory::with(['campus:id,name', 'student'])
-            ->when($campusId, fn($q) => $q->where('campus_id', $campusId))
+            ->when($campusId, fn ($q) => $q->where('campus_id', $campusId))
             ->orderBy('created_at', 'desc')
             ->limit(5)
             ->get()
-            ->map(fn($si) => [
+            ->map(fn ($si) => [
                 'id' => $si->id,
                 'type' => 'assignment',
-                'description' => 'Inventory assigned to ' . ($si->student?->user?->name ?? 'N/A'),
+                'description' => 'Inventory assigned to '.($si->student?->user?->name ?? 'N/A'),
                 'date' => $si->assigned_date,
                 'created_at' => $si->created_at,
             ]);
@@ -460,7 +461,7 @@ class InventoryItemsController extends Controller
 
         // Get recent purchases with items for "Top Moving Items" calculation
         $recentPurchasesWithItems = Purchase::with(['purchaseItems.inventoryItem:id,name'])
-            ->when($campusId, fn($q) => $q->where('campus_id', $campusId))
+            ->when($campusId, fn ($q) => $q->where('campus_id', $campusId))
             ->orderBy('purchase_date', 'desc')
             ->limit(50)
             ->get();
@@ -479,13 +480,13 @@ class InventoryItemsController extends Controller
             ],
             'low_stock_items' => $lowStockItemsList,
             'recent_activities' => $recentActivities,
-            'recent_purchases' => $recentPurchasesWithItems->map(fn($p) => [
+            'recent_purchases' => $recentPurchasesWithItems->map(fn ($p) => [
                 'id' => $p->id,
                 'purchase_id' => $p->purchase_id,
                 'purchase_date' => $p->purchase_date,
                 'supplier_name' => $p->supplier?->name,
                 'total_amount' => $p->total_amount,
-                'items' => $p->purchaseItems->map(fn($item) => [
+                'items' => $p->purchaseItems->map(fn ($item) => [
                     'id' => $item->id,
                     'inventory_item_id' => $item->inventory_item_id,
                     'item_name' => $item->inventoryItem?->name ?? $item->item_name_snapshot ?? 'Unknown',

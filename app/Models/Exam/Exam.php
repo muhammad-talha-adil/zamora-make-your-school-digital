@@ -2,6 +2,7 @@
 
 namespace App\Models\Exam;
 
+use App\Models\Session;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -13,10 +14,15 @@ class Exam extends Model
 
     // Status constants
     public const STATUS_SCHEDULED = 'scheduled';
+
     public const STATUS_ACTIVE = 'active';
+
     public const STATUS_MARKING = 'marking';
+
     public const STATUS_PUBLISHED = 'published';
+
     public const STATUS_COMPLETED = 'completed';
+
     public const STATUS_CANCELLED = 'cancelled';
 
     public const STATUSES = [
@@ -70,7 +76,7 @@ class Exam extends Model
      */
     public function session(): BelongsTo
     {
-        return $this->belongsTo(\App\Models\Session::class);
+        return $this->belongsTo(Session::class);
     }
 
     /**

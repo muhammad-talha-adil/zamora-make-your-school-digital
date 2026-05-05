@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 class Menu extends Model
 {
     use SoftDeletes;
+
     protected $fillable = [
         'title',
         'icon',
@@ -66,16 +67,16 @@ class Menu extends Model
     protected function generatePath()
     {
         $slug = strtolower(str_replace(' ', '-', $this->title));
-    
+
         if ($this->parent_id) {
             $parent = self::find($this->parent_id);
             if ($parent) {
-                $this->path = $parent->path . '/' . $slug;
+                $this->path = $parent->path.'/'.$slug;
             } else {
-                $this->path = '/' . $slug;
+                $this->path = '/'.$slug;
             }
         } else {
-            $this->path = '/' . $slug;
+            $this->path = '/'.$slug;
         }
     }
 }

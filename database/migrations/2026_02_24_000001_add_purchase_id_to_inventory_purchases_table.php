@@ -2,21 +2,21 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Database\Schema\Blueprint;
-use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 return new class extends Migration
 {
     /**
      * Run the migrations.
-     * 
+     *
      * Adds a human-readable purchase_id column (e.g., PR-2026-0001)
      * and fixes total_amount to properly calculate from items.
      */
     public function up(): void
     {
         // Add purchase_id column if it doesn't already exist
-        if (!Schema::hasColumn('inventory_purchases', 'purchase_id')) {
+        if (! Schema::hasColumn('inventory_purchases', 'purchase_id')) {
             Schema::table('inventory_purchases', function (Blueprint $table) {
                 $table->string('purchase_id')->nullable()->unique()->after('id')->comment('Human-readable purchase ID (e.g., PR-2026-0001)');
             });
@@ -32,23 +32,23 @@ return new class extends Migration
         $existing = DB::table('inventory_purchases')
             ->whereNotNull('purchase_id')
             ->pluck('purchase_id');
-        
+
         $maxCounter = 0;
         foreach ($existing as $pid) {
             if (preg_match('/PR-\d+-(\d+)/', $pid, $matches)) {
-                $maxCounter = max($maxCounter, (int)$matches[1]);
+                $maxCounter = max($maxCounter, (int) $matches[1]);
             }
         }
         $counter = $maxCounter + 1;
 
         foreach ($purchases as $purchase) {
             $year = date('Y', strtotime($purchase->created_at));
-            $purchaseId = 'PR-' . $year . '-' . str_pad($counter, 4, '0', STR_PAD_LEFT);
-            
+            $purchaseId = 'PR-'.$year.'-'.str_pad($counter, 4, '0', STR_PAD_LEFT);
+
             DB::table('inventory_purchases')
                 ->where('id', $purchase->id)
                 ->update(['purchase_id' => $purchaseId]);
-            
+
             $counter++;
         }
 

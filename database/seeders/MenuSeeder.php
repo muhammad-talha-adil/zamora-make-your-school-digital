@@ -3,7 +3,6 @@
 namespace Database\Seeders;
 
 use App\Models\Menu;
-use Illuminate\Database\Console\Seeds\WithoutModelEvents;
 use Illuminate\Database\Seeder;
 
 class MenuSeeder extends Seeder
@@ -81,8 +80,6 @@ class MenuSeeder extends Seeder
             'url' => '/exams',
         ]);
 
-        
-
         // Menu::create([
         //     'title' => 'Papers / Date Sheet',
         //     'icon' => 'calendar',
@@ -91,7 +88,7 @@ class MenuSeeder extends Seeder
         //     'parent_id' => $exam->id,
         //     'is_active' => true,
         //     'url' => '/exams/papers',
-        // ]); 
+        // ]);
 
         // Menu::create([
         //     'title' => 'Registrations',
@@ -469,6 +466,7 @@ class MenuSeeder extends Seeder
             'order' => 1,
             'parent_id' => $settings->id,
             'is_active' => true,
+            'url' => '/settings/profile',
         ]);
 
         Menu::create([
@@ -478,6 +476,7 @@ class MenuSeeder extends Seeder
             'order' => 2,
             'parent_id' => $settings->id,
             'is_active' => true,
+            'url' => '/settings/appearance',
         ]);
 
         Menu::create([
@@ -487,6 +486,7 @@ class MenuSeeder extends Seeder
             'order' => 3,
             'parent_id' => $settings->id,
             'is_active' => true,
+            'url' => '/settings/school-profile',
         ]);
 
         Menu::create([
@@ -496,6 +496,7 @@ class MenuSeeder extends Seeder
             'order' => 4,
             'parent_id' => $settings->id,
             'is_active' => true,
+            'url' => '/settings/menu-settings',
         ]);
     }
 }

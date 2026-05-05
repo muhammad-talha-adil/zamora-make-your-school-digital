@@ -8,18 +8,38 @@ use App\Http\Requests\Settings\UpdateCampusRequest;
 use App\Models\Campus;
 use App\Models\CampusType;
 use Illuminate\Http\JsonResponse;
-use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class CampusController extends Controller
 {
     /**
-     * API endpoint to get all campuses for dropdowns.
+     * API endpoint to get campuses for data table with filtering.
      */
     public function apiIndex(): JsonResponse
     {
-        $campuses = Campus::orderBy('name')->get(['id', 'name', 'is_active']);
+        $query = Campus::with('campusType');
+
+        $status = request()->get('status');
+        if ($status === 'active') {
+            $query->where('is_active', true);
+        } elseif ($status === 'inactive') {
+            $query->where('is_active', false);
+        }
+
+        // Pagination: if per_page is present, paginate; else, return all (for dropdowns etc.)
+        if (request()->has('per_page')) {
+            $perPage = request()->get('per_page', 10);
+            $page = request()->get('page', 1);
+            $campuses = $query->orderBy('id', 'desc')
+                ->paginate($perPage, ['*'], 'page', $page);
+
+            return response()->json($campuses);
+        }
+
+        // Non-paginated, used for dropdowns
+        $campuses = $query->orderBy('name', 'asc')->get();
+
         return response()->json($campuses);
     }
 
@@ -102,40 +122,52 @@ class CampusController extends Controller
     /**
      * Remove the specified resource from storage (soft delete).
      */
-    public function destroy(Campus $campus): RedirectResponse
+    public function destroy(Campus $campus)
     {
         $campus->delete();
 
-        return redirect()->route('campuses.index')->with('success', 'Campus deleted successfully.');
+        return response()->json(['success' => true]);
     }
 
     /**
      * Inactivate the specified resource.
      */
-    public function inactivate(Campus $campus): RedirectResponse
+    public function inactivate(Campus $campus)
     {
         $campus->update(['is_active' => false]);
 
-        return redirect()->route('campuses.index')->with('success', 'Campus inactivated successfully.');
+        if (request()->expectsJson()) {
+            return response()->json(['success' => true]);
+        }
+
+        return redirect()->back()->with('success', 'Campus inactivated successfully.');
     }
 
     /**
      * Activate the specified resource.
      */
-    public function activate(Campus $campus): RedirectResponse
+    public function activate(Campus $campus)
     {
         $campus->update(['is_active' => true]);
 
-        return redirect()->route('campuses.index')->with('success', 'Campus activated successfully.');
+        if (request()->expectsJson()) {
+            return response()->json(['success' => true]);
+        }
+
+        return redirect()->back()->with('success', 'Campus activated successfully.');
     }
 
     /**
      * Restore the specified resource from trash.
      */
-    public function restore(int $id): RedirectResponse
+    public function restore(int $id)
     {
         $campus = Campus::onlyTrashed()->findOrFail($id);
         $campus->restore();
+
+        if (request()->expectsJson()) {
+            return response()->json(['success' => true]);
+        }
 
         return redirect()->route('campuses.index')->with('success', 'Campus restored successfully.');
     }
@@ -143,10 +175,14 @@ class CampusController extends Controller
     /**
      * Permanently delete the specified resource.
      */
-    public function forceDelete(int $id): RedirectResponse
+    public function forceDelete(int $id)
     {
         $campus = Campus::onlyTrashed()->findOrFail($id);
         $campus->forceDelete();
+
+        if (request()->expectsJson()) {
+            return response()->json(['success' => true]);
+        }
 
         return redirect()->route('campuses.index')->with('success', 'Campus permanently deleted.');
     }

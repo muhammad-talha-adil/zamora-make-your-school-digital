@@ -4,7 +4,7 @@ namespace App\Enums\Fee;
 
 /**
  * Approval Status Enum
- * 
+ *
  * Tracks approval workflow status for discounts and special requests.
  */
 enum ApprovalStatus: string
@@ -18,7 +18,7 @@ enum ApprovalStatus: string
      */
     public function label(): string
     {
-        return match($this) {
+        return match ($this) {
             self::PENDING => 'Pending Approval',
             self::APPROVED => 'Approved',
             self::REJECTED => 'Rejected',
@@ -30,7 +30,7 @@ enum ApprovalStatus: string
      */
     public function color(): string
     {
-        return match($this) {
+        return match ($this) {
             self::PENDING => 'yellow',
             self::APPROVED => 'green',
             self::REJECTED => 'red',

@@ -79,7 +79,7 @@ class AttendancePolicy
     public function unlock(User $user, Attendance $attendance): bool
     {
         // Cannot unlock if already unlocked
-        if (!$attendance->is_locked) {
+        if (! $attendance->is_locked) {
             return false;
         }
 

@@ -4,7 +4,7 @@ namespace App\Enums\Fee;
 
 /**
  * Voucher Item Source Enum
- * 
+ *
  * Tracks the origin/source of a voucher line item.
  */
 enum VoucherItemSource: string
@@ -20,7 +20,7 @@ enum VoucherItemSource: string
      */
     public function label(): string
     {
-        return match($this) {
+        return match ($this) {
             self::STRUCTURE => 'Fee Structure',
             self::OVERRIDE => 'Student Override',
             self::MANUAL => 'Manual Entry',

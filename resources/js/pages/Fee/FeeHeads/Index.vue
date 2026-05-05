@@ -58,7 +58,9 @@ const breadcrumbItems: BreadcrumbItem[] = [
 const filters = reactive({
     search: props.filters?.search || '',
     category: props.filters?.category || '',
-    is_active: props.filters?.is_active || '',
+    is_active: props.filters?.is_active !== undefined && props.filters?.is_active !== null 
+        ? String(props.filters.is_active) 
+        : '',
 });
 
 let searchDebounceTimer: ReturnType<typeof setTimeout> | null = null;
@@ -76,7 +78,7 @@ const applyFilters = () => {
     const params = new URLSearchParams();
     if (filters.search) params.append('search', filters.search);
     if (filters.category) params.append('category', filters.category);
-    if (filters.is_active) params.append('is_active', filters.is_active);
+    if (filters.is_active !== '') params.append('is_active', filters.is_active);
     
     const queryString = params.toString();
     const newUrl = route('fee.heads.index') + (queryString ? `?${queryString}` : '');
@@ -88,11 +90,30 @@ const fetchFeeHeads = () => {
     const params = new URLSearchParams();
     if (filters.search) params.append('search', filters.search);
     if (filters.category) params.append('category', filters.category);
-    if (filters.is_active) params.append('is_active', filters.is_active);
+    if (filters.is_active !== '') params.append('is_active', filters.is_active);
 
     axios.get(route('fee.heads.index') + `?${params.toString()}`).then((response) => {
         feeHeadsData.value = response.data.feeHeads?.data || response.data.feeHeads || [];
     });
+};
+
+const toggleActive = (feeHead: FeeHead) => {
+    axios.post(route('fee.heads.toggle-active', feeHead.id), {})
+        .then(() => {
+            feeHead.is_active = !feeHead.is_active;
+        })
+        .catch(console.error);
+};
+
+const deleteFeeHead = (feeHead: FeeHead) => {
+    if (!confirm(`Are you sure you want to delete \"${feeHead.name}\"?`)) {
+        return;
+    }
+    axios.delete(route('fee.heads.destroy', feeHead.id))
+        .then(() => {
+            fetchFeeHeads();
+        })
+        .catch(console.error);
 };
 
 const getCategoryColor = (category: string) => {
@@ -194,12 +215,13 @@ const getFrequencyLabel = (frequency: string) => {
             <!-- Mobile Card View -->
             <div class="block lg:hidden space-y-3">
                 <div
-                    v-for="feeHead in sortedFeeHeads"
+                    v-for="(feeHead, index) in sortedFeeHeads"
                     :key="feeHead.id"
                     class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 space-y-2"
                 >
                     <div class="flex justify-between items-start">
                         <div>
+                            <div class="text-xs text-gray-500">Sr# {{ index + 1 }}</div>
                             <div class="font-medium text-gray-900 dark:text-white">{{ feeHead.name }}</div>
                             <div class="text-xs text-gray-500">Code: {{ feeHead.code }}</div>
                         </div>
@@ -212,13 +234,19 @@ const getFrequencyLabel = (frequency: string) => {
                         <div>Order: {{ feeHead.sort_order }}</div>
                     </div>
                     <div class="flex gap-2 pt-2">
+                        <Button @click="toggleActive(feeHead)" :variant="feeHead.is_active ? 'outline' : 'default'" size="sm" class="flex-1">
+                            {{ feeHead.is_active ? 'Deactivate' : 'Activate' }}
+                        </Button>
                         <Button variant="outline" size="sm" @click="router.visit(route('fee.heads.edit', feeHead.id))">
                             <Icon icon="edit" class="mr-1" />Edit
                         </Button>
+                        <Button variant="destructive" size="sm" @click="deleteFeeHead(feeHead)" class="flex-1">
+                            <Icon icon="trash" class="mr-1" />Delete
+                        </Button>
                     </div>
-                </div>
-                <div v-if="feeHeadsData.length === 0" class="text-center py-8 text-gray-500">
-                    No fee heads found.
+                    <div v-if="feeHeadsData.length === 0" class="text-center py-8 text-gray-500">
+                        No fee heads found.
+                    </div>
                 </div>
             </div>
 
@@ -228,6 +256,9 @@ const getFrequencyLabel = (frequency: string) => {
                     <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
                         <thead class="bg-gray-50 dark:bg-gray-800">
                             <tr>
+                                <th scope="col" class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase dark:text-gray-300">
+                                    Sr#
+                                </th>
                                 <th scope="col" class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase dark:text-gray-300">
                                     Order
                                 </th>
@@ -252,7 +283,10 @@ const getFrequencyLabel = (frequency: string) => {
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-900">
-                            <tr v-for="feeHead in sortedFeeHeads" :key="feeHead.id" class="transition-colors hover:bg-gray-50 dark:hover:bg-gray-800">
+                            <tr v-for="(feeHead, index) in sortedFeeHeads" :key="feeHead.id" class="transition-colors hover:bg-gray-50 dark:hover:bg-gray-800">
+                                <td class="px-4 py-3">
+                                    <div class="text-sm font-medium text-gray-900 dark:text-white">{{ index + 1 }}</div>
+                                </td>
                                 <td class="px-4 py-3">
                                     <div class="text-sm font-medium text-gray-900 dark:text-white">{{ feeHead.sort_order }}</div>
                                 </td>
@@ -278,8 +312,14 @@ const getFrequencyLabel = (frequency: string) => {
                                 </td>
                                 <td class="px-4 py-3 text-sm font-medium whitespace-nowrap">
                                     <div class="flex gap-2 justify-end">
+                                        <Button @click="toggleActive(feeHead)" :variant="feeHead.is_active ? 'outline' : 'default'" size="sm" class="min-w-[80px]">
+                                            {{ feeHead.is_active ? 'Deactivate' : 'Activate' }}
+                                        </Button>
                                         <Button variant="outline" size="sm" @click="router.visit(route('fee.heads.edit', feeHead.id))">
                                             <Icon icon="edit" class="mr-1 h-3 w-3" />Edit
+                                        </Button>
+                                        <Button variant="destructive" size="sm" @click="deleteFeeHead(feeHead)">
+                                            <Icon icon="trash" class="mr-1 h-3 w-3" />Delete
                                         </Button>
                                     </div>
                                 </td>

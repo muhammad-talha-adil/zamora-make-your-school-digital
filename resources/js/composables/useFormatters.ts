@@ -1,5 +1,3 @@
-import { ref, computed } from 'vue';
-
 /**
  * Composable for formatting phone numbers in Pakistani format
  * Format: XXXX-XXXXXXX (4 digits prefix, 7 digits local)

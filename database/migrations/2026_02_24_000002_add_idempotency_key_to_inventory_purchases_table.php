@@ -8,12 +8,12 @@ return new class extends Migration
 {
     /**
      * Run the migrations.
-     * 
+     *
      * Adds idempotency_key column to prevent duplicate purchase submissions.
      */
-     public function up(): void
+    public function up(): void
     {
-        if (!Schema::hasColumn('inventory_purchases', 'idempotency_key')) {
+        if (! Schema::hasColumn('inventory_purchases', 'idempotency_key')) {
             Schema::table('inventory_purchases', function (Blueprint $table) {
                 $table->string('idempotency_key')->nullable()->unique()->after('note')->comment('Unique key to prevent duplicate submissions');
             });

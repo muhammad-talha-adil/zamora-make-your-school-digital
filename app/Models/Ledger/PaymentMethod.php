@@ -3,12 +3,13 @@
 namespace App\Models\Ledger;
 
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class PaymentMethod extends Model
 {
     use SoftDeletes;
+
     protected $table = 'payment_methods';
 
     protected $fillable = [

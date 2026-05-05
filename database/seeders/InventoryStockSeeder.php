@@ -22,12 +22,12 @@ class InventoryStockSeeder extends Seeder
 
         foreach ($campuses as $campus) {
             $items = InventoryItem::where('campus_id', $campus->id)->get();
-            
+
             foreach ($items as $item) {
                 // Create stock with random quantities for variety
                 $quantity = rand(10, 500);
                 $reserved = rand(0, 20);
-                
+
                 InventoryStock::firstOrCreate(
                     [
                         'campus_id' => $campus->id,

@@ -13,7 +13,7 @@
 </template>
 
 <script setup lang="ts">
-import { UsersIcon, CurrencyDollarIcon, BookOpenIcon, UserGroupIcon } from '@heroicons/vue/24/outline';
+import { UsersIcon } from '@heroicons/vue/24/outline';
 
 interface Props {
     title: string;

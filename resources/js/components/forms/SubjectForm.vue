@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { router } from '@inertiajs/vue3';
-import { ref } from 'vue';
+import axios from 'axios';
+import { ref, watch } from 'vue';
 import { alert } from '@/utils';
 
 // Components
@@ -46,12 +46,15 @@ const emit = defineEmits<{
 }>();
 
 // Form data
-const form = ref({
+const getInitialForm = () => ({
     name: props.subject?.name || '',
     code: props.subject?.code || '',
+    short_name: (props.subject as { short_name?: string } | undefined)?.short_name || '',
     description: props.subject?.description || '',
     is_active: props.subject?.is_active ?? true,
 });
+
+const form = ref(getInitialForm());
 
 const errors = ref<Record<string, string>>({});
 const processing = ref(false);
@@ -59,7 +62,13 @@ const processing = ref(false);
 // Dialog
 const open = ref(false);
 
-// Methods
+watch(open, (isOpen) => {
+    if (isOpen) {
+        form.value = getInitialForm();
+        errors.value = {};
+    }
+});
+
 const submit = () => {
     processing.value = true;
     errors.value = {};
@@ -67,66 +76,56 @@ const submit = () => {
     const formData = {
         name: form.value.name,
         code: form.value.code,
+        short_name: form.value.short_name || null,
         description: form.value.description,
         is_active: form.value.is_active ? 1 : 0,
     };
 
     if (props.subject) {
         // Update
-        router.put(`/settings/subjects/${props.subject.id}`, formData, {
-            preserveScroll: true,
-            onSuccess: () => {
+        axios.patch(`/settings/subjects/${props.subject.id}`, formData, {
+            headers: { Accept: 'application/json' },
+        }).then(() => {
                 alert.success('Subject updated successfully!');
                 open.value = false;
                 resetForm();
                 emit('saved');
-            },
-            onError: (err) => {
-                errors.value = err as Record<string, string>;
+            }).catch((error) => {
+                errors.value = error.response?.data?.errors ?? {};
                 if (Object.keys(errors.value).length > 0) {
                     const firstError = Object.values(errors.value)[0];
                     alert.error(firstError);
                 } else {
                     alert.error('Failed to update subject. Please check the errors.');
                 }
-            },
-            onFinish: () => {
+            }).finally(() => {
                 processing.value = false;
-            },
-        });
+            });
     } else {
         // Create
-        router.post('/settings/subjects', formData, {
-            preserveScroll: true,
-            onSuccess: () => {
+        axios.post('/settings/subjects', formData, {
+            headers: { Accept: 'application/json' },
+        }).then(() => {
                 alert.success('Subject created successfully!');
                 open.value = false;
                 resetForm();
                 emit('saved');
-            },
-            onError: (err) => {
-                errors.value = err as Record<string, string>;
+            }).catch((error) => {
+                errors.value = error.response?.data?.errors ?? {};
                 if (Object.keys(errors.value).length > 0) {
                     const firstError = Object.values(errors.value)[0];
                     alert.error(firstError);
                 } else {
                     alert.error('Failed to create subject. Please check the errors.');
                 }
-            },
-            onFinish: () => {
+            }).finally(() => {
                 processing.value = false;
-            },
-        });
+            });
     }
 };
 
 const resetForm = () => {
-    form.value = {
-        name: '',
-        code: '',
-        description: '',
-        is_active: true,
-    };
+    form.value = getInitialForm();
     errors.value = {};
 };
 </script>
@@ -173,6 +172,17 @@ const resetForm = () => {
                             :class="{ 'border-red-500': errors.code }"
                         />
                         <InputError :message="errors.code" />
+                    </div>
+
+                    <div class="grid gap-2">
+                        <Label for="short_name">Short Name</Label>
+                        <Input
+                            id="short_name"
+                            v-model="form.short_name"
+                            placeholder="Enter short name (optional)"
+                            :class="{ 'border-red-500': errors.short_name }"
+                        />
+                        <InputError :message="errors.short_name" />
                     </div>
 
                     <div class="grid gap-2">

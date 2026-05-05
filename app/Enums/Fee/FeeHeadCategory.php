@@ -4,7 +4,7 @@ namespace App\Enums\Fee;
 
 /**
  * Fee Head Category Enum
- * 
+ *
  * Defines the main categories of fee heads in the system.
  * Used to classify different types of fees for reporting and processing.
  */
@@ -23,7 +23,7 @@ enum FeeHeadCategory: string
      */
     public function label(): string
     {
-        return match($this) {
+        return match ($this) {
             self::MONTHLY => 'Monthly Fee',
             self::ANNUAL => 'Annual Fee',
             self::ONE_TIME => 'One-Time Charge',

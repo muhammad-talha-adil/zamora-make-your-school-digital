@@ -8,7 +8,7 @@ return new class extends Migration
 {
     /**
      * Run the migrations.
-     * 
+     *
      * Creates parent-child structure for student inventory returns:
      * - student_inventory_returns (parent table with return ID like SIR-2026-0001)
      * - student_inventory_return_items (child table with individual items)

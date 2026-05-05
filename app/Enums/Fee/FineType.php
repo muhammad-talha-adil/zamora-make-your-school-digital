@@ -4,7 +4,7 @@ namespace App\Enums\Fee;
 
 /**
  * Fine Type Enum
- * 
+ *
  * Defines how late payment fines are calculated.
  */
 enum FineType: string
@@ -18,7 +18,7 @@ enum FineType: string
      */
     public function label(): string
     {
-        return match($this) {
+        return match ($this) {
             self::FIXED_PER_DAY => 'Fixed Amount Per Day',
             self::FIXED_ONCE => 'Fixed Amount (One Time)',
             self::PERCENT => 'Percentage of Amount',

@@ -6,8 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\Fee\FeePayment;
 use App\Models\Fee\FeeVoucher;
 use Illuminate\Http\Request;
-use Inertia\Inertia;
 use Illuminate\Support\Facades\DB;
+use Inertia\Inertia;
 
 class FeeReportController extends Controller
 {
@@ -62,9 +62,9 @@ class FeeReportController extends Controller
 
         // Get daily collection
         $dailyCollection = FeePayment::select(
-                DB::raw('DATE(payment_date) as date'),
-                DB::raw('SUM(received_amount) as total')
-            )
+            DB::raw('DATE(payment_date) as date'),
+            DB::raw('SUM(received_amount) as total')
+        )
             ->when($request->filled('date_from'), function ($q) use ($request) {
                 $q->whereDate('payment_date', '>=', $request->date_from);
             })
@@ -109,10 +109,10 @@ class FeeReportController extends Controller
 
         // Get outstanding by class
         $byClass = FeeVoucher::select(
-                'class_id',
-                DB::raw('SUM(balance_amount) as total'),
-                DB::raw('COUNT(*) as count')
-            )
+            'class_id',
+            DB::raw('SUM(balance_amount) as total'),
+            DB::raw('COUNT(*) as count')
+        )
             ->whereIn('status', ['unpaid', 'partial', 'overdue'])
             ->groupBy('class_id')
             ->with('class:id,name')
@@ -120,10 +120,10 @@ class FeeReportController extends Controller
 
         // Get top defaulters
         $topDefaulters = FeeVoucher::select(
-                'student_id',
-                DB::raw('SUM(balance_amount) as total_outstanding'),
-                DB::raw('COUNT(*) as voucher_count')
-            )
+            'student_id',
+            DB::raw('SUM(balance_amount) as total_outstanding'),
+            DB::raw('COUNT(*) as voucher_count')
+        )
             ->whereIn('status', ['unpaid', 'partial', 'overdue'])
             ->groupBy('student_id')
             ->with('student:id,name,registration_number')
@@ -185,10 +185,10 @@ class FeeReportController extends Controller
         }
 
         $byMethod = $query->select(
-                'payment_method',
-                DB::raw('COUNT(*) as count'),
-                DB::raw('SUM(received_amount) as total')
-            )
+            'payment_method',
+            DB::raw('COUNT(*) as count'),
+            DB::raw('SUM(received_amount) as total')
+        )
             ->groupBy('payment_method')
             ->get();
 

@@ -4,8 +4,10 @@ namespace App\Services;
 
 use App\Models\Invoice;
 use App\Models\InvoiceItem;
+use App\Models\Payment;
 use App\Models\StudentFee;
 use App\Models\StudentInventory;
+use App\Models\User;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 
@@ -15,10 +17,6 @@ class FeeService
      * Generate unique invoice number with race condition protection.
      * Uses DB lock to prevent concurrent generation.
      * Format: CAMPUS{campus_id}-INV-{sequence}
-     *
-     * @param int $campusId
-     * @param int $sessionId
-     * @return string
      */
     public function generateInvoiceNumber(int $campusId, int $sessionId): string
     {
@@ -31,22 +29,19 @@ class FeeService
                 ->first();
 
             $sequence = $lastInvoice ? (intval(substr($lastInvoice->invoice_number, -6)) + 1) : 1;
-            
+
             return sprintf('CAMPUS%d-INV-%06d', $campusId, $sequence);
         });
     }
 
     /**
      * Create invoice from unpaid fees and inventory.
-     *
-     * @param array $data
-     * @return Invoice
      */
     public function createInvoice(array $data): Invoice
     {
         return DB::transaction(function () use ($data) {
             // PRODUCTION FIX: Validate student belongs to campus
-            $student = \App\Models\User::where('id', $data['student_id'])
+            $student = User::where('id', $data['student_id'])
                 ->where('campus_id', $data['campus_id'])
                 ->firstOrFail();
 
@@ -56,7 +51,7 @@ class FeeService
                 ->where('status', 'pending')
                 ->whereNull('invoice_id');
 
-            if (!empty($data['fee_ids'])) {
+            if (! empty($data['fee_ids'])) {
                 $feeQuery->whereIn('id', $data['fee_ids']);
             }
 
@@ -67,7 +62,7 @@ class FeeService
                 ->whereNull('invoice_id')
                 ->whereIn('status', ['assigned', 'partial_return']);
 
-            if (!empty($data['inventory_ids'])) {
+            if (! empty($data['inventory_ids'])) {
                 $inventoryQuery->whereIn('id', $data['inventory_ids']);
             }
 
@@ -127,7 +122,7 @@ class FeeService
             foreach ($uninvoicedInventory as $inventory) {
                 // PRODUCTION FIX: Calculate only remaining value for partial returns
                 $remainingValue = $inventory->remainingValue();
-                
+
                 $discountSnapshot = [
                     'amount' => $inventory->discount_amount,
                     'percentage' => $inventory->discount_percentage,
@@ -166,9 +161,6 @@ class FeeService
 
     /**
      * Cancel invoice safely.
-     *
-     * @param Invoice $invoice
-     * @return Invoice
      */
     public function cancelInvoice(Invoice $invoice): Invoice
     {
@@ -208,9 +200,6 @@ class FeeService
 
     /**
      * Process payment with concurrency safety.
-     *
-     * @param array $data
-     * @return array
      */
     public function processPayment(array $data): array
     {
@@ -225,13 +214,13 @@ class FeeService
 
             // PRODUCTION FIX: Validate payment amount
             $remainingBalance = $invoice->total_amount - $invoice->paid_amount;
-            
+
             if ($data['amount'] > $remainingBalance) {
                 throw new \Exception("Payment amount exceeds remaining balance. Remaining: {$remainingBalance}");
             }
 
             // Create payment
-            $payment = \App\Models\Payment::create([
+            $payment = Payment::create([
                 'invoice_id' => $invoice->id,
                 'payment_date' => $data['payment_date'],
                 'payment_mode' => $data['payment_mode'],
@@ -243,7 +232,7 @@ class FeeService
             // PRODUCTION FIX: Update invoice totals
             $newPaidAmount = $invoice->paid_amount + $data['amount'];
             $newStatus = 'partial';
-            
+
             if ($newPaidAmount >= $invoice->total_amount) {
                 $newStatus = 'paid';
             }
@@ -275,16 +264,11 @@ class FeeService
 
     /**
      * Get invoice preview with all pending items.
-     *
-     * @param int $campusId
-     * @param int $studentId
-     * @param int $sessionId
-     * @return array
      */
     public function getInvoicePreview(int $campusId, int $studentId, int $sessionId): array
     {
         // PRODUCTION FIX: Validate student belongs to campus
-        $student = \App\Models\User::where('id', $studentId)
+        $student = User::where('id', $studentId)
             ->where('campus_id', $campusId)
             ->firstOrFail();
 

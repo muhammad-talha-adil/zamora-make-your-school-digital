@@ -12,7 +12,7 @@ class StudentGuardianSeeder extends Seeder
 {
     /**
      * Run the database seeds.
-     * 
+     *
      * Links students to guardians with proper relationships.
      * Each student is linked to father (primary) and mother.
      * Siblings share the same guardians.
@@ -22,8 +22,9 @@ class StudentGuardianSeeder extends Seeder
         $fatherRelation = Relation::where('name', 'Father')->first();
         $motherRelation = Relation::where('name', 'Mother')->first();
 
-        if (!$fatherRelation || !$motherRelation) {
+        if (! $fatherRelation || ! $motherRelation) {
             $this->command->warn('Relation types not found. Skipping student_guardian seeding.');
+
             return;
         }
 
@@ -33,12 +34,14 @@ class StudentGuardianSeeder extends Seeder
 
         if ($students->isEmpty() || $guardians->isEmpty()) {
             $this->command->warn('Students or guardians not found. Skipping student_guardian seeding.');
+
             return;
         }
 
         // Group students by last name to identify siblings
         $studentsByFamily = $students->groupBy(function ($student) {
             $nameParts = explode(' ', $student->user->name ?? '');
+
             return end($nameParts);
         });
 
@@ -59,7 +62,7 @@ class StudentGuardianSeeder extends Seeder
 
             foreach ($familyStudents as $index => $student) {
                 $isFatherPrimary = $index === 0;
-                
+
                 StudentGuardian::updateOrCreate(
                     [
                         'student_id' => $student->id,
@@ -74,7 +77,7 @@ class StudentGuardianSeeder extends Seeder
 
                 if ($motherGuardian->id !== $fatherGuardian->id) {
                     $isMotherPrimary = $index === 1;
-                    
+
                     StudentGuardian::updateOrCreate(
                         [
                             'student_id' => $student->id,

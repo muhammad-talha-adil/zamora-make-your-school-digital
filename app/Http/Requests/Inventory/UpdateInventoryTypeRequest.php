@@ -2,6 +2,9 @@
 
 namespace App\Http\Requests\Inventory;
 
+use App\Models\Campus;
+use App\Models\InventoryType;
+use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Facades\Route;
 
@@ -18,7 +21,7 @@ class UpdateInventoryTypeRequest extends FormRequest
     /**
      * Get the validation rules that apply to the request.
      *
-     * @return array<string, \Illuminate\Contracts\Validation\ValidationRule|array<mixed>|string>
+     * @return array<string, ValidationRule|array<mixed>|string>
      */
     public function rules(): array
     {
@@ -56,19 +59,20 @@ class UpdateInventoryTypeRequest extends FormRequest
             $inventoryTypeId = Route::current()->parameter('inventoryType');
 
             // Get the original inventory type
-            $originalType = \App\Models\InventoryType::find($inventoryTypeId);
+            $originalType = InventoryType::find($inventoryTypeId);
 
             // Validate campus_id: either 'all' or numeric ID that exists
             if ($campusId !== 'all') {
-                if (!is_numeric($campusId) || !\App\Models\Campus::where('id', $campusId)->exists()) {
+                if (! is_numeric($campusId) || ! Campus::where('id', $campusId)->exists()) {
                     $validator->errors()->add('campus_id', 'The selected campus id is invalid.');
+
                     return;
                 }
             }
 
             /**
              * CASE C: Name Temporarily Modified During Edit Session
-             * If the name is the same as the original (case-insensitive), 
+             * If the name is the same as the original (case-insensitive),
              * it's the same entity being edited - allow without uniqueness check
              */
             if ($originalName && strtolower(trim($name)) === strtolower($originalName)) {
@@ -83,26 +87,27 @@ class UpdateInventoryTypeRequest extends FormRequest
              */
             if ($campusId === 'all') {
                 // Check if name exists in ANY campus (excluding current type)
-                $existingType = \App\Models\InventoryType::whereRaw('LOWER(name) = LOWER(?)', [trim($name)])
+                $existingType = InventoryType::whereRaw('LOWER(name) = LOWER(?)', [trim($name)])
                     ->where('id', '!=', $inventoryTypeId)
                     ->exists();
             } else {
                 // Check if name exists in the specific campus
-                $existingInCampus = \App\Models\InventoryType::where('campus_id', $campusId)
+                $existingInCampus = InventoryType::where('campus_id', $campusId)
                     ->whereRaw('LOWER(name) = LOWER(?)', [trim($name)])
                     ->where('id', '!=', $inventoryTypeId)
                     ->exists();
-                
+
                 // Also check if there's an "All Campuses" type with the same name
-                $existingInAllCampuses = \App\Models\InventoryType::whereNull('campus_id')
+                $existingInAllCampuses = InventoryType::whereNull('campus_id')
                     ->whereRaw('LOWER(name) = LOWER(?)', [trim($name)])
                     ->where('id', '!=', $inventoryTypeId)
                     ->exists();
-                
+
                 $existingType = $existingInCampus || $existingInAllCampuses;
-                
+
                 if ($existingInAllCampuses) {
                     $validator->errors()->add('name', 'An inventory type with this name already exists for All Campuses. Cannot create duplicate for specific campus.');
+
                     return;
                 }
             }

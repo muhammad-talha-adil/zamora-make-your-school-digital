@@ -3,9 +3,9 @@
 namespace App\Http\Controllers\Exam;
 
 use App\Http\Controllers\Controller;
+use App\Models\Exam\ExamType;
 use App\Models\Exam\GradeSystem;
 use App\Models\Exam\GradeSystemItem;
-use App\Models\Exam\ExamType;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -19,9 +19,9 @@ class ExamSettingsController extends Controller
         $gradeSystems = GradeSystem::with('gradeSystemItems')
             ->orderBy('name')
             ->get();
-        
+
         $examTypes = ExamType::orderBy('id', 'desc')->paginate(10);
-        
+
         return Inertia::render('Exam/Settings/Index', [
             'gradeSystems' => $gradeSystems,
             'examTypes' => $examTypes,
@@ -36,7 +36,7 @@ class ExamSettingsController extends Controller
         $gradeScales = GradeSystem::with('gradeSystemItems')
             ->orderBy('name')
             ->get();
-        
+
         return Inertia::render('Exam/Settings/GradeScales/Index', [
             'gradeScales' => $gradeScales,
         ]);
@@ -57,7 +57,7 @@ class ExamSettingsController extends Controller
     {
         $gradeScale = GradeSystem::with('gradeSystemItems')
             ->findOrFail($id);
-        
+
         return Inertia::render('Exam/Settings/GradeScales/Edit', [
             'gradeScale' => $gradeScale,
         ]);
@@ -71,7 +71,7 @@ class ExamSettingsController extends Controller
         $gradeScales = GradeSystem::with('gradeSystemItems')
             ->orderBy('name')
             ->get();
-        
+
         return response()->json(['data' => $gradeScales]);
     }
 
@@ -88,7 +88,7 @@ class ExamSettingsController extends Controller
         ]);
 
         $gradeScale = GradeSystem::create($validated);
-        
+
         return response()->json(['data' => $gradeScale], 201);
     }
 
@@ -98,16 +98,16 @@ class ExamSettingsController extends Controller
     public function updateGradeScale(Request $request, $id)
     {
         $gradeScale = GradeSystem::findOrFail($id);
-        
+
         $validated = $request->validate([
-            'name' => 'required|string|max:255|unique:grade_systems,name,' . $id,
+            'name' => 'required|string|max:255|unique:grade_systems,name,'.$id,
             'rounding_mode' => 'nullable|in:round,floor,ceil,half_up,half_down',
             'precision' => 'nullable|integer|min:0|max:2',
             'is_default' => 'nullable|boolean',
         ]);
 
         $gradeScale->update($validated);
-        
+
         return response()->json(['data' => $gradeScale]);
     }
 
@@ -118,7 +118,7 @@ class ExamSettingsController extends Controller
     {
         $gradeScale = GradeSystem::findOrFail($id);
         $gradeScale->delete();
-        
+
         return response()->json(['message' => 'Grade scale deleted successfully']);
     }
 
@@ -128,13 +128,13 @@ class ExamSettingsController extends Controller
     public function setDefaultGradeScale(Request $request, $id)
     {
         $gradeScale = GradeSystem::findOrFail($id);
-        
+
         // Unset default from all other grade scales
         GradeSystem::where('id', '!=', $id)->update(['is_default' => false]);
-        
+
         // Set this one as default
         $gradeScale->update(['is_default' => true]);
-        
+
         return response()->json(['data' => $gradeScale->fresh()]);
     }
 
@@ -144,13 +144,13 @@ class ExamSettingsController extends Controller
     public function setActiveGradeScale(Request $request, $id)
     {
         $gradeScale = GradeSystem::findOrFail($id);
-        
+
         // Deactivate all other grade scales
         GradeSystem::where('id', '!=', $id)->update(['is_active' => false]);
-        
+
         // Activate the selected one
         $gradeScale->update(['is_active' => true]);
-        
+
         return response()->json(['data' => $gradeScale->fresh()]);
     }
 
@@ -161,7 +161,7 @@ class ExamSettingsController extends Controller
     {
         $gradeScale = GradeSystem::findOrFail($id);
         $items = $gradeScale->gradeSystemItems()->orderBy('min_percentage', 'desc')->get();
-        
+
         return response()->json(['data' => $items]);
     }
 
@@ -171,9 +171,9 @@ class ExamSettingsController extends Controller
     public function storeGradeScaleItem(Request $request, $id)
     {
         $gradeScale = GradeSystem::findOrFail($id);
-        
+
         $validated = $request->validate([
-            'grade_letter' => 'required|string|max:255|unique:grade_system_items,grade_letter,NULL,id,grade_system_id,' . $id,
+            'grade_letter' => 'required|string|max:255|unique:grade_system_items,grade_letter,NULL,id,grade_system_id,'.$id,
             'min_percentage' => 'required|numeric|min:0|max:100',
             'max_percentage' => 'nullable|numeric|min:0|max:100|gte:min_percentage',
             'grade_point' => 'nullable|numeric|min:0',
@@ -182,7 +182,7 @@ class ExamSettingsController extends Controller
         ]);
 
         $item = $gradeScale->gradeSystemItems()->create($validated);
-        
+
         return response()->json(['data' => $item], 201);
     }
 
@@ -193,9 +193,9 @@ class ExamSettingsController extends Controller
     {
         $gradeScale = GradeSystem::findOrFail($id);
         $item = GradeSystemItem::where('grade_system_id', $id)->findOrFail($itemId);
-        
+
         $validated = $request->validate([
-            'grade_letter' => 'required|string|max:255|unique:grade_system_items,grade_letter,' . $itemId . ',id,grade_system_id,' . $id,
+            'grade_letter' => 'required|string|max:255|unique:grade_system_items,grade_letter,'.$itemId.',id,grade_system_id,'.$id,
             'min_percentage' => 'required|numeric|min:0|max:100',
             'max_percentage' => 'nullable|numeric|min:0|max:100|gte:min_percentage',
             'grade_point' => 'nullable|numeric|min:0',
@@ -204,7 +204,7 @@ class ExamSettingsController extends Controller
         ]);
 
         $item->update($validated);
-        
+
         return response()->json(['data' => $item]);
     }
 
@@ -215,9 +215,9 @@ class ExamSettingsController extends Controller
     {
         $gradeScale = GradeSystem::findOrFail($id);
         $item = GradeSystemItem::where('grade_system_id', $id)->findOrFail($itemId);
-        
+
         $item->delete();
-        
+
         return response()->json(['message' => 'Grade scale item deleted successfully']);
     }
 }

@@ -278,7 +278,7 @@ const removeItem = async (item: FeeVoucherItem) => {
         
         // Reload the page to get updated data
         router.reload({ only: ['voucher'] });
-    } catch (error: any) {
+    } catch {
         alert('Failed to remove fee item');
     } finally {
         isSubmitting.value = false;

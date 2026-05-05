@@ -81,27 +81,67 @@ class CampusTypeController extends Controller
     }
 
     /**
-     * Get all campus types with optional search
-     * Used by ComboboxInput for search functionality
+     * Get all campus types with optional search and trashed filter
+     * Used by ComboboxInput for search functionality and CampusTypeModal for listing
      */
     public function getAll()
     {
-        $query = trim(request()->get('q', ''));
+        $query = CampusType::withCount('campuses');
 
-        $campusTypes = CampusType::withCount('campuses')
-            ->when($query, function ($q) use ($query) {
-                $q->whereRaw('LOWER(name) LIKE ?', ['%' . strtolower($query) . '%']);
-            })
-            ->orderBy('name')
+        // Handle trashed filter: 1 = only trashed, 0 or null = only non-trashed
+        $trashed = request()->get('trashed');
+        if ($trashed === '1') {
+            $query->onlyTrashed();
+        } else {
+            $query->whereNull('deleted_at');
+        }
+
+        $search = trim(request()->get('q', ''));
+        if ($search !== '') {
+            $query->whereRaw('LOWER(name) LIKE ?', ['%'.strtolower($search).'%']);
+        }
+
+        $campusTypes = $query->orderBy('name')
             ->limit(20)
             ->get()
             ->map(function ($type) {
                 return [
                     'id' => $type->id,
                     'name' => $type->name,
+                    'campuses_count' => $type->campuses_count,
                 ];
             });
 
         return response()->json($campusTypes);
+    }
+
+    /**
+     * Restore the specified campus type from trash.
+     */
+    public function restore(int $id)
+    {
+        $campusType = CampusType::onlyTrashed()->findOrFail($id);
+        $campusType->restore();
+
+        if (request()->expectsJson()) {
+            return response()->json(['success' => true]);
+        }
+
+        return back()->with('success', 'Campus type restored successfully.');
+    }
+
+    /**
+     * Permanently delete the specified campus type.
+     */
+    public function forceDelete(int $id)
+    {
+        $campusType = CampusType::onlyTrashed()->findOrFail($id);
+        $campusType->forceDelete();
+
+        if (request()->expectsJson()) {
+            return response()->json(['success' => true]);
+        }
+
+        return back()->with('success', 'Campus type permanently deleted.');
     }
 }

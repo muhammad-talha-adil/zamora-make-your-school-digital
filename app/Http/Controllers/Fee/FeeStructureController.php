@@ -6,13 +6,14 @@ use App\Enums\Fee\FeeFrequency;
 use App\Enums\Fee\FeeHeadCategory;
 use App\Enums\Fee\FeeStructureStatus;
 use App\Http\Controllers\Controller;
-use App\Models\Fee\FeeStructure;
-use App\Models\Session;
 use App\Models\Campus;
+use App\Models\Fee\FeeHead;
+use App\Models\Fee\FeeStructure;
+use App\Models\Month;
 use App\Models\SchoolClass;
 use App\Models\Section;
-use App\Models\Month;
-use App\Models\Fee\FeeHead;
+use App\Models\Session;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -23,63 +24,14 @@ class FeeStructureController extends Controller
      */
     public function index(Request $request)
     {
-        $query = FeeStructure::with(['session', 'campus', 'class', 'section'])
-            ->withCount('items');
+        $transformedStructures = $this->getTransformedStructures($request);
 
-        // Apply filters
-        if ($request->filled('session_id')) {
-            $query->where('session_id', $request->session_id);
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'structures' => $transformedStructures,
+            ]);
         }
-
-        if ($request->filled('campus_id')) {
-            $query->where('campus_id', $request->campus_id);
-        }
-
-        if ($request->filled('class_id')) {
-            $query->where('class_id', $request->class_id);
-        }
-
-        if ($request->filled('section_id')) {
-            $query->where('section_id', $request->section_id);
-        }
-
-        if ($request->filled('status')) {
-            $query->where('status', $request->status);
-        }
-
-        if ($request->filled('search')) {
-            $query->where('title', 'like', '%' . $request->search . '%');
-        }
-
-        $structures = $query->latest()->get();
-
-        // Transform structures for frontend
-        $transformedStructures = $structures->map(function ($structure) {
-            return [
-                'id' => $structure->id,
-                'title' => $structure->title,
-                'session' => $structure->session ? [
-                    'id' => $structure->session->id,
-                    'name' => $structure->session->name,
-                ] : null,
-                'campus' => $structure->campus ? [
-                    'id' => $structure->campus->id,
-                    'name' => $structure->campus->name,
-                ] : null,
-                'class' => $structure->class ? [
-                    'id' => $structure->class->id,
-                    'name' => $structure->class->name,
-                ] : null,
-                'section' => $structure->section ? [
-                    'id' => $structure->section->id,
-                    'name' => $structure->section->name,
-                ] : null,
-                'status' => $structure->status instanceof FeeStructureStatus ? $structure->status->value : $structure->status,
-                'effective_from' => $structure->effective_from?->toDateString(),
-                'effective_to' => $structure->effective_to?->toDateString(),
-                'items_count' => $structure->items_count,
-            ];
-        });
 
         return Inertia::render('Fee/Structures/Index', [
             'structures' => $transformedStructures,
@@ -135,7 +87,7 @@ class FeeStructureController extends Controller
         $validated['effective_to'] = $session->end_date;
 
         // Check for duplicate title for the same session/campus/class/section combination
-        $sectionId = !empty($validated['section_ids']) ? $validated['section_ids'][0] : null;
+        $sectionId = ! empty($validated['section_ids']) ? $validated['section_ids'][0] : null;
         $existingStructure = FeeStructure::where('session_id', $validated['session_id'])
             ->where('campus_id', $validated['campus_id'])
             ->where('class_id', $validated['class_id'] ?? null)
@@ -150,7 +102,7 @@ class FeeStructureController extends Controller
         }
 
         $validated['created_by'] = auth()->id();
-        
+
         // Get section_ids from validated data
         $sectionIds = $validated['section_ids'] ?? [];
         unset($validated['section_ids']); // Remove from base data
@@ -158,24 +110,24 @@ class FeeStructureController extends Controller
         // If no sections selected, create ONE record with NULL section (applies to all)
         // If sections selected, create ONE record per section
         $structures = [];
-        
+
         $sectionsToCreate = empty($sectionIds) ? [null] : $sectionIds;
-        
+
         foreach ($sectionsToCreate as $sectionId) {
             $structureData = $validated;
             $structureData['section_id'] = $sectionId;
-            
+
             $structure = FeeStructure::create($structureData);
             $structures[] = $structure;
-            
+
             // Create fee structure items for this structure
-            if (!empty($validated['items'])) {
+            if (! empty($validated['items'])) {
                 foreach ($validated['items'] as $item) {
                     $feeHead = FeeHead::find($item['fee_head_id']);
                     $frequency = $feeHead?->default_frequency instanceof FeeFrequency
                         ? $feeHead->default_frequency->value
                         : ($feeHead?->default_frequency ?? 'monthly');
-                    
+
                     $structure->items()->create([
                         'fee_head_id' => $item['fee_head_id'],
                         'amount' => $item['amount'],
@@ -186,9 +138,9 @@ class FeeStructureController extends Controller
         }
 
         $count = count($structures);
-        $message = $count === 1 
-            ? 'Fee structure created successfully with ' . count($validated['items'] ?? []) . ' fee items.'
-            : 'Fee structures created successfully for ' . $count . ' sections with ' . count($validated['items'] ?? []) . ' fee items each.';
+        $message = $count === 1
+            ? 'Fee structure created successfully with '.count($validated['items'] ?? []).' fee items.'
+            : 'Fee structures created successfully for '.$count.' sections with '.count($validated['items'] ?? []).' fee items each.';
 
         return redirect()->route('fee.structures.index')
             ->with('success', $message);
@@ -338,7 +290,7 @@ class FeeStructureController extends Controller
 
         // Check for duplicate title for the same session/campus/class/section combination
         // but exclude the current structure being updated
-        $sectionId = !empty($validated['section_ids']) ? $validated['section_ids'][0] : null;
+        $sectionId = ! empty($validated['section_ids']) ? $validated['section_ids'][0] : null;
         $existingStructure = FeeStructure::where('session_id', $validated['session_id'])
             ->where('campus_id', $validated['campus_id'])
             ->where('class_id', $validated['class_id'] ?? null)
@@ -370,14 +322,14 @@ class FeeStructureController extends Controller
 
         // Delete structures that are no longer selected
         foreach ($existingRelatedStructures as $relatedStructure) {
-            if (!in_array($relatedStructure->section_id, $sectionsToKeep)) {
+            if (! in_array($relatedStructure->section_id, $sectionsToKeep)) {
                 $relatedStructure->delete();
             }
         }
 
         // Update or create structures for each section
         $structures = [];
-        
+
         // First, update the main structure being edited
         $mainStructureData = $validated;
         $mainStructureData['section_id'] = $sectionIds[0] ?? null;
@@ -390,7 +342,7 @@ class FeeStructureController extends Controller
         // Then create/update structures for remaining sections
         $sectionsToProcess = empty($sectionIds) ? [null] : $sectionIds;
         array_shift($sectionsToProcess);
-        
+
         foreach ($sectionsToProcess as $sectionId) {
             // Check if structure already exists for this section
             $existingStructure = FeeStructure::where('session_id', $structure->session_id)
@@ -416,8 +368,10 @@ class FeeStructureController extends Controller
 
         // Sync items across all structures
         foreach ($structures as $struct) {
-            if ($struct->id === $structure->id) continue; // Skip main (already has items)
-            
+            if ($struct->id === $structure->id) {
+                continue;
+            } // Skip main (already has items)
+
             // Delete existing items and copy from main structure
             $struct->items()->delete();
             foreach ($mainItems as $item) {
@@ -442,8 +396,69 @@ class FeeStructureController extends Controller
     {
         $structure->delete();
 
+        if (request()->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Fee structure deleted successfully.',
+            ]);
+        }
+
         return redirect()->route('fee.structures.index')
             ->with('success', 'Fee structure deleted successfully.');
+    }
+
+    /**
+     * Activate the specified fee structure.
+     */
+    public function activate(Request $request, FeeStructure $feeStructure): JsonResponse
+    {
+        $feeStructure->update([
+            'status' => FeeStructureStatus::ACTIVE,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Fee structure activated successfully.',
+            'structure' => $this->transformStructure($feeStructure->fresh(['session', 'campus', 'class', 'section'])->loadCount('items')),
+        ]);
+    }
+
+    /**
+     * Deactivate the specified fee structure.
+     */
+    public function deactivate(Request $request, FeeStructure $feeStructure): JsonResponse
+    {
+        $feeStructure->update([
+            'status' => FeeStructureStatus::INACTIVE,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Fee structure deactivated successfully.',
+            'structure' => $this->transformStructure($feeStructure->fresh(['session', 'campus', 'class', 'section'])->loadCount('items')),
+        ]);
+    }
+
+    /**
+     * Set the specified fee structure as default.
+     */
+    public function setDefault(Request $request, FeeStructure $feeStructure): JsonResponse
+    {
+        FeeStructure::where('session_id', $feeStructure->session_id)
+            ->where('campus_id', $feeStructure->campus_id)
+            ->where('class_id', $feeStructure->class_id)
+            ->where('section_id', $feeStructure->section_id)
+            ->update(['is_default' => false]);
+
+        $feeStructure->update([
+            'is_default' => true,
+        ]);
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Default fee structure updated successfully.',
+            'structure' => $this->transformStructure($feeStructure->fresh(['session', 'campus', 'class', 'section'])->loadCount('items')),
+        ]);
     }
 
     /**
@@ -456,11 +471,11 @@ class FeeStructureController extends Controller
         $campusId = $request->query('campus_id');
         $classId = $request->query('class_id');
         $sectionId = $request->query('section_id');
-        
-        if (!$sessionId || !$campusId) {
+
+        if (! $sessionId || ! $campusId) {
             return response()->json([
                 'success' => false,
-                'message' => 'Session and Campus are required'
+                'message' => 'Session and Campus are required',
             ], 400);
         }
 
@@ -510,10 +525,10 @@ class FeeStructureController extends Controller
             ->effectiveOn(now())
             ->first();
 
-        if (!$structure) {
+        if (! $structure) {
             return response()->json([
                 'success' => false,
-                'message' => 'No active fee structure found for this class'
+                'message' => 'No active fee structure found for this class',
             ]);
         }
 
@@ -533,11 +548,11 @@ class FeeStructureController extends Controller
         $sectionId = $request->query('section_id');
 
         $structures = FeeStructure::select('id', 'title', 'session_id', 'campus_id', 'class_id', 'section_id')
-            ->when($query, fn($q) => $q->where('title', 'like', "%{$query}%"))
-            ->when($sessionId, fn($q) => $q->where('session_id', $sessionId))
-            ->when($campusId, fn($q) => $q->where('campus_id', $campusId))
-            ->when($classId, fn($q) => $q->where('class_id', $classId))
-            ->when($sectionId, fn($q) => $q->where('section_id', $sectionId))
+            ->when($query, fn ($q) => $q->where('title', 'like', "%{$query}%"))
+            ->when($sessionId, fn ($q) => $q->where('session_id', $sessionId))
+            ->when($campusId, fn ($q) => $q->where('campus_id', $campusId))
+            ->when($classId, fn ($q) => $q->where('class_id', $classId))
+            ->when($sectionId, fn ($q) => $q->where('section_id', $sectionId))
             ->orderBy('title')
             ->limit(20)
             ->get();
@@ -557,13 +572,13 @@ class FeeStructureController extends Controller
 
         foreach ($structure->items as $item) {
             $amount = (float) $item->amount;
-            $frequency = $item->frequency instanceof FeeFrequency 
-                ? $item->frequency->value 
+            $frequency = $item->frequency instanceof FeeFrequency
+                ? $item->frequency->value
                 : $item->frequency;
-            
+
             // Convert to lowercase for case-insensitive comparison
             $frequency = strtolower($frequency);
-            
+
             switch ($frequency) {
                 case 'monthly':
                     $monthlyTotal += $amount;
@@ -585,12 +600,12 @@ class FeeStructureController extends Controller
                 'monthly_fee' => $monthlyTotal,
                 'annual_fee' => $yearlyTotal,
                 'one_time_fee' => $oneTimeTotal,
-                'items' => $structure->items->map(function($item) {
+                'items' => $structure->items->map(function ($item) {
                     // Convert frequency enum to string value for JSON response
-                    $frequency = $item->frequency instanceof FeeFrequency 
-                        ? $item->frequency->value 
+                    $frequency = $item->frequency instanceof FeeFrequency
+                        ? $item->frequency->value
                         : $item->frequency;
-                    
+
                     return [
                         'id' => $item->id,
                         'fee_head_id' => $item->fee_head_id,
@@ -600,8 +615,75 @@ class FeeStructureController extends Controller
                         'is_optional' => $item->is_optional,
                         'applicable_on_admission' => $item->applicable_on_admission,
                     ];
-                })
-            ]
+                }),
+            ],
         ]);
+    }
+
+    /**
+     * Get transformed fee structures for the listing.
+     */
+    private function getTransformedStructures(Request $request)
+    {
+        $query = FeeStructure::with(['session', 'campus', 'class', 'section'])
+            ->withCount('items');
+
+        if ($request->filled('session_id')) {
+            $query->where('session_id', $request->session_id);
+        }
+
+        if ($request->filled('campus_id')) {
+            $query->where('campus_id', $request->campus_id);
+        }
+
+        if ($request->filled('class_id')) {
+            $query->where('class_id', $request->class_id);
+        }
+
+        if ($request->filled('section_id')) {
+            $query->where('section_id', $request->section_id);
+        }
+
+        if ($request->filled('status')) {
+            $query->where('status', $request->status);
+        }
+
+        if ($request->filled('search')) {
+            $query->where('title', 'like', '%'.$request->search.'%');
+        }
+
+        return $query->latest()->get()->map(fn (FeeStructure $structure) => $this->transformStructure($structure));
+    }
+
+    /**
+     * Transform a fee structure for frontend consumption.
+     */
+    private function transformStructure(FeeStructure $structure): array
+    {
+        return [
+            'id' => $structure->id,
+            'title' => $structure->title,
+            'session' => $structure->session ? [
+                'id' => $structure->session->id,
+                'name' => $structure->session->name,
+            ] : null,
+            'campus' => $structure->campus ? [
+                'id' => $structure->campus->id,
+                'name' => $structure->campus->name,
+            ] : null,
+            'class' => $structure->class ? [
+                'id' => $structure->class->id,
+                'name' => $structure->class->name,
+            ] : null,
+            'section' => $structure->section ? [
+                'id' => $structure->section->id,
+                'name' => $structure->section->name,
+            ] : null,
+            'status' => $structure->status instanceof FeeStructureStatus ? $structure->status->value : $structure->status,
+            'effective_from' => $structure->effective_from?->toDateString(),
+            'effective_to' => $structure->effective_to?->toDateString(),
+            'items_count' => $structure->items_count,
+            'is_default' => (bool) $structure->is_default,
+        ];
     }
 }

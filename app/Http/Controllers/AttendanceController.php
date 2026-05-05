@@ -3,8 +3,8 @@
 namespace App\Http\Controllers;
 
 use App\Models\Attendance;
-use App\Models\AttendanceStudent;
 use App\Models\AttendanceStatus;
+use App\Models\AttendanceStudent;
 use App\Models\Campus;
 use App\Models\Holiday;
 use App\Models\LeaveType;
@@ -12,7 +12,6 @@ use App\Models\SchoolClass;
 use App\Models\Section;
 use App\Models\Session;
 use App\Models\Student;
-use App\Policies\AttendancePolicy;
 use App\Services\AttendanceService;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
@@ -97,26 +96,26 @@ class AttendanceController extends Controller
 
         $today = now()->toDateString();
         $yesterday = now()->subDay()->toDateString();
-        
+
         // Get current session and campus from request or use defaults
-        $currentSessionId = $request->filled('session_id') 
-            ? $request->session_id 
+        $currentSessionId = $request->filled('session_id')
+            ? $request->session_id
             : Session::where('is_active', true)->first()?->id;
         $currentCampusId = $request->filled('campus_id') ? $request->campus_id : null;
 
         // Today's attendance summary
         $todayQuery = Attendance::with(['class', 'section', 'attendanceStudents.attendanceStatus'])
             ->where('attendance_date', $today);
-        
+
         if ($currentCampusId) {
             $todayQuery->where('campus_id', $currentCampusId);
         }
         if ($currentSessionId) {
             $todayQuery->where('session_id', $currentSessionId);
         }
-        
+
         $todayAttendances = $todayQuery->get();
-        
+
         // Calculate today's statistics
         $todayStats = $this->calculateDashboardStats($todayAttendances);
 
@@ -133,6 +132,7 @@ class AttendanceController extends Controller
         // Get classes with attendance status for today
         $classSummaries = $todayAttendances->map(function ($attendance) {
             $students = $attendance->attendanceStudents;
+
             return [
                 'id' => $attendance->id,
                 'class_name' => $attendance->class?->name ?? 'N/A',
@@ -209,8 +209,8 @@ class AttendanceController extends Controller
             'absent' => $absent,
             'leave' => $leave,
             'late' => $late,
-            'attendance_percentage' => $totalStudents > 0 
-                ? round(($present / $totalStudents) * 100, 1) 
+            'attendance_percentage' => $totalStudents > 0
+                ? round(($present / $totalStudents) * 100, 1)
                 : 0,
             'total_classes' => $attendances->count(),
         ];
@@ -239,7 +239,7 @@ class AttendanceController extends Controller
         $selectedDate = $request->filled('date') ? $request->date : now()->toDateString();
 
         // Check if selected date is a Sunday
-        $isSunday = \Carbon\Carbon::parse($selectedDate)->dayOfWeek === \Carbon\Carbon::SUNDAY;
+        $isSunday = Carbon::parse($selectedDate)->dayOfWeek === Carbon::SUNDAY;
 
         // Check if selected date is a holiday
         $holiday = null;
@@ -249,7 +249,7 @@ class AttendanceController extends Controller
 
         // Get students for the selected class/section if all required params are present
         $students = [];
-        if ($selectedClassId && ($selectedSectionId === 'all' || $selectedSectionId) && !$isSunday && !$holiday) {
+        if ($selectedClassId && ($selectedSectionId === 'all' || $selectedSectionId) && ! $isSunday && ! $holiday) {
             $students = $this->attendanceService->getEligibleStudents(
                 $selectedClassId,
                 $selectedSectionId === 'all' ? null : $selectedSectionId,
@@ -290,7 +290,7 @@ class AttendanceController extends Controller
     {
         $validator = Validator::make($request->all(), [
             'class_id' => 'required|exists:school_classes,id',
-            'section_id' => 'required|exists:sections,id',
+            'section_id' => 'nullable|exists:sections,id',
             'session_id' => 'nullable|exists:academic_sessions,id',
             'campus_id' => 'nullable|exists:campuses,id',
             'date' => 'nullable|date',
@@ -304,7 +304,8 @@ class AttendanceController extends Controller
             $request->class_id,
             $request->section_id,
             $request->session_id,
-            $request->campus_id
+            $request->campus_id,
+            $request->date
         );
 
         return response()->json([
@@ -344,7 +345,7 @@ class AttendanceController extends Controller
                 ->with('success', 'Attendance recorded successfully.');
         } catch (\Exception $e) {
             return redirect()->back()
-                ->with('error', 'Failed to record attendance: ' . $e->getMessage())
+                ->with('error', 'Failed to record attendance: '.$e->getMessage())
                 ->withInput();
         }
     }
@@ -360,7 +361,7 @@ class AttendanceController extends Controller
         $campusId = $data['campus_id'];
         $classId = $data['class_id'];
         $sectionId = $data['section_id'];
-        
+
         // Get status IDs from service
         $statusIds = $this->attendanceService->getStatusIds();
 
@@ -382,8 +383,8 @@ class AttendanceController extends Controller
         // Check if date is a holiday and throw error unless attendance is allowed
         $isHoliday = $this->attendanceService->isHoliday($attendanceDate, $campusId);
         $isAttendanceAllowed = $this->attendanceService->isAttendanceAllowed($attendanceDate, $campusId);
-        
-        if ($isHoliday && !$isAttendanceAllowed) {
+
+        if ($isHoliday && ! $isAttendanceAllowed) {
             throw new \Exception('Cannot mark attendance on a holiday. Please select another date.');
         }
 
@@ -420,7 +421,7 @@ class AttendanceController extends Controller
 
             // Get student's current section
             $student = Student::with('currentEnrollment')->find($studentId);
-            if (!$student || !$student->currentEnrollment) {
+            if (! $student || ! $student->currentEnrollment) {
                 continue;
             }
 
@@ -433,7 +434,7 @@ class AttendanceController extends Controller
                 ->first();
 
             // If not exists, create new attendance record
-            if (!$attendance) {
+            if (! $attendance) {
                 $attendance = Attendance::create([
                     'attendance_date' => $attendanceDate,
                     'campus_id' => $data['campus_id'],
@@ -443,7 +444,7 @@ class AttendanceController extends Controller
                     'taken_by' => auth()->id(),
                     'is_locked' => false,
                 ]);
-                
+
                 if ($firstAttendance === null) {
                     $firstAttendance = $attendance;
                 }
@@ -462,7 +463,7 @@ class AttendanceController extends Controller
             );
         }
 
-        return $firstAttendance ?? new Attendance();
+        return $firstAttendance ?? new Attendance;
     }
 
     /**
@@ -596,7 +597,7 @@ class AttendanceController extends Controller
             $validated['check_out'] ?? null
         );
 
-        if (!empty($timeErrors)) {
+        if (! empty($timeErrors)) {
             return redirect()->back()
                 ->withErrors(['check_time' => $timeErrors[0]])
                 ->withInput();
@@ -607,7 +608,7 @@ class AttendanceController extends Controller
                 // Get student's current enrollment
                 $student = Student::with('currentEnrollment')->findOrFail($validated['student_id']);
 
-                if (!$student->currentEnrollment) {
+                if (! $student->currentEnrollment) {
                     throw new \Exception('Student has no active enrollment');
                 }
 
@@ -678,7 +679,7 @@ class AttendanceController extends Controller
             return redirect()->back()->with('success', 'Attendance recorded successfully.');
         } catch (\Exception $e) {
             return redirect()->back()
-                ->with('error', 'Failed to record attendance: ' . $e->getMessage())
+                ->with('error', 'Failed to record attendance: '.$e->getMessage())
                 ->withInput();
         }
     }
@@ -758,7 +759,7 @@ class AttendanceController extends Controller
                 $studentAttendance['check_out'] ?? null
             );
 
-            if (!empty($timeErrors)) {
+            if (! empty($timeErrors)) {
                 return redirect()->back()
                     ->withErrors(['check_time' => $timeErrors[0]])
                     ->withInput();
@@ -796,7 +797,7 @@ class AttendanceController extends Controller
                 ->with('success', 'Attendance updated successfully.');
         } catch (\Exception $e) {
             return redirect()->back()
-                ->with('error', 'Failed to update attendance: ' . $e->getMessage())
+                ->with('error', 'Failed to update attendance: '.$e->getMessage())
                 ->withInput();
         }
     }
@@ -818,7 +819,7 @@ class AttendanceController extends Controller
             return redirect()->back()->with('success', 'Attendance locked successfully');
         } catch (\Exception $e) {
             return redirect()->back()
-                ->with('error', 'Failed to lock attendance: ' . $e->getMessage());
+                ->with('error', 'Failed to lock attendance: '.$e->getMessage());
         }
     }
 
@@ -830,7 +831,7 @@ class AttendanceController extends Controller
         $this->authorize('unlock', $attendance);
 
         try {
-            if (!$attendance->is_locked) {
+            if (! $attendance->is_locked) {
                 return redirect()->back()->with('error', 'Attendance is already unlocked');
             }
 
@@ -839,7 +840,7 @@ class AttendanceController extends Controller
             return redirect()->back()->with('success', 'Attendance unlocked successfully');
         } catch (\Exception $e) {
             return redirect()->back()
-                ->with('error', 'Failed to unlock attendance: ' . $e->getMessage());
+                ->with('error', 'Failed to unlock attendance: '.$e->getMessage());
         }
     }
 
@@ -861,7 +862,7 @@ class AttendanceController extends Controller
                 ->with('success', 'Attendance deleted successfully');
         } catch (\Exception $e) {
             return redirect()->back()
-                ->with('error', 'Failed to delete attendance: ' . $e->getMessage());
+                ->with('error', 'Failed to delete attendance: '.$e->getMessage());
         }
     }
 
@@ -917,7 +918,7 @@ class AttendanceController extends Controller
             : [];
 
         // If no class_id provided, show empty report form
-        if (!$request->filled('class_id')) {
+        if (! $request->filled('class_id')) {
             return Inertia::render('attendance/ClassReport', [
                 'class' => null,
                 'sections' => [],
@@ -946,7 +947,7 @@ class AttendanceController extends Controller
         $students = Student::with(['user', 'currentEnrollment.campus', 'currentEnrollment.section', 'studentGuardians.guardian.user'])
             ->whereHas('currentEnrollment', function ($q) use ($request) {
                 $q->where('class_id', $request->class_id)
-                  ->whereNull('leave_date');
+                    ->whereNull('leave_date');
 
                 if ($request->filled('section_id')) {
                     $q->where('section_id', $request->section_id);
@@ -957,7 +958,7 @@ class AttendanceController extends Controller
 
         // Optimize: Get all attendance records in one query
         $studentIds = $students->pluck('id')->toArray();
-        
+
         $allAttendanceRecords = AttendanceStudent::with(['attendanceStatus'])
             ->whereIn('student_id', $studentIds)
             ->whereHas('attendance', function ($q) use ($startDate, $endDate) {
@@ -968,7 +969,7 @@ class AttendanceController extends Controller
 
         $summary = $students->map(function ($student) use ($allAttendanceRecords) {
             $studentRecords = $allAttendanceRecords->get($student->id, collect());
-            
+
             // Calculate stats using service
             $stats = $this->attendanceService->calculateStats($studentRecords);
 
@@ -978,8 +979,8 @@ class AttendanceController extends Controller
             // Get enrollment info
             $enrollment = $student->currentEnrollment;
             $enrollmentInfo = $enrollment ? (
-                ($enrollment->campus ? $enrollment->campus->name : '') . ' / ' .
-                ($enrollment->class ? $enrollment->class->name : '') . ' / ' .
+                ($enrollment->campus ? $enrollment->campus->name : '').' / '.
+                ($enrollment->class ? $enrollment->class->name : '').' / '.
                 ($enrollment->section ? $enrollment->section->name : '')
             ) : '';
 
@@ -1015,28 +1016,30 @@ class AttendanceController extends Controller
     private function getGuardianInfo(Student $student): string
     {
         $guardians = $student->studentGuardians;
-        
+
         if ($guardians->isEmpty()) {
             return '-';
         }
-        
+
         // Try to find primary guardian first
         $primaryGuardian = $guardians->where('type', 'primary')->first();
-        
+
         if ($primaryGuardian && $primaryGuardian->guardian && $primaryGuardian->guardian->user) {
             $name = $primaryGuardian->guardian->user->name;
             $phone = $primaryGuardian->guardian->phone ?? '';
-            return $name . ' - ' . $phone;
+
+            return $name.' - '.$phone;
         }
-        
+
         // Fall back to any guardian
         $otherGuardian = $guardians->first();
         if ($otherGuardian && $otherGuardian->guardian && $otherGuardian->guardian->user) {
             $name = $otherGuardian->guardian->user->name;
             $phone = $otherGuardian->guardian->phone ?? '';
-            return $name . ' - ' . $phone;
+
+            return $name.' - '.$phone;
         }
-        
+
         return '-';
     }
 

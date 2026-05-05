@@ -2,6 +2,11 @@
 
 namespace App\Models\Exam;
 
+use App\Models\Campus;
+use App\Models\SchoolClass;
+use App\Models\Section;
+use App\Models\Student;
+use App\Models\StudentEnrollmentRecord;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -31,7 +36,7 @@ class ExamStudentRegistration extends Model
      */
     public function campus(): BelongsTo
     {
-        return $this->belongsTo(\App\Models\Campus::class);
+        return $this->belongsTo(Campus::class);
     }
 
     /**
@@ -39,7 +44,7 @@ class ExamStudentRegistration extends Model
      */
     public function class(): BelongsTo
     {
-        return $this->belongsTo(\App\Models\SchoolClass::class, 'class_id');
+        return $this->belongsTo(SchoolClass::class, 'class_id');
     }
 
     /**
@@ -47,7 +52,7 @@ class ExamStudentRegistration extends Model
      */
     public function section(): BelongsTo
     {
-        return $this->belongsTo(\App\Models\Section::class)->withDefault();
+        return $this->belongsTo(Section::class)->withDefault();
     }
 
     /**
@@ -55,7 +60,7 @@ class ExamStudentRegistration extends Model
      */
     public function student(): BelongsTo
     {
-        return $this->belongsTo(\App\Models\Student::class);
+        return $this->belongsTo(Student::class);
     }
 
     /**
@@ -63,6 +68,6 @@ class ExamStudentRegistration extends Model
      */
     public function enrollment(): BelongsTo
     {
-        return $this->belongsTo(\App\Models\StudentEnrollmentRecord::class, 'enrollment_id');
+        return $this->belongsTo(StudentEnrollmentRecord::class, 'enrollment_id');
     }
 }

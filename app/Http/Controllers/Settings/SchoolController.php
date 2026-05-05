@@ -3,15 +3,15 @@
 namespace App\Http\Controllers\Settings;
 
 use App\Http\Controllers\Controller;
-use App\Models\School;
 use App\Models\Campus;
 use App\Models\CampusType;
+use App\Models\School;
 use App\Models\SchoolClass;
 use App\Models\Section;
 use App\Models\Session;
 use App\Models\Subject;
-use Illuminate\Http\Request;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -31,7 +31,7 @@ class SchoolController extends Controller
         $campusTypes = CampusType::orderBy('name', 'asc')->get(['id', 'name']);
 
         $classes = SchoolClass::withCount('sections')
-            ->orderBy('id', 'asc')
+            ->orderBy('id', 'desc')
             ->paginate(10);
 
         $sections = Section::with('schoolClass')
@@ -40,13 +40,16 @@ class SchoolController extends Controller
 
         $sessions = Session::orderBy('id', 'desc')->paginate(10);
 
-        $subjects = Subject::orderBy('id', 'asc')->paginate(10);
+        $subjects = Subject::orderBy('id', 'desc')->paginate(10);
+
+        $allClasses = SchoolClass::orderBy('name', 'asc')->get(['id', 'name']);
 
         return Inertia::render('settings/SchoolProfile', [
             'school' => $school,
             'campuses' => $campuses,
             'campusTypes' => $campusTypes,
             'classes' => $classes,
+            'allClasses' => $allClasses,
             'sections' => $sections,
             'sessions' => $sessions,
             'subjects' => $subjects,
@@ -70,9 +73,9 @@ class SchoolController extends Controller
 
         if ($request->hasFile('logo')) {
             $logoFile = $request->file('logo');
-            $logoName = time() . '_' . $logoFile->getClientOriginalName();
+            $logoName = time().'_'.$logoFile->getClientOriginalName();
             $logoFile->move(public_path('uploads/logo'), $logoName);
-            $validated['logo_path'] = '/uploads/logo/' . $logoName;
+            $validated['logo_path'] = '/uploads/logo/'.$logoName;
         }
 
         if ($school) {

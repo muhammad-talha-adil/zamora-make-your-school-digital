@@ -31,9 +31,9 @@
         </style>
 
         {{-- Custom theme styles --}}
-        @if($theme)
+        @if(! empty($theme ?? null))
         <style>
-            @if($theme_mode === 'light')
+            @if(($theme_mode ?? 'light') === 'light')
             :root {
                 --background: {{ $theme->colors['card_bg'] ?? 'hsl(0 0% 100%)' }};
                 --foreground: {{ $theme->colors['card_text'] ?? 'hsl(0 0% 3.9%)' }};

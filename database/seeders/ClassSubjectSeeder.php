@@ -11,9 +11,9 @@ class ClassSubjectSeeder extends Seeder
 {
     /**
      * Run the database seeds.
-     * 
+     *
      * Assigns subjects by class level. Each section of a class receives the same subject set.
-     * 
+     *
      * Curriculum mapping:
      * - PG/KG: English, Urdu, Mathematics, Drawing, Islamiyat
      * - Class 1-3: add Science, Social Studies
@@ -28,6 +28,7 @@ class ClassSubjectSeeder extends Seeder
 
         if ($classes->isEmpty() || $subjects->isEmpty()) {
             $this->command->warn('Classes or subjects not found. Skipping class_subject seeding.');
+
             return;
         }
 
@@ -37,21 +38,21 @@ class ClassSubjectSeeder extends Seeder
             'PG' => ['English', 'Urdu', 'Mathematics', 'Drawing', 'Islamiyat'],
             'KG-I' => ['English', 'Urdu', 'Mathematics', 'Drawing', 'Islamiyat'],
             'KG-II' => ['English', 'Urdu', 'Mathematics', 'Drawing', 'Islamiyat'],
-            
+
             // Class 1-3 (Primary)
             'One' => ['English', 'Urdu', 'Mathematics', 'Drawing', 'Islamiyat', 'Science', 'Social Studies'],
             'Two' => ['English', 'Urdu', 'Mathematics', 'Drawing', 'Islamiyat', 'Science', 'Social Studies'],
             'Three' => ['English', 'Urdu', 'Mathematics', 'Drawing', 'Islamiyat', 'Science', 'Social Studies'],
-            
+
             // Class 4-5 (Upper Primary)
             'Four' => ['English', 'Urdu', 'Mathematics', 'Drawing', 'Islamiyat', 'Science', 'Social Studies', 'Pakistan Studies'],
             'Five' => ['English', 'Urdu', 'Mathematics', 'Drawing', 'Islamiyat', 'Science', 'Social Studies', 'Pakistan Studies'],
-            
+
             // Class 6-8 (Middle School)
             'Six' => ['English', 'Urdu', 'Mathematics', 'Islamiyat', 'Science', 'Social Studies', 'Pakistan Studies', 'Computer Science', 'History'],
             'Seven' => ['English', 'Urdu', 'Mathematics', 'Islamiyat', 'Science', 'Social Studies', 'Pakistan Studies', 'Computer Science', 'History'],
             'Eight' => ['English', 'Urdu', 'Mathematics', 'Islamiyat', 'Science', 'Social Studies', 'Pakistan Studies', 'Computer Science', 'History'],
-            
+
             // Class 9-10 (Secondary School)
             'Nine' => ['English', 'Urdu', 'Mathematics', 'Physics', 'Chemistry', 'Biology', 'Pakistan Studies', 'Islamiyat', 'Computer Science'],
             'Ten' => ['English', 'Urdu', 'Mathematics', 'Physics', 'Chemistry', 'Biology', 'Pakistan Studies', 'Islamiyat', 'Computer Science'],

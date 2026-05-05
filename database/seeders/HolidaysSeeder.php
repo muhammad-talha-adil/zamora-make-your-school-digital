@@ -9,7 +9,7 @@ class HolidaysSeeder extends Seeder
 {
     /**
      * Run the database seeds.
-     * 
+     *
      * Seeds Pakistan official public/national holidays for 2026.
      * Note: Eid dates are approximate due to moon sighting and should be adjusted as needed.
      */

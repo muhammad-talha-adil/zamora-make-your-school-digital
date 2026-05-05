@@ -11,7 +11,9 @@ use App\Models\Purchase;
 use App\Models\PurchaseItem;
 use App\Models\Supplier;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Inertia\Response;
 
 class PurchasesController extends Controller
@@ -29,7 +31,7 @@ class PurchasesController extends Controller
         $campusId = $request->get('campus_id');
 
         // Default to first campus if none selected
-        if (!$campusId) {
+        if (! $campusId) {
             $firstCampus = Campus::first();
             if ($firstCampus) {
                 $campusId = $firstCampus->id;
@@ -38,11 +40,11 @@ class PurchasesController extends Controller
 
         return inertia('inventory/Purchases/Index', [
             'purchases' => Purchase::with(['campus:id,name', 'supplier:id,name', 'purchaseItems.inventoryItem:id,name'])
-                ->when($campusId, fn($q) => $q->where('campus_id', $campusId))
+                ->when($campusId, fn ($q) => $q->where('campus_id', $campusId))
                 ->orderBy('purchase_date', 'desc')
                 ->paginate(20),
             'campuses' => Campus::orderBy('name')->get(),
-            'suppliers' => Supplier::when($campusId, fn($q) => $q->where('campus_id', $campusId))
+            'suppliers' => Supplier::when($campusId, fn ($q) => $q->where('campus_id', $campusId))
                 ->where('is_active', true)
                 ->orderBy('name')
                 ->get(['id', 'name']),
@@ -74,7 +76,7 @@ class PurchasesController extends Controller
         $perPage = in_array($perPage, [25, 50, 75, 100]) ? $perPage : 25;
 
         // Default to first campus if no campus_id provided
-        if (!$campusId) {
+        if (! $campusId) {
             $firstCampus = Campus::first();
             if ($firstCampus) {
                 $campusId = $firstCampus->id;
@@ -83,12 +85,12 @@ class PurchasesController extends Controller
 
         $purchasesQuery = Purchase::with(['campus:id,name', 'supplier:id,name', 'purchaseItems.inventoryItem:id,name'])
             ->select(['id', 'purchase_id', 'supplier_id', 'purchase_date', 'total_amount', 'campus_id', 'created_at'])
-            ->when($campusId, fn($q) => $q->where('campus_id', $campusId))
+            ->when($campusId, fn ($q) => $q->where('campus_id', $campusId))
             ->when($query, function ($q) use ($query) {
                 // Search in supplier name OR item name
                 $q->where(function ($sq) use ($query) {
-                    $sq->whereHas('supplier', fn($ssq) => $ssq->where('name', 'LIKE', "%{$query}%"))
-                        ->orWhereHas('purchaseItems.inventoryItem', fn($iq) => $iq->where('name', 'LIKE', "%{$query}%"));
+                    $sq->whereHas('supplier', fn ($ssq) => $ssq->where('name', 'LIKE', "%{$query}%"))
+                        ->orWhereHas('purchaseItems.inventoryItem', fn ($iq) => $iq->where('name', 'LIKE', "%{$query}%"));
                 });
             })
             ->when($request->get('from_date'), function ($q) use ($request) {
@@ -110,7 +112,7 @@ class PurchasesController extends Controller
                     ->filter()
                     ->take(3)
                     ->implode(', ');
-                
+
                 $moreItemsCount = $purchase->purchaseItems->count() - 3;
                 if ($moreItemsCount > 0) {
                     $itemNames .= " (+{$moreItemsCount} more)";
@@ -143,7 +145,7 @@ class PurchasesController extends Controller
                 'total' => $paginator->total(),
                 'from' => $paginator->firstItem(),
                 'to' => $paginator->lastItem(),
-            ]
+            ],
         ]);
     }
 
@@ -152,7 +154,7 @@ class PurchasesController extends Controller
      *
      * REDIRECTED: Now uses modal on dashboard instead of separate page.
      */
-    public function create(Request $request): \Illuminate\Http\RedirectResponse
+    public function create(Request $request): RedirectResponse
     {
         return redirect()->route('inventory.purchases.index');
     }
@@ -176,7 +178,7 @@ class PurchasesController extends Controller
             $existingPurchase = Purchase::where('idempotency_key', $idempotencyKey)->first();
             if ($existingPurchase) {
                 return response()->json([
-                    'success' => true, 
+                    'success' => true,
                     'message' => 'Purchase already created.',
                     'purchase_id' => $existingPurchase->id,
                 ]);
@@ -185,7 +187,7 @@ class PurchasesController extends Controller
 
         // IMPROVEMENT: Use DB transaction for atomic operation
         try {
-            \DB::transaction(function () use ($validated, &$purchase, $idempotencyKey) {
+            DB::transaction(function () use ($validated, &$purchase, $idempotencyKey) {
                 // Create purchase first with idempotency key if available
                 $purchaseData = [
                     'campus_id' => $validated['campus_id'],
@@ -194,12 +196,12 @@ class PurchasesController extends Controller
                     'total_amount' => 0, // Will update after items
                     'note' => $validated['note'] ?? null,
                 ];
-                
+
                 // Add idempotency key if provided
                 if ($idempotencyKey) {
                     $purchaseData['idempotency_key'] = $idempotencyKey;
                 }
-                
+
                 $purchase = Purchase::create($purchaseData);
 
                 $totalAmount = 0;
@@ -246,7 +248,7 @@ class PurchasesController extends Controller
 
             return response()->json(['success' => true, 'message' => 'Purchase created successfully. Stock has been updated.']);
         } catch (\Exception $e) {
-            return response()->json(['success' => false, 'message' => 'Failed to create purchase: ' . $e->getMessage()], 500);
+            return response()->json(['success' => false, 'message' => 'Failed to create purchase: '.$e->getMessage()], 500);
         }
     }
 
@@ -256,7 +258,7 @@ class PurchasesController extends Controller
     protected function getItemSnapshot(int $itemId, float $purchaseRate = 0, float $saleRate = 0): array
     {
         $item = InventoryItem::find($itemId);
-        if (!$item) {
+        if (! $item) {
             return [];
         }
 
@@ -276,7 +278,7 @@ class PurchasesController extends Controller
     {
         /** @var Purchase $purchase */
         $purchase = Purchase::where('id', $purchase->id)
-            ->when($request->get('campus_id'), fn($q) => $q->where('campus_id', $request->get('campus_id')))
+            ->when($request->get('campus_id'), fn ($q) => $q->where('campus_id', $request->get('campus_id')))
             ->firstOrFail();
 
         return inertia('inventory/Purchases/Show', [
@@ -289,11 +291,11 @@ class PurchasesController extends Controller
      *
      * REDIRECTED: Now uses modal on dashboard instead of separate page.
      */
-    public function edit(Request $request, Purchase $purchase): \Illuminate\Http\RedirectResponse
+    public function edit(Request $request, Purchase $purchase): RedirectResponse
     {
         /** @var Purchase $purchase */
         $purchase = Purchase::where('id', $purchase->id)
-            ->when($request->get('campus_id'), fn($q) => $q->where('campus_id', $request->get('campus_id')))
+            ->when($request->get('campus_id'), fn ($q) => $q->where('campus_id', $request->get('campus_id')))
             ->firstOrFail();
 
         return redirect()->to("/inventory?modal=inventory-purchases-form&action=edit&id={$purchase->id}");
@@ -311,7 +313,7 @@ class PurchasesController extends Controller
     {
         /** @var Purchase $purchase */
         $purchase = Purchase::where('id', $purchase->id)
-            ->when($request->get('campus_id'), fn($q) => $q->where('campus_id', $request->get('campus_id')))
+            ->when($request->get('campus_id'), fn ($q) => $q->where('campus_id', $request->get('campus_id')))
             ->firstOrFail();
 
         $request->validate([
@@ -326,7 +328,7 @@ class PurchasesController extends Controller
         ]);
 
         try {
-            \DB::transaction(function () use ($request, $purchase) {
+            DB::transaction(function () use ($request, $purchase) {
                 // First, reverse old stock for existing purchase items
                 foreach ($purchase->purchaseItems as $oldItem) {
                     $stock = InventoryStock::where('campus_id', $purchase->campus_id)
@@ -390,7 +392,7 @@ class PurchasesController extends Controller
 
             return response()->json(['success' => true, 'message' => 'Purchase updated successfully.']);
         } catch (\Exception $e) {
-            return response()->json(['success' => false, 'message' => 'Failed to update purchase: ' . $e->getMessage()], 500);
+            return response()->json(['success' => false, 'message' => 'Failed to update purchase: '.$e->getMessage()], 500);
         }
     }
 
@@ -401,7 +403,7 @@ class PurchasesController extends Controller
     {
         /** @var Purchase $purchase */
         $purchase = Purchase::where('id', $purchase->id)
-            ->when($request->get('campus_id'), fn($q) => $q->where('campus_id', $request->get('campus_id')))
+            ->when($request->get('campus_id'), fn ($q) => $q->where('campus_id', $request->get('campus_id')))
             ->firstOrFail();
 
         if ($purchase->purchaseItems()->exists()) {
@@ -426,7 +428,7 @@ class PurchasesController extends Controller
         $campusId = $request->get('campus_id');
 
         // Default to first campus if no campus_id provided
-        if (!$campusId) {
+        if (! $campusId) {
             $firstCampus = Campus::first();
             if ($firstCampus) {
                 $campusId = $firstCampus->id;
@@ -434,14 +436,14 @@ class PurchasesController extends Controller
         }
 
         $purchase = Purchase::where('id', $request->purchase_id)
-            ->when($campusId, fn($q) => $q->where('campus_id', $campusId))
+            ->when($campusId, fn ($q) => $q->where('campus_id', $campusId))
             ->firstOrFail();
 
         try {
-            \DB::transaction(function () use ($purchase, $request) {
+            DB::transaction(function () use ($purchase, $request) {
                 // Add cancellation note
                 $existingNote = $purchase->note ?? '';
-                $purchase->note = $existingNote . "\n\n[CANCELLED] " . now()->toIso8601String() . ": " . $request->cancellation_reason;
+                $purchase->note = $existingNote."\n\n[CANCELLED] ".now()->toIso8601String().': '.$request->cancellation_reason;
                 $purchase->save();
 
                 // Reverse stock
@@ -463,7 +465,7 @@ class PurchasesController extends Controller
 
             return response()->json(['success' => true, 'message' => 'Purchase cancelled successfully.']);
         } catch (\Exception $e) {
-            return response()->json(['success' => false, 'message' => 'Failed to cancel purchase: ' . $e->getMessage()], 500);
+            return response()->json(['success' => false, 'message' => 'Failed to cancel purchase: '.$e->getMessage()], 500);
         }
     }
 
@@ -475,7 +477,7 @@ class PurchasesController extends Controller
         $campusId = $request->get('campus_id');
 
         // Default to first campus if no campus_id provided
-        if (!$campusId) {
+        if (! $campusId) {
             $firstCampus = Campus::first();
             if ($firstCampus) {
                 $campusId = $firstCampus->id;
@@ -483,7 +485,7 @@ class PurchasesController extends Controller
         }
 
         $purchase = Purchase::with(['campus:id,name', 'supplier:id,name', 'purchaseItems.inventoryItem:id,name'])
-            ->when($campusId, fn($q) => $q->where('campus_id', $campusId))
+            ->when($campusId, fn ($q) => $q->where('campus_id', $campusId))
             ->findOrFail($id);
 
         $items = $purchase->purchaseItems->map(function ($item) {
@@ -526,7 +528,7 @@ class PurchasesController extends Controller
         $campusId = $request->get('campus_id');
 
         // Default to first campus if no campus_id provided
-        if (!$campusId) {
+        if (! $campusId) {
             $firstCampus = Campus::first();
             if ($firstCampus) {
                 $campusId = $firstCampus->id;
@@ -534,7 +536,7 @@ class PurchasesController extends Controller
         }
 
         $purchase = Purchase::with(['campus', 'supplier', 'purchaseItems.inventoryItem'])
-            ->when($campusId, fn($q) => $q->where('campus_id', $campusId))
+            ->when($campusId, fn ($q) => $q->where('campus_id', $campusId))
             ->findOrFail($id);
 
         $analysis = $purchase->purchaseItems->map(function ($item) {

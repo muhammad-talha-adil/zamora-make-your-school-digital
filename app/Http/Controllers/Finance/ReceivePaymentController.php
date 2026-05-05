@@ -3,16 +3,15 @@
 namespace App\Http\Controllers\Finance;
 
 use App\Http\Controllers\Controller;
-use App\Services\FinanceService;
-use App\Models\Fee\FeeVoucher;
-use App\Models\Fee\FeeVoucherItem;
 use App\Models\Campus;
+use App\Models\Fee\FeeVoucher;
+use App\Models\Ledger\LedgerCategory;
+use App\Models\Ledger\PaymentMethod;
 use App\Models\SchoolClass;
 use App\Models\Section;
 use App\Models\Student;
 use App\Models\StudentEnrollmentRecord;
-use App\Models\Ledger\LedgerCategory;
-use App\Models\Ledger\PaymentMethod;
+use App\Services\FinanceService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -162,7 +161,7 @@ class ReceivePaymentController extends Controller
                     'id' => $student->id,
                     'name' => $student->name,
                     'registration_number' => $student->registration_number,
-                    'display_text' => $student->name . ' (' . $student->registration_number . ')',
+                    'display_text' => $student->name.' ('.$student->registration_number.')',
                 ];
             });
 
@@ -179,12 +178,12 @@ class ReceivePaymentController extends Controller
         ]);
 
         $studentId = $request->student_id;
-        
+
         // Get student with user relationship
         $student = Student::with(['user:id,name', 'currentEnrollment'])
             ->find($studentId);
 
-        if (!$student) {
+        if (! $student) {
             return response()->json(['error' => 'Student not found'], 404);
         }
 
@@ -267,7 +266,7 @@ class ReceivePaymentController extends Controller
                 'reference_type' => 'App\\Models\\Ledger\\ManualPayment',
                 'reference_id' => null,
                 'transaction_date' => $validated['transaction_date'],
-                'description' => $validated['description'] ?? 'Manual payment received: ' . ($validated['payer_name'] ?? 'Other'),
+                'description' => $validated['description'] ?? 'Manual payment received: '.($validated['payer_name'] ?? 'Other'),
                 'campus_id' => $validated['campus_id'],
             ]);
 
@@ -287,7 +286,7 @@ class ReceivePaymentController extends Controller
         ]);
 
         $voucher = FeeVoucher::findOrFail($validated['voucher_id']);
-        
+
         // Update voucher (existing business logic)
         $voucher->paid_amount += $validated['amount'];
         $voucher->balance_amount = max(0, $voucher->net_amount - $voucher->paid_amount);
@@ -306,7 +305,7 @@ class ReceivePaymentController extends Controller
             'reference_type' => 'App\\Models\\Fee\\FeeVoucher',
             'reference_id' => $validated['voucher_id'],
             'transaction_date' => $validated['transaction_date'],
-            'description' => $validated['description'] ?? 'Fee payment for ' . $voucher->voucher_no,
+            'description' => $validated['description'] ?? 'Fee payment for '.$voucher->voucher_no,
             'campus_id' => $voucher->campus_id,
         ]);
 

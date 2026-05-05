@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\Ledger\Ledger;
 use App\Models\Ledger\LedgerCategory;
 use App\Models\Ledger\PaymentMethod;
+use Illuminate\Database\Eloquent\Collection;
 
 class FinanceService
 {
@@ -14,7 +15,7 @@ class FinanceService
     public function createIncomeTransaction(array $data): Ledger
     {
         $ledgerNumber = $this->generateLedgerNumber('INCOME');
-        
+
         return Ledger::create([
             'ledger_number' => $ledgerNumber,
             'transaction_type' => 'INCOME',
@@ -39,7 +40,7 @@ class FinanceService
     public function createExpenseTransaction(array $data): Ledger
     {
         $ledgerNumber = $this->generateLedgerNumber('EXPENSE');
-        
+
         return Ledger::create([
             'ledger_number' => $ledgerNumber,
             'transaction_type' => 'EXPENSE',
@@ -65,19 +66,19 @@ class FinanceService
     {
         $prefix = $type === 'INCOME' ? 'LI' : 'LE';
         $year = date('Y');
-        
+
         $lastLedger = Ledger::whereYear('created_at', $year)
-            ->where('ledger_number', 'like', $prefix . '-' . $year . '%')
+            ->where('ledger_number', 'like', $prefix.'-'.$year.'%')
             ->orderBy('id', 'desc')
             ->first();
-        
-        if ($lastLedger && preg_match('/' . $prefix . '-' . $year . '-(\d+)/', $lastLedger->ledger_number, $matches)) {
+
+        if ($lastLedger && preg_match('/'.$prefix.'-'.$year.'-(\d+)/', $lastLedger->ledger_number, $matches)) {
             $counter = intval($matches[1]) + 1;
         } else {
             $counter = 1;
         }
-        
-        return $prefix . '-' . $year . '-' . str_pad($counter, 4, '0', STR_PAD_LEFT);
+
+        return $prefix.'-'.$year.'-'.str_pad($counter, 4, '0', STR_PAD_LEFT);
     }
 
     /**
@@ -87,11 +88,11 @@ class FinanceService
     {
         $query = Ledger::income()
             ->whereBetween('transaction_date', [$fromDate, $toDate]);
-        
+
         if ($campusId) {
             $query->where('campus_id', $campusId);
         }
-        
+
         return (float) $query->sum('amount');
     }
 
@@ -102,11 +103,11 @@ class FinanceService
     {
         $query = Ledger::expense()
             ->whereBetween('transaction_date', [$fromDate, $toDate]);
-        
+
         if ($campusId) {
             $query->where('campus_id', $campusId);
         }
-        
+
         return (float) $query->sum('amount');
     }
 
@@ -117,7 +118,7 @@ class FinanceService
     {
         $income = $this->getTotalIncome($fromDate, $toDate, $campusId);
         $expense = $this->getTotalExpense($fromDate, $toDate, $campusId);
-        
+
         return $income - $expense;
     }
 
@@ -127,7 +128,7 @@ class FinanceService
     public function getTodaySummary($campusId = null): array
     {
         $today = now()->toDateString();
-        
+
         return [
             'income' => $this->getTotalIncome($today, $today, $campusId),
             'expense' => $this->getTotalExpense($today, $today, $campusId),
@@ -142,7 +143,7 @@ class FinanceService
     {
         $fromDate = now()->startOfMonth()->toDateString();
         $toDate = now()->endOfMonth()->toDateString();
-        
+
         return [
             'income' => $this->getTotalIncome($fromDate, $toDate, $campusId),
             'expense' => $this->getTotalExpense($fromDate, $toDate, $campusId),
@@ -153,7 +154,7 @@ class FinanceService
     /**
      * Get category by type (for dropdowns)
      */
-    public function getCategoriesByType(string $type): \Illuminate\Database\Eloquent\Collection
+    public function getCategoriesByType(string $type): Collection
     {
         return LedgerCategory::where('type', $type)
             ->where('is_active', true)
@@ -164,7 +165,7 @@ class FinanceService
     /**
      * Get all active payment methods
      */
-    public function getPaymentMethods(): \Illuminate\Database\Eloquent\Collection
+    public function getPaymentMethods(): Collection
     {
         return PaymentMethod::active()->orderBy('name')->get();
     }
@@ -172,7 +173,7 @@ class FinanceService
     /**
      * Get income categories
      */
-    public function getIncomeCategories(): \Illuminate\Database\Eloquent\Collection
+    public function getIncomeCategories(): Collection
     {
         return $this->getCategoriesByType('INCOME');
     }
@@ -180,7 +181,7 @@ class FinanceService
     /**
      * Get expense categories
      */
-    public function getExpenseCategories(): \Illuminate\Database\Eloquent\Collection
+    public function getExpenseCategories(): Collection
     {
         return $this->getCategoriesByType('EXPENSE');
     }

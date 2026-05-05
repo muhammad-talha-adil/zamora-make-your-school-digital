@@ -14,8 +14,8 @@ class PaymentMethodController extends Controller
         $query = PaymentMethod::query();
 
         if ($request->filled('search')) {
-            $query->where('name', 'like', '%' . $request->search . '%')
-                ->orWhere('code', 'like', '%' . $request->search . '%');
+            $query->where('name', 'like', '%'.$request->search.'%')
+                ->orWhere('code', 'like', '%'.$request->search.'%');
         }
 
         $methods = $query->orderBy('name')->get();
@@ -43,7 +43,7 @@ class PaymentMethodController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:50',
-            'code' => 'required|string|max:20|unique:payment_methods,code,' . $method->id,
+            'code' => 'required|string|max:20|unique:payment_methods,code,'.$method->id,
             'is_active' => 'boolean',
         ]);
 

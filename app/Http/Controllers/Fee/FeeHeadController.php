@@ -28,11 +28,6 @@ class FeeHeadController extends Controller
     {
         // Gate::authorize('viewAny', FeeHead::class);
 
-        Log::info('FeeHeadController: Listing fee heads', [
-            'user_id' => auth()->id(),
-            'filters' => $request->all(),
-        ]);
-
         $data = $this->service->getIndexData($request);
 
         return Inertia::render('Fee/FeeHeads/Index', $data);
@@ -78,7 +73,7 @@ class FeeHeadController extends Controller
             ]);
 
             return redirect()->back()
-                ->with('error', 'Failed to create fee head: ' . $e->getMessage())
+                ->with('error', 'Failed to create fee head: '.$e->getMessage())
                 ->withInput();
         }
     }
@@ -125,15 +120,53 @@ class FeeHeadController extends Controller
             ]);
 
             return redirect()->back()
-                ->with('error', 'Failed to update fee head: ' . $e->getMessage())
+                ->with('error', 'Failed to update fee head: '.$e->getMessage())
                 ->withInput();
+        }
+    }
+
+    /**
+     * Toggle active status of fee head
+     */
+    public function toggleActive(Request $request, FeeHead $feeHead): RedirectResponse|JsonResponse
+    {
+        // Gate::authorize('update', $feeHead);
+
+        Log::info('FeeHeadController: Toggling active status', [
+            'user_id' => auth()->id(),
+            'fee_head_id' => $feeHead->id,
+            'current_status' => $feeHead->is_active,
+        ]);
+
+        try {
+            $this->service->toggleActive($feeHead);
+
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Fee head status updated successfully.',
+                    'feeHead' => $feeHead->fresh(),
+                ]);
+            }
+
+            return redirect()->route('fee.heads.index')
+                ->with('success', 'Fee head status updated successfully.');
+        } catch (\Exception $e) {
+            Log::error('FeeHeadController: Toggle active failed', [
+                'user_id' => auth()->id(),
+                'fee_head_id' => $feeHead->id,
+                'error' => $e->getMessage(),
+            ]);
+
+            return redirect()->back()
+                ->with('error', 'Failed to update status: '.$e->getMessage());
         }
     }
 
     /**
      * Delete fee head
      */
-    public function destroy(FeeHead $feeHead): RedirectResponse
+    public function destroy(Request $request, FeeHead $feeHead): RedirectResponse|JsonResponse
     {
         // Gate::authorize('delete', $feeHead);
 
@@ -145,6 +178,13 @@ class FeeHeadController extends Controller
         try {
             $this->service->delete($feeHead);
 
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Fee head deleted successfully.',
+                ]);
+            }
+
             return redirect()->route('fee.heads.index')
                 ->with('success', 'Fee head deleted successfully.');
         } catch (\Exception $e) {
@@ -155,7 +195,7 @@ class FeeHeadController extends Controller
             ]);
 
             return redirect()->back()
-                ->with('error', 'Failed to delete fee head: ' . $e->getMessage());
+                ->with('error', 'Failed to delete fee head: '.$e->getMessage());
         }
     }
 
@@ -165,11 +205,11 @@ class FeeHeadController extends Controller
     public function getAll(Request $request): JsonResponse
     {
         try {
-            $feeHeads = FeeHead::active()->ordered()->get();
+            $data = $this->service->getIndexData($request);
 
             return response()->json([
                 'success' => true,
-                'data' => $feeHeads,
+                'feeHeads' => $data['feeHeads'],
             ]);
         } catch (\Exception $e) {
             return response()->json([

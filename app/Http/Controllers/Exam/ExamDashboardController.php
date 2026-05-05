@@ -5,9 +5,8 @@ namespace App\Http\Controllers\Exam;
 use App\Http\Controllers\Controller;
 use App\Models\Exam\Exam;
 use App\Models\Exam\ExamPaper;
-use App\Models\Exam\ExamStudentRegistration;
 use App\Models\Exam\ExamResultHeader;
-use App\Models\Exam\ExamType;
+use App\Models\Exam\ExamStudentRegistration;
 use App\Models\Exam\GradeSystem;
 use App\Models\Exam\GradeSystemItem;
 use Illuminate\Http\Request;
@@ -29,23 +28,23 @@ class ExamDashboardController extends Controller
     public function getStats(Request $request)
     {
         $examId = $request->query('exam_id');
-        
+
         // ============================
         // Overview Statistics
         // ============================
-        
+
         // Total exams count
         $totalExams = Exam::count();
-        
+
         // Total papers count
         $totalPapers = ExamPaper::count();
-        
+
         // Total registrations count
         $totalRegistrations = ExamStudentRegistration::count();
-        
+
         // Total results entered
         $totalResults = ExamResultHeader::count();
-        
+
         // Exams by status
         $examsByStatus = Exam::select('status')
             ->selectRaw('COUNT(*) as count')
@@ -53,7 +52,7 @@ class ExamDashboardController extends Controller
             ->get()
             ->pluck('count', 'status')
             ->toArray();
-        
+
         // Papers by status
         $papersByStatus = ExamPaper::select('status')
             ->selectRaw('COUNT(*) as count')
@@ -61,7 +60,7 @@ class ExamDashboardController extends Controller
             ->get()
             ->pluck('count', 'status')
             ->toArray();
-        
+
         // ============================
         // Recent Exams
         // ============================
@@ -82,7 +81,7 @@ class ExamDashboardController extends Controller
                     'results_count' => $exam->resultHeaders()->count(),
                 ];
             });
-        
+
         // ============================
         // Upcoming Papers (next 7 days)
         // ============================
@@ -108,7 +107,7 @@ class ExamDashboardController extends Controller
                     'status' => $paper->status,
                 ];
             });
-        
+
         // ============================
         // Today's Papers
         // ============================
@@ -129,7 +128,7 @@ class ExamDashboardController extends Controller
                     'total_marks' => $paper->total_marks,
                 ];
             });
-        
+
         // ============================
         // Active Exams
         // ============================
@@ -150,34 +149,34 @@ class ExamDashboardController extends Controller
                     'registrations_count' => $exam->studentRegistrations()->count(),
                 ];
             });
-        
+
         // ============================
         // Marking Progress (if exam selected)
         // ============================
         $markingProgress = null;
         $toppers = [];
         $gradeDistribution = [];
-        
+
         if ($examId) {
             $exam = Exam::findOrFail($examId);
-            
+
             // Get total registered students
             $totalRegistered = ExamStudentRegistration::where('exam_id', $examId)->count();
-            
+
             // Get students with results
             $markedStudents = ExamResultHeader::where('exam_id', $examId)
                 ->whereNotNull('total_obtained_cache')
                 ->count();
-            
+
             $markingProgress = [
                 'total_registered' => $totalRegistered,
                 'marked' => $markedStudents,
                 'pending' => $totalRegistered - $markedStudents,
-                'percentage' => $totalRegistered > 0 
-                    ? round(($markedStudents / $totalRegistered) * 100, 2) 
+                'percentage' => $totalRegistered > 0
+                    ? round(($markedStudents / $totalRegistered) * 100, 2)
                     : 0,
             ];
-            
+
             // Grade distribution
             $gradeDistributionData = ExamResultHeader::where('exam_id', $examId)
                 ->whereNotNull('overall_grade_item_id_cache')
@@ -187,13 +186,14 @@ class ExamDashboardController extends Controller
                 ->get()
                 ->map(function ($item) {
                     $gradeItem = GradeSystemItem::find($item->overall_grade_item_id_cache);
+
                     return [
                         'grade' => $gradeItem?->grade_label ?? 'N/A',
                         'count' => $item->count,
                     ];
                 });
             $gradeDistribution = $gradeDistributionData;
-            
+
             // Toppers for this exam
             $toppers = ExamResultHeader::where('exam_id', $examId)
                 ->whereNotNull('total_obtained_cache')
@@ -213,32 +213,32 @@ class ExamDashboardController extends Controller
                     ];
                 });
         }
-        
+
         return response()->json([
             // Overview
             'total_exams' => $totalExams,
             'total_papers' => $totalPapers,
             'total_registrations' => $totalRegistrations,
             'total_results' => $totalResults,
-            
+
             // Status breakdowns
             'exams_by_status' => $examsByStatus,
             'papers_by_status' => $papersByStatus,
-            
+
             // Recent & Active
             'recent_exams' => $recentExams,
             'active_exams' => $activeExams,
-            
+
             // Papers
             'upcoming_papers' => $upcomingPapers,
             'today_papers' => $todayPapers,
-            
+
             // Selected exam data
             'selected_exam' => $examId ? Exam::find($examId) : null,
             'marking_progress' => $markingProgress,
             'grade_distribution' => $gradeDistribution,
             'toppers' => $toppers,
-            
+
             // Settings
             'active_grade_system' => GradeSystem::getActiveGradeSystem(),
         ]);

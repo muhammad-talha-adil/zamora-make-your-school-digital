@@ -6,8 +6,10 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Settings\StoreMenuRequest;
 use App\Http\Requests\Settings\UpdateMenuRequest;
 use App\Models\Menu;
-use Illuminate\Http\Request;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -37,10 +39,10 @@ class MenuController extends Controller
         $menus = $query->ordered()
             ->paginate($perPage, ['*'], 'page', $page);
 
-        \Log::info('MenuController index: Fetched ' . $menus->count() . ' menus');
+        Log::info('MenuController index: Fetched '.$menus->count().' menus');
 
         $parentMenus = Menu::active()->ordered()->get(['id', 'title']);
-        \Log::info('MenuController index: Fetched ' . $parentMenus->count() . ' parent menus');
+        Log::info('MenuController index: Fetched '.$parentMenus->count().' parent menus');
 
         return Inertia::render('settings/Menus/Index', [
             'tableMenus' => $menus,
@@ -51,7 +53,7 @@ class MenuController extends Controller
     /**
      * API: Display a listing of menus (for filtering).
      */
-    public function apiIndex(Request $request): \Illuminate\Http\JsonResponse
+    public function apiIndex(Request $request): JsonResponse
     {
         $query = Menu::with('parent');
 
@@ -92,7 +94,7 @@ class MenuController extends Controller
         $this->authorize('settings.manage');
 
         // Ensure only users with 'developer' role can create menus
-        if (!$request->user()->roles()->where('name', 'developer')->exists()) {
+        if (! $request->user()->roles()->where('name', 'developer')->exists()) {
             abort(403, 'Only developers can create menus.');
         }
 

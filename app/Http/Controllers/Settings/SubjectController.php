@@ -59,11 +59,18 @@ class SubjectController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(StoreSubjectRequest $request): RedirectResponse
+    public function store(StoreSubjectRequest $request): RedirectResponse|JsonResponse
     {
         $validated = $request->validated();
 
         Subject::create($validated);
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Subject created successfully.',
+            ]);
+        }
 
         return redirect()->route('subjects.index')->with('success', 'Subject created successfully.');
     }
@@ -81,11 +88,18 @@ class SubjectController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(UpdateSubjectRequest $request, Subject $subject): RedirectResponse
+    public function update(UpdateSubjectRequest $request, Subject $subject): RedirectResponse|JsonResponse
     {
         $validated = $request->validated();
 
         $subject->update($validated);
+
+        if ($request->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Subject updated successfully.',
+            ]);
+        }
 
         return redirect()->route('subjects.index')->with('success', 'Subject updated successfully.');
     }
@@ -93,9 +107,13 @@ class SubjectController extends Controller
     /**
      * Remove the specified resource from storage (soft delete).
      */
-    public function destroy(Subject $subject): RedirectResponse
+    public function destroy(Subject $subject): RedirectResponse|JsonResponse
     {
         $subject->delete();
+
+        if (request()->expectsJson()) {
+            return response()->json(['success' => true]);
+        }
 
         return redirect()->route('subjects.index')->with('success', 'Subject deleted successfully.');
     }
@@ -103,9 +121,13 @@ class SubjectController extends Controller
     /**
      * Inactivate the specified resource.
      */
-    public function inactivate(Subject $subject): RedirectResponse
+    public function inactivate(Subject $subject): RedirectResponse|JsonResponse
     {
         $subject->update(['is_active' => false]);
+
+        if (request()->expectsJson()) {
+            return response()->json(['success' => true]);
+        }
 
         return redirect()->route('subjects.index')->with('success', 'Subject inactivated successfully.');
     }
@@ -113,9 +135,13 @@ class SubjectController extends Controller
     /**
      * Activate the specified resource.
      */
-    public function activate(Subject $subject): RedirectResponse
+    public function activate(Subject $subject): RedirectResponse|JsonResponse
     {
         $subject->update(['is_active' => true]);
+
+        if (request()->expectsJson()) {
+            return response()->json(['success' => true]);
+        }
 
         return redirect()->route('subjects.index')->with('success', 'Subject activated successfully.');
     }
@@ -123,10 +149,14 @@ class SubjectController extends Controller
     /**
      * Restore the specified resource from trash.
      */
-    public function restore(int $id): RedirectResponse
+    public function restore(int $id): RedirectResponse|JsonResponse
     {
         $subject = Subject::onlyTrashed()->findOrFail($id);
         $subject->restore();
+
+        if (request()->expectsJson()) {
+            return response()->json(['success' => true]);
+        }
 
         return redirect()->route('subjects.index')->with('success', 'Subject restored successfully.');
     }
@@ -134,10 +164,14 @@ class SubjectController extends Controller
     /**
      * Permanently delete the specified resource.
      */
-    public function forceDelete(int $id): RedirectResponse
+    public function forceDelete(int $id): RedirectResponse|JsonResponse
     {
         $subject = Subject::onlyTrashed()->findOrFail($id);
         $subject->forceDelete();
+
+        if (request()->expectsJson()) {
+            return response()->json(['success' => true]);
+        }
 
         return redirect()->route('subjects.index')->with('success', 'Subject permanently deleted.');
     }

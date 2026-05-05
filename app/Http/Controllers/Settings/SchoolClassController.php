@@ -6,7 +6,6 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Settings\StoreSchoolClassRequest;
 use App\Http\Requests\Settings\UpdateSchoolClassRequest;
 use App\Models\SchoolClass;
-use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -65,11 +64,16 @@ class SchoolClassController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(StoreSchoolClassRequest $request): RedirectResponse
+    public function store(StoreSchoolClassRequest $request)
     {
         $validated = $request->validated();
+        $validated['is_active'] = true; // New classes are always active
 
         SchoolClass::create($validated);
+
+        if (request()->expectsJson()) {
+            return response()->json(['success' => true, 'message' => 'Class created successfully.']);
+        }
 
         return redirect()->route('school-classes.index')->with('success', 'School class created successfully.');
     }
@@ -87,11 +91,18 @@ class SchoolClassController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(UpdateSchoolClassRequest $request, SchoolClass $schoolClass): RedirectResponse
+    public function update(UpdateSchoolClassRequest $request, SchoolClass $schoolClass)
     {
         $validated = $request->validated();
+        // is_active should not be changed through form; preserve existing value
+        // (if somehow sent, ignore it)
+        unset($validated['is_active']);
 
         $schoolClass->update($validated);
+
+        if (request()->expectsJson()) {
+            return response()->json(['success' => true, 'message' => 'Class updated successfully.']);
+        }
 
         return redirect()->route('school-classes.index')->with('success', 'School class updated successfully.');
     }
@@ -99,9 +110,13 @@ class SchoolClassController extends Controller
     /**
      * Remove the specified resource from storage (soft delete).
      */
-    public function destroy(SchoolClass $schoolClass): RedirectResponse
+    public function destroy(SchoolClass $schoolClass)
     {
         $schoolClass->delete();
+
+        if (request()->expectsJson()) {
+            return response()->json(['success' => true]);
+        }
 
         return redirect()->route('school-classes.index')->with('success', 'School class deleted successfully.');
     }
@@ -109,9 +124,13 @@ class SchoolClassController extends Controller
     /**
      * Inactivate the specified resource.
      */
-    public function inactivate(SchoolClass $schoolClass): RedirectResponse
+    public function inactivate(SchoolClass $schoolClass)
     {
         $schoolClass->update(['is_active' => false]);
+
+        if (request()->expectsJson()) {
+            return response()->json(['success' => true]);
+        }
 
         return redirect()->route('school-classes.index')->with('success', 'School class inactivated successfully.');
     }
@@ -119,9 +138,13 @@ class SchoolClassController extends Controller
     /**
      * Activate the specified resource.
      */
-    public function activate(SchoolClass $schoolClass): RedirectResponse
+    public function activate(SchoolClass $schoolClass)
     {
         $schoolClass->update(['is_active' => true]);
+
+        if (request()->expectsJson()) {
+            return response()->json(['success' => true]);
+        }
 
         return redirect()->route('school-classes.index')->with('success', 'School class activated successfully.');
     }
@@ -129,10 +152,14 @@ class SchoolClassController extends Controller
     /**
      * Restore the specified resource from trash.
      */
-    public function restore(int $id): RedirectResponse
+    public function restore(int $id)
     {
         $schoolClass = SchoolClass::onlyTrashed()->findOrFail($id);
         $schoolClass->restore();
+
+        if (request()->expectsJson()) {
+            return response()->json(['success' => true]);
+        }
 
         return redirect()->route('school-classes.index')->with('success', 'School class restored successfully.');
     }
@@ -140,10 +167,14 @@ class SchoolClassController extends Controller
     /**
      * Permanently delete the specified resource.
      */
-    public function forceDelete(int $id): RedirectResponse
+    public function forceDelete(int $id)
     {
         $schoolClass = SchoolClass::onlyTrashed()->findOrFail($id);
         $schoolClass->forceDelete();
+
+        if (request()->expectsJson()) {
+            return response()->json(['success' => true]);
+        }
 
         return redirect()->route('school-classes.index')->with('success', 'School class permanently deleted.');
     }

@@ -9,9 +9,9 @@ return new class extends Migration
     /**
      * Run the migrations.
      */
-     public function up(): void
+    public function up(): void
     {
-        if (!Schema::hasColumn('purchase_return_items', 'reason_id')) {
+        if (! Schema::hasColumn('purchase_return_items', 'reason_id')) {
             Schema::table('purchase_return_items', function (Blueprint $table) {
                 $table->foreignId('reason_id')->nullable()->constrained('reasons')->onDelete('set null')->after('reason');
             });

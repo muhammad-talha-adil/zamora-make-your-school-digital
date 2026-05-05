@@ -8,7 +8,7 @@ return new class extends Migration
 {
     /**
      * Run the migrations.
-     * 
+     *
      * Consolidated migration for inventory_types table.
      * Includes campus_id as nullable (can be null for shared types across campuses).
      */

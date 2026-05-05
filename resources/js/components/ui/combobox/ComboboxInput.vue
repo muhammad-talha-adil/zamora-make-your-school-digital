@@ -1,7 +1,6 @@
 <template>
   <div class="relative" ref="containerRef">
     <input
-      ref="inputRef"
       v-model="query"
       :placeholder="placeholder"
       class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background file:border-0 file:bg-transparent file:text-sm file:font-medium placeholder:text-muted-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
@@ -10,36 +9,33 @@
       @focus="onFocus"
       @blur="onBlur"
     />
-    <Teleport to="body">
-      <div
-        v-if="isOpen && displayItems.length > 0"
-        class="fixed z-[9999] bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-lg max-h-60 overflow-auto"
-        :style="dropdownStyle"
-      >
-        <div
-          v-for="item in displayItems"
-          :key="item.id"
-          class="px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer text-gray-900 dark:text-white whitespace-nowrap"
-          @mousedown.prevent="selectItem(item)"
-        >
-          {{ getItemDisplayText(item) }}
-        </div>
+    <div
+      v-if="isOpen && displayItems.length > 0"
+      class="absolute top-full left-0 z-[100] mt-1 w-full rounded-md border border-gray-300 bg-white shadow-lg max-h-60 overflow-auto dark:border-gray-600 dark:bg-gray-800"
+    >
+       <div
+         v-for="item in displayItems"
+         :key="item.id"
+         class="px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer text-gray-900 dark:text-white whitespace-nowrap"
+         @mousedown.prevent
+         @click="selectItem(item)"
+       >
+         {{ getItemDisplayText(item) }}
+       </div>
+    </div>
+    <div
+      v-if="isOpen && displayItems.length === 0 && query.length > 0"
+      class="absolute top-full left-0 z-[100] mt-1 w-full rounded-md border border-gray-300 bg-white shadow-lg dark:border-gray-600 dark:bg-gray-800"
+    >
+      <div class="px-3 py-2 text-gray-500 dark:text-gray-400">
+        No results found
       </div>
-      <div
-        v-if="isOpen && displayItems.length === 0 && query.length > 0"
-        class="fixed z-[9999] bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-md shadow-lg"
-        :style="dropdownStyle"
-      >
-        <div class="px-3 py-2 text-gray-500 dark:text-gray-400">
-          No results found
-        </div>
-      </div>
-    </Teleport>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted, onUnmounted, nextTick } from 'vue'
+import { ref, computed, watch } from 'vue'
 
 interface Item {
   id: number | string
@@ -75,48 +71,16 @@ const emit = defineEmits<{
 }>()
 
 const containerRef = ref<HTMLElement | null>(null)
-const inputRef = ref<HTMLInputElement | null>(null)
 const query = ref('')
 const isOpen = ref(false)
-const serverResults = ref<Item[]>([])
 const debounceTimer = ref<number | null>(null)
 const allItems = ref<Item[]>([])
-
-// Computed style for dropdown positioning
-const dropdownStyle = computed(() => {
-  if (!inputRef.value) return { width: '200px' }
-  
-  // Access scrollY to create dependency
-  const _ = scrollY.value
-  
-  const rect = inputRef.value.getBoundingClientRect()
-  return {
-    width: rect.width + 'px',
-    left: rect.left + 'px',
-    top: (rect.bottom + window.scrollY) + 'px'
-  }
-})
-
-// Update position on scroll - force re-render
-const scrollY = ref(0)
-const handleScroll = () => {
-  scrollY.value = window.scrollY
-}
-
-onMounted(() => {
-  allItems.value = [...props.initialItems]
-  window.addEventListener('scroll', handleScroll, true)
-  window.addEventListener('resize', handleScroll)
-})
-
-onUnmounted(() => {
-  window.removeEventListener('scroll', handleScroll, true)
-  window.removeEventListener('resize', handleScroll)
-})
 
 watch(() => props.initialItems, (newItems) => {
   allItems.value = [...newItems]
 }, { deep: true })
+
+allItems.value = [...props.initialItems]
 
 // Function to get display text for an item
 const getItemDisplayText = (item: Item): string => {
@@ -165,7 +129,6 @@ watch(selectedItem, (newItem) => {
 
 const searchItems = async (searchQuery: string) => {
   if (!props.searchUrl) {
-    serverResults.value = []
     return
   }
 
@@ -198,6 +161,14 @@ const searchItems = async (searchQuery: string) => {
 const onInput = () => {
   isOpen.value = true
 
+  if (
+    props.valueType === 'id' &&
+    selectedItem.value &&
+    query.value !== getItemDisplayText(selectedItem.value)
+  ) {
+    emit('update:modelValue', null)
+  }
+
   if (debounceTimer.value) {
     clearTimeout(debounceTimer.value)
   }
@@ -221,11 +192,17 @@ const onFocus = () => {
 const onBlur = () => {
   window.setTimeout(() => {
     isOpen.value = false
-    // If user typed a custom value (query has content) and no dropdown item was selected,
-    // emit the typed query as the model value to capture custom titles not in database
+    if (props.valueType === 'id') {
+      if (selectedItem.value) {
+        query.value = getItemDisplayText(selectedItem.value)
+      } else if (!query.value.trim()) {
+        emit('update:modelValue', null)
+      }
+      return
+    }
+
     if (query.value.trim() && !selectedItem.value) {
-      const value = props.valueType === 'id' ? query.value : query.value
-      emit('update:modelValue', value)
+      emit('update:modelValue', query.value)
     }
   }, 150)
 }

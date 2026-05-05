@@ -139,12 +139,12 @@
 
 <script setup lang="ts">
 import { ref, reactive, computed } from 'vue';
-import { useForm } from '@inertiajs/vue3';
 import { route } from 'ziggy-js';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import Icon from '@/components/Icon.vue';
 import { alert } from '@/utils';
+import axios from 'axios';
 
 interface Campus {
     id: number;
@@ -287,27 +287,31 @@ const deselectAll = () => {
 };
 
 const saveAssignments = () => {
-    const form = useForm({
+    const payload = {
         class_id: filters.class_id,
         section_id: filters.section_id === '' ? null : (filters.section_id || null),
         subject_ids: selectedSubjects.value,
         is_all_sections: filters.section_id === '',
-    });
+    };
 
     saving.value = true;
 
-    form.post(route('class-subjects.store'), {
-        onSuccess: () => {
+    axios.post(route('class-subjects.store'), payload, {
+        headers: { Accept: 'application/json' },
+    }).then(() => {
             originalSubjects.value = [...selectedSubjects.value];
             alert.success('Subjects assigned successfully!');
-            saving.value = false;
-        },
-        onError: (errors) => {
-            const errorMessage = Object.values(errors).join(', ') || 'Unknown error';
+            return loadAssignedSubjects();
+        }).catch((error) => {
+            const errors = error.response?.data?.errors;
+            const errorMessage = errors
+                ? Object.values(errors).flat().join(', ')
+                : (error.response?.data?.message || 'Unknown error');
+
             alert.error('Failed to save: ' + errorMessage);
+        }).finally(() => {
             saving.value = false;
-        },
-    });
+        });
 };
 
 // Load initial data on mount

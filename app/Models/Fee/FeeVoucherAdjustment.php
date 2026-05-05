@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 /**
  * Fee Voucher Adjustment Model
- * 
+ *
  * Voucher-level adjustments like arrears, advance, waiver, fine reversal.
  */
 class FeeVoucherAdjustment extends Model

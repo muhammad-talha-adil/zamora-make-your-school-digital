@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\Finance;
 
 use App\Http\Controllers\Controller;
-use App\Services\FinanceService;
 use App\Models\Campus;
+use App\Services\FinanceService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
@@ -22,8 +22,8 @@ class FinanceController extends Controller
      */
     public function index(Request $request)
     {
-        $campusId = $request->filled('campus_id') 
-            ? $request->campus_id 
+        $campusId = $request->filled('campus_id')
+            ? $request->campus_id
             : (auth()->user()->campus_id ?? Campus::first()?->id);
 
         $today = now()->toDateString();

@@ -15,28 +15,11 @@ interface Props {
 const props = defineProps<Props>();
 
 // Emits
-const emit = defineEmits<{
-    saved: [];
-}>();
-
 const showInactive = ref(false);
 const statusFilter = ref('');
 const perPage = ref(10);
 const examTypesData = ref(props.examTypes.data || []);
 const pagination = ref(props.examTypes);
-
-const statusOptions = [
-    { id: '', name: 'All' },
-    { id: 'active', name: 'Active' },
-    { id: 'inactive', name: 'Inactive' },
-];
-
-const perPageOptions = [
-    { id: 10, name: '10' },
-    { id: 25, name: '25' },
-    { id: 50, name: '50' },
-    { id: 100, name: '100' },
-];
 
 const toggleInactive = () => {
     showInactive.value = !showInactive.value;
