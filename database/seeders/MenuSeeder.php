@@ -12,6 +12,9 @@ class MenuSeeder extends Seeder
      */
     public function run(): void
     {
+        // Clear existing menus to prevent duplicates on re-run
+        \App\Models\Menu::query()->delete();
+
         // Main navigation items
         Menu::create([
             'title' => 'Dashboard',
@@ -341,12 +344,50 @@ class MenuSeeder extends Seeder
             'url' => '/inventory/student-manage',
         ]);
 
+        // ==================== STAFF MENU ====================
+        $staff = Menu::create([
+            'title' => 'Staff',
+            'icon' => 'briefcase',
+            'type' => 'main',
+            'order' => 7,
+            'is_active' => true,
+        ]);
+
+        Menu::create([
+            'title' => 'Dashboard',
+            'icon' => 'layout-dashboard',
+            'type' => 'main',
+            'order' => 1,
+            'parent_id' => $staff->id,
+            'is_active' => true,
+            'url' => '/staff',
+        ]);
+
+        // ==================== TRANSPORT MENU ====================
+        $transport = Menu::create([
+            'title' => 'Transport',
+            'icon' => 'bus',
+            'type' => 'main',
+            'order' => 8,
+            'is_active' => true,
+        ]);
+
+        Menu::create([
+            'title' => 'Dashboard',
+            'icon' => 'layout-dashboard',
+            'type' => 'main',
+            'order' => 1,
+            'parent_id' => $transport->id,
+            'is_active' => true,
+            'url' => '/transport',
+        ]);
+
         // ==================== FINANCE MENU ====================
         $finance = Menu::create([
             'title' => 'Finance',
             'icon' => 'wallet',
             'type' => 'main',
-            'order' => 7,
+            'order' => 9,
             'is_active' => true,
         ]);
 

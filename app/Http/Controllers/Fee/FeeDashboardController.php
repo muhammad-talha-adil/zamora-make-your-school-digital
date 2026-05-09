@@ -46,7 +46,7 @@ class FeeDashboardController extends Controller
             'totalVouchers' => FeeVoucher::count(),
             'unpaidVouchers' => FeeVoucher::where('status', 'unpaid')->count(),
             'overdueVouchers' => FeeVoucher::where('status', 'overdue')->count(),
-            'totalCollected' => FeePayment::where('status', 'completed')->sum('received_amount'),
+            'totalCollected' => FeePayment::where('status', 'posted')->sum('received_amount'),
             'totalOutstanding' => FeeVoucher::whereIn('status', ['unpaid', 'partial', 'overdue'])->sum('balance_amount'),
             'monthlyCollection' => FeePayment::whereMonth('payment_date', now()->month)
                 ->whereYear('payment_date', now()->year)

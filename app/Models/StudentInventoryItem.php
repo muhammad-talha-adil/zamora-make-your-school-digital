@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Finance\StudentAccountCharge;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -38,7 +39,10 @@ class StudentInventoryItem extends Model
         'discount_percentage',
         'assigned_date',
         'status',
-        'invoice_id',
+        'student_account_charge_id',
+        'is_billed',
+        'billed_quantity',
+        'credited_quantity',
     ];
 
     /**
@@ -54,6 +58,7 @@ class StudentInventoryItem extends Model
         'discount_amount' => 'decimal:2',
         'discount_percentage' => 'decimal:2',
         'assigned_date' => 'date',
+        'is_billed' => 'boolean',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
         'deleted_at' => 'datetime',
@@ -92,11 +97,12 @@ class StudentInventoryItem extends Model
     }
 
     /**
-     * Get the invoice for this student inventory.
+     * Get the shared student-account charge that represents the billable
+     * value of this inventory item.
      */
-    public function invoice(): BelongsTo
+    public function studentAccountCharge(): BelongsTo
     {
-        return $this->belongsTo(Invoice::class);
+        return $this->belongsTo(StudentAccountCharge::class, 'student_account_charge_id');
     }
 
     /**

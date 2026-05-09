@@ -2,6 +2,7 @@
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import Icon from '@/components/Icon.vue';
+import { tableActionButtonClass } from '@/utils/table-actions';
 
 interface Menu {
     id: number;
@@ -9,6 +10,10 @@ interface Menu {
     type: string;
     order: number;
     is_active: boolean;
+    parent_id?: number | null;
+    parent_title?: string | null;
+    parent_hierarchy_label?: string | null;
+    hierarchy_label?: string;
     deleted_at?: string | null;
 }
 
@@ -72,12 +77,15 @@ const updatePerPage = (value: number) => {
                                 Type
                             </th>
                             <th scope="col" class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">
+                                Parent Menu
+                            </th>
+                            <th scope="col" class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">
                                 Order
                             </th>
                             <th scope="col" class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">
                                 Status
                             </th>
-                            <th scope="col" class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">
+                            <th scope="col" class="px-6 py-4 text-right text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">
                                 Actions
                             </th>
                         </tr>
@@ -93,6 +101,9 @@ const updatePerPage = (value: number) => {
                                 <div class="text-sm font-medium text-gray-900 dark:text-white">
                                     {{ menu.title }}
                                 </div>
+                                <div v-if="menu.hierarchy_label && menu.hierarchy_label !== menu.title" class="text-xs text-gray-500 dark:text-gray-400">
+                                    {{ menu.hierarchy_label }}
+                                </div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <Badge :variant="menu.type === 'main' ? 'default' : 'secondary'">
@@ -101,7 +112,21 @@ const updatePerPage = (value: number) => {
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <div class="text-sm text-gray-600 dark:text-gray-300">
+                                    {{ menu.parent_title || 'Top Level' }}
+                                </div>
+                                <div
+                                    v-if="menu.parent_hierarchy_label && menu.parent_hierarchy_label !== menu.parent_title"
+                                    class="text-xs text-gray-500 dark:text-gray-400"
+                                >
+                                    {{ menu.parent_hierarchy_label }}
+                                </div>
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <div class="inline-flex min-w-14 items-center justify-center rounded-md bg-gray-100 px-3 py-1 text-sm font-semibold text-gray-800 dark:bg-gray-800 dark:text-gray-100">
                                     {{ menu.order }}
+                                </div>
+                                <div class="mt-2 text-xs font-medium text-gray-500 dark:text-gray-400">
+                                    {{ menu.parent_title ? 'Sibling order' : 'Top level' }}
                                 </div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
@@ -110,13 +135,14 @@ const updatePerPage = (value: number) => {
                                 </Badge>
                             </td>
                             <td class="px-6 py-4 text-sm font-medium whitespace-nowrap">
-                                <div class="flex space-x-2" v-if="!showInactive">
-                                    <Button variant="outline" size="sm" title="Edit Menu" @click="emit('edit', menu)">
+                                <div class="flex flex-wrap justify-end gap-2" v-if="!showInactive">
+                                    <Button variant="outline" size="sm" :class="tableActionButtonClass.edit" title="Edit Menu" @click="emit('edit', menu)">
                                         <Icon icon="edit" class="mr-1" />Edit
                                     </Button>
                                     <Button
-                                        :variant="menu.is_active ? 'destructive' : 'default'"
+                                        variant="outline"
                                         size="sm"
+                                        :class="menu.is_active ? tableActionButtonClass.deactivate : tableActionButtonClass.activate"
                                         :title="menu.is_active ? 'Inactivate Menu' : 'Activate Menu'"
                                         @click="emit('toggleActive', menu)"
                                     >
@@ -124,25 +150,28 @@ const updatePerPage = (value: number) => {
                                         {{ menu.is_active ? 'Inactivate' : 'Activate' }}
                                     </Button>
                                     <Button
-                                        variant="secondary"
+                                        variant="outline"
                                         size="sm"
+                                        :class="tableActionButtonClass.delete"
                                         title="Delete Menu"
                                         @click="emit('delete', menu)"
                                     >
                                         <Icon icon="trash-2" class="mr-1" />Delete
                                     </Button>
                                 </div>
-                                <div class="flex space-x-2" v-else>
+                                <div class="flex flex-wrap justify-end gap-2" v-else>
                                     <Button
-                                        variant="default"
+                                        variant="outline"
                                         size="sm"
+                                        :class="tableActionButtonClass.restore"
                                         @click="emit('restore', menu)"
                                     >
                                         <Icon icon="refresh" class="mr-1" />Restore
                                     </Button>
                                     <Button
-                                        variant="destructive"
+                                        variant="outline"
                                         size="sm"
+                                        :class="tableActionButtonClass.delete"
                                         @click="emit('forceDelete', menu)"
                                     >
                                         <Icon icon="x" class="mr-1" />Delete

@@ -19,7 +19,8 @@ class FeeHeadService
     public function getIndexData(Request $request): array
     {
         $filters = $request->only(['search', 'category', 'is_active', 'is_optional']);
-        $feeHeads = $this->repository->getPaginatedWithFilters($filters, 15);
+        $perPage = $request->input('per_page', 10);
+        $feeHeads = $this->repository->getPaginatedWithFilters($filters, (int) $perPage);
 
         return [
             'feeHeads' => $feeHeads,

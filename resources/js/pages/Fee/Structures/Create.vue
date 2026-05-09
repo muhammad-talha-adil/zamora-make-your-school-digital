@@ -92,7 +92,7 @@ const titleSearchUrl = computed(() => {
     if (form.class_id) {
         url += `&class_id=${form.class_id}`;
     }
-    if (form.section_id) {
+    if (form.section_id && form.section_id !== 'all') {
         url += `&section_id=${form.section_id}`;
     }
     
@@ -136,7 +136,7 @@ onMounted(() => {
 });
 
 // Watch for scope changes and clear title when session/campus/class changes
-watch([() => form.session_id, () => form.campus_id, () => form.class_id], () => {
+watch([() => form.session_id, () => form.campus_id, () => form.class_id, () => form.section_id], () => {
     form.title = null;
 });
 
@@ -214,6 +214,9 @@ const validateItemForm = () => {
     }
     if (!itemForm.amount || Number(itemForm.amount) <= 0) {
         itemErrors.value.amount = 'Valid amount is required';
+    }
+    if (itemForm.fee_head_id && feeItems.value.some((item) => item.fee_head_id === Number(itemForm.fee_head_id))) {
+        itemErrors.value.fee_head_id = 'This fee head has already been added';
     }
     
     return Object.keys(itemErrors.value).length === 0;
@@ -301,6 +304,7 @@ const submitForm = () => {
         },
         onError: (err) => {
             isSubmitting.value = false;
+            errors.value = err as Record<string, string>;
             const firstError = Object.values(err)[0];
             alert.error(firstError);
         },

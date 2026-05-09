@@ -11,6 +11,10 @@ use Illuminate\Support\Str;
 
 class GuardianService
 {
+    public function __construct(
+        protected SchoolEmailService $schoolEmailService
+    ) {}
+
     /**
      * Create a user account for a guardian with proper username generation and role assignment.
      *
@@ -164,51 +168,10 @@ class GuardianService
     {
         // If a valid email is provided, use it (with duplicate handling)
         if (! empty($providedEmail) && filter_var($providedEmail, FILTER_VALIDATE_EMAIL)) {
-            $baseEmail = strtolower(trim($providedEmail));
-
-            if (! $this->emailExists($baseEmail)) {
-                return $baseEmail;
-            }
-
-            return $this->createUniqueEmail($baseEmail);
+            return $this->schoolEmailService->ensureUniqueProvidedEmail($providedEmail);
         }
 
-        // Generate email from guardian name
-        $processedName = preg_replace('/\s+/', '', strtolower($guardianName));
-        $baseEmail = $processedName.'@school.com';
-
-        if (! $this->emailExists($baseEmail)) {
-            return $baseEmail;
-        }
-
-        return $this->createUniqueEmail($baseEmail);
-    }
-
-    /**
-     * Check if an email already exists in the users table.
-     */
-    protected function emailExists(string $email): bool
-    {
-        return User::where('email', $email)->exists();
-    }
-
-    /**
-     * Create a unique email by appending incremental numbers.
-     */
-    protected function createUniqueEmail(string $baseEmail): string
-    {
-        $counter = 1;
-        $emailParts = explode('@', $baseEmail);
-        $username = $emailParts[0];
-        $domain = $emailParts[1] ?? 'school.com';
-
-        while (true) {
-            $newEmail = $username.$counter.'@'.$domain;
-            if (! $this->emailExists($newEmail)) {
-                return $newEmail;
-            }
-            $counter++;
-        }
+        return $this->schoolEmailService->generateUniqueEmailFromName($guardianName);
     }
 
     /**
@@ -290,9 +253,14 @@ class GuardianService
             $guardian->user->update(['name' => $data['name']]);
         }
 
-        // Update user email if provided
         if (isset($data['email']) && $guardian->user && filter_var($data['email'], FILTER_VALIDATE_EMAIL)) {
-            $guardian->user->update(['email' => $data['email']]);
+            $guardian->user->update([
+                'email' => $this->schoolEmailService->ensureUniqueProvidedEmail($data['email'], $guardian->user->id),
+            ]);
+        } elseif (isset($data['name']) && $guardian->user && $this->schoolEmailService->isManagedEmail($guardian->user->email)) {
+            $guardian->user->update([
+                'email' => $this->schoolEmailService->generateUniqueEmailFromName($data['name'], $guardian->user->id),
+            ]);
         }
 
         return $guardian->fresh();

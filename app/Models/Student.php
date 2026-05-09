@@ -8,6 +8,8 @@ use App\Models\Fee\FeeVoucher;
 use App\Models\Fee\StudentDiscount;
 use App\Models\Fee\StudentFeeAssignment;
 use App\Models\Fee\StudentFeeWalletTransaction;
+use App\Models\Finance\StudentAccountAdjustment;
+use App\Models\Finance\StudentAccountCharge;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -78,7 +80,7 @@ class Student extends Model
      */
     public function getRegistrationNumberAttribute(): string
     {
-        return $this->registration_no;
+        return $this->registration_no ?? 'Student #'.$this->id;
     }
 
     /**
@@ -113,6 +115,11 @@ class Student extends Model
     public function studentInventories(): HasMany
     {
         return $this->hasMany(StudentInventory::class);
+    }
+
+    public function transportAssignments(): HasMany
+    {
+        return $this->hasMany(TransportStudentAssignment::class);
     }
 
     /**
@@ -197,6 +204,24 @@ class Student extends Model
     public function feePayments(): HasMany
     {
         return $this->hasMany(FeePayment::class);
+    }
+
+    /**
+     * Get the student's unified account charges across fee, inventory,
+     * transport, and future student-billable modules.
+     */
+    public function accountCharges(): HasMany
+    {
+        return $this->hasMany(StudentAccountCharge::class);
+    }
+
+    /**
+     * Get the student's account adjustments such as waivers, refunds,
+     * credits, and write-offs.
+     */
+    public function accountAdjustments(): HasMany
+    {
+        return $this->hasMany(StudentAccountAdjustment::class);
     }
 
     /**

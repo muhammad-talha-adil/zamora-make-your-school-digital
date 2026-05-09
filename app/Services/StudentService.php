@@ -125,7 +125,7 @@ class StudentService
                 $query->with(['guardian.user', 'relation']);
             },
             'enrollmentRecords' => function ($query) {
-                $query->with(['campus', 'class', 'section', 'session', 'studentStatus'])
+                $query->with(['campus', 'class', 'section', 'session', 'studentStatus', 'discounts'])
                     ->orderBy('admission_date', 'desc');
             },
         ]);
@@ -150,7 +150,10 @@ class StudentService
             'id' => $student->id,
             'admission_no' => $student->admission_no,
             'registration_no' => $student->registration_no,
-            'name' => $student->user?->name,
+            'user' => [
+                'name' => $student->user?->name,
+                'email' => $student->user?->email,
+            ],
             'dob' => $student->dob?->format('Y-m-d'),
             'gender_id' => $student->gender_id,
             'b_form' => $student->b_form,
@@ -172,6 +175,12 @@ class StudentService
                 // NEW: Fee structure integration fields
                 'fee_structure_id' => $currentEnrollment->fee_structure_id,
                 'fee_mode' => $currentEnrollment->fee_mode,
+                'discounts' => $currentEnrollment->discounts->map(fn ($discount) => [
+                    'fee_head_id' => $discount->fee_head_id,
+                    'discount_type_id' => $discount->discount_type_id,
+                    'value' => (float) $discount->value,
+                    'value_type' => $discount->value_type,
+                ])->values()->toArray(),
                 'custom_fee_entries' => $currentEnrollment->custom_fee_entries,
                 'manual_discount_percentage' => $currentEnrollment->manual_discount_percentage,
                 'manual_discount_reason' => $currentEnrollment->manual_discount_reason,
@@ -198,6 +207,8 @@ class StudentService
                 'phone' => $studentGuardian->guardian?->phone,
                 'email' => $studentGuardian->guardian?->user?->email,
                 'cnic' => $studentGuardian->guardian?->cnic,
+                'occupation' => $studentGuardian->guardian?->occupation,
+                'address' => $studentGuardian->guardian?->address,
                 'pivot' => [
                     'relation_id' => $studentGuardian->relation_id,
                     'is_primary' => $studentGuardian->is_primary,

@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Fee;
 use App\Http\Controllers\Controller;
 use App\Models\Fee\DiscountType;
 use Illuminate\Http\Request;
+use Illuminate\Database\QueryException;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -95,7 +96,28 @@ class DiscountTypeController extends Controller
      */
     public function destroy(DiscountType $discountType)
     {
-        $discountType->delete();
+        try {
+            $discountType->delete();
+        } catch (QueryException $exception) {
+            $message = 'This discount type cannot be deleted because it is already linked to student fee records.';
+
+            if (request()->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => $message,
+                ], 422);
+            }
+
+            return redirect()->route('fee.discount-types.index')
+                ->with('error', $message);
+        }
+
+        if (request()->expectsJson()) {
+            return response()->json([
+                'success' => true,
+                'message' => 'Discount type deleted successfully.',
+            ]);
+        }
 
         return redirect()->route('fee.discount-types.index')
             ->with('success', 'Discount type deleted successfully.');

@@ -14,11 +14,18 @@ use App\Models\SchoolClass;
 use App\Models\Section;
 use App\Models\Session;
 use App\Services\Fee\VoucherGenerationService;
+use App\Services\Finance\StudentBillingService;
+use App\Services\Finance\UnifiedAccountingService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 class FeeVoucherController extends Controller
 {
+    public function __construct(
+        protected StudentBillingService $studentBillingService,
+        protected UnifiedAccountingService $accountingService
+    ) {}
+
     /**
      * API: Get vouchers list as JSON (for AJAX requests)
      */
@@ -62,7 +69,8 @@ class FeeVoucherController extends Controller
             });
         }
 
-        $vouchers = $query->latest()->paginate(50);
+        $perPage = $request->input('per_page', 50);
+        $vouchers = $query->latest()->paginate($perPage);
 
         // Transform the data
         $vouchers->getCollection()->transform(function ($voucher) {
@@ -139,7 +147,8 @@ class FeeVoucherController extends Controller
             });
         }
 
-        $vouchers = $query->latest()->paginate(50);
+        $perPage = $request->input('per_page', 50);
+        $vouchers = $query->latest()->paginate($perPage);
 
         // Transform the data to ensure consistent structure
         $vouchers->getCollection()->transform(function ($voucher) {
@@ -325,9 +334,11 @@ class FeeVoucherController extends Controller
             'month_ids.*' => 'required|exists:months,id',
             'year' => 'required|integer|min:2020|max:2100',
             'include_previous_unpaid' => 'nullable|boolean',
+            'include_inventory_dues' => 'nullable|boolean',
+            'include_transport_dues' => 'nullable|boolean',
             'custom_fee_heads' => 'nullable|array',
             'custom_fee_heads.*.fee_head_id' => 'required|exists:fee_heads,id',
-            'custom_fee_heads.*.amount' => 'required|numeric|min:0',
+            'custom_fee_heads.*.amount' => 'required|numeric|gt:0',
         ]);
 
         $voucherService = app(VoucherGenerationService::class);
@@ -342,6 +353,8 @@ class FeeVoucherController extends Controller
             'class_id' => $validated['class_id'],
             'section_id' => $validated['section_id'] ?? null,
             'include_previous_unpaid' => $validated['include_previous_unpaid'] ?? false,
+            'include_inventory_dues' => $validated['include_inventory_dues'] ?? false,
+            'include_transport_dues' => $validated['include_transport_dues'] ?? false,
             'custom_fee_heads' => $validated['custom_fee_heads'] ?? [],
         ];
 
@@ -396,6 +409,8 @@ class FeeVoucherController extends Controller
             'paymentAllocations.payment',
         ]);
 
+        [$cohortSummary, $cohortVouchers] = $this->buildCohortAnalytics($voucher);
+
         // Transform payment allocations to flat payments array for the UI
         $payments = $voucher->paymentAllocations->map(function ($allocation) {
             return [
@@ -440,6 +455,8 @@ class FeeVoucherController extends Controller
                 })->toArray(),
                 'payments' => $payments,
             ],
+            'cohortSummary' => $cohortSummary,
+            'cohortVouchers' => $cohortVouchers,
         ]);
     }
 
@@ -537,7 +554,7 @@ class FeeVoucherController extends Controller
      */
     public function getUnpaid(Request $request)
     {
-        $query = FeeVoucher::unpaid()->with(['student', 'voucherMonth']);
+        $query = FeeVoucher::unpaid()->with(['student', 'voucherMonth', 'items.feeHead', 'items.studentAccountCharge']);
 
         if ($request->filled('campus_id')) {
             $query->where('campus_id', $request->campus_id);
@@ -547,7 +564,41 @@ class FeeVoucherController extends Controller
             $query->where('student_id', $request->student_id);
         }
 
-        return response()->json($query->get());
+        $vouchers = $query->get()->map(function (FeeVoucher $voucher) {
+            $items = $voucher->items->map(function (FeeVoucherItem $item) {
+                $charge = $item->studentAccountCharge;
+                $balance = $this->studentBillingService->getVoucherItemBalance($item);
+
+                return [
+                    'id' => $item->id,
+                    'student_account_charge_id' => $charge?->id,
+                    'fee_head_id' => $item->fee_head_id,
+                    'fee_head_name' => $item->feeHead?->name,
+                    'description' => $item->description,
+                    'source_module' => $item->source_module ?? 'fee',
+                    'source_type' => $item->source_type instanceof \BackedEnum ? $item->source_type->value : (string) $item->source_type,
+                    'amount' => (float) $item->amount,
+                    'net_amount' => (float) $item->net_amount,
+                    'balance_amount' => $balance,
+                    'status' => $charge?->status ?? 'open',
+                ];
+            })->filter(fn (array $item) => $item['balance_amount'] > 0)->values()->all();
+
+            return [
+                'id' => $voucher->id,
+                'voucher_no' => $voucher->voucher_no,
+                'voucher_month' => $voucher->voucherMonth ? [
+                    'id' => $voucher->voucherMonth->id,
+                    'name' => $voucher->voucherMonth->name,
+                ] : null,
+                'voucher_year' => $voucher->voucher_year,
+                'net_amount' => (float) $voucher->net_amount,
+                'balance_amount' => (float) $voucher->balance_amount,
+                'items' => $items,
+            ];
+        })->filter(fn (array $voucher) => ! empty($voucher['items']))->values();
+
+        return response()->json($vouchers);
     }
 
     /**
@@ -574,10 +625,87 @@ class FeeVoucherController extends Controller
      */
     public function edit(FeeVoucher $voucher)
     {
-        $voucher->load(['student', 'voucherMonth', 'items.feeHead', 'adjustments']);
+        $voucher->load([
+            'student',
+            'voucherMonth',
+            'campus',
+            'schoolClass',
+            'section',
+            'items.feeHead',
+            'adjustments',
+        ]);
+
+        [$cohortSummary, $cohortVouchers] = $this->buildCohortAnalytics($voucher);
 
         return Inertia::render('Fee/Vouchers/Edit', [
-            'voucher' => $voucher,
+            'voucher' => [
+                'id' => $voucher->id,
+                'voucher_no' => $voucher->voucher_no,
+                'student_id' => $voucher->student_id,
+                'class_id' => $voucher->class_id,
+                'section_id' => $voucher->section_id,
+                'voucher_month_id' => $voucher->voucher_month_id,
+                'voucher_year' => $voucher->voucher_year,
+                'issue_date' => $voucher->issue_date?->format('Y-m-d'),
+                'due_date' => $voucher->due_date?->format('Y-m-d'),
+                'status' => $voucher->status instanceof \BackedEnum ? $voucher->status->value : (string) $voucher->status,
+                'gross_amount' => (float) $voucher->gross_amount,
+                'discount_amount' => (float) $voucher->discount_amount,
+                'fine_amount' => (float) $voucher->fine_amount,
+                'paid_amount' => (float) $voucher->paid_amount,
+                'net_amount' => (float) $voucher->net_amount,
+                'balance_amount' => (float) $voucher->balance_amount,
+                'advance_adjusted_amount' => (float) $voucher->advance_adjusted_amount,
+                'notes' => $voucher->notes,
+                'student' => $voucher->student ? [
+                    'id' => $voucher->student->id,
+                    'name' => $voucher->student->name,
+                    'registration_number' => $voucher->student->registration_number,
+                ] : null,
+                'voucherMonth' => $voucher->voucherMonth ? [
+                    'id' => $voucher->voucherMonth->id,
+                    'name' => $voucher->voucherMonth->name,
+                ] : null,
+                'campus' => $voucher->campus ? [
+                    'id' => $voucher->campus->id,
+                    'name' => $voucher->campus->name,
+                ] : null,
+                'schoolClass' => $voucher->schoolClass ? [
+                    'id' => $voucher->schoolClass->id,
+                    'name' => $voucher->schoolClass->name,
+                ] : null,
+                'section' => $voucher->section ? [
+                    'id' => $voucher->section->id,
+                    'name' => $voucher->section->name,
+                ] : null,
+                'items' => $voucher->items->map(function ($item) {
+                    return [
+                        'id' => $item->id,
+                        'fee_head_id' => $item->fee_head_id,
+                        'fee_head' => $item->feeHead ? [
+                            'id' => $item->feeHead->id,
+                            'name' => $item->feeHead->name,
+                            'code' => $item->feeHead->code,
+                        ] : null,
+                        'description' => $item->description,
+                        'amount' => (float) $item->amount,
+                        'discount_amount' => (float) $item->discount_amount,
+                        'net_amount' => (float) $item->net_amount,
+                    ];
+                })->values()->toArray(),
+                'adjustments' => $voucher->adjustments->map(function ($adjustment) {
+                    return [
+                        'id' => $adjustment->id,
+                        'type' => $adjustment->type instanceof \BackedEnum ? $adjustment->type->value : (string) $adjustment->type,
+                        'amount' => (float) $adjustment->amount,
+                        'description' => $adjustment->description,
+                        'created_at' => $adjustment->created_at?->toDateTimeString(),
+                    ];
+                })->values()->toArray(),
+            ],
+            'feeHeads' => FeeHead::active()->select('id', 'name', 'code', 'category')->ordered()->get(),
+            'cohortSummary' => $cohortSummary,
+            'cohortVouchers' => $cohortVouchers,
         ]);
     }
 
@@ -604,7 +732,9 @@ class FeeVoucherController extends Controller
     {
         // Prevent changes to paid vouchers
         if ($voucher->status === 'paid') {
-            return back()->withErrors(['error' => 'Cannot modify a paid voucher.']);
+            return $request->expectsJson()
+                ? response()->json(['message' => 'Cannot modify a paid voucher.'], 422)
+                : back()->withErrors(['error' => 'Cannot modify a paid voucher.']);
         }
 
         $validated = $request->validate([
@@ -617,25 +747,55 @@ class FeeVoucherController extends Controller
         // Check if this fee head already exists on the voucher
         $existingItem = $voucher->items()->where('fee_head_id', $validated['fee_head_id'])->first();
         if ($existingItem) {
-            return back()->withErrors(['error' => 'This fee head already exists on the voucher.']);
+            return $request->expectsJson()
+                ? response()->json(['message' => 'This fee head already exists on the voucher.'], 422)
+                : back()->withErrors(['error' => 'This fee head already exists on the voucher.']);
         }
 
         $feeHead = FeeHead::find($validated['fee_head_id']);
 
-        $voucher->items()->create([
+        $item = $voucher->items()->create([
             'fee_head_id' => $validated['fee_head_id'],
             'description' => $validated['description'] ?? $feeHead->name,
-            'quantity' => 1,
-            'unit_price' => $validated['amount'],
             'amount' => $validated['amount'],
             'discount_amount' => $validated['discount_amount'] ?? 0,
             'net_amount' => $validated['amount'] - ($validated['discount_amount'] ?? 0),
             'source_type' => 'manual',
+            'source_module' => 'fee',
             'reference_id' => null,
         ]);
 
+        if ($item) {
+            $charge = $this->studentBillingService->createVoucherCharge($voucher, $voucher->enrollmentRecord, [
+                'source_module' => 'fee',
+                'source_type' => 'manual_fee_head',
+                'source_id' => $voucher->id,
+                'charge_category' => $feeHead->category ?? 'fee',
+                'title' => $feeHead->name,
+                'description' => $item->description,
+                'amount' => (float) $item->amount,
+                'discount_amount' => (float) $item->discount_amount,
+                'net_amount' => (float) $item->net_amount,
+                'is_recurring' => false,
+                'meta' => [
+                    'manual_edit' => true,
+                ],
+                'created_by' => auth()->id(),
+                'approved_by' => auth()->id(),
+            ]);
+
+            $item->update(['student_account_charge_id' => $charge->id]);
+            $this->studentBillingService->linkChargeToVoucherItem($charge, $item);
+        }
+
         // Recalculate voucher totals
         $this->recalculateVoucherTotals($voucher);
+        $this->studentBillingService->syncVoucherChargeStatuses($voucher->fresh('items.studentAccountCharge'));
+        $this->accountingService->postVoucherJournal($voucher->fresh('items.studentAccountCharge'));
+
+        if ($request->expectsJson()) {
+            return response()->json(['message' => 'Fee item added successfully.']);
+        }
 
         return back()->with('success', 'Fee item added successfully.');
     }
@@ -647,12 +807,16 @@ class FeeVoucherController extends Controller
     {
         // Prevent changes to paid vouchers
         if ($voucher->status === 'paid') {
-            return back()->withErrors(['error' => 'Cannot modify a paid voucher.']);
+            return $request->expectsJson()
+                ? response()->json(['message' => 'Cannot modify a paid voucher.'], 422)
+                : back()->withErrors(['error' => 'Cannot modify a paid voucher.']);
         }
 
         // Ensure the item belongs to this voucher
         if ($item->fee_voucher_id !== $voucher->id) {
-            return back()->withErrors(['error' => 'Item does not belong to this voucher.']);
+            return $request->expectsJson()
+                ? response()->json(['message' => 'Item does not belong to this voucher.'], 422)
+                : back()->withErrors(['error' => 'Item does not belong to this voucher.']);
         }
 
         $validated = $request->validate([
@@ -663,14 +827,43 @@ class FeeVoucherController extends Controller
 
         $item->update([
             'description' => $validated['description'] ?? $item->description,
-            'unit_price' => $validated['amount'],
             'amount' => $validated['amount'],
             'discount_amount' => $validated['discount_amount'] ?? 0,
             'net_amount' => $validated['amount'] - ($validated['discount_amount'] ?? 0),
         ]);
 
+        if (! $item->studentAccountCharge && $voucher->enrollmentRecord) {
+            $charge = $this->studentBillingService->createVoucherCharge($voucher, $voucher->enrollmentRecord, [
+                'source_module' => 'fee',
+                'source_type' => 'manual_fee_head',
+                'source_id' => $voucher->id,
+                'charge_category' => $item->feeHead?->category ?? 'fee',
+                'title' => $item->feeHead?->name ?? $item->description,
+                'description' => $item->description,
+                'amount' => (float) $item->amount,
+                'discount_amount' => (float) $item->discount_amount,
+                'net_amount' => (float) $item->net_amount,
+                'is_recurring' => false,
+                'meta' => [
+                    'manual_edit' => true,
+                ],
+                'created_by' => auth()->id(),
+                'approved_by' => auth()->id(),
+            ]);
+            $item->update(['student_account_charge_id' => $charge->id]);
+            $this->studentBillingService->linkChargeToVoucherItem($charge, $item);
+        }
+
+        $this->studentBillingService->updateChargeFromVoucherItem($voucher, $item->fresh('feeHead', 'studentAccountCharge'));
+
         // Recalculate voucher totals
         $this->recalculateVoucherTotals($voucher);
+        $this->studentBillingService->syncVoucherChargeStatuses($voucher->fresh('items.studentAccountCharge'));
+        $this->accountingService->postVoucherJournal($voucher->fresh('items.studentAccountCharge'));
+
+        if ($request->expectsJson()) {
+            return response()->json(['message' => 'Fee item updated successfully.']);
+        }
 
         return back()->with('success', 'Fee item updated successfully.');
     }
@@ -682,18 +875,32 @@ class FeeVoucherController extends Controller
     {
         // Prevent changes to paid vouchers
         if ($voucher->status === 'paid') {
-            return back()->withErrors(['error' => 'Cannot modify a paid voucher.']);
+            return request()->expectsJson()
+                ? response()->json(['message' => 'Cannot modify a paid voucher.'], 422)
+                : back()->withErrors(['error' => 'Cannot modify a paid voucher.']);
         }
 
         // Ensure the item belongs to this voucher
         if ($item->fee_voucher_id !== $voucher->id) {
-            return back()->withErrors(['error' => 'Item does not belong to this voucher.']);
+            return request()->expectsJson()
+                ? response()->json(['message' => 'Item does not belong to this voucher.'], 422)
+                : back()->withErrors(['error' => 'Item does not belong to this voucher.']);
+        }
+
+        if ($item->studentAccountCharge) {
+            $item->studentAccountCharge->delete();
         }
 
         $item->delete();
 
         // Recalculate voucher totals
         $this->recalculateVoucherTotals($voucher);
+        $this->studentBillingService->syncVoucherChargeStatuses($voucher->fresh('items.studentAccountCharge'));
+        $this->accountingService->postVoucherJournal($voucher->fresh('items.studentAccountCharge'));
+
+        if (request()->expectsJson()) {
+            return response()->json(['message' => 'Fee item removed successfully.']);
+        }
 
         return back()->with('success', 'Fee item removed successfully.');
     }
@@ -715,5 +922,82 @@ class FeeVoucherController extends Controller
             'net_amount' => $netAmount,
             'balance_amount' => $netAmount - $voucher->paid_amount,
         ]);
+    }
+
+    /**
+     * Build class/section voucher cycle analytics for the same period.
+     */
+    protected function buildCohortAnalytics(FeeVoucher $voucher): array
+    {
+        $cohortQuery = FeeVoucher::with(['student'])
+            ->where('session_id', $voucher->session_id)
+            ->where('campus_id', $voucher->campus_id)
+            ->where('class_id', $voucher->class_id)
+            ->where('voucher_month_id', $voucher->voucher_month_id)
+            ->where('voucher_year', $voucher->voucher_year)
+            ->when($voucher->section_id, fn ($query) => $query->where('section_id', $voucher->section_id))
+            ->when(! $voucher->section_id, fn ($query) => $query->whereNull('section_id'))
+            ->orderBy('student_id');
+
+        $cohortVouchersCollection = $cohortQuery->get();
+
+        $summary = [
+            'total' => $cohortVouchersCollection->count(),
+            'paid' => 0,
+            'partial' => 0,
+            'unpaid' => 0,
+            'overdue' => 0,
+            'cancelled' => 0,
+        ];
+
+        $today = now()->toDateString();
+
+        foreach ($cohortVouchersCollection as $cohortVoucher) {
+            $status = $cohortVoucher->status instanceof \BackedEnum
+                ? $cohortVoucher->status->value
+                : (string) $cohortVoucher->status;
+
+            if (
+                in_array($status, ['unpaid', 'partial'], true)
+                && $cohortVoucher->due_date
+                && $cohortVoucher->due_date->toDateString() < $today
+                && (float) $cohortVoucher->balance_amount > 0
+            ) {
+                $status = 'overdue';
+            }
+
+            if (array_key_exists($status, $summary)) {
+                $summary[$status]++;
+            }
+        }
+
+        $cohortVouchers = $cohortVouchersCollection->map(function (FeeVoucher $cohortVoucher) use ($today) {
+            $status = $cohortVoucher->status instanceof \BackedEnum
+                ? $cohortVoucher->status->value
+                : (string) $cohortVoucher->status;
+
+            if (
+                in_array($status, ['unpaid', 'partial'], true)
+                && $cohortVoucher->due_date
+                && $cohortVoucher->due_date->toDateString() < $today
+                && (float) $cohortVoucher->balance_amount > 0
+            ) {
+                $status = 'overdue';
+            }
+
+            return [
+                'id' => $cohortVoucher->id,
+                'voucher_no' => $cohortVoucher->voucher_no,
+                'student_name' => $cohortVoucher->student?->name,
+                'registration_number' => $cohortVoucher->student?->registration_number,
+                'status' => $status,
+                'net_amount' => (float) $cohortVoucher->net_amount,
+                'paid_amount' => (float) $cohortVoucher->paid_amount,
+                'balance_amount' => (float) $cohortVoucher->balance_amount,
+                'due_date' => $cohortVoucher->due_date?->format('Y-m-d'),
+            ];
+        })->values()->toArray();
+
+        return [$summary, $cohortVouchers];
     }
 }

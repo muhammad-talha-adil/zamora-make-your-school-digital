@@ -3,6 +3,7 @@ import AcademicSessionForm from '@/components/forms/AcademicSessionForm.vue';
 import Icon from '@/components/Icon.vue';
 import { Button } from '@/components/ui/button';
 import { alert, formatDate } from '@/utils';
+import { tableActionButtonClass } from '@/utils/table-actions';
 import axios from 'axios';
 import { ref, watch } from 'vue';
 import { route } from 'ziggy-js';
@@ -180,7 +181,7 @@ const inactivateSession = (session: any) => {
                             <th scope="col" class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">
                                 Status
                             </th>
-                            <th scope="col" class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">
+                            <th scope="col" class="px-6 py-4 text-right text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">
                                 Actions
                             </th>
                         </tr>
@@ -224,12 +225,13 @@ const inactivateSession = (session: any) => {
                                 </span>
                             </td>
                             <td class="px-6 py-4 text-sm font-medium whitespace-nowrap">
-                                <div class="flex space-x-2">
+                                <div class="flex flex-wrap justify-end gap-2">
                                     <AcademicSessionForm
                                         :session="session"
                                         trigger="Edit"
                                         variant="outline"
                                         size="sm"
+                                        class="contents"
                                         @saved="handleSaved"
                                     >
                                         <Icon icon="edit" class="mr-1" />Edit
@@ -238,21 +240,24 @@ const inactivateSession = (session: any) => {
                                         v-if="session.is_active"
                                         variant="outline"
                                         size="sm"
+                                        :class="tableActionButtonClass.deactivate"
                                         @click="inactivateSession(session)"
                                     >
                                         <Icon icon="pause" class="mr-1" />Inactive
                                     </Button>
                                     <Button
                                         v-else
-                                        variant="default"
+                                        variant="outline"
                                         size="sm"
+                                        :class="tableActionButtonClass.activate"
                                         @click="activateSession(session)"
                                     >
                                         <Icon icon="check" class="mr-1" />Active
                                     </Button>
                                     <Button
-                                        variant="destructive"
+                                        variant="outline"
                                         size="sm"
+                                        :class="tableActionButtonClass.delete"
                                         @click="deleteSession(session)"
                                     >
                                         <Icon icon="trash" class="mr-1" />Delete

@@ -10,7 +10,6 @@ use App\Http\Controllers\Fee\FeeStructureController;
 use App\Http\Controllers\Fee\FeeStructureItemController;
 use App\Http\Controllers\Fee\FeeVoucherController;
 use App\Http\Controllers\Fee\FineRuleController;
-use App\Models\Fee\FeeStructure;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -60,11 +59,7 @@ Route::prefix('fee')->name('fee.')->middleware($middleware)->group(function () {
         Route::get('/create', [FeeStructureController::class, 'create'])->name('create');
         Route::post('/', [FeeStructureController::class, 'store'])->name('store');
         Route::get('/{feeStructure}', [FeeStructureController::class, 'show'])->name('show');
-        Route::get('/{feeStructure}/debug', function (FeeStructure $feeStructure) {
-            $feeStructure->load(['session', 'campus', 'class', 'section', 'items.feeHead', 'creator']);
-
-            return response()->json($feeStructure);
-        })->name('debug');
+        Route::get('/{feeStructure}/debug', [FeeStructureController::class, 'debug'])->name('debug');
         Route::get('/{feeStructure}/edit', [FeeStructureController::class, 'edit'])->name('edit');
         Route::put('/{feeStructure}', [FeeStructureController::class, 'update'])->name('update');
         Route::delete('/{feeStructure}', [FeeStructureController::class, 'destroy'])->name('destroy');
@@ -137,6 +132,7 @@ Route::prefix('fee')->name('fee.')->middleware($middleware)->group(function () {
     Route::prefix('payments')->name('payments.')->group(function () {
         Route::get('/', [FeePaymentController::class, 'index'])->name('index');
         Route::get('/create', [FeePaymentController::class, 'create'])->name('create');
+        Route::get('/search-students', [FeePaymentController::class, 'searchStudents'])->name('search-students');
         Route::post('/', [FeePaymentController::class, 'store'])->name('store');
         Route::get('/{payment}', [FeePaymentController::class, 'show'])->name('show');
         Route::delete('/{payment}', [FeePaymentController::class, 'destroy'])->name('destroy');

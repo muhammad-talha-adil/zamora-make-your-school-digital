@@ -17,6 +17,16 @@ interface Props {
         expense: number;
         balance: number;
     };
+    student_receivables?: {
+        total_open: number;
+        fee_open: number;
+        inventory_open: number;
+        transport_open: number;
+    };
+    operations_summary?: {
+        pending_salary_payable: number;
+        transport_expense_month: number;
+    };
     campuses?: Array<{ id: number; name: string }>;
     selected_campus?: number;
 }
@@ -26,6 +36,8 @@ const props = defineProps<Props>();
 // Computed values
 const todaySummary = computed(() => props.today_summary || { income: 0, expense: 0, balance: 0 });
 const monthSummary = computed(() => props.month_summary || { income: 0, expense: 0, balance: 0 });
+const studentReceivables = computed(() => props.student_receivables || { total_open: 0, fee_open: 0, inventory_open: 0, transport_open: 0 });
+const operationsSummary = computed(() => props.operations_summary || { pending_salary_payable: 0, transport_expense_month: 0 });
 const campuses = computed(() => props.campuses || []);
 
 // Form state
@@ -123,13 +135,36 @@ const navigateTo = (path: string) => {
             </div>
 
             <!-- Quick Actions -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 md:p-6">
+                <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Student Receivables</h2>
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <div>
+                    <p class="text-sm text-gray-600 dark:text-gray-400">Total Outstanding</p>
+                    <p class="text-xl font-bold text-amber-600">{{ formatMoney(studentReceivables.total_open) }}</p>
+                </div>
+                <div>
+                        <p class="text-sm text-gray-600 dark:text-gray-400">Fee Dues</p>
+                        <p class="text-xl font-bold text-blue-600">{{ formatMoney(studentReceivables.fee_open) }}</p>
+                    </div>
+                <div>
+                    <p class="text-sm text-gray-600 dark:text-gray-400">Inventory Dues</p>
+                    <p class="text-xl font-bold text-orange-600">{{ formatMoney(studentReceivables.inventory_open) }}</p>
+                </div>
+                <div>
+                    <p class="text-sm text-gray-600 dark:text-gray-400">Transport Dues</p>
+                    <p class="text-xl font-bold text-indigo-600">{{ formatMoney(studentReceivables.transport_open) }}</p>
+                </div>
+            </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                 <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 md:p-6">
                     <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Quick Actions</h3>
                     <div class="flex flex-wrap gap-2">
                         <Button @click="navigateTo('/finance/receive-payment')" size="sm">Receive Payment</Button>
                         <Button @click="navigateTo('/finance/make-payment')" size="sm">Make Payment</Button>
                         <Button variant="outline" @click="navigateTo('/finance/transactions')" size="sm">View Transactions</Button>
+                        <Button variant="outline" @click="navigateTo('/finance/student-account-statement')" size="sm">Student Statement</Button>
                     </div>
                 </div>
                 <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 md:p-6">
@@ -138,6 +173,23 @@ const navigateTo = (path: string) => {
                         <Button variant="outline" @click="navigateTo('/finance/reports/cash-book')" size="sm">Cash Book</Button>
                         <Button variant="outline" @click="navigateTo('/finance/reports/income')" size="sm">Income Statement</Button>
                         <Button variant="outline" @click="navigateTo('/finance/reports/expense')" size="sm">Expense Statement</Button>
+                    </div>
+                </div>
+                <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 md:p-6">
+                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Operations</h3>
+                    <div class="space-y-3 text-sm text-gray-600 dark:text-gray-300">
+                        <div class="flex items-center justify-between gap-4">
+                            <span>Pending Salary Payable</span>
+                            <span class="font-semibold text-red-600">{{ formatMoney(operationsSummary.pending_salary_payable) }}</span>
+                        </div>
+                        <div class="flex items-center justify-between gap-4">
+                            <span>Transport Expense This Month</span>
+                            <span class="font-semibold text-orange-600">{{ formatMoney(operationsSummary.transport_expense_month) }}</span>
+                        </div>
+                        <div class="flex flex-wrap gap-2 pt-2">
+                            <Button variant="outline" @click="navigateTo('/staff')" size="sm">Staff Module</Button>
+                            <Button variant="outline" @click="navigateTo('/transport')" size="sm">Transport Module</Button>
+                        </div>
                     </div>
                 </div>
             </div>

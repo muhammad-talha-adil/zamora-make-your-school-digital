@@ -8,6 +8,7 @@ import type { BreadcrumbItem } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
+import { alert } from '@/utils';
 
 interface FineRule {
     id: number;
@@ -63,6 +64,15 @@ const isLoading = ref(false);
 
 // Form errors
 const formErrors = ref<Record<string, string>>({});
+
+const normalizeErrors = (errors: Record<string, string | string[]>) => {
+    return Object.fromEntries(
+        Object.entries(errors).map(([key, value]) => [
+            key,
+            Array.isArray(value) ? String(value[0] ?? 'Validation failed.') : String(value),
+        ]),
+    );
+};
 
 // Filter states
 const filterCampus = ref<string>(props.filters?.campus_id ? String(props.filters.campus_id) : '');
@@ -294,7 +304,7 @@ const submitForm = () => {
             closeModal();
             fetchFineRules();
         }).catch((error) => {
-            formErrors.value = error.response?.data?.errors || {};
+            formErrors.value = normalizeErrors(error.response?.data?.errors || {});
         }).finally(() => {
             isSubmitting.value = false;
         });
@@ -308,7 +318,7 @@ const submitForm = () => {
             closeModal();
             fetchFineRules();
         }).catch((error) => {
-            formErrors.value = error.response?.data?.errors || {};
+            formErrors.value = normalizeErrors(error.response?.data?.errors || {});
         }).finally(() => {
             isSubmitting.value = false;
         });
@@ -316,36 +326,64 @@ const submitForm = () => {
 };
 
 const deleteRule = (rule: FineRule) => {
-    if (confirm(`Are you sure you want to delete "${rule.name}"?`)) {
-        axios.delete(route('fee.settings.fine-rules.destroy', rule.id), {
-            headers: {
-                Accept: 'application/json',
-                'X-Requested-With': 'XMLHttpRequest',
-            },
-        }).then(() => {
-            fetchFineRules();
+    alert
+        .confirm(
+            `Are you sure you want to delete "${rule.name}"?`,
+            'Delete Fine Rule',
+            'Yes, delete it!',
+        )
+        .then((result) => {
+            if (result.isConfirmed) {
+                axios.delete(route('fee.settings.fine-rules.destroy', rule.id), {
+                    headers: {
+                        Accept: 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                    },
+                }).then(() => {
+                    alert.success('Fine rule deleted successfully!');
+                    fetchFineRules();
+                }).catch(() => {
+                    alert.error('Failed to delete fine rule. Please try again.');
+                });
+            }
         });
-    }
 };
 
 const toggleStatus = (rule: FineRule) => {
-    axios.patch(route('fee.settings.fine-rules.toggle-status', rule.id), {}, {
-        headers: {
-            Accept: 'application/json',
-            'X-Requested-With': 'XMLHttpRequest',
-        },
-    }).then((response) => {
-        const updatedRule = response.data.fineRule;
-
-        fineRulesData.value = fineRulesData.value.map((item) =>
-            item.id === updatedRule.id
-                ? {
-                    ...item,
-                    is_active: updatedRule.is_active,
-                }
-                : item,
-        );
-    });
+    const actionText = rule.is_active ? 'deactivate' : 'activate';
+    const confirmButtonText = rule.is_active ? 'Yes, deactivate it!' : 'Yes, activate it!';
+    
+    alert
+        .confirm(
+            `Are you sure you want to ${actionText} "${rule.name}"?`,
+            actionText.charAt(0).toUpperCase() + actionText.slice(1) + ' Fine Rule',
+            confirmButtonText,
+        )
+        .then((result) => {
+            if (result.isConfirmed) {
+                axios.patch(route('fee.settings.fine-rules.toggle-status', rule.id), {}, {
+                    headers: {
+                        Accept: 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                    },
+                }).then((response) => {
+                    const updatedRule = response.data.fineRule;
+                    
+                    fineRulesData.value = fineRulesData.value.map((item) =>
+                        item.id === updatedRule.id
+                            ? {
+                                ...item,
+                                is_active: updatedRule.is_active,
+                            }
+                            : item,
+                    );
+                    
+                    alert.success(`Fine rule ${actionText}d successfully!`);
+                }).catch(() => {
+                    alert.error('Failed to update status. Please try again.');
+                });
+            }
+        });
 };
 
 const getFineTypeLabel = (type: string): string => {

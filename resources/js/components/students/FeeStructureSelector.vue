@@ -2,13 +2,13 @@
     <div class="rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-800">
         <h2 class="mb-4 flex items-center gap-2 text-lg font-semibold text-gray-900 dark:text-white">
             <Icon icon="credit-card" class="h-5 w-5 text-primary" />
-            Tuition Fees
+            Fee Structure
         </h2>
 
         <!-- No Class Selected Yet -->
         <div v-if="!classId || !sessionId || !campusId" class="text-center py-8 text-gray-500">
             <Icon icon="info" class="mx-auto mb-2 h-12 w-12 text-gray-400" />
-            <p>Please select Campus, Session, and Class to view fee structure</p>
+            <p>Please select Branch, Session, Class, and Section if required to view the fee structure.</p>
         </div>
 
         <!-- Fee Structure Loading -->
@@ -23,7 +23,8 @@
                 <Icon icon="alert-triangle" class="mx-auto mb-2 h-8 w-8 text-yellow-600" />
                 <p class="font-medium text-yellow-800 dark:text-yellow-100">No Fee Structure Found</p>
                 <p class="mt-1 text-sm text-yellow-700 dark:text-yellow-300">
-                    No active fee structure exists for this class. Please create a fee structure first.
+                    No active fee structure exists for the selected branch, session, class, and section combination.
+                    Please create the matching fee structure first.
                 </p>
                 <Button type="button" variant="outline" size="sm" class="mt-3" @click="createFeeStructure">
                     <Icon icon="plus" class="mr-1 h-4 w-4" />
@@ -163,7 +164,7 @@
                             <input
                                 type="checkbox"
                                 :id="'discount_' + item.fee_head_id"
-                                v-model="manualSelectedFeeHeads"
+                                v-model="discountSelectedFeeHeads"
                                 :value="item.fee_head_id"
                                 class="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
                             />
@@ -314,6 +315,12 @@ interface Props {
     enrollment?: {
         fee_structure_id?: number | null;
         fee_mode?: string | null;
+        discounts?: Array<{
+            fee_head_id: number;
+            discount_type_id: number;
+            value: number;
+            value_type: string;
+        }> | null;
         custom_fee_entries?: Array<{ fee_head_id: number; amount: number }> | null;
         manual_discount_percentage?: number | null;
         manual_discount_reason?: string | null;
@@ -330,27 +337,34 @@ const {
     discountTypes,
     selectedDiscountType,
     discountValue,
+    discountSelectedFeeHeads,
     manualSelectedFeeHeads,
     manualFeeAmounts,
     manualReason,
     selectedDiscountTypeObj,
     appliedDiscounts,
     manualFeeEntries,
-    formClassId,
-    formSessionId,
-    formCampusId,
-    formSectionId,
     setupFormWatchers,
+    syncScopeRefs,
     fetchFeeStructure,
     fetchDiscountTypes,
     setManualFeeAmount,
     calculateDiscountPercentage,
     createFeeStructure,
     loadEnrollmentData,
+    validateActiveMode,
+    getSubmissionPayload,
 } = useFeeStructure();
 
 // Initialize on mount
 onMounted(async () => {
+    syncScopeRefs({
+        classId: props.classId,
+        sessionId: props.sessionId,
+        campusId: props.campusId,
+        sectionId: props.sectionId,
+    });
+
     // Setup watchers for form changes FIRST
     setupFormWatchers();
     
@@ -368,14 +382,17 @@ onMounted(async () => {
 // Watch for prop changes and update the composable state
 watch(
     () => [props.classId, props.sessionId, props.campusId, props.sectionId],
-    ([newClassId, newSessionId, newCampusId, newSectionId]) => {
-        // Update the composable refs directly
-        formClassId.value = newClassId ?? '';
-        formSessionId.value = newSessionId ?? '';
-        formCampusId.value = newCampusId ?? '';
-        formSectionId.value = newSectionId ?? '';
-        
-        // The watcher in setupFormWatchers will trigger fetchFeeStructure
+    async ([newClassId, newSessionId, newCampusId, newSectionId]) => {
+        syncScopeRefs({
+            classId: newClassId,
+            sessionId: newSessionId,
+            campusId: newCampusId,
+            sectionId: newSectionId,
+        });
+
+        if (newClassId && newSessionId && newCampusId) {
+            await fetchFeeStructure();
+        }
     }
 );
 
@@ -396,6 +413,8 @@ defineExpose({
     manualFeeEntries,
     manualFeeAmounts,
     manualReason,
+    validateActiveMode,
+    getSubmissionPayload,
     onDiscountTypeChange,
 });
 </script>

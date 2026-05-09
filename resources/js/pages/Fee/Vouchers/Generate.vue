@@ -7,7 +7,9 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import type { BreadcrumbItem } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
 import Icon from '@/components/Icon.vue';
+import { alert } from '@/utils';
 
 interface Session {
     id: number;
@@ -67,6 +69,7 @@ interface FeeStructure {
     items: FeeStructureItem[];
     total_monthly: number;
     total_annual: number;
+    total_one_time: number;
 }
 
 interface Props {
@@ -100,6 +103,8 @@ const form = reactive({
     year: currentYear,
     month_ids: [] as number[],
     include_previous_unpaid: false,
+    include_inventory_dues: false,
+    include_transport_dues: false,
     custom_fee_heads: [] as Array<{
         fee_head_id: number;
         amount: number;
@@ -116,6 +121,7 @@ const isGenerating = ref(false);
 const showCustomFeeModal = ref(false);
 const selectedFeeHeadId = ref<number | null>(null);
 const customFeeAmount = ref<number>(0);
+let feeStructureTimer: ReturnType<typeof setTimeout> | null = null;
 
 // Fee structure state
 const feeStructureLoading = ref(false);
@@ -126,7 +132,7 @@ const noFeeStructureMessage = ref<string>('');
 // Filter sections based on selected class
 const filteredSections = computed(() => {
     if (!form.class_id) return [];
-    return props.sections.filter(s => s.class_id === form.class_id);
+    return props.sections.filter((section) => section.class_id === Number(form.class_id));
 });
 
 // Fetch applicable fee structure when class/campus/session changes
@@ -157,6 +163,7 @@ const fetchFeeStructure = async () => {
         if (response.data.success) {
             // Transform the response to match our display format
             const data = response.data.data;
+            feeStructureSource.value = data.source || null;
             applicableFeeStructure.value = {
                 id: data.id,
                 title: data.title,
@@ -177,13 +184,13 @@ const fetchFeeStructure = async () => {
                 })),
                 total_monthly: data.monthly_fee || 0,
                 total_annual: data.annual_fee || 0,
+                total_one_time: data.one_time_fee || 0,
             };
         } else {
             noFeeStructureMessage.value = response.data.message || 'No fee structure found for this class.';
         }
     } catch (error: any) {
-        console.error('Error fetching fee structure:', error);
-        noFeeStructureMessage.value = 'Error loading fee structure.';
+        noFeeStructureMessage.value = error?.response?.data?.message || 'Error loading fee structure.';
     } finally {
         feeStructureLoading.value = false;
     }
@@ -193,12 +200,19 @@ const fetchFeeStructure = async () => {
 watch(
     () => [form.session_id, form.campus_id, form.class_id, form.section_id],
     () => {
-        // Debounce the fetch
-        setTimeout(() => {
+        if (feeStructureTimer) {
+            clearTimeout(feeStructureTimer);
+        }
+
+        feeStructureTimer = setTimeout(() => {
             fetchFeeStructure();
-        }, 300);
+        }, 250);
     }
 );
+
+watch(() => form.class_id, () => {
+    form.section_id = '';
+});
 
 // Available years (2000 to current year + 1)
 const years = Array.from({ length: (currentYear + 1) - 2000 + 1 }, (_, i) => 2000 + i);
@@ -243,6 +257,8 @@ const addCustomFeeHead = () => {
         showCustomFeeModal.value = false;
         selectedFeeHeadId.value = null;
         customFeeAmount.value = 0;
+    } else {
+        alert.error('Please select a fee head and enter an amount greater than zero.');
     }
 };
 
@@ -273,12 +289,12 @@ const getFeeHeadName = (id: number): string => {
 
 const generateVouchers = () => {
     if (form.month_ids.length === 0) {
-        alert('Please select at least one month');
+        alert.error('Please select at least one month.');
         return;
     }
 
     if (!form.session_id || !form.campus_id || !form.class_id) {
-        alert('Please select Session, Campus, and Class');
+        alert.error('Please select Session, Campus, and Class.');
         return;
     }
 
@@ -294,6 +310,8 @@ const generateVouchers = () => {
             year: form.year,
             month_ids: form.month_ids,
             include_previous_unpaid: form.include_previous_unpaid,
+            include_inventory_dues: form.include_inventory_dues,
+            include_transport_dues: form.include_transport_dues,
             custom_fee_heads: form.custom_fee_heads.length > 0 ? form.custom_fee_heads : null,
         },
         {
@@ -382,9 +400,13 @@ const generateVouchers = () => {
                             <select
                                 id="section_id"
                                 v-model="form.section_id"
-                                class="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white px-3 py-2"
+                                :disabled="!form.class_id || filteredSections.length === 0"
+                                :class="[
+                                    'mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white px-3 py-2',
+                                    (!form.class_id || filteredSections.length === 0) ? 'cursor-not-allowed opacity-50' : '',
+                                ]"
                             >
-                                <option v-if="filteredSections.length > 0" value="">Select Section</option>
+                                <option value="">{{ filteredSections.length > 0 ? 'All Sections' : 'No Sections Available' }}</option>
                                 <option v-for="section in filteredSections" :key="section.id" :value="section.id">
                                     {{ section.name }}
                                 </option>
@@ -409,9 +431,9 @@ const generateVouchers = () => {
 
                     <!-- Months Selection -->
                     <div>
-                        <div class="flex items-center justify-between mb-3">
+                        <div class="mb-3 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                             <Label>Select Months *</Label>
-                            <div class="flex gap-2">
+                            <div class="flex flex-wrap gap-2">
                                 <Button type="button" variant="outline" size="sm" @click="selectCurrentYearMonths">
                                     Select All
                                 </Button>
@@ -420,11 +442,11 @@ const generateVouchers = () => {
                                 </Button>
                             </div>
                         </div>
-                        <div class="grid grid-cols-3 md:grid-cols-6 lg:grid-cols-12 gap-3">
+                        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-12 gap-3">
                             <label
                                 v-for="month in props.months"
                                 :key="month.id"
-                                class="flex items-center space-x-2 cursor-pointer p-2 rounded border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700"
+                                class="flex min-h-11 items-center gap-2 cursor-pointer rounded border border-gray-200 p-2 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700"
                                 :class="form.month_ids.includes(month.id) ? 'bg-blue-50 dark:bg-blue-900/30 border-blue-500' : 'bg-white dark:bg-gray-800'"
                             >
                                 <input
@@ -454,9 +476,33 @@ const generateVouchers = () => {
                         </Label>
                     </div>
 
+                    <div class="flex items-center gap-2">
+                        <input
+                            type="checkbox"
+                            id="include_inventory_dues"
+                            v-model="form.include_inventory_dues"
+                            class="w-4 h-4 text-blue-600 rounded"
+                        />
+                        <Label for="include_inventory_dues" class="cursor-pointer">
+                            Include open inventory dues in generated vouchers
+                        </Label>
+                    </div>
+
+                    <div class="flex items-center gap-2">
+                        <input
+                            type="checkbox"
+                            id="include_transport_dues"
+                            v-model="form.include_transport_dues"
+                            class="w-4 h-4 text-blue-600 rounded"
+                        />
+                        <Label for="include_transport_dues" class="cursor-pointer">
+                            Include open transport dues in generated vouchers
+                        </Label>
+                    </div>
+
                     <!-- Custom Fee Heads Section -->
                     <div class="border-t border-gray-200 dark:border-gray-700 pt-6">
-                        <div class="flex items-center justify-between mb-4">
+                        <div class="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                             <Label>Add Custom Fee Heads (Optional)</Label>
                             <Button type="button" variant="outline" size="sm" @click="showCustomFeeModal = true">
                                 <Icon icon="plus" class="mr-1 h-4 w-4" />
@@ -500,7 +546,7 @@ const generateVouchers = () => {
                             <div class="flex items-start gap-3">
                                 <Icon icon="check-circle" class="h-5 w-5 text-green-600 dark:text-green-400 flex-shrink-0 mt-0.5" />
                                 <div class="flex-1">
-                                    <div class="flex items-center justify-between">
+                                    <div class="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
                                         <div>
                                             <p class="font-semibold text-green-800 dark:text-green-300">
                                                 {{ applicableFeeStructure.title }}
@@ -515,6 +561,9 @@ const generateVouchers = () => {
                                             </p>
                                             <p v-if="applicableFeeStructure.total_annual > 0" class="text-sm text-green-600 dark:text-green-400">
                                                 + Rs. {{ applicableFeeStructure.total_annual.toLocaleString() }}/annual
+                                            </p>
+                                            <p v-if="applicableFeeStructure.total_one_time > 0" class="text-sm text-green-600 dark:text-green-400">
+                                                + Rs. {{ applicableFeeStructure.total_one_time.toLocaleString() }}/one-time
                                             </p>
                                         </div>
                                     </div>
@@ -571,13 +620,15 @@ const generateVouchers = () => {
                                     <li>Students without a fee structure will be skipped</li>
                                     <li>Existing vouchers for selected month(s) will not be duplicated</li>
                                     <li>Vouchers will be generated based on the fee structure assigned to each student</li>
+                                    <li>Inventory dues can be merged into the same voucher when the checkbox is enabled</li>
+                                    <li>Transport dues can also be merged when the transport option is enabled</li>
                                 </ul>
                             </div>
                         </div>
                     </div>
 
                     <!-- Actions -->
-                    <div class="flex justify-end gap-3">
+                    <div class="flex flex-col-reverse gap-3 sm:flex-row sm:justify-end">
                         <Button type="button" variant="outline" @click="router.visit(route('fee.vouchers.index'))">
                             Cancel
                         </Button>
@@ -592,8 +643,8 @@ const generateVouchers = () => {
         </div>
 
         <!-- Custom Fee Head Modal -->
-        <div v-if="showCustomFeeModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-            <div class="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-md mx-4">
+        <div v-if="showCustomFeeModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4 py-6">
+            <div class="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-lg bg-white p-6 dark:bg-gray-800">
                 <h3 class="text-lg font-semibold mb-4">Add Custom Fee Head</h3>
                 
                 <div class="space-y-4">
@@ -613,13 +664,12 @@ const generateVouchers = () => {
 
                     <div>
                         <Label for="custom_fee_amount">Amount (Rs.)</Label>
-                        <input
+                        <Input
                             id="custom_fee_amount"
                             v-model.number="customFeeAmount"
                             type="number"
                             min="0"
                             step="0.01"
-                            class="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white px-3 py-2"
                             placeholder="Enter amount"
                         />
                     </div>

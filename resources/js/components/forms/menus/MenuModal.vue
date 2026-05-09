@@ -33,6 +33,10 @@ interface Props {
     parentMenus: Array<{
         id: number;
         title: string;
+        type: string;
+        parent_id?: number | null;
+        order: number;
+        hierarchy_label: string;
     }>;
 }
 
@@ -65,6 +69,11 @@ const description = computed(() =>
 );
 
 const buttonText = computed(() => props.mode === 'create' ? 'Create Menu' : 'Update Menu');
+const filteredParentMenuOptions = computed(() =>
+    props.parentMenus
+        .filter((menu) => menu.type === form.type)
+        .map((menu) => ({ id: menu.id, name: menu.hierarchy_label }))
+);
 
 const form = useForm({
     title: '',
@@ -105,6 +114,8 @@ const closeModal = () => {
 };
 
 const submitForm = () => {
+    form.parent_id = form.parent_id || null;
+
     const requestOptions = {
         preserveScroll: true,
         onSuccess: () => {
@@ -120,6 +131,18 @@ const submitForm = () => {
 
     form.patch(action.value, requestOptions);
 };
+
+watch(
+    () => form.type,
+    () => {
+        if (form.parent_id) {
+            const selectedParent = props.parentMenus.find((menu) => menu.id === form.parent_id);
+            if (!selectedParent || selectedParent.type !== form.type) {
+                form.parent_id = null;
+            }
+        }
+    },
+);
 </script>
 
 <template>
@@ -178,11 +201,12 @@ const submitForm = () => {
                             id="parent_id"
                             name="parent_id"
                             placeholder="Select parent menu (optional)"
-                            :initial-items="props.parentMenus.map(menu => ({ id: menu.id, name: menu.title }))"
+                            :initial-items="filteredParentMenuOptions"
                             :default-value="null"
                             value-type="id"
                         />
                         <InputError class="mt-2" :message="form.errors.parent_id" />
+                        <p class="text-xs text-gray-500">Each option shows its full parent path, so duplicate names like Dashboard are easier to distinguish.</p>
                     </div>
 
                     <div class="grid gap-2">
@@ -196,6 +220,7 @@ const submitForm = () => {
                             placeholder="0"
                         />
                         <InputError class="mt-2" :message="form.errors.order" />
+                        <p class="text-xs text-gray-500">Order is managed only within the selected parent menu. Moving item 4 to 1 will shift the current 1, 2, and 3 down automatically.</p>
                     </div>
 
                     <div class="grid gap-2">

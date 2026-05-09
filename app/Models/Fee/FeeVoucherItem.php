@@ -2,6 +2,7 @@
 
 namespace App\Models\Fee;
 
+use App\Models\Finance\StudentAccountCharge;
 use App\Enums\Fee\VoucherItemSource;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -15,6 +16,7 @@ class FeeVoucherItem extends Model
 {
     protected $fillable = [
         'fee_voucher_id',
+        'student_account_charge_id',
         'fee_head_id',
         'description',
         'amount',
@@ -23,7 +25,9 @@ class FeeVoucherItem extends Model
         'adjusted_amount',
         'net_amount',
         'source_type',
+        'source_module',
         'reference_id',
+        'reference_item_id',
     ];
 
     protected $casts = [
@@ -33,7 +37,9 @@ class FeeVoucherItem extends Model
         'adjusted_amount' => 'decimal:2',
         'net_amount' => 'decimal:2',
         'source_type' => VoucherItemSource::class,
+        'source_module' => 'string',
         'reference_id' => 'integer',
+        'reference_item_id' => 'integer',
     ];
 
     /**
@@ -42,6 +48,15 @@ class FeeVoucherItem extends Model
     public function voucher(): BelongsTo
     {
         return $this->belongsTo(FeeVoucher::class, 'fee_voucher_id');
+    }
+
+    /**
+     * Get the originating student account charge when the line item is
+     * created from the unified receivable layer.
+     */
+    public function studentAccountCharge(): BelongsTo
+    {
+        return $this->belongsTo(StudentAccountCharge::class, 'student_account_charge_id');
     }
 
     /**

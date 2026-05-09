@@ -2,6 +2,7 @@
 
 namespace App\Models\Fee;
 
+use App\Models\Finance\StudentAccountCharge;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
@@ -15,6 +16,9 @@ class FeePaymentAllocation extends Model
     protected $fillable = [
         'fee_payment_id',
         'fee_voucher_id',
+        'fee_voucher_item_id',
+        'student_account_charge_id',
+        'source_module',
         'allocated_amount',
         'allocation_date',
         'notes',
@@ -39,5 +43,15 @@ class FeePaymentAllocation extends Model
     public function voucher(): BelongsTo
     {
         return $this->belongsTo(FeeVoucher::class, 'fee_voucher_id');
+    }
+
+    public function voucherItem(): BelongsTo
+    {
+        return $this->belongsTo(FeeVoucherItem::class, 'fee_voucher_item_id');
+    }
+
+    public function studentAccountCharge(): BelongsTo
+    {
+        return $this->belongsTo(StudentAccountCharge::class, 'student_account_charge_id');
     }
 }

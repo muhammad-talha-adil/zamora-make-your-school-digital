@@ -55,7 +55,10 @@ class InventoryAdjustmentsController extends Controller
         $campusId = $request->get('campus_id');
 
         if (! $campusId) {
-            return response()->json(['error' => 'campus_id is required'], 422);
+            $firstCampus = Campus::first();
+            if ($firstCampus) {
+                $campusId = $firstCampus->id;
+            }
         }
 
         $adjustments = InventoryAdjustment::with(['campus:id,name', 'inventoryItem:id,name'])
@@ -65,8 +68,25 @@ class InventoryAdjustmentsController extends Controller
             ->when($request->get('from_date'), fn ($q) => $q->whereDate('created_at', '>=', $request->get('from_date')))
             ->when($request->get('to_date'), fn ($q) => $q->whereDate('created_at', '<=', $request->get('to_date')))
             ->orderBy('created_at', 'desc')
-            ->limit($request->get('limit', 50))
-            ->get();
+            ->limit($request->get('limit', 100))
+            ->get()
+            ->map(function ($adjustment) {
+                return [
+                    'id' => $adjustment->id,
+                    'campus_id' => $adjustment->campus_id,
+                    'campus_name' => $adjustment->campus?->name,
+                    'inventory_item_id' => $adjustment->inventory_item_id,
+                    'item_name' => $adjustment->inventoryItem?->name,
+                    'type' => $adjustment->type,
+                    'quantity' => $adjustment->quantity,
+                    'previous_quantity' => $adjustment->previous_quantity,
+                    'new_quantity' => $adjustment->new_quantity,
+                    'reason' => $adjustment->reason,
+                    'reference_number' => $adjustment->reference_number,
+                    'created_at' => $adjustment->created_at,
+                ];
+            })
+            ->values();
 
         return response()->json($adjustments);
     }

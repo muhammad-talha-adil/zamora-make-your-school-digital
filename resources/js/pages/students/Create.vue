@@ -400,7 +400,7 @@
                     </div>
                 </div>
 
-                <!-- Tuition Fees Card - Using FeeStructureSelector Component -->
+                <!-- Fee Structure Card -->
                 <FeeStructureSelector
                     ref="feeStructureSelector"
                     :class-id="form.class_id"
@@ -708,14 +708,15 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import AppLayout from '@/layouts/AppLayout.vue';
-import type { BreadcrumbItem } from '@/types';
-import { Head, router } from '@inertiajs/vue3';
+import type { AppPageProps, BreadcrumbItem } from '@/types';
+import { Head, router, usePage } from '@inertiajs/vue3';
 import axios from 'axios';
 import { computed, onMounted, ref, watch } from 'vue';
 import { route } from 'ziggy-js';
 import { useStudentForm } from '@/composables/useStudentForm';
 import FeeStructureSelector from '@/components/students/FeeStructureSelector.vue';
 import { alert } from '@/utils/alert';
+import { buildGeneratedEmail } from '@/utils/schoolEmail';
 
 // ==================== FEE STRUCTURE IS NOW HANDLED BY FeeStructureSelector COMPONENT ====================
 // All fee structure logic is now encapsulated in the FeeStructureSelector.vue component
@@ -738,6 +739,7 @@ interface Props {
 }
 
 const props = defineProps<Props>();
+const page = usePage<AppPageProps>();
 
 const breadcrumbItems: BreadcrumbItem[] = [
     {
@@ -773,6 +775,7 @@ const {
     processing,
     imagePreview,
     imageError,
+    phoneError,
     siblingMatch,
     linkedGuardianId,
     fatherRelationId,
@@ -802,14 +805,15 @@ const {
     todayDate: todayDate.value,
 });
 
-// Generate live email preview based on student name
+// Generate live email preview based on student name and school initials
+const schoolName = computed(() => page.props.school?.name ?? page.props.name ?? '');
+
 const generatedEmailPreview = computed(() => {
     if (!form.value.name || !form.value.name.trim()) {
         return 'Enter student name to see email preview';
     }
-    // Remove all whitespace and convert to lowercase
-    const processedName = form.value.name.replace(/\s+/g, '').toLowerCase();
-    return `${processedName}@school.com`;
+
+    return buildGeneratedEmail(form.value.name, schoolName.value);
 });
 
 const errors = ref<Record<string, string>>({});
@@ -933,6 +937,10 @@ const submitForm = () => {
 
     // Validate phone uniqueness before submitting
     if (!validatePhoneUniqueness()) {
+        if (phoneError.value) {
+            errors.value.other_phone = phoneError.value;
+            alert.error(phoneError.value);
+        }
         processing.value = false;
         return;
     }
@@ -1084,27 +1092,33 @@ const submitForm = () => {
     // ==================== FEE STRUCTURE DATA ====================
     const feeStructureRef = feeStructureSelector.value;
     if (feeStructureRef?.feeStructure) {
-        formData.set('fee_structure_id', String(feeStructureRef.feeStructure.id));
-        formData.set('fee_mode', feeStructureRef.feeMode || 'structure');
-        
-        // If discount mode and has applied discounts, send them
-        if (feeStructureRef.feeMode === 'discount' && feeStructureRef.appliedDiscounts?.length > 0) {
-            formData.set('discounts', JSON.stringify(feeStructureRef.appliedDiscounts));
+        const feeValidationMessage = feeStructureRef.validateActiveMode?.();
+        if (feeValidationMessage) {
+            processing.value = false;
+            alert.error(feeValidationMessage);
+            return;
         }
-        
-        // If manual mode, send the custom fee entries
-        if (feeStructureRef.feeMode === 'manual' && feeStructureRef.manualFeeEntries?.length > 0) {
-            formData.set('custom_fee_entries', JSON.stringify(feeStructureRef.manualFeeEntries));
-            formData.set('manual_discount_reason', feeStructureRef.manualReason || '');
-            
-            // Calculate overall discount percentage (average)
-            const totalDiscount = feeStructureRef.manualFeeEntries.reduce((sum: number, entry: any) => {
-                return sum + (entry.discount_percentage || 0);
-            }, 0);
-            const avgDiscount = feeStructureRef.manualFeeEntries.length > 0 
-                ? Math.round(totalDiscount / feeStructureRef.manualFeeEntries.length) 
-                : 0;
-            formData.set('manual_discount_percentage', String(avgDiscount));
+
+        const feePayload = feeStructureRef.getSubmissionPayload?.();
+        if (feePayload) {
+            formData.set('fee_structure_id', String(feePayload.fee_structure_id));
+            formData.set('fee_mode', String(feePayload.fee_mode ?? 'structure'));
+
+            if (Array.isArray(feePayload.discounts) && feePayload.discounts.length > 0) {
+                formData.set('discounts', JSON.stringify(feePayload.discounts));
+            }
+
+            if (Array.isArray(feePayload.custom_fee_entries) && feePayload.custom_fee_entries.length > 0) {
+                formData.set('custom_fee_entries', JSON.stringify(feePayload.custom_fee_entries));
+            }
+
+            if (typeof feePayload.manual_discount_percentage !== 'undefined') {
+                formData.set('manual_discount_percentage', String(feePayload.manual_discount_percentage));
+            }
+
+            if (typeof feePayload.manual_discount_reason === 'string') {
+                formData.set('manual_discount_reason', feePayload.manual_discount_reason);
+            }
         }
     }
     // ==================== END FEE STRUCTURE DATA ====================
@@ -1118,7 +1132,6 @@ const submitForm = () => {
         },
         onSuccess: () => {
             alert.success('Student admitted successfully!');
-            router.visit(route('students.index'));
         },
         onError: (err) => {
             errors.value = err as Record<string, string>;

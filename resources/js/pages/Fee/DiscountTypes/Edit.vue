@@ -45,6 +45,14 @@ const form = reactive({
 const errors = ref<Record<string, string>>({});
 const isSubmitting = ref(false);
 
+const getFirstErrorMessage = (value: unknown) => {
+    if (Array.isArray(value)) {
+        return String(value[0] ?? 'Validation failed.');
+    }
+
+    return typeof value === 'string' ? value : 'Validation failed.';
+};
+
 const validateForm = () => {
     errors.value = {};
     
@@ -77,8 +85,10 @@ const submitForm = () => {
         },
         onError: (err) => {
             isSubmitting.value = false;
-            const firstError = Object.values(err)[0];
-            alert.error(firstError);
+            errors.value = Object.fromEntries(
+                Object.entries(err).map(([key, value]) => [key, getFirstErrorMessage(value)])
+            );
+            alert.error(getFirstErrorMessage(Object.values(err)[0]));
         },
     });
 };

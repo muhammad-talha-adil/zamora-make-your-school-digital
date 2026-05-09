@@ -18,6 +18,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 class FeeFineRule extends Model
 {
     protected $fillable = [
+        'name',
         'campus_id',
         'session_id',
         'class_id',

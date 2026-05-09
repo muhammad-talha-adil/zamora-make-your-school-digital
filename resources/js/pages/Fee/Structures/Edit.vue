@@ -48,6 +48,11 @@ interface Props {
 
 const props = defineProps<Props>();
 
+const normalizeDateForInput = (value?: string | null) => {
+    if (!value) return '';
+    return value.slice(0, 10);
+};
+
 const breadcrumbItems: BreadcrumbItem[] = [
     { title: 'Dashboard', href: '/dashboard' },
     { title: 'Fee Management', href: '/fee/dashboard' },
@@ -81,8 +86,8 @@ const breadcrumbItems: BreadcrumbItem[] = [
         campus_id: String(props.structure.campus_id),
         class_id: String(props.structure.class_id || ''),
         section_id: getInitialSectionId(),
-        effective_from: props.structure.effective_from,
-        effective_to: props.structure.effective_to || '',
+        effective_from: normalizeDateForInput(props.structure.effective_from),
+        effective_to: normalizeDateForInput(props.structure.effective_to || ''),
         status: props.structure.status,
         notes: props.structure.notes || '',
     });
@@ -125,11 +130,23 @@ const titleSearchUrl = computed(() => {
     if (form.class_id) {
         url += `&class_id=${form.class_id}`;
     }
-    if (form.section_id) {
+    if (form.section_id && form.section_id !== 'all') {
         url += `&section_id=${form.section_id}`;
     }
     
     return url;
+});
+
+const titleInitialItems = computed(() => {
+    if (!props.structure.title) return [];
+
+    return [
+        {
+            id: props.structure.id,
+            name: props.structure.title,
+            title: props.structure.title,
+        },
+    ];
 });
 
 // Get selected session's start and end dates
@@ -141,8 +158,8 @@ const selectedSession = computed(() => {
 // Auto-fill effective dates when session changes or on mount
 const autoFillDates = () => {
     if (selectedSession.value) {
-        form.effective_from = selectedSession.value.start_date;
-        form.effective_to = selectedSession.value.end_date;
+        form.effective_from = normalizeDateForInput(selectedSession.value.start_date);
+        form.effective_to = normalizeDateForInput(selectedSession.value.end_date);
     }
 };
 
@@ -266,6 +283,7 @@ const submitForm = () => {
         },
         onError: (err) => {
             isSubmitting.value = false;
+            errors.value = err as Record<string, string>;
             const firstError = Object.values(err)[0];
             alert.error(firstError);
         },
@@ -310,6 +328,12 @@ const validateItemForm = () => {
     if (!itemForm.amount || Number(itemForm.amount) <= 0) {
         itemErrors.value.amount = 'Valid amount is required';
     }
+    if (
+        itemForm.fee_head_id &&
+        props.structure.items.some((item) => item.fee_head_id === Number(itemForm.fee_head_id) && item.id !== editingItem.value)
+    ) {
+        itemErrors.value.fee_head_id = 'This fee head has already been added';
+    }
     
     return Object.keys(itemErrors.value).length === 0;
 };
@@ -340,6 +364,7 @@ const submitItemForm = () => {
         },
         onError: (err) => {
             isItemSubmitting.value = false;
+            itemErrors.value = err as Record<string, string>;
             const firstError = Object.values(err)[0];
             alert.error(firstError);
         },
@@ -422,6 +447,7 @@ const getFrequencyLabel = (freq: string) => {
                                 v-model="form.title"
                                 :placeholder="'Search or enter title...'"
                                 :search-url="titleSearchUrl"
+                                :initial-items="titleInitialItems"
                                 :value-type="'name'"
                                 display-key="title"
                                 classMinWidth="w-full"

@@ -198,7 +198,11 @@ const handleCampusTypeSaved = (campusType: { id: number; name: string } | undefi
 <template>
     <Dialog v-model:open="campusDialogOpen">
         <DialogTrigger as-child>
-            <Button :variant="props.variant" :size="props.size">
+            <Button
+                :variant="props.variant"
+                :size="props.size"
+                :class="props.campus ? 'min-h-8 border-sky-200 text-sky-700 hover:bg-sky-50 hover:text-sky-800 dark:border-sky-800 dark:text-sky-300 dark:hover:bg-sky-950/40 dark:hover:text-sky-200' : ''"
+            >
                 <Icon v-if="props.campus" icon="edit" class="mr-1" />
                 <Icon v-else icon="map-pin" class="mr-1" />
                 {{ trigger }}

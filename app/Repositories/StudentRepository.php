@@ -23,7 +23,7 @@ use App\Services\GuardianService;
 use App\Services\StudentUserService;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
-use Illuminate\Http\File;
+use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -298,7 +298,8 @@ class StudentRepository
                 'gender_id' => $data['gender_id'],
                 'student_status_id' => $data['student_status_id'],
                 'b_form' => $data['b_form'] ?? null,
-                'admission_date' => now()->toDateString(),
+                'description' => $data['description'] ?? null,
+                'admission_date' => $data['admission_date'] ?? now()->toDateString(),
                 'image' => $imagePath,
             ]);
 
@@ -309,10 +310,11 @@ class StudentRepository
                 'class_id' => $data['class_id'],
                 'section_id' => $data['section_id'] ?? null,
                 'campus_id' => $data['campus_id'],
-                'admission_date' => now()->toDateString(),
+                'admission_date' => $data['admission_date'] ?? now()->toDateString(),
                 'leave_date' => null,
                 'student_status_id' => $data['student_status_id'],
                 'previous_enrollment_id' => null,
+                'description' => $data['description'] ?? null,
                 'monthly_fee' => $data['monthly_fee'] ?? 0,
                 'annual_fee' => $data['annual_fee'] ?? 0,
                 // New fee structure integration fields
@@ -327,7 +329,7 @@ class StudentRepository
             $this->createFeeAssignmentsFromAdmission($enrollment, $data);
 
             // 8. Create student discounts if fee_mode is 'discount' or 'manual'
-            if (in_array($data['fee_mode'] ?? null, ['discount', 'manual']) && ! empty($data['discounts'])) {
+            if (($data['fee_mode'] ?? null) === 'discount' && ! empty($data['discounts'])) {
                 $this->createDiscountsFromAdmission($enrollment, $data);
             }
 
@@ -446,7 +448,13 @@ class StudentRepository
                 'gender_id' => $data['gender_id'],
                 'student_status_id' => $data['student_status_id'],
                 'b_form' => $data['b_form'] ?? null,
+                'description' => $data['description'] ?? null,
+                'admission_date' => $data['admission_date'] ?? $student->admission_date,
             ]);
+
+            if ($student->user && ! empty($data['name'])) {
+                $this->studentUserService->syncManagedStudentIdentity($student->user, $data['name']);
+            }
 
             // 2. Handle image upload, update, or removal
             $this->handleImageUpdate($student, $data);
@@ -458,9 +466,11 @@ class StudentRepository
                 $currentEnrollment->update([
                     'session_id' => $data['session_id'],
                     'class_id' => $data['class_id'],
-                    'section_id' => $data['section_id'],
+                    'section_id' => $data['section_id'] ?? null,
                     'campus_id' => $data['campus_id'],
+                    'admission_date' => $data['admission_date'] ?? $currentEnrollment->admission_date,
                     'student_status_id' => $data['student_status_id'],
+                    'description' => $data['description'] ?? null,
                     'monthly_fee' => $data['monthly_fee'] ?? 0,
                     'annual_fee' => $data['annual_fee'] ?? 0,
                     // NEW: Fee structure integration fields
@@ -471,25 +481,22 @@ class StudentRepository
                     'manual_discount_reason' => $data['manual_discount_reason'] ?? null,
                 ]);
 
-                // Handle discounts update
-                if (in_array($data['fee_mode'] ?? 'structure', ['discount', 'manual']) && ! empty($data['discounts'])) {
-                    // Remove existing discounts for this enrollment
-                    $currentEnrollment->discounts()->delete();
-
-                    // Create new discounts
+                $currentEnrollment->discounts()->delete();
+                if (($data['fee_mode'] ?? 'structure') === 'discount' && ! empty($data['discounts'])) {
                     $this->createDiscountsFromAdmission($currentEnrollment, $data);
                 }
             } else {
-                StudentEnrollmentRecord::create([
+                $currentEnrollment = StudentEnrollmentRecord::create([
                     'student_id' => $student->id,
                     'session_id' => $data['session_id'],
                     'class_id' => $data['class_id'],
-                    'section_id' => $data['section_id'],
+                    'section_id' => $data['section_id'] ?? null,
                     'campus_id' => $data['campus_id'],
-                    'admission_date' => now()->toDateString(),
+                    'admission_date' => $data['admission_date'] ?? now()->toDateString(),
                     'leave_date' => null,
                     'student_status_id' => $data['student_status_id'],
                     'previous_enrollment_id' => null,
+                    'description' => $data['description'] ?? null,
                     'monthly_fee' => $data['monthly_fee'] ?? 0,
                     'annual_fee' => $data['annual_fee'] ?? 0,
                     // NEW: Fee structure integration fields
@@ -499,29 +506,15 @@ class StudentRepository
                     'manual_discount_percentage' => $data['manual_discount_percentage'] ?? null,
                     'manual_discount_reason' => $data['manual_discount_reason'] ?? null,
                 ]);
-            }
 
-            // 4. Update guardians if provided
-            if (! empty($data['guardians'])) {
-                foreach ($data['guardians'] as $guardianData) {
-                    if (isset($guardianData['id'])) {
-                        $studentGuardian = StudentGuardian::where('student_id', $student->id)
-                            ->where('guardian_id', $guardianData['id'])
-                            ->first();
+                $this->createFeeAssignmentsFromAdmission($currentEnrollment, $data);
 
-                        if ($studentGuardian) {
-                            $studentGuardian->update([
-                                'relation_id' => $guardianData['relation_id'],
-                                'is_primary' => $guardianData['is_primary'] ?? false,
-                            ]);
-                        }
-
-                        Guardian::where('id', $guardianData['id'])->update([
-                            'phone' => $guardianData['phone'] ?? null,
-                        ]);
-                    }
+                if (($data['fee_mode'] ?? 'structure') === 'discount' && ! empty($data['discounts'])) {
+                    $this->createDiscountsFromAdmission($currentEnrollment, $data);
                 }
             }
+
+            $this->syncAdmissionGuardians($student, $data);
 
             Log::info('Student updated successfully', [
                 'student_id' => $student->id,
@@ -550,7 +543,7 @@ class StudentRepository
         }
 
         // Check if new image is uploaded
-        if (! empty($data['image']) && $data['image'] instanceof File) {
+        if (! empty($data['image']) && $data['image'] instanceof UploadedFile) {
             // Delete old image if exists
             $this->deleteImage($student->image);
 
@@ -848,6 +841,114 @@ class StudentRepository
             'enrollment_id' => $enrollment->id,
             'discounts_count' => count($discounts),
         ]);
+    }
+
+    private function syncAdmissionGuardians(Student $student, array $data): void
+    {
+        $student->loadMissing('studentGuardians.guardian.user');
+
+        $this->syncPrimaryGuardian($student, $data);
+        $this->syncOtherGuardian($student, $data);
+    }
+
+    private function syncPrimaryGuardian(Student $student, array $data): void
+    {
+        $primaryLink = $student->studentGuardians->firstWhere('is_primary', true);
+        $payload = [
+            'name' => $data['father_name'],
+            'email' => $data['father_email'] ?? null,
+            'phone' => $data['father_phone'] ?? null,
+            'cnic' => $data['father_cnic'] ?? null,
+            'occupation' => $data['father_occupation'] ?? null,
+            'address' => $data['father_address'] ?? null,
+        ];
+
+        if (! empty($data['guardian_id'])) {
+            $guardian = Guardian::findOrFail($data['guardian_id']);
+            $this->guardianService->updateGuardian($guardian, $payload);
+        } else {
+            $guardian = $this->resolveGuardianForUpdate($primaryLink?->guardian, $payload);
+        }
+
+        if ($primaryLink) {
+            $primaryLink->update([
+                'guardian_id' => $guardian->id,
+                'relation_id' => $data['father_relation_id'],
+                'is_primary' => true,
+            ]);
+        } else {
+            StudentGuardian::create([
+                'student_id' => $student->id,
+                'guardian_id' => $guardian->id,
+                'relation_id' => $data['father_relation_id'],
+                'is_primary' => true,
+            ]);
+        }
+
+        $otherLinks = StudentGuardian::where('student_id', $student->id);
+        if ($primaryLink) {
+            $otherLinks->where('id', '!=', $primaryLink->id);
+        }
+        $otherLinks->update(['is_primary' => false]);
+    }
+
+    private function syncOtherGuardian(Student $student, array $data): void
+    {
+        $otherLink = $student->studentGuardians->first(fn ($link) => ! $link->is_primary);
+
+        if (empty($data['other_name'])) {
+            StudentGuardian::where('student_id', $student->id)
+                ->where('is_primary', false)
+                ->delete();
+
+            return;
+        }
+
+        $payload = [
+            'name' => $data['other_name'],
+            'email' => $data['other_email'] ?? null,
+            'phone' => $data['other_phone'] ?? null,
+            'cnic' => $data['other_cnic'] ?? null,
+        ];
+
+        $guardian = $this->resolveGuardianForUpdate($otherLink?->guardian, $payload);
+
+        if ($otherLink) {
+            $otherLink->update([
+                'guardian_id' => $guardian->id,
+                'relation_id' => $data['other_relation_id'] ?? $otherLink->relation_id,
+                'is_primary' => false,
+            ]);
+        } else {
+            StudentGuardian::create([
+                'student_id' => $student->id,
+                'guardian_id' => $guardian->id,
+                'relation_id' => $data['other_relation_id'] ?? 3,
+                'is_primary' => false,
+            ]);
+        }
+    }
+
+    private function resolveGuardianForUpdate(?Guardian $existingGuardian, array $payload): Guardian
+    {
+        $cleanPhone = ! empty($payload['phone'])
+            ? preg_replace('/[^0-9]/', '', $payload['phone'])
+            : null;
+
+        if ($existingGuardian && (($cleanPhone && $existingGuardian->phone === $cleanPhone) || ! $cleanPhone)) {
+            $existingGuardian->update([
+                'phone' => $cleanPhone,
+                'cnic' => $payload['cnic'] ?? $existingGuardian->cnic,
+                'occupation' => $payload['occupation'] ?? $existingGuardian->occupation,
+                'address' => $payload['address'] ?? $existingGuardian->address,
+            ]);
+
+            return $this->guardianService->updateGuardian($existingGuardian, $payload);
+        }
+
+        $guardian = $this->guardianService->findOrCreateByPhone($cleanPhone, $payload);
+
+        return $this->guardianService->updateGuardian($guardian, $payload);
     }
 
     /**

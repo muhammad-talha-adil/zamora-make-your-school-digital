@@ -82,8 +82,8 @@ const deleteDiscountType = (discountType: DiscountType) => {
                 }).then(() => {
                     alert.success('Discount type deleted successfully!');
                     discountTypesData.value = discountTypesData.value.filter(d => d.id !== discountType.id);
-                }).catch(() => {
-                    alert.error('Failed to delete discount type. It may be in use.');
+                }).catch((error) => {
+                    alert.error(error.response?.data?.message || 'Failed to delete discount type. It may be in use.');
                 });
             }
         });

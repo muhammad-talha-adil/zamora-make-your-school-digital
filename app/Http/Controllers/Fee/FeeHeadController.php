@@ -207,10 +207,7 @@ class FeeHeadController extends Controller
         try {
             $data = $this->service->getIndexData($request);
 
-            return response()->json([
-                'success' => true,
-                'feeHeads' => $data['feeHeads'],
-            ]);
+            return response()->json($data['feeHeads']);
         } catch (\Exception $e) {
             return response()->json([
                 'success' => false,

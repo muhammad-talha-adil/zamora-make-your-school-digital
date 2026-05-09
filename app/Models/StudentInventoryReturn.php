@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Finance\StudentAccountAdjustment;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -29,9 +30,11 @@ class StudentInventoryReturn extends Model
         'campus_id',
         'student_id',
         'record_id',
+        'student_account_adjustment_id',
         'total_quantity',
         'total_amount',
         'status',
+        'financial_effect',
         'return_date',
         'note',
     ];
@@ -93,6 +96,15 @@ class StudentInventoryReturn extends Model
     public function studentInventoryRecord(): BelongsTo
     {
         return $this->belongsTo(StudentInventory::class, 'record_id');
+    }
+
+    /**
+     * Get the linked student-account adjustment when a return creates a
+     * refund or credit in the unified finance layer.
+     */
+    public function studentAccountAdjustment(): BelongsTo
+    {
+        return $this->belongsTo(StudentAccountAdjustment::class, 'student_account_adjustment_id');
     }
 
     /**

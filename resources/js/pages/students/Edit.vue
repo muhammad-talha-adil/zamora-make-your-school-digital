@@ -70,6 +70,17 @@
                             <InputError :message="errors.name" />
                         </div>
 
+                        <div class="space-y-2">
+                            <Label for="student_email">Student Email <p class="text-xs text-gray-500">(Auto-generated)</p></Label>
+                            <Input
+                                id="student_email"
+                                :model-value="generatedEmailPreview"
+                                type="email"
+                                disabled
+                                class="bg-gray-50 dark:bg-gray-700"
+                            />
+                        </div>
+
                         <!-- Admission No -->
                         <div class="space-y-2">
                             <Label for="admission_no">Admission No <span class="text-red-500">*</span></Label>
@@ -255,9 +266,9 @@
                             ></textarea>
                         </div>
 
-                        <!-- Tuition Fees Section - Using FeeStructureSelector Component -->
+                        <!-- Fee Structure Section -->
                         <div class="col-span-full">
-                            <Label class="text-lg font-semibold mb-3 block">Tuition Fees</Label>
+                            <Label class="text-lg font-semibold mb-3 block">Fee Structure</Label>
                             <FeeStructureSelector
                                 ref="feeStructureSelector"
                                 :class-id="form.class_id"
@@ -538,11 +549,11 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue';
 import { router } from '@inertiajs/vue3';
-import { Head } from '@inertiajs/vue3';
+import { Head, usePage } from '@inertiajs/vue3';
 import { route } from 'ziggy-js';
 import axios from 'axios';
 import AppLayout from '@/layouts/AppLayout.vue';
-import type { BreadcrumbItem } from '@/types';
+import type { AppPageProps, BreadcrumbItem } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -551,6 +562,7 @@ import Icon from '@/components/Icon.vue';
 import { useStudentForm } from '@/composables/useStudentForm';
 import FeeStructureSelector from '@/components/students/FeeStructureSelector.vue';
 import { alert } from '@/utils/alert';
+import { buildGeneratedEmail } from '@/utils/schoolEmail';
 
 interface Props {
     student: {
@@ -568,13 +580,15 @@ interface Props {
         admission_date: string;
         description: string;
         image?: string | null;
-        user?: { name: string };
+        user?: { name: string; email?: string };
         guardians?: Array<{
             id: number;
             name: string;
             phone: string;
             email: string;
             cnic: string;
+            occupation?: string;
+            address?: string;
             pivot?: { relation_id: number };
         }>;
         current_enrollment?: {
@@ -582,6 +596,12 @@ interface Props {
             annual_fee: number;
             fee_structure_id?: number | null;
             fee_mode?: string | null;
+            discounts?: Array<{
+                fee_head_id: number;
+                discount_type_id: number;
+                value: number;
+                value_type: string;
+            }> | null;
             custom_fee_entries?: Array<{ fee_head_id: number; amount: number }> | null;
             manual_discount_percentage?: number | null;
             manual_discount_reason?: string | null;
@@ -597,7 +617,9 @@ interface Props {
 }
 
 const props = defineProps<Props>();
+const page = usePage<AppPageProps>();
 const studentData = computed(() => props.student);
+const schoolName = computed(() => page.props.school?.name ?? page.props.name ?? '');
 
 const breadcrumbItems: BreadcrumbItem[] = [
     { title: 'Dashboard', href: '/dashboard' },
@@ -611,6 +633,7 @@ const {
     processing,
     imagePreview,
     removeCurrentImage,
+    phoneError,
     siblingMatch,
     linkedGuardianId,
     fatherRelationId,
@@ -627,12 +650,21 @@ const {
     handleOtherCnicInput,
     handleImageChange,
     removeImage,
+    validatePhoneUniqueness,
     clearSiblingMatch,
     setupClassWatcher,
     setupOtherGuardianWatcher,
     initializeForm,
 } = useStudentForm(props, {
     isEdit: true,
+});
+
+const generatedEmailPreview = computed(() => {
+    if (!form.value.name || !form.value.name.trim()) {
+        return 'Enter student name to see email preview';
+    }
+
+    return buildGeneratedEmail(form.value.name, schoolName.value);
 });
 
 const errors = ref<Record<string, string>>({});
@@ -754,6 +786,13 @@ const submitForm = () => {
     errors.value = {};
     const validationErrors: Record<string, string> = {};
 
+    if (!validatePhoneUniqueness()) {
+        if (phoneError.value) {
+            validationErrors.other_phone = phoneError.value;
+            alert.error(phoneError.value);
+        }
+    }
+
     if (!form.value.name?.trim()) {
         validationErrors.name = 'Student name is required';
     }
@@ -814,7 +853,6 @@ const submitForm = () => {
         }
     });
 
-    // If there are validation errors, show them
     if (Object.keys(validationErrors).length > 0) {
         errors.value = validationErrors;
         processing.value = false;
@@ -878,29 +916,44 @@ const submitForm = () => {
     // ==================== FEE STRUCTURE DATA ====================
     const feeStructureRef = feeStructureSelector.value;
     if (feeStructureRef?.feeStructure) {
-        formData.set('fee_structure_id', String(feeStructureRef.feeStructure.id));
-        formData.set('fee_mode', feeStructureRef.feeMode || 'structure');
-        
-        // If discount mode, send the applied discounts
-        if (feeStructureRef.feeMode === 'discount' && feeStructureRef.appliedDiscounts?.length > 0) {
-            formData.set('discounts', JSON.stringify(feeStructureRef.appliedDiscounts));
-            formData.set('manual_discount_percentage', String(feeStructureRef.appliedDiscounts[0]?.value || 0));
+        const feeValidationMessage = feeStructureRef.validateActiveMode?.();
+        if (feeValidationMessage) {
+            processing.value = false;
+            alert.error(feeValidationMessage);
+            return;
         }
-        
-        // If manual mode, send the custom fee entries
-        if (feeStructureRef.feeMode === 'manual' && feeStructureRef.manualFeeEntries?.length > 0) {
-            formData.set('custom_fee_entries', JSON.stringify(feeStructureRef.manualFeeEntries));
-            formData.set('manual_discount_reason', feeStructureRef.manualReason || '');
+
+        const feePayload = feeStructureRef.getSubmissionPayload?.();
+        if (feePayload) {
+            formData.set('fee_structure_id', String(feePayload.fee_structure_id));
+            formData.set('fee_mode', String(feePayload.fee_mode ?? 'structure'));
+
+            if (Array.isArray(feePayload.discounts) && feePayload.discounts.length > 0) {
+                formData.set('discounts', JSON.stringify(feePayload.discounts));
+            }
+
+            if (Array.isArray(feePayload.custom_fee_entries) && feePayload.custom_fee_entries.length > 0) {
+                formData.set('custom_fee_entries', JSON.stringify(feePayload.custom_fee_entries));
+            }
+
+            if (typeof feePayload.manual_discount_percentage !== 'undefined') {
+                formData.set('manual_discount_percentage', String(feePayload.manual_discount_percentage));
+            }
+
+            if (typeof feePayload.manual_discount_reason === 'string') {
+                formData.set('manual_discount_reason', feePayload.manual_discount_reason);
+            }
         }
     }
     // ==================== END FEE STRUCTURE DATA ====================
+
+    formData.set('_method', 'PUT');
 
     router.post(route('students.update', props.student.id), formData, {
         headers: { 'Content-Type': 'multipart/form-data' },
         onFinish: () => { processing.value = false; },
         onSuccess: () => {
             alert.success('Student updated successfully!');
-            router.visit(route('students.index'));
         },
         onError: (err) => {
             errors.value = err as Record<string, string>;

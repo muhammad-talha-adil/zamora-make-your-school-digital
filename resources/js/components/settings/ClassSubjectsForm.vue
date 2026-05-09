@@ -64,7 +64,7 @@
                     :disabled="!filters.class_id || loading"
                     variant="secondary"
                 >
-                    <Icon icon="search" class="mr-1" />
+                    <Icon icon="search" class="mr-1"  />
                     {{ loading ? 'Loading...' : 'Load Subjects' }}
                 </Button>
             </div>

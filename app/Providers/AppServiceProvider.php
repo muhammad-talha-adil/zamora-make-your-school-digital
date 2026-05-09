@@ -8,6 +8,7 @@ use App\Models\ThemeSetting;
 use App\Repositories\StudentRepository;
 use App\Services\AttendanceService;
 use App\Services\GuardianService;
+use App\Services\SchoolEmailService;
 use App\Services\StudentService;
 use App\Services\StudentUserService;
 use Illuminate\Support\Facades\Gate;
@@ -30,12 +31,16 @@ class AppServiceProvider extends ServiceProvider
 
         // Register StudentUserService
         $this->app->singleton(StudentUserService::class, function ($app) {
-            return new StudentUserService;
+            return new StudentUserService(
+                $app->make(SchoolEmailService::class)
+            );
         });
 
         // Register GuardianService
         $this->app->singleton(GuardianService::class, function ($app) {
-            return new GuardianService;
+            return new GuardianService(
+                $app->make(SchoolEmailService::class)
+            );
         });
 
         // Register StudentRepository

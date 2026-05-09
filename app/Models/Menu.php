@@ -43,6 +43,16 @@ class Menu extends Model
         return $query->orderBy('order');
     }
 
+    public function scopeForSettingsList($query)
+    {
+        return $query
+            ->orderBy('type')
+            ->orderByRaw('CASE WHEN parent_id IS NULL THEN id ELSE parent_id END')
+            ->orderByRaw('CASE WHEN parent_id IS NULL THEN 0 ELSE 1 END')
+            ->orderBy('order')
+            ->orderBy('title');
+    }
+
     public function getHrefAttribute()
     {
         // Prioritize explicit URL over auto-generated path

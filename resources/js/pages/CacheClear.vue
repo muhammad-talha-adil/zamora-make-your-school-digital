@@ -112,17 +112,29 @@
 </template>
 
 <script setup lang="ts">
-import { Head, router } from '@inertiajs/vue3';
+import { Head, router, usePage } from '@inertiajs/vue3';
 import { route } from 'ziggy-js';
-import { ref } from 'vue';
+import { computed, ref, watch } from 'vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import Icon from '@/components/Icon.vue';
 import { Button } from '@/components/ui/button';
-import type { BreadcrumbItem } from '@/types';
+import type { AppPageProps, BreadcrumbItem } from '@/types';
+
+interface FlashData {
+    success?: string;
+    error?: string;
+    cacheCleared?: boolean;
+    cacheResults?: Record<string, string>;
+}
+
+interface CacheClearPageProps {
+    flash?: FlashData;
+    [key: string]: unknown;
+}
 
 const breadcrumbItems: BreadcrumbItem[] = [
     { title: 'Dashboard', href: '/dashboard' },
-    { title: 'Cache Management', href: '/cache' },
+    { title: 'Cache Management', href: '/artisan/cache' },
 ];
 
 const processing = ref(false);
@@ -132,22 +144,32 @@ const processingRebuild = ref(false);
 const showResults = ref(false);
 const resultsOutput = ref('');
 const successMessage = ref('');
+const page = usePage<AppPageProps<CacheClearPageProps>>();
+const flash = computed(() => page.props.flash ?? {});
+
+watch(
+    flash,
+    (value) => {
+        successMessage.value = value.success ?? '';
+
+        if (value.cacheResults) {
+            resultsOutput.value = JSON.stringify(value.cacheResults, null, 2);
+            showResults.value = true;
+        } else if (!processing.value && !processingBackend.value && !processingRebuild.value) {
+            resultsOutput.value = '';
+            showResults.value = false;
+        }
+    },
+    { immediate: true, deep: true }
+);
 
 const clearAll = () => {
     processing.value = true;
     showResults.value = false;
     
-    router.post(route('cache.clear'), {}, {
+    router.post(route('artisan.cache.clear'), {}, {
         onFinish: () => {
             processing.value = false;
-            successMessage.value = 'All caches cleared successfully!';
-            showResults.value = true;
-            
-            // Check for results in flash data
-            const pageProps = (window as any).pageProps || {};
-            if (pageProps.cacheResults) {
-                resultsOutput.value = JSON.stringify(pageProps.cacheResults, null, 2);
-            }
         },
     });
 };
@@ -156,16 +178,9 @@ const clearBackend = () => {
     processingBackend.value = true;
     showResults.value = false;
     
-    router.post(route('cache.clear.backend'), {}, {
+    router.post(route('artisan.cache.clear.backend'), {}, {
         onFinish: () => {
             processingBackend.value = false;
-            successMessage.value = 'Backend caches cleared successfully!';
-            showResults.value = true;
-            
-            const pageProps = (window as any).pageProps || {};
-            if (pageProps.cacheResults) {
-                resultsOutput.value = JSON.stringify(pageProps.cacheResults, null, 2);
-            }
         },
     });
 };
@@ -173,10 +188,9 @@ const clearBackend = () => {
 const clearFrontend = () => {
     processingFrontend.value = true;
     
-    router.post(route('cache.clear.frontend'), {}, {
-        onSuccess: () => {
+    router.post(route('artisan.cache.clear.frontend'), {}, {
+        onFinish: () => {
             processingFrontend.value = false;
-            successMessage.value = 'Frontend cache cleared! Please hard refresh your browser (Ctrl+F5).';
         },
     });
 };
@@ -185,16 +199,9 @@ const rebuild = () => {
     processingRebuild.value = true;
     showResults.value = false;
     
-    router.post(route('cache.rebuild'), {}, {
+    router.post(route('artisan.cache.rebuild'), {}, {
         onFinish: () => {
             processingRebuild.value = false;
-            successMessage.value = 'Caches rebuilt successfully!';
-            showResults.value = true;
-            
-            const pageProps = (window as any).pageProps || {};
-            if (pageProps.cacheResults) {
-                resultsOutput.value = JSON.stringify(pageProps.cacheResults, null, 2);
-            }
         },
     });
 };

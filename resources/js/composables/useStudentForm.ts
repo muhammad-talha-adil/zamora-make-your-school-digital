@@ -26,6 +26,8 @@ export interface GuardianData {
     phone: string;
     email: string;
     cnic: string;
+    occupation?: string;
+    address?: string;
     pivot?: {
         relation_id: number;
     };
@@ -450,6 +452,8 @@ export function useStudentForm(
                         form.value.father_phone = guardian.phone;
                         form.value.father_email = guardian.email;
                         form.value.father_cnic = guardian.cnic;
+                        form.value.father_occupation = guardian.occupation || '';
+                        form.value.father_address = guardian.address || '';
                         form.value.father_relation_id = relationId;
                     } else {
                         // For any non-father guardian, treat as other guardian

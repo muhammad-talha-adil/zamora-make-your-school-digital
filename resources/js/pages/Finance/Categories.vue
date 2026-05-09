@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import type { BreadcrumbItem } from '@/types';
+import { tableActionButtonClass } from '@/utils/table-actions';
 
 interface Category {
     id: number;
@@ -120,8 +121,8 @@ const deleteCategory = async (id: number) => {
                                 <span :class="{'opacity-50': !category.is_active}">{{ category.name }}</span>
                             </div>
                             <div class="flex gap-2">
-                                <button @click="editCategory(category)" class="text-blue-600 hover:text-blue-800">Edit</button>
-                                <button @click="deleteCategory(category.id)" class="text-red-600 hover:text-red-800">Delete</button>
+                                <Button variant="outline" size="sm" :class="tableActionButtonClass.edit" @click="editCategory(category)">Edit</Button>
+                                <Button variant="outline" size="sm" :class="tableActionButtonClass.delete" @click="deleteCategory(category.id)">Delete</Button>
                             </div>
                         </div>
                         <p v-if="incomeCategories.length === 0" class="text-gray-500">No income categories</p>
@@ -141,8 +142,8 @@ const deleteCategory = async (id: number) => {
                                 <span :class="{'opacity-50': !category.is_active}">{{ category.name }}</span>
                             </div>
                             <div class="flex gap-2">
-                                <button @click="editCategory(category)" class="text-blue-600 hover:text-blue-800">Edit</button>
-                                <button @click="deleteCategory(category.id)" class="text-red-600 hover:text-red-800">Delete</button>
+                                <Button variant="outline" size="sm" :class="tableActionButtonClass.edit" @click="editCategory(category)">Edit</Button>
+                                <Button variant="outline" size="sm" :class="tableActionButtonClass.delete" @click="deleteCategory(category.id)">Delete</Button>
                             </div>
                         </div>
                         <p v-if="expenseCategories.length === 0" class="text-gray-500">No expense categories</p>

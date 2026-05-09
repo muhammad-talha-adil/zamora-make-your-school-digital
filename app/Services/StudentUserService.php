@@ -9,6 +9,10 @@ use Illuminate\Support\Str;
 
 class StudentUserService
 {
+    public function __construct(
+        protected SchoolEmailService $schoolEmailService
+    ) {}
+
     /**
      * Create a user account for a student with proper username generation and role assignment.
      *
@@ -95,51 +99,21 @@ class StudentUserService
     {
         // If a valid email is provided, use it (with duplicate handling)
         if (! empty($providedEmail) && filter_var($providedEmail, FILTER_VALIDATE_EMAIL)) {
-            $baseEmail = strtolower(trim($providedEmail));
-
-            if (! $this->emailExists($baseEmail)) {
-                return $baseEmail;
-            }
-
-            return $this->createUniqueEmail($baseEmail);
+            return $this->schoolEmailService->ensureUniqueProvidedEmail($providedEmail);
         }
 
-        // Generate email from student name
-        $processedName = preg_replace('/\s+/', '', strtolower($studentName));
-        $baseEmail = $processedName.'@school.com';
-
-        if (! $this->emailExists($baseEmail)) {
-            return $baseEmail;
-        }
-
-        return $this->createUniqueEmail($baseEmail);
+        return $this->schoolEmailService->generateUniqueEmailFromName($studentName);
     }
 
-    /**
-     * Check if an email already exists in the users table.
-     */
-    protected function emailExists(string $email): bool
+    public function syncManagedStudentIdentity(User $user, string $studentName): void
     {
-        return User::where('email', $email)->exists();
-    }
+        $updates = ['name' => $studentName];
 
-    /**
-     * Create a unique email by appending incremental numbers.
-     */
-    protected function createUniqueEmail(string $baseEmail): string
-    {
-        $counter = 1;
-        $emailParts = explode('@', $baseEmail);
-        $username = $emailParts[0];
-        $domain = $emailParts[1] ?? 'school.com';
-
-        while (true) {
-            $newEmail = $username.$counter.'@'.$domain;
-            if (! $this->emailExists($newEmail)) {
-                return $newEmail;
-            }
-            $counter++;
+        if ($this->schoolEmailService->isManagedEmail($user->email)) {
+            $updates['email'] = $this->schoolEmailService->generateUniqueEmailFromName($studentName, $user->id);
         }
+
+        $user->update($updates);
     }
 
     /**

@@ -57,6 +57,14 @@ class HandleInertiaRequests extends Middleware
             ...parent::share($request),
             'name' => $school?->name ?? config('app.name'),
             'school' => $school,
+            'flash' => [
+                'success' => fn () => $request->session()->get('success'),
+                'error' => fn () => $request->session()->get('error'),
+                'output' => fn () => $request->session()->get('output'),
+                'results' => fn () => $request->session()->get('results'),
+                'cacheCleared' => fn () => $request->session()->get('cache-cleared'),
+                'cacheResults' => fn () => $request->session()->get('cache-results'),
+            ],
             'auth' => [
                 'user' => $request->user() ? $request->user()->load('roles.permissions') : null,
             ],

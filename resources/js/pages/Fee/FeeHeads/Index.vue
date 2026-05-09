@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, router } from '@inertiajs/vue3';
-import { reactive, ref, computed } from 'vue';
+import { reactive, ref, computed, watch } from 'vue';
 import { route } from 'ziggy-js';
 import axios from 'axios';
 import AppLayout from '@/layouts/AppLayout.vue';
@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import Icon from '@/components/Icon.vue';
+import { alert } from '@/utils';
 
 interface FeeHead {
     id: number;
@@ -41,6 +42,8 @@ interface Props {
 const props = defineProps<Props>();
 
 const feeHeadsData = ref<FeeHead[]>(props.feeHeads.data);
+const pagination = ref(props.feeHeads || { data: [], links: [], from: 0, to: 0, total: 0, current_page: 1, last_page: 1, per_page: 10 });
+const perPage = ref(props.feeHeads.per_page || 10);
 
 // Sort fee heads by sort_order ascending
 const sortedFeeHeads = computed(() => {
@@ -81,28 +84,68 @@ const applyFilters = () => {
     if (filters.is_active !== '') params.append('is_active', filters.is_active);
     
     const queryString = params.toString();
-    const newUrl = route('fee.heads.index') + (queryString ? `?${queryString}` : '');
+    const newUrl = queryString ? `${window.location.pathname}?${queryString}` : window.location.pathname;
     window.history.pushState({}, '', newUrl);
-    fetchFeeHeads();
+    fetchFeeHeads(1);
 };
 
-const fetchFeeHeads = () => {
-    const params = new URLSearchParams();
+const perPageOptions = [
+    { id: 10, name: '10' },
+    { id: 25, name: '25' },
+    { id: 50, name: '50' },
+    { id: 100, name: '100' },
+];
+
+const fetchFeeHeads = (page = 1) => {
+    const params = new URLSearchParams({
+        per_page: perPage.value.toString(),
+        page: page.toString(),
+    });
     if (filters.search) params.append('search', filters.search);
     if (filters.category) params.append('category', filters.category);
     if (filters.is_active !== '') params.append('is_active', filters.is_active);
 
-    axios.get(route('fee.heads.index') + `?${params.toString()}`).then((response) => {
-        feeHeadsData.value = response.data.feeHeads?.data || response.data.feeHeads || [];
+    axios.get(route('fee.heads.all') + `?${params}`).then((response) => {
+        feeHeadsData.value = response.data?.data || [];
+        pagination.value = response.data || { data: [], links: [], from: 0, to: 0, total: 0 };
+    }).catch((error) => {
+        console.error('Failed to fetch fee heads:', error);
+        alert.error('Failed to load fee heads. Please try again.');
     });
 };
 
+watch([perPage], () => {
+    fetchFeeHeads(1);
+});
+
+// Watch for props changes (e.g., after create/update/delete)
+watch(() => props.feeHeads, (newFeeHeads) => {
+    feeHeadsData.value = newFeeHeads?.data || [];
+    pagination.value = newFeeHeads || { data: [], links: [], from: 0, to: 0, total: 0 };
+}, { deep: true });
+
 const toggleActive = (feeHead: FeeHead) => {
-    axios.post(route('fee.heads.toggle-active', feeHead.id), {})
-        .then(() => {
-            feeHead.is_active = !feeHead.is_active;
-        })
-        .catch(console.error);
+    const actionText = feeHead.is_active ? 'deactivate' : 'activate';
+    const confirmButtonText = feeHead.is_active ? 'Yes, deactivate it!' : 'Yes, activate it!';
+    
+    alert
+        .confirm(
+            `Are you sure you want to ${actionText} "${feeHead.name}"?`,
+            actionText.charAt(0).toUpperCase() + actionText.slice(1) + ' Fee Head',
+            confirmButtonText,
+        )
+        .then((result) => {
+            if (result.isConfirmed) {
+                axios.post(route('fee.heads.toggle-active', feeHead.id), {})
+                    .then(() => {
+                        feeHead.is_active = !feeHead.is_active;
+                        alert.success(`Fee head ${actionText}d successfully!`);
+                    })
+                    .catch(() => {
+                        alert.error('Failed to update status. Please try again.');
+                    });
+            }
+        });
 };
 
 const deleteFeeHead = (feeHead: FeeHead) => {
@@ -221,7 +264,7 @@ const getFrequencyLabel = (frequency: string) => {
                 >
                     <div class="flex justify-between items-start">
                         <div>
-                            <div class="text-xs text-gray-500">Sr# {{ index + 1 }}</div>
+                            <div class="text-xs text-gray-500">Sr# {{ ((pagination.from || 1) - 1) + index + 1 }}</div>
                             <div class="font-medium text-gray-900 dark:text-white">{{ feeHead.name }}</div>
                             <div class="text-xs text-gray-500">Code: {{ feeHead.code }}</div>
                         </div>
@@ -284,9 +327,9 @@ const getFrequencyLabel = (frequency: string) => {
                         </thead>
                         <tbody class="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-900">
                             <tr v-for="(feeHead, index) in sortedFeeHeads" :key="feeHead.id" class="transition-colors hover:bg-gray-50 dark:hover:bg-gray-800">
-                                <td class="px-4 py-3">
-                                    <div class="text-sm font-medium text-gray-900 dark:text-white">{{ index + 1 }}</div>
-                                </td>
+                            <td class="px-4 py-3">
+                                <div class="text-sm font-medium text-gray-900 dark:text-white">{{ ((pagination.from || 1) - 1) + index + 1 }}</div>
+                            </td>
                                 <td class="px-4 py-3">
                                     <div class="text-sm font-medium text-gray-900 dark:text-white">{{ feeHead.sort_order }}</div>
                                 </td>
@@ -326,6 +369,32 @@ const getFrequencyLabel = (frequency: string) => {
                             </tr>
                         </tbody>
                     </table>
+                </div>
+            </div>
+
+            <!-- Pagination -->
+            <div class="flex justify-between items-center pt-4">
+                <div class="flex items-center gap-4">
+                    <div class="text-sm text-gray-600 dark:text-gray-400">
+                        Showing {{ pagination.from }} to {{ pagination.to }} of {{ pagination.total }} entries
+                    </div>
+                    <select v-model="perPage" class="rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 text-sm min-h-10 w-20">
+                        <option v-for="option in perPageOptions" :key="option.id" :value="option.id">
+                            {{ option.name }}
+                        </option>
+                    </select>
+                </div>
+                <div class="flex gap-1">
+                    <Button
+                        v-for="link in pagination.links"
+                        :key="link.label"
+                        :variant="link.active ? 'default' : 'outline'"
+                        size="sm"
+                        :disabled="!link.url"
+                        @click="link.url ? fetchFeeHeads(parseInt(link.url.match(/page=(\d+)/)?.[1] || '1')) : null"
+                    >
+                        <span v-html="link.label"></span>
+                    </Button>
                 </div>
             </div>
         </div>

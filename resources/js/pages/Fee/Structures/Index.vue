@@ -9,6 +9,8 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import Icon from '@/components/Icon.vue';
+import { alert } from '@/utils';
+import { tableActionButtonClass } from '@/utils/table-actions';
 
 interface FeeStructure {
     id: number;
@@ -25,7 +27,20 @@ interface FeeStructure {
 }
 
 interface Props {
-    structures: FeeStructure[];
+    structures: {
+        data: FeeStructure[];
+        current_page: number;
+        last_page: number;
+        per_page: number;
+        total: number;
+        links: Array<{
+            url: string | null;
+            label: string;
+            active: boolean;
+        }>;
+        from: number;
+        to: number;
+    };
     sessions: Array<{ id: number; name: string }>;
     campuses: Array<{ id: number; name: string }>;
     classes: Array<{ id: number; name: string }>;
@@ -42,7 +57,9 @@ interface Props {
 
 const props = defineProps<Props>();
 
-const structuresData = ref<FeeStructure[]>(props.structures || []);
+const structuresData = ref<FeeStructure[]>(props.structures?.data || []);
+const pagination = ref(props.structures || { data: [], links: [], from: 0, to: 0, total: 0, current_page: 1, last_page: 1, per_page: 10 });
+const perPage = ref(props.structures?.per_page || 10);
 const isLoading = ref(false);
 
 const breadcrumbItems: BreadcrumbItem[] = [
@@ -58,6 +75,13 @@ const filterSection = ref(props.filters?.section_id || '');
 const filterStatus = ref(props.filters?.status || '');
 const searchQuery = ref(props.filters?.search || '');
 
+const perPageOptions = [
+    { id: 10, name: '10' },
+    { id: 25, name: '25' },
+    { id: 50, name: '50' },
+    { id: 100, name: '100' },
+];
+
 const filteredSections = computed(() => {
     if (!filterClass.value) {
         return [];
@@ -68,8 +92,11 @@ const filteredSections = computed(() => {
 
 let searchDebounceTimer: ReturnType<typeof setTimeout> | null = null;
 
-const fetchStructures = () => {
-    const params: Record<string, string> = {};
+const fetchStructures = (page = 1) => {
+    const params: Record<string, string | number> = {
+        per_page: perPage.value,
+        page: page,
+    };
 
     if (filterSession.value) params.session_id = filterSession.value;
     if (filterCampus.value) params.campus_id = filterCampus.value;
@@ -87,20 +114,28 @@ const fetchStructures = () => {
             'X-Requested-With': 'XMLHttpRequest',
         },
     }).then((response) => {
-        structuresData.value = response.data.structures || [];
+        structuresData.value = response.data?.data || [];
+        pagination.value = response.data || { data: [], links: [], from: 0, to: 0, total: 0, current_page: 1, last_page: 1, per_page: 10 };
+    }).catch((error) => {
+        console.error('Failed to fetch fee structures:', error);
+        alert.error('Failed to load fee structures. Please try again.');
     }).finally(() => {
         isLoading.value = false;
     });
 };
 
-watch([filterSession, filterCampus, filterStatus], fetchStructures);
+watch([filterSession, filterCampus, filterStatus], () => {
+    fetchStructures(1);
+});
 
 watch(filterClass, () => {
     filterSection.value = '';
-    fetchStructures();
+    fetchStructures(1);
 });
 
-watch(filterSection, fetchStructures);
+watch(filterSection, () => {
+    fetchStructures(1);
+});
 
 watch(searchQuery, () => {
     if (searchDebounceTimer) {
@@ -108,9 +143,19 @@ watch(searchQuery, () => {
     }
 
     searchDebounceTimer = window.setTimeout(() => {
-        fetchStructures();
+        fetchStructures(1);
     }, 300);
 });
+
+watch(perPage, () => {
+    fetchStructures(1);
+});
+
+// Watch for props changes (e.g., after create/update/delete)
+watch(() => props.structures, (newStructures) => {
+    structuresData.value = newStructures?.data || [];
+    pagination.value = newStructures || { data: [], links: [], from: 0, to: 0, total: 0, current_page: 1, last_page: 1, per_page: 10 };
+}, { deep: true });
 
 const getStatusColor = (status: string) => {
     const colors: Record<string, string> = {
@@ -123,37 +168,63 @@ const getStatusColor = (status: string) => {
 };
 
 const toggleStatus = (structure: FeeStructure) => {
-    const actionRoute = structure.status === 'active'
-        ? route('fee.structures.deactivate', structure.id)
-        : route('fee.structures.activate', structure.id);
+    const actionText = structure.status === 'active' ? 'deactivate' : 'activate';
+    const confirmButtonText = structure.status === 'active' ? 'Yes, deactivate it!' : 'Yes, activate it!';
+    
+    alert
+        .confirm(
+            `Are you sure you want to ${actionText} "${structure.title}"?`,
+            actionText.charAt(0).toUpperCase() + actionText.slice(1) + ' Fee Structure',
+            confirmButtonText,
+        )
+        .then((result) => {
+            if (result.isConfirmed) {
+                const actionRoute = structure.status === 'active'
+                    ? route('fee.structures.deactivate', structure.id)
+                    : route('fee.structures.activate', structure.id);
 
-    axios.patch(actionRoute, {}, {
-        headers: {
-            Accept: 'application/json',
-            'X-Requested-With': 'XMLHttpRequest',
-        },
-    }).then((response) => {
-        const updatedStructure = response.data.structure;
+                axios.patch(actionRoute, {}, {
+                    headers: {
+                        Accept: 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                    },
+                }).then((response) => {
+                    const updatedStructure = response.data.structure;
 
-        structuresData.value = structuresData.value.map((item) =>
-            item.id === updatedStructure.id ? updatedStructure : item,
-        );
-    });
+                    structuresData.value = structuresData.value.map((item) =>
+                        item.id === updatedStructure.id ? updatedStructure : item,
+                    );
+                    
+                    alert.success(`Fee structure ${actionText}d successfully!`);
+                }).catch(() => {
+                    alert.error('Failed to update status. Please try again.');
+                });
+            }
+        });
 };
 
 const deleteStructure = (structure: FeeStructure) => {
-    if (!window.confirm(`Are you sure you want to delete "${structure.title}"?`)) {
-        return;
-    }
-
-    axios.delete(route('fee.structures.destroy', structure.id), {
-        headers: {
-            Accept: 'application/json',
-            'X-Requested-With': 'XMLHttpRequest',
-        },
-    }).then(() => {
-        fetchStructures();
-    });
+    alert
+        .confirm(
+            `Are you sure you want to delete "${structure.title}"?`,
+            'Delete Fee Structure',
+            'Yes, delete it!',
+        )
+        .then((result) => {
+            if (result.isConfirmed) {
+                axios.delete(route('fee.structures.destroy', structure.id), {
+                    headers: {
+                        Accept: 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                    },
+                }).then(() => {
+                    alert.success('Fee structure deleted successfully!');
+                    fetchStructures();
+                }).catch(() => {
+                    alert.error('Failed to delete fee structure. Please try again.');
+                });
+            }
+        });
 };
 </script>
 
@@ -267,7 +338,7 @@ const deleteStructure = (structure: FeeStructure) => {
                 >
                     <div class="flex justify-between items-start gap-3">
                         <div>
-                            <div class="text-xs text-gray-500 dark:text-gray-400">Sr# {{ index + 1 }}</div>
+                            <div class="text-xs text-gray-500 dark:text-gray-400">Sr# {{ ((pagination.from || 1) - 1) + index + 1 }}</div>
                             <div class="font-medium text-gray-900 dark:text-white">{{ structure.title }}</div>
                             <div class="text-xs text-gray-500 dark:text-gray-400">{{ structure.session?.name || '-' }}</div>
                         </div>
@@ -287,19 +358,20 @@ const deleteStructure = (structure: FeeStructure) => {
                     </div>
                     <div class="flex flex-wrap gap-2 pt-2">
                         <Button
-                            :variant="structure.status === 'active' ? 'outline' : 'default'"
+                            variant="outline"
                             size="sm"
+                            :class="structure.status === 'active' ? tableActionButtonClass.deactivate : tableActionButtonClass.activate"
                             @click="toggleStatus(structure)"
                         >
                             {{ structure.status === 'active' ? 'Inactive' : 'Active' }}
                         </Button>
-                        <Button variant="outline" size="sm" @click="router.visit(route('fee.structures.show', structure.id))">
+                        <Button variant="outline" size="sm" :class="tableActionButtonClass.view" @click="router.visit(route('fee.structures.show', structure.id))">
                             <Icon icon="eye" class="mr-1 h-3 w-3" />View
                         </Button>
-                        <Button variant="outline" size="sm" @click="router.visit(route('fee.structures.edit', structure.id))">
+                        <Button variant="outline" size="sm" :class="tableActionButtonClass.edit" @click="router.visit(route('fee.structures.edit', structure.id))">
                             <Icon icon="edit" class="mr-1 h-3 w-3" />Edit
                         </Button>
-                        <Button variant="destructive" size="sm" @click="deleteStructure(structure)">
+                        <Button variant="outline" size="sm" :class="tableActionButtonClass.delete" @click="deleteStructure(structure)">
                             Delete
                         </Button>
                     </div>
@@ -350,7 +422,7 @@ const deleteStructure = (structure: FeeStructure) => {
                                 class="transition-colors hover:bg-gray-50 dark:hover:bg-gray-800"
                             >
                                 <td class="px-4 py-3 whitespace-nowrap">
-                                    <div class="text-sm font-medium text-gray-900 dark:text-white">{{ index + 1 }}</div>
+                                    <div class="text-sm font-medium text-gray-900 dark:text-white">{{ ((pagination.from || 1) - 1) + index + 1 }}</div>
                                 </td>
                                 <td class="px-4 py-3 whitespace-nowrap">
                                     <div class="text-sm font-medium text-gray-900 dark:text-white">{{ structure.title }}</div>
@@ -379,19 +451,20 @@ const deleteStructure = (structure: FeeStructure) => {
                                 <td class="px-4 py-3 text-sm font-medium whitespace-nowrap">
                                     <div class="flex gap-2 justify-end">
                                         <Button
-                                            :variant="structure.status === 'active' ? 'outline' : 'default'"
+                                            variant="outline"
                                             size="sm"
+                                            :class="structure.status === 'active' ? tableActionButtonClass.deactivate : tableActionButtonClass.activate"
                                             @click="toggleStatus(structure)"
                                         >
                                             {{ structure.status === 'active' ? 'Inactive' : 'Active' }}
                                         </Button>
-                                        <Button variant="outline" size="sm" @click="router.visit(route('fee.structures.show', structure.id))">
+                                        <Button variant="outline" size="sm" :class="tableActionButtonClass.view" @click="router.visit(route('fee.structures.show', structure.id))">
                                             <Icon icon="eye" class="mr-1 h-3 w-3" />View
                                         </Button>
-                                        <Button variant="outline" size="sm" @click="router.visit(route('fee.structures.edit', structure.id))">
+                                        <Button variant="outline" size="sm" :class="tableActionButtonClass.edit" @click="router.visit(route('fee.structures.edit', structure.id))">
                                             <Icon icon="edit" class="mr-1 h-3 w-3" />Edit
                                         </Button>
-                                        <Button variant="destructive" size="sm" @click="deleteStructure(structure)">
+                                        <Button variant="outline" size="sm" :class="tableActionButtonClass.delete" @click="deleteStructure(structure)">
                                             Delete
                                         </Button>
                                     </div>
@@ -405,6 +478,32 @@ const deleteStructure = (structure: FeeStructure) => {
                 </div>
                 <div v-else-if="structuresData.length === 0" class="text-center py-8 text-gray-500 dark:text-gray-400">
                     No fee structures found.
+                </div>
+            </div>
+
+            <!-- Pagination -->
+            <div class="flex justify-between items-center pt-4">
+                <div class="flex items-center gap-4">
+                    <div class="text-sm text-gray-600 dark:text-gray-400">
+                        Showing {{ pagination.from }} to {{ pagination.to }} of {{ pagination.total }} entries
+                    </div>
+                    <select v-model="perPage" class="rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 text-sm min-h-10 w-20">
+                        <option v-for="option in perPageOptions" :key="option.id" :value="option.id">
+                            {{ option.name }}
+                        </option>
+                    </select>
+                </div>
+                <div class="flex gap-1">
+                    <Button
+                        v-for="link in pagination.links"
+                        :key="link.label"
+                        :variant="link.active ? 'default' : 'outline'"
+                        size="sm"
+                        :disabled="!link.url"
+                        @click="link.url ? fetchStructures(parseInt(link.url.match(/page=(\d+)/)?.[1] || '1')) : null"
+                    >
+                        <span v-html="link.label"></span>
+                    </Button>
                 </div>
             </div>
         </div>

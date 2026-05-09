@@ -6,6 +6,7 @@ use App\Http\Controllers\Finance\MakePaymentController;
 use App\Http\Controllers\Finance\PaymentMethodController;
 use App\Http\Controllers\Finance\ReceivePaymentController;
 use App\Http\Controllers\Finance\ReportController;
+use App\Http\Controllers\Finance\StudentAccountStatementController;
 use App\Http\Controllers\Finance\TransactionController;
 use Illuminate\Support\Facades\Route;
 
@@ -19,6 +20,10 @@ Route::prefix('finance')->name('finance.')->middleware($middleware)->group(funct
     // Transactions
     Route::get('/transactions', [TransactionController::class, 'index'])->name('transactions.index');
     Route::get('/transactions/{ledger}', [TransactionController::class, 'show'])->name('transactions.show');
+
+    // Student Account Statement
+    Route::get('/student-account-statement', [StudentAccountStatementController::class, 'index'])->name('student-account-statement.index');
+    Route::get('/student-account-statement/search-students', [StudentAccountStatementController::class, 'searchStudents'])->name('student-account-statement.search-students');
 
     // Receive Payment (Income)
     Route::get('/receive-payment', [ReceivePaymentController::class, 'create'])->name('receive.create');

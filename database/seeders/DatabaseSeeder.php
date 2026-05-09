@@ -40,11 +40,9 @@ class DatabaseSeeder extends Seeder
             UsersSeeder::class,
 
             // === Students & Guardians ===
-            // StudentSeeder creates users with 'student' role
-            // GuardianSeeder creates users with 'guardian' role
-            // StudentSeeder::class,
-            // GuardianSeeder::class,
-            // StudentGuardianSeeder::class,
+            StudentSeeder::class,
+            GuardianSeeder::class,
+            StudentGuardianSeeder::class,
 
             // === Holidays ===
             HolidaysSeeder::class,
@@ -62,6 +60,7 @@ class DatabaseSeeder extends Seeder
             FeeHeadSeeder::class,
             DiscountTypeSeeder::class,
             FineRuleSeeder::class,
+            FeeStructureSeeder::class,
 
             // === Theme & UI ===
             ThemePalettesSeeder::class,
@@ -70,6 +69,15 @@ class DatabaseSeeder extends Seeder
 
             // === Inventory (InventorySeeder handles the order) ===
             InventorySeeder::class,
+
+            // === Staff & Payroll ===
+            StaffDepartmentSeeder::class,
+            StaffDesignationSeeder::class,
+            StaffSeeder::class,
+            PayrollSeeder::class,
+
+            // === Transport ===
+            TransportSeeder::class,
 
             // === Other Seeders ===
             ReasonSeeder::class,

@@ -18,12 +18,19 @@ use App\Models\StudentInventory;
 use App\Models\StudentInventoryItem;
 use App\Models\StudentInventoryReturn;
 use App\Models\StudentInventoryReturnItem;
+use App\Services\Finance\StudentBillingService;
+use App\Services\Finance\UnifiedAccountingService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
 class StudentInventoriesController extends Controller
 {
+    public function __construct(
+        protected StudentBillingService $studentBillingService,
+        protected UnifiedAccountingService $accountingService
+    ) {}
+
     /**
      * Display student inventory listing.
      *
@@ -560,6 +567,10 @@ class StudentInventoriesController extends Controller
                         ->first();
                     $stock->deductForAssignment($quantity);
                 }
+
+                $studentInventoryRecord->load('items');
+                $this->studentBillingService->createInventoryCharge($studentInventoryRecord);
+                $this->accountingService->postInventoryAssignmentJournal($studentInventoryRecord);
             });
 
             return redirect()->route('inventory.student-manage')
@@ -630,6 +641,7 @@ class StudentInventoriesController extends Controller
                         ? $itemData['return_price']
                         : ($studentInventoryItem->unit_price_snapshot ?? 0);
                     $lineTotal = $quantity * $unitPrice;
+                    $lineCost = (float) ($studentInventoryItem->purchase_rate_snapshot ?? 0) * $quantity;
 
                     $totalQuantity += $quantity;
                     $totalAmount += $lineTotal;
@@ -649,6 +661,7 @@ class StudentInventoriesController extends Controller
 
                     // Update returned quantity on the item
                     $studentInventoryItem->returned_quantity += $quantity;
+                    $studentInventoryItem->credited_quantity = (int) $studentInventoryItem->credited_quantity + $quantity;
                     $studentInventoryItem->save();
 
                     $itemsData[] = [
@@ -657,6 +670,7 @@ class StudentInventoriesController extends Controller
                         'quantity' => $quantity,
                         'unit_price' => $unitPrice,
                         'total_amount' => $lineTotal,
+                        'total_cost' => $lineCost,
                         'return_price' => $itemData['return_price'] ?? null,
                         'reason_id' => $itemData['reason_id'] ?? null,
                         'custom_reason' => $itemData['custom_reason'] ?? null,
@@ -705,6 +719,21 @@ class StudentInventoriesController extends Controller
                 // Update parent record status
                 $record->status = $status;
                 $record->save();
+
+                $returnedItems = collect($itemsData)->map(function (array $itemData) {
+                    return [
+                        'student_inventory_item_id' => $itemData['item_id'],
+                        'inventory_item_id' => $itemData['inventory_item_id'],
+                        'quantity' => $itemData['quantity'],
+                        'credit_amount' => $itemData['total_amount'],
+                    ];
+                });
+
+                $this->studentBillingService->applyInventoryReturn($record, $returnRecord, $returnedItems, (float) $totalAmount);
+
+                $returnedCost = (float) collect($itemsData)->sum('total_cost');
+
+                $this->accountingService->postInventoryReturnJournal($returnRecord, $record, (float) $totalAmount, (float) $returnedCost);
             });
 
             return response()->json([

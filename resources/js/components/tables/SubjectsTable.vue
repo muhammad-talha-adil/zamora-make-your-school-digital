@@ -3,6 +3,7 @@ import SubjectForm from '@/components/forms/SubjectForm.vue';
 import Icon from '@/components/Icon.vue';
 import { Button } from '@/components/ui/button';
 import { alert } from '@/utils';
+import { tableActionButtonClass } from '@/utils/table-actions';
 import axios from 'axios';
 import { ref, watch } from 'vue';
 import { route } from 'ziggy-js';
@@ -160,7 +161,7 @@ const inactivateSubject = (subject: any) => {
                             <th scope="col" class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">
                                 Status
                             </th>
-                            <th scope="col" class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">
+                            <th scope="col" class="px-6 py-4 text-right text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">
                                 Actions
                             </th>
                         </tr>
@@ -204,12 +205,13 @@ const inactivateSubject = (subject: any) => {
                                 </span>
                             </td>
                             <td class="px-6 py-4 text-sm font-medium whitespace-nowrap">
-                                <div class="flex space-x-2">
+                                <div class="flex flex-wrap justify-end gap-2">
                                     <SubjectForm
                                         :subject="subject"
                                         trigger="Edit"
                                         variant="outline"
                                         size="sm"
+                                        class="contents"
                                         @saved="handleSaved"
                                     >
                                         <Icon icon="edit" class="mr-1" />Edit
@@ -218,21 +220,24 @@ const inactivateSubject = (subject: any) => {
                                         v-if="subject.is_active"
                                         variant="outline"
                                         size="sm"
+                                        :class="tableActionButtonClass.deactivate"
                                         @click="inactivateSubject(subject)"
                                     >
                                         <Icon icon="pause" class="mr-1" />Inactive
                                     </Button>
                                     <Button
                                         v-else
-                                        variant="default"
+                                        variant="outline"
                                         size="sm"
+                                        :class="tableActionButtonClass.activate"
                                         @click="activateSubject(subject)"
                                     >
                                         <Icon icon="check" class="mr-1" />Active
                                     </Button>
                                     <Button
-                                        variant="destructive"
+                                        variant="outline"
                                         size="sm"
+                                        :class="tableActionButtonClass.delete"
                                         @click="deleteSubject(subject)"
                                     >
                                         <Icon icon="trash" class="mr-1" />Delete

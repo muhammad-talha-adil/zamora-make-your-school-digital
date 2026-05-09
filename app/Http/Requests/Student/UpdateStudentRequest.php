@@ -2,6 +2,9 @@
 
 namespace App\Http\Requests\Student;
 
+use App\Enums\Fee\FeeStructureStatus;
+use App\Models\Fee\FeeStructure;
+use App\Models\Guardian;
 use App\Models\Section;
 use App\Models\Student;
 use App\Models\StudentEnrollmentRecord;
@@ -81,6 +84,12 @@ class UpdateStudentRequest extends FormRequest
 
         // Base rules for student update
         $studentRules = [
+            'name' => [
+                'required',
+                'string',
+                'max:255',
+                'regex:/^[a-zA-Z\s\.\-\'\@]+$/',
+            ],
             'admission_no' => [
                 'required',
                 'string',
@@ -166,6 +175,57 @@ class UpdateStudentRequest extends FormRequest
                 'string',
                 'max:500',
             ],
+            'discounts.*.discount_type_id' => [
+                'required_with:discounts',
+                'integer',
+                Rule::exists('discount_types', 'id'),
+            ],
+            'discounts.*.fee_head_id' => [
+                'required_with:discounts',
+                'integer',
+                Rule::exists('fee_heads', 'id'),
+            ],
+            'discounts.*.value' => [
+                'required_with:discounts',
+                'numeric',
+                'min:0',
+            ],
+            'discounts.*.value_type' => [
+                'required_with:discounts',
+                'string',
+                'in:fixed,percent',
+            ],
+            'custom_fee_entries.*.fee_head_id' => [
+                'required_with:custom_fee_entries',
+                'integer',
+                Rule::exists('fee_heads', 'id'),
+            ],
+            'custom_fee_entries.*.amount' => [
+                'required_with:custom_fee_entries',
+                'numeric',
+                'min:0',
+            ],
+            'description' => [
+                'nullable',
+                'string',
+                'max:2000',
+            ],
+            'admission_date' => [
+                'nullable',
+                'date',
+                'before_or_equal:today',
+            ],
+            'image' => [
+                'nullable',
+                'file',
+                'image',
+                'mimes:jpg,jpeg,png,gif,webp',
+                'max:2048',
+            ],
+            'remove_image' => [
+                'nullable',
+                'boolean',
+            ],
         ];
 
         // Enrollment rules (for active enrollment)
@@ -190,6 +250,127 @@ class UpdateStudentRequest extends FormRequest
                 'nullable',
                 'integer',
                 Rule::exists('sections', 'id'),
+            ],
+        ];
+
+        $guardianRules = [
+            'guardian_id' => [
+                'nullable',
+                'integer',
+                Rule::exists('guardians', 'id'),
+            ],
+            'father_name' => [
+                'required_without:guardian_id',
+                'string',
+                'max:255',
+                'regex:/^[a-zA-Z\s\.\-\'\@]+$/',
+            ],
+            'father_email' => [
+                'nullable',
+                'string',
+                'email',
+                'max:255',
+            ],
+            'father_phone' => [
+                'required_without:guardian_id',
+                'string',
+                'max:20',
+                'regex:/^[0-9+\-\s]+$/',
+            ],
+            'father_cnic' => [
+                'nullable',
+                'string',
+                'max:15',
+                'regex:/^[0-9]{5}-[0-9]{7}-[0-9]$/',
+                function ($attribute, $value, $fail) use ($studentId) {
+                    if (empty($value)) {
+                        return;
+                    }
+
+                    $currentGuardianIds = Student::with('studentGuardians')
+                        ->find($studentId)
+                        ?->studentGuardians
+                        ->pluck('guardian_id')
+                        ->filter()
+                        ->all() ?? [];
+
+                    $exists = Guardian::where('cnic', $value)
+                        ->when(
+                            ! empty($currentGuardianIds),
+                            fn ($query) => $query->whereNotIn('id', $currentGuardianIds)
+                        )
+                        ->exists();
+
+                    if ($exists) {
+                        $fail('This CNIC has already been registered for another guardian.');
+                    }
+                },
+            ],
+            'father_occupation' => [
+                'nullable',
+                'string',
+                'max:255',
+            ],
+            'father_address' => [
+                'nullable',
+                'string',
+                'max:500',
+            ],
+            'father_relation_id' => [
+                'required_with:father_name',
+                'integer',
+                Rule::exists('relations', 'id'),
+            ],
+            'other_name' => [
+                'nullable',
+                'string',
+                'max:255',
+            ],
+            'other_email' => [
+                'nullable',
+                'string',
+                'email',
+                'max:255',
+            ],
+            'other_phone' => [
+                'nullable',
+                'string',
+                'max:20',
+                'regex:/^[0-9+\-\s]+$/',
+            ],
+            'other_cnic' => [
+                'nullable',
+                'string',
+                'max:15',
+                'regex:/^[0-9]{5}-[0-9]{7}-[0-9]$/',
+                function ($attribute, $value, $fail) use ($studentId) {
+                    if (empty($value)) {
+                        return;
+                    }
+
+                    $currentGuardianIds = Student::with('studentGuardians')
+                        ->find($studentId)
+                        ?->studentGuardians
+                        ->pluck('guardian_id')
+                        ->filter()
+                        ->all() ?? [];
+
+                    $exists = Guardian::where('cnic', $value)
+                        ->when(
+                            ! empty($currentGuardianIds),
+                            fn ($query) => $query->whereNotIn('id', $currentGuardianIds)
+                        )
+                        ->exists();
+
+                    if ($exists) {
+                        $fail('This CNIC has already been registered for another guardian.');
+                    }
+                },
+            ],
+            'other_relation_id' => [
+                'nullable',
+                'integer',
+                Rule::exists('relations', 'id'),
             ],
         ];
 
@@ -273,7 +454,7 @@ class UpdateStudentRequest extends FormRequest
         $action = $this->get('action', 'update');
 
         return match ($action) {
-            'update' => array_merge($studentRules, $enrollmentRules),
+            'update' => array_merge($studentRules, $enrollmentRules, $guardianRules),
             'change_status' => $statusChangeRules,
             'readmit' => $readmitRules,
             'update_guardians' => $guardianRules,
@@ -343,6 +524,67 @@ class UpdateStudentRequest extends FormRequest
             }
         }
 
+        $fatherPhone = ! empty($this->father_phone)
+            ? preg_replace('/\D/', '', $this->father_phone)
+            : null;
+        $otherPhone = ! empty($this->other_phone)
+            ? preg_replace('/\D/', '', $this->other_phone)
+            : null;
+
+        if ($fatherPhone && $otherPhone && $fatherPhone === $otherPhone) {
+            $validator->errors()->add(
+                'other_phone',
+                "Other guardian's phone number cannot be the same as Father's phone number."
+            );
+        }
+
+        if ($this->filled('fee_structure_id')) {
+            $feeStructure = FeeStructure::with('items')->find($this->fee_structure_id);
+
+            $structureStatus = $feeStructure?->status instanceof FeeStructureStatus
+                ? $feeStructure->status->value
+                : $feeStructure?->status;
+
+            if (! $feeStructure || $structureStatus !== FeeStructureStatus::ACTIVE->value) {
+                $validator->errors()->add('fee_structure_id', 'The selected fee structure is not active.');
+            } elseif (
+                (int) $feeStructure->session_id !== (int) $this->session_id ||
+                (int) $feeStructure->campus_id !== (int) $this->campus_id
+            ) {
+                $validator->errors()->add('fee_structure_id', 'The selected fee structure does not belong to the chosen campus/session.');
+            } elseif ($feeStructure->class_id !== null && (int) $feeStructure->class_id !== (int) $this->class_id) {
+                $validator->errors()->add('fee_structure_id', 'The selected fee structure does not belong to the chosen class.');
+            } elseif ($feeStructure->section_id !== null && (int) $feeStructure->section_id !== (int) $this->section_id) {
+                $validator->errors()->add('fee_structure_id', 'The selected fee structure does not belong to the chosen section.');
+            }
+
+            if ($feeStructure && $this->fee_mode === 'manual') {
+                $customEntries = collect($this->custom_fee_entries ?? []);
+                $selectedFeeHeadIds = $customEntries->pluck('fee_head_id')->map(fn ($id) => (int) $id)->all();
+
+                if ($customEntries->isEmpty()) {
+                    $validator->errors()->add('custom_fee_entries', 'At least one custom fee entry is required for manual mode.');
+                }
+
+                $requiredFeeHeadIds = $feeStructure->items
+                    ->where('is_optional', false)
+                    ->pluck('fee_head_id')
+                    ->map(fn ($id) => (int) $id)
+                    ->all();
+
+                foreach ($requiredFeeHeadIds as $feeHeadId) {
+                    if (! in_array($feeHeadId, $selectedFeeHeadIds, true)) {
+                        $validator->errors()->add('custom_fee_entries', 'All mandatory fee heads must be included in manual mode.');
+                        break;
+                    }
+                }
+            }
+
+            if ($feeStructure && $this->fee_mode === 'discount' && empty($this->discounts)) {
+                $validator->errors()->add('discounts', 'At least one discount is required when discount mode is selected.');
+            }
+        }
+
         // Validate that the student can be re-activated if status is changing
         if ($this->filled('student_status_id')) {
             $currentStatus = StudentStatus::find($this->student_status_id);
@@ -373,6 +615,7 @@ class UpdateStudentRequest extends FormRequest
     public function attributes(): array
     {
         return [
+            'name' => 'student name',
             'admission_no' => 'admission number',
             'dob' => 'date of birth',
             'gender_id' => 'gender',
@@ -380,14 +623,40 @@ class UpdateStudentRequest extends FormRequest
             'b_form' => 'B-Form/CNIC',
             'monthly_fee' => 'monthly fee',
             'annual_fee' => 'annual fee',
+            'fee_structure_id' => 'fee structure',
+            'fee_mode' => 'fee mode',
+            'custom_fee_entries' => 'custom fee entries',
+            'custom_fee_entries.*.fee_head_id' => 'fee head',
+            'custom_fee_entries.*.amount' => 'custom amount',
+            'discounts' => 'discounts',
+            'discounts.*.discount_type_id' => 'discount type',
+            'discounts.*.fee_head_id' => 'discount fee head',
+            'discounts.*.value' => 'discount value',
+            'discounts.*.value_type' => 'discount value type',
+            'manual_discount_percentage' => 'discount percentage',
+            'manual_discount_reason' => 'discount reason',
             'campus_id' => 'campus',
             'session_id' => 'academic session',
             'class_id' => 'class',
             'section_id' => 'section',
+            'description' => 'description',
+            'admission_date' => 'admission date',
+            'image' => 'student photo',
+            'father_name' => "father's/guardian's name",
+            'father_email' => "father's email",
+            'father_phone' => "father's phone",
+            'father_cnic' => "father's CNIC",
+            'father_occupation' => "father's occupation",
+            'father_address' => "father's address",
+            'father_relation_id' => 'relationship to father/guardian',
+            'other_name' => "other guardian's name",
+            'other_email' => "other guardian's email",
+            'other_phone' => "other guardian's phone",
+            'other_cnic' => "other guardian's CNIC",
+            'other_relation_id' => 'relationship to other guardian',
             'status_id' => 'status',
             'status_description' => 'status description',
             'is_reactivation' => 'reactivation flag',
-            'admission_date' => 'admission date',
         ];
     }
 
@@ -416,9 +685,21 @@ class UpdateStudentRequest extends FormRequest
 
         // Trim input fields
         $this->merge([
+            'name' => trim($this->name ?? ''),
             'admission_no' => trim($this->admission_no ?? ''),
             'b_form' => trim($this->b_form ?? ''),
+            'description' => trim($this->description ?? ''),
             'status_description' => trim($this->status_description ?? ''),
+            'father_name' => trim($this->father_name ?? ''),
+            'father_email' => trim($this->father_email ?? ''),
+            'father_phone' => trim($this->father_phone ?? ''),
+            'father_cnic' => trim($this->father_cnic ?? ''),
+            'father_occupation' => trim($this->father_occupation ?? ''),
+            'father_address' => trim($this->father_address ?? ''),
+            'other_name' => trim($this->other_name ?? ''),
+            'other_email' => trim($this->other_email ?? ''),
+            'other_phone' => trim($this->other_phone ?? ''),
+            'other_cnic' => trim($this->other_cnic ?? ''),
         ]);
 
         // Decode JSON strings sent from frontend via FormData

@@ -24,13 +24,42 @@ class FeeStructureController extends Controller
      */
     public function index(Request $request)
     {
-        $transformedStructures = $this->getTransformedStructures($request);
+        $perPage = $request->input('per_page', 10);
+        $page = $request->input('page', 1);
+
+        $structures = FeeStructure::with(['session', 'campus', 'class', 'section'])
+            ->withCount('items');
+
+        if ($request->filled('session_id')) {
+            $structures->where('session_id', $request->session_id);
+        }
+
+        if ($request->filled('campus_id')) {
+            $structures->where('campus_id', $request->campus_id);
+        }
+
+        if ($request->filled('class_id')) {
+            $structures->where('class_id', $request->class_id);
+        }
+
+        if ($request->filled('section_id')) {
+            $structures->where('section_id', $request->section_id);
+        }
+
+        if ($request->filled('status')) {
+            $structures->where('status', $request->status);
+        }
+
+        if ($request->filled('search')) {
+            $structures->where('title', 'like', '%'.$request->search.'%');
+        }
+
+        $paginatedStructures = $structures->latest()->paginate($perPage, ['*'], 'page', $page);
+
+        $transformedStructures = $paginatedStructures->through(fn (FeeStructure $structure) => $this->transformStructure($structure));
 
         if ($request->expectsJson()) {
-            return response()->json([
-                'success' => true,
-                'structures' => $transformedStructures,
-            ]);
+            return response()->json($transformedStructures);
         }
 
         return Inertia::render('Fee/Structures/Index', [
@@ -86,32 +115,32 @@ class FeeStructureController extends Controller
         $validated['effective_from'] = $session->start_date;
         $validated['effective_to'] = $session->end_date;
 
-        // Check for duplicate title for the same session/campus/class/section combination
-        $sectionId = ! empty($validated['section_ids']) ? $validated['section_ids'][0] : null;
-        $existingStructure = FeeStructure::where('session_id', $validated['session_id'])
-            ->where('campus_id', $validated['campus_id'])
-            ->where('class_id', $validated['class_id'] ?? null)
-            ->where('section_id', $sectionId)
-            ->where('title', $validated['title'])
-            ->first();
-
-        if ($existingStructure) {
-            return response()->json([
-                'message' => 'A fee structure with this title already exists for the selected session, campus, class and section. Please use a different title or change the section.',
-            ], 422);
-        }
-
         $validated['created_by'] = auth()->id();
 
         // Get section_ids from validated data
         $sectionIds = $validated['section_ids'] ?? [];
         unset($validated['section_ids']); // Remove from base data
 
+        $sectionsToCreate = empty($sectionIds) ? [null] : array_values($sectionIds);
+
+        foreach ($sectionsToCreate as $sectionId) {
+            $existingStructure = FeeStructure::where('session_id', $validated['session_id'])
+                ->where('campus_id', $validated['campus_id'])
+                ->where('class_id', $validated['class_id'] ?? null)
+                ->where('section_id', $sectionId)
+                ->where('title', $validated['title'])
+                ->first();
+
+            if ($existingStructure) {
+                return response()->json([
+                    'message' => 'A fee structure with this title already exists for one of the selected class/section combinations. Please use a different title or change the selection.',
+                ], 422);
+            }
+        }
+
         // If no sections selected, create ONE record with NULL section (applies to all)
         // If sections selected, create ONE record per section
         $structures = [];
-
-        $sectionsToCreate = empty($sectionIds) ? [null] : $sectionIds;
 
         foreach ($sectionsToCreate as $sectionId) {
             $structureData = $validated;
@@ -204,40 +233,47 @@ class FeeStructureController extends Controller
         ]);
     }
 
+    public function debug(FeeStructure $feeStructure): JsonResponse
+    {
+        $feeStructure->load(['session', 'campus', 'class', 'section', 'items.feeHead', 'creator']);
+
+        return response()->json($feeStructure);
+    }
+
     /**
      * Show the form for editing the specified fee structure.
      */
-    public function edit(FeeStructure $structure)
+    public function edit(FeeStructure $feeStructure)
     {
         // Find ALL related structures (same session/campus/class, different sections)
-        $relatedStructures = FeeStructure::where('session_id', $structure->session_id)
-            ->where('campus_id', $structure->campus_id)
-            ->where('class_id', $structure->class_id)
-            ->where('title', $structure->title)
+        $relatedStructures = FeeStructure::where('session_id', $feeStructure->session_id)
+            ->where('campus_id', $feeStructure->campus_id)
+            ->where('class_id', $feeStructure->class_id)
+            ->where('title', $feeStructure->title)
             ->get();
 
         // Get all section IDs from related structures
         $sectionIds = $relatedStructures->pluck('section_id')->filter()->values()->toArray();
 
         // Load items for the main structure being edited
-        $structure->load(['session', 'campus', 'class', 'section', 'items.feeHead']);
+        $feeStructure->load(['session', 'campus', 'class', 'section', 'items.feeHead']);
 
         // Get the currently active session for reference
         $activeSession = Session::where('is_active', true)->first();
 
         // Transform the structure data for frontend
         $data = [
-            'id' => $structure->id,
-            'title' => $structure->title,
-            'session_id' => $structure->session_id,
-            'campus_id' => $structure->campus_id,
-            'class_id' => $structure->class_id,
+            'id' => $feeStructure->id,
+            'title' => $feeStructure->title,
+            'session_id' => $feeStructure->session_id,
+            'campus_id' => $feeStructure->campus_id,
+            'class_id' => $feeStructure->class_id,
             'section_ids' => $sectionIds, // Array of section IDs
-            'status' => $structure->status instanceof FeeStructureStatus ? $structure->status->value : $structure->status,
-            'effective_from' => $structure->effective_from?->toDateString(),
-            'effective_to' => $structure->effective_to?->toDateString(),
-            'notes' => $structure->notes,
-            'items' => $structure->items->map(function ($item) {
+            'status' => $feeStructure->status instanceof FeeStructureStatus ? $feeStructure->status->value : $feeStructure->status,
+            'effective_from' => $feeStructure->effective_from?->toDateString(),
+            'effective_to' => $feeStructure->effective_to?->toDateString(),
+            'notes' => $feeStructure->notes,
+            'items' => $feeStructure->items->map(function ($item) {
                 return [
                     'id' => $item->id,
                     'fee_head_id' => $item->fee_head_id,
@@ -270,7 +306,7 @@ class FeeStructureController extends Controller
     /**
      * Update the specified fee structure.
      */
-    public function update(Request $request, FeeStructure $structure)
+    public function update(Request $request, FeeStructure $feeStructure)
     {
         $validated = $request->validate([
             'title' => 'required|string|max:200',
@@ -288,38 +324,45 @@ class FeeStructureController extends Controller
         $validated['effective_from'] = $session->start_date;
         $validated['effective_to'] = $session->end_date;
 
-        // Check for duplicate title for the same session/campus/class/section combination
-        // but exclude the current structure being updated
-        $sectionId = ! empty($validated['section_ids']) ? $validated['section_ids'][0] : null;
-        $existingStructure = FeeStructure::where('session_id', $validated['session_id'])
-            ->where('campus_id', $validated['campus_id'])
-            ->where('class_id', $validated['class_id'] ?? null)
-            ->where('section_id', $sectionId)
-            ->where('title', $validated['title'])
-            ->where('id', '!=', $structure->id)
-            ->first();
-
-        if ($existingStructure) {
-            return response()->json([
-                'message' => 'A fee structure with this title already exists for the selected session, campus, class and section. Please use a different title or change the section.',
-            ], 422);
-        }
-
         // Get section_ids from validated data
         $sectionIds = $validated['section_ids'] ?? [];
         unset($validated['section_ids']);
 
         // Get the existing related structures (same class/session/campus/title)
-        $existingRelatedStructures = FeeStructure::where('session_id', $structure->session_id)
-            ->where('campus_id', $structure->campus_id)
-            ->where('class_id', $structure->class_id)
-            ->where('title', $structure->title)
-            ->where('id', '!=', $structure->id)
+        $existingRelatedStructures = FeeStructure::where('session_id', $feeStructure->session_id)
+            ->where('campus_id', $feeStructure->campus_id)
+            ->where('class_id', $feeStructure->class_id)
+            ->where('title', $feeStructure->title)
+            ->where('id', '!=', $feeStructure->id)
             ->get();
 
-        // Determine which sections should have structures
-        $sectionsToKeep = empty($sectionIds) ? [null] : $sectionIds;
+        $relatedStructureIds = $existingRelatedStructures->pluck('id')
+            ->push($feeStructure->id)
+            ->all();
 
+        $sectionsToKeep = empty($sectionIds) ? [null] : array_values($sectionIds);
+
+        foreach ($sectionsToKeep as $sectionId) {
+            $duplicateQuery = FeeStructure::where('session_id', $validated['session_id'])
+                ->where('campus_id', $validated['campus_id'])
+                ->where('class_id', $validated['class_id'] ?? null)
+                ->where('title', $validated['title'])
+                ->whereNotIn('id', $relatedStructureIds);
+
+            if ($sectionId === null) {
+                $duplicateQuery->whereNull('section_id');
+            } else {
+                $duplicateQuery->where('section_id', $sectionId);
+            }
+
+            if ($duplicateQuery->exists()) {
+                return response()->json([
+                    'message' => 'A fee structure with this title already exists for one of the selected class/section combinations. Please use a different title or change the selection.',
+                ], 422);
+            }
+        }
+
+        // Determine which sections should have structures
         // Delete structures that are no longer selected
         foreach ($existingRelatedStructures as $relatedStructure) {
             if (! in_array($relatedStructure->section_id, $sectionsToKeep)) {
@@ -333,11 +376,11 @@ class FeeStructureController extends Controller
         // First, update the main structure being edited
         $mainStructureData = $validated;
         $mainStructureData['section_id'] = $sectionIds[0] ?? null;
-        $structure->update($mainStructureData);
-        $structures[] = $structure;
+        $feeStructure->update($mainStructureData);
+        $structures[] = $feeStructure;
 
         // Sync fee items from main structure to all related structures
-        $mainItems = $structure->items()->get();
+        $mainItems = $feeStructure->items()->get();
 
         // Then create/update structures for remaining sections
         $sectionsToProcess = empty($sectionIds) ? [null] : $sectionIds;
@@ -345,11 +388,11 @@ class FeeStructureController extends Controller
 
         foreach ($sectionsToProcess as $sectionId) {
             // Check if structure already exists for this section
-            $existingStructure = FeeStructure::where('session_id', $structure->session_id)
-                ->where('campus_id', $structure->campus_id)
-                ->where('class_id', $structure->class_id)
+            $existingStructure = FeeStructure::where('session_id', $feeStructure->session_id)
+                ->where('campus_id', $feeStructure->campus_id)
+                ->where('class_id', $feeStructure->class_id)
                 ->where('section_id', $sectionId)
-                ->where('title', $structure->title)
+                ->where('title', $feeStructure->title)
                 ->first();
 
             if ($existingStructure) {
@@ -368,7 +411,7 @@ class FeeStructureController extends Controller
 
         // Sync items across all structures
         foreach ($structures as $struct) {
-            if ($struct->id === $structure->id) {
+            if ($struct->id === $feeStructure->id) {
                 continue;
             } // Skip main (already has items)
 
@@ -392,9 +435,9 @@ class FeeStructureController extends Controller
     /**
      * Remove the specified fee structure.
      */
-    public function destroy(FeeStructure $structure)
+    public function destroy(FeeStructure $feeStructure)
     {
-        $structure->delete();
+        $feeStructure->delete();
 
         if (request()->expectsJson()) {
             return response()->json([
@@ -483,15 +526,22 @@ class FeeStructureController extends Controller
         $classId = $classId && $classId !== '' ? $classId : null;
         $sectionId = $sectionId && $sectionId !== '' ? $sectionId : null;
 
+        $baseQuery = FeeStructure::active()
+            ->with(['items.feeHead'])
+            ->where('session_id', $sessionId)
+            ->where('campus_id', $campusId)
+            ->orderByDesc('is_default')
+            ->orderByDesc('effective_from')
+            ->orderByDesc('id');
+
+        // For student admission/edit forms, match the selected session scope.
+        // Do not block lookup only because the current date falls outside effective range.
+
         // Try section-specific first (class_id AND section_id both set)
         if ($classId && $sectionId) {
-            $structure = FeeStructure::active()
-                ->with(['items.feeHead'])
-                ->where('session_id', $sessionId)
-                ->where('campus_id', $campusId)
+            $structure = (clone $baseQuery)
                 ->where('class_id', $classId)
                 ->where('section_id', $sectionId)
-                ->effectiveOn(now())
                 ->first();
 
             if ($structure) {
@@ -501,13 +551,9 @@ class FeeStructureController extends Controller
 
         // Try class-specific (class_id set, section_id is null)
         if ($classId) {
-            $structure = FeeStructure::active()
-                ->with(['items.feeHead'])
-                ->where('session_id', $sessionId)
-                ->where('campus_id', $campusId)
+            $structure = (clone $baseQuery)
                 ->where('class_id', $classId)
                 ->whereNull('section_id')
-                ->effectiveOn(now())
                 ->first();
 
             if ($structure) {
@@ -516,13 +562,9 @@ class FeeStructureController extends Controller
         }
 
         // Try campus-wide (both class_id and section_id are null)
-        $structure = FeeStructure::active()
-            ->with(['items.feeHead'])
-            ->where('session_id', $sessionId)
-            ->where('campus_id', $campusId)
+        $structure = (clone $baseQuery)
             ->whereNull('class_id')
             ->whereNull('section_id')
-            ->effectiveOn(now())
             ->first();
 
         if (! $structure) {
@@ -597,6 +639,7 @@ class FeeStructureController extends Controller
             'data' => [
                 'id' => $structure->id,
                 'title' => $structure->title,
+                'source' => $structure->section_id ? 'section' : ($structure->class_id ? 'class' : 'campus'),
                 'monthly_fee' => $monthlyTotal,
                 'annual_fee' => $yearlyTotal,
                 'one_time_fee' => $oneTimeTotal,

@@ -22,7 +22,7 @@ class FeePayment extends Model
 {
     use SoftDeletes;
 
-    protected $table = 'fee_payments';
+    protected $table = 'new_fee_payments';
 
     protected $fillable = [
         'receipt_no',
@@ -80,6 +80,14 @@ class FeePayment extends Model
      * Get the receiver
      */
     public function receiver(): BelongsTo
+    {
+        return $this->belongsTo(User::class, 'received_by');
+    }
+
+    /**
+     * Backward-compatible alias used by controllers/pages.
+     */
+    public function receivedBy(): BelongsTo
     {
         return $this->belongsTo(User::class, 'received_by');
     }

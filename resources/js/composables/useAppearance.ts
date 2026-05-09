@@ -13,8 +13,8 @@ const cssVarMapping: Record<string, string> = {
     '--popover-foreground': 'card_text',
     '--primary': 'sidebar_active_bg',
     '--primary-foreground': 'sidebar_active_text',
-    '--secondary': 'header_bg',
-    '--secondary-foreground': 'header_text',
+    '--secondary': 'button_secondary_bg',
+    '--secondary-foreground': 'button_secondary_text',
     '--muted': 'content_bg',
     '--muted-foreground': 'content_text',
     '--accent': 'sidebar_bg',
@@ -41,7 +41,85 @@ const cssVarMapping: Record<string, string> = {
     '--radius': '0.5rem',
 };
 
-function applyTheme(theme: any) {
+function getDefaults(isDark: boolean): Record<string, string> {
+    if (isDark) {
+        return {
+            '--background': '#111827',
+            '--foreground': '#f9fafb',
+            '--card': '#1f2937',
+            '--card-foreground': '#f9fafb',
+            '--popover': '#1f2937',
+            '--popover-foreground': '#f9fafb',
+            '--primary': '#60a5fa',
+            '--primary-foreground': '#111827',
+            '--secondary': '#374151',
+            '--secondary-foreground': '#f9fafb',
+            '--muted': '#111827',
+            '--muted-foreground': '#9ca3af',
+            '--accent': '#374151',
+            '--accent-foreground': '#f9fafb',
+            '--destructive': '#ef4444',
+            '--destructive-foreground': '#ffffff',
+            '--border': '#374151',
+            '--input': '#374151',
+            '--ring': '#60a5fa',
+            '--chart-1': '#8884d8',
+            '--chart-2': '#82ca9d',
+            '--chart-3': '#ffc658',
+            '--chart-4': '#ff7c7c',
+            '--chart-5': '#8dd1e1',
+            '--sidebar-background': '#111827',
+            '--sidebar-foreground': '#f9fafb',
+            '--sidebar-primary': '#60a5fa',
+            '--sidebar-primary-foreground': '#111827',
+            '--sidebar-accent': '#374151',
+            '--sidebar-accent-foreground': '#f9fafb',
+            '--sidebar-border': '#374151',
+            '--sidebar-ring': '#60a5fa',
+            '--sidebar': '#111827',
+            '--radius': '0.5rem',
+        };
+    }
+    return {
+        '--background': '#ffffff',
+        '--foreground': '#111827',
+        '--card': '#ffffff',
+        '--card-foreground': '#111827',
+        '--popover': '#ffffff',
+        '--popover-foreground': '#111827',
+        '--primary': '#2563eb',
+        '--primary-foreground': '#ffffff',
+        '--secondary': '#e5e7eb',
+        '--secondary-foreground': '#111827',
+        '--muted': '#f9fafb',
+        '--muted-foreground': '#6b7280',
+        '--accent': '#f3f4f6',
+        '--accent-foreground': '#111827',
+        '--destructive': '#ef4444',
+        '--destructive-foreground': '#ffffff',
+        '--border': '#e5e7eb',
+        '--input': '#ffffff',
+        '--ring': '#2563eb',
+        '--chart-1': '#8884d8',
+        '--chart-2': '#82ca9d',
+        '--chart-3': '#ffc658',
+        '--chart-4': '#ff7c7c',
+        '--chart-5': '#8dd1e1',
+        '--sidebar-background': '#f9fafb',
+        '--sidebar-foreground': '#111827',
+        '--sidebar-primary': '#2563eb',
+        '--sidebar-primary-foreground': '#ffffff',
+        '--sidebar-accent': '#e5e7eb',
+        '--sidebar-accent-foreground': '#111827',
+        '--sidebar-border': '#e5e7eb',
+        '--sidebar-ring': '#2563eb',
+        '--sidebar': '#f9fafb',
+        '--radius': '0.5rem',
+    };
+}
+
+function applyTheme(theme: any, isDark: boolean = false) {
+    const defaults = getDefaults(isDark);
     Object.entries(cssVarMapping).forEach(([cssVar, slot]) => {
         let value: string;
         if (slot.startsWith('#')) {
@@ -49,43 +127,6 @@ function applyTheme(theme: any) {
         } else if (theme && theme.colors_json && theme.colors_json[slot]) {
             value = theme.colors_json[slot];
         } else {
-            // Default values when no theme or slot not found
-            const defaults: Record<string, string> = {
-                '--background': '#ffffff',
-                '--foreground': '#000000',
-                '--card': '#ffffff',
-                '--card-foreground': '#000000',
-                '--popover': '#ffffff',
-                '--popover-foreground': '#000000',
-                '--primary': '#000000',
-                '--primary-foreground': '#ffffff',
-                '--secondary': '#f3f4f6',
-                '--secondary-foreground': '#000000',
-                '--muted': '#f9fafb',
-                '--muted-foreground': '#6b7280',
-                '--accent': '#f3f4f6',
-                '--accent-foreground': '#000000',
-                '--destructive': '#ef4444',
-                '--destructive-foreground': '#ffffff',
-                '--border': '#e5e7eb',
-                '--input': '#ffffff',
-                '--ring': '#000000',
-                '--chart-1': '#8884d8',
-                '--chart-2': '#82ca9d',
-                '--chart-3': '#ffc658',
-                '--chart-4': '#ff7c7c',
-                '--chart-5': '#8dd1e1',
-                '--sidebar-background': '#f9fafb',
-                '--sidebar-foreground': '#000000',
-                '--sidebar-primary': '#000000',
-                '--sidebar-primary-foreground': '#ffffff',
-                '--sidebar-accent': '#f3f4f6',
-                '--sidebar-accent-foreground': '#000000',
-                '--sidebar-border': '#e5e7eb',
-                '--sidebar-ring': '#000000',
-                '--sidebar': '#f9fafb',
-                '--radius': '0.5rem',
-            };
             value = defaults[cssVar] || '#000000';
         }
         document.documentElement.style.setProperty(cssVar, value);
@@ -110,10 +151,11 @@ export function updateTheme(value: Appearance) {
             'dark',
             systemTheme === 'dark',
         );
-        applyTheme(themes ? themes[systemTheme] : null);
+        applyTheme(themes ? themes[systemTheme] : null, systemTheme === 'dark');
     } else {
-        document.documentElement.classList.toggle('dark', value === 'dark');
-        applyTheme(themes ? themes[value] : null);
+        const isDark = value === 'dark';
+        document.documentElement.classList.toggle('dark', isDark);
+        applyTheme(themes ? themes[value] : null, isDark);
     }
 }
 

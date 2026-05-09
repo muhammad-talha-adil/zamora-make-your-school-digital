@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Head } from '@inertiajs/vue3';
+import { Head, router } from '@inertiajs/vue3';
 import { route } from 'ziggy-js';
 import AppLayout from '@/layouts/AppLayout.vue';
 import type { BreadcrumbItem } from '@/types';
@@ -42,7 +42,7 @@ interface FeePayment {
         phone?: string;
     };
     allocations: FeePaymentAllocation[];
-    receivedBy?: { id: number; name: string };
+    received_by?: { id: number; name: string };
 }
 
 interface Props {

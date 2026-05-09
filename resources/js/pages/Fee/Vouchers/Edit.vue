@@ -9,14 +9,13 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import Icon from '@/components/Icon.vue';
 import axios from 'axios';
+import { alert } from '@/utils';
 
 interface FeeVoucherItem {
     id: number;
     fee_head_id: number;
     fee_head?: { id: number; name: string; code: string };
     description: string;
-    quantity: number;
-    unit_price: number;
     amount: number;
     discount_amount: number;
     net_amount: number;
@@ -67,6 +66,25 @@ interface FeeHead {
 interface Props {
     voucher: FeeVoucher;
     feeHeads?: FeeHead[];
+    cohortSummary: {
+        total: number;
+        paid: number;
+        partial: number;
+        unpaid: number;
+        overdue: number;
+        cancelled: number;
+    };
+    cohortVouchers: Array<{
+        id: number;
+        voucher_no: string;
+        student_name: string;
+        registration_number: string;
+        status: string;
+        net_amount: number;
+        paid_amount: number;
+        balance_amount: number;
+        due_date: string;
+    }>;
 }
 
 const props = defineProps<Props>();
@@ -79,8 +97,16 @@ const breadcrumbItems: BreadcrumbItem[] = [
     { title: 'Edit', href: `/fee/vouchers/${props.voucher.id}/edit` },
 ];
 
+const normalizeDateValue = (value?: string | null) => {
+    if (!value) {
+        return '';
+    }
+
+    return value.slice(0, 10);
+};
+
 const form = reactive({
-    due_date: props.voucher.due_date || '',
+    due_date: normalizeDateValue(props.voucher.due_date),
     notes: props.voucher.notes || '',
 });
 
@@ -170,6 +196,18 @@ const getStatusColor = (status: string): string => {
     return colors[status] || 'bg-gray-100 text-gray-800';
 };
 
+const getSummaryTone = (tone: 'green' | 'blue' | 'yellow' | 'red' | 'gray') => {
+    const tones: Record<string, string> = {
+        green: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
+        blue: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400',
+        yellow: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400',
+        red: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
+        gray: 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400',
+    };
+
+    return tones[tone];
+};
+
 // Open add item modal
 const openAddItemModal = async () => {
     showAddItemModal.value = true;
@@ -184,8 +222,8 @@ const openAddItemModal = async () => {
         try {
             const response = await axios.get(route('fee.heads.all'));
             availableFeeHeads.value = response.data;
-        } catch (error) {
-            console.error('Error loading fee heads:', error);
+        } catch {
+            alert.error('Failed to load fee heads.');
         } finally {
             isLoadingFeeHeads.value = false;
         }
@@ -211,6 +249,11 @@ const addItem = async () => {
             description: newItemForm.description || undefined,
             amount: newItemForm.amount,
             discount_amount: newItemForm.discount_amount || 0,
+        }, {
+            headers: {
+                Accept: 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+            },
         });
         
         // Reload the page to get updated data
@@ -220,7 +263,7 @@ const addItem = async () => {
         if (error.response?.data?.errors) {
             errors.value = error.response.data.errors;
         } else {
-            alert('Failed to add fee item');
+            alert.error('Failed to add fee item.');
         }
     } finally {
         isSubmitting.value = false;
@@ -249,6 +292,11 @@ const saveEditItem = async (item: FeeVoucherItem) => {
             description: editItemForm.description || undefined,
             amount: editItemForm.amount,
             discount_amount: editItemForm.discount_amount || 0,
+        }, {
+            headers: {
+                Accept: 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+            },
         });
         
         // Reload the page to get updated data
@@ -257,8 +305,10 @@ const saveEditItem = async (item: FeeVoucherItem) => {
     } catch (error: any) {
         if (error.response?.data?.errors) {
             errors.value = error.response.data.errors;
+        } else if (error.response?.data?.message) {
+            alert.error(error.response.data.message);
         } else {
-            alert('Failed to update fee item');
+            alert.error('Failed to update fee item.');
         }
     } finally {
         isSubmitting.value = false;
@@ -267,19 +317,28 @@ const saveEditItem = async (item: FeeVoucherItem) => {
 
 // Remove item from voucher
 const removeItem = async (item: FeeVoucherItem) => {
-    if (!confirm(`Are you sure you want to remove \"${item.fee_head?.name || 'this item'}\" from the voucher?`)) {
+    if (!confirm(`Are you sure you want to remove "${item.fee_head?.name || 'this item'}" from the voucher?`)) {
         return;
     }
     
     isSubmitting.value = true;
     
     try {
-        await axios.delete(route('fee.vouchers.remove-item', { voucher: props.voucher.id, item: item.id }));
+        await axios.delete(route('fee.vouchers.remove-item', { voucher: props.voucher.id, item: item.id }), {
+            headers: {
+                Accept: 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+            },
+        });
         
         // Reload the page to get updated data
         router.reload({ only: ['voucher'] });
-    } catch {
-        alert('Failed to remove fee item');
+    } catch (error: any) {
+        if (error.response?.data?.message) {
+            alert.error(error.response.data.message);
+        } else {
+            alert.error('Failed to remove fee item.');
+        }
     } finally {
         isSubmitting.value = false;
     }
@@ -336,6 +395,15 @@ const removeItem = async (item: FeeVoucherItem) => {
 
                 <!-- Status Card -->
                 <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
+                    <p class="text-xs text-gray-500 dark:text-gray-400">Class / Section</p>
+                    <p class="text-sm font-medium text-gray-900 dark:text-white">
+                        {{ props.voucher.schoolClass?.name || 'N/A' }}
+                        <span v-if="props.voucher.section"> / {{ props.voucher.section.name }}</span>
+                    </p>
+                </div>
+
+                <!-- Status Card -->
+                <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
                     <p class="text-xs text-gray-500 dark:text-gray-400">Status</p>
                     <span :class="['inline-flex items-center px-2 py-1 rounded-full text-xs font-medium', getStatusColor(props.voucher.status)]">
                         {{ props.voucher.status }}
@@ -378,6 +446,35 @@ const removeItem = async (item: FeeVoucherItem) => {
                 </div>
             </div>
 
+            <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 md:p-6">
+                <h3 class="mb-4 text-sm font-medium text-gray-900 dark:text-white">Class Voucher Progress</h3>
+                <p class="mb-4 text-sm text-gray-600 dark:text-gray-400">
+                    This billing cycle currently has {{ cohortSummary.total }} student vouchers in the same class, section, month, and year.
+                </p>
+                <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
+                    <div class="rounded-lg border border-gray-200 p-3 dark:border-gray-700">
+                        <p class="text-xs text-gray-500 dark:text-gray-400">Paid</p>
+                        <span :class="['mt-2 inline-flex rounded-full px-2.5 py-1 text-xs font-medium', getSummaryTone('green')]">{{ cohortSummary.paid }}</span>
+                    </div>
+                    <div class="rounded-lg border border-gray-200 p-3 dark:border-gray-700">
+                        <p class="text-xs text-gray-500 dark:text-gray-400">Partial</p>
+                        <span :class="['mt-2 inline-flex rounded-full px-2.5 py-1 text-xs font-medium', getSummaryTone('blue')]">{{ cohortSummary.partial }}</span>
+                    </div>
+                    <div class="rounded-lg border border-gray-200 p-3 dark:border-gray-700">
+                        <p class="text-xs text-gray-500 dark:text-gray-400">Unpaid</p>
+                        <span :class="['mt-2 inline-flex rounded-full px-2.5 py-1 text-xs font-medium', getSummaryTone('yellow')]">{{ cohortSummary.unpaid }}</span>
+                    </div>
+                    <div class="rounded-lg border border-gray-200 p-3 dark:border-gray-700">
+                        <p class="text-xs text-gray-500 dark:text-gray-400">Overdue</p>
+                        <span :class="['mt-2 inline-flex rounded-full px-2.5 py-1 text-xs font-medium', getSummaryTone('red')]">{{ cohortSummary.overdue }}</span>
+                    </div>
+                    <div class="rounded-lg border border-gray-200 p-3 dark:border-gray-700">
+                        <p class="text-xs text-gray-500 dark:text-gray-400">Cancelled</p>
+                        <span :class="['mt-2 inline-flex rounded-full px-2.5 py-1 text-xs font-medium', getSummaryTone('gray')]">{{ cohortSummary.cancelled }}</span>
+                    </div>
+                </div>
+            </div>
+
             <!-- Edit Form -->
             <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 md:p-6">
                 <h3 class="text-sm font-medium text-gray-900 dark:text-white mb-4">Edit Voucher Details</h3>
@@ -387,11 +484,15 @@ const removeItem = async (item: FeeVoucherItem) => {
                     <div class="grid gap-4 md:grid-cols-2">
                         <div class="space-y-2">
                             <Label for="due_date">Due Date</Label>
-                            <Input
+                            <input
                                 id="due_date"
                                 v-model="form.due_date"
                                 type="date"
-                                :class="{ 'border-red-500': errors.due_date }"
+                                :class="[
+                                    'h-9 w-full rounded-md border bg-transparent px-3 py-1 text-sm shadow-xs transition-[color,box-shadow] outline-none',
+                                    'border-input dark:bg-input/30 focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]',
+                                    errors.due_date ? 'border-red-500' : '',
+                                ]"
                                 :disabled="isVoucherPaid"
                             />
                             <p v-if="errors.due_date" class="text-sm text-red-500">{{ errors.due_date }}</p>
@@ -443,8 +544,6 @@ const removeItem = async (item: FeeVoucherItem) => {
                             <tr class="border-b border-gray-200 dark:border-gray-700">
                                 <th class="text-left py-2 px-3 text-gray-500 dark:text-gray-400">Fee Head</th>
                                 <th class="text-left py-2 px-3 text-gray-500 dark:text-gray-400">Description</th>
-                                <th class="text-right py-2 px-3 text-gray-500 dark:text-gray-400">Qty</th>
-                                <th class="text-right py-2 px-3 text-gray-500 dark:text-gray-400">Unit Price</th>
                                 <th class="text-right py-2 px-3 text-gray-500 dark:text-gray-400">Amount</th>
                                 <th class="text-right py-2 px-3 text-gray-500 dark:text-gray-400">Discount</th>
                                 <th class="text-right py-2 px-3 text-gray-500 dark:text-gray-400">Net</th>
@@ -463,7 +562,6 @@ const removeItem = async (item: FeeVoucherItem) => {
                                             class="h-8 text-sm"
                                         />
                                     </td>
-                                    <td class="py-2 px-3 text-right text-gray-600 dark:text-gray-300">{{ item.quantity }}</td>
                                     <td class="py-2 px-3 text-right text-gray-600 dark:text-gray-300">
                                         <Input
                                             v-model.number="editItemForm.amount"
@@ -472,7 +570,6 @@ const removeItem = async (item: FeeVoucherItem) => {
                                             class="h-8 text-sm w-24 text-right"
                                         />
                                     </td>
-                                    <td class="py-2 px-3 text-right text-gray-900 dark:text-white font-medium">{{ formatCurrency(item.amount) }}</td>
                                     <td class="py-2 px-3 text-right">
                                         <Input
                                             v-model.number="editItemForm.discount_amount"
@@ -497,8 +594,6 @@ const removeItem = async (item: FeeVoucherItem) => {
                                     <!-- Display Mode -->
                                     <td class="py-2 px-3 text-gray-900 dark:text-white">{{ item.fee_head?.name || 'N/A' }}</td>
                                     <td class="py-2 px-3 text-gray-600 dark:text-gray-300">{{ item.description }}</td>
-                                    <td class="py-2 px-3 text-right text-gray-600 dark:text-gray-300">{{ item.quantity }}</td>
-                                    <td class="py-2 px-3 text-right text-gray-600 dark:text-gray-300">{{ formatCurrency(item.unit_price) }}</td>
                                     <td class="py-2 px-3 text-right text-gray-900 dark:text-white font-medium">{{ formatCurrency(item.amount) }}</td>
                                     <td class="py-2 px-3 text-right text-green-600 dark:text-green-400">-{{ formatCurrency(item.discount_amount) }}</td>
                                     <td class="py-2 px-3 text-right text-gray-900 dark:text-white font-medium">{{ formatCurrency(item.net_amount) }}</td>
@@ -515,7 +610,7 @@ const removeItem = async (item: FeeVoucherItem) => {
                                 </template>
                             </tr>
                             <tr v-if="props.voucher.items.length === 0">
-                                <td :colspan="isVoucherPaid ? 7 : 8" class="py-4 text-center text-gray-500">
+                                <td :colspan="isVoucherPaid ? 5 : 6" class="py-4 text-center text-gray-500">
                                     No fee items found
                                 </td>
                             </tr>
@@ -549,6 +644,43 @@ const removeItem = async (item: FeeVoucherItem) => {
                                     {{ adj.type === 'debit' ? '+' : '-' }}{{ formatCurrency(adj.amount) }}
                                 </td>
                                 <td class="py-2 px-3 text-gray-600 dark:text-gray-300">{{ new Date(adj.created_at).toLocaleDateString() }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 md:p-6">
+                <h3 class="mb-4 text-sm font-medium text-gray-900 dark:text-white">Class / Section Payment Status</h3>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-sm">
+                        <thead>
+                            <tr class="border-b border-gray-200 dark:border-gray-700">
+                                <th class="px-3 py-2 text-left text-gray-500 dark:text-gray-400">Student</th>
+                                <th class="px-3 py-2 text-left text-gray-500 dark:text-gray-400">Voucher</th>
+                                <th class="px-3 py-2 text-right text-gray-500 dark:text-gray-400">Net</th>
+                                <th class="px-3 py-2 text-right text-gray-500 dark:text-gray-400">Paid</th>
+                                <th class="px-3 py-2 text-right text-gray-500 dark:text-gray-400">Balance</th>
+                                <th class="px-3 py-2 text-left text-gray-500 dark:text-gray-400">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            <tr v-for="cohortVoucher in cohortVouchers" :key="cohortVoucher.id" class="border-b border-gray-100 dark:border-gray-700">
+                                <td class="px-3 py-2">
+                                    <div class="font-medium text-gray-900 dark:text-white">{{ cohortVoucher.student_name }}</div>
+                                    <div class="text-xs text-gray-500 dark:text-gray-400">{{ cohortVoucher.registration_number }}</div>
+                                </td>
+                                <td class="px-3 py-2 text-gray-600 dark:text-gray-300">{{ cohortVoucher.voucher_no }}</td>
+                                <td class="px-3 py-2 text-right text-gray-600 dark:text-gray-300">{{ formatCurrency(cohortVoucher.net_amount) }}</td>
+                                <td class="px-3 py-2 text-right text-green-600 dark:text-green-400">{{ formatCurrency(cohortVoucher.paid_amount) }}</td>
+                                <td class="px-3 py-2 text-right font-medium" :class="cohortVoucher.balance_amount > 0 ? 'text-red-600 dark:text-red-400' : 'text-gray-900 dark:text-white'">
+                                    {{ formatCurrency(cohortVoucher.balance_amount) }}
+                                </td>
+                                <td class="px-3 py-2">
+                                    <span :class="['inline-flex items-center rounded-full px-2 py-1 text-xs font-medium', getStatusColor(cohortVoucher.status)]">
+                                        {{ cohortVoucher.status }}
+                                    </span>
+                                </td>
                             </tr>
                         </tbody>
                     </table>

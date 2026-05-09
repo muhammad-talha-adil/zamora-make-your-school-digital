@@ -2,6 +2,8 @@
 
 namespace App\Http\Requests\Student;
 
+use App\Enums\Fee\FeeStructureStatus;
+use App\Models\Fee\FeeStructure;
 use App\Models\Guardian;
 use App\Models\Section;
 use Carbon\Carbon;
@@ -223,6 +225,23 @@ class StoreStudentRequest extends FormRequest
                 'string',
                 'max:500',
             ],
+            'description' => [
+                'nullable',
+                'string',
+                'max:2000',
+            ],
+            'admission_date' => [
+                'nullable',
+                'date',
+                'before_or_equal:today',
+            ],
+            'image' => [
+                'nullable',
+                'file',
+                'image',
+                'mimes:jpg,jpeg,png,gif,webp',
+                'max:2048',
+            ],
 
             // Admission fee info
             'admission_fee' => [
@@ -419,6 +438,54 @@ class StoreStudentRequest extends FormRequest
                 }
             }
 
+            $feeStructure = null;
+            if (! empty($this->fee_structure_id)) {
+                $feeStructure = FeeStructure::with('items')->find($this->fee_structure_id);
+
+                $structureStatus = $feeStructure?->status instanceof FeeStructureStatus
+                    ? $feeStructure->status->value
+                    : $feeStructure?->status;
+
+                if (! $feeStructure || $structureStatus !== FeeStructureStatus::ACTIVE->value) {
+                    $validator->errors()->add('fee_structure_id', 'The selected fee structure is not active.');
+                } elseif (
+                    (int) $feeStructure->session_id !== (int) $this->session_id ||
+                    (int) $feeStructure->campus_id !== (int) $this->campus_id
+                ) {
+                    $validator->errors()->add('fee_structure_id', 'The selected fee structure does not belong to the chosen campus/session.');
+                } elseif ($feeStructure->class_id !== null && (int) $feeStructure->class_id !== (int) $this->class_id) {
+                    $validator->errors()->add('fee_structure_id', 'The selected fee structure does not belong to the chosen class.');
+                } elseif ($feeStructure->section_id !== null && (int) $feeStructure->section_id !== (int) $this->section_id) {
+                    $validator->errors()->add('fee_structure_id', 'The selected fee structure does not belong to the chosen section.');
+                }
+            }
+
+            if ($feeStructure && $this->fee_mode === 'manual') {
+                $customEntries = collect($this->custom_fee_entries ?? []);
+                $selectedFeeHeadIds = $customEntries->pluck('fee_head_id')->map(fn ($id) => (int) $id)->all();
+
+                if ($customEntries->isEmpty()) {
+                    $validator->errors()->add('custom_fee_entries', 'At least one custom fee entry is required for manual mode.');
+                }
+
+                $requiredFeeHeadIds = $feeStructure->items
+                    ->where('is_optional', false)
+                    ->pluck('fee_head_id')
+                    ->map(fn ($id) => (int) $id)
+                    ->all();
+
+                foreach ($requiredFeeHeadIds as $feeHeadId) {
+                    if (! in_array($feeHeadId, $selectedFeeHeadIds, true)) {
+                        $validator->errors()->add('custom_fee_entries', 'All mandatory fee heads must be included in manual mode.');
+                        break;
+                    }
+                }
+            }
+
+            if ($feeStructure && $this->fee_mode === 'discount' && empty($this->discounts)) {
+                $validator->errors()->add('discounts', 'At least one discount is required when discount mode is selected.');
+            }
+
             // Log validation completion
             if ($validator->errors()->isEmpty()) {
                 Log::info('StoreStudentRequest validation passed', [
@@ -465,6 +532,9 @@ class StoreStudentRequest extends FormRequest
             'admission_fee' => 'admission fee',
             'payment_status' => 'payment status',
             'fee_notes' => 'fee notes',
+            'description' => 'description',
+            'admission_date' => 'admission date',
+            'image' => 'student photo',
             'campus_id' => 'campus',
             'session_id' => 'academic session',
             'class_id' => 'class',

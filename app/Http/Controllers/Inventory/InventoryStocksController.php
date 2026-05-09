@@ -58,19 +58,15 @@ class InventoryStocksController extends Controller
         $itemId = $request->get('item_id');
         $lowStockOnly = $request->get('low_stock_only', false);
         $perPage = $request->get('per_page', 25);
-
-        // Default to first campus if no campus_id provided
-        if (! $campusId) {
-            $firstCampus = Campus::first();
-            if ($firstCampus) {
-                $campusId = $firstCampus->id;
-            }
-        }
+        $search = trim((string) $request->get('search', ''));
 
         $stocks = InventoryStock::with(['campus:id,name', 'inventoryItem:id,name'])
             ->select(['id', 'campus_id', 'inventory_item_id', 'quantity', 'reserved_quantity', 'available_quantity', 'low_stock_threshold', 'updated_at'])
             ->when($campusId, fn ($q) => $q->where('campus_id', $campusId))
             ->when($itemId, fn ($q) => $q->where('inventory_item_id', $itemId))
+            ->when($search !== '', function ($q) use ($search) {
+                $q->whereHas('inventoryItem', fn ($itemQuery) => $itemQuery->whereRaw('LOWER(name) LIKE ?', ['%'.strtolower($search).'%']));
+            })
             ->when($lowStockOnly, function ($q) {
                 $q->having('available_quantity', '<', DB::raw('COALESCE(low_stock_threshold, 10)'));
             })

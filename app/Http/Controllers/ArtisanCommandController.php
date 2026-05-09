@@ -5,19 +5,23 @@ namespace App\Http\Controllers;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\DB;
+use Inertia\Response;
 
 class ArtisanCommandController extends Controller
 {
     /**
      * Display the artisan commands dashboard.
      */
-    public function index()
+    public function index(): Response
     {
         // Get list of available seeders
         $seeders = $this->getAvailableSeeders();
+        $pendingMigrations = $this->getPendingMigrations();
 
         return inertia('ArtisanCommands', [
             'seeders' => $seeders,
+            'pendingMigrations' => $pendingMigrations,
         ]);
     }
 
@@ -41,6 +45,37 @@ class ArtisanCommandController extends Controller
         return $seeders;
     }
 
+    private function getPendingMigrations(): array
+    {
+        $pendingMigrations = [];
+
+        try {
+            $migrationPath = database_path('migrations');
+            $migrationFiles = [];
+
+            if (is_dir($migrationPath)) {
+                $files = scandir($migrationPath);
+                foreach ($files as $file) {
+                    if (pathinfo($file, PATHINFO_EXTENSION) === 'php') {
+                        $migrationFiles[] = pathinfo($file, PATHINFO_FILENAME);
+                    }
+                }
+            }
+
+            $migrated = DB::table('migrations')->pluck('migration')->toArray();
+
+            foreach ($migrationFiles as $file) {
+                if (! in_array($file, $migrated)) {
+                    $pendingMigrations[] = $file;
+                }
+            }
+        } catch (\Exception $e) {
+            return [];
+        }
+
+        return array_values($pendingMigrations);
+    }
+
     /**
      * Clear application cache.
      */
@@ -62,9 +97,9 @@ class ArtisanCommandController extends Controller
             $results[$command] = $result === 0 ? 'Success' : 'Failed';
         }
 
-        return redirect()->route('artisan.commands.index')
-            ->with('success', 'Cache cleared successfully!')
-            ->with('results', $results);
+return redirect()->route('artisan.ui')
+             ->with('success', 'Cache cleared successfully!')
+             ->with('results', $results);
     }
 
     /**
@@ -85,9 +120,9 @@ class ArtisanCommandController extends Controller
             $results[$command] = $result === 0 ? 'Success' : 'Failed';
         }
 
-        return redirect()->route('artisan.commands.index')
-            ->with('success', 'Cache rebuilt successfully!')
-            ->with('results', $results);
+return redirect()->route('artisan.ui')
+             ->with('success', 'Cache rebuilt successfully!')
+             ->with('results', $results);
     }
 
     /**
@@ -98,7 +133,7 @@ class ArtisanCommandController extends Controller
         try {
             $output = Artisan::call('migrate');
 
-            return redirect()->route('artisan.commands.index')
+            return redirect()->route('artisan.ui')
                 ->with('success', 'Migrations completed successfully!')
                 ->with('output', Artisan::output());
         } catch (\Exception $e) {
@@ -156,7 +191,7 @@ class ArtisanCommandController extends Controller
         try {
             $output = Artisan::call('migrate:fresh');
 
-            return redirect()->route('artisan.commands.index')
+            return redirect()->route('artisan.ui')
                 ->with('success', 'Migrate:fresh completed successfully!')
                 ->with('output', Artisan::output());
         } catch (\Exception $e) {
@@ -196,11 +231,11 @@ class ArtisanCommandController extends Controller
                 $output = Artisan::call('db:seed');
             }
 
-            return redirect()->route('artisan.commands.index')
+            return redirect()->route('artisan.ui')
                 ->with('success', 'Database seeded successfully!')
                 ->with('output', Artisan::output());
         } catch (\Exception $e) {
-            return redirect()->route('artisan.commands.index')
+            return redirect()->route('artisan.ui')
                 ->with('error', 'Seeding failed: '.$e->getMessage());
         }
     }
@@ -218,15 +253,15 @@ class ArtisanCommandController extends Controller
             if ($seederClass) {
                 $output = Artisan::call('db:seed', ['--class' => $seederClass]);
 
-                return redirect()->route('artisan.commands.index')
+                return redirect()->route('artisan.ui')
                     ->with('success', "Seeder '{$seederName}' executed successfully!")
                     ->with('output', Artisan::output());
             } else {
-                return redirect()->route('artisan.commands.index')
+                return redirect()->route('artisan.ui')
                     ->with('error', "Seeder '{$seederName}' not found!");
             }
         } catch (\Exception $e) {
-            return redirect()->route('artisan.commands.index')
+            return redirect()->route('artisan.ui')
                 ->with('error', 'Seeding failed: '.$e->getMessage());
         }
     }
@@ -263,11 +298,11 @@ class ArtisanCommandController extends Controller
         try {
             $output = Artisan::call('migrate:rollback');
 
-            return redirect()->route('artisan.commands.index')
+            return redirect()->route('artisan.ui')
                 ->with('success', 'Migration rollback completed!')
                 ->with('output', Artisan::output());
         } catch (\Exception $e) {
-            return redirect()->route('artisan.commands.index')
+            return redirect()->route('artisan.ui')
                 ->with('error', 'Rollback failed: '.$e->getMessage());
         }
     }
@@ -280,11 +315,11 @@ class ArtisanCommandController extends Controller
         try {
             $output = Artisan::call('migrate:reset');
 
-            return redirect()->route('artisan.commands.index')
+            return redirect()->route('artisan.ui')
                 ->with('success', 'All migrations reset!')
                 ->with('output', Artisan::output());
         } catch (\Exception $e) {
-            return redirect()->route('artisan.commands.index')
+            return redirect()->route('artisan.ui')
                 ->with('error', 'Reset failed: '.$e->getMessage());
         }
     }
@@ -297,11 +332,11 @@ class ArtisanCommandController extends Controller
         try {
             $output = Artisan::call('migrate:status');
 
-            return redirect()->route('artisan.commands.index')
+            return redirect()->route('artisan.ui')
                 ->with('success', 'Migration status retrieved!')
                 ->with('output', Artisan::output());
         } catch (\Exception $e) {
-            return redirect()->route('artisan.commands.index')
+            return redirect()->route('artisan.ui')
                 ->with('error', 'Status check failed: '.$e->getMessage());
         }
     }
@@ -314,18 +349,18 @@ class ArtisanCommandController extends Controller
         $name = $request->get('name');
 
         if (! $name) {
-            return redirect()->route('artisan.commands.index')
+            return redirect()->route('artisan.ui')
                 ->with('error', 'Migration name is required!');
         }
 
         try {
             $output = Artisan::call('make:migration', ['name' => $name]);
 
-            return redirect()->route('artisan.commands.index')
+            return redirect()->route('artisan.ui')
                 ->with('success', 'Migration created!')
                 ->with('output', Artisan::output());
         } catch (\Exception $e) {
-            return redirect()->route('artisan.commands.index')
+            return redirect()->route('artisan.ui')
                 ->with('error', 'Failed to create migration: '.$e->getMessage());
         }
     }
@@ -338,18 +373,18 @@ class ArtisanCommandController extends Controller
         $name = $request->get('name');
 
         if (! $name) {
-            return redirect()->route('artisan.commands.index')
+            return redirect()->route('artisan.ui')
                 ->with('error', 'Seeder name is required!');
         }
 
         try {
             $output = Artisan::call('make:seeder', ['name' => $name]);
 
-            return redirect()->route('artisan.commands.index')
+            return redirect()->route('artisan.ui')
                 ->with('success', 'Seeder created!')
                 ->with('output', Artisan::output());
         } catch (\Exception $e) {
-            return redirect()->route('artisan.commands.index')
+            return redirect()->route('artisan.ui')
                 ->with('error', 'Failed to create seeder: '.$e->getMessage());
         }
     }
@@ -362,18 +397,18 @@ class ArtisanCommandController extends Controller
         $name = $request->get('name');
 
         if (! $name) {
-            return redirect()->route('artisan.commands.index')
+            return redirect()->route('artisan.ui')
                 ->with('error', 'Controller name is required!');
         }
 
         try {
             $output = Artisan::call('make:controller', ['name' => $name]);
 
-            return redirect()->route('artisan.commands.index')
+            return redirect()->route('artisan.ui')
                 ->with('success', 'Controller created!')
                 ->with('output', Artisan::output());
         } catch (\Exception $e) {
-            return redirect()->route('artisan.commands.index')
+            return redirect()->route('artisan.ui')
                 ->with('error', 'Failed to create controller: '.$e->getMessage());
         }
     }
@@ -386,18 +421,18 @@ class ArtisanCommandController extends Controller
         $name = $request->get('name');
 
         if (! $name) {
-            return redirect()->route('artisan.commands.index')
+            return redirect()->route('artisan.ui')
                 ->with('error', 'Model name is required!');
         }
 
         try {
             $output = Artisan::call('make:model', ['name' => $name]);
 
-            return redirect()->route('artisan.commands.index')
+            return redirect()->route('artisan.ui')
                 ->with('success', 'Model created!')
                 ->with('output', Artisan::output());
         } catch (\Exception $e) {
-            return redirect()->route('artisan.commands.index')
+            return redirect()->route('artisan.ui')
                 ->with('error', 'Failed to create model: '.$e->getMessage());
         }
     }
@@ -410,11 +445,11 @@ class ArtisanCommandController extends Controller
         try {
             $output = Artisan::call('queue:work');
 
-            return redirect()->route('artisan.commands.index')
+            return redirect()->route('artisan.ui')
                 ->with('success', 'Queue work started!')
                 ->with('output', Artisan::output());
         } catch (\Exception $e) {
-            return redirect()->route('artisan.commands.index')
+            return redirect()->route('artisan.ui')
                 ->with('error', 'Queue work failed: '.$e->getMessage());
         }
     }
@@ -427,11 +462,11 @@ class ArtisanCommandController extends Controller
         try {
             $output = Artisan::call('queue:clear');
 
-            return redirect()->route('artisan.commands.index')
+            return redirect()->route('artisan.ui')
                 ->with('success', 'Queue cleared!')
                 ->with('output', Artisan::output());
         } catch (\Exception $e) {
-            return redirect()->route('artisan.commands.index')
+            return redirect()->route('artisan.ui')
                 ->with('error', 'Queue clear failed: '.$e->getMessage());
         }
     }
@@ -444,11 +479,11 @@ class ArtisanCommandController extends Controller
         try {
             $output = Artisan::call('queue:restart');
 
-            return redirect()->route('artisan.commands.index')
+            return redirect()->route('artisan.ui')
                 ->with('success', 'Queue restarted!')
                 ->with('output', Artisan::output());
         } catch (\Exception $e) {
-            return redirect()->route('artisan.commands.index')
+            return redirect()->route('artisan.ui')
                 ->with('error', 'Queue restart failed: '.$e->getMessage());
         }
     }
@@ -461,11 +496,11 @@ class ArtisanCommandController extends Controller
         try {
             $output = Artisan::call('route:list');
 
-            return redirect()->route('artisan.commands.index')
+            return redirect()->route('artisan.ui')
                 ->with('success', 'Routes listed!')
                 ->with('output', Artisan::output());
         } catch (\Exception $e) {
-            return redirect()->route('artisan.commands.index')
+            return redirect()->route('artisan.ui')
                 ->with('error', 'Route list failed: '.$e->getMessage());
         }
     }
@@ -480,11 +515,11 @@ class ArtisanCommandController extends Controller
         try {
             $output = Artisan::call('vendor:publish', ['--tag' => $tag]);
 
-            return redirect()->route('artisan.commands.index')
+            return redirect()->route('artisan.ui')
                 ->with('success', 'Vendor published!')
                 ->with('output', Artisan::output());
         } catch (\Exception $e) {
-            return redirect()->route('artisan.commands.index')
+            return redirect()->route('artisan.ui')
                 ->with('error', 'Vendor publish failed: '.$e->getMessage());
         }
     }
@@ -497,11 +532,11 @@ class ArtisanCommandController extends Controller
         try {
             $output = Artisan::call($command);
 
-            return redirect()->route('artisan.commands.index')
+            return redirect()->route('artisan.ui')
                 ->with('success', "Command '{$command}' executed!")
                 ->with('output', Artisan::output());
         } catch (\Exception $e) {
-            return redirect()->route('artisan.commands.index')
+            return redirect()->route('artisan.ui')
                 ->with('error', "Command '{$command}' failed: ".$e->getMessage());
         }
     }

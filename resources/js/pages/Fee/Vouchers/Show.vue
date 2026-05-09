@@ -45,8 +45,31 @@ interface FeeVoucher {
     }>;
 }
 
+interface CohortSummary {
+    total: number;
+    paid: number;
+    partial: number;
+    unpaid: number;
+    overdue: number;
+    cancelled: number;
+}
+
+interface CohortVoucher {
+    id: number;
+    voucher_no: string;
+    student_name: string;
+    registration_number: string;
+    status: string;
+    net_amount: number;
+    paid_amount: number;
+    balance_amount: number;
+    due_date: string;
+}
+
 interface Props {
     voucher: FeeVoucher;
+    cohortSummary: CohortSummary;
+    cohortVouchers: CohortVoucher[];
 }
 
 const props = defineProps<Props>();
@@ -72,6 +95,18 @@ const getStatusColor = (status: string) => {
 
 const canCancel = () => {
     return ['unpaid', 'partial', 'overdue'].includes(props.voucher.status);
+};
+
+const getStatusCountClass = (tone: 'green' | 'blue' | 'yellow' | 'red' | 'gray') => {
+    const tones: Record<string, string> = {
+        green: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
+        blue: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400',
+        yellow: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400',
+        red: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
+        gray: 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400',
+    };
+
+    return tones[tone];
 };
 
 const handleCancel = () => {
@@ -282,6 +317,49 @@ const handleCancel = () => {
                         </div>
                     </div>
 
+                    <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 md:p-6">
+                        <h2 class="text-lg font-semibold mb-4">Class Voucher Progress</h2>
+                        <p class="mb-4 text-sm text-gray-600 dark:text-gray-400">
+                            This voucher belongs to one student, but this billing cycle covers {{ cohortSummary.total }} student vouchers for the same class, section, month, and year.
+                        </p>
+                        <div class="grid grid-cols-2 gap-3">
+                            <div class="rounded-lg border border-gray-200 dark:border-gray-700 p-3">
+                                <p class="text-xs text-gray-500 dark:text-gray-400">Total Students</p>
+                                <p class="mt-1 text-lg font-semibold text-gray-900 dark:text-white">{{ cohortSummary.total }}</p>
+                            </div>
+                            <div class="rounded-lg border border-gray-200 dark:border-gray-700 p-3">
+                                <p class="text-xs text-gray-500 dark:text-gray-400">Paid</p>
+                                <span :class="['mt-2 inline-flex rounded-full px-2.5 py-1 text-xs font-medium', getStatusCountClass('green')]">
+                                    {{ cohortSummary.paid }}
+                                </span>
+                            </div>
+                            <div class="rounded-lg border border-gray-200 dark:border-gray-700 p-3">
+                                <p class="text-xs text-gray-500 dark:text-gray-400">Partial</p>
+                                <span :class="['mt-2 inline-flex rounded-full px-2.5 py-1 text-xs font-medium', getStatusCountClass('blue')]">
+                                    {{ cohortSummary.partial }}
+                                </span>
+                            </div>
+                            <div class="rounded-lg border border-gray-200 dark:border-gray-700 p-3">
+                                <p class="text-xs text-gray-500 dark:text-gray-400">Unpaid</p>
+                                <span :class="['mt-2 inline-flex rounded-full px-2.5 py-1 text-xs font-medium', getStatusCountClass('yellow')]">
+                                    {{ cohortSummary.unpaid }}
+                                </span>
+                            </div>
+                            <div class="rounded-lg border border-gray-200 dark:border-gray-700 p-3">
+                                <p class="text-xs text-gray-500 dark:text-gray-400">Overdue</p>
+                                <span :class="['mt-2 inline-flex rounded-full px-2.5 py-1 text-xs font-medium', getStatusCountClass('red')]">
+                                    {{ cohortSummary.overdue }}
+                                </span>
+                            </div>
+                            <div class="rounded-lg border border-gray-200 dark:border-gray-700 p-3">
+                                <p class="text-xs text-gray-500 dark:text-gray-400">Cancelled</p>
+                                <span :class="['mt-2 inline-flex rounded-full px-2.5 py-1 text-xs font-medium', getStatusCountClass('gray')]">
+                                    {{ cohortSummary.cancelled }}
+                                </span>
+                            </div>
+                        </div>
+                    </div>
+
                     <!-- Quick Actions -->
                     <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 md:p-6">
                         <h2 class="text-lg font-semibold mb-4">Quick Actions</h2>
@@ -290,7 +368,7 @@ const handleCancel = () => {
                                 <Icon icon="printer" class="mr-2 h-4 w-4" />
                                 Print Voucher
                             </Button>
-                            <Button v-if="voucher.status !== 'paid'" variant="outline" class="w-full justify-start" size="sm">
+                            <Button v-if="voucher.status !== 'paid'" variant="outline" class="w-full justify-start" size="sm" @click="router.visit(`${route('fee.payments.create')}?student_id=${voucher.student.id}`)">
                                 <Icon icon="credit-card" class="mr-2 h-4 w-4" />
                                 Record Payment
                             </Button>
@@ -300,6 +378,45 @@ const handleCancel = () => {
                             </Button>
                         </div>
                     </div>
+                </div>
+            </div>
+
+            <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+                <div class="px-4 md:px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+                    <h2 class="text-lg font-semibold">Class / Section Payment Status</h2>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
+                        <thead class="bg-gray-50 dark:bg-gray-800">
+                            <tr>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase dark:text-gray-300">Student</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase dark:text-gray-300">Voucher</th>
+                                <th class="px-4 py-3 text-right text-xs font-semibold text-gray-600 uppercase dark:text-gray-300">Net</th>
+                                <th class="px-4 py-3 text-right text-xs font-semibold text-gray-600 uppercase dark:text-gray-300">Paid</th>
+                                <th class="px-4 py-3 text-right text-xs font-semibold text-gray-600 uppercase dark:text-gray-300">Balance</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase dark:text-gray-300">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-900">
+                            <tr v-for="cohortVoucher in cohortVouchers" :key="cohortVoucher.id" class="hover:bg-gray-50 dark:hover:bg-gray-800">
+                                <td class="px-4 py-3">
+                                    <div class="text-sm font-medium text-gray-900 dark:text-white">{{ cohortVoucher.student_name }}</div>
+                                    <div class="text-xs text-gray-500 dark:text-gray-400">{{ cohortVoucher.registration_number }}</div>
+                                </td>
+                                <td class="px-4 py-3 text-sm text-gray-600 dark:text-gray-300">{{ cohortVoucher.voucher_no }}</td>
+                                <td class="px-4 py-3 text-right text-sm text-gray-600 dark:text-gray-300">{{ formatCurrency(cohortVoucher.net_amount) }}</td>
+                                <td class="px-4 py-3 text-right text-sm text-green-600 dark:text-green-400">{{ formatCurrency(cohortVoucher.paid_amount) }}</td>
+                                <td class="px-4 py-3 text-right text-sm font-medium" :class="cohortVoucher.balance_amount > 0 ? 'text-red-600 dark:text-red-400' : 'text-gray-900 dark:text-white'">
+                                    {{ formatCurrency(cohortVoucher.balance_amount) }}
+                                </td>
+                                <td class="px-4 py-3">
+                                    <span :class="['px-2 py-1 text-xs font-medium rounded-full', getStatusColor(cohortVoucher.status)]">
+                                        {{ cohortVoucher.status }}
+                                    </span>
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
         </div>

@@ -35,6 +35,13 @@ export interface AppliedDiscount {
     value_type: string;
 }
 
+export interface EnrollmentDiscount {
+    fee_head_id: number;
+    discount_type_id: number;
+    value: number;
+    value_type: string;
+}
+
 export interface ManualFeeEntry {
     fee_head_id: number;
     fee_head: string;
@@ -64,6 +71,7 @@ export function useFeeStructure() {
     const discountTypes = ref<DiscountType[]>([]);
     const selectedDiscountType = ref<number | ''>('');
     const discountValue = ref<number>(0);
+    const discountSelectedFeeHeads = ref<number[]>([]);
     const manualSelectedFeeHeads = ref<number[]>([]);
     const manualFeeAmounts = ref<Record<number, number>>({});
     const manualReason = ref('');
@@ -73,6 +81,18 @@ export function useFeeStructure() {
     const formSessionId = ref<number | string>('');
     const formCampusId = ref<number | string>('');
     const formSectionId = ref<number | string>('');
+
+    const syncScopeRefs = (scope: {
+        classId?: number | string;
+        sessionId?: number | string;
+        campusId?: number | string;
+        sectionId?: number | string;
+    }) => {
+        formClassId.value = scope.classId ?? '';
+        formSessionId.value = scope.sessionId ?? '';
+        formCampusId.value = scope.campusId ?? '';
+        formSectionId.value = scope.sectionId ?? '';
+    };
 
     // Initialize form refs from parent
     const initFormRefs = (refs: {
@@ -111,11 +131,11 @@ export function useFeeStructure() {
     });
 
     const appliedDiscounts = computed((): AppliedDiscount[] => {
-        if (!selectedDiscountType.value || !feeStructure.value || manualSelectedFeeHeads.value.length === 0) {
+        if (!selectedDiscountType.value || !feeStructure.value || discountSelectedFeeHeads.value.length === 0) {
             return [];
         }
         
-        return manualSelectedFeeHeads.value.map(feeHeadId => {
+        return discountSelectedFeeHeads.value.map(feeHeadId => {
             const item = feeStructure.value!.items.find((i: FeeStructureItem) => i.fee_head_id === feeHeadId);
             return {
                 fee_head_id: feeHeadId,
@@ -197,10 +217,13 @@ export function useFeeStructure() {
     }
 
     function resetSelections() {
+        discountSelectedFeeHeads.value = [];
         manualSelectedFeeHeads.value = [];
         manualFeeAmounts.value = {};
         discountValue.value = 0;
         selectedDiscountType.value = '';
+        manualReason.value = '';
+        feeMode.value = 'structure';
     }
 
     // Navigate to create fee structure page
@@ -209,6 +232,9 @@ export function useFeeStructure() {
         params.set('campus_id', String(formCampusId.value));
         params.set('session_id', String(formSessionId.value));
         params.set('class_id', String(formClassId.value));
+        if (formSectionId.value) {
+            params.set('section_id', String(formSectionId.value));
+        }
         router.visit(route('fee.structures.create') + '?' + params.toString());
     }
 
@@ -216,6 +242,7 @@ export function useFeeStructure() {
     function loadEnrollmentData(enrollment: {
         fee_structure_id?: number | null;
         fee_mode?: string | null;
+        discounts?: EnrollmentDiscount[] | null;
         custom_fee_entries?: Array<{ fee_head_id: number; amount: number }> | null;
         manual_discount_percentage?: number | null;
         manual_discount_reason?: string | null;
@@ -230,14 +257,83 @@ export function useFeeStructure() {
                         enrollment.custom_fee_entries.forEach((entry: any) => {
                             manualFeeAmounts.value[entry.fee_head_id] = entry.amount;
                         });
+                        manualReason.value = enrollment.manual_discount_reason || '';
                     }
                     
-                    if (enrollment.fee_mode === 'discount') {
-                        discountValue.value = enrollment.manual_discount_percentage || 0;
+                    if (enrollment.fee_mode === 'discount' && enrollment.discounts?.length) {
+                        selectedDiscountType.value = enrollment.discounts[0].discount_type_id;
+                        discountValue.value = enrollment.discounts[0].value;
+                        discountSelectedFeeHeads.value = enrollment.discounts
+                            .map((discount) => discount.fee_head_id)
+                            .filter((feeHeadId): feeHeadId is number => !!feeHeadId);
                     }
                 }
             });
         }
+    }
+
+    function validateActiveMode(): string | null {
+        if (!feeStructure.value) {
+            return null;
+        }
+
+        if (feeMode.value === 'discount') {
+            if (!selectedDiscountType.value) {
+                return 'Please select a discount type.';
+            }
+
+            if (discountSelectedFeeHeads.value.length === 0) {
+                return 'Please select at least one fee head for discount mode.';
+            }
+        }
+
+        if (feeMode.value === 'manual') {
+            if (manualFeeEntries.value.length === 0) {
+                return 'Please add at least one custom fee entry for manual mode.';
+            }
+
+            const mandatoryFeeHeadIds = feeStructure.value.items
+                .filter((item) => !item.is_optional)
+                .map((item) => item.fee_head_id);
+
+            const hasAllMandatoryFeeHeads = mandatoryFeeHeadIds.every((feeHeadId) =>
+                manualSelectedFeeHeads.value.includes(feeHeadId),
+            );
+
+            if (!hasAllMandatoryFeeHeads) {
+                return 'Please include all mandatory fee heads in manual mode.';
+            }
+        }
+
+        return null;
+    }
+
+    function getSubmissionPayload() {
+        if (!feeStructure.value) return null;
+
+        const payload: Record<string, unknown> = {
+            fee_structure_id: feeStructure.value.id,
+            fee_mode: feeMode.value,
+        };
+
+        if (feeMode.value === 'discount') {
+            payload.discounts = appliedDiscounts.value;
+            payload.manual_discount_percentage = discountValue.value;
+        }
+
+        if (feeMode.value === 'manual') {
+            payload.custom_fee_entries = manualFeeEntries.value;
+            payload.manual_discount_reason = manualReason.value;
+
+            const totalDiscount = manualFeeEntries.value.reduce((sum, entry) => {
+                return sum + (entry.discount_percentage || 0);
+            }, 0);
+            payload.manual_discount_percentage = manualFeeEntries.value.length > 0
+                ? Math.round(totalDiscount / manualFeeEntries.value.length)
+                : 0;
+        }
+
+        return payload;
     }
 
     // Get data to send to server
@@ -278,6 +374,7 @@ export function useFeeStructure() {
         discountTypes,
         selectedDiscountType,
         discountValue,
+        discountSelectedFeeHeads,
         manualSelectedFeeHeads,
         manualFeeAmounts,
         manualReason,
@@ -293,6 +390,7 @@ export function useFeeStructure() {
         manualFeeEntries,
         // Methods
         initFormRefs,
+        syncScopeRefs,
         setupFormWatchers,
         fetchFeeStructure,
         fetchDiscountTypes,
@@ -301,6 +399,8 @@ export function useFeeStructure() {
         resetSelections,
         createFeeStructure,
         loadEnrollmentData,
+        validateActiveMode,
+        getSubmissionPayload,
         getFeeData,
     };
 }

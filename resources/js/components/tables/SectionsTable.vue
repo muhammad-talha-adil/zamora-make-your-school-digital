@@ -3,9 +3,11 @@ import SectionForm from '@/components/forms/SectionForm.vue';
 import Icon from '@/components/Icon.vue';
 import { Button } from '@/components/ui/button';
 import { alert } from '@/utils';
+import { tableActionButtonClass } from '@/utils/table-actions';
 import axios from 'axios';
 import { ref, watch } from 'vue';
 
+const stateButtonClass = 'min-h-8 border-amber-200 text-amber-700 hover:bg-amber-50 hover:text-amber-800 dark:border-amber-800 dark:text-amber-300 dark:hover:bg-amber-950/40 dark:hover:text-amber-200';
 interface Props {
     sections: any;
     schoolClasses?: { id: number; name: string }[];
@@ -163,7 +165,7 @@ const handleSaved = () => {
                             <th scope="col" class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">
                                 Status
                             </th>
-                            <th scope="col" class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">
+                            <th scope="col" class="px-6 py-4 text-right text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">
                                 Actions
                             </th>
                         </tr>
@@ -212,13 +214,14 @@ const handleSaved = () => {
                                 </span>
                             </td>
                             <td class="px-6 py-4 text-sm font-medium whitespace-nowrap">
-                                <div class="flex space-x-2">
+                                <div class="flex flex-wrap justify-end gap-2">
                                     <SectionForm
                                         :section="section"
                                         :school-classes="schoolClasses"
                                         trigger="Edit"
                                         variant="outline"
                                         size="sm"
+                                        class="contents"
                                         @saved="handleSaved"
                                     >
                                         <Icon icon="edit" class="mr-1" />Edit
@@ -227,21 +230,24 @@ const handleSaved = () => {
                                         v-if="section.is_active"
                                         variant="outline"
                                         size="sm"
+                                        :class="stateButtonClass"
                                         @click="inactivateSection(section)"
                                     >
                                         <Icon icon="pause" class="mr-1" />Inactive
                                     </Button>
                                     <Button
                                         v-else
-                                        variant="default"
+                                        variant="outline"
                                         size="sm"
+                                        :class="section.is_active ? tableActionButtonClass.deactivate : tableActionButtonClass.activate"
                                         @click="activateSection(section)"
                                     >
                                         <Icon icon="check" class="mr-1" />Activate
                                     </Button>
                                     <Button
-                                        variant="destructive"
+                                        variant="outline"
                                         size="sm"
+                                        :class="tableActionButtonClass.delete"
                                         @click="deleteSection(section)"
                                     >
                                         <Icon icon="trash" class="mr-1" />Delete

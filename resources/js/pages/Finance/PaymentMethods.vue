@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import type { BreadcrumbItem } from '@/types';
+import { tableActionButtonClass } from '@/utils/table-actions';
 
 interface PaymentMethod {
     id: number;
@@ -98,7 +99,7 @@ const submitForm = async () => {
                             <p class="text-sm text-gray-500">{{ method.code }}</p>
                         </div>
                         <div class="flex gap-2">
-                            <button @click="editMethod(method)" class="text-blue-600 hover:text-blue-800 text-sm">Edit</button>
+                            <Button variant="outline" size="sm" :class="tableActionButtonClass.edit" @click="editMethod(method)">Edit</Button>
                         </div>
                     </div>
                     <div class="mt-2">

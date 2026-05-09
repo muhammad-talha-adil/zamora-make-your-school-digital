@@ -2,19 +2,31 @@
 
 namespace App\Http\Controllers\Fee;
 
+use App\Enums\Fee\WalletDirection;
+use App\Enums\Fee\WalletTransactionType;
 use App\Http\Controllers\Controller;
 use App\Models\Campus;
 use App\Models\Fee\FeePayment;
+use App\Models\Fee\StudentFeeWalletTransaction;
 use App\Models\Fee\FeeVoucher;
 use App\Models\Student;
 use App\Services\FinanceService;
+use App\Services\Finance\StudentBillingService;
+use App\Services\Finance\UnifiedAccountingService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\Rule;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 
 class FeePaymentController extends Controller
 {
+    public function __construct(
+        protected StudentBillingService $studentBillingService,
+        protected UnifiedAccountingService $accountingService
+    ) {}
+
     /**
      * Display a listing of payments.
      */
@@ -66,18 +78,66 @@ class FeePaymentController extends Controller
     {
         $studentId = $request->get('student_id');
         $unpaidVouchers = [];
+        $selectedStudent = null;
 
         if ($studentId) {
-            $unpaidVouchers = FeeVoucher::where('student_id', $studentId)
-                ->whereIn('status', ['unpaid', 'partial', 'overdue'])
-                ->with(['voucherMonth', 'items.feeHead'])
-                ->get();
+            $selectedStudent = Student::with('user:id,name')->find($studentId);
+            $unpaidVouchers = $this->getUnpaidVouchersForStudent((int) $studentId);
         }
 
         return Inertia::render('Fee/Payments/Create', [
             'unpaidVouchers' => $unpaidVouchers,
             'studentId' => $studentId,
+            'selectedStudent' => $selectedStudent ? [
+                'id' => $selectedStudent->id,
+                'name' => $selectedStudent->name,
+                'registration_number' => $selectedStudent->registration_number,
+            ] : null,
         ]);
+    }
+
+    /**
+     * Search students for payment by student fields or voucher number.
+     */
+    public function searchStudents(Request $request)
+    {
+        $search = trim((string) $request->get('q', ''));
+
+        if (mb_strlen($search) < 2) {
+            return response()->json([]);
+        }
+
+        $students = Student::query()
+            ->with('user:id,name')
+            ->where(function ($query) use ($search) {
+                $query->where('registration_no', 'like', "%{$search}%")
+                    ->orWhere('admission_no', 'like', "%{$search}%")
+                    ->orWhereHas('user', function ($userQuery) use ($search) {
+                        $userQuery->where('name', 'like', "%{$search}%");
+                    })
+                    ->orWhereHas('feeVouchers', function ($voucherQuery) use ($search) {
+                        $voucherQuery->where('voucher_no', 'like', "%{$search}%");
+                    });
+            })
+            ->limit(15)
+            ->get(['id', 'registration_no', 'admission_no'])
+            ->map(function (Student $student) use ($search) {
+                $matchedVoucher = $student->feeVouchers()
+                    ->where('voucher_no', 'like', "%{$search}%")
+                    ->orderByDesc('id')
+                    ->value('voucher_no');
+
+                return [
+                    'id' => $student->id,
+                    'name' => $student->name,
+                    'registration_number' => $student->registration_number,
+                    'admission_no' => $student->admission_no,
+                    'matched_voucher_no' => $matchedVoucher,
+                ];
+            })
+            ->values();
+
+        return response()->json($students);
     }
 
     /**
@@ -89,14 +149,107 @@ class FeePaymentController extends Controller
             'student_id' => 'required|exists:students,id',
             'payment_date' => 'required|date',
             'payment_method' => 'required|in:cash,bank,online,jazzcash,easypaisa,cheque',
-            'reference_no' => 'nullable|string|max:100',
-            'bank_name' => 'nullable|string|max:100',
+            'reference_no' => [
+                'nullable',
+                'string',
+                'max:100',
+                Rule::requiredIf($request->input('payment_method') !== 'cash'),
+                Rule::prohibitedIf($request->input('payment_method') === 'cash'),
+            ],
+            'bank_name' => [
+                'nullable',
+                'string',
+                'max:100',
+                Rule::requiredIf(in_array($request->input('payment_method'), ['bank', 'cheque'], true)),
+            ],
             'received_amount' => 'required|numeric|min:0',
-            'vouchers' => 'required|array|min:1',
-            'vouchers.*.voucher_id' => 'required|exists:fee_vouchers,id',
-            'vouchers.*.amount' => 'required|numeric|min:0',
+            'charges' => 'required|array|min:1',
+            'charges.*.voucher_id' => 'required|exists:fee_vouchers,id',
+            'charges.*.fee_voucher_item_id' => 'required|exists:fee_voucher_items,id',
+            'charges.*.student_account_charge_id' => 'nullable|exists:student_account_charges,id',
+            'charges.*.source_module' => 'nullable|string|max:50',
+            'charges.*.amount' => 'required|numeric|gt:0',
             'remarks' => 'nullable|string',
         ]);
+
+        $voucherIds = collect($validated['charges'])
+            ->pluck('voucher_id')
+            ->unique()
+            ->values();
+
+        $vouchers = FeeVoucher::query()
+            ->whereIn('id', $voucherIds)
+            ->where('student_id', $validated['student_id'])
+            ->whereIn('status', ['unpaid', 'partial', 'overdue'])
+            ->get()
+            ->keyBy('id');
+
+        if ($vouchers->count() !== $voucherIds->count()) {
+            throw ValidationException::withMessages([
+                'vouchers' => 'One or more selected vouchers do not belong to this student or are no longer unpaid.',
+            ]);
+        }
+
+        $chargeIds = collect($validated['charges'])
+            ->pluck('student_account_charge_id')
+            ->filter()
+            ->unique()
+            ->values();
+
+        $charges = \App\Models\Finance\StudentAccountCharge::query()
+            ->whereIn('id', $chargeIds)
+            ->where('student_id', $validated['student_id'])
+            ->get()
+            ->keyBy('id');
+
+        foreach ($validated['charges'] as $index => $chargeData) {
+            $voucher = $vouchers->get($chargeData['voucher_id']);
+            if (! $voucher) {
+                continue;
+            }
+
+            $item = $voucher->items()->whereKey($chargeData['fee_voucher_item_id'])->first();
+            if (! $item) {
+                throw ValidationException::withMessages([
+                    "charges.{$index}.fee_voucher_item_id" => 'Selected due item does not belong to the selected voucher.',
+                ]);
+            }
+
+            $charge = null;
+            if (! empty($chargeData['student_account_charge_id'])) {
+                $charge = $charges->get($chargeData['student_account_charge_id']);
+
+                if (! $charge || $item->student_account_charge_id !== $charge->id) {
+                    throw ValidationException::withMessages([
+                        "charges.{$index}.student_account_charge_id" => 'Selected due charge does not match the voucher item.',
+                    ]);
+                }
+            }
+
+            $maxAllocatable = $this->studentBillingService->getVoucherItemBalance($item->loadMissing('studentAccountCharge'));
+
+            if ((float) $chargeData['amount'] > $maxAllocatable) {
+                throw ValidationException::withMessages([
+                    "charges.{$index}.amount" => 'Allocated amount cannot exceed the remaining balance of the selected due item.',
+                ]);
+            }
+        }
+
+        $totalAllocated = (float) collect($validated['charges'])->sum('amount');
+        if ($totalAllocated > (float) $validated['received_amount']) {
+            throw ValidationException::withMessages([
+                'charges' => 'Allocated due amount cannot be greater than the received amount.',
+            ]);
+        }
+
+        /* Legacy voucher-wide validation remains below only for voucher existence. */
+        foreach ($validated['charges'] as $index => $voucherData) {
+            $voucher = $vouchers->get($voucherData['voucher_id']);
+
+            if (! $voucher) {
+                continue;
+            }
+        }
 
         return DB::transaction(function () use ($validated) {
             // Get student enrollment to determine campus
@@ -122,7 +275,7 @@ class FeePaymentController extends Controller
                 'campus_id' => $enrollment->campus_id,
                 'payment_date' => $validated['payment_date'],
                 'payment_method' => $validated['payment_method'],
-                'reference_no' => $validated['reference_no'] ?? null,
+                'reference_no' => $validated['payment_method'] === 'cash' ? null : ($validated['reference_no'] ?? null),
                 'bank_name' => $validated['bank_name'] ?? null,
                 'received_amount' => $validated['received_amount'],
                 'allocated_amount' => $totalAllocated,
@@ -134,77 +287,64 @@ class FeePaymentController extends Controller
             ]);
 
             // Create allocations and update vouchers
-            foreach ($validated['vouchers'] as $voucherData) {
-                $voucher = FeeVoucher::findOrFail($voucherData['voucher_id']);
-                $amountToAllocate = $voucherData['amount'];
+            $affectedVoucherIds = [];
+            $affectedChargeIds = [];
 
-                // Auto-allocate to previous vouchers if this voucher has previous_voucher_ids
-                $previousVoucherIds = $voucher->previous_voucher_ids ?? [];
+            foreach ($validated['charges'] as $chargeData) {
+                $voucher = FeeVoucher::findOrFail($chargeData['voucher_id']);
+                $item = $voucher->items()->findOrFail($chargeData['fee_voucher_item_id']);
+                $chargeId = $chargeData['student_account_charge_id'] ?? $item->student_account_charge_id;
 
-                if (! empty($previousVoucherIds) && is_array($previousVoucherIds)) {
-                    // Get previous vouchers that still have balance
-                    $previousVouchers = FeeVoucher::whereIn('id', $previousVoucherIds)
-                        ->whereIn('status', ['unpaid', 'partial'])
-                        ->get();
+                $payment->allocations()->create([
+                    'fee_voucher_id' => $voucher->id,
+                    'fee_voucher_item_id' => $item->id,
+                    'student_account_charge_id' => $chargeId,
+                    'source_module' => $chargeData['source_module'] ?? $item->source_module,
+                    'allocated_amount' => $chargeData['amount'],
+                    'allocation_date' => $validated['payment_date'],
+                    'notes' => $item->description,
+                ]);
 
-                    foreach ($previousVouchers as $previousVoucher) {
-                        if ($amountToAllocate <= 0) {
-                            break;
-                        }
-
-                        $previousBalance = $previousVoucher->balance_amount;
-                        $allocationToPrevious = min($amountToAllocate, $previousBalance);
-
-                        if ($allocationToPrevious > 0) {
-                            // Create allocation for previous voucher
-                            $payment->allocations()->create([
-                                'fee_voucher_id' => $previousVoucher->id,
-                                'allocated_amount' => $allocationToPrevious,
-                                'allocation_date' => $validated['payment_date'],
-                            ]);
-
-                            // Update previous voucher
-                            $previousVoucher->paid_amount += $allocationToPrevious;
-                            $previousVoucher->balance_amount = $previousVoucher->net_amount - $previousVoucher->paid_amount;
-
-                            if ($previousVoucher->balance_amount <= 0) {
-                                $previousVoucher->status = 'paid';
-                            } elseif ($previousVoucher->paid_amount > 0) {
-                                $previousVoucher->status = 'partial';
-                            }
-
-                            $previousVoucher->save();
-
-                            // Reduce amount available for current voucher
-                            $amountToAllocate -= $allocationToPrevious;
-                        }
-                    }
-                }
-
-                // Create allocation for current voucher (remaining amount)
-                if ($amountToAllocate > 0) {
-                    $payment->allocations()->create([
-                        'fee_voucher_id' => $voucher->id,
-                        'allocated_amount' => $amountToAllocate,
-                        'allocation_date' => $validated['payment_date'],
-                    ]);
-
-                    // Update current voucher
-                    $voucher->paid_amount += $amountToAllocate;
-                    $voucher->balance_amount = $voucher->net_amount - $voucher->paid_amount;
-
-                    if ($voucher->balance_amount <= 0) {
-                        $voucher->status = 'paid';
-                    } elseif ($voucher->paid_amount > 0) {
-                        $voucher->status = 'partial';
-                    }
-
-                    $voucher->save();
+                $affectedVoucherIds[$voucher->id] = $voucher->id;
+                if ($chargeId) {
+                    $affectedChargeIds[$chargeId] = $chargeId;
                 }
             }
 
-            // Create Finance Ledger Entry (Income from tuition fee)
-            $this->createFinanceLedgerEntry($payment, $validated['received_amount'], $enrollment->campus_id);
+            foreach ($affectedChargeIds as $chargeId) {
+                $charge = \App\Models\Finance\StudentAccountCharge::find($chargeId);
+                if ($charge) {
+                    $this->studentBillingService->syncChargeSettlement($charge);
+                }
+            }
+
+            foreach ($affectedVoucherIds as $voucherId) {
+                $voucher = FeeVoucher::find($voucherId);
+                if ($voucher) {
+                    $this->studentBillingService->syncVoucherSettlement($voucher);
+                }
+            }
+
+            // Keep the legacy ledger view aligned with the new accounting rule:
+            // only the allocated portion is recognized as current-period income.
+            if ($totalAllocated > 0) {
+                $this->createFinanceLedgerEntry($payment, $totalAllocated, $enrollment->campus_id);
+            }
+            $this->accountingService->postPaymentJournal($payment);
+
+            if ($walletAmount > 0) {
+                StudentFeeWalletTransaction::create([
+                    'student_id' => $validated['student_id'],
+                    'transaction_date' => $validated['payment_date'],
+                    'transaction_type' => WalletTransactionType::ADVANCE_DEPOSIT,
+                    'direction' => WalletDirection::CREDIT,
+                    'amount' => $walletAmount,
+                    'reference_type' => FeePayment::class,
+                    'reference_id' => $payment->id,
+                    'description' => 'Excess amount kept as advance from receipt '.$payment->receipt_no,
+                    'created_by' => auth()->id(),
+                ]);
+            }
 
             return redirect()->route('fee.payments.show', $payment->id)
                 ->with('success', 'Payment recorded successfully.');
@@ -299,5 +439,16 @@ class FeePaymentController extends Controller
         return Inertia::render('Fee/Payments/Receipt', [
             'payment' => $payment,
         ]);
+    }
+
+    protected function getUnpaidVouchersForStudent(int $studentId)
+    {
+        return FeeVoucher::query()
+            ->where('student_id', $studentId)
+            ->whereIn('status', ['unpaid', 'partial', 'overdue'])
+            ->with(['voucherMonth', 'items.feeHead'])
+            ->orderBy('voucher_year')
+            ->orderBy('voucher_month_id')
+            ->get();
     }
 }

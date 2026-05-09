@@ -13,7 +13,7 @@ class FeeStructureItemController extends Controller
     /**
      * Store a newly created fee structure item.
      */
-    public function store(Request $request, FeeStructure $structure)
+    public function store(Request $request, FeeStructure $feeStructure)
     {
         $validated = $request->validate([
             'fee_head_id' => 'required|exists:fee_heads,id',
@@ -26,7 +26,7 @@ class FeeStructureItemController extends Controller
             'notes' => 'nullable|string',
         ]);
 
-        $validated['fee_structure_id'] = $structure->id;
+        $validated['fee_structure_id'] = $feeStructure->id;
 
         // Auto-set frequency from FeeHead if not provided
         if (empty($validated['frequency'])) {
@@ -85,7 +85,7 @@ class FeeStructureItemController extends Controller
     /**
      * Get fee heads for the structure's campus/scope.
      */
-    public function getAvailableFeeHeads(Request $request, FeeStructure $structure)
+    public function getAvailableFeeHeads(Request $request, FeeStructure $feeStructure)
     {
         // Get all active fee heads
         $feeHeads = FeeHead::active()

@@ -3,6 +3,7 @@ import CampusForm from '@/components/forms/CampusForm.vue';
 import { Button } from '@/components/ui/button';
 import Icon from '@/components/Icon.vue';
 import { alert } from '@/utils';
+import { tableActionButtonClass } from '@/utils/table-actions';
 import axios from 'axios';
 import { ref, watch } from 'vue';
 import { route } from 'ziggy-js';
@@ -196,7 +197,7 @@ const inactivateCampus = (campus: any) => {
                             </th>
                             <th
                                 scope="col"
-                                class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300"
+                                class="px-6 py-4 text-right text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300"
                             >
                                 Actions
                             </th>
@@ -210,7 +211,7 @@ const inactivateCampus = (campus: any) => {
                         >
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <div class="text-sm text-gray-600 dark:text-gray-300">
-                                    {{ (index as number) + 1 }}
+                                    {{ ((pagination.from || 1) - 1) + (index as number) + 1 }}
                                 </div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
@@ -248,13 +249,14 @@ const inactivateCampus = (campus: any) => {
                                 </span>
                             </td>
                             <td class="px-6 py-4 text-sm font-medium whitespace-nowrap">
-                                <div class="flex space-x-2">
+                                <div class="flex flex-wrap justify-end gap-2">
                                     <CampusForm
                                         :campus="campus"
                                         :campus-types="campusTypesLoaded"
                                         trigger="Edit"
                                         variant="outline"
                                         size="sm"
+                                        class="contents"
                                         @saved="handleSaved"
                                     >
                                         <Icon icon="edit" class="mr-1" />Edit
@@ -263,21 +265,24 @@ const inactivateCampus = (campus: any) => {
                                         v-if="campus.is_active"
                                         variant="outline"
                                         size="sm"
+                                        :class="tableActionButtonClass.deactivate"
                                         @click="inactivateCampus(campus)"
                                     >
                                         <Icon icon="pause" class="mr-1" />Inactive
                                     </Button>
                                     <Button
                                         v-else
-                                        variant="default"
+                                        variant="outline"
                                         size="sm"
+                                        :class="tableActionButtonClass.activate"
                                         @click="activateCampus(campus)"
                                     >
                                         <Icon icon="check" class="mr-1" />Active
                                     </Button>
                                     <Button
-                                        variant="destructive"
+                                        variant="outline"
                                         size="sm"
+                                        :class="tableActionButtonClass.delete"
                                         @click="deleteCampus(campus)"
                                     >
                                         <Icon icon="trash" class="mr-1" />Delete

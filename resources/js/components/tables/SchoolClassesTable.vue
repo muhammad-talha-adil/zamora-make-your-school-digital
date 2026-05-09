@@ -3,6 +3,7 @@ import SchoolClassForm from '@/components/forms/SchoolClassForm.vue';
 import { Button } from '@/components/ui/button';
 import Icon from '@/components/Icon.vue';
 import { alert } from '@/utils';
+import { tableActionButtonClass } from '@/utils/table-actions';
 import axios from 'axios';
 import { ref, watch } from 'vue';
 import { route } from 'ziggy-js';
@@ -171,7 +172,7 @@ const inactivateClass = (schoolClass: any) => {
                             </th>
                             <th
                                 scope="col"
-                                class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300"
+                                class="px-6 py-4 text-right text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300"
                             >
                                 Actions
                             </th>
@@ -216,12 +217,13 @@ const inactivateClass = (schoolClass: any) => {
                                 </span>
                             </td>
                             <td class="px-6 py-4 text-sm font-medium whitespace-nowrap">
-                                <div class="flex space-x-2">
+                                <div class="flex flex-wrap justify-end gap-2">
                                     <SchoolClassForm
                                         :school-class="schoolClass"
                                         trigger="Edit"
                                         variant="outline"
                                         size="sm"
+                                        class="contents"
                                         @saved="handleSaved"
                                     >
                                         <Icon icon="edit" class="mr-1" />Edit
@@ -230,21 +232,24 @@ const inactivateClass = (schoolClass: any) => {
                                         v-if="schoolClass.is_active"
                                         variant="outline"
                                         size="sm"
+                                        :class="tableActionButtonClass.deactivate"
                                         @click="inactivateClass(schoolClass)"
                                     >
                                         <Icon icon="pause" class="mr-1" />Inactive
                                     </Button>
                                     <Button
                                         v-else
-                                        variant="default"
+                                        variant="outline"
                                         size="sm"
+                                        :class="tableActionButtonClass.activate"
                                         @click="activateClass(schoolClass)"
                                     >
                                         <Icon icon="check" class="mr-1" />Active
                                     </Button>
                                     <Button
-                                        variant="destructive"
+                                        variant="outline"
                                         size="sm"
+                                        :class="tableActionButtonClass.delete"
                                         @click="deleteClass(schoolClass)"
                                     >
                                         <Icon icon="trash" class="mr-1" />Delete

@@ -44,7 +44,7 @@ class CacheController extends Controller
         $request->session()->flash('cache-cleared', true);
         $request->session()->flash('cache-results', $results);
 
-        return redirect()->route('cache.clear.index')
+        return redirect()->route('artisan.cache.clear.index')
             ->with('success', 'All caches cleared successfully!');
     }
 
@@ -53,11 +53,9 @@ class CacheController extends Controller
      */
     public function clearFrontend(Request $request): RedirectResponse
     {
-        // Return a response that will force browser refresh
-        return redirect('/')
-            ->header('Cache-Control', 'no-cache, no-store, must-revalidate')
-            ->header('Pragma', 'no-cache')
-            ->header('Expires', '0')
+        $request->session()->flash('cache-cleared', true);
+
+        return redirect()->route('artisan.cache.clear.index')
             ->with('success', 'Frontend cache cleared! Please hard refresh your browser (Ctrl+F5).');
     }
 
@@ -83,7 +81,7 @@ class CacheController extends Controller
             $results[$command] = $result === 0 ? 'Success' : 'Failed';
         }
 
-        return redirect()->route('cache.clear.index')
+        return redirect()->route('artisan.cache.clear.index')
             ->with('success', 'Backend caches cleared successfully!')
             ->with('cache-results', $results);
     }
@@ -106,7 +104,7 @@ class CacheController extends Controller
             $results[$command] = $result === 0 ? 'Success' : 'Failed';
         }
 
-        return redirect()->route('cache.clear.index')
+        return redirect()->route('artisan.cache.clear.index')
             ->with('success', 'Caches rebuilt successfully!')
             ->with('cache-results', $results);
     }

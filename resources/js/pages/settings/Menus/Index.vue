@@ -19,6 +19,10 @@ interface Props {
             type: string;
             order: number;
             is_active: boolean;
+            parent_id?: number | null;
+            parent_title?: string | null;
+            parent_hierarchy_label?: string | null;
+            hierarchy_label?: string;
         }>;
         links: Array<{
             url: string | null;
@@ -32,6 +36,10 @@ interface Props {
     parentMenus: Array<{
         id: number;
         title: string;
+        type: string;
+        parent_id?: number | null;
+        order: number;
+        hierarchy_label: string;
     }>;
 }
 
