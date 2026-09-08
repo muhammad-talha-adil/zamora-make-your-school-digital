@@ -132,9 +132,9 @@ const getPaymentMethodLabel = (method: string) => {
 
 const getStatusColor = (status: string) => {
     const colors: Record<string, string> = {
-        posted: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
-        pending: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400',
-        reversed: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
+        posted: 'bg-success/10 text-success',
+        pending: 'bg-warning/10 text-warning',
+        reversed: 'bg-destructive/10 text-destructive',
     };
 
     return colors[status] || colors.pending;
@@ -157,10 +157,10 @@ const getPageFromUrl = (url: string | null) => {
         <div class="space-y-4 p-4 md:space-y-6 md:p-6">
             <div class="flex flex-col items-start justify-between gap-3 md:gap-4 sm:flex-row sm:items-center">
                 <div>
-                    <h1 class="text-lg font-bold text-gray-900 dark:text-white md:text-2xl">
+                    <h1 class="text-lg font-bold text-foreground md:text-2xl">
                         Fee Payments
                     </h1>
-                    <p class="mt-1 text-xs text-gray-600 dark:text-gray-400 md:text-sm">
+                    <p class="mt-1 text-xs text-muted-foreground md:text-sm">
                         View and record student fee payments
                     </p>
                 </div>
@@ -170,14 +170,14 @@ const getPageFromUrl = (url: string | null) => {
                 </Button>
             </div>
 
-            <div class="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800">
+            <div class="rounded-lg border border-border bg-card p-4">
                 <div class="grid grid-cols-1 gap-4 md:grid-cols-5">
                     <div class="space-y-2">
                         <Label for="filter-campus">Campus</Label>
                         <select
                             id="filter-campus"
                             v-model="filters.campus_id"
-                            class="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                            class="w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground"
                         >
                             <option value="">All Campuses</option>
                             <option v-for="campus in props.campuses" :key="campus.id" :value="String(campus.id)">
@@ -206,7 +206,7 @@ const getPageFromUrl = (url: string | null) => {
                         <select
                             id="filter-method"
                             v-model="filters.payment_method"
-                            class="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                            class="w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground"
                         >
                             <option value="">All Methods</option>
                             <option value="cash">Cash</option>
@@ -238,17 +238,17 @@ const getPageFromUrl = (url: string | null) => {
                 <div
                     v-for="(payment, index) in paymentsData"
                     :key="payment.id"
-                    class="space-y-3 rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800"
+                    class="space-y-3 rounded-lg border border-border bg-card p-4"
                 >
-                    <div class="flex items-start justify-between gap-3">
+                    <div class="flex flex-wrap items-start justify-between gap-3">
                         <div>
-                            <div class="text-xs text-gray-500 dark:text-gray-400">
+                            <div class="text-xs text-muted-foreground">
                                 Sr# {{ ((paymentsPagination.from || 1) - 1) + index + 1 }}
                             </div>
-                            <div class="font-medium text-gray-900 dark:text-white">
+                            <div class="font-medium text-foreground">
                                 {{ payment.receipt_no }}
                             </div>
-                            <div class="text-xs text-gray-500 dark:text-gray-400">
+                            <div class="text-xs text-muted-foreground">
                                 {{ payment.student?.name || 'N/A' }}
                             </div>
                         </div>
@@ -256,7 +256,7 @@ const getPageFromUrl = (url: string | null) => {
                             {{ payment.status }}
                         </span>
                     </div>
-                    <div class="space-y-1 border-t border-gray-100 pt-2 text-sm text-gray-600 dark:border-gray-700 dark:text-gray-400">
+                    <div class="space-y-1 border-t border-border pt-2 text-sm text-muted-foreground">
                         <div>Campus: {{ payment.campus?.name || 'N/A' }}</div>
                         <div>Date: {{ formatDate(payment.payment_date) }}</div>
                         <div>Method: {{ getPaymentMethodLabel(payment.payment_method) }}</div>
@@ -282,87 +282,87 @@ const getPageFromUrl = (url: string | null) => {
                         </Button>
                     </div>
                 </div>
-                <div v-if="paymentsData.length === 0" class="py-8 text-center text-gray-500 dark:text-gray-400">
+                <div v-if="paymentsData.length === 0" class="py-8 text-center text-muted-foreground">
                     No payments found.
                 </div>
             </div>
 
-            <div class="hidden overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-900 lg:block">
+            <div class="hidden overflow-hidden rounded-lg border border-border bg-card shadow-sm lg:block">
                 <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                        <thead class="bg-gray-50 dark:bg-gray-800">
+                    <table class="min-w-full divide-y divide-border">
+                        <thead class="bg-muted">
                             <tr>
-                                <th scope="col" class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-300">
+                                <th scope="col" class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                                     Sr#
                                 </th>
-                                <th scope="col" class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-300">
+                                <th scope="col" class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                                     Receipt No
                                 </th>
-                                <th scope="col" class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-300">
+                                <th scope="col" class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                                     Student
                                 </th>
-                                <th scope="col" class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-300">
+                                <th scope="col" class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                                     Campus
                                 </th>
-                                <th scope="col" class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-300">
+                                <th scope="col" class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                                     Date
                                 </th>
-                                <th scope="col" class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-300">
+                                <th scope="col" class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                                     Method
                                 </th>
-                                <th scope="col" class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-300">
+                                <th scope="col" class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                                     Amount
                                 </th>
-                                <th scope="col" class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-300">
+                                <th scope="col" class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                                     Status
                                 </th>
-                                <th scope="col" class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-300">
+                                <th scope="col" class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                                     Actions
                                 </th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-900">
+                        <tbody class="divide-y divide-border bg-card">
                             <tr
                                 v-for="(payment, index) in paymentsData"
                                 :key="payment.id"
-                                class="transition-colors hover:bg-gray-50 dark:hover:bg-gray-800"
+                                class="transition-colors hover:bg-accent"
                             >
-                                <td class="whitespace-nowrap px-4 py-3 text-sm text-gray-500 dark:text-gray-400">
+                                <td class="whitespace-nowrap px-4 py-3 text-sm text-muted-foreground">
                                     {{ ((paymentsPagination.from || 1) - 1) + index + 1 }}
                                 </td>
                                 <td class="whitespace-nowrap px-4 py-3">
-                                    <div class="text-sm font-medium text-gray-900 dark:text-white">
+                                    <div class="text-sm font-medium text-foreground">
                                         {{ payment.receipt_no }}
                                     </div>
                                 </td>
                                 <td class="whitespace-nowrap px-4 py-3">
-                                    <div class="text-sm text-gray-900 dark:text-white">
+                                    <div class="text-sm text-foreground">
                                         {{ payment.student?.name || 'N/A' }}
                                     </div>
-                                    <div class="text-xs text-gray-500">
+                                    <div class="text-xs text-muted-foreground">
                                         {{ payment.student?.registration_number || 'N/A' }}
                                     </div>
                                 </td>
                                 <td class="whitespace-nowrap px-4 py-3">
-                                    <div class="text-sm text-gray-600 dark:text-gray-300">
+                                    <div class="text-sm text-muted-foreground">
                                         {{ payment.campus?.name || 'N/A' }}
                                     </div>
                                 </td>
                                 <td class="whitespace-nowrap px-4 py-3">
-                                    <div class="text-sm text-gray-600 dark:text-gray-300">
+                                    <div class="text-sm text-muted-foreground">
                                         {{ formatDate(payment.payment_date) }}
                                     </div>
                                 </td>
                                 <td class="whitespace-nowrap px-4 py-3">
-                                    <div class="text-sm text-gray-600 dark:text-gray-300">
+                                    <div class="text-sm text-muted-foreground">
                                         {{ getPaymentMethodLabel(payment.payment_method) }}
                                     </div>
                                 </td>
                                 <td class="whitespace-nowrap px-4 py-3">
-                                    <div class="text-sm font-semibold text-green-600 dark:text-green-400">
+                                    <div class="text-sm font-semibold text-success">
                                         {{ formatCurrency(payment.received_amount) }}
                                     </div>
-                                    <div class="text-xs text-gray-500">
+                                    <div class="text-xs text-muted-foreground">
                                         Allocated: {{ formatCurrency(payment.allocated_amount) }}
                                     </div>
                                 </td>
@@ -372,7 +372,7 @@ const getPageFromUrl = (url: string | null) => {
                                     </span>
                                 </td>
                                 <td class="whitespace-nowrap px-4 py-3 text-sm font-medium">
-                                    <div class="flex justify-end gap-2">
+                                    <div class="flex flex-wrap justify-end gap-2">
                                         <Button
                                             variant="outline"
                                             size="sm"
@@ -395,13 +395,13 @@ const getPageFromUrl = (url: string | null) => {
                         </tbody>
                     </table>
                 </div>
-                <div v-if="paymentsData.length === 0" class="py-8 text-center text-gray-500 dark:text-gray-400">
+                <div v-if="paymentsData.length === 0" class="py-8 text-center text-muted-foreground">
                     No payments found.
                 </div>
             </div>
 
             <div v-if="paymentsPagination.links?.length" class="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
-                <div class="text-xs text-gray-600 dark:text-gray-400 md:text-sm">
+                <div class="text-xs text-muted-foreground md:text-sm">
                     Showing {{ paymentsPagination.from || 0 }} to {{ paymentsPagination.to || 0 }} of {{ paymentsPagination.total || 0 }} entries
                 </div>
                 <div class="flex flex-wrap gap-1">
@@ -413,8 +413,8 @@ const getPageFromUrl = (url: string | null) => {
                         :class="[
                             'min-h-10 items-center justify-center rounded-md px-3 py-2 text-sm transition-colors',
                             link.active
-                                ? 'bg-blue-600 text-white'
-                                : 'border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700'
+                                ? 'bg-primary text-primary-foreground'
+                                : 'border border-border bg-card text-muted-foreground hover:bg-accent disabled:cursor-not-allowed disabled:opacity-50'
                         ]"
                         @click="link.url ? loadPayments(getPageFromUrl(link.url)) : null"
                     >

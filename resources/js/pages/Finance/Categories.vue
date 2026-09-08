@@ -94,12 +94,12 @@ const deleteCategory = async (id: number) => {
 
         <div class="space-y-6 p-4 md:p-6">
             <!-- Header -->
-            <div class="flex justify-between items-center">
+            <div class="flex flex-wrap gap-2 justify-between items-center">
                 <div>
-                    <h1 class="text-xl md:text-2xl font-bold text-gray-900 dark:text-white">
+                    <h1 class="text-xl md:text-2xl font-bold text-foreground">
                         Categories
                     </h1>
-                    <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                    <p class="mt-1 text-sm text-muted-foreground">
                         Manage income and expense categories
                     </p>
                 </div>
@@ -109,13 +109,13 @@ const deleteCategory = async (id: number) => {
             <!-- Categories Grid -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <!-- Income Categories -->
-                <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-                    <h2 class="text-lg font-semibold text-green-600 dark:text-green-400 mb-4">Income Categories</h2>
+                <div class="bg-card rounded-lg border border-border p-6">
+                    <h2 class="text-lg font-semibold text-success mb-4">Income Categories</h2>
                     <div class="space-y-2">
                         <div 
                             v-for="category in incomeCategories" 
                             :key="category.id"
-                            class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg"
+                            class="flex flex-wrap gap-2 items-center justify-between p-3 bg-muted rounded-lg"
                         >
                             <div class="flex items-center gap-2">
                                 <span :class="{'opacity-50': !category.is_active}">{{ category.name }}</span>
@@ -125,18 +125,18 @@ const deleteCategory = async (id: number) => {
                                 <Button variant="outline" size="sm" :class="tableActionButtonClass.delete" @click="deleteCategory(category.id)">Delete</Button>
                             </div>
                         </div>
-                        <p v-if="incomeCategories.length === 0" class="text-gray-500">No income categories</p>
+                        <p v-if="incomeCategories.length === 0" class="text-muted-foreground">No income categories</p>
                     </div>
                 </div>
 
                 <!-- Expense Categories -->
-                <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-                    <h2 class="text-lg font-semibold text-red-600 dark:text-red-400 mb-4">Expense Categories</h2>
+                <div class="bg-card rounded-lg border border-border p-6">
+                    <h2 class="text-lg font-semibold text-destructive mb-4">Expense Categories</h2>
                     <div class="space-y-2">
                         <div 
                             v-for="category in expenseCategories" 
                             :key="category.id"
-                            class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700/50 rounded-lg"
+                            class="flex flex-wrap gap-2 items-center justify-between p-3 bg-muted rounded-lg"
                         >
                             <div class="flex items-center gap-2">
                                 <span :class="{'opacity-50': !category.is_active}">{{ category.name }}</span>
@@ -146,14 +146,14 @@ const deleteCategory = async (id: number) => {
                                 <Button variant="outline" size="sm" :class="tableActionButtonClass.delete" @click="deleteCategory(category.id)">Delete</Button>
                             </div>
                         </div>
-                        <p v-if="expenseCategories.length === 0" class="text-gray-500">No expense categories</p>
+                        <p v-if="expenseCategories.length === 0" class="text-muted-foreground">No expense categories</p>
                     </div>
                 </div>
             </div>
 
             <!-- Add/Edit Form Modal -->
             <div v-if="showForm" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-                <div class="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-md">
+                <div class="bg-card rounded-lg p-6 w-full max-w-md">
                     <h3 class="text-lg font-semibold mb-4">
                         {{ editingCategory ? 'Edit Category' : 'Add Category' }}
                     </h3>
@@ -164,7 +164,7 @@ const deleteCategory = async (id: number) => {
                         </div>
                         <div>
                             <Label>Type</Label>
-                            <select v-model="form.type" class="w-full mt-1 rounded-md border border-gray-300 dark:border-gray-600 dark:bg-gray-700 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500">
+                            <select v-model="form.type" class="w-full mt-1 rounded-md border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary">
                                 <option value="INCOME">Income</option>
                                 <option value="EXPENSE">Expense</option>
                             </select>

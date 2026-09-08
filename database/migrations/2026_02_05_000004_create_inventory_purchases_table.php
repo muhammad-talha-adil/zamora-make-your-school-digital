@@ -24,7 +24,9 @@ return new class extends Migration
             $table->id();
             $table->string('purchase_id')->nullable()->unique()->comment('Human-readable purchase ID (e.g., PR-2026-0001)');
             $table->foreignId('campus_id')->constrained('campuses')->onDelete('cascade');
-            $table->foreignId('supplier_id')->nullable()->constrained('suppliers')->onDelete('set null');
+            // `suppliers` is created later; the constraint is added by
+            // 2026_09_07_000003_add_deferred_foreign_keys.
+            $table->foreignId('supplier_id')->nullable();
             $table->date('purchase_date');
             $table->decimal('total_amount', 12, 2)->comment('Total purchase amount');
             $table->text('note')->nullable();

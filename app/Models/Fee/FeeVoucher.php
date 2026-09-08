@@ -192,6 +192,60 @@ class FeeVoucher extends Model
     }
 
     /**
+     * The number a bank cashier keys in, or a scanner reads off the challan.
+     *
+     * Fee here is collected over the counter at a bank, and the teller has no
+     * access to the school's system: everything they need has to be on the slip
+     * itself. The digits are the voucher's own id, the due date and the amount
+     * in paisa, closed by a check digit, so a mistyped consumer number is
+     * rejected at the counter rather than turning up as an unmatched deposit
+     * the office has to chase.
+     */
+    public function challanReference(): string
+    {
+        $body = str_pad((string) $this->id, 8, '0', STR_PAD_LEFT)
+            .($this->due_date ? $this->due_date->format('ymd') : '000000')
+            .str_pad((string) (int) round((float) $this->balance_amount * 100), 10, '0', STR_PAD_LEFT);
+
+        return $body.self::checkDigitFor($body);
+    }
+
+    /**
+     * The challan reference in groups, which is how a teller reads it aloud.
+     */
+    public function challanReferenceFormatted(): string
+    {
+        return trim(chunk_split($this->challanReference(), 4, ' '));
+    }
+
+    /**
+     * Luhn check digit — the same one printed on utility bills here, so bank
+     * staff and scanners already know how to validate it.
+     */
+    public static function checkDigitFor(string $digits): int
+    {
+        $sum = 0;
+        $double = true;
+
+        for ($i = strlen($digits) - 1; $i >= 0; $i--) {
+            $value = (int) $digits[$i];
+
+            if ($double) {
+                $value *= 2;
+
+                if ($value > 9) {
+                    $value -= 9;
+                }
+            }
+
+            $sum += $value;
+            $double = ! $double;
+        }
+
+        return (10 - ($sum % 10)) % 10;
+    }
+
+    /**
      * Scope: By status
      */
     public function scopeByStatus($query, VoucherStatus $status)

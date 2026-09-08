@@ -6,10 +6,10 @@
             <!-- Header -->
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 md:gap-4">
                 <div>
-                    <h1 class="text-lg md:text-2xl font-bold text-gray-900 dark:text-white">
+                    <h1 class="text-lg md:text-2xl font-bold text-foreground">
                         Exam Management
                     </h1>
-                    <p class="mt-1 text-xs md:text-sm text-gray-600 dark:text-gray-400">
+                    <p class="mt-1 text-xs md:text-sm text-muted-foreground">
                         Manage exams and their configurations
                     </p>
                 </div>
@@ -29,7 +29,7 @@
                         id="filter-session"
                         v-model="filters.session_id"
                         @change="applyFilters"
-                        class="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 text-sm min-h-10 md:min-h-11"
+                        class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm min-h-10 md:min-h-11"
                     >
                         <option value="">All Sessions</option>
                         <option v-for="session in props.sessions" :key="session.id" :value="session.id">
@@ -43,7 +43,7 @@
                         id="filter-type"
                         v-model="filters.exam_type_id"
                         @change="applyFilters"
-                        class="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 text-sm min-h-10 md:min-h-11"
+                        class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm min-h-10 md:min-h-11"
                     >
                         <option value="">All Types</option>
                         <option v-for="type in props.examTypes" :key="type.id" :value="type.id">
@@ -68,18 +68,18 @@
                 <div
                     v-for="(exam, index) in examsData"
                     :key="exam.id"
-                    class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 space-y-2"
+                    class="bg-card rounded-lg border border-border p-4 space-y-2"
                 >
-                    <div class="flex justify-between items-start">
+                    <div class="flex flex-wrap gap-2 justify-between items-start">
                         <div>
-                            <div class="text-xs text-gray-500 dark:text-gray-400">Sr# {{ index + 1 }}</div>
-                            <div class="font-medium text-gray-900 dark:text-white">{{ exam.name }}</div>
-                            <div class="text-xs text-gray-500">{{ exam.exam_type?.name }}</div>
+                            <div class="text-xs text-muted-foreground">Sr# {{ index + 1 }}</div>
+                            <div class="font-medium text-foreground">{{ exam.name }}</div>
+                            <div class="text-xs text-muted-foreground">{{ exam.exam_type?.name }}</div>
                         </div>
                         <div class="flex items-center gap-1">
                             <select
                                 v-model="exam.status"
-                                class="rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-2 py-1 text-xs font-medium"
+                                class="rounded-md border border-border bg-card text-foreground px-2 py-1 text-xs font-medium"
                             >
                                 <option value="scheduled">Scheduled</option>
                                 <option value="active">Active</option>
@@ -108,7 +108,7 @@
                             </Button>
                         </div>
                     </div>
-                    <div class="text-sm text-gray-600 dark:text-gray-400 space-y-1 pt-2 border-t border-gray-100 dark:border-gray-700">
+                    <div class="text-sm text-muted-foreground space-y-1 pt-2 border-t border-border">
                         <div class="flex items-center gap-2">
                             <Icon icon="calendar" class="h-4 w-4" />
                             <span>{{ exam.start_date_formatted }} - {{ exam.end_date_formatted }}</span>
@@ -165,62 +165,62 @@
                         />
                     </div>
                 </div>
-                <div v-if="examsData.length === 0" class="text-center py-8 text-gray-500">
+                <div v-if="examsData.length === 0" class="text-center py-8 text-muted-foreground">
                     No exams found.
                 </div>
             </div>
 
             <!-- Desktop Table View -->
-            <div class="hidden lg:block overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-900">
+            <div class="hidden lg:block overflow-hidden rounded-lg border border-border bg-card shadow-sm">
                 <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                        <thead class="bg-gray-50 dark:bg-gray-800">
+                    <table class="min-w-full divide-y divide-border">
+                        <thead class="bg-muted">
                             <tr>
-                                <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300 w-12">
+                                <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase w-12">
                                     Sr#
                                 </th>
-                                <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">
+                                <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">
                                     Exam Name
                                 </th>
-                                <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">
+                                <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">
                                     Type
                                 </th>
-                                <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">
+                                <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">
                                     Session
                                 </th>
-                                <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">
+                                <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">
                                     Dates
                                 </th>
-                                <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">
+                                <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">
                                     Status
                                 </th>
-                                <th scope="col" class="px-4 py-3 text-right text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">
+                                <th scope="col" class="px-4 py-3 text-right text-xs font-semibold tracking-wider text-muted-foreground uppercase">
                                     Actions
                                 </th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-900">
-                            <tr v-for="(exam, index) in examsData" :key="exam.id" class="transition-colors hover:bg-gray-50 dark:hover:bg-gray-800">
+                        <tbody class="divide-y divide-border bg-card">
+                            <tr v-for="(exam, index) in examsData" :key="exam.id" class="transition-colors hover:bg-accent">
                                 <td class="px-4 py-3 whitespace-nowrap">
-                                    <div class="text-sm font-medium text-gray-900 dark:text-white">{{ index + 1 }}</div>
+                                    <div class="text-sm font-medium text-foreground">{{ index + 1 }}</div>
                                 </td>
                                 <td class="px-4 py-3 whitespace-nowrap">
-                                    <div class="text-sm font-medium text-gray-900 dark:text-white">{{ exam.name }}</div>
+                                    <div class="text-sm font-medium text-foreground">{{ exam.name }}</div>
                                 </td>
                                 <td class="px-4 py-3 whitespace-nowrap">
-                                    <div class="text-sm text-gray-600 dark:text-gray-300">{{ exam.exam_type?.name }}</div>
+                                    <div class="text-sm text-muted-foreground">{{ exam.exam_type?.name }}</div>
                                 </td>
                                 <td class="px-4 py-3 whitespace-nowrap">
-                                    <div class="text-sm text-gray-600 dark:text-gray-300">{{ exam.session?.name }}</div>
+                                    <div class="text-sm text-muted-foreground">{{ exam.session?.name }}</div>
                                 </td>
                                 <td class="px-4 py-3 whitespace-nowrap">
-                                    <div class="text-sm text-gray-600 dark:text-gray-300">{{ exam.start_date_formatted }} - {{ exam.end_date_formatted }}</div>
+                                    <div class="text-sm text-muted-foreground">{{ exam.start_date_formatted }} - {{ exam.end_date_formatted }}</div>
                                 </td>
                                 <td class="px-4 py-3 whitespace-nowrap">
                                     <div class="flex items-center gap-2">
                                         <select
                                             v-model="exam.status"
-                                            class="rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-2 py-1 text-xs font-medium"
+                                            class="rounded-md border border-border bg-card text-foreground px-2 py-1 text-xs font-medium"
                                         >
                                             <option value="scheduled">Scheduled</option>
                                             <option value="active">Active</option>

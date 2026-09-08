@@ -80,11 +80,11 @@ const getDaysOverdue = (dueDate: string): number => {
 
 const getStatusColor = (status: string): string => {
     const colors: Record<string, string> = {
-        unpaid: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
-        partial: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
-        overdue: 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200',
+        unpaid: 'bg-destructive/10 text-destructive',
+        partial: 'bg-warning/10 text-warning',
+        overdue: 'bg-warning/10 text-warning',
     };
-    return colors[status] || 'bg-gray-100 text-gray-800';
+    return colors[status] || 'bg-muted text-foreground';
 };
 
 const applyFilters = () => {
@@ -117,16 +117,16 @@ const changePage = (page: number) => {
         <div class="space-y-6 p-4 md:p-6">
             <!-- Header -->
             <div>
-                <h1 class="text-xl md:text-2xl font-bold text-gray-900 dark:text-white">
+                <h1 class="text-xl md:text-2xl font-bold text-foreground">
                     Defaulters List
                 </h1>
-                <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                <p class="mt-1 text-sm text-muted-foreground">
                     Students with overdue fee payments
                 </p>
             </div>
 
             <!-- Filters -->
-            <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
+            <div class="bg-card rounded-lg border border-border p-4">
                 <div class="grid gap-4 md:grid-cols-4">
                     <div class="space-y-2">
                         <Label for="campus_id">Campus</Label>
@@ -164,46 +164,46 @@ const changePage = (page: number) => {
             </div>
 
             <!-- Summary -->
-            <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-                <p class="text-sm text-gray-500 dark:text-gray-400">
-                    Total Defaulters: <span class="font-medium text-gray-900 dark:text-white">{{ props.defaulters.total }}</span>
+            <div class="bg-card rounded-lg border border-border p-4">
+                <p class="text-sm text-muted-foreground">
+                    Total Defaulters: <span class="font-medium text-foreground">{{ props.defaulters.total }}</span>
                 </p>
             </div>
 
             <!-- Defaulters Table -->
-            <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+            <div class="bg-card rounded-lg border border-border overflow-hidden">
                 <div class="overflow-x-auto">
                     <table class="w-full text-sm">
-                        <thead class="bg-gray-50 dark:bg-gray-700">
+                        <thead class="bg-muted">
                             <tr>
-                                <th class="text-left py-3 px-4 text-gray-500 dark:text-gray-400">Student</th>
-                                <th class="text-left py-3 px-4 text-gray-500 dark:text-gray-400">Voucher No</th>
-                                <th class="text-left py-3 px-4 text-gray-500 dark:text-gray-400">Month</th>
-                                <th class="text-right py-3 px-4 text-gray-500 dark:text-gray-400">Due Date</th>
-                                <th class="text-right py-3 px-4 text-gray-500 dark:text-gray-400">Days Overdue</th>
-                                <th class="text-right py-3 px-4 text-gray-500 dark:text-gray-400">Amount</th>
-                                <th class="text-center py-3 px-4 text-gray-500 dark:text-gray-400">Status</th>
+                                <th class="text-left py-3 px-4 text-muted-foreground">Student</th>
+                                <th class="text-left py-3 px-4 text-muted-foreground">Voucher No</th>
+                                <th class="text-left py-3 px-4 text-muted-foreground">Month</th>
+                                <th class="text-right py-3 px-4 text-muted-foreground">Due Date</th>
+                                <th class="text-right py-3 px-4 text-muted-foreground">Days Overdue</th>
+                                <th class="text-right py-3 px-4 text-muted-foreground">Amount</th>
+                                <th class="text-center py-3 px-4 text-muted-foreground">Status</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <tr v-for="defaulter in props.defaulters.data" :key="defaulter.id" class="border-t border-gray-200 dark:border-gray-700">
+                            <tr v-for="defaulter in props.defaulters.data" :key="defaulter.id" class="border-t border-border">
                                 <td class="py-3 px-4">
-                                    <div class="text-gray-900 dark:text-white font-medium">
+                                    <div class="text-foreground font-medium">
                                         {{ defaulter.student?.name || 'N/A' }}
                                     </div>
-                                    <div class="text-xs text-gray-500 dark:text-gray-400">
+                                    <div class="text-xs text-muted-foreground">
                                         {{ defaulter.student?.registration_number }}
                                     </div>
                                 </td>
-                                <td class="py-3 px-4 text-gray-900 dark:text-white">{{ defaulter.voucher_no }}</td>
-                                <td class="py-3 px-4 text-gray-600 dark:text-gray-300">{{ defaulter.voucherMonth?.name }}</td>
-                                <td class="py-3 px-4 text-right text-gray-600 dark:text-gray-300">{{ formatDate(defaulter.due_date) }}</td>
+                                <td class="py-3 px-4 text-foreground">{{ defaulter.voucher_no }}</td>
+                                <td class="py-3 px-4 text-muted-foreground">{{ defaulter.voucherMonth?.name }}</td>
+                                <td class="py-3 px-4 text-right text-muted-foreground">{{ formatDate(defaulter.due_date) }}</td>
                                 <td class="py-3 px-4 text-right">
-                                    <span class="text-orange-600 dark:text-orange-400 font-medium">
+                                    <span class="text-warning font-medium">
                                         {{ getDaysOverdue(defaulter.due_date) }} days
                                     </span>
                                 </td>
-                                <td class="py-3 px-4 text-right text-red-600 dark:text-red-400 font-medium">
+                                <td class="py-3 px-4 text-right text-destructive font-medium">
                                     {{ formatCurrency(defaulter.balance_amount) }}
                                 </td>
                                 <td class="py-3 px-4 text-center">
@@ -214,7 +214,7 @@ const changePage = (page: number) => {
                             </tr>
                         </tbody>
                     </table>
-                    <div v-if="props.defaulters.data.length === 0" class="text-center text-gray-500 dark:text-gray-400 py-8">
+                    <div v-if="props.defaulters.data.length === 0" class="text-center text-muted-foreground py-8">
                         No defaulters found
                     </div>
                 </div>
@@ -230,7 +230,7 @@ const changePage = (page: number) => {
                 >
                     Previous
                 </Button>
-                <span class="flex items-center px-4 text-sm text-gray-600 dark:text-gray-400">
+                <span class="flex items-center px-4 text-sm text-muted-foreground">
                     Page {{ props.defaulters.current_page }} of {{ props.defaulters.last_page }}
                 </span>
                 <Button

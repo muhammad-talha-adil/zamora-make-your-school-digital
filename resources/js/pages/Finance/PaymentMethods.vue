@@ -74,12 +74,12 @@ const submitForm = async () => {
 
         <div class="space-y-6 p-4 md:p-6">
             <!-- Header -->
-            <div class="flex justify-between items-center">
+            <div class="flex flex-wrap gap-2 justify-between items-center">
                 <div>
-                    <h1 class="text-xl md:text-2xl font-bold text-gray-900 dark:text-white">
+                    <h1 class="text-xl md:text-2xl font-bold text-foreground">
                         Payment Methods
                     </h1>
-                    <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                    <p class="mt-1 text-sm text-muted-foreground">
                         Manage payment methods for transactions
                     </p>
                 </div>
@@ -91,29 +91,29 @@ const submitForm = async () => {
                 <div 
                     v-for="method in paymentMethods" 
                     :key="method.id"
-                    class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4"
+                    class="bg-card rounded-lg border border-border p-4"
                 >
-                    <div class="flex items-center justify-between">
+                    <div class="flex flex-wrap gap-2 items-center justify-between">
                         <div>
                             <h3 class="font-semibold">{{ method.name }}</h3>
-                            <p class="text-sm text-gray-500">{{ method.code }}</p>
+                            <p class="text-sm text-muted-foreground">{{ method.code }}</p>
                         </div>
                         <div class="flex gap-2">
                             <Button variant="outline" size="sm" :class="tableActionButtonClass.edit" @click="editMethod(method)">Edit</Button>
                         </div>
                     </div>
                     <div class="mt-2">
-                        <span :class="method.is_active ? 'bg-green-100 text-green-800' : 'bg-gray-100 text-gray-800'" class="px-2 py-1 text-xs rounded-full">
+                        <span :class="method.is_active ? 'bg-success/10 text-success' : 'bg-muted text-foreground'" class="px-2 py-1 text-xs rounded-full">
                             {{ method.is_active ? 'Active' : 'Inactive' }}
                         </span>
                     </div>
                 </div>
-                <p v-if="paymentMethods.length === 0" class="col-span-full text-center text-gray-500">No payment methods found</p>
+                <p v-if="paymentMethods.length === 0" class="col-span-full text-center text-muted-foreground">No payment methods found</p>
             </div>
 
             <!-- Add/Edit Form Modal -->
             <div v-if="showForm" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
-                <div class="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-md">
+                <div class="bg-card rounded-lg p-6 w-full max-w-md">
                     <h3 class="text-lg font-semibold mb-4">
                         {{ editingMethod ? 'Edit Payment Method' : 'Add Payment Method' }}
                     </h3>

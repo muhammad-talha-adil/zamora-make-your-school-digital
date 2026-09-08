@@ -71,6 +71,23 @@ class UpdateStudentRequest extends FormRequest
      *
      * @return array<string, ValidationRule|array<mixed>|string>
      */
+    /**
+     * Which set of rules this request is validated against.
+     *
+     * Taken from the route, not the payload. It used to read an `action` field
+     * out of the request, which let the caller choose their own rule set — and
+     * `get()` consulted route attributes before the body, so the value was not
+     * reliably the posted one either.
+     */
+    private function action(): string
+    {
+        return match ($this->route()?->getName()) {
+            'students.change-status' => 'change_status',
+            'students.readmit' => 'readmit',
+            default => 'update',
+        };
+    }
+
     public function rules(): array
     {
         $studentId = $this->route('student')?->id ?? null;
@@ -90,18 +107,35 @@ class UpdateStudentRequest extends FormRequest
                 'max:255',
                 'regex:/^[a-zA-Z\s\.\-\'\@]+$/',
             ],
+            /*
+             * Read-only once issued.
+             *
+             * The admission number identifies the student on the register, on
+             * every fee voucher already printed and on their result cards, so
+             * renaming it would leave those pointing at nothing.
+             * prepareForValidation() pins it to the stored value, so whatever
+             * the form sends is ignored rather than rejected -- a stale form
+             * should still save.
+             */
             'admission_no' => [
                 'required',
                 'string',
                 'max:50',
-                Rule::unique('students', 'admission_no')->ignore($studentId),
             ],
             'dob' => [
                 'required',
                 'date',
                 'before:today',
                 function ($attribute, $value, $fail) {
-                    $dob = Carbon::parse($value);
+                    // Closures still run when `date` has already failed, so an
+                    // unparsable value has to be skipped here; parsing it threw
+                    // and turned a validation message into a 500.
+                    try {
+                        $dob = Carbon::parse($value);
+                    } catch (\Throwable) {
+                        return;
+                    }
+
                     $minAge = 3;
                     $maxAge = 25;
 
@@ -422,8 +456,16 @@ class UpdateStudentRequest extends FormRequest
             ],
         ];
 
-        // Guardian update rules
-        $guardianRules = [
+        /*
+         * Rules for the `guardians[]` array, which re-links existing guardians
+         * to the student.
+         *
+         * This used to be assigned to `$guardianRules` as well, overwriting the
+         * father / other-guardian field rules defined above it. Those fields
+         * then had no rules, so `validated()` dropped them and the update
+         * failed on a missing `father_name`.
+         */
+        $guardianLinkRules = [
             'guardians' => [
                 'nullable',
                 'array',
@@ -450,15 +492,10 @@ class UpdateStudentRequest extends FormRequest
             ],
         ];
 
-        // Determine which rules to apply based on the request action
-        $action = $this->get('action', 'update');
-
-        return match ($action) {
-            'update' => array_merge($studentRules, $enrollmentRules, $guardianRules),
+        return match ($this->action()) {
             'change_status' => $statusChangeRules,
             'readmit' => $readmitRules,
-            'update_guardians' => $guardianRules,
-            default => array_merge($studentRules, $enrollmentRules),
+            default => array_merge($studentRules, $enrollmentRules, $guardianRules, $guardianLinkRules),
         };
     }
 
@@ -469,7 +506,7 @@ class UpdateStudentRequest extends FormRequest
     {
         $validator->after(function ($validator) {
             $studentId = $this->route('student')?->id;
-            $action = $this->get('action', 'update');
+            $action = $this->action();
 
             // Only run additional validations for specific actions
             if ($action === 'update') {
@@ -665,23 +702,15 @@ class UpdateStudentRequest extends FormRequest
      */
     protected function prepareForValidation(): void
     {
-        // Normalize the action parameter
-        $action = $this->input('action', 'update');
-
-        // Map old action names to new ones for backward compatibility
-        $actionMap = [
-            'status' => 'change_status',
-            'reactivate' => 'readmit',
-            'guardians' => 'update_guardians',
-        ];
-
-        if (isset($actionMap[$action])) {
-            $action = $actionMap[$action];
+        /*
+         * The admission number is pinned to what the student already has.
+         *
+         * `student_code` and `registration_no` need no handling: neither has a
+         * rule, so `validated()` drops them whatever the form sends.
+         */
+        if ($student = $this->route('student')) {
+            $this->merge(['admission_no' => $student->admission_no]);
         }
-
-        $this->merge([
-            'action' => $action,
-        ]);
 
         // Trim input fields
         $this->merge([

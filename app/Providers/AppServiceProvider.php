@@ -2,11 +2,12 @@
 
 namespace App\Providers;
 
-use App\Models\Permission;
 use App\Models\Student;
 use App\Models\ThemeSetting;
+use App\Models\User;
 use App\Repositories\StudentRepository;
 use App\Services\AttendanceService;
+use App\Services\Exam\GradeResolver;
 use App\Services\GuardianService;
 use App\Services\SchoolEmailService;
 use App\Services\StudentService;
@@ -24,6 +25,16 @@ class AppServiceProvider extends ServiceProvider
      */
     public function register(): void
     {
+        /*
+         * One grading scale per request.
+         *
+         * The resolver holds what it has resolved and the bands it has read.
+         * Two instances mean two cold caches — and, worse, two answers to
+         * "which scale applies", which is exactly the drift this class exists
+         * to stop.
+         */
+        $this->app->singleton(GradeResolver::class);
+
         // Register AttendanceService as a singleton
         $this->app->singleton(AttendanceService::class, function ($app) {
             return new AttendanceService;
@@ -91,22 +102,14 @@ class AppServiceProvider extends ServiceProvider
             ])->findOrFail($value);
         });
 
-        // Register gates for permissions
-        Gate::before(function ($user, $ability) {
-            if ($user->userRoles()->where('is_active', true)->whereHas('role', function ($query) {
-                $query->where('name', 'developer');
-            })->exists()) {
-                return true;
-            }
+        // Every ability is granted to the developer role, which owns the
+        // subscription and system tooling the owner deliberately cannot reach.
+        //
+        // Individual permissions are no longer defined as gates here: Spatie
+        // resolves them itself and caches the lookup, where the old loop ran a
+        // query per permission on every request.
+        Gate::before(function (User $user) {
+            return $user->hasRole('developer') ? true : null;
         });
-
-        $permissions = Permission::all();
-        foreach ($permissions as $permission) {
-            Gate::define($permission->key, function ($user) use ($permission) {
-                return $user->userRoles()->where('is_active', true)->whereHas('role.permissions', function ($query) use ($permission) {
-                    $query->where('permissions.id', $permission->id);
-                })->exists();
-            });
-        }
     }
 }

@@ -351,7 +351,7 @@ const resetForm = () => {
                                     class="h-3.5 w-3.5 text-muted-foreground"
                                 />
                             </div>
-                            Supplier Name <span class="text-red-500">*</span>
+                            Supplier Name <span class="text-destructive">*</span>
                         </Label>
                         <div class="relative">
                             <Input
@@ -361,7 +361,7 @@ const resetForm = () => {
                                 required
                                 class="h-11 pl-10"
                                 :class="{
-                                    'border-red-500 focus:border-red-500': nameExists,
+                                    'border-destructive focus:border-destructive': nameExists,
                                 }"
                             />
                             <Icon
@@ -376,7 +376,7 @@ const resetForm = () => {
                             <Icon
                                 v-else-if="nameExists"
                                 icon="alert-circle"
-                                class="absolute top-1/2 right-3 h-4 w-4 -translate-y-1/2 text-red-500"
+                                class="absolute top-1/2 right-3 h-4 w-4 -translate-y-1/2 text-destructive"
                             />
                         </div>
                         <InputError :message="errors.name" />
@@ -391,12 +391,12 @@ const resetForm = () => {
                                     class="h-3.5 w-3.5 text-muted-foreground"
                                 />
                             </div>
-                            Campus <span class="text-red-500">*</span>
+                            Campus <span class="text-destructive">*</span>
                         </Label>
                         <select
                             id="campus"
                             v-model="form.campus_id"
-                            class="h-11 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+                            class="h-11 w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground"
                             required
                         >
                             <option
@@ -529,7 +529,7 @@ const resetForm = () => {
                 </div>
 
                 <!-- Actions -->
-                <div class="flex justify-end gap-3 pt-2">
+                <div class="flex flex-wrap justify-end gap-3 pt-2">
                     <DialogClose as-child>
                         <Button
                             type="button"

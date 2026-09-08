@@ -140,7 +140,7 @@ const resetForm = () => {
             <Button
                 :variant="props.variant"
                 :size="props.size"
-                :class="props.session ? 'min-h-8 border-sky-200 text-sky-700 hover:bg-sky-50 hover:text-sky-800 dark:border-sky-800 dark:text-sky-300 dark:hover:bg-sky-950/40 dark:hover:text-sky-200' : ''"
+                :class="props.session ? 'min-h-8 border-info/40 text-info hover:bg-info/20 hover:text-info' : ''"
             >
                 <Icon v-if="props.session" icon="edit" class="mr-1" />
                 <Icon v-else icon="plus" class="mr-1" />
@@ -161,52 +161,52 @@ const resetForm = () => {
 
                 <div class="grid gap-4 py-4">
                     <div class="grid gap-2">
-                        <Label for="name">Name <span class="text-red-500">*</span></Label>
+                        <Label for="name">Name <span class="text-destructive">*</span></Label>
                         <Input
                             id="name"
                             v-model="form.name"
                             placeholder="e.g., 2024-2025"
-                            :class="{ 'border-red-500': errors.name }"
+                            :class="{ 'border-destructive': errors.name }"
                         />
                         <InputError :message="errors.name" />
                     </div>
 
-                    <div class="grid grid-cols-2 gap-4">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div class="grid gap-2">
-                            <Label for="start_year">Start Year <span class="text-red-500">*</span></Label>
+                            <Label for="start_year">Start Year <span class="text-destructive">*</span></Label>
                             <Input
                                 id="start_year"
                                 v-model.number="form.start_year"
                                 type="number"
                                 min="2000"
                                 max="2100"
-                                :class="{ 'border-red-500': errors.start_year }"
+                                :class="{ 'border-destructive': errors.start_year }"
                             />
                             <InputError :message="errors.start_year" />
                         </div>
 
                         <div class="grid gap-2">
-                            <Label for="end_year">End Year <span class="text-red-500">*</span></Label>
+                            <Label for="end_year">End Year <span class="text-destructive">*</span></Label>
                             <Input
                                 id="end_year"
                                 v-model.number="form.end_year"
                                 type="number"
                                 min="2000"
                                 max="2100"
-                                :class="{ 'border-red-500': errors.end_year }"
+                                :class="{ 'border-destructive': errors.end_year }"
                             />
                             <InputError :message="errors.end_year" />
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-2 gap-4">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div class="grid gap-2">
                             <Label for="start_date">Start Date</Label>
                             <Input
                                 id="start_date"
                                 v-model="form.start_date"
                                 type="date"
-                                :class="{ 'border-red-500': errors.start_date }"
+                                :class="{ 'border-destructive': errors.start_date }"
                             />
                             <InputError :message="errors.start_date" />
                         </div>
@@ -217,7 +217,7 @@ const resetForm = () => {
                                 id="end_date"
                                 v-model="form.end_date"
                                 type="date"
-                                :class="{ 'border-red-500': errors.end_date }"
+                                :class="{ 'border-destructive': errors.end_date }"
                             />
                             <InputError :message="errors.end_date" />
                         </div>
@@ -228,7 +228,7 @@ const resetForm = () => {
                             id="is_active"
                             v-model="form.is_active"
                             type="checkbox"
-                            class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500"
+                            class="rounded border-border text-primary shadow-sm focus:ring-primary"
                         />
                         <Label for="is_active">Set as Active Session</Label>
                     </div>

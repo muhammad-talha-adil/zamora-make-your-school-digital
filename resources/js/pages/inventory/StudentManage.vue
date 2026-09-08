@@ -143,23 +143,23 @@ fetchStudentInventories();
         <div class="space-y-6 p-4 md:p-6">
             <!-- Header -->
             <div>
-                <h1 class="text-2xl font-bold text-gray-900 dark:text-white">
+                <h1 class="text-2xl font-bold text-foreground">
                     Student Inventory
                 </h1>
-                <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                <p class="mt-1 text-sm text-muted-foreground">
                     Manage inventory assigned to students and their returns.
                 </p>
             </div>
 
             <!-- Tabs -->
-            <div class="border-b border-gray-200">
+            <div class="border-b border-border">
                 <nav class="-mb-px flex space-x-8 overflow-x-auto">
                     <button
                         @click="activeTab = 'assigned'"
                         :class="[
                             activeTab === 'assigned'
-                                ? 'border-indigo-500 text-indigo-600'
-                                : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300',
+                                ? 'border-primary text-primary'
+                                : 'border-transparent text-muted-foreground hover:border-border hover:text-foreground',
                             'border-b-2 px-1 py-2 text-sm font-medium whitespace-nowrap',
                         ]"
                     >
@@ -170,8 +170,8 @@ fetchStudentInventories();
                         @click="activeTab = 'returns'"
                         :class="[
                             activeTab === 'returns'
-                                ? 'border-indigo-500 text-indigo-600'
-                                : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300',
+                                ? 'border-primary text-primary'
+                                : 'border-transparent text-muted-foreground hover:border-border hover:text-foreground',
                             'border-b-2 px-1 py-2 text-sm font-medium whitespace-nowrap',
                         ]"
                     >
@@ -187,7 +187,7 @@ fetchStudentInventories();
                     <select v-model="campusFilter" @change="() => {
                         if (activeTab === 'assigned') fetchStudentInventories();
                         if (activeTab === 'returns') fetchReturns();
-                    }" class="w-full sm:w-48 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 text-sm">
+                    }" class="w-full sm:w-48 rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm">
                         <option value="">All Campuses</option>
                         <option v-for="campus in props.campuses" :key="campus.id" :value="campus.id">
                             {{ campus.name }}
@@ -203,44 +203,44 @@ fetchStudentInventories();
 
             <!-- ==================== ASSIGNED ITEMS TAB ==================== -->
             <div v-if="activeTab === 'assigned'">
-                <div class="overflow-x-auto rounded-lg border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-900">
-                    <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                        <thead class="bg-gray-50 dark:bg-gray-800">
+                <div class="overflow-x-auto rounded-lg border border-border bg-card shadow-sm">
+                    <table class="min-w-full divide-y divide-border">
+                        <thead class="bg-muted">
                             <tr>
-                                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase dark:text-gray-300">Sr#</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase dark:text-gray-300">Student</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase dark:text-gray-300">Reg #</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase dark:text-gray-300">Campus</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase dark:text-gray-300">Items</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase dark:text-gray-300">Total Qty</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase dark:text-gray-300">Amount</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase dark:text-gray-300">Date</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase dark:text-gray-300">Status</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase dark:text-gray-300">Actions</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Sr#</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Student</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Reg #</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Campus</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Items</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Total Qty</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Amount</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Date</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Status</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Actions</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-900">
-                            <tr v-for="(record, index) in studentInventoriesData" :key="record.id" class="hover:bg-gray-50 dark:hover:bg-gray-800">
-                                <td class="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">{{ String(Number(studentInventoriesPagination.from || 1) + Number(index)) }}</td>
-                                <td class="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
+                        <tbody class="divide-y divide-border bg-card">
+                            <tr v-for="(record, index) in studentInventoriesData" :key="record.id" class="hover:bg-accent">
+                                <td class="px-4 py-4 whitespace-nowrap text-sm font-medium text-foreground">{{ String(Number(studentInventoriesPagination.from || 1) + Number(index)) }}</td>
+                                <td class="px-4 py-4 whitespace-nowrap text-sm font-medium text-foreground">
                                     <div>{{ record.student_name }}</div>
-                                    <div class="text-xs text-gray-500" v-if="record.class_name || record.section_name">
+                                    <div class="text-xs text-muted-foreground" v-if="record.class_name || record.section_name">
                                         {{ record.class_name }}{{ record.class_name && record.section_name ? ' - ' : '' }}{{ record.section_name }}
                                     </div>
                                 </td>
-                                <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">{{ record.registration_number || '-' }}</td>
-                                <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">{{ record.campus_name || '-' }}</td>
-                                <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                                <td class="px-4 py-4 whitespace-nowrap text-sm text-muted-foreground">{{ record.registration_number || '-' }}</td>
+                                <td class="px-4 py-4 whitespace-nowrap text-sm text-muted-foreground">{{ record.campus_name || '-' }}</td>
+                                <td class="px-4 py-4 whitespace-nowrap text-sm text-foreground">
                                     <div class="flex flex-col">
                                         <span>{{ getItemDisplayText(record) }}</span>
-                                        <span v-if="record.items && record.items.length > 1" class="text-xs text-gray-500">
+                                        <span v-if="record.items && record.items.length > 1" class="text-xs text-muted-foreground">
                                             {{ record.items.length }} different items
                                         </span>
                                     </div>
                                 </td>
-                                <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">{{ getTotalItemsCount(record) }}</td>
-                                <td class="px-4 py-4 whitespace-nowrap text-sm font-bold text-gray-900 dark:text-white">{{ formatCurrency(Math.abs(record.final_amount)) }}</td>
-                                <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">{{ formatDate(record.assigned_date) }}</td>
+                                <td class="px-4 py-4 whitespace-nowrap text-sm text-muted-foreground">{{ getTotalItemsCount(record) }}</td>
+                                <td class="px-4 py-4 whitespace-nowrap text-sm font-bold text-foreground">{{ formatCurrency(Math.abs(record.final_amount)) }}</td>
+                                <td class="px-4 py-4 whitespace-nowrap text-sm text-muted-foreground">{{ formatDate(record.assigned_date) }}</td>
                                 <td class="px-4 py-4 whitespace-nowrap">
                                     <Badge :variant="getStatusBadge(record.status).variant">
                                         {{ getStatusBadge(record.status).label }}
@@ -264,39 +264,39 @@ fetchStudentInventories();
 
             <!-- ==================== RETURNS TAB ==================== -->
             <div v-if="activeTab === 'returns'">
-                <div class="overflow-x-auto rounded-lg border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-900">
-                    <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                        <thead class="bg-gray-50 dark:bg-gray-800">
+                <div class="overflow-x-auto rounded-lg border border-border bg-card shadow-sm">
+                    <table class="min-w-full divide-y divide-border">
+                        <thead class="bg-muted">
                             <tr>
-                                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase dark:text-gray-300">Return ID</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase dark:text-gray-300">Student</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase dark:text-gray-300">Reg #</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase dark:text-gray-300">Total Qty</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase dark:text-gray-300">Total Amount</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase dark:text-gray-300">Return Date</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase dark:text-gray-300">Status</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase dark:text-gray-300">Campus</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase dark:text-gray-300">Actions</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Return ID</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Student</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Reg #</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Total Qty</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Total Amount</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Return Date</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Status</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Campus</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Actions</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-900">
-                            <tr v-for="returnItem in returnsData" :key="returnItem.id" class="hover:bg-gray-50 dark:hover:bg-gray-800">
-                                <td class="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">{{ returnItem.return_id || 'N/A' }}</td>
-                                <td class="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
+                        <tbody class="divide-y divide-border bg-card">
+                            <tr v-for="returnItem in returnsData" :key="returnItem.id" class="hover:bg-accent">
+                                <td class="px-4 py-4 whitespace-nowrap text-sm font-medium text-foreground">{{ returnItem.return_id || 'N/A' }}</td>
+                                <td class="px-4 py-4 whitespace-nowrap text-sm font-medium text-foreground">
                                     {{ returnItem.student_name || returnItem.student?.name || 'N/A' }}
                                 </td>
-                                <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">
+                                <td class="px-4 py-4 whitespace-nowrap text-sm text-muted-foreground">
                                     {{ returnItem.registration_number || returnItem.student?.registration_number || '-' }}
                                 </td>
-                                <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">{{ returnItem.total_quantity }}</td>
-                                <td class="px-4 py-4 whitespace-nowrap text-sm font-bold text-gray-900 dark:text-white">{{ formatCurrency(returnItem.total_amount) }}</td>
-                                <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">{{ formatDate(returnItem.return_date) }}</td>
+                                <td class="px-4 py-4 whitespace-nowrap text-sm text-muted-foreground">{{ returnItem.total_quantity }}</td>
+                                <td class="px-4 py-4 whitespace-nowrap text-sm font-bold text-foreground">{{ formatCurrency(returnItem.total_amount) }}</td>
+                                <td class="px-4 py-4 whitespace-nowrap text-sm text-muted-foreground">{{ formatDate(returnItem.return_date) }}</td>
                                 <td class="px-4 py-4 whitespace-nowrap">
                                     <Badge :variant="getStatusBadge(returnItem.status).variant">
                                         {{ getStatusBadge(returnItem.status).label }}
                                     </Badge>
                                 </td>
-                                <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">{{ returnItem.campus_name }}</td>
+                                <td class="px-4 py-4 whitespace-nowrap text-sm text-muted-foreground">{{ returnItem.campus_name }}</td>
                                 <td class="px-4 py-4 whitespace-nowrap">
                                     <Button variant="outline" size="sm" @click="router.visit(`/inventory/student-inventory/return/${returnItem.id}/view`)">
                                         <Icon icon="eye" class="h-4 w-4" />

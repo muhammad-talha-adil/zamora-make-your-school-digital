@@ -1,25 +1,25 @@
 <template>
-  <header class="bg-white dark:bg-gray-800 shadow-sm border-b border-gray-200 dark:border-gray-700">
-    <div class="flex items-center justify-between px-4 py-3">
+  <header class="bg-card shadow-sm border-b border-border">
+    <div class="flex flex-wrap gap-2 items-center justify-between px-4 py-3">
       <!-- Hamburger Menu for Mobile -->
       <button
         @click="toggleSidebar"
-        class="md:hidden p-2 rounded-md text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+        class="md:hidden p-2 rounded-md text-muted-foreground hover:bg-accent"
       >
         <Bars3Icon class="w-6 h-6" />
       </button>
 
       <!-- Title -->
-      <h1 class="text-xl font-semibold text-gray-900 dark:text-white">{{ schoolName }}</h1>
+      <h1 class="text-xl font-semibold text-foreground">{{ schoolName }}</h1>
 
       <!-- Right Side: User Menu -->
       <div class="flex items-center space-x-4">
-        <span class="text-sm text-gray-700 dark:text-gray-300">Welcome, {{ $page.props.auth.user?.name }}</span>
+        <span class="text-sm text-muted-foreground">Welcome, {{ $page.props.auth.user?.name }}</span>
         <Link
           href="/logout"
           method="post"
           as="button"
-          class="px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-md hover:bg-red-700 transition-colors"
+          class="px-4 py-2 bg-destructive text-destructive-foreground text-sm font-medium rounded-md hover:bg-destructive/90 transition-colors"
         >
           Logout
         </Link>

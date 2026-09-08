@@ -6,10 +6,10 @@
             <!-- Header -->
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 md:gap-4">
                 <div>
-                    <h1 class="text-lg md:text-2xl font-bold text-gray-900 dark:text-white">
+                    <h1 class="text-lg md:text-2xl font-bold text-foreground">
                         {{ exam.name }}
                     </h1>
-                    <p class="mt-1 text-xs md:text-sm text-gray-600 dark:text-gray-400">
+                    <p class="mt-1 text-xs md:text-sm text-muted-foreground">
                         Exam Details and Configuration
                     </p>
                 </div>
@@ -26,64 +26,64 @@
             </div>
 
             <!-- Exam Info -->
-            <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+            <div class="bg-card rounded-lg border border-border p-6">
                 <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                     <div class="space-y-1">
-                        <p class="text-sm text-gray-500 dark:text-gray-400">Exam Type</p>
-                        <p class="font-medium text-gray-900 dark:text-white">{{ exam.exam_type?.name }}</p>
+                        <p class="text-sm text-muted-foreground">Exam Type</p>
+                        <p class="font-medium text-foreground">{{ exam.exam_type?.name }}</p>
                     </div>
                     <div class="space-y-1">
-                        <p class="text-sm text-gray-500 dark:text-gray-400">Session</p>
-                        <p class="font-medium text-gray-900 dark:text-white">{{ exam.session?.name }}</p>
+                        <p class="text-sm text-muted-foreground">Session</p>
+                        <p class="font-medium text-foreground">{{ exam.session?.name }}</p>
                     </div>
                     <div class="space-y-1">
-                        <p class="text-sm text-gray-500 dark:text-gray-400">Status</p>
+                        <p class="text-sm text-muted-foreground">Status</p>
                         <span
                             :class="[
                                 'px-2 py-1 text-xs font-medium rounded-full',
-                                exam.status === 'active' ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' :
-                                exam.status === 'completed' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400' :
-                                exam.status === 'cancelled' ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400' :
-                                'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
+                                exam.status === 'active' ? 'bg-success/10 text-success' :
+                                exam.status === 'completed' ? 'bg-primary/10 text-primary' :
+                                exam.status === 'cancelled' ? 'bg-destructive/10 text-destructive' :
+                                'bg-muted text-foreground'
                             ]"
                         >
                             {{ exam.status }}
                         </span>
                     </div>
                     <div class="space-y-1">
-                        <p class="text-sm text-gray-500 dark:text-gray-400">Start Date</p>
-                        <p class="font-medium text-gray-900 dark:text-white">{{ exam.start_date }}</p>
+                        <p class="text-sm text-muted-foreground">Start Date</p>
+                        <p class="font-medium text-foreground">{{ exam.start_date }}</p>
                     </div>
                     <div class="space-y-1">
-                        <p class="text-sm text-gray-500 dark:text-gray-400">End Date</p>
-                        <p class="font-medium text-gray-900 dark:text-white">{{ exam.end_date }}</p>
+                        <p class="text-sm text-muted-foreground">End Date</p>
+                        <p class="font-medium text-foreground">{{ exam.end_date }}</p>
                     </div>
                 </div>
             </div>
 
             <!-- Offerings Summary -->
-            <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-                <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Offerings</h2>
+            <div class="bg-card rounded-lg border border-border p-6">
+                <h2 class="text-lg font-semibold text-foreground mb-4">Offerings</h2>
                 <div v-if="exam.exam_offerings && exam.exam_offerings.length > 0" class="space-y-3">
                     <div
                         v-for="offering in exam.exam_offerings"
                         :key="offering.id"
-                        class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg"
+                        class="flex flex-wrap gap-2 items-center justify-between p-3 bg-muted rounded-lg"
                     >
                         <div class="flex items-center gap-3">
-                            <Icon icon="building" class="h-5 w-5 text-gray-500" />
+                            <Icon icon="building" class="h-5 w-5 text-muted-foreground" />
                             <div>
-                                <p class="font-medium text-gray-900 dark:text-white">{{ offering.campus?.name }}</p>
-                                <p class="text-sm text-gray-500 dark:text-gray-400">{{ offering.exam_groups?.length || 0 }} Groups</p>
+                                <p class="font-medium text-foreground">{{ offering.campus?.name }}</p>
+                                <p class="text-sm text-muted-foreground">{{ offering.exam_groups?.length || 0 }} Groups</p>
                             </div>
                         </div>
                         <div class="flex items-center gap-2">
-                            <span v-if="offering.is_published" class="px-2 py-1 text-xs bg-green-100 text-green-800 rounded-full">Published</span>
-                            <span v-if="offering.is_locked" class="px-2 py-1 text-xs bg-red-100 text-red-800 rounded-full">Locked</span>
+                            <span v-if="offering.is_published" class="px-2 py-1 text-xs bg-success/10 text-success rounded-full">Published</span>
+                            <span v-if="offering.is_locked" class="px-2 py-1 text-xs bg-destructive/10 text-destructive rounded-full">Locked</span>
                         </div>
                     </div>
                 </div>
-                <div v-else class="text-center py-8 text-gray-500">
+                <div v-else class="text-center py-8 text-muted-foreground">
                     No offerings created yet.
                 </div>
             </div>

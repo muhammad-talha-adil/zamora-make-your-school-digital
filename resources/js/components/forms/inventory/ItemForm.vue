@@ -223,13 +223,13 @@ const submitForm = () => {
                             <div class="p-1 bg-muted rounded">
                                 <Icon icon="building" class="h-3.5 w-3.5 text-muted-foreground" />
                             </div>
-                            Campus <span class="text-red-500">*</span>
+                            Campus <span class="text-destructive">*</span>
                         </Label>
                         <select
                             id="campus_id"
                             v-model="form.campus_id"
-                            class="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 text-sm h-11"
-                            :class="{ 'border-red-500': errors.campus_id }"
+                            class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm h-11"
+                            :class="{ 'border-destructive': errors.campus_id }"
                             required
                         >
                             <option value="">Select Campus</option>
@@ -246,19 +246,19 @@ const submitForm = () => {
                             <div class="p-1 bg-muted rounded">
                                 <Icon icon="tag" class="h-3.5 w-3.5 text-muted-foreground" />
                             </div>
-                            Inventory Type <span class="text-red-500">*</span>
+                            Inventory Type <span class="text-destructive">*</span>
                         </Label>
                         <select
                             id="inventory_type_id"
                             v-model="form.inventory_type_id"
-                            class="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 text-sm h-11"
-                            :class="{ 'border-red-500': errors.inventory_type_id }"
+                            class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm h-11"
+                            :class="{ 'border-destructive': errors.inventory_type_id }"
                             :disabled="!form.campus_id"
                             required
                         >
                             <option value="">{{ form.campus_id ? 'Select Type' : 'Select Campus First' }}</option>
                             <option v-for="type in filteredInventoryTypes" :key="type.id" :value="type.id">
-                                {{ type.name }}<span v-if="type.campus_id === null" class="text-xs text-gray-400"> (All Campuses)</span>
+                                {{ type.name }}<span v-if="type.campus_id === null" class="text-xs text-muted-foreground"> (All Campuses)</span>
                             </option>
                         </select>
                         <InputError :message="errors.inventory_type_id" />
@@ -270,7 +270,7 @@ const submitForm = () => {
                             <div class="p-1 bg-muted rounded">
                                 <Icon icon="box" class="h-3.5 w-3.5 text-muted-foreground" />
                             </div>
-                            Item Name <span class="text-red-500">*</span>
+                            Item Name <span class="text-destructive">*</span>
                         </Label>
                         <div class="relative">
                             <Input
@@ -279,7 +279,7 @@ const submitForm = () => {
                                 type="text"
                                 placeholder="e.g., School Uniform - Size 28"
                                 class="pl-10 h-11"
-                                :class="{ 'border-red-500': errors.name }"
+                                :class="{ 'border-destructive': errors.name }"
                                 required
                             />
                             <Icon icon="box" class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -299,7 +299,7 @@ const submitForm = () => {
                             id="description"
                             v-model="form.description"
                             rows="3"
-                            class="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 min-h-20"
+                            class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 min-h-20"
                             placeholder="Item description..."
                         ></textarea>
                     </div>
@@ -310,14 +310,14 @@ const submitForm = () => {
                             id="is_active"
                             v-model="form.is_active"
                             type="checkbox"
-                            class="rounded border-gray-300 text-primary focus:ring-primary w-5 h-5"
+                            class="rounded border-border text-primary focus:ring-primary w-5 h-5"
                         />
                         <Label for="is_active">Active</Label>
                     </div>
                 </div>
 
                 <!-- Actions -->
-                <div class="flex justify-end gap-3 pt-2">
+                <div class="flex flex-wrap justify-end gap-3 pt-2">
                     <DialogClose as-child>
                         <Button type="button" variant="outline" @click="resetForm" class="h-10">
                             <Icon icon="x" class="mr-2 h-4 w-4" />

@@ -3,10 +3,8 @@
 namespace Database\Seeders;
 
 use App\Models\Guardian;
-use App\Models\Role;
 use App\Models\Student;
 use App\Models\User;
-use App\Models\UserRole;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 
@@ -20,8 +18,6 @@ class GuardianSeeder extends Seeder
      */
     public function run(): void
     {
-        $guardianRole = Role::where('slug', 'guardian')->first();
-
         // Get all students to assign guardians to
         $students = Student::with('user')->get();
 
@@ -76,12 +72,7 @@ class GuardianSeeder extends Seeder
             $createdGuardians[] = $fatherGuardian;
 
             // Assign guardian role
-            if ($guardianRole) {
-                UserRole::firstOrCreate(
-                    ['user_id' => $fatherUser->id, 'role_id' => $guardianRole->id],
-                    ['is_active' => true]
-                );
-            }
+            $fatherUser->syncRoles(['guardian']);
 
             // Create mother guardian
             $motherName = $this->getMotherName();
@@ -108,12 +99,7 @@ class GuardianSeeder extends Seeder
             $createdGuardians[] = $motherGuardian;
 
             // Assign guardian role
-            if ($guardianRole) {
-                UserRole::firstOrCreate(
-                    ['user_id' => $motherUser->id, 'role_id' => $guardianRole->id],
-                    ['is_active' => true]
-                );
-            }
+            $motherUser->syncRoles(['guardian']);
 
             // Store family info for StudentGuardianSeeder
             $siblingIds = $siblings->pluck('id')->toArray();

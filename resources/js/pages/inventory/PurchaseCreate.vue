@@ -362,10 +362,10 @@ initializeForm();
             <!-- Header -->
             <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                 <div>
-                    <h1 class="text-2xl font-bold text-gray-900 dark:text-white">
+                    <h1 class="text-2xl font-bold text-foreground">
                         {{ isEditMode ? 'Edit Purchase Order' : 'Create Purchase Order' }}
                     </h1>
-                    <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                    <p class="mt-1 text-sm text-muted-foreground">
                         {{ isEditMode ? 'Update purchase details and items' : 'Create a new purchase order' }}
                     </p>
                 </div>
@@ -385,13 +385,13 @@ initializeForm();
                         <div class="space-y-2">
                             <Label for="campus_id" class="flex items-center gap-2">
                                 <Icon icon="building" class="h-4 w-4" />
-                                Campus <span class="text-red-500">*</span>
+                                Campus <span class="text-destructive">*</span>
                             </Label>
                             <select
                                 id="campus_id"
                                 v-model="form.campus_id"
-                                class="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 text-sm h-11"
-                                :class="{ 'border-red-500': errors.campus_id }"
+                                class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm h-11"
+                                :class="{ 'border-destructive': errors.campus_id }"
                                 required
                             >
                                 <option value="">Select Campus</option>
@@ -404,7 +404,7 @@ initializeForm();
                         <div class="space-y-2">
                             <Label for="supplier_id" class="flex items-center gap-2">
                                 <Icon icon="truck" class="h-4 w-4" />
-                                Supplier <span class="text-red-500">*</span>
+                                Supplier <span class="text-destructive">*</span>
                             </Label>
                             <div class="flex gap-2">
                                 <div class="flex-1">
@@ -432,14 +432,14 @@ initializeForm();
                         <div class="space-y-2">
                             <Label for="purchase_date" class="flex items-center gap-2">
                                 <Icon icon="calendar" class="h-4 w-4" />
-                                Purchase Date <span class="text-red-500">*</span>
+                                Purchase Date <span class="text-destructive">*</span>
                             </Label>
                             <Input
                                 id="purchase_date"
                                 v-model="form.purchase_date"
                                 type="date"
                                 class="h-11"
-                                :class="{ 'border-red-500': errors.purchase_date }"
+                                :class="{ 'border-destructive': errors.purchase_date }"
                                 required
                             />
                             <InputError :message="errors.purchase_date" />
@@ -457,21 +457,21 @@ initializeForm();
                         </Button>
                     </div>
 
-                    <div v-if="form.purchase_items.length === 0" class="text-center py-8 text-gray-500 border rounded-lg">
-                        <Icon icon="shopping-cart" :size="48" class="mx-auto mb-2 text-gray-300" />
+                    <div v-if="form.purchase_items.length === 0" class="text-center py-8 text-muted-foreground border rounded-lg">
+                        <Icon icon="shopping-cart" :size="48" class="mx-auto mb-2 text-muted-foreground" />
                         <p>No items added yet. Click "Add Item" to start.</p>
                     </div>
 
                     <div v-else class="space-y-4">
-                        <div v-for="(item, index) in form.purchase_items" :key="index" class="p-3 md:p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                        <div v-for="(item, index) in form.purchase_items" :key="index" class="p-3 md:p-4 bg-muted rounded-lg">
                             <div class="flex flex-col gap-4">
                                 <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
                                     <div class="space-y-2">
-                                        <Label class="text-xs">Item <span class="text-red-500">*</span></Label>
+                                        <Label class="text-xs">Item <span class="text-destructive">*</span></Label>
                                         <select
                                             v-model="item.inventory_item_id"
-                                            class="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white px-3 py-2 text-sm h-10"
-                                            :class="{ 'border-red-500': errors[`purchase_items.${index}.inventory_item_id`] }"
+                                            class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm h-10"
+                                            :class="{ 'border-destructive': errors[`purchase_items.${index}.inventory_item_id`] }"
                                             required
                                         >
                                             <option value="0">
@@ -488,7 +488,7 @@ initializeForm();
                                         <InputError :message="errors[`purchase_items.${index}.inventory_item_id`]" />
                                     </div>
                                     <div class="space-y-2">
-                                        <Label class="text-xs">Quantity <span class="text-red-500">*</span></Label>
+                                        <Label class="text-xs">Quantity <span class="text-destructive">*</span></Label>
                                         <Input
                                             v-model.number="item.quantity"
                                             type="number"
@@ -498,7 +498,7 @@ initializeForm();
                                         />
                                     </div>
                                     <div class="space-y-2">
-                                        <Label class="text-xs">Purchase Rate <span class="text-red-500">*</span></Label>
+                                        <Label class="text-xs">Purchase Rate <span class="text-destructive">*</span></Label>
                                         <Input
                                             v-model.number="item.purchase_rate"
                                             type="number"
@@ -519,18 +519,18 @@ initializeForm();
                                         />
                                     </div>
                                 </div>
-                                <div class="flex items-center justify-between gap-2">
-                                    <div class="text-sm font-bold text-gray-900 dark:text-white">
+                                <div class="flex flex-wrap items-center justify-between gap-2">
+                                    <div class="text-sm font-bold text-foreground">
                                         {{ formatCurrency(item.quantity * item.purchase_rate) }}
                                     </div>
                                     <Button type="button" variant="ghost" size="sm" @click="removeItem(index)" class="h-8 w-8 p-0 flex-shrink-0">
-                                        <Icon icon="trash" class="text-red-500" />
+                                        <Icon icon="trash" class="text-destructive" />
                                     </Button>
                                 </div>
                             </div>
                         </div>
                         
-                        <div v-if="availableItems.length === 0 && !loadingItems" class="text-center py-4 text-amber-600 bg-amber-50 dark:bg-amber-900/20 rounded-lg">
+                        <div v-if="availableItems.length === 0 && !loadingItems" class="text-center py-4 text-warning bg-warning/10 rounded-lg">
                             <Icon icon="alert-triangle" class="mr-2 h-4 w-4 inline" />
                             No inventory items found. Please add items in Inventory Settings first.
                         </div>
@@ -539,16 +539,16 @@ initializeForm();
 
                 <!-- Total & Notes Card -->
                 <div class="bg-card rounded-lg border p-4 md:p-5 space-y-4">
-                    <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 space-y-3">
+                    <div class="bg-muted rounded-lg p-4 space-y-3">
                         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
                             <span class="text-lg font-semibold">Total Amount:</span>
-                            <span class="text-2xl font-bold text-green-600">{{ formatCurrency(calculateTotal) }}</span>
+                            <span class="text-2xl font-bold text-success">{{ formatCurrency(calculateTotal) }}</span>
                         </div>
                         <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
                             <span class="text-lg font-semibold">Estimated Profit:</span>
                             <span 
                                 class="text-2xl font-bold"
-                                :class="calculateEstimatedProfit >= 0 ? 'text-blue-600' : 'text-red-600'"
+                                :class="calculateEstimatedProfit >= 0 ? 'text-primary' : 'text-destructive'"
                             >
                                 {{ formatCurrency(calculateEstimatedProfit) }}
                             </span>
@@ -564,7 +564,7 @@ initializeForm();
                             id="note"
                             v-model="form.note"
                             rows="2"
-                            class="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 min-h-20"
+                            class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 min-h-20"
                             placeholder="Additional notes or remarks..."
                         ></textarea>
                     </div>

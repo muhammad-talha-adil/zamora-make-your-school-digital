@@ -3,18 +3,18 @@
         <Head title="Revaluation Requests" />
 
         <div class="p-6">
-            <div class="flex justify-between items-center mb-6">
+            <div class="flex flex-wrap gap-2 justify-between items-center mb-6">
                 <h1 class="text-2xl font-bold">Revaluation Requests</h1>
                 <button
                     @click="showCreateModal = true"
-                    class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700"
+                    class="bg-primary text-primary-foreground px-4 py-2 rounded hover:bg-primary/90"
                 >
                     New Request
                 </button>
             </div>
 
             <!-- Filters -->
-            <div class="bg-white dark:bg-gray-800 rounded-lg shadow p-4 mb-6">
+            <div class="bg-card rounded-lg shadow p-4 mb-6">
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                     <div>
                         <label class="block text-sm font-medium mb-1">Exam</label>
@@ -43,7 +43,7 @@
                     <div class="flex items-end">
                         <button
                             @click="fetchRevaluations"
-                            class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700 w-full"
+                            class="bg-primary text-primary-foreground px-4 py-2 rounded hover:bg-primary/90 w-full"
                         >
                             Search
                         </button>
@@ -53,25 +53,25 @@
 
             <!-- Revaluations Table -->
             <div v-if="loading" class="text-center py-8">
-                <span class="text-gray-500">Loading...</span>
+                <span class="text-muted-foreground">Loading...</span>
             </div>
             
-            <div v-else-if="revaluations.length > 0" class="bg-white dark:bg-gray-800 rounded-lg shadow overflow-hidden">
-                <table class="min-w-full divide-y divide-gray-200">
-                    <thead class="bg-gray-50">
+            <div v-else-if="revaluations.length > 0" class="table-scroll bg-card rounded-lg shadow">
+                <table class="min-w-full divide-y divide-border">
+                    <thead class="bg-muted">
                         <tr>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">ID</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Student</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Exam</th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase">Subject</th>
-                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Original Marks</th>
-                            <th class="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase">Expected Marks</th>
-                            <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Status</th>
-                            <th class="px-6 py-3 text-center text-xs font-medium text-gray-500 uppercase">Actions</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">ID</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Student</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Exam</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Subject</th>
+                            <th class="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase">Original Marks</th>
+                            <th class="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase">Expected Marks</th>
+                            <th class="px-6 py-3 text-center text-xs font-medium text-muted-foreground uppercase">Status</th>
+                            <th class="px-6 py-3 text-center text-xs font-medium text-muted-foreground uppercase">Actions</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-gray-200">
-                        <tr v-for="item in revaluations" :key="item.id" class="hover:bg-gray-50">
+                    <tbody class="divide-y divide-border">
+                        <tr v-for="item in revaluations" :key="item.id" class="hover:bg-accent">
                             <td class="px-6 py-4 whitespace-nowrap text-sm">#{{ item.id }}</td>
                             <td class="px-6 py-4 whitespace-nowrap">{{ item.student?.name }}</td>
                             <td class="px-6 py-4 whitespace-nowrap">{{ item.exam?.name }}</td>
@@ -81,9 +81,9 @@
                             <td class="px-6 py-4 text-center">
                                 <span 
                                     :class="{
-                                        'bg-yellow-100 text-yellow-800': item.status === 'pending',
-                                        'bg-green-100 text-green-800': item.status === 'approved',
-                                        'bg-red-100 text-red-800': item.status === 'rejected',
+                                        'bg-warning/10 text-warning': item.status === 'pending',
+                                        'bg-success/10 text-success': item.status === 'approved',
+                                        'bg-destructive/10 text-destructive': item.status === 'rejected',
                                     }"
                                     class="px-2 py-1 rounded text-xs font-medium"
                                 >
@@ -93,14 +93,14 @@
                             <td class="px-6 py-4 text-center">
                                 <button
                                     @click="viewDetail(item)"
-                                    class="text-blue-600 hover:text-blue-800 text-sm mr-2"
+                                    class="text-primary hover:text-primary text-sm mr-2"
                                 >
                                     View
                                 </button>
                                 <button
                                     v-if="item.status === 'pending'"
                                     @click="cancelRequest(item)"
-                                    class="text-red-600 hover:text-red-800 text-sm"
+                                    class="text-destructive hover:text-destructive text-sm"
                                 >
                                     Cancel
                                 </button>
@@ -110,13 +110,13 @@
                 </table>
             </div>
 
-            <div v-else class="text-center py-8 text-gray-500">
+            <div v-else class="text-center py-8 text-muted-foreground">
                 No revaluation requests found.
             </div>
 
             <!-- Create Modal -->
             <div v-if="showCreateModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-                <div class="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-md">
+                <div class="bg-card rounded-lg p-6 w-full max-w-md">
                     <h2 class="text-xl font-bold mb-4">New Revaluation Request</h2>
                     <form @submit.prevent="submitRequest">
                         <div class="mb-4">
@@ -145,9 +145,9 @@
                             <label class="block text-sm font-medium mb-1">Reason</label>
                             <textarea v-model="form.reason" class="w-full border rounded px-3 py-2" rows="3"></textarea>
                         </div>
-                        <div class="flex justify-end gap-2">
+                        <div class="flex flex-wrap justify-end gap-2">
                             <button type="button" @click="showCreateModal = false" class="px-4 py-2 border rounded">Cancel</button>
-                            <button type="submit" class="px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700">Submit</button>
+                            <button type="submit" class="px-4 py-2 bg-primary text-primary-foreground rounded hover:bg-primary/90">Submit</button>
                         </div>
                     </form>
                 </div>

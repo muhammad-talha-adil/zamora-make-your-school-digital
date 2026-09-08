@@ -51,7 +51,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('campus_id')->constrained('campuses')->cascadeOnDelete();
             $table->foreignId('student_id')->constrained('users')->cascadeOnDelete();
-            $table->foreignId('session_id')->constrained('sessions')->cascadeOnDelete();
+            $table->foreignId('session_id')->constrained('academic_sessions')->cascadeOnDelete();
             $table->string('invoice_number')->unique();
             $table->date('invoice_date');
             $table->decimal('total_amount', 10, 2)->default(0);
@@ -66,7 +66,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('campus_id')->constrained('campuses')->cascadeOnDelete();
             $table->foreignId('student_id')->constrained('users')->cascadeOnDelete();
-            $table->foreignId('session_id')->constrained('sessions')->cascadeOnDelete();
+            $table->foreignId('session_id')->constrained('academic_sessions')->cascadeOnDelete();
             $table->foreignId('fee_type_id')->constrained('fee_types')->cascadeOnDelete();
             $table->decimal('amount', 10, 2);
             $table->decimal('discount_amount', 10, 2)->default(0);

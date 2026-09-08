@@ -116,10 +116,10 @@ const calculateFinalPrice = (item: any) => {
         <div class="space-y-6 p-4 md:p-6">
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
-                    <h1 class="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">
+                    <h1 class="text-xl sm:text-2xl font-bold text-foreground">
                         Inventory Returns
                     </h1>
-                    <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                    <p class="mt-1 text-sm text-muted-foreground">
                         Track all returned inventory items from students.
                     </p>
                 </div>
@@ -130,26 +130,26 @@ const calculateFinalPrice = (item: any) => {
             </div>
 
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                <div class="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm border border-gray-200 dark:border-gray-700">
-                    <div class="text-sm text-gray-500">Total Returns</div>
+                <div class="bg-card rounded-lg p-4 shadow-sm border border-border">
+                    <div class="text-sm text-muted-foreground">Total Returns</div>
                     <div class="text-2xl font-bold">{{ pagination.total }}</div>
                 </div>
-                <div class="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm border border-gray-200 dark:border-gray-700">
-                    <div class="text-sm text-gray-500">Items Returned</div>
+                <div class="bg-card rounded-lg p-4 shadow-sm border border-border">
+                    <div class="text-sm text-muted-foreground">Items Returned</div>
                     <div class="text-2xl font-bold">
                         {{ (returnsData || []).reduce((sum, r) => sum + (r.quantity || 0), 0).toLocaleString() }}
                     </div>
                 </div>
-                <div class="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm border border-gray-200 dark:border-gray-700">
-                    <div class="text-sm text-gray-500">Total Value</div>
-                    <div class="text-2xl font-bold text-green-600">
+                <div class="bg-card rounded-lg p-4 shadow-sm border border-border">
+                    <div class="text-sm text-muted-foreground">Total Value</div>
+                    <div class="text-2xl font-bold text-success">
                         {{ formatCurrency((returnsData || []).reduce((sum, r) => sum + (r.total_value || 0), 0)) }}
                     </div>
                 </div>
             </div>
 
             <div class="flex flex-wrap gap-3">
-                <select v-model="campusFilter" class="w-full sm:w-48 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 text-sm min-h-11">
+                <select v-model="campusFilter" class="w-full sm:w-48 rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm min-h-11">
                     <option value="">All Campuses</option>
                     <option v-for="campus in props.campuses" :key="campus.id" :value="campus.id">
                         {{ campus.name }}
@@ -157,42 +157,42 @@ const calculateFinalPrice = (item: any) => {
                 </select>
             </div>
 
-            <div class="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-900">
+            <div class="overflow-hidden rounded-lg border border-border bg-card shadow-sm">
                 <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                        <thead class="bg-gray-50 dark:bg-gray-800">
+                    <table class="min-w-full divide-y divide-border">
+                        <thead class="bg-muted">
                             <tr>
-                                <th scope="col" class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">#</th>
-                                <th scope="col" class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">Student</th>
-                                <th scope="col" class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">Item</th>
-                                <th scope="col" class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">Qty</th>
-                                <th scope="col" class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">Unit Price</th>
-                                <th scope="col" class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">Total</th>
-                                <th scope="col" class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">Date</th>
+                                <th scope="col" class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">#</th>
+                                <th scope="col" class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">Student</th>
+                                <th scope="col" class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">Item</th>
+                                <th scope="col" class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">Qty</th>
+                                <th scope="col" class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">Unit Price</th>
+                                <th scope="col" class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">Total</th>
+                                <th scope="col" class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">Date</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-900">
-                            <tr v-for="(returnItem, index) in returnsData" :key="returnItem.id" class="transition-colors hover:bg-gray-50 dark:hover:bg-gray-800">
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">
+                        <tbody class="divide-y divide-border bg-card">
+                            <tr v-for="(returnItem, index) in returnsData" :key="returnItem.id" class="transition-colors hover:bg-accent">
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
                                     {{ (pagination.from || 0) + index }}
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="text-sm font-medium text-gray-900 dark:text-white">{{ returnItem.student_name }}</div>
-                                    <div class="text-xs text-gray-500">{{ returnItem.registration_number }}</div>
+                                    <div class="text-sm font-medium text-foreground">{{ returnItem.student_name }}</div>
+                                    <div class="text-xs text-muted-foreground">{{ returnItem.registration_number }}</div>
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-foreground">
                                     {{ returnItem.item_name_snapshot }}
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900 dark:text-white">
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-foreground">
                                     {{ returnItem.quantity }}
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
                                     {{ formatCurrency(calculateFinalPrice(returnItem)) }}
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-green-600">
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-bold text-success">
                                     {{ formatCurrency(returnItem.total_value) }}
                                 </td>
-                                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">
+                                <td class="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
                                     {{ formatDate(returnItem.return_date) }}
                                 </td>
                             </tr>
@@ -202,7 +202,7 @@ const calculateFinalPrice = (item: any) => {
             </div>
 
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                <div class="text-sm text-gray-600">
+                <div class="text-sm text-muted-foreground">
                     Showing {{ pagination.from }} to {{ pagination.to }} of {{ pagination.total }} entries
                 </div>
                 <div class="flex flex-wrap gap-1">

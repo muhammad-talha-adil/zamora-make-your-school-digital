@@ -48,23 +48,23 @@ const breadcrumbItems: BreadcrumbItem[] = [
         <div class="p-6">
             <div class="space-y-6">
                 <div>
-                    <h1 class="text-2xl font-bold text-gray-900 dark:text-white">
+                    <h1 class="text-2xl font-bold text-foreground">
                         Exam Settings
                     </h1>
-                    <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                    <p class="mt-1 text-sm text-muted-foreground">
                         Manage exam settings and grade systems.
                     </p>
                 </div>
 
                 <!-- Tabs -->
-                <div class="border-b border-gray-200 dark:border-gray-700">
+                <div class="border-b border-border">
                     <nav class="-mb-px flex space-x-8 overflow-x-auto">
                         <button
                             @click="activeTab = 'grade-scales'"
                             :class="[
                                 activeTab === 'grade-scales'
-                                    ? 'border-indigo-500 text-indigo-600 dark:text-indigo-400'
-                                    : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300',
+                                    ? 'border-primary text-primary'
+                                    : 'border-transparent text-muted-foreground hover:border-border hover:text-foreground',
                                 'border-b-2 px-1 py-2 text-sm font-medium whitespace-nowrap',
                             ]"
                         >
@@ -74,8 +74,8 @@ const breadcrumbItems: BreadcrumbItem[] = [
                             @click="activeTab = 'exam-types'"
                             :class="[
                                 activeTab === 'exam-types'
-                                    ? 'border-indigo-500 text-indigo-600 dark:text-indigo-400'
-                                    : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300',
+                                    ? 'border-primary text-primary'
+                                    : 'border-transparent text-muted-foreground hover:border-border hover:text-foreground',
                                 'border-b-2 px-1 py-2 text-sm font-medium whitespace-nowrap',
                             ]"
                         >

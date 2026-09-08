@@ -148,8 +148,10 @@ class StudentService
         // Build the student object exactly as Edit.vue expects
         $studentData = [
             'id' => $student->id,
+            // System-issued identifiers, shown read-only on the edit form.
             'admission_no' => $student->admission_no,
             'registration_no' => $student->registration_no,
+            'student_code' => $student->student_code,
             'user' => [
                 'name' => $student->user?->name,
                 'email' => $student->user?->email,
@@ -423,7 +425,7 @@ class StudentService
             'student_id' => $student->id,
         ]);
 
-        $deleted = $student->delete();
+        $deleted = (bool) $student->delete();
 
         if ($deleted) {
             Log::info('StudentService: Student deleted successfully', [
@@ -444,7 +446,7 @@ class StudentService
             'student_id' => $student->id,
         ]);
 
-        $restored = $student->restore();
+        $restored = (bool) $student->restore();
 
         if ($restored) {
             Log::info('StudentService: Student restored successfully', [
@@ -465,7 +467,7 @@ class StudentService
             'student_id' => $student->id,
         ]);
 
-        $deleted = $student->forceDelete();
+        $deleted = (bool) $student->forceDelete();
 
         if ($deleted) {
             Log::info('StudentService: Student force deleted', [

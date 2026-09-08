@@ -67,28 +67,28 @@ const loadReport = () => {
         <div class="space-y-6 p-4 md:p-6">
             <!-- Header -->
             <div>
-                <h1 class="text-xl md:text-2xl font-bold text-gray-900 dark:text-white">
+                <h1 class="text-xl md:text-2xl font-bold text-foreground">
                     Income Statement
                 </h1>
-                <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                <p class="mt-1 text-sm text-muted-foreground">
                     Income report by category
                 </p>
             </div>
 
             <!-- Filters -->
-            <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
+            <div class="bg-card rounded-lg border border-border p-4">
                 <div class="flex flex-wrap gap-4 items-end">
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">From Date</label>
-                        <input type="date" v-model="fromDate" class="rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700">
+                        <label class="block text-sm font-medium text-muted-foreground mb-1">From Date</label>
+                        <input type="date" v-model="fromDate" class="rounded-md border-border">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">To Date</label>
-                        <input type="date" v-model="toDate" class="rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700">
+                        <label class="block text-sm font-medium text-muted-foreground mb-1">To Date</label>
+                        <input type="date" v-model="toDate" class="rounded-md border-border">
                     </div>
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Campus</label>
-                        <select v-model="selectedCampus" class="rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700">
+                        <label class="block text-sm font-medium text-muted-foreground mb-1">Campus</label>
+                        <select v-model="selectedCampus" class="rounded-md border-border">
                             <option :value="undefined">All Campuses</option>
                             <option v-for="campus in campuses" :key="campus.id" :value="campus.id">{{ campus.name }}</option>
                         </select>
@@ -98,36 +98,36 @@ const loadReport = () => {
             </div>
 
             <!-- Summary -->
-            <div class="bg-green-50 dark:bg-green-900/20 rounded-lg p-6">
-                <p class="text-sm text-gray-600 dark:text-gray-400">Total Income</p>
-                <p class="text-3xl font-bold text-green-600">{{ formatMoney(totalIncome) }}</p>
+            <div class="bg-success/10 rounded-lg p-6">
+                <p class="text-sm text-muted-foreground">Total Income</p>
+                <p class="text-3xl font-bold text-success">{{ formatMoney(totalIncome) }}</p>
             </div>
 
             <!-- By Category Table -->
-            <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+            <div class="bg-card rounded-lg border border-border overflow-hidden">
                 <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                        <thead class="bg-gray-50 dark:bg-gray-900">
+                    <table class="min-w-full divide-y divide-border">
+                        <thead class="bg-muted">
                             <tr>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Category</th>
-                                <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Amount</th>
-                                <th class="px-4 py-3 text-right text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">% of Total</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Category</th>
+                                <th class="px-4 py-3 text-right text-xs font-medium text-muted-foreground uppercase">Amount</th>
+                                <th class="px-4 py-3 text-right text-xs font-medium text-muted-foreground uppercase">% of Total</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
-                            <tr v-for="item in byCategory" :key="item.category_id" class="hover:bg-gray-50 dark:hover:bg-gray-900/50">
+                        <tbody class="divide-y divide-border">
+                            <tr v-for="item in byCategory" :key="item.category_id" class="hover:bg-accent">
                                 <td class="px-4 py-3 text-sm">{{ item.category?.name || 'Unknown' }}</td>
-                                <td class="px-4 py-3 text-sm text-right font-medium text-green-600">{{ formatMoney(item.total) }}</td>
+                                <td class="px-4 py-3 text-sm text-right font-medium text-success">{{ formatMoney(item.total) }}</td>
                                 <td class="px-4 py-3 text-sm text-right">{{ totalIncome > 0 ? ((item.total / totalIncome) * 100).toFixed(1) : 0 }}%</td>
                             </tr>
                             <tr v-if="byCategory.length === 0">
-                                <td colspan="3" class="px-4 py-8 text-center text-gray-500">No income data</td>
+                                <td colspan="3" class="px-4 py-8 text-center text-muted-foreground">No income data</td>
                             </tr>
                         </tbody>
-                        <tfoot class="bg-gray-50 dark:bg-gray-900">
+                        <tfoot class="bg-muted">
                             <tr>
                                 <td class="px-4 py-3 font-bold">Total</td>
-                                <td class="px-4 py-3 text-right font-bold text-green-600">{{ formatMoney(totalIncome) }}</td>
+                                <td class="px-4 py-3 text-right font-bold text-success">{{ formatMoney(totalIncome) }}</td>
                                 <td class="px-4 py-3 text-right">100%</td>
                             </tr>
                         </tfoot>

@@ -197,23 +197,23 @@ fetchPurchases();
         <div class="space-y-6 p-4 md:p-6">
             <!-- Header -->
             <div>
-                <h1 class="text-2xl font-bold text-gray-900 dark:text-white">
+                <h1 class="text-2xl font-bold text-foreground">
                     Purchases & Suppliers
                 </h1>
-                <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                <p class="mt-1 text-sm text-muted-foreground">
                     Manage purchases, suppliers, and purchase returns.
                 </p>
             </div>
 
             <!-- Tabs - Horizontal scroll on mobile -->
-            <div class="border-b border-gray-200 overflow-x-auto dark:border-gray-700">
+            <div class="border-b border-border overflow-x-auto">
                 <nav class="-mb-px flex min-w-full space-x-8">
                     <button
                         @click="activeTab = 'purchases'"
                         :class="[
                             activeTab === 'purchases'
-                                ? 'border-indigo-500 text-indigo-600 dark:text-indigo-400'
-                                : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300',
+                                ? 'border-primary text-primary'
+                                : 'border-transparent text-muted-foreground hover:border-border hover:text-foreground',
                             'border-b-2 px-1 py-2 text-sm font-medium whitespace-nowrap transition-colors',
                         ]"
                     >
@@ -224,8 +224,8 @@ fetchPurchases();
                         @click="activeTab = 'suppliers'"
                         :class="[
                             activeTab === 'suppliers'
-                                ? 'border-indigo-500 text-indigo-600 dark:text-indigo-400'
-                                : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300',
+                                ? 'border-primary text-primary'
+                                : 'border-transparent text-muted-foreground hover:border-border hover:text-foreground',
                             'border-b-2 px-1 py-2 text-sm font-medium whitespace-nowrap transition-colors',
                         ]"
                     >
@@ -236,8 +236,8 @@ fetchPurchases();
                         @click="activeTab = 'returns'"
                         :class="[
                             activeTab === 'returns'
-                                ? 'border-indigo-500 text-indigo-600 dark:text-indigo-400'
-                                : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300',
+                                ? 'border-primary text-primary'
+                                : 'border-transparent text-muted-foreground hover:border-border hover:text-foreground',
                             'border-b-2 px-1 py-2 text-sm font-medium whitespace-nowrap transition-colors',
                         ]"
                     >
@@ -260,7 +260,7 @@ fetchPurchases();
                                 if (activeTab === 'suppliers') fetchSuppliers();
                                 if (activeTab === 'returns') fetchPurchaseReturns();
                             }" 
-                            class="w-32 md:w-36 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 text-sm h-9 flex-shrink-0"
+                            class="w-32 md:w-36 rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm h-9 flex-shrink-0"
                         >
                             <option value="">All Campuses</option>
                             <option v-for="campus in props.campuses" :key="campus.id" :value="campus.id">
@@ -324,33 +324,33 @@ fetchPurchases();
 
             <!-- ==================== PURCHASES TAB ==================== -->
             <div v-if="activeTab === 'purchases'">
-                <div class="overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-sm -mx-4 md:mx-0">
+                <div class="overflow-hidden rounded-lg border border-border bg-card shadow-sm -mx-4 md:mx-0">
                     <div class="overflow-x-auto">
-                        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                            <thead class="bg-gray-50 dark:bg-gray-800">
+                        <table class="min-w-full divide-y divide-border">
+                            <thead class="bg-muted">
                                 <tr>
-                                    <th class="px-3 md:px-6 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase">Sr#</th>
-                                    <th class="px-3 md:px-6 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase">Purchase ID</th>
-                                    <th class="px-3 md:px-6 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase">Date</th>
-                                    <th class="px-3 md:px-6 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase">Campus</th>
-                                    <th class="px-3 md:px-6 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase">Supplier</th>
-                                    <th class="px-3 md:px-6 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase">Items</th>
-                                    <th class="px-3 md:px-6 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase">Total</th>
-                                    <th class="px-3 md:px-6 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase">Actions</th>
+                                    <th class="px-3 md:px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Sr#</th>
+                                    <th class="px-3 md:px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Purchase ID</th>
+                                    <th class="px-3 md:px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Date</th>
+                                    <th class="px-3 md:px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Campus</th>
+                                    <th class="px-3 md:px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Supplier</th>
+                                    <th class="px-3 md:px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Items</th>
+                                    <th class="px-3 md:px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Total</th>
+                                    <th class="px-3 md:px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Actions</th>
                                 </tr>
                             </thead>
-                            <tbody class="divide-y divide-gray-200 dark:divide-gray-700 bg-white dark:bg-gray-900">
-                                <tr v-for="(purchase, index) in purchasesData" :key="purchase.id" class="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
-                                    <td class="px-3 md:px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">{{ purchasesPagination.from + index }}</td>
-                                    <td class="px-3 md:px-6 py-4 whitespace-nowrap text-sm font-bold text-blue-600 dark:text-blue-400">{{ purchase.purchase_id || '#' + purchase.id }}</td>
-                                    <td class="px-3 md:px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">{{ formatDate(purchase.purchase_date) }}</td>
-                                    <td class="px-3 md:px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">{{ purchase.campus_name || 'All Campuses' }}</td>
-                                    <td class="px-3 md:px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">{{ purchase.supplier?.name || '-' }}</td>
-                                    <td class="px-3 md:px-6 py-4 text-sm text-gray-600 dark:text-gray-300">
+                            <tbody class="divide-y divide-border bg-card">
+                                <tr v-for="(purchase, index) in purchasesData" :key="purchase.id" class="hover:bg-accent transition-colors">
+                                    <td class="px-3 md:px-6 py-4 whitespace-nowrap text-sm font-medium text-foreground">{{ purchasesPagination.from + index }}</td>
+                                    <td class="px-3 md:px-6 py-4 whitespace-nowrap text-sm font-bold text-primary">{{ purchase.purchase_id || '#' + purchase.id }}</td>
+                                    <td class="px-3 md:px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">{{ formatDate(purchase.purchase_date) }}</td>
+                                    <td class="px-3 md:px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">{{ purchase.campus_name || 'All Campuses' }}</td>
+                                    <td class="px-3 md:px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">{{ purchase.supplier?.name || '-' }}</td>
+                                    <td class="px-3 md:px-6 py-4 text-sm text-muted-foreground">
                                         <span v-if="purchase.items_count > 0">{{ purchase.item_names || '-' }}</span>
-                                        <span v-else class="text-gray-400">-</span>
+                                        <span v-else class="text-muted-foreground">-</span>
                                     </td>
-                                    <td class="px-3 md:px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900 dark:text-white">{{ formatCurrency(purchase.total_amount) }}</td>
+                                    <td class="px-3 md:px-6 py-4 whitespace-nowrap text-sm font-bold text-foreground">{{ formatCurrency(purchase.total_amount) }}</td>
                                     <td class="px-3 md:px-6 py-4 whitespace-nowrap">
                                         <div class="flex flex-wrap gap-1 md:gap-2">
                                             <Button variant="outline" size="sm" @click="router.visit(`/inventory/purchases/${purchase.id}/view`)" class="text-xs md:text-sm">
@@ -366,7 +366,7 @@ fetchPurchases();
                                     </td>
                                 </tr>
                                 <tr v-if="purchasesData.length === 0">
-                                    <td colspan="8" class="px-6 py-8 text-center text-sm text-gray-500">No purchases found</td>
+                                    <td colspan="8" class="px-6 py-8 text-center text-sm text-muted-foreground">No purchases found</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -375,11 +375,11 @@ fetchPurchases();
 
                 <!-- Pagination -->
                 <div class="flex flex-col sm:flex-row items-center justify-between gap-4 mt-4 px-2">
-                    <div class="flex flex-wrap items-center gap-2 text-sm text-gray-600 dark:text-gray-400 order-2 sm:order-1">
+                    <div class="flex flex-wrap items-center gap-2 text-sm text-muted-foreground order-2 sm:order-1">
                         <span>Show</span>
                         <select 
                             v-model="perPage" 
-                            class="rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-2 py-1 text-sm"
+                            class="rounded-md border border-border bg-card px-2 py-1 text-sm"
                         >
                             <option :value="25">25</option>
                             <option :value="50">50</option>
@@ -389,7 +389,7 @@ fetchPurchases();
                         <span>entries</span>
                     </div>
                     <div class="flex flex-col sm:flex-row items-center gap-2 order-1 sm:order-2">
-                        <span class="text-sm text-gray-600 dark:text-gray-400 text-center sm:text-left">
+                        <span class="text-sm text-muted-foreground text-center sm:text-left">
                             Showing {{ purchasesPagination.from || 0 }} to {{ purchasesPagination.to || 0 }} of {{ purchasesPagination.total }}
                         </span>
                         <div class="flex gap-1">
@@ -416,29 +416,29 @@ fetchPurchases();
 
             <!-- ==================== SUPPLIERS TAB ==================== -->
             <div v-if="activeTab === 'suppliers'">
-                <div class="overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-sm -mx-4 md:mx-0">
+                <div class="overflow-hidden rounded-lg border border-border bg-card shadow-sm -mx-4 md:mx-0">
                     <div class="overflow-x-auto">
-                        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                            <thead class="bg-gray-50 dark:bg-gray-800">
+                        <table class="min-w-full divide-y divide-border">
+                            <thead class="bg-muted">
                                 <tr>
-                                    <th class="px-3 md:px-6 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase">Sr#</th>
-                                    <th class="px-3 md:px-6 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase">Name</th>
-                                    <th class="px-3 md:px-6 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase">Contact</th>
-                                    <th class="px-3 md:px-6 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase">Phone</th>
-                                    <th class="px-3 md:px-6 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase">Email</th>
-                                    <th class="px-3 md:px-6 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase">Campus</th>
-                                    <th class="px-3 md:px-6 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase">Status</th>
-                                    <th class="px-3 md:px-6 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase">Actions</th>
+                                    <th class="px-3 md:px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Sr#</th>
+                                    <th class="px-3 md:px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Name</th>
+                                    <th class="px-3 md:px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Contact</th>
+                                    <th class="px-3 md:px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Phone</th>
+                                    <th class="px-3 md:px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Email</th>
+                                    <th class="px-3 md:px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Campus</th>
+                                    <th class="px-3 md:px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Status</th>
+                                    <th class="px-3 md:px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Actions</th>
                                 </tr>
                             </thead>
-                            <tbody class="divide-y divide-gray-200 dark:divide-gray-700 bg-white dark:bg-gray-900">
-                                <tr v-for="(supplier, index) in suppliersData" :key="supplier.id" class="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
-                                    <td class="px-3 md:px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">{{ suppliersPagination.from + index }}</td>
-                                    <td class="px-3 md:px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">{{ supplier.name }}</td>
-                                    <td class="px-3 md:px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">{{ supplier.contact_person || '-' }}</td>
-                                    <td class="px-3 md:px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">{{ supplier.phone || '-' }}</td>
-                                    <td class="px-3 md:px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">{{ supplier.email || '-' }}</td>
-                                    <td class="px-3 md:px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">{{ supplier.campus?.name || 'All Campuses' }}</td>
+                            <tbody class="divide-y divide-border bg-card">
+                                <tr v-for="(supplier, index) in suppliersData" :key="supplier.id" class="hover:bg-accent transition-colors">
+                                    <td class="px-3 md:px-6 py-4 whitespace-nowrap text-sm font-medium text-foreground">{{ suppliersPagination.from + index }}</td>
+                                    <td class="px-3 md:px-6 py-4 whitespace-nowrap text-sm font-medium text-foreground">{{ supplier.name }}</td>
+                                    <td class="px-3 md:px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">{{ supplier.contact_person || '-' }}</td>
+                                    <td class="px-3 md:px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">{{ supplier.phone || '-' }}</td>
+                                    <td class="px-3 md:px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">{{ supplier.email || '-' }}</td>
+                                    <td class="px-3 md:px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">{{ supplier.campus?.name || 'All Campuses' }}</td>
                                     <td class="px-3 md:px-6 py-4 whitespace-nowrap">
                                         <Badge :variant="supplier.is_active ? 'default' : 'destructive'">
                                             {{ supplier.is_active ? 'Active' : 'Inactive' }}
@@ -456,7 +456,7 @@ fetchPurchases();
                                     </td>
                                 </tr>
                                 <tr v-if="suppliersData.length === 0">
-                                    <td colspan="8" class="px-6 py-8 text-center text-sm text-gray-500">No suppliers found</td>
+                                    <td colspan="8" class="px-6 py-8 text-center text-sm text-muted-foreground">No suppliers found</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -465,11 +465,11 @@ fetchPurchases();
 
                 <!-- Pagination -->
                 <div class="flex flex-col sm:flex-row items-center justify-between gap-4 mt-4 px-2">
-                    <div class="flex flex-wrap items-center gap-2 text-sm text-gray-600 dark:text-gray-400 order-2 sm:order-1">
+                    <div class="flex flex-wrap items-center gap-2 text-sm text-muted-foreground order-2 sm:order-1">
                         <span>Show</span>
                         <select 
                             v-model="perPage" 
-                            class="rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-2 py-1 text-sm"
+                            class="rounded-md border border-border bg-card px-2 py-1 text-sm"
                         >
                             <option :value="25">25</option>
                             <option :value="50">50</option>
@@ -479,7 +479,7 @@ fetchPurchases();
                         <span>entries</span>
                     </div>
                     <div class="flex flex-col sm:flex-row items-center gap-2 order-1 sm:order-2">
-                        <span class="text-sm text-gray-600 dark:text-gray-400 text-center sm:text-left">
+                        <span class="text-sm text-muted-foreground text-center sm:text-left">
                             Showing {{ suppliersPagination.from || 0 }} to {{ suppliersPagination.to || 0 }} of {{ suppliersPagination.total }}
                         </span>
                         <div class="flex gap-1">
@@ -506,33 +506,33 @@ fetchPurchases();
 
             <!-- ==================== PURCHASE RETURNS TAB ==================== -->
             <div v-if="activeTab === 'returns'">
-                <div class="overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-900 shadow-sm -mx-4 md:mx-0">
+                <div class="overflow-hidden rounded-lg border border-border bg-card shadow-sm -mx-4 md:mx-0">
                     <div class="overflow-x-auto">
-                        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                            <thead class="bg-gray-50 dark:bg-gray-800">
+                        <table class="min-w-full divide-y divide-border">
+                            <thead class="bg-muted">
                                 <tr>
-                                    <th class="px-3 md:px-6 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase">Sr#</th>
-                                    <th class="px-3 md:px-6 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase">Return ID</th>
-                                    <th class="px-3 md:px-6 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase">Date</th>
-                                    <th class="px-3 md:px-6 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase">Campus</th>
-                                    <th class="px-3 md:px-6 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase">Supplier</th>
-                                    <th class="px-3 md:px-6 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase">Items</th>
-                                    <th class="px-3 md:px-6 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase">Total</th>
-                                    <th class="px-3 md:px-6 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase">Actions</th>
+                                    <th class="px-3 md:px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Sr#</th>
+                                    <th class="px-3 md:px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Return ID</th>
+                                    <th class="px-3 md:px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Date</th>
+                                    <th class="px-3 md:px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Campus</th>
+                                    <th class="px-3 md:px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Supplier</th>
+                                    <th class="px-3 md:px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Items</th>
+                                    <th class="px-3 md:px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Total</th>
+                                    <th class="px-3 md:px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Actions</th>
                                 </tr>
                             </thead>
-                            <tbody class="divide-y divide-gray-200 dark:divide-gray-700 bg-white dark:bg-gray-900">
-                                <tr v-for="(returnItem, index) in purchaseReturnsData" :key="returnItem.id" class="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
-                                    <td class="px-3 md:px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">{{ returnsPagination.from + index }}</td>
-                                    <td class="px-3 md:px-6 py-4 whitespace-nowrap text-sm font-bold text-blue-600 dark:text-blue-400">{{ returnItem.purchase_return_id || '#' + returnItem.id }}</td>
-                                    <td class="px-3 md:px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">{{ formatDate(returnItem.return_date) }}</td>
-                                    <td class="px-3 md:px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">{{ returnItem.campus_name || 'All Campuses' }}</td>
-                                    <td class="px-3 md:px-6 py-4 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">{{ returnItem.supplier?.name || '-' }}</td>
-                                    <td class="px-3 md:px-6 py-4 text-sm text-gray-600 dark:text-gray-300">
+                            <tbody class="divide-y divide-border bg-card">
+                                <tr v-for="(returnItem, index) in purchaseReturnsData" :key="returnItem.id" class="hover:bg-accent transition-colors">
+                                    <td class="px-3 md:px-6 py-4 whitespace-nowrap text-sm font-medium text-foreground">{{ returnsPagination.from + index }}</td>
+                                    <td class="px-3 md:px-6 py-4 whitespace-nowrap text-sm font-bold text-primary">{{ returnItem.purchase_return_id || '#' + returnItem.id }}</td>
+                                    <td class="px-3 md:px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">{{ formatDate(returnItem.return_date) }}</td>
+                                    <td class="px-3 md:px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">{{ returnItem.campus_name || 'All Campuses' }}</td>
+                                    <td class="px-3 md:px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">{{ returnItem.supplier?.name || '-' }}</td>
+                                    <td class="px-3 md:px-6 py-4 text-sm text-muted-foreground">
                                         <span v-if="returnItem.items_count > 0">{{ returnItem.item_names || '-' }}</span>
-                                        <span v-else class="text-gray-400">-</span>
+                                        <span v-else class="text-muted-foreground">-</span>
                                     </td>
-                                    <td class="px-3 md:px-6 py-4 whitespace-nowrap text-sm font-bold text-gray-900 dark:text-white">{{ formatCurrency(returnItem.total_amount) }}</td>
+                                    <td class="px-3 md:px-6 py-4 whitespace-nowrap text-sm font-bold text-foreground">{{ formatCurrency(returnItem.total_amount) }}</td>
                                     <td class="px-3 md:px-6 py-4 whitespace-nowrap">
                                         <div class="flex flex-wrap gap-1 md:gap-2">
                                             <Button variant="outline" size="sm" @click="router.visit(`/inventory/purchase-returns/${returnItem.id}`)" class="text-xs md:text-sm">
@@ -548,7 +548,7 @@ fetchPurchases();
                                     </td>
                                 </tr>
                                 <tr v-if="purchaseReturnsData.length === 0">
-                                    <td colspan="8" class="px-6 py-8 text-center text-sm text-gray-500">No purchase returns found</td>
+                                    <td colspan="8" class="px-6 py-8 text-center text-sm text-muted-foreground">No purchase returns found</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -557,11 +557,11 @@ fetchPurchases();
 
                 <!-- Pagination -->
                 <div class="flex flex-col sm:flex-row items-center justify-between gap-4 mt-4 px-2">
-                    <div class="flex flex-wrap items-center gap-2 text-sm text-gray-600 dark:text-gray-400 order-2 sm:order-1">
+                    <div class="flex flex-wrap items-center gap-2 text-sm text-muted-foreground order-2 sm:order-1">
                         <span>Show</span>
                         <select 
                             v-model="perPage" 
-                            class="rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 px-2 py-1 text-sm"
+                            class="rounded-md border border-border bg-card px-2 py-1 text-sm"
                         >
                             <option :value="25">25</option>
                             <option :value="50">50</option>
@@ -571,7 +571,7 @@ fetchPurchases();
                         <span>entries</span>
                     </div>
                     <div class="flex flex-col sm:flex-row items-center gap-2 order-1 sm:order-2">
-                        <span class="text-sm text-gray-600 dark:text-gray-400 text-center sm:text-left">
+                        <span class="text-sm text-muted-foreground text-center sm:text-left">
                             Showing {{ returnsPagination.from || 0 }} to {{ returnsPagination.to || 0 }} of {{ returnsPagination.total }}
                         </span>
                         <div class="flex gap-1">

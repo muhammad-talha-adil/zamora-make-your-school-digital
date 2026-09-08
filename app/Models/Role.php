@@ -2,37 +2,49 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-use Illuminate\Database\Eloquent\SoftDeletes;
+use Spatie\Permission\Models\Role as SpatieRole;
 
-class Role extends Model
+/**
+ * Application role.
+ *
+ * Extends Spatie's model so the package's assignment, checking and caching
+ * machinery applies, while keeping the columns this project adds on top:
+ * a human label, and the level a role operates at.
+ *
+ * `name` is the identifier used everywhere (`developer`, `campus_admin`, ...).
+ * The old `slug` column duplicated it and has been dropped.
+ */
+class Role extends SpatieRole
 {
-    use SoftDeletes;
+    /** Highest scope a role can act within. */
+    public const SCOPE_SYSTEM = 'SYSTEM';
+
+    public const SCOPE_SCHOOL = 'SCHOOL';
+
+    public const SCOPE_CAMPUS = 'CAMPUS';
+
+    public const SCOPE_SELF = 'SELF';
 
     protected $fillable = [
         'name',
-        'slug',
+        'guard_name',
         'label',
         'scope_level',
         'is_active',
     ];
 
-    public function permissions(): BelongsToMany
+    protected function casts(): array
     {
-        return $this->belongsToMany(Permission::class, 'role_permissions')->withTimestamps();
+        return [
+            'is_active' => 'boolean',
+        ];
     }
 
     /**
-     * Check if role has a specific permission
-     */
-    public function hasPermission(string $key): bool
-    {
-        return $this->permissions->where('key', $key)->isNotEmpty();
-    }
-
-    /**
-     * Check if role has any permission in a module
+     * Whether the role holds any permission belonging to a module.
+     *
+     * Used to decide if a module should appear at all for this role, before
+     * checking the individual abilities inside it.
      */
     public function hasModulePermission(string $module): bool
     {
@@ -40,13 +52,12 @@ class Role extends Model
     }
 
     /**
-     * Check if role has all permissions in a module
+     * Whether the role holds every permission in a module.
      */
     public function hasAllModulePermissions(string $module): bool
     {
-        $modulePermissions = $this->permissions->where('module', $module);
+        $held = $this->permissions->where('module', $module)->count();
 
-        return $modulePermissions->count() > 0 &&
-               $modulePermissions->count() === Permission::where('module', $module)->count();
+        return $held > 0 && $held === Permission::where('module', $module)->count();
     }
 }

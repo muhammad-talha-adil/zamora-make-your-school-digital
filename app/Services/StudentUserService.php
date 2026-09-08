@@ -4,7 +4,6 @@ namespace App\Services;
 
 use App\Models\Role;
 use App\Models\User;
-use App\Models\UserRole;
 use Illuminate\Support\Str;
 
 class StudentUserService
@@ -119,26 +118,18 @@ class StudentUserService
     /**
      * Assign the student role to a user.
      */
-    protected function assignStudentRole(User $user): UserRole
+    protected function assignStudentRole(User $user): void
     {
-        $studentRole = Role::where('name', 'student')->first();
-
-        if (! $studentRole) {
-            $studentRole = Role::create([
-                'name' => 'student',
-                'slug' => 'student',
+        $role = Role::firstOrCreate(
+            ['name' => 'student', 'guard_name' => 'web'],
+            [
                 'label' => 'Student',
-                'scope_level' => 'SELF',
+                'scope_level' => Role::SCOPE_SELF,
                 'is_active' => true,
-            ]);
-        }
+            ]
+        );
 
-        return UserRole::create([
-            'user_id' => $user->id,
-            'role_id' => $studentRole->id,
-            'campus_id' => null,
-            'is_active' => true,
-        ]);
+        $user->assignRole($role);
     }
 
     /**

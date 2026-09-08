@@ -42,7 +42,7 @@ const request = () => route('password.request');
 
         <div
             v-if="status"
-            class="mb-4 text-center text-sm font-medium text-green-600"
+            class="mb-4 text-center text-sm font-medium text-success"
         >
             {{ status }}
         </div>
@@ -85,7 +85,7 @@ const request = () => route('password.request');
                 </div>
 
                 <div class="space-y-2">
-                    <div class="flex items-center justify-between">
+                    <div class="flex flex-wrap gap-2 items-center justify-between">
                         <Label for="password" class="text-sm font-medium">Password</Label>
                         <TextLink
                             v-if="canResetPassword"

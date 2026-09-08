@@ -45,8 +45,11 @@ return new class extends Migration
             $table->index('check_in');
             $table->index('check_out');
 
-            // Composite indexes
-            $table->index(['attendance_id', 'student_id'], 'unique_student_attendance');
+            // One row per student per register. This was declared as a plain
+            // index under a name that claimed otherwise, so nothing stopped a
+            // student being marked present and absent on the same day and every
+            // count built on top of it was wrong.
+            $table->unique(['attendance_id', 'student_id'], 'unique_student_attendance');
         });
     }
 

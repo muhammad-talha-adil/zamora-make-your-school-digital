@@ -110,7 +110,10 @@ class StudentController extends Controller
 
             return redirect()->route('students.index')
                 ->with('success', 'Student admitted successfully with guardian details.');
-        } catch (\Exception $e) {
+            // Throwable, not Exception: a bad enum value raises a ValueError,
+            // which slipped past the narrower catch and returned a bare 500
+            // instead of the message below.
+        } catch (\Throwable $e) {
             Log::error('StudentController: Store failed', [
                 'user_id' => auth()->id(),
                 'error' => $e->getMessage(),
@@ -345,7 +348,8 @@ class StudentController extends Controller
             'class_id' => 'required|integer|exists:school_classes,id',
         ]);
 
-        return $this->service->getSectionsByClass($validated['class_id']);
+        // `integer` validation accepts a numeric string from the query string.
+        return $this->service->getSectionsByClass((int) $validated['class_id']);
     }
 
     /**

@@ -58,7 +58,14 @@ return [
             'prefix' => '',
             'prefix_indexes' => true,
             'strict' => true,
-            'engine' => null,
+            /*
+             * Stated rather than left to the server's default. WAMP ships with
+             * MyISAM as the default engine, which silently ignores foreign keys
+             * and does not support transactions -- every `constrained()` in the
+             * migrations was dropped on the floor and every `DB::transaction()`
+             * was a no-op, so a half-finished write could not roll back.
+             */
+            'engine' => env('DB_ENGINE', 'InnoDB'),
             'options' => extension_loaded('pdo_mysql') ? array_filter([
                 (PHP_VERSION_ID >= 80500 ? Mysql::ATTR_SSL_CA : PDO::MYSQL_ATTR_SSL_CA) => env('MYSQL_ATTR_SSL_CA'),
             ]) : [],

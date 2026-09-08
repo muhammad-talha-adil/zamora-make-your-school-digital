@@ -76,10 +76,10 @@ const goBack = () => {
             <!-- Header -->
             <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                 <div>
-                    <h1 class="text-2xl font-bold text-gray-900 dark:text-white">
+                    <h1 class="text-2xl font-bold text-foreground">
                         Return Details
                     </h1>
-                    <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                    <p class="mt-1 text-sm text-muted-foreground">
                         Return ID: {{ props.returnRecord.return_id }}
                     </p>
                 </div>
@@ -95,37 +95,37 @@ const goBack = () => {
                 
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                     <div>
-                        <label class="text-sm font-medium text-gray-500 dark:text-gray-400">Return ID</label>
-                        <p class="text-lg font-semibold text-gray-900 dark:text-white">
+                        <label class="text-sm font-medium text-muted-foreground">Return ID</label>
+                        <p class="text-lg font-semibold text-foreground">
                             {{ props.returnRecord.return_id }}
                         </p>
                     </div>
                     <div>
-                        <label class="text-sm font-medium text-gray-500 dark:text-gray-400">Student Name</label>
-                        <p class="text-lg font-semibold text-gray-900 dark:text-white">
+                        <label class="text-sm font-medium text-muted-foreground">Student Name</label>
+                        <p class="text-lg font-semibold text-foreground">
                             {{ props.returnRecord.student_name }}
                         </p>
                     </div>
                     <div>
-                        <label class="text-sm font-medium text-gray-500 dark:text-gray-400">Registration #</label>
-                        <p class="text-lg font-semibold text-gray-900 dark:text-white">
+                        <label class="text-sm font-medium text-muted-foreground">Registration #</label>
+                        <p class="text-lg font-semibold text-foreground">
                             {{ props.returnRecord.registration_number }}
                         </p>
                     </div>
                     <div>
-                        <label class="text-sm font-medium text-gray-500 dark:text-gray-400">Campus</label>
-                        <p class="text-lg font-semibold text-gray-900 dark:text-white">
+                        <label class="text-sm font-medium text-muted-foreground">Campus</label>
+                        <p class="text-lg font-semibold text-foreground">
                             {{ props.returnRecord.campus_name }}
                         </p>
                     </div>
                     <div>
-                        <label class="text-sm font-medium text-gray-500 dark:text-gray-400">Return Date</label>
-                        <p class="text-lg font-semibold text-gray-900 dark:text-white">
+                        <label class="text-sm font-medium text-muted-foreground">Return Date</label>
+                        <p class="text-lg font-semibold text-foreground">
                             {{ formatDate(props.returnRecord.return_date) }}
                         </p>
                     </div>
                     <div>
-                        <label class="text-sm font-medium text-gray-500 dark:text-gray-400">Status</label>
+                        <label class="text-sm font-medium text-muted-foreground">Status</label>
                         <p class="mt-1">
                             <Badge :variant="getStatusBadge(props.returnRecord.status).variant">
                                 {{ getStatusBadge(props.returnRecord.status).label }}
@@ -133,14 +133,14 @@ const goBack = () => {
                         </p>
                     </div>
                     <div>
-                        <label class="text-sm font-medium text-gray-500 dark:text-gray-400">Total Quantity</label>
-                        <p class="text-lg font-semibold text-gray-900 dark:text-white">
+                        <label class="text-sm font-medium text-muted-foreground">Total Quantity</label>
+                        <p class="text-lg font-semibold text-foreground">
                             {{ props.returnRecord.total_quantity }}
                         </p>
                     </div>
                     <div>
-                        <label class="text-sm font-medium text-gray-500 dark:text-gray-400">Total Amount</label>
-                        <p class="text-lg font-bold text-green-600">
+                        <label class="text-sm font-medium text-muted-foreground">Total Amount</label>
+                        <p class="text-lg font-bold text-success">
                             {{ formatCurrency(props.returnRecord.total_amount) }}
                         </p>
                     </div>
@@ -148,8 +148,8 @@ const goBack = () => {
 
                 <!-- Notes -->
                 <div v-if="props.returnRecord.note" class="mt-4 pt-4 border-t">
-                    <label class="text-sm font-medium text-gray-500 dark:text-gray-400">Notes</label>
-                    <p class="text-gray-900 dark:text-white mt-1">{{ props.returnRecord.note }}</p>
+                    <label class="text-sm font-medium text-muted-foreground">Notes</label>
+                    <p class="text-foreground mt-1">{{ props.returnRecord.note }}</p>
                 </div>
             </div>
 
@@ -158,32 +158,32 @@ const goBack = () => {
                 <h2 class="text-lg font-semibold">Returned Items</h2>
 
                 <div class="border rounded-lg overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                        <thead class="bg-gray-50 dark:bg-gray-800">
+                    <table class="min-w-full divide-y divide-border">
+                        <thead class="bg-muted">
                             <tr>
-                                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase dark:text-gray-300">Sr#</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase dark:text-gray-300">Item</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase dark:text-gray-300">Qty</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase dark:text-gray-300">Unit Price</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase dark:text-gray-300">Return Price</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase dark:text-gray-300">Total</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase dark:text-gray-300">Reason</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Sr#</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Item</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Qty</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Unit Price</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Return Price</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Total</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Reason</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-900">
-                            <tr v-for="(item, index) in props.returnRecord.items" :key="item.id" class="hover:bg-gray-50 dark:hover:bg-gray-800">
-                                <td class="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">{{ index + 1 }}</td>
+                        <tbody class="divide-y divide-border bg-card">
+                            <tr v-for="(item, index) in props.returnRecord.items" :key="item.id" class="hover:bg-accent">
+                                <td class="px-4 py-4 whitespace-nowrap text-sm font-medium text-foreground">{{ index + 1 }}</td>
                                 <td class="px-4 py-4 whitespace-nowrap">
-                                    <div class="text-sm font-medium text-gray-900 dark:text-white">{{ item.item_name_snapshot }}</div>
-                                    <div class="text-xs text-gray-500" v-if="item.description_snapshot">{{ item.description_snapshot }}</div>
+                                    <div class="text-sm font-medium text-foreground">{{ item.item_name_snapshot }}</div>
+                                    <div class="text-xs text-muted-foreground" v-if="item.description_snapshot">{{ item.description_snapshot }}</div>
                                 </td>
-                                <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">{{ item.quantity }}</td>
-                                <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">{{ formatCurrency(item.unit_price) }}</td>
-                                <td class="px-4 py-4 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
+                                <td class="px-4 py-4 whitespace-nowrap text-sm text-foreground">{{ item.quantity }}</td>
+                                <td class="px-4 py-4 whitespace-nowrap text-sm text-foreground">{{ formatCurrency(item.unit_price) }}</td>
+                                <td class="px-4 py-4 whitespace-nowrap text-sm font-medium text-foreground">
                                     {{ item.return_price ? formatCurrency(item.return_price) : '-' }}
                                 </td>
-                                <td class="px-4 py-4 whitespace-nowrap text-sm font-bold text-gray-900 dark:text-white">{{ formatCurrency(item.total_amount) }}</td>
-                                <td class="px-4 py-4 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                                <td class="px-4 py-4 whitespace-nowrap text-sm font-bold text-foreground">{{ formatCurrency(item.total_amount) }}</td>
+                                <td class="px-4 py-4 whitespace-nowrap text-sm text-foreground">
                                     <span v-if="item.custom_reason">{{ item.custom_reason }}</span>
                                     <span v-else-if="item.reason_id">Reason #{{ item.reason_id }}</span>
                                     <span v-else>-</span>

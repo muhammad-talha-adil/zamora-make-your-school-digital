@@ -19,7 +19,7 @@ defineProps<{
     <PortfolioHeader />
 
     <!-- Layer 1: Full Screen Background -->
-    <div class="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-slate-100 dark:from-slate-900 dark:via-slate-800/50 dark:to-slate-900 relative pt-16">
+    <div class="min-h-screen bg-gradient-to-br from-muted via-primary/30 to-muted relative pt-16">
         <!-- Radial glow behind container -->
         <div class="absolute inset-0" style="background: radial-gradient(circle at center, rgba(59, 130, 246, 0.1) 0%, transparent 50%)"></div>
         <!-- Subtle noise -->
@@ -27,13 +27,13 @@ defineProps<{
 
         <!-- Layer 2: Glass Container -->
         <div class="relative flex items-center justify-center min-h-screen p-4">
-            <div class="auth-shell w-full max-w-6xl min-h-[560px] bg-white/50 dark:bg-gray-900/55 backdrop-blur-[24px] border border-black/6 dark:border-white/10 rounded-2xl shadow-2xl overflow-hidden relative" style="backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);">
+            <div class="auth-shell w-full max-w-6xl min-h-[560px] bg-card/50 backdrop-blur-[24px] border border-black/6 rounded-2xl shadow-2xl overflow-hidden relative" style="backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);">
                 <!-- Subtle radial highlight for light mode -->
-                <div class="absolute inset-0 bg-gradient-radial from-white/10 via-transparent to-transparent rounded-2xl pointer-events-none"></div>
+                <div class="absolute inset-0 bg-gradient-radial from-card/10 via-transparent to-transparent rounded-2xl pointer-events-none"></div>
                 <!-- Layer 3: Two Column Content -->
                 <div class="grid lg:grid-cols-2 min-h-[560px] relative">
                     <!-- Vertical Divider (Soft Gradient) -->
-                    <div class="hidden lg:block absolute left-1/2 top-0 bottom-0 w-px bg-gradient-to-b from-transparent via-black/2 dark:via-white/3 to-transparent transform -translate-x-1/2"></div>
+                    <div class="hidden lg:block absolute left-1/2 top-0 bottom-0 w-px bg-gradient-to-b from-transparent via-black/2 to-transparent transform -translate-x-1/2"></div>
 
                     <!-- Left Column: Story/Visual -->
                     <div class="flex flex-col justify-center p-8 lg:p-12 relative">
@@ -74,7 +74,7 @@ defineProps<{
                     </div>
 
                     <!-- Right Column: Login Form -->
-                    <div class="flex flex-col justify-center p-8 lg:p-12 bg-white/35 dark:bg-white/4">
+                    <div class="flex flex-col justify-center p-8 lg:p-12 bg-card/35">
                         <div class="max-w-md mx-auto w-full space-y-6">
                             <!-- Branding Header -->
                             <SchoolBrandHeader :school="school" />

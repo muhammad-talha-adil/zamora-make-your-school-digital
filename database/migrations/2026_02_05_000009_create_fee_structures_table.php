@@ -11,7 +11,7 @@ return new class extends Migration
         Schema::create('fee_structures', function (Blueprint $table) {
             $table->id();
             $table->foreignId('campus_id')->constrained('campuses')->onDelete('cascade');
-            $table->foreignId('session_id')->constrained('sessions')->onDelete('cascade');
+            $table->foreignId('session_id')->constrained('academic_sessions')->onDelete('cascade');
             $table->foreignId('class_id')->constrained('school_classes')->onDelete('cascade');
             $table->foreignId('fee_type_id')->constrained('fee_types')->onDelete('cascade');
             $table->decimal('amount', 10, 2);

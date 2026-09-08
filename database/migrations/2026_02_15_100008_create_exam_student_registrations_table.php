@@ -35,7 +35,9 @@ return new class extends Migration
             $table->foreign('class_id')->references('id')->on('school_classes')->onDelete('cascade');
             $table->foreign('section_id')->references('id')->on('sections')->onDelete('cascade');
             $table->foreign('student_id')->references('id')->on('students')->onDelete('cascade');
-            $table->foreign('enrollment_id')->references('id')->on('student_enrollments')->onDelete('set null');
+            // The table is `student_enrollment_records`; `student_enrollments`
+            // does not exist.
+            $table->foreign('enrollment_id')->references('id')->on('student_enrollment_records')->onDelete('set null');
 
             // Unique constraint
             $table->unique(['exam_id', 'student_id'], 'esr_exam_student_unique');

@@ -149,10 +149,10 @@ const summaryStats = computed(() => {
                         <Icon icon="package" class="h-5 w-5 text-primary" />
                     </div>
                     <div>
-                        <h1 class="text-lg md:text-2xl font-bold text-gray-900 dark:text-white">
+                        <h1 class="text-lg md:text-2xl font-bold text-foreground">
                             Inventory Stocks
                         </h1>
-                        <p class="mt-1 text-xs md:text-sm text-gray-600 dark:text-gray-400">
+                        <p class="mt-1 text-xs md:text-sm text-muted-foreground">
                             View and manage stock levels across all items.
                         </p>
                     </div>
@@ -164,31 +164,31 @@ const summaryStats = computed(() => {
                 <Card class="min-h-20">
                     <CardContent class="p-3 md:p-4">
                         <div class="text-lg md:text-2xl font-bold">{{ summaryStats.totalItems }}</div>
-                        <div class="text-xs text-gray-500">Total Items</div>
+                        <div class="text-xs text-muted-foreground">Total Items</div>
                     </CardContent>
                 </Card>
                 <Card class="min-h-20">
                     <CardContent class="p-3 md:p-4">
                         <div class="text-lg md:text-2xl font-bold">{{ summaryStats.totalQuantity.toLocaleString() }}</div>
-                        <div class="text-xs text-gray-500">Total Quantity</div>
+                        <div class="text-xs text-muted-foreground">Total Quantity</div>
                     </CardContent>
                 </Card>
                 <Card class="min-h-20">
                     <CardContent class="p-3 md:p-4">
-                        <div class="text-lg md:text-2xl font-bold text-green-600">{{ summaryStats.totalAvailable.toLocaleString() }}</div>
-                        <div class="text-xs text-gray-500">Available</div>
+                        <div class="text-lg md:text-2xl font-bold text-success">{{ summaryStats.totalAvailable.toLocaleString() }}</div>
+                        <div class="text-xs text-muted-foreground">Available</div>
                     </CardContent>
                 </Card>
                 <Card class="min-h-20">
                     <CardContent class="p-3 md:p-4">
-                        <div class="text-lg md:text-2xl font-bold text-amber-600">{{ summaryStats.lowStockCount }}</div>
-                        <div class="text-xs text-gray-500">Low Stock</div>
+                        <div class="text-lg md:text-2xl font-bold text-warning">{{ summaryStats.lowStockCount }}</div>
+                        <div class="text-xs text-muted-foreground">Low Stock</div>
                     </CardContent>
                 </Card>
                 <Card class="min-h-20">
                     <CardContent class="p-3 md:p-4">
-                        <div class="text-lg md:text-2xl font-bold text-red-600">{{ summaryStats.criticalCount }}</div>
-                        <div class="text-xs text-gray-500">Critical</div>
+                        <div class="text-lg md:text-2xl font-bold text-destructive">{{ summaryStats.criticalCount }}</div>
+                        <div class="text-xs text-muted-foreground">Critical</div>
                     </CardContent>
                 </Card>
             </div>
@@ -198,24 +198,24 @@ const summaryStats = computed(() => {
                 <select 
                     v-model="campusFilter" 
                     @change="() => fetchStocks()"
-                    class="w-full sm:w-44 md:w-48 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 text-sm min-h-10 md:min-h-11"
+                    class="w-full sm:w-44 md:w-48 rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm min-h-10 md:min-h-11"
                 >
                     <option value="">All Campuses</option>
                     <option v-for="campus in props.campuses" :key="campus.id" :value="campus.id">
                         {{ campus.name }}
                     </option>
                 </select>
-                <label class="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300 min-h-10 px-2">
+                <label class="flex items-center gap-2 text-sm text-muted-foreground min-h-10 px-2">
                     <input 
                         type="checkbox" 
                         v-model="lowStockOnly" 
-                        class="rounded border-gray-300 text-primary focus:ring-primary w-4 h-4" 
+                        class="rounded border-border text-primary focus:ring-primary w-4 h-4" 
                     />
                     <span class="whitespace-nowrap">Low stock only</span>
                 </label>
                 <div class="flex items-center gap-2 ml-auto">
-                    <label class="text-sm text-gray-600 dark:text-gray-400">Show:</label>
-                    <select v-model="perPage" class="w-20 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-2 py-2 text-sm min-h-11">
+                    <label class="text-sm text-muted-foreground">Show:</label>
+                    <select v-model="perPage" class="w-20 rounded-md border border-border bg-card text-foreground px-2 py-2 text-sm min-h-11">
                         <option v-for="option in perPageOptions" :key="option" :value="option">
                             {{ option }}
                         </option>
@@ -228,12 +228,12 @@ const summaryStats = computed(() => {
                 <div 
                     v-for="stock in stocksData" 
                     :key="stock.id" 
-                    class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 space-y-2"
+                    class="bg-card rounded-lg border border-border p-4 space-y-2"
                 >
-                    <div class="flex justify-between items-start">
+                    <div class="flex flex-wrap gap-2 justify-between items-start">
                         <div>
-                            <div class="font-medium text-gray-900 dark:text-white">{{ stock.item_name }}</div>
-                            <div class="text-xs text-gray-500">{{ stock.inventory_type_name }}</div>
+                            <div class="font-medium text-foreground">{{ stock.item_name }}</div>
+                            <div class="text-xs text-muted-foreground">{{ stock.inventory_type_name }}</div>
                         </div>
                         <Badge :variant="getStockStatusBadge(stock.stock_status).variant">
                             {{ getStockStatusBadge(stock.stock_status).label }}
@@ -241,104 +241,104 @@ const summaryStats = computed(() => {
                     </div>
                     <div class="grid grid-cols-2 gap-2 text-sm">
                         <div>
-                            <span class="text-gray-500">Qty:</span>
+                            <span class="text-muted-foreground">Qty:</span>
                             <span class="font-medium ml-1">{{ stock.quantity }}</span>
                         </div>
                         <div>
-                            <span class="text-gray-500">Available:</span>
+                            <span class="text-muted-foreground">Available:</span>
                             <span 
                                 class="font-medium ml-1"
-                                :class="stock.available_quantity <= 0 ? 'text-red-600' : stock.available_quantity < stock.low_stock_threshold ? 'text-amber-600' : 'text-green-600'"
+                                :class="stock.available_quantity <= 0 ? 'text-destructive' : stock.available_quantity < stock.low_stock_threshold ? 'text-warning' : 'text-success'"
                             >
                                 {{ stock.available_quantity }}
                             </span>
                         </div>
                         <div>
-                            <span class="text-gray-500">Reserved:</span>
+                            <span class="text-muted-foreground">Reserved:</span>
                             <span class="font-medium ml-1">{{ stock.reserved_quantity || 0 }}</span>
                         </div>
                         <div>
-                            <span class="text-gray-500">Buy:</span>
+                            <span class="text-muted-foreground">Buy:</span>
                             <span class="font-medium ml-1">{{ formatCurrency(stock.purchase_rate) }}</span>
                         </div>
                     </div>
-                    <div class="text-xs text-gray-400">{{ stock.campus_name }}</div>
+                    <div class="text-xs text-muted-foreground">{{ stock.campus_name }}</div>
                 </div>
-                <div v-if="stocksData.length === 0" class="text-center py-8 text-gray-500">
+                <div v-if="stocksData.length === 0" class="text-center py-8 text-muted-foreground">
                     No stock records found.
                 </div>
             </div>
 
             <!-- Desktop Table View (visible only on large screens) -->
-            <div class="hidden lg:block overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-900">
+            <div class="hidden lg:block overflow-hidden rounded-lg border border-border bg-card shadow-sm">
                 <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                        <thead class="bg-gray-50 dark:bg-gray-800">
+                    <table class="min-w-full divide-y divide-border">
+                        <thead class="bg-muted">
                             <tr>
-                                <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">
+                                <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">
                                     Sr#
                                 </th>
-                                <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">
+                                <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">
                                     Item
                                 </th>
-                                <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">
+                                <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">
                                     Campus
                                 </th>
-                                <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">
+                                <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">
                                     Qty
                                 </th>
-                                <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">
+                                <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">
                                     Available
                                 </th>
-                                <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">
+                                <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">
                                     Reserved
                                 </th>
-                                <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">
+                                <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">
                                     Status
                                 </th>
-                                <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">
+                                <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">
                                     Rates
                                 </th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-900">
-                            <tr v-for="(stock, index) in stocksData" :key="stock.id" class="transition-colors hover:bg-gray-50 dark:hover:bg-gray-800">
+                        <tbody class="divide-y divide-border bg-card">
+                            <tr v-for="(stock, index) in stocksData" :key="stock.id" class="transition-colors hover:bg-accent">
                                 <td class="px-4 py-3 whitespace-nowrap">
-                                    <div class="text-sm text-gray-600 dark:text-gray-300">
+                                    <div class="text-sm text-muted-foreground">
                                         {{ (pagination.from || 0) + index }}
                                     </div>
                                 </td>
                                 <td class="px-4 py-3 whitespace-nowrap">
                                     <div>
-                                        <div class="text-sm font-medium text-gray-900 dark:text-white">
+                                        <div class="text-sm font-medium text-foreground">
                                             {{ stock.item_name }}
                                         </div>
-                                        <div class="text-xs text-gray-500">
+                                        <div class="text-xs text-muted-foreground">
                                             {{ stock.inventory_type_name }}
                                         </div>
                                     </div>
                                 </td>
                                 <td class="px-4 py-3 whitespace-nowrap">
-                                    <div class="text-sm text-gray-600 dark:text-gray-300">
+                                    <div class="text-sm text-muted-foreground">
                                         {{ stock.campus_name }}
                                     </div>
                                 </td>
                                 <td class="px-4 py-3 whitespace-nowrap">
-                                    <div class="text-sm font-bold text-gray-900 dark:text-white">
+                                    <div class="text-sm font-bold text-foreground">
                                         {{ stock.quantity }}
                                     </div>
                                 </td>
                                 <td class="px-4 py-3 whitespace-nowrap">
                                     <div :class="[
                                         'text-sm font-bold',
-                                        stock.available_quantity <= 0 ? 'text-red-600' :
-                                        stock.available_quantity < stock.low_stock_threshold ? 'text-amber-600' : 'text-green-600'
+                                        stock.available_quantity <= 0 ? 'text-destructive' :
+                                        stock.available_quantity < stock.low_stock_threshold ? 'text-warning' : 'text-success'
                                     ]">
                                         {{ stock.available_quantity }}
                                     </div>
                                 </td>
                                 <td class="px-4 py-3 whitespace-nowrap">
-                                    <div class="text-sm text-gray-600 dark:text-gray-300">
+                                    <div class="text-sm text-muted-foreground">
                                         {{ stock.reserved_quantity || 0 }}
                                     </div>
                                 </td>
@@ -349,10 +349,10 @@ const summaryStats = computed(() => {
                                 </td>
                                 <td class="px-4 py-3 whitespace-nowrap">
                                     <div class="text-sm">
-                                        <span class="text-gray-500">Buy:</span> {{ formatCurrency(stock.purchase_rate) }}
+                                        <span class="text-muted-foreground">Buy:</span> {{ formatCurrency(stock.purchase_rate) }}
                                     </div>
                                     <div class="text-sm">
-                                        <span class="text-gray-500">Sell:</span> {{ formatCurrency(stock.sale_rate) }}
+                                        <span class="text-muted-foreground">Sell:</span> {{ formatCurrency(stock.sale_rate) }}
                                     </div>
                                 </td>
                             </tr>
@@ -363,7 +363,7 @@ const summaryStats = computed(() => {
 
             <!-- Pagination -->
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-                <div class="text-xs md:text-sm text-gray-600">
+                <div class="text-xs md:text-sm text-muted-foreground">
                     Showing {{ pagination.from }} to {{ pagination.to }} of {{ pagination.total }} entries
                 </div>
                 <div class="flex flex-wrap gap-1">

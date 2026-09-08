@@ -84,7 +84,7 @@ const submit = () => {
                             <Icon icon="tag" class="mr-1 h-4 w-4" />
                             School Name *
                         </Label>
-                        <Input id="name" v-model="form.name" :class="{ 'border-red-500': (errors as any).name }" />
+                        <Input id="name" v-model="form.name" :class="{ 'border-destructive': (errors as any).name }" />
                         <InputError :message="(errors as any).name" />
                     </div>
 
@@ -93,8 +93,8 @@ const submit = () => {
                             <Icon icon="quote" class="mr-1 h-4 w-4" />
                             School Slogan/Motto
                         </Label>
-                        <Input id="slogan" v-model="form.slogan" :class="{ 'border-red-500': (errors as any).slogan }" />
-                        <p class="text-sm text-gray-500">
+                        <Input id="slogan" v-model="form.slogan" :class="{ 'border-destructive': (errors as any).slogan }" />
+                        <p class="text-sm text-muted-foreground">
                             The school's motto or slogan (optional).
                         </p>
                         <InputError :message="(errors as any).slogan" />
@@ -121,8 +121,8 @@ const submit = () => {
                         id="address"
                         v-model="form.address"
                         rows="3"
-                        class="w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-                        :class="{ 'border-red-500': (errors as any).address }"
+                        class="w-full rounded-md border border-border px-3 py-2 shadow-sm focus:border-primary focus:ring-primary focus:outline-none"
+                        :class="{ 'border-destructive': (errors as any).address }"
                     ></textarea>
                     <InputError :message="(errors as any).address" />
                 </div>
@@ -132,7 +132,7 @@ const submit = () => {
                         <Icon icon="phone" class="mr-1 h-4 w-4" />
                         Phone
                     </Label>
-                    <Input id="phone" v-model="form.phone" :class="{ 'border-red-500': (errors as any).phone }" />
+                    <Input id="phone" v-model="form.phone" :class="{ 'border-destructive': (errors as any).phone }" />
                     <InputError :message="(errors as any).phone" />
                 </div>
             </CardContent>
@@ -162,14 +162,14 @@ const submit = () => {
                                         .files?.[0] || null)
                         "
                         accept="image/*"
-                        :class="{ 'border-red-500': (errors as any).logo }"
+                        :class="{ 'border-destructive': (errors as any).logo }"
                     />
-                    <p class="text-sm text-gray-500">
+                    <p class="text-sm text-muted-foreground">
                         Upload a new logo (optional, max 2MB)
                     </p>
                     <InputError :message="(errors as any).logo" />
                     <div v-if="props.school?.logo_path" class="mt-2">
-                        <p class="text-sm text-gray-600 dark:text-gray-400">Current logo:</p>
+                        <p class="text-sm text-muted-foreground">Current logo:</p>
                         <img :src="props.school.logo_path" alt="School Logo" class="mt-1 h-16 w-16 object-cover rounded" />
                     </div>
                 </div>
@@ -184,7 +184,7 @@ const submit = () => {
             </CardContent>
         </Card>
 
-        <div class="flex justify-end">
+        <div class="flex flex-wrap gap-2 justify-end">
             <Button type="submit" :disabled="processing">
                 <Icon v-if="processing" name="loader" class="mr-2 h-4 w-4 animate-spin" />
                 Save Changes

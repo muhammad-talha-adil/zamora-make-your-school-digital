@@ -2,10 +2,10 @@
 
 namespace App\Models;
 
+use App\Services\AttendanceService;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Support\Facades\Cache;
 
 class Holiday extends Model
 {
@@ -193,21 +193,16 @@ class Holiday extends Model
     }
 
     /**
-     * Clear the holiday cache.
+     * Retires the cached holiday answers.
+     *
+     * This used to call `Cache::flush()` in a loop — three times per holiday
+     * saved — and threw away the whole application cache with it: the
+     * permission cache, the theme palette, everything, for every campus and
+     * every signed-in user. `holiday:*` was never a real key either; nothing in
+     * this store has ever supported pattern deletes.
      */
     public function clearCache(): void
     {
-        // Clear all holiday-related caches
-        $cacheKeys = [
-            'holiday:*',
-            'attendance_status_ids',
-            'attendance_statuses',
-        ];
-
-        foreach ($cacheKeys as $pattern) {
-            // Use Cache::flush() for pattern in production
-            // For now, we'll clear all caches
-            Cache::flush();
-        }
+        app(AttendanceService::class)->forgetHolidays();
     }
 }

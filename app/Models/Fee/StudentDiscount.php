@@ -3,6 +3,7 @@
 namespace App\Models\Fee;
 
 use App\Enums\Fee\ApprovalStatus;
+use App\Enums\Fee\ValueType;
 use App\Models\Student;
 use App\Models\StudentEnrollmentRecord;
 use App\Models\User;
@@ -35,6 +36,10 @@ class StudentDiscount extends Model
 
     protected $casts = [
         'approval_status' => ApprovalStatus::class,
+        'value_type' => ValueType::class,
+        'value' => 'decimal:2',
+        'effective_from' => 'date',
+        'effective_to' => 'date',
     ];
 
     /**
@@ -91,6 +96,23 @@ class StudentDiscount extends Model
     public function scopePending($query)
     {
         return $query->where('approval_status', ApprovalStatus::PENDING);
+    }
+
+    /**
+     * Scope: Effective at any point within a period.
+     *
+     * A month is billed as a whole, so a concession counts for that month if
+     * its window overlaps the month at all — one granted on the 15th still
+     * applies to that month's voucher, and one that lapsed on the 20th is not
+     * withdrawn retrospectively.
+     */
+    public function scopeEffectiveDuring($query, $start, $end)
+    {
+        return $query->where('effective_from', '<=', $end)
+            ->where(function ($q) use ($start) {
+                $q->whereNull('effective_to')
+                    ->orWhere('effective_to', '>=', $start);
+            });
     }
 
     /**

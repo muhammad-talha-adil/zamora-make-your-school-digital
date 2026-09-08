@@ -323,8 +323,8 @@ const saveGradeItems = async () => {
     <!-- Header -->
     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
       <div>
-        <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Grade Systems</h2>
-        <p class="text-sm text-gray-500 dark:text-gray-400">Manage grading scales with percentage ranges and grade labels</p>
+        <h2 class="text-lg font-semibold text-foreground">Grade Systems</h2>
+        <p class="text-sm text-muted-foreground">Manage grading scales with percentage ranges and grade labels</p>
       </div>
       <Dialog v-model:open="showCreateModal">
         <DialogTrigger as-child>
@@ -344,7 +344,7 @@ const saveGradeItems = async () => {
 
             <div class="grid gap-4 py-4">
               <div class="grid gap-2">
-                <Label for="name">System Name <span class="text-red-500">*</span></Label>
+                <Label for="name">System Name <span class="text-destructive">*</span></Label>
                 <Input
                   id="name"
                   v-model="createForm.name"
@@ -383,7 +383,7 @@ const saveGradeItems = async () => {
                   id="is_default"
                   v-model="createForm.is_default"
                   type="checkbox"
-                  class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                  class="h-4 w-4 rounded border-border text-primary focus:ring-primary"
                 />
                 <Label for="is_default">Set as default grade system</Label>
               </div>
@@ -405,9 +405,9 @@ const saveGradeItems = async () => {
     </div>
 
     <!-- Empty State -->
-    <div v-if="localGradeSystems.length === 0" class="text-center py-12 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700">
-      <Icon icon="academic-cap" class="w-12 h-12 text-gray-400 mx-auto mb-4" />
-      <p class="text-gray-500 dark:text-gray-400 mb-4">No grade systems found. Create one to get started.</p>
+    <div v-if="localGradeSystems.length === 0" class="text-center py-12 bg-card rounded-lg border border-border">
+      <Icon icon="academic-cap" class="w-12 h-12 text-muted-foreground mx-auto mb-4" />
+      <p class="text-muted-foreground mb-4">No grade systems found. Create one to get started.</p>
       <Button @click="openCreateModal">
         <Icon icon="plus" class="mr-1" />
         Create Grade System
@@ -419,39 +419,39 @@ const saveGradeItems = async () => {
       <div
         v-for="system in localGradeSystems"
         :key="system.id"
-        class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden"
+        class="bg-card rounded-lg border border-border overflow-hidden"
       >
         <!-- System Header -->
         <div 
-          class="p-4 flex items-center justify-between cursor-pointer hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+          class="p-4 flex flex-wrap gap-2 items-center justify-between cursor-pointer hover:bg-accent transition-colors"
           @click="toggleExpand(system)"
         >
           <div class="flex items-center gap-3 min-w-0">
             <svg 
-              class="w-5 h-5 text-gray-400 transition-transform flex-shrink-0"
+              class="w-5 h-5 text-muted-foreground transition-transform flex-shrink-0"
               :class="{ 'rotate-90': expandedSystem === system.id }"
               fill="none" stroke="currentColor" viewBox="0 0 24 24"
             >
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
             </svg>
             <div class="min-w-0">
-              <h3 class="font-medium text-gray-900 dark:text-white truncate">{{ system.name }}</h3>
+              <h3 class="font-medium text-foreground truncate">{{ system.name }}</h3>
               <div class="flex flex-wrap gap-2 mt-1">
                 <span
                   v-if="system.is_default"
-                  class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200"
+                  class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-primary/10 text-primary"
                 >
                   <Icon icon="star" class="w-3 h-3 mr-1" />
                   Default
                 </span>
                 <span
                   v-if="system.is_active"
-                  class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200"
+                  class="inline-flex items-center px-2 py-0.5 rounded text-xs font-medium bg-success/10 text-success"
                 >
                   <Icon icon="check" class="w-3 h-3 mr-1" />
                   Active
                 </span>
-                <span class="text-xs text-gray-500 dark:text-gray-400">
+                <span class="text-xs text-muted-foreground">
                   {{ system.grade_system_items?.length || 0 }} grade{{ (system.grade_system_items?.length || 0) !== 1 ? 's' : '' }}
                 </span>
               </div>
@@ -484,7 +484,7 @@ const saveGradeItems = async () => {
               variant="ghost"
               size="sm"
               @click="confirmDelete(system)"
-              class="text-red-600 hover:text-red-800 hover:bg-red-50 dark:text-red-400 dark:hover:text-red-300 dark:hover:bg-red-900/20"
+              class="text-destructive hover:text-destructive hover:bg-destructive/20"
             >
               <Icon icon="trash" class="w-4 h-4" />
             </Button>
@@ -492,7 +492,7 @@ const saveGradeItems = async () => {
         </div>
 
         <!-- Expanded Content -->
-        <div v-if="expandedSystem === system.id" class="border-t border-gray-200 dark:border-gray-700 bg-gray-50 dark:bg-gray-900">
+        <div v-if="expandedSystem === system.id" class="border-t border-border bg-muted">
           <div v-if="editingSystem" class="p-4 space-y-4">
             <!-- Edit System Form -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -528,11 +528,11 @@ const saveGradeItems = async () => {
             </div>
 
             <!-- Grade Items Section -->
-            <div class="border border-gray-200 dark:border-gray-700 rounded-lg bg-white dark:bg-gray-800 overflow-hidden">
-              <div class="flex justify-between items-center p-3 bg-gray-50 dark:bg-gray-700 border-b border-gray-200 dark:border-gray-600">
+            <div class="border border-border rounded-lg bg-card overflow-hidden">
+              <div class="flex flex-wrap gap-2 justify-between items-center p-3 bg-muted border-b border-border">
                 <div>
-                  <h4 class="text-sm font-semibold text-gray-900 dark:text-white">Grade Items</h4>
-                  <p class="text-xs text-gray-500 dark:text-gray-400">Define percentage ranges and corresponding grade labels</p>
+                  <h4 class="text-sm font-semibold text-foreground">Grade Items</h4>
+                  <p class="text-xs text-muted-foreground">Define percentage ranges and corresponding grade labels</p>
                 </div>
                 <Button
                   variant="outline"
@@ -546,28 +546,28 @@ const saveGradeItems = async () => {
               
               <!-- Grade Items Table -->
               <div class="overflow-x-auto">
-                <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                  <thead class="bg-gray-50 dark:bg-gray-800">
+                <table class="min-w-full divide-y divide-border">
+                  <thead class="bg-muted">
                     <tr>
-                      <th scope="col" class="px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">
+                      <th scope="col" class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                         Grade Label
                       </th>
-                      <th scope="col" class="px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">
+                      <th scope="col" class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                         Min %
                       </th>
-                      <th scope="col" class="px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">
+                      <th scope="col" class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                         Max %
                       </th>
-                      <th scope="col" class="px-4 py-3 text-right text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">
+                      <th scope="col" class="px-4 py-3 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                         Actions
                       </th>
                     </tr>
                   </thead>
-                  <tbody class="divide-y divide-gray-200 dark:divide-gray-700 bg-white dark:bg-gray-800">
+                  <tbody class="divide-y divide-border bg-card">
                     <tr 
                       v-for="(item, index) in localItems" 
                       :key="item.id"
-                      class="hover:bg-gray-50 dark:hover:bg-gray-700"
+                      class="hover:bg-accent"
                     >
                       <td class="px-4 py-2">
                         <Input
@@ -601,16 +601,16 @@ const saveGradeItems = async () => {
                           variant="ghost"
                           size="sm"
                           @click="removeGradeItem(index)"
-                          class="text-red-600 hover:text-red-800 hover:bg-red-50 dark:text-red-400 dark:hover:text-red-300 dark:hover:bg-red-900/20"
+                          class="text-destructive hover:text-destructive hover:bg-destructive/20"
                         >
                           <Icon icon="trash" class="w-4 h-4" />
                         </Button>
                       </td>
                     </tr>
                     <tr v-if="localItems.length === 0">
-                      <td colspan="4" class="px-4 py-8 text-center text-gray-500 dark:text-gray-400">
+                      <td colspan="4" class="px-4 py-8 text-center text-muted-foreground">
                         <div class="flex flex-col items-center">
-                          <Icon icon="document-text" class="w-8 h-8 text-gray-400 mb-2" />
+                          <Icon icon="document-text" class="w-8 h-8 text-muted-foreground mb-2" />
                           <p class="text-sm">No grades defined.</p>
                           <p class="text-xs">Click "Add Grade" to create grade items.</p>
                         </div>
@@ -622,7 +622,7 @@ const saveGradeItems = async () => {
             </div>
 
             <!-- Save Button -->
-            <div class="flex justify-end gap-2 pt-2">
+            <div class="flex flex-wrap justify-end gap-2 pt-2">
               <Button
                 variant="outline"
                 @click="expandedSystem = null"

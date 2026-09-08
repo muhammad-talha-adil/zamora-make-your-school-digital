@@ -1,6 +1,28 @@
+includes:
+    - vendor/larastan/larastan/extension.neon
+
 parameters:
-    level: 0
+    # Raised from 0, where almost nothing was reported.
+    level: 5
+
+    # Scoped to the Student module while it is under review. The rest of the
+    # app carries a large backlog from running at level 0; widen `paths` one
+    # module at a time as each is cleaned up.
+    # Pest binds $this inside closures at runtime, which PHPStan cannot follow
+    # without the Pest extension, so the suite is checked by running it rather
+    # than by static analysis.
     paths:
-        - app
+        - app/Http/Controllers/StudentController.php
+        - app/Http/Requests/Student
+        - app/Services/StudentService.php
+        - app/Services/StudentUserService.php
+        - app/Services/GuardianService.php
+        - app/Repositories/StudentRepository.php
+        - app/Policies/StudentPolicy.php
+        - app/Models/Student.php
+        - app/Models/StudentEnrollmentRecord.php
+        - app/Models/StudentGuardian.php
+        - app/Models/Guardian.php
+
     parallel:
-        maximumNumberOfProcesses: 1
+        maximumNumberOfProcesses: 2

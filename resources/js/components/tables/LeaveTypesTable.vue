@@ -91,9 +91,9 @@ const deleteLeaveType = (leaveType: any) => {
 
 <template>
     <div class="space-y-4">
-        <div class="flex justify-between items-center">
+        <div class="flex flex-wrap gap-2 justify-between items-center">
             <div class="flex gap-2">
-                <select v-model="statusFilter" class="w-32 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 text-sm">
+                <select v-model="statusFilter" class="w-32 rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm">
                     <option value="">All</option>
                     <option value="active">Active</option>
                     <option value="inactive">Inactive</option>
@@ -111,61 +111,61 @@ const deleteLeaveType = (leaveType: any) => {
                 </Button>
             </div>
         </div>
-        <div class="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-900">
+        <div class="overflow-hidden rounded-lg border border-border bg-card shadow-sm">
             <div class="overflow-x-auto">
-                <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                    <thead class="bg-gray-50 dark:bg-gray-800">
+                <table class="min-w-full divide-y divide-border">
+                    <thead class="bg-muted">
                         <tr>
                             <th
                                 scope="col"
-                                class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300"
+                                class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase"
                             >
                                 #
                             </th>
                             <th
                                 scope="col"
-                                class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300"
+                                class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase"
                             >
                                 Name
                             </th>
                             <th
                                 scope="col"
-                                class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300"
+                                class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase"
                             >
                                 Description
                             </th>
                             <th
                                 scope="col"
-                                class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300"
+                                class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase"
                             >
                                 Status
                             </th>
                             <th
                                 scope="col"
-                                class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300"
+                                class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase"
                             >
                                 Actions
                             </th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-900">
+                    <tbody class="divide-y divide-border bg-card">
                         <tr
                             v-for="(leaveType, index) in leaveTypesData"
                             :key="leaveType.id"
-                            class="transition-colors hover:bg-gray-50 dark:hover:bg-gray-800"
+                            class="transition-colors hover:bg-accent"
                         >
                             <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="text-sm text-gray-600 dark:text-gray-300">
+                                <div class="text-sm text-muted-foreground">
                                     {{ (index as number) + 1 }}
                                 </div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="text-sm font-medium text-gray-900 dark:text-white">
+                                <div class="text-sm font-medium text-foreground">
                                     {{ leaveType.name }}
                                 </div>
                             </td>
                             <td class="px-6 py-4">
-                                <div class="max-w-xs truncate text-sm text-gray-600 dark:text-gray-300">
+                                <div class="max-w-xs truncate text-sm text-muted-foreground">
                                     {{ leaveType.description || '—' }}
                                 </div>
                             </td>
@@ -174,8 +174,8 @@ const deleteLeaveType = (leaveType: any) => {
                                     :class="[
                                         'inline-flex rounded-full px-2 py-1 text-xs font-semibold',
                                         leaveType.is_active
-                                            ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-                                            : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
+                                            ? 'bg-success/10 text-success'
+                                            : 'bg-destructive/10 text-destructive',
                                     ]"
                                 >
                                     {{ leaveType.is_active ? 'Active' : 'Inactive' }}
@@ -206,12 +206,12 @@ const deleteLeaveType = (leaveType: any) => {
                 </table>
             </div>
         </div>
-        <div class="flex justify-between items-center">
+        <div class="flex flex-wrap gap-2 justify-between items-center">
             <div class="flex items-center gap-4">
-                <div class="text-sm text-gray-600">
+                <div class="text-sm text-muted-foreground">
                     Showing {{ pagination.from }} to {{ pagination.to }} of {{ pagination.total }} entries
                 </div>
-                <select v-model="perPage" class="w-20 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-2 py-1 text-sm">
+                <select v-model="perPage" class="w-20 rounded-md border border-border bg-card text-foreground px-2 py-1 text-sm">
                     <option value="10">10</option>
                     <option value="25">25</option>
                     <option value="50">50</option>

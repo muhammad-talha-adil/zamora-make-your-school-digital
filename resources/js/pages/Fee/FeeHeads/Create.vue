@@ -94,40 +94,40 @@ const cancel = () => {
             <!-- Header -->
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 md:gap-4">
                 <div>
-                    <h1 class="text-lg md:text-2xl font-bold text-gray-900 dark:text-white">
+                    <h1 class="text-lg md:text-2xl font-bold text-foreground">
                         Create Fee Head
                     </h1>
-                    <p class="mt-1 text-xs md:text-sm text-gray-600 dark:text-gray-400">
+                    <p class="mt-1 text-xs md:text-sm text-muted-foreground">
                         Create a new fee head category
                     </p>
                 </div>
             </div>
 
             <!-- Form -->
-            <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 md:p-6">
+            <div class="bg-card rounded-lg border border-border p-4 md:p-6">
                 <form @submit.prevent="submitForm" class="space-y-6">
                     <!-- Name & Code -->
                     <div class="grid gap-4 md:grid-cols-2">
                         <div class="space-y-2">
-                            <Label for="name">Name <span class="text-red-500">*</span></Label>
+                            <Label for="name">Name <span class="text-destructive">*</span></Label>
                             <Input
                                 id="name"
                                 v-model="form.name"
                                 placeholder="e.g., Tuition Fee"
-                                :class="{ 'border-red-500': errors.name }"
+                                :class="{ 'border-destructive': errors.name }"
                             />
-                            <p v-if="errors.name" class="text-sm text-red-500">{{ errors.name }}</p>
+                            <p v-if="errors.name" class="text-sm text-destructive">{{ errors.name }}</p>
                         </div>
 
                         <div class="space-y-2">
-                            <Label for="code">Code <span class="text-red-500">*</span></Label>
+                            <Label for="code">Code <span class="text-destructive">*</span></Label>
                             <Input
                                 id="code"
                                 v-model="form.code"
                                 placeholder="e.g., TF"
-                                :class="{ 'border-red-500': errors.code }"
+                                :class="{ 'border-destructive': errors.code }"
                             />
-                            <p v-if="errors.code" class="text-sm text-red-500">{{ errors.code }}</p>
+                            <p v-if="errors.code" class="text-sm text-destructive">{{ errors.code }}</p>
                         </div>
                     </div>
 
@@ -138,7 +138,7 @@ const cancel = () => {
                             id="description"
                             v-model="form.description"
                             rows="3"
-                            class="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 text-sm"
+                            class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm"
                             placeholder="Description of this fee head..."
                         ></textarea>
                     </div>
@@ -146,31 +146,31 @@ const cancel = () => {
                     <!-- Category & Frequency -->
                     <div class="grid gap-4 md:grid-cols-2">
                         <div class="space-y-2">
-                            <Label for="category">Category <span class="text-red-500">*</span></Label>
+                            <Label for="category">Category <span class="text-destructive">*</span></Label>
                             <select
                                 id="category"
                                 v-model="form.category"
-                                :class="['w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 text-sm', { 'border-red-500': errors.category }]"
+                                :class="['w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm', { 'border-destructive': errors.category }]"
                             >
                                 <option v-for="cat in props.categories" :key="cat.value" :value="cat.value">
                                     {{ cat.label }}
                                 </option>
                             </select>
-                            <p v-if="errors.category" class="text-sm text-red-500">{{ errors.category }}</p>
+                            <p v-if="errors.category" class="text-sm text-destructive">{{ errors.category }}</p>
                         </div>
 
                         <div class="space-y-2">
-                            <Label for="frequency">Frequency <span class="text-red-500">*</span></Label>
+                            <Label for="frequency">Frequency <span class="text-destructive">*</span></Label>
                             <select
                                 id="frequency"
                                 v-model="form.default_frequency"
-                                :class="['w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 text-sm', { 'border-red-500': errors.default_frequency }]"
+                                :class="['w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm', { 'border-destructive': errors.default_frequency }]"
                             >
                                 <option v-for="freq in props.frequencies" :key="freq.value" :value="freq.value">
                                     {{ freq.label }}
                                 </option>
                             </select>
-                            <p v-if="errors.default_frequency" class="text-sm text-red-500">{{ errors.default_frequency }}</p>
+                            <p v-if="errors.default_frequency" class="text-sm text-destructive">{{ errors.default_frequency }}</p>
                         </div>
                     </div>
 
@@ -185,7 +185,7 @@ const cancel = () => {
                                 min="1"
                                 :placeholder="String(nextOrder)"
                             />
-                            <p class="text-xs text-gray-500 mt-1">Next available: {{ nextOrder }}</p>
+                            <p class="text-xs text-muted-foreground mt-1">Next available: {{ nextOrder }}</p>
                         </div>
 
                         <div class="space-y-2">
@@ -193,7 +193,7 @@ const cancel = () => {
                             <select
                                 id="is_active"
                                 v-model="form.is_active"
-                                class="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 text-sm"
+                                class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm"
                             >
                                 <option :value="true">Active</option>
                                 <option :value="false">Inactive</option>
@@ -205,7 +205,7 @@ const cancel = () => {
                             <select
                                 id="is_optional"
                                 v-model="form.is_optional"
-                                class="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 text-sm"
+                                class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm"
                             >
                                 <option :value="false">Required</option>
                                 <option :value="true">Optional</option>
@@ -214,7 +214,7 @@ const cancel = () => {
                     </div>
 
                     <!-- Submit -->
-                    <div class="flex justify-end gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
+                    <div class="flex flex-wrap justify-end gap-3 pt-4 border-t border-border">
                         <Button type="button" variant="outline" @click="cancel">
                             Cancel
                         </Button>

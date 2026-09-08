@@ -1,18 +1,18 @@
 <template>
   <aside
     :class="[
-      'fixed inset-y-0 left-0 z-50 w-64 bg-white dark:bg-gray-800 border-r border-gray-200 dark:border-gray-700 transform transition-transform duration-300 ease-in-out md:translate-x-0 md:static md:inset-0 min-h-screen',
+      'fixed inset-y-0 left-0 z-50 w-64 bg-card border-r border-border transform transition-transform duration-300 ease-in-out md:translate-x-0 md:static md:inset-0 min-h-screen',
       isOpen ? 'translate-x-0' : '-translate-x-full'
     ]"
   >
     <div class="flex flex-col h-full">
       <!-- Sidebar Header -->
-      <div class="p-4 border-b border-gray-200 dark:border-gray-700 flex items-center justify-between">
-        <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Navigation</h2>
+      <div class="p-4 border-b border-border flex flex-wrap gap-2 items-center justify-between">
+        <h2 class="text-lg font-semibold text-foreground">Navigation</h2>
         <!-- Close button for mobile -->
         <button
           @click="closeSidebar"
-          class="md:hidden p-2 rounded-md text-gray-600 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700"
+          class="md:hidden p-2 rounded-md text-muted-foreground hover:bg-accent"
         >
           <XMarkIcon class="w-5 h-5" />
         </button>
@@ -27,8 +27,8 @@
           :class="[
             'flex items-center px-4 py-2 text-sm font-medium rounded-md transition-colors',
             $page.url === item.href
-              ? 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300'
-              : 'text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700'
+              ? 'bg-primary/10 text-primary'
+              : 'text-muted-foreground hover:bg-accent'
           ]"
         >
           {{ (console.log('mainNavItems item.icon:', item.icon), '') }}
@@ -39,7 +39,7 @@
         <div class="space-y-1">
           <button
             @click="settingsOpen = !settingsOpen"
-            class="flex items-center w-full px-4 py-2 text-sm font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-md transition-colors"
+            class="flex items-center w-full px-4 py-2 text-sm font-medium text-muted-foreground hover:bg-accent rounded-md transition-colors"
           >
             <SettingsIcon class="w-5 h-5 mr-3" />
             Settings
@@ -53,12 +53,12 @@
               :class="[
                 'flex items-center px-4 py-2 text-sm font-medium rounded-md transition-colors',
                 $page.url === child.href
-                  ? 'bg-blue-100 dark:bg-blue-900 text-blue-700 dark:text-blue-300'
-                  : 'text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
+                  ? 'bg-primary/10 text-primary'
+                  : 'text-muted-foreground hover:bg-accent'
               ]"
             >
               {{ (console.log('settingsItems child.icon:', child.icon), '') }}
-              <component :is="child.icon || 'div'" class="w-4 h-4 mr-2 text-gray-600 dark:text-gray-400" />
+              <component :is="child.icon || 'div'" class="w-4 h-4 mr-2 text-muted-foreground" />
               {{ child.title }}
             </Link>
           </div>

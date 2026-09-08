@@ -17,24 +17,24 @@ const settings = [
         title: 'Fee Heads',
         description: 'Manage fee heads and categories',
         icon: 'list',
-        color: 'text-blue-600 dark:text-blue-400',
-        bgColor: 'bg-blue-100 dark:bg-blue-900/30',
+        color: 'text-primary',
+        bgColor: 'bg-primary/10',
         route: 'fee.settings.fee-heads',
     },
     {
         title: 'Discount Types',
         description: 'Manage discount types and default values',
         icon: 'percent',
-        color: 'text-green-600 dark:text-green-400',
-        bgColor: 'bg-green-100 dark:bg-green-900/30',
+        color: 'text-success',
+        bgColor: 'bg-success/10',
         route: 'fee.settings.discount-types',
     },
     {
         title: 'Fine Rules',
         description: 'Configure late payment fine rules',
         icon: 'alert-circle',
-        color: 'text-red-600 dark:text-red-400',
-        bgColor: 'bg-red-100 dark:bg-red-900/30',
+        color: 'text-destructive',
+        bgColor: 'bg-destructive/10',
         route: 'fee.settings.fine-rules',
     },
 ];
@@ -47,10 +47,10 @@ const settings = [
         <div class="space-y-4 md:space-y-6 p-4 md:p-6">
             <!-- Header -->
             <div>
-                <h1 class="text-lg md:text-2xl font-bold text-gray-900 dark:text-white">
+                <h1 class="text-lg md:text-2xl font-bold text-foreground">
                     Fee Settings
                 </h1>
-                <p class="mt-1 text-xs md:text-sm text-gray-600 dark:text-gray-400">
+                <p class="mt-1 text-xs md:text-sm text-muted-foreground">
                     Configure fee management settings
                 </p>
             </div>
@@ -60,7 +60,7 @@ const settings = [
                 <div
                     v-for="setting in settings"
                     :key="setting.route"
-                    class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 hover:shadow-lg transition-shadow cursor-pointer"
+                    class="bg-card rounded-lg border border-border p-6 hover:shadow-lg transition-shadow cursor-pointer"
                     @click="router.visit(route(setting.route))"
                 >
                     <div class="flex items-start gap-4">
@@ -68,10 +68,10 @@ const settings = [
                             <Icon :icon="setting.icon" :class="['h-6 w-6', setting.color]" />
                         </div>
                         <div class="flex-1">
-                            <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+                            <h3 class="text-lg font-semibold text-foreground">
                                 {{ setting.title }}
                             </h3>
-                            <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                            <p class="mt-1 text-sm text-muted-foreground">
                                 {{ setting.description }}
                             </p>
                             <Button variant="link" class="mt-3 p-0 h-auto">

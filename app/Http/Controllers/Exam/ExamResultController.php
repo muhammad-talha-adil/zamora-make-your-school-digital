@@ -107,8 +107,14 @@ class ExamResultController extends Controller
             ], 400);
         }
 
+        $this->authorize('viewAny', ExamResultHeader::class);
+
         $query = ExamResultHeader::with(['student.user', 'campus', 'class', 'section', 'exam', 'overallGradeItem', 'examResultLines'])
-            ->where('exam_id', $examId);
+            ->where('exam_id', $examId)
+            // Every signed-in user could read every child's marks in every
+            // class of every campus. The policy guards one result; this filters
+            // the list to the same reach.
+            ->visibleTo($request->user());
 
         if ($campusId) {
             $query->where('campus_id', $campusId);

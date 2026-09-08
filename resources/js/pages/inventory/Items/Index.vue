@@ -177,9 +177,9 @@ const toggleDeleted = () => {
 };
 
 const getStockStatus = (quantity: number) => {
-    if (quantity <= 0) return { label: 'Out of Stock', variant: 'destructive' as const, color: 'text-red-600' };
-    if (quantity < 10) return { label: 'Low Stock', variant: 'secondary' as const, color: 'text-amber-600' };
-    return { label: 'In Stock', variant: 'default' as const, color: 'text-green-600' };
+    if (quantity <= 0) return { label: 'Out of Stock', variant: 'destructive' as const, color: 'text-destructive' };
+    if (quantity < 10) return { label: 'Low Stock', variant: 'secondary' as const, color: 'text-warning' };
+    return { label: 'In Stock', variant: 'default' as const, color: 'text-success' };
 };
 </script>
 
@@ -189,12 +189,12 @@ const getStockStatus = (quantity: number) => {
 
         <div class="space-y-6 p-4 md:p-6">
             <!-- Header -->
-            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-4 border-b border-gray-200 dark:border-gray-700">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pb-4 border-b border-border">
                 <div>
-                    <h1 class="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">
+                    <h1 class="text-xl sm:text-2xl font-bold text-foreground">
                         Inventory Items
                     </h1>
-                    <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                    <p class="mt-1 text-sm text-muted-foreground">
                         Manage individual inventory items across all categories.
                     </p>
                 </div>
@@ -210,13 +210,13 @@ const getStockStatus = (quantity: number) => {
 
             <!-- Filters -->
             <div class="flex flex-wrap gap-2 items-center">
-                <select v-model="campusFilter" class="w-full sm:w-48 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2.5 text-sm min-h-11">
+                <select v-model="campusFilter" class="w-full sm:w-48 rounded-md border border-border bg-card text-foreground px-3 py-2.5 text-sm min-h-11">
                     <option value="">All Campuses</option>
                     <option v-for="campus in props.campuses" :key="campus.id" :value="campus.id">
                         {{ campus.name }}
                     </option>
                 </select>
-                <select v-model="typeFilter" class="w-full sm:w-48 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2.5 text-sm min-h-11">
+                <select v-model="typeFilter" class="w-full sm:w-48 rounded-md border border-border bg-card text-foreground px-3 py-2.5 text-sm min-h-11">
                     <option value="">All Types</option>
                     <option v-for="type in props.inventoryTypes" :key="type.id" :value="type.id">
                         {{ type.name }}
@@ -233,8 +233,8 @@ const getStockStatus = (quantity: number) => {
                     {{ showDeleted ? 'Active Items' : 'Deleted Items' }}
                 </Button>
                 <div class="flex items-center gap-2">
-                    <label class="text-sm text-gray-600 dark:text-gray-400">Show:</label>
-                    <select v-model="perPage" class="w-20 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-2 py-2 text-sm min-h-11">
+                    <label class="text-sm text-muted-foreground">Show:</label>
+                    <select v-model="perPage" class="w-20 rounded-md border border-border bg-card text-foreground px-2 py-2 text-sm min-h-11">
                         <option v-for="option in perPageOptions" :key="option" :value="option">
                             {{ option }}
                         </option>
@@ -243,47 +243,47 @@ const getStockStatus = (quantity: number) => {
             </div>
 
             <!-- Table -->
-            <div class="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-900">
+            <div class="overflow-hidden rounded-lg border border-border bg-card shadow-sm">
                 <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                        <thead class="bg-gray-50 dark:bg-gray-800">
+                    <table class="min-w-full divide-y divide-border">
+                        <thead class="bg-muted">
                             <tr>
-                                <th scope="col" class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">
+                                <th scope="col" class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">
                                     Sr#
                                 </th>
-                                <th scope="col" class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">
+                                <th scope="col" class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">
                                     Item
                                 </th>
-                                <th scope="col" class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">
+                                <th scope="col" class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">
                                     Type
                                 </th>
-                                <th scope="col" class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">
+                                <th scope="col" class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">
                                     Rates
                                 </th>
-                                <th scope="col" class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">
+                                <th scope="col" class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">
                                     Stock
                                 </th>
-                                <th scope="col" class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">
+                                <th scope="col" class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">
                                     Status
                                 </th>
-                                <th scope="col" class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">
+                                <th scope="col" class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">
                                     Actions
                                 </th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-900">
-                            <tr v-for="(item, index) in inventoryItemsData" :key="item.id" class="transition-colors hover:bg-gray-50 dark:hover:bg-gray-800">
+                        <tbody class="divide-y divide-border bg-card">
+                            <tr v-for="(item, index) in inventoryItemsData" :key="item.id" class="transition-colors hover:bg-accent">
                                 <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="text-sm text-gray-600 dark:text-gray-300">
+                                    <div class="text-sm text-muted-foreground">
                                         {{ (pagination.from || 0) + index }}
                                     </div>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <div>
-                                        <div class="text-sm font-medium text-gray-900 dark:text-white">
+                                        <div class="text-sm font-medium text-foreground">
                                             {{ item.name }}
                                         </div>
-                                        <div class="text-xs text-gray-500 truncate max-w-xs">
+                                        <div class="text-xs text-muted-foreground truncate max-w-xs">
                                             {{ item.description || 'No description' }}
                                         </div>
                                     </div>
@@ -295,11 +295,11 @@ const getStockStatus = (quantity: number) => {
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <div class="text-sm">
-                                        <span class="text-gray-500">Buy:</span>
+                                        <span class="text-muted-foreground">Buy:</span>
                                         <span class="font-medium ml-1">{{ formatCurrency(item.purchase_rate) }}</span>
                                     </div>
                                     <div class="text-sm">
-                                        <span class="text-gray-500">Sell:</span>
+                                        <span class="text-muted-foreground">Sell:</span>
                                         <span class="font-medium ml-1">{{ formatCurrency(item.sale_rate) }}</span>
                                     </div>
                                 </td>
@@ -350,8 +350,8 @@ const getStockStatus = (quantity: number) => {
             </div>
 
             <!-- Pagination -->
-            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pt-4 border-t border-gray-200 dark:border-gray-700">
-                <div class="text-sm text-gray-600 dark:text-gray-400">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pt-4 border-t border-border">
+                <div class="text-sm text-muted-foreground">
                     Showing {{ pagination.from }} to {{ pagination.to }} of {{ pagination.total }} entries
                 </div>
                 <div class="flex flex-wrap gap-1">

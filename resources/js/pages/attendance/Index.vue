@@ -6,10 +6,10 @@
             <!-- Header -->
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 md:gap-4">
                 <div>
-                    <h1 class="text-lg md:text-2xl font-bold text-gray-900 dark:text-white">
+                    <h1 class="text-lg md:text-2xl font-bold text-foreground">
                         Attendance Management
                     </h1>
-                    <p class="mt-1 text-xs md:text-sm text-gray-600 dark:text-gray-400">
+                    <p class="mt-1 text-xs md:text-sm text-muted-foreground">
                         Track and manage student attendance records
                     </p>
                 </div>
@@ -35,10 +35,10 @@
             />
 
             <!-- Prompt to Load Data -->
-            <div v-if="!hasSearched" class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-8 text-center">
-                <Icon icon="search" class="h-12 w-12 mx-auto text-blue-500 mb-3" />
-                <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-2">Select Filters and Click Load</h3>
-                <p class="text-gray-600 dark:text-gray-400">Choose the required filters above and click the "Load" button to view attendance records.</p>
+            <div v-if="!hasSearched" class="bg-primary/10 border border-primary/40 rounded-lg p-8 text-center">
+                <Icon icon="search" class="h-12 w-12 mx-auto text-primary mb-3" />
+                <h3 class="text-lg font-semibold text-foreground mb-2">Select Filters and Click Load</h3>
+                <p class="text-muted-foreground">Choose the required filters above and click the "Load" button to view attendance records.</p>
             </div>
 
             <!-- Attendance Table -->

@@ -52,22 +52,13 @@ class ThemeSettingsController extends Controller
         return back()->with('success', 'Theme settings updated successfully.');
     }
 
+    /**
+     * Branding is an owner-level concern, so this is gated on the ability
+     * rather than on a hardcoded role list.
+     */
     private function authorizeUser(): void
     {
-        $user = auth()->user();
-
-        $allowedRoleSlugs = ['developer', 'owner', 'school_owner', 'super_admin'];
-
-        $userRoleSlugs = $user->userRoles()
-            ->where('is_active', true)
-            ->whereHas('role')
-            ->with('role:id,slug')
-            ->get()
-            ->pluck('role.slug')
-            ->filter()
-            ->all();
-
-        if (! array_intersect($allowedRoleSlugs, $userRoleSlugs)) {
+        if (! auth()->user()?->hasPermission('school.theme.manage')) {
             abort(403, 'Unauthorized');
         }
     }
@@ -87,6 +78,18 @@ class ThemeSettingsController extends Controller
             'colors.content_text' => 'required|string',
             'colors.card_bg' => 'required|string',
             'colors.card_text' => 'required|string',
+            // Action colours. Optional so a client posting only the chrome
+            // slots keeps working; missing slots fall back to the CSS defaults.
+            'colors.primary' => 'nullable|string',
+            'colors.primary_text' => 'nullable|string',
+            'colors.success' => 'nullable|string',
+            'colors.success_text' => 'nullable|string',
+            'colors.danger' => 'nullable|string',
+            'colors.danger_text' => 'nullable|string',
+            'colors.warning' => 'nullable|string',
+            'colors.warning_text' => 'nullable|string',
+            'colors.info' => 'nullable|string',
+            'colors.info_text' => 'nullable|string',
         ]);
     }
 

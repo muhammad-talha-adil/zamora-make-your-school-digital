@@ -130,8 +130,8 @@ const breadcrumbItems: BreadcrumbItem[] = [
     { title: 'Staff', href: '/staff' },
 ];
 
-const selectClass = 'w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 dark:border-gray-600 dark:bg-gray-800 dark:text-white';
-const textareaClass = 'min-h-24 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 dark:border-gray-600 dark:bg-gray-800 dark:text-white';
+const selectClass = 'w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground';
+const textareaClass = 'min-h-24 w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground';
 
 const activeTab = ref<'staff' | 'payroll' | 'departments' | 'designations'>('staff');
 const expandedPayrollRunId = ref<number | null>(null);
@@ -434,8 +434,8 @@ const markPayrollPaid = async (item: PayrollItem) => {
         <div class="space-y-6 p-4 md:p-6">
             <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                 <div>
-                    <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Staff Management</h1>
-                    <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                    <h1 class="text-2xl font-bold text-foreground">Staff Management</h1>
+                    <p class="mt-1 text-sm text-muted-foreground">
                         Manage staff records, departments, designations, and payroll with finance integration.
                     </p>
                 </div>
@@ -452,27 +452,27 @@ const markPayrollPaid = async (item: PayrollItem) => {
             </div>
 
             <div class="grid gap-4 md:grid-cols-3">
-                <div class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-700 dark:bg-gray-800">
-                    <p class="text-sm text-gray-500 dark:text-gray-400">Active Staff</p>
-                    <p class="mt-2 text-2xl font-bold text-gray-900 dark:text-white">{{ props.summary.active_staff }}</p>
+                <div class="rounded-2xl border border-border bg-card p-5 shadow-sm">
+                    <p class="text-sm text-muted-foreground">Active Staff</p>
+                    <p class="mt-2 text-2xl font-bold text-foreground">{{ props.summary.active_staff }}</p>
                 </div>
-                <div class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-700 dark:bg-gray-800">
-                    <p class="text-sm text-gray-500 dark:text-gray-400">Monthly Salary Cost</p>
-                    <p class="mt-2 text-2xl font-bold text-blue-600">{{ formatMoney(props.summary.monthly_salary) }}</p>
+                <div class="rounded-2xl border border-border bg-card p-5 shadow-sm">
+                    <p class="text-sm text-muted-foreground">Monthly Salary Cost</p>
+                    <p class="mt-2 text-2xl font-bold text-primary">{{ formatMoney(props.summary.monthly_salary) }}</p>
                 </div>
-                <div class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-700 dark:bg-gray-800">
-                    <p class="text-sm text-gray-500 dark:text-gray-400">Pending Payroll Payable</p>
-                    <p class="mt-2 text-2xl font-bold text-red-600">{{ formatMoney(props.summary.pending_payroll) }}</p>
+                <div class="rounded-2xl border border-border bg-card p-5 shadow-sm">
+                    <p class="text-sm text-muted-foreground">Pending Payroll Payable</p>
+                    <p class="mt-2 text-2xl font-bold text-destructive">{{ formatMoney(props.summary.pending_payroll) }}</p>
                 </div>
             </div>
 
-            <div class="border-b border-gray-200 dark:border-gray-700">
+            <div class="border-b border-border">
                 <nav class="-mb-px grid grid-cols-2 gap-x-4 gap-y-1 md:grid-cols-4">
                     <button
                         type="button"
                         @click="activeTab = 'staff'"
                         :class="[
-                            activeTab === 'staff' ? 'border-blue-600 text-blue-600 dark:border-blue-400 dark:text-blue-400' : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300',
+                            activeTab === 'staff' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:border-border hover:text-foreground',
                             'border-b-2 px-2 py-3 text-sm font-medium'
                         ]"
                     >
@@ -482,7 +482,7 @@ const markPayrollPaid = async (item: PayrollItem) => {
                         type="button"
                         @click="activeTab = 'payroll'"
                         :class="[
-                            activeTab === 'payroll' ? 'border-blue-600 text-blue-600 dark:border-blue-400 dark:text-blue-400' : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300',
+                            activeTab === 'payroll' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:border-border hover:text-foreground',
                             'border-b-2 px-2 py-3 text-sm font-medium'
                         ]"
                     >
@@ -492,7 +492,7 @@ const markPayrollPaid = async (item: PayrollItem) => {
                         type="button"
                         @click="activeTab = 'departments'"
                         :class="[
-                            activeTab === 'departments' ? 'border-blue-600 text-blue-600 dark:border-blue-400 dark:text-blue-400' : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300',
+                            activeTab === 'departments' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:border-border hover:text-foreground',
                             'border-b-2 px-2 py-3 text-sm font-medium'
                         ]"
                     >
@@ -502,7 +502,7 @@ const markPayrollPaid = async (item: PayrollItem) => {
                         type="button"
                         @click="activeTab = 'designations'"
                         :class="[
-                            activeTab === 'designations' ? 'border-blue-600 text-blue-600 dark:border-blue-400 dark:text-blue-400' : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300',
+                            activeTab === 'designations' ? 'border-primary text-primary' : 'border-transparent text-muted-foreground hover:border-border hover:text-foreground',
                             'border-b-2 px-2 py-3 text-sm font-medium'
                         ]"
                     >
@@ -512,9 +512,9 @@ const markPayrollPaid = async (item: PayrollItem) => {
             </div>
 
             <div v-if="activeTab === 'staff'" class="grid gap-6 xl:grid-cols-[420px_minmax(0,1fr)]">
-                <div class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-700 dark:bg-gray-800">
-                    <div class="mb-4 flex items-center justify-between">
-                        <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
+                <div class="rounded-2xl border border-border bg-card p-5 shadow-sm">
+                    <div class="mb-4 flex flex-wrap gap-2 items-center justify-between">
+                        <h2 class="text-lg font-semibold text-foreground">
                             {{ staffForm.id ? 'Edit Staff Member' : 'Create Staff Member' }}
                         </h2>
                         <Button v-if="staffForm.id" variant="outline" size="sm" @click="resetStaffForm">Reset</Button>
@@ -523,22 +523,22 @@ const markPayrollPaid = async (item: PayrollItem) => {
                     <div class="space-y-4">
                         <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-1">
                             <div>
-                                <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Name</label>
+                                <label class="mb-2 block text-sm font-medium text-muted-foreground">Name</label>
                                 <Input v-model="staffForm.name" placeholder="Staff name" />
                             </div>
                             <div>
-                                <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Email</label>
+                                <label class="mb-2 block text-sm font-medium text-muted-foreground">Email</label>
                                 <Input v-model="staffForm.email" type="email" placeholder="Email (optional)" />
                             </div>
                         </div>
 
                         <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-1">
                             <div>
-                                <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Employee No</label>
+                                <label class="mb-2 block text-sm font-medium text-muted-foreground">Employee No</label>
                                 <Input v-model="staffForm.employee_no" placeholder="Auto-generate if empty" />
                             </div>
                             <div>
-                                <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Campus</label>
+                                <label class="mb-2 block text-sm font-medium text-muted-foreground">Campus</label>
                                 <select v-model="staffForm.campus_id" :class="selectClass">
                                     <option value="">Select campus</option>
                                     <option v-for="campus in props.campuses" :key="campus.id" :value="String(campus.id)">{{ campus.name }}</option>
@@ -548,14 +548,14 @@ const markPayrollPaid = async (item: PayrollItem) => {
 
                         <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-1">
                             <div>
-                                <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Department</label>
+                                <label class="mb-2 block text-sm font-medium text-muted-foreground">Department</label>
                                 <select v-model="staffForm.department_id" :class="selectClass">
                                     <option value="">Select department</option>
                                     <option v-for="department in props.departments" :key="department.id" :value="String(department.id)">{{ department.name }}</option>
                                 </select>
                             </div>
                             <div>
-                                <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Designation</label>
+                                <label class="mb-2 block text-sm font-medium text-muted-foreground">Designation</label>
                                 <select v-model="staffForm.designation_id" :class="selectClass">
                                     <option value="">Select designation</option>
                                     <option v-for="designation in props.designations" :key="designation.id" :value="String(designation.id)">{{ designation.name }}</option>
@@ -565,7 +565,7 @@ const markPayrollPaid = async (item: PayrollItem) => {
 
                         <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-1">
                             <div>
-                                <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Employment Type</label>
+                                <label class="mb-2 block text-sm font-medium text-muted-foreground">Employment Type</label>
                                 <select v-model="staffForm.employment_type" :class="selectClass">
                                     <option value="permanent">Permanent</option>
                                     <option value="contract">Contract</option>
@@ -574,29 +574,29 @@ const markPayrollPaid = async (item: PayrollItem) => {
                                 </select>
                             </div>
                             <div>
-                                <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Hire Date</label>
+                                <label class="mb-2 block text-sm font-medium text-muted-foreground">Hire Date</label>
                                 <Input v-model="staffForm.hire_date" type="date" />
                             </div>
                         </div>
 
                         <div class="grid gap-4 md:grid-cols-3 xl:grid-cols-1">
                             <div>
-                                <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Basic Salary</label>
+                                <label class="mb-2 block text-sm font-medium text-muted-foreground">Basic Salary</label>
                                 <Input v-model="staffForm.basic_salary" type="number" min="0" />
                             </div>
                             <div>
-                                <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Allowance</label>
+                                <label class="mb-2 block text-sm font-medium text-muted-foreground">Allowance</label>
                                 <Input v-model="staffForm.allowance_amount" type="number" min="0" />
                             </div>
                             <div>
-                                <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Deduction</label>
+                                <label class="mb-2 block text-sm font-medium text-muted-foreground">Deduction</label>
                                 <Input v-model="staffForm.deduction_amount" type="number" min="0" />
                             </div>
                         </div>
 
                         <div class="grid gap-4 md:grid-cols-3 xl:grid-cols-1">
                             <div>
-                                <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Payment Method</label>
+                                <label class="mb-2 block text-sm font-medium text-muted-foreground">Payment Method</label>
                                 <select v-model="staffForm.payment_method" :class="selectClass">
                                     <option value="bank">Bank</option>
                                     <option value="cash">Cash</option>
@@ -604,17 +604,17 @@ const markPayrollPaid = async (item: PayrollItem) => {
                                 </select>
                             </div>
                             <div>
-                                <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Bank Name</label>
+                                <label class="mb-2 block text-sm font-medium text-muted-foreground">Bank Name</label>
                                 <Input v-model="staffForm.bank_name" placeholder="Bank name" />
                             </div>
                             <div>
-                                <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Account No</label>
+                                <label class="mb-2 block text-sm font-medium text-muted-foreground">Account No</label>
                                 <Input v-model="staffForm.account_no" placeholder="Account number" />
                             </div>
                         </div>
 
-                        <label class="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
-                            <input v-model="staffForm.is_active" type="checkbox" class="h-4 w-4 rounded border-gray-300 text-blue-600" />
+                        <label class="flex items-center gap-2 text-sm text-muted-foreground">
+                            <input v-model="staffForm.is_active" type="checkbox" class="h-4 w-4 rounded border-border text-primary" />
                             Staff member is active
                         </label>
 
@@ -629,59 +629,59 @@ const markPayrollPaid = async (item: PayrollItem) => {
                 </div>
 
                 <div class="space-y-6">
-                    <div class="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800">
+                    <div class="rounded-2xl border border-border bg-card p-4 shadow-sm">
                         <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
                             <div>
-                                <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Campus</label>
+                                <label class="mb-2 block text-sm font-medium text-muted-foreground">Campus</label>
                                 <select v-model="staffCampusFilter" :class="selectClass">
                                     <option value="">All Campuses</option>
                                     <option v-for="campus in props.campuses" :key="campus.id" :value="String(campus.id)">{{ campus.name }}</option>
                                 </select>
                             </div>
                             <div class="xl:col-span-2">
-                                <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Search</label>
+                                <label class="mb-2 block text-sm font-medium text-muted-foreground">Search</label>
                                 <Input v-model="staffSearch" placeholder="Search by name, employee no, department, campus..." />
                             </div>
                         </div>
                     </div>
 
-                    <div class="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-900">
+                    <div class="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
                         <div class="overflow-x-auto">
-                            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                                <thead class="bg-gray-50 dark:bg-gray-800">
+                            <table class="min-w-full divide-y divide-border">
+                                <thead class="bg-muted">
                                     <tr>
-                                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-300">Employee</th>
-                                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-300">Department / Designation</th>
-                                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-300">Campus</th>
-                                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-300">Salary</th>
-                                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-300">Status</th>
-                                        <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-300">Actions</th>
+                                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Employee</th>
+                                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Department / Designation</th>
+                                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Campus</th>
+                                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Salary</th>
+                                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Status</th>
+                                        <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">Actions</th>
                                     </tr>
                                 </thead>
-                                <tbody class="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-900">
-                                    <tr v-for="member in filteredStaff" :key="member.id" class="hover:bg-gray-50 dark:hover:bg-gray-800">
+                                <tbody class="divide-y divide-border bg-card">
+                                    <tr v-for="member in filteredStaff" :key="member.id" class="hover:bg-accent">
                                         <td class="px-4 py-3">
-                                            <div class="font-medium text-gray-900 dark:text-white">{{ member.user?.name || '-' }}</div>
-                                            <div class="text-xs text-gray-500 dark:text-gray-400">
+                                            <div class="font-medium text-foreground">{{ member.user?.name || '-' }}</div>
+                                            <div class="text-xs text-muted-foreground">
                                                 {{ member.employee_no }}<span v-if="member.user?.email"> | {{ member.user?.email }}</span>
                                             </div>
                                         </td>
-                                        <td class="px-4 py-3 text-sm text-gray-600 dark:text-gray-300">
+                                        <td class="px-4 py-3 text-sm text-muted-foreground">
                                             <div>{{ member.department?.name || '-' }}</div>
-                                            <div class="text-xs text-gray-500 dark:text-gray-400">{{ member.designation?.name || '-' }}</div>
+                                            <div class="text-xs text-muted-foreground">{{ member.designation?.name || '-' }}</div>
                                         </td>
-                                        <td class="px-4 py-3 text-sm text-gray-600 dark:text-gray-300">{{ member.campus?.name || '-' }}</td>
-                                        <td class="px-4 py-3 text-sm text-gray-600 dark:text-gray-300">
+                                        <td class="px-4 py-3 text-sm text-muted-foreground">{{ member.campus?.name || '-' }}</td>
+                                        <td class="px-4 py-3 text-sm text-muted-foreground">
                                             <div>Gross: {{ formatMoney(member.gross_salary) }}</div>
-                                            <div class="text-xs text-blue-600">Net: {{ formatMoney(member.net_salary) }}</div>
+                                            <div class="text-xs text-primary">Net: {{ formatMoney(member.net_salary) }}</div>
                                         </td>
                                         <td class="px-4 py-3">
-                                            <span :class="member.is_active ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300' : 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300'" class="inline-flex rounded-full px-2.5 py-1 text-xs font-medium">
+                                            <span :class="member.is_active ? 'bg-success/10 text-success' : 'bg-muted text-muted-foreground'" class="inline-flex rounded-full px-2.5 py-1 text-xs font-medium">
                                                 {{ member.is_active ? 'Active' : 'Inactive' }}
                                             </span>
                                         </td>
                                         <td class="px-4 py-3">
-                                            <div class="flex justify-end gap-2">
+                                            <div class="flex flex-wrap justify-end gap-2">
                                                 <Button variant="outline" size="sm" :class="tableActionButtonClass.edit" @click="editStaff(member)">
                                                     <Icon icon="square-pen" class="h-3.5 w-3.5" />
                                                     Edit
@@ -694,7 +694,7 @@ const markPayrollPaid = async (item: PayrollItem) => {
                                         </td>
                                     </tr>
                                     <tr v-if="filteredStaff.length === 0">
-                                        <td colspan="6" class="px-4 py-10 text-center text-sm text-gray-500 dark:text-gray-400">No staff members found.</td>
+                                        <td colspan="6" class="px-4 py-10 text-center text-sm text-muted-foreground">No staff members found.</td>
                                     </tr>
                                 </tbody>
                             </table>
@@ -704,28 +704,28 @@ const markPayrollPaid = async (item: PayrollItem) => {
             </div>
 
             <div v-if="activeTab === 'payroll'" class="space-y-6">
-                <div class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-700 dark:bg-gray-800">
+                <div class="rounded-2xl border border-border bg-card p-5 shadow-sm">
                     <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
                         <div>
-                            <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Campus</label>
+                            <label class="mb-2 block text-sm font-medium text-muted-foreground">Campus</label>
                             <select v-model="payrollForm.campus_id" :class="selectClass">
                                 <option value="">All Campuses</option>
                                 <option v-for="campus in props.campuses" :key="campus.id" :value="String(campus.id)">{{ campus.name }}</option>
                             </select>
                         </div>
                         <div>
-                            <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Month</label>
+                            <label class="mb-2 block text-sm font-medium text-muted-foreground">Month</label>
                             <select v-model="payrollForm.payroll_month_id" :class="selectClass">
                                 <option value="">Select month</option>
                                 <option v-for="month in props.months" :key="month.id" :value="String(month.id)">{{ month.name }}</option>
                             </select>
                         </div>
                         <div>
-                            <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Year</label>
+                            <label class="mb-2 block text-sm font-medium text-muted-foreground">Year</label>
                             <Input v-model="payrollForm.payroll_year" type="number" min="2020" max="2100" />
                         </div>
                         <div class="xl:col-span-2">
-                            <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Title</label>
+                            <label class="mb-2 block text-sm font-medium text-muted-foreground">Title</label>
                             <Input v-model="payrollForm.title" placeholder="Optional payroll title" />
                         </div>
                     </div>
@@ -734,7 +734,7 @@ const markPayrollPaid = async (item: PayrollItem) => {
                             <Icon icon="wallet" class="h-4 w-4" />
                             Generate Payroll
                         </Button>
-                        <p class="self-center text-sm text-gray-500 dark:text-gray-400">
+                        <p class="self-center text-sm text-muted-foreground">
                             Generating payroll will post salary expense and salary payable into finance journals.
                         </p>
                     </div>
@@ -744,62 +744,62 @@ const markPayrollPaid = async (item: PayrollItem) => {
                     <div
                         v-for="run in filteredPayrollRuns"
                         :key="run.id"
-                        class="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-900"
+                        class="overflow-hidden rounded-2xl border border-border bg-card shadow-sm"
                     >
-                        <div class="flex flex-col gap-4 border-b border-gray-200 px-5 py-4 dark:border-gray-700 md:flex-row md:items-center md:justify-between">
+                        <div class="flex flex-col gap-4 border-b border-border px-5 py-4 md:flex-row md:items-center md:justify-between">
                             <div>
-                                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">{{ run.title }}</h3>
-                                <p class="text-sm text-gray-500 dark:text-gray-400">
+                                <h3 class="text-lg font-semibold text-foreground">{{ run.title }}</h3>
+                                <p class="text-sm text-muted-foreground">
                                     {{ run.month?.name || 'Month' }} {{ run.payroll_year }} | {{ run.campus?.name || 'All Campuses' }}
                                 </p>
                             </div>
                             <div class="flex flex-wrap items-center gap-3 text-sm">
-                                <span :class="run.status === 'paid' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300' : 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300'" class="inline-flex rounded-full px-2.5 py-1 font-medium uppercase">
+                                <span :class="run.status === 'paid' ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'" class="inline-flex rounded-full px-2.5 py-1 font-medium uppercase">
                                     {{ run.status }}
                                 </span>
-                                <span class="font-medium text-gray-700 dark:text-gray-200">Net: {{ formatMoney(run.total_net) }}</span>
+                                <span class="font-medium text-muted-foreground">Net: {{ formatMoney(run.total_net) }}</span>
                                 <Button variant="outline" size="sm" @click="expandedPayrollRunId = expandedPayrollRunId === run.id ? null : run.id">
                                     {{ expandedPayrollRunId === run.id ? 'Hide Items' : 'Show Items' }}
                                 </Button>
                             </div>
                         </div>
 
-                        <div class="grid gap-4 border-b border-gray-200 px-5 py-4 text-sm dark:border-gray-700 md:grid-cols-3">
-                            <div>Gross: <span class="font-medium text-gray-900 dark:text-white">{{ formatMoney(run.total_gross) }}</span></div>
-                            <div>Deductions: <span class="font-medium text-red-600">{{ formatMoney(run.total_deductions) }}</span></div>
-                            <div>Processed: <span class="font-medium text-gray-900 dark:text-white">{{ formatDate(run.processed_at) }}</span></div>
+                        <div class="grid gap-4 border-b border-border px-5 py-4 text-sm md:grid-cols-3">
+                            <div>Gross: <span class="font-medium text-foreground">{{ formatMoney(run.total_gross) }}</span></div>
+                            <div>Deductions: <span class="font-medium text-destructive">{{ formatMoney(run.total_deductions) }}</span></div>
+                            <div>Processed: <span class="font-medium text-foreground">{{ formatDate(run.processed_at) }}</span></div>
                         </div>
 
                         <div v-if="expandedPayrollRunId === run.id" class="overflow-x-auto">
-                            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                                <thead class="bg-gray-50 dark:bg-gray-800">
+                            <table class="min-w-full divide-y divide-border">
+                                <thead class="bg-muted">
                                     <tr>
-                                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-300">Staff</th>
-                                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-300">Gross</th>
-                                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-300">Allowance</th>
-                                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-300">Deduction</th>
-                                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-300">Net</th>
-                                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-300">Status</th>
-                                        <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-300">Actions</th>
+                                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Staff</th>
+                                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Gross</th>
+                                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Allowance</th>
+                                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Deduction</th>
+                                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Net</th>
+                                        <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Status</th>
+                                        <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">Actions</th>
                                     </tr>
                                 </thead>
-                                <tbody class="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-900">
-                                    <tr v-for="item in run.items" :key="item.id" class="hover:bg-gray-50 dark:hover:bg-gray-800">
+                                <tbody class="divide-y divide-border bg-card">
+                                    <tr v-for="item in run.items" :key="item.id" class="hover:bg-accent">
                                         <td class="px-4 py-3">
-                                            <div class="font-medium text-gray-900 dark:text-white">{{ item.staff_profile?.user?.name || '-' }}</div>
-                                            <div class="text-xs text-gray-500 dark:text-gray-400">{{ item.staff_profile?.employee_no || '-' }}</div>
+                                            <div class="font-medium text-foreground">{{ item.staff_profile?.user?.name || '-' }}</div>
+                                            <div class="text-xs text-muted-foreground">{{ item.staff_profile?.employee_no || '-' }}</div>
                                         </td>
-                                        <td class="px-4 py-3 text-sm text-gray-600 dark:text-gray-300">{{ formatMoney(item.gross_salary) }}</td>
-                                        <td class="px-4 py-3 text-sm text-gray-600 dark:text-gray-300">{{ formatMoney(item.allowance_amount) }}</td>
-                                        <td class="px-4 py-3 text-sm text-red-600">{{ formatMoney(item.deduction_amount) }}</td>
-                                        <td class="px-4 py-3 text-sm font-medium text-blue-600">{{ formatMoney(item.net_salary) }}</td>
+                                        <td class="px-4 py-3 text-sm text-muted-foreground">{{ formatMoney(item.gross_salary) }}</td>
+                                        <td class="px-4 py-3 text-sm text-muted-foreground">{{ formatMoney(item.allowance_amount) }}</td>
+                                        <td class="px-4 py-3 text-sm text-destructive">{{ formatMoney(item.deduction_amount) }}</td>
+                                        <td class="px-4 py-3 text-sm font-medium text-primary">{{ formatMoney(item.net_salary) }}</td>
                                         <td class="px-4 py-3">
-                                            <span :class="item.status === 'paid' ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300' : 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300'" class="inline-flex rounded-full px-2.5 py-1 text-xs font-medium uppercase">
+                                            <span :class="item.status === 'paid' ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'" class="inline-flex rounded-full px-2.5 py-1 text-xs font-medium uppercase">
                                                 {{ item.status }}
                                             </span>
                                         </td>
                                         <td class="px-4 py-3">
-                                            <div class="flex justify-end gap-2">
+                                            <div class="flex flex-wrap justify-end gap-2">
                                                 <Button
                                                     variant="outline"
                                                     size="sm"
@@ -818,26 +818,26 @@ const markPayrollPaid = async (item: PayrollItem) => {
                         </div>
                     </div>
 
-                    <div v-if="filteredPayrollRuns.length === 0" class="rounded-2xl border border-dashed border-gray-300 p-10 text-center text-sm text-gray-500 dark:border-gray-700 dark:text-gray-400">
+                    <div v-if="filteredPayrollRuns.length === 0" class="rounded-2xl border border-dashed border-border p-10 text-center text-sm text-muted-foreground">
                         No payroll runs found yet.
                     </div>
                 </div>
             </div>
 
             <div v-if="activeTab === 'departments'" class="grid gap-6 xl:grid-cols-[360px_minmax(0,1fr)]">
-                <div class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-700 dark:bg-gray-800">
-                    <h2 class="mb-4 text-lg font-semibold text-gray-900 dark:text-white">{{ departmentForm.id ? 'Edit Department' : 'Create Department' }}</h2>
+                <div class="rounded-2xl border border-border bg-card p-5 shadow-sm">
+                    <h2 class="mb-4 text-lg font-semibold text-foreground">{{ departmentForm.id ? 'Edit Department' : 'Create Department' }}</h2>
                     <div class="space-y-4">
                         <div>
-                            <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Name</label>
+                            <label class="mb-2 block text-sm font-medium text-muted-foreground">Name</label>
                             <Input v-model="departmentForm.name" placeholder="Department name" />
                         </div>
                         <div>
-                            <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Description</label>
+                            <label class="mb-2 block text-sm font-medium text-muted-foreground">Description</label>
                             <textarea v-model="departmentForm.description" :class="textareaClass" placeholder="Description (optional)" />
                         </div>
-                        <label class="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
-                            <input v-model="departmentForm.is_active" type="checkbox" class="h-4 w-4 rounded border-gray-300 text-blue-600" />
+                        <label class="flex items-center gap-2 text-sm text-muted-foreground">
+                            <input v-model="departmentForm.is_active" type="checkbox" class="h-4 w-4 rounded border-border text-primary" />
                             Active department
                         </label>
                         <div class="flex flex-wrap gap-2">
@@ -847,28 +847,28 @@ const markPayrollPaid = async (item: PayrollItem) => {
                     </div>
                 </div>
 
-                <div class="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-900">
+                <div class="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
                     <div class="overflow-x-auto">
-                        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                            <thead class="bg-gray-50 dark:bg-gray-800">
+                        <table class="min-w-full divide-y divide-border">
+                            <thead class="bg-muted">
                                 <tr>
-                                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-300">Name</th>
-                                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-300">Description</th>
-                                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-300">Status</th>
-                                    <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-300">Actions</th>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Name</th>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Description</th>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Status</th>
+                                    <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">Actions</th>
                                 </tr>
                             </thead>
-                            <tbody class="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-900">
+                            <tbody class="divide-y divide-border bg-card">
                                 <tr v-for="department in props.departments" :key="department.id">
-                                    <td class="px-4 py-3 font-medium text-gray-900 dark:text-white">{{ department.name }}</td>
-                                    <td class="px-4 py-3 text-sm text-gray-600 dark:text-gray-300">{{ department.description || '-' }}</td>
+                                    <td class="px-4 py-3 font-medium text-foreground">{{ department.name }}</td>
+                                    <td class="px-4 py-3 text-sm text-muted-foreground">{{ department.description || '-' }}</td>
                                     <td class="px-4 py-3">
-                                        <span :class="department.is_active ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300' : 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300'" class="inline-flex rounded-full px-2.5 py-1 text-xs font-medium">
+                                        <span :class="department.is_active ? 'bg-success/10 text-success' : 'bg-muted text-muted-foreground'" class="inline-flex rounded-full px-2.5 py-1 text-xs font-medium">
                                             {{ department.is_active ? 'Active' : 'Inactive' }}
                                         </span>
                                     </td>
                                     <td class="px-4 py-3">
-                                        <div class="flex justify-end gap-2">
+                                        <div class="flex flex-wrap justify-end gap-2">
                                             <Button variant="outline" size="sm" :class="tableActionButtonClass.edit" @click="editDepartment(department)">
                                                 <Icon icon="square-pen" class="h-3.5 w-3.5" />
                                                 Edit
@@ -883,19 +883,19 @@ const markPayrollPaid = async (item: PayrollItem) => {
             </div>
 
             <div v-if="activeTab === 'designations'" class="grid gap-6 xl:grid-cols-[360px_minmax(0,1fr)]">
-                <div class="rounded-2xl border border-gray-200 bg-white p-5 shadow-sm dark:border-gray-700 dark:bg-gray-800">
-                    <h2 class="mb-4 text-lg font-semibold text-gray-900 dark:text-white">{{ designationForm.id ? 'Edit Designation' : 'Create Designation' }}</h2>
+                <div class="rounded-2xl border border-border bg-card p-5 shadow-sm">
+                    <h2 class="mb-4 text-lg font-semibold text-foreground">{{ designationForm.id ? 'Edit Designation' : 'Create Designation' }}</h2>
                     <div class="space-y-4">
                         <div>
-                            <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Name</label>
+                            <label class="mb-2 block text-sm font-medium text-muted-foreground">Name</label>
                             <Input v-model="designationForm.name" placeholder="Designation name" />
                         </div>
                         <div>
-                            <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Description</label>
+                            <label class="mb-2 block text-sm font-medium text-muted-foreground">Description</label>
                             <textarea v-model="designationForm.description" :class="textareaClass" placeholder="Description (optional)" />
                         </div>
-                        <label class="flex items-center gap-2 text-sm text-gray-700 dark:text-gray-300">
-                            <input v-model="designationForm.is_active" type="checkbox" class="h-4 w-4 rounded border-gray-300 text-blue-600" />
+                        <label class="flex items-center gap-2 text-sm text-muted-foreground">
+                            <input v-model="designationForm.is_active" type="checkbox" class="h-4 w-4 rounded border-border text-primary" />
                             Active designation
                         </label>
                         <div class="flex flex-wrap gap-2">
@@ -905,28 +905,28 @@ const markPayrollPaid = async (item: PayrollItem) => {
                     </div>
                 </div>
 
-                <div class="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-900">
+                <div class="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
                     <div class="overflow-x-auto">
-                        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                            <thead class="bg-gray-50 dark:bg-gray-800">
+                        <table class="min-w-full divide-y divide-border">
+                            <thead class="bg-muted">
                                 <tr>
-                                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-300">Name</th>
-                                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-300">Description</th>
-                                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-300">Status</th>
-                                    <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-300">Actions</th>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Name</th>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Description</th>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Status</th>
+                                    <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">Actions</th>
                                 </tr>
                             </thead>
-                            <tbody class="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-900">
+                            <tbody class="divide-y divide-border bg-card">
                                 <tr v-for="designation in props.designations" :key="designation.id">
-                                    <td class="px-4 py-3 font-medium text-gray-900 dark:text-white">{{ designation.name }}</td>
-                                    <td class="px-4 py-3 text-sm text-gray-600 dark:text-gray-300">{{ designation.description || '-' }}</td>
+                                    <td class="px-4 py-3 font-medium text-foreground">{{ designation.name }}</td>
+                                    <td class="px-4 py-3 text-sm text-muted-foreground">{{ designation.description || '-' }}</td>
                                     <td class="px-4 py-3">
-                                        <span :class="designation.is_active ? 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300' : 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-300'" class="inline-flex rounded-full px-2.5 py-1 text-xs font-medium">
+                                        <span :class="designation.is_active ? 'bg-success/10 text-success' : 'bg-muted text-muted-foreground'" class="inline-flex rounded-full px-2.5 py-1 text-xs font-medium">
                                             {{ designation.is_active ? 'Active' : 'Inactive' }}
                                         </span>
                                     </td>
                                     <td class="px-4 py-3">
-                                        <div class="flex justify-end gap-2">
+                                        <div class="flex flex-wrap justify-end gap-2">
                                             <Button variant="outline" size="sm" :class="tableActionButtonClass.edit" @click="editDesignation(designation)">
                                                 <Icon icon="square-pen" class="h-3.5 w-3.5" />
                                                 Edit

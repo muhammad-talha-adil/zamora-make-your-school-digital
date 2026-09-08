@@ -19,67 +19,76 @@
             })();
         </script>
 
-        {{-- Inline style to set the HTML background color based on our theme in app.css --}}
-        <style>
-            html {
-                background-color: oklch(1 0 0);
-            }
-
-            html.dark {
-                background-color: oklch(0.145 0 0);
-            }
-        </style>
-
         {{-- Custom theme styles --}}
-        @if(! empty($theme ?? null))
-        <style>
-            @if(($theme_mode ?? 'light') === 'light')
-            :root {
-                --background: {{ $theme->colors['card_bg'] ?? 'hsl(0 0% 100%)' }};
-                --foreground: {{ $theme->colors['card_text'] ?? 'hsl(0 0% 3.9%)' }};
-                --card: {{ $theme->colors['card_bg'] ?? 'hsl(0 0% 100%)' }};
-                --card-foreground: {{ $theme->colors['card_text'] ?? 'hsl(0 0% 3.9%)' }};
-                --popover: {{ $theme->colors['card_bg'] ?? 'hsl(0 0% 100%)' }};
-                --popover-foreground: {{ $theme->colors['card_text'] ?? 'hsl(0 0% 3.9%)' }};
-                --input: {{ $theme->colors['card_bg'] ?? 'hsl(0 0% 100%)' }};
-                --muted: {{ $theme->colors['card_bg'] ?? 'hsl(0 0% 96.1%)' }};
-                --muted-foreground: {{ $theme->colors['card_text'] ?? 'hsl(0 0% 45.1%)' }};
-                --accent: {{ $theme->colors['card_bg'] ?? 'hsl(0 0% 96.1%)' }};
-                --accent-foreground: {{ $theme->colors['card_text'] ?? 'hsl(0 0% 9%)' }};
-                --primary: {{ $theme->colors['card_bg'] ?? 'hsl(0 0% 9%)' }};
-                --primary-foreground: {{ $theme->colors['card_text'] ?? 'hsl(0 0% 98%)' }};
-                --sidebar-background: {{ $theme->colors['sidebar_bg'] ?? 'hsl(0 0% 98%)' }};
-                --sidebar-foreground: {{ $theme->colors['sidebar_text'] ?? 'hsl(240 5.3% 26.1%)' }};
-                --sidebar-primary: {{ $theme->colors['sidebar_active_bg'] ?? 'hsl(0 0% 10%)' }};
-                --sidebar-primary-foreground: {{ $theme->colors['sidebar_active_text'] ?? 'hsl(0 0% 98%)' }};
-                --header-bg: {{ $theme->colors['header_bg'] ?? 'hsl(0 0% 100%)' }};
-                --header-text: {{ $theme->colors['header_text'] ?? 'hsl(0 0% 3.9%)' }};
-            }
-            @else
-            .dark {
-                --background: {{ $theme->colors['card_bg'] ?? 'hsl(0 0% 3.9%)' }};
-                --foreground: {{ $theme->colors['card_text'] ?? 'hsl(0 0% 98%)' }};
-                --card: {{ $theme->colors['card_bg'] ?? 'hsl(0 0% 3.9%)' }};
-                --card-foreground: {{ $theme->colors['card_text'] ?? 'hsl(0 0% 98%)' }};
-                --popover: hsl(0 0% 3.9%);
-                --popover-foreground: hsl(0 0% 98%);
-                --input: {{ $theme->colors['card_bg'] ?? 'hsl(0 0% 3.9%)' }};
-                --muted: {{ $theme->colors['card_bg'] ?? 'hsl(0 0% 16.08%)' }};
-                --muted-foreground: {{ $theme->colors['card_text'] ?? 'hsl(0 0% 63.9%)' }};
-                --accent: {{ $theme->colors['card_bg'] ?? 'hsl(0 0% 14.9%)' }};
-                --accent-foreground: {{ $theme->colors['card_text'] ?? 'hsl(0 0% 98%)' }};
-                --primary: {{ $theme->colors['card_bg'] ?? 'hsl(0 0% 98%)' }};
-                --primary-foreground: {{ $theme->colors['card_text'] ?? 'hsl(0 0% 9%)' }};
-                --sidebar-background: {{ $theme->colors['sidebar_bg'] ?? 'hsl(0 0% 7%)' }};
-                --sidebar-foreground: {{ $theme->colors['sidebar_text'] ?? 'hsl(0 0% 95.9%)' }};
-                --sidebar-primary: {{ $theme->colors['sidebar_active_bg'] ?? 'hsl(360, 100%, 100%)' }};
-                --sidebar-primary-foreground: {{ $theme->colors['sidebar_active_text'] ?? 'hsl(0 0% 100%)' }};
-                --header-bg: {{ $theme->colors['header_bg'] ?? 'hsl(0 0% 3.9%)' }};
-                --header-text: {{ $theme->colors['header_text'] ?? 'hsl(0 0% 98%)' }};
-            }
-            @endif
-        </style>
-        @endif
+        @php
+            /**
+             * Emits the palette slots the Theme Settings screen owns.
+             *
+             * Only the surface colours are read from the palette; contrast
+             * tokens (border, muted, ring) are mixed from them so a custom
+             * palette keeps a readable hierarchy instead of collapsing into a
+             * single flat colour. Slots left blank fall through to the
+             * defaults in resources/css/app.css.
+             */
+            $themeVars = function ($setting) {
+                $c = $setting?->colors ?? [];
+
+                $surface = $c['card_bg'] ?? null;
+                $onSurface = $c['card_text'] ?? null;
+                $page = $c['content_bg'] ?? null;
+                $onPage = $c['content_text'] ?? null;
+
+                $mix = fn (?string $a, ?string $b, int $pct) => $a && $b
+                    ? "color-mix(in srgb, {$a} {$pct}%, {$b})"
+                    : null;
+
+                return array_filter([
+                    '--primary' => $c['primary'] ?? null,
+                    '--primary-foreground' => $c['primary_text'] ?? null,
+                    '--destructive' => $c['danger'] ?? null,
+                    '--destructive-foreground' => $c['danger_text'] ?? null,
+                    '--success' => $c['success'] ?? null,
+                    '--success-foreground' => $c['success_text'] ?? null,
+                    '--warning' => $c['warning'] ?? null,
+                    '--warning-foreground' => $c['warning_text'] ?? null,
+                    '--info' => $c['info'] ?? null,
+                    '--info-foreground' => $c['info_text'] ?? null,
+                    '--background' => $page,
+                    '--foreground' => $onPage,
+                    '--card' => $surface,
+                    '--card-foreground' => $onSurface,
+                    '--popover' => $surface,
+                    '--popover-foreground' => $onSurface,
+                    // Secondary surfaces sit a few percent toward the text
+                    // colour so they read as raised against the card.
+                    '--muted' => $mix($onSurface, $surface, 6),
+                    '--muted-foreground' => $mix($onSurface, $surface, 60),
+                    '--secondary' => $mix($onSurface, $surface, 6),
+                    '--secondary-foreground' => $onSurface,
+                    '--accent' => $mix($onSurface, $surface, 8),
+                    '--accent-foreground' => $onSurface,
+                    '--border' => $mix($onSurface, $surface, 14),
+                    '--input' => $mix($onSurface, $surface, 14),
+                    '--ring' => $mix($onSurface, $surface, 40),
+                    '--sidebar-background' => $c['sidebar_bg'] ?? null,
+                    '--sidebar-foreground' => $c['sidebar_text'] ?? null,
+                    '--sidebar-primary' => $c['sidebar_active_bg'] ?? null,
+                    '--sidebar-primary-foreground' => $c['sidebar_active_text'] ?? null,
+                    '--sidebar-accent' => $c['sidebar_active_bg'] ?? null,
+                    '--sidebar-accent-foreground' => $c['sidebar_active_text'] ?? null,
+                    '--sidebar-border' => $mix($c['sidebar_text'] ?? null, $c['sidebar_bg'] ?? null, 20),
+                    '--header-bg' => $c['header_bg'] ?? null,
+                    '--header-text' => $c['header_text'] ?? null,
+                    '--content-bg' => $page,
+                    '--content-text' => $onPage,
+                    '--card-bg' => $surface,
+                    '--card-text' => $onSurface,
+                ], fn ($v) => $v !== null && $v !== '');
+            };
+
+            $lightVars = $themeVars($themes['light'] ?? null);
+            $darkVars = $themeVars($themes['dark'] ?? null);
+        @endphp
 
         <title inertia>{{ config('app.name', 'Laravel') }}</title>
 
@@ -95,6 +104,32 @@
         @routes
         @vite(['resources/js/app.ts', "resources/js/pages/{$page['component']}.vue"])
         @inertiaHead
+
+        {{--
+          Emitted after the bundle so these win over the `:root` defaults in
+          app.css, which carry the same specificity and would otherwise take
+          precedence by document order.
+        --}}
+        @if($lightVars || $darkVars)
+        <style>
+            @if($lightVars)
+            :root {
+                @foreach($lightVars as $name => $value){{ $name }}: {{ $value }};
+                @endforeach
+            }
+            @endif
+            @if($darkVars)
+            .dark {
+                @foreach($darkVars as $name => $value){{ $name }}: {{ $value }};
+                @endforeach
+            }
+            @endif
+        </style>
+        @endif
+
+        <style>
+            html { background-color: var(--background); }
+        </style>
     </head>
     <body class="font-sans antialiased">
         @inertia

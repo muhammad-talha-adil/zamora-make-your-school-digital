@@ -150,13 +150,13 @@ const submitForm = () => {
                             <div class="p-1 bg-muted rounded">
                                 <Icon icon="building" class="h-3.5 w-3.5 text-muted-foreground" />
                             </div>
-                            Campus <span class="text-red-500">*</span>
+                            Campus <span class="text-destructive">*</span>
                         </Label>
                         <select
                             id="campus_id"
                             v-model="form.campus_id"
                             @change="onCampusChange"
-                            class="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 text-sm h-11"
+                            class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm h-11"
                             required
                         >
                             <option value="">Select Campus</option>
@@ -173,12 +173,12 @@ const submitForm = () => {
                             <div class="p-1 bg-muted rounded">
                                 <Icon icon="box" class="h-3.5 w-3.5 text-muted-foreground" />
                             </div>
-                            Inventory Item <span class="text-red-500">*</span>
+                            Inventory Item <span class="text-destructive">*</span>
                         </Label>
                         <select
                             id="inventory_item_id"
                             v-model="form.inventory_item_id"
-                            class="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 text-sm h-11"
+                            class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm h-11"
                             required
                         >
                             <option value="">Select Item</option>
@@ -195,13 +195,13 @@ const submitForm = () => {
                             <div class="p-1 bg-muted rounded">
                                 <Icon icon="git-branch" class="h-3.5 w-3.5 text-muted-foreground" />
                             </div>
-                            Adjustment Type <span class="text-red-500">*</span>
+                            Adjustment Type <span class="text-destructive">*</span>
                         </Label>
-                        <div class="grid grid-cols-3 gap-2">
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2">
                             <label
                                 :class="[
                                     'border rounded-lg p-3 cursor-pointer transition-colors text-center',
-                                    form.type === 'add' ? 'border-green-500 bg-green-50 dark:bg-green-900/20' : 'border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800'
+                                    form.type === 'add' ? 'border-success bg-success/10' : 'border-border hover:bg-accent'
                                 ]"
                             >
                                 <input type="radio" v-model="form.type" value="add" class="sr-only" />
@@ -211,7 +211,7 @@ const submitForm = () => {
                             <label
                                 :class="[
                                     'border rounded-lg p-3 cursor-pointer transition-colors text-center',
-                                    form.type === 'subtract' ? 'border-red-500 bg-red-50 dark:bg-red-900/20' : 'border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800'
+                                    form.type === 'subtract' ? 'border-destructive bg-destructive/10' : 'border-border hover:bg-accent'
                                 ]"
                             >
                                 <input type="radio" v-model="form.type" value="subtract" class="sr-only" />
@@ -221,7 +221,7 @@ const submitForm = () => {
                             <label
                                 :class="[
                                     'border rounded-lg p-3 cursor-pointer transition-colors text-center',
-                                    form.type === 'set' ? 'border-blue-500 bg-blue-50 dark:bg-blue-900/20' : 'border-gray-300 dark:border-gray-600 hover:bg-gray-50 dark:hover:bg-gray-800'
+                                    form.type === 'set' ? 'border-primary bg-primary/10' : 'border-border hover:bg-accent'
                                 ]"
                             >
                                 <input type="radio" v-model="form.type" value="set" class="sr-only" />
@@ -237,7 +237,7 @@ const submitForm = () => {
                             <div class="p-1 bg-muted rounded">
                                 <Icon icon="hash" class="h-3.5 w-3.5 text-muted-foreground" />
                             </div>
-                            {{ form.type === 'set' ? 'New Quantity' : 'Quantity' }} <span class="text-red-500">*</span>
+                            {{ form.type === 'set' ? 'New Quantity' : 'Quantity' }} <span class="text-destructive">*</span>
                         </Label>
                         <Input
                             :id="`quantity-${form.type}`"
@@ -245,25 +245,25 @@ const submitForm = () => {
                             type="number"
                             min="0"
                             class="h-11"
-                            :class="{ 'border-red-500': errors.quantity }"
+                            :class="{ 'border-destructive': errors.quantity }"
                             required
                         />
                         <InputError :message="errors.quantity" />
 
                         <!-- Preview -->
-                        <div v-if="selectedItem && form.quantity > 0" class="p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                            <div class="text-sm text-gray-600 dark:text-gray-400">
+                        <div v-if="selectedItem && form.quantity > 0" class="p-3 bg-muted rounded-lg">
+                            <div class="text-sm text-muted-foreground">
                                 <span v-if="form.type === 'add'">
                                     Current: <strong>{{ selectedItem.current_stock }}</strong> → 
-                                    After: <strong class="text-green-600">{{ selectedItem.current_stock + form.quantity }}</strong>
+                                    After: <strong class="text-success">{{ selectedItem.current_stock + form.quantity }}</strong>
                                 </span>
                                 <span v-else-if="form.type === 'subtract'">
                                     Current: <strong>{{ selectedItem.current_stock }}</strong> → 
-                                    After: <strong class="text-red-600">{{ Math.max(0, selectedItem.current_stock - form.quantity) }}</strong>
+                                    After: <strong class="text-destructive">{{ Math.max(0, selectedItem.current_stock - form.quantity) }}</strong>
                                 </span>
                                 <span v-else>
                                     Current: <strong>{{ selectedItem.current_stock }}</strong> → 
-                                    After: <strong class="text-blue-600">{{ form.quantity }}</strong>
+                                    After: <strong class="text-primary">{{ form.quantity }}</strong>
                                 </span>
                             </div>
                         </div>
@@ -275,14 +275,14 @@ const submitForm = () => {
                             <div class="p-1 bg-muted rounded">
                                 <Icon icon="align-left" class="h-3.5 w-3.5 text-muted-foreground" />
                             </div>
-                            Reason <span class="text-red-500">*</span>
+                            Reason <span class="text-destructive">*</span>
                         </Label>
                         <textarea
                             id="reason"
                             v-model="form.reason"
                             rows="3"
-                            class="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 min-h-20"
-                            :class="{ 'border-red-500': errors.reason }"
+                            class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 min-h-20"
+                            :class="{ 'border-destructive': errors.reason }"
                             placeholder="Provide a detailed reason for this adjustment..."
                             required
                         ></textarea>
@@ -308,7 +308,7 @@ const submitForm = () => {
                 </div>
 
                 <!-- Actions -->
-                <div class="flex justify-end gap-3 pt-2">
+                <div class="flex flex-wrap justify-end gap-3 pt-2">
                     <DialogClose as-child>
                         <Button type="button" variant="outline" @click="resetForm" class="h-10">
                             <Icon icon="x" class="mr-2 h-4 w-4" />

@@ -98,10 +98,10 @@ const deleteDiscountType = (discountType: DiscountType) => {
             <!-- Header -->
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 md:gap-4">
                 <div>
-                    <h1 class="text-lg md:text-2xl font-bold text-gray-900 dark:text-white">
+                    <h1 class="text-lg md:text-2xl font-bold text-foreground">
                         Discount Types
                     </h1>
-                    <p class="mt-1 text-xs md:text-sm text-gray-600 dark:text-gray-400">
+                    <p class="mt-1 text-xs md:text-sm text-muted-foreground">
                         Manage discount types for student fees
                     </p>
                 </div>
@@ -116,18 +116,18 @@ const deleteDiscountType = (discountType: DiscountType) => {
                 <div
                     v-for="discountType in discountTypesData"
                     :key="discountType.id"
-                    class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 space-y-2"
+                    class="bg-card rounded-lg border border-border p-4 space-y-2"
                 >
-                    <div class="flex justify-between items-start">
+                    <div class="flex flex-wrap gap-2 justify-between items-start">
                         <div>
-                            <div class="font-medium text-gray-900 dark:text-white">{{ discountType.name }}</div>
-                            <div class="text-xs text-gray-500">Code: {{ discountType.code }}</div>
+                            <div class="font-medium text-foreground">{{ discountType.name }}</div>
+                            <div class="text-xs text-muted-foreground">Code: {{ discountType.code }}</div>
                         </div>
-                        <span :class="['px-2 py-1 text-xs font-medium rounded-full', discountType.is_active ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' : 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400']">
+                        <span :class="['px-2 py-1 text-xs font-medium rounded-full', discountType.is_active ? 'bg-success/10 text-success' : 'bg-muted text-foreground']">
                             {{ discountType.is_active ? 'Active' : 'Inactive' }}
                         </span>
                     </div>
-                    <div class="text-sm text-gray-600 dark:text-gray-400 space-y-1 pt-2 border-t border-gray-100 dark:border-gray-700">
+                    <div class="text-sm text-muted-foreground space-y-1 pt-2 border-t border-border">
                         <div>Default: {{ formatValue(discountType.value_type, discountType.default_value) }}</div>
                         <div>Requires Approval: {{ discountType.requires_approval ? 'Yes' : 'No' }}</div>
                     </div>
@@ -137,7 +137,7 @@ const deleteDiscountType = (discountType: DiscountType) => {
                         </Button>
                         <Button
                             :variant="discountType.is_active ? 'default' : 'outline'"
-                            :class="discountType.is_active ? 'bg-green-600 hover:bg-green-700' : 'text-green-600 border-green-600 hover:bg-green-50 dark:hover:bg-green-900/20'"
+                            :class="discountType.is_active ? 'bg-success hover:bg-success/90' : 'text-success border-success hover:bg-success/20'"
                             size="sm"
                             @click="toggleActiveStatus(discountType)"
                         >
@@ -146,74 +146,74 @@ const deleteDiscountType = (discountType: DiscountType) => {
                         </Button>
                     </div>
                 </div>
-                <div v-if="discountTypesData.length === 0" class="text-center py-8 text-gray-500">
+                <div v-if="discountTypesData.length === 0" class="text-center py-8 text-muted-foreground">
                     No discount types found.
                 </div>
             </div>
 
             <!-- Desktop Table View -->
-            <div class="hidden lg:block overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-900">
+            <div class="hidden lg:block overflow-hidden rounded-lg border border-border bg-card shadow-sm">
                 <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                        <thead class="bg-gray-50 dark:bg-gray-800">
+                    <table class="min-w-full divide-y divide-border">
+                        <thead class="bg-muted">
                             <tr>
-                                <th scope="col" class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase dark:text-gray-300">
+                                <th scope="col" class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">
                                     Sr#
                                 </th>
-                                <th scope="col" class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase dark:text-gray-300">
+                                <th scope="col" class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">
                                     Code
                                 </th>
-                                <th scope="col" class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase dark:text-gray-300">
+                                <th scope="col" class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">
                                     Name
                                 </th>
-                                <th scope="col" class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase dark:text-gray-300">
+                                <th scope="col" class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">
                                     Default Value
                                 </th>
-                                <th scope="col" class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase dark:text-gray-300">
+                                <th scope="col" class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">
                                     Requires Approval
                                 </th>
-                                <th scope="col" class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase dark:text-gray-300">
+                                <th scope="col" class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">
                                     Status
                                 </th>
-                                <th scope="col" class="px-4 py-3 text-right text-xs font-semibold text-gray-600 uppercase dark:text-gray-300">
+                                <th scope="col" class="px-4 py-3 text-right text-xs font-semibold text-muted-foreground uppercase">
                                     Actions
                                 </th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-900">
-                            <tr v-for="(discountType, index) in discountTypesData" :key="discountType.id" class="transition-colors hover:bg-gray-50 dark:hover:bg-gray-800">
+                        <tbody class="divide-y divide-border bg-card">
+                            <tr v-for="(discountType, index) in discountTypesData" :key="discountType.id" class="transition-colors hover:bg-accent">
                                 <td class="px-4 py-3">
-                                    <div class="text-sm font-medium text-gray-900 dark:text-white">{{ index + 1 }}</div>
+                                    <div class="text-sm font-medium text-foreground">{{ index + 1 }}</div>
                                 </td>
                                 <td class="px-4 py-3">
-                                    <div class="text-sm font-medium text-gray-900 dark:text-white">{{ discountType.code }}</div>
+                                    <div class="text-sm font-medium text-foreground">{{ discountType.code }}</div>
                                 </td>
                                 <td class="px-4 py-3">
-                                    <div class="text-sm font-medium text-gray-900 dark:text-white">{{ discountType.name }}</div>
+                                    <div class="text-sm font-medium text-foreground">{{ discountType.name }}</div>
                                 </td>
                                 <td class="px-4 py-3">
-                                    <div class="text-sm text-gray-600 dark:text-gray-300">
+                                    <div class="text-sm text-muted-foreground">
                                         {{ formatValue(discountType.value_type, discountType.default_value) }}
                                     </div>
                                 </td>
                                 <td class="px-4 py-3">
-                                    <span :class="['px-2 py-1 text-xs font-medium rounded-full', discountType.requires_approval ? 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400' : 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400']">
+                                    <span :class="['px-2 py-1 text-xs font-medium rounded-full', discountType.requires_approval ? 'bg-warning/10 text-warning' : 'bg-success/10 text-success']">
                                         {{ discountType.requires_approval ? 'Yes' : 'No' }}
                                     </span>
                                 </td>
                                 <td class="px-4 py-3">
-                                    <span :class="['px-2 py-1 text-xs font-medium rounded-full', discountType.is_active ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' : 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400']">
+                                    <span :class="['px-2 py-1 text-xs font-medium rounded-full', discountType.is_active ? 'bg-success/10 text-success' : 'bg-muted text-foreground']">
                                         {{ discountType.is_active ? 'Active' : 'Inactive' }}
                                     </span>
                                 </td>
                                 <td class="px-4 py-3 text-sm font-medium whitespace-nowrap">
-                                    <div class="flex gap-2 justify-end">
+                                    <div class="flex flex-wrap gap-2 justify-end">
                                         <Button variant="outline" size="sm" @click="router.visit(route('fee.discount-types.edit', discountType.id))">
                                             <Icon icon="edit" class="mr-1 h-3 w-3" />Edit
                                         </Button>
                                         <Button
                                             :variant="discountType.is_active ? 'default' : 'outline'"
-                                            :class="discountType.is_active ? 'bg-green-600 hover:bg-green-700' : 'text-green-600 border-green-600 hover:bg-green-50 dark:hover:bg-green-900/20'"
+                                            :class="discountType.is_active ? 'bg-success hover:bg-success/90' : 'text-success border-success hover:bg-success/20'"
                                             size="sm"
                                             @click="toggleActiveStatus(discountType)"
                                         >

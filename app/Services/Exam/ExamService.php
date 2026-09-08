@@ -8,6 +8,20 @@ use Illuminate\Support\Facades\DB;
 
 class ExamService
 {
+    /**
+     * The statuses the exam's dates are allowed to decide.
+     *
+     * `marking`, `published` and `cancelled` are somebody's decision, and are
+     * left alone.
+     *
+     * @var array<int, string>
+     */
+    private const DATE_DRIVEN_STATUSES = [
+        Exam::STATUS_SCHEDULED,
+        Exam::STATUS_ACTIVE,
+        Exam::STATUS_COMPLETED,
+    ];
+
     public function list(array $filters = [])
     {
         $query = Exam::with(['examType', 'session']);
@@ -55,11 +69,18 @@ class ExamService
     public function update(Exam $exam, array $data)
     {
         return DB::transaction(function () use ($exam, $data) {
-            // Auto-calculate status based on start_date
-            $data['status'] = $this->calculateStatus(
-                $data['start_date'] ?? $exam->start_date,
-                $data['end_date'] ?? $exam->end_date
-            );
+            // The dates decide the status only while nobody has decided it
+            // deliberately. Recalculating unconditionally meant that editing a
+            // published exam's name silently unpublished it, and reopening one
+            // for marking was undone by the next save.
+            if (in_array($exam->status, self::DATE_DRIVEN_STATUSES, true)) {
+                $data['status'] = $this->calculateStatus(
+                    $data['start_date'] ?? $exam->start_date,
+                    $data['end_date'] ?? $exam->end_date
+                );
+            } else {
+                unset($data['status']);
+            }
 
             $exam->update($data);
 

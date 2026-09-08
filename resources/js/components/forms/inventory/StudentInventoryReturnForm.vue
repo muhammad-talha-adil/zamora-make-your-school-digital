@@ -203,8 +203,8 @@ const submitForm = () => {
         <DialogContent class="sm:max-w-2xl">
             <DialogHeader>
                 <DialogTitle class="flex items-center gap-2">
-                    <div class="p-2 bg-green-100 dark:bg-green-900/20 rounded-lg">
-                        <Icon icon="rotate-ccw" class="h-5 w-5 text-green-600" />
+                    <div class="p-2 bg-success/10 rounded-lg">
+                        <Icon icon="rotate-ccw" class="h-5 w-5 text-success" />
                     </div>
                     Process Return
                 </DialogTitle>
@@ -214,18 +214,18 @@ const submitForm = () => {
                 <!-- Form Card -->
                 <div class="bg-card rounded-lg border p-5 space-y-4">
                     <!-- Student Info -->
-                    <div class="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                        <div class="grid grid-cols-2 gap-4">
+                    <div class="p-4 bg-muted rounded-lg">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
-                                <div class="text-sm text-gray-500">Student</div>
+                                <div class="text-sm text-muted-foreground">Student</div>
                                 <div class="font-medium">{{ props.studentInventory.student_name }}</div>
-                                <div class="text-xs text-gray-400">{{ props.studentInventory.registration_number }}</div>
-                                <div class="text-xs text-gray-400" v-if="props.studentInventory.class_name">
+                                <div class="text-xs text-muted-foreground">{{ props.studentInventory.registration_number }}</div>
+                                <div class="text-xs text-muted-foreground" v-if="props.studentInventory.class_name">
                                     {{ props.studentInventory.class_name }} - {{ props.studentInventory.section_name }}
                                 </div>
                             </div>
                             <div>
-                                <div class="text-sm text-gray-500">Campus ID</div>
+                                <div class="text-sm text-muted-foreground">Campus ID</div>
                                 <div class="font-medium">{{ props.studentInventory.campus_id }}</div>
                             </div>
                         </div>
@@ -244,7 +244,7 @@ const submitForm = () => {
                             <div 
                                 v-for="item in props.studentInventory.items.filter(i => i.remaining_quantity > 0)" 
                                 :key="item.id"
-                                class="p-3 flex items-center justify-between gap-4 hover:bg-gray-50 dark:hover:bg-gray-800"
+                                class="p-3 flex flex-wrap items-center justify-between gap-4 hover:bg-accent"
                             >
                                 <div class="flex items-center gap-3">
                                     <input 
@@ -258,13 +258,13 @@ const submitForm = () => {
                                                 formItem.quantity = target.checked ? item.remaining_quantity : 0;
                                             }
                                         }"
-                                        class="h-4 w-4 rounded border-gray-300"
+                                        class="h-4 w-4 rounded border-border"
                                     />
                                     <div>
                                         <Label :for="'item-' + item.id" class="font-medium cursor-pointer">
                                             {{ item.item_name_snapshot }}
                                         </Label>
-                                        <div class="text-xs text-gray-500">
+                                        <div class="text-xs text-muted-foreground">
                                             Price: {{ formatCurrency(getFinalPrice(item)) }} | 
                                             Remaining: {{ item.remaining_quantity }}
                                         </div>
@@ -282,7 +282,7 @@ const submitForm = () => {
                                 </div>
                             </div>
                         </div>
-                        <p v-if="props.studentInventory.items.every(i => i.remaining_quantity === 0)" class="text-sm text-gray-500">
+                        <p v-if="props.studentInventory.items.every(i => i.remaining_quantity === 0)" class="text-sm text-muted-foreground">
                             All items have been returned.
                         </p>
                     </div>
@@ -315,32 +315,32 @@ const submitForm = () => {
                             id="note"
                             v-model="form.note"
                             rows="2"
-                            class="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 min-h-20"
+                            class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 min-h-20"
                             placeholder="Reason for return or additional notes..."
                         ></textarea>
                     </div>
 
                     <!-- Refund Summary -->
-                    <div class="p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                    <div class="p-4 bg-success/10 rounded-lg">
                         <div class="flex flex-col sm:flex-row justify-between items-center gap-4">
                             <div>
-                                <div class="text-sm text-gray-500">Items to Return</div>
-                                <div class="text-lg font-bold text-green-600">{{ selectedItems.length }} items</div>
+                                <div class="text-sm text-muted-foreground">Items to Return</div>
+                                <div class="text-lg font-bold text-success">{{ selectedItems.length }} items</div>
                             </div>
                             <div class="text-center sm:text-right">
-                                <div class="text-sm text-gray-500">Total Quantity</div>
-                                <div class="text-xl font-bold text-amber-600">{{ totalReturnQuantity }}</div>
+                                <div class="text-sm text-muted-foreground">Total Quantity</div>
+                                <div class="text-xl font-bold text-warning">{{ totalReturnQuantity }}</div>
                             </div>
                             <div class="text-center sm:text-right">
-                                <div class="text-sm text-gray-500">Total Refund</div>
-                                <div class="text-2xl font-bold text-green-600">{{ formatCurrency(totalRefund) }}</div>
+                                <div class="text-sm text-muted-foreground">Total Refund</div>
+                                <div class="text-2xl font-bold text-success">{{ formatCurrency(totalRefund) }}</div>
                             </div>
                         </div>
                     </div>
                 </div>
 
                 <!-- Actions -->
-                <div class="flex justify-end gap-3 pt-2">
+                <div class="flex flex-wrap justify-end gap-3 pt-2">
                     <DialogClose as-child>
                         <Button type="button" variant="outline" @click="resetForm" class="h-10">
                             <Icon icon="x" class="mr-2 h-4 w-4" />

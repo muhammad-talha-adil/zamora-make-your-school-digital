@@ -21,14 +21,20 @@ class StudentPaidOneTimeFee extends Model
         'student_id',
         'fee_head_id',
         'amount_paid',
+        'refunded_amount',
         'payment_date',
+        'refunded_at',
+        'refund_reason',
+        'refunded_by',
         'voucher_id',
         'notes',
     ];
 
     protected $casts = [
         'amount_paid' => 'decimal:2',
+        'refunded_amount' => 'decimal:2',
         'payment_date' => 'date',
+        'refunded_at' => 'date',
     ];
 
     /**
@@ -56,12 +62,38 @@ class StudentPaidOneTimeFee extends Model
     }
 
     /**
+     * What is still with the school out of what was paid.
+     */
+    public function amountHeld(): float
+    {
+        return round((float) $this->amount_paid - (float) $this->refunded_amount, 2);
+    }
+
+    public function isFullyRefunded(): bool
+    {
+        return $this->amountHeld() <= 0;
+    }
+
+    /**
+     * Payments the school is still holding.
+     *
+     * A refunded admission fee stops standing as proof of payment: if the child
+     * comes back, they are admitted afresh and charged afresh. Without this the
+     * refund would quietly buy them a free readmission.
+     */
+    public function scopeNotRefunded($query)
+    {
+        return $query->whereColumn('refunded_amount', '<', 'amount_paid');
+    }
+
+    /**
      * Check if a student has paid a specific one-time fee
      */
     public static function hasPaid(int $studentId, int $feeHeadId): bool
     {
         return self::where('student_id', $studentId)
             ->where('fee_head_id', $feeHeadId)
+            ->notRefunded()
             ->exists();
     }
 

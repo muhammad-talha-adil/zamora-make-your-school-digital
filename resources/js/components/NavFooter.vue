@@ -30,7 +30,7 @@ defineProps<Props>();
                 <template v-for="item in items" :key="item.title">
                     <SidebarMenuItem v-if="!item.children">
                         <SidebarMenuButton
-                            class="text-neutral-600 hover:text-neutral-800 dark:text-neutral-300 dark:hover:text-neutral-100"
+                            class="text-muted-foreground hover:text-foreground"
                             as-child
                         >
                             <a
@@ -45,7 +45,7 @@ defineProps<Props>();
                     </SidebarMenuItem>
                     <SidebarMenuItem v-else>
                         <SidebarMenuButton
-                            class="text-neutral-600 hover:text-neutral-800 dark:text-neutral-300 dark:hover:text-neutral-100"
+                            class="text-muted-foreground hover:text-foreground"
                         >
                             <Icon :icon="item.icon" :size="24" />
                             <span>{{ item.title }}</span>
@@ -54,7 +54,7 @@ defineProps<Props>();
                             <SidebarMenuSubItem v-for="child in item.children" :key="child.title">
                                 <SidebarMenuSubButton as-child>
                                     <a :href="toUrl(child.href)">
-                                        <Icon :icon="child.icon" :size="24" class="text-neutral-600 dark:text-neutral-400" />
+                                        <Icon :icon="child.icon" :size="24" class="text-muted-foreground" />
                                         <span>{{ child.title }}</span>
                                     </a>
                                 </SidebarMenuSubButton>

@@ -62,24 +62,24 @@ onUnmounted(() => {
             <div class="space-y-6">
                 <div>
                     <h1
-                        class="text-2xl font-bold text-gray-900 dark:text-white"
+                        class="text-2xl font-bold text-foreground"
                     >
                         Profile Settings
                     </h1>
-                    <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                    <p class="mt-1 text-sm text-muted-foreground">
                         Manage your account settings and security.
                     </p>
                 </div>
 
                 <!-- Tabs -->
-                <div class="border-b border-gray-200">
+                <div class="border-b border-border">
                     <nav class="-mb-px flex space-x-8">
                         <button
                             @click="activeTab = 'profile'"
                             :class="[
                                 activeTab === 'profile'
-                                    ? 'border-indigo-500 text-indigo-600'
-                                    : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300',
+                                    ? 'border-primary text-primary'
+                                    : 'border-transparent text-muted-foreground hover:border-border hover:text-foreground',
                                 'border-b-2 px-1 py-2 text-sm font-medium whitespace-nowrap',
                             ]"
                         >
@@ -89,8 +89,8 @@ onUnmounted(() => {
                             @click="activeTab = 'password'"
                             :class="[
                                 activeTab === 'password'
-                                    ? 'border-indigo-500 text-indigo-600'
-                                    : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300',
+                                    ? 'border-primary text-primary'
+                                    : 'border-transparent text-muted-foreground hover:border-border hover:text-foreground',
                                 'border-b-2 px-1 py-2 text-sm font-medium whitespace-nowrap',
                             ]"
                         >
@@ -100,8 +100,8 @@ onUnmounted(() => {
                             @click="activeTab = 'two-factor'"
                             :class="[
                                 activeTab === 'two-factor'
-                                    ? 'border-indigo-500 text-indigo-600'
-                                    : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300',
+                                    ? 'border-primary text-primary'
+                                    : 'border-transparent text-muted-foreground hover:border-border hover:text-foreground',
                                 'border-b-2 px-1 py-2 text-sm font-medium whitespace-nowrap',
                             ]"
                         >
@@ -152,7 +152,7 @@ onUnmounted(() => {
                                 <Link
                                     :href="send()"
                                     as="button"
-                                    class="text-foreground underline decoration-neutral-300 underline-offset-4 transition-colors duration-300 ease-out hover:decoration-current! dark:decoration-neutral-500"
+                                    class="text-foreground underline text-muted-foreground underline-offset-4 transition-colors duration-300 ease-out hover:decoration-current!"
                                 >
                                     Click here to resend the verification email.
                                 </Link>
@@ -160,7 +160,7 @@ onUnmounted(() => {
 
                             <div
                                 v-if="status === 'verification-link-sent'"
-                                class="mt-2 text-sm font-medium text-green-600"
+                                class="mt-2 text-sm font-medium text-success"
                             >
                                 A new verification link has been sent to your email
                                 address.
@@ -182,7 +182,7 @@ onUnmounted(() => {
                             >
                                 <p
                                     v-show="recentlySuccessful"
-                                    class="text-sm text-neutral-600"
+                                    class="text-sm text-muted-foreground"
                                 >
                                     Saved.
                                 </p>
@@ -271,7 +271,7 @@ onUnmounted(() => {
                                 >
                                     <p
                                         v-show="recentlySuccessful"
-                                        class="text-sm text-neutral-600"
+                                        class="text-sm text-muted-foreground"
                                     >
                                         Saved.
                                     </p>

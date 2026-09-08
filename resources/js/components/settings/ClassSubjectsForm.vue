@@ -1,8 +1,8 @@
 <template>
     <div class="space-y-6">
         <!-- Filters -->
-        <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-            <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+        <div class="bg-card rounded-lg border border-border p-6">
+            <h3 class="text-lg font-semibold text-foreground mb-4">
                 Assign Subjects to Class Sections
             </h3>
             
@@ -14,7 +14,7 @@
                         id="campus-filter"
                         v-model="filters.campus_id"
                         @change="onCampusChange"
-                        class="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 text-sm"
+                        class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm"
                     >
                         <option value="">Select Campus</option>
                         <option v-for="campus in campuses" :key="campus.id" :value="campus.id">
@@ -30,7 +30,7 @@
                         id="class-filter"
                         v-model="filters.class_id"
                         @change="onClassChange"
-                        class="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 text-sm"
+                        class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm"
                     >
                         <option value="">Select Class</option>
                         <option v-for="cls in classes" :key="cls.id" :value="cls.id">
@@ -47,7 +47,7 @@
                         v-model="filters.section_id"
                         @change="onSectionChange"
                         :disabled="!filters.class_id"
-                        class="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 text-sm"
+                        class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm"
                     >
                         <option value="">All Sections</option>
                         <option v-for="section in filteredSections" :key="section.id" :value="section.id">
@@ -71,9 +71,9 @@
         </div>
 
         <!-- Subjects Selection -->
-        <div v-if="showSubjects" class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+        <div v-if="showSubjects" class="bg-card rounded-lg border border-border p-6">
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4">
-                <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+                <h3 class="text-lg font-semibold text-foreground">
                     Select Subjects
                 </h3>
                 <div class="flex gap-2">
@@ -91,20 +91,20 @@
                 <label
                     v-for="subject in subjects"
                     :key="subject.id"
-                    class="flex items-center gap-3 p-3 rounded-lg border border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700 cursor-pointer transition-colors"
+                    class="flex items-center gap-3 p-3 rounded-lg border border-border hover:bg-accent cursor-pointer transition-colors"
                     :class="{ 'bg-primary/10 border-primary': selectedSubjects.includes(subject.id) }"
                 >
                     <input
                         type="checkbox"
                         :value="subject.id"
                         v-model="selectedSubjects"
-                        class="w-4 h-4 text-primary rounded border-gray-300 focus:ring-primary"
+                        class="w-4 h-4 text-primary rounded border-border focus:ring-primary"
                     />
                     <div class="flex-1">
-                        <div class="text-sm font-medium text-gray-900 dark:text-white">
+                        <div class="text-sm font-medium text-foreground">
                             {{ subject.name }}
                         </div>
-                        <div v-if="subject.short_name" class="text-xs text-gray-500 dark:text-gray-400">
+                        <div v-if="subject.short_name" class="text-xs text-muted-foreground">
                             {{ subject.short_name }}
                         </div>
                     </div>
@@ -112,12 +112,12 @@
             </div>
 
             <!-- No subjects message -->
-            <div v-if="subjects.length === 0" class="text-center py-8 text-gray-500 dark:text-gray-400">
+            <div v-if="subjects.length === 0" class="text-center py-8 text-muted-foreground">
                 No subjects available. Please add subjects first.
             </div>
 
             <!-- Save Button -->
-            <div class="mt-6 flex justify-end">
+            <div class="mt-6 flex flex-wrap gap-2 justify-end">
                 <Button 
                     @click="saveAssignments" 
                     :disabled="saving || !hasChanges"
@@ -129,8 +129,8 @@
         </div>
 
         <!-- No class selected message -->
-        <div v-else-if="!showSubjects && hasLoaded" class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 text-center">
-            <p class="text-gray-500 dark:text-gray-400">
+        <div v-else-if="!showSubjects && hasLoaded" class="bg-card rounded-lg border border-border p-6 text-center">
+            <p class="text-muted-foreground">
                 Please select a class to manage subjects.
             </p>
         </div>

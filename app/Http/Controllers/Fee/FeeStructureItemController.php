@@ -26,6 +26,17 @@ class FeeStructureItemController extends Controller
             'notes' => 'nullable|string',
         ]);
 
+        // The same head twice in one structure bills it twice on every voucher.
+        $alreadyCharged = $feeStructure->items()
+            ->where('fee_head_id', $validated['fee_head_id'])
+            ->exists();
+
+        if ($alreadyCharged) {
+            return back()->withErrors([
+                'fee_head_id' => 'This fee head is already charged in this structure.',
+            ]);
+        }
+
         $validated['fee_structure_id'] = $feeStructure->id;
 
         // Auto-set frequency from FeeHead if not provided
@@ -44,9 +55,15 @@ class FeeStructureItemController extends Controller
 
     /**
      * Update the specified fee structure item.
+     *
+     * The structure is taken even though the item alone identifies the row: the
+     * route declares it, and a method that leaves it out has the route's
+     * arguments handed to it in the wrong order.
      */
-    public function update(Request $request, FeeStructureItem $item)
+    public function update(Request $request, FeeStructure $feeStructure, FeeStructureItem $item)
     {
+        $this->assertBelongsToStructure($feeStructure, $item);
+
         $validated = $request->validate([
             'fee_head_id' => 'required|exists:fee_heads,id',
             'amount' => 'required|numeric|min:0',
@@ -64,8 +81,13 @@ class FeeStructureItemController extends Controller
             $validated['frequency'] = $feeHead?->default_frequency ?? 'monthly';
         }
 
-        $validated['is_optional'] = $validated['is_optional'] ?? false;
-        $validated['applicable_on_admission'] = $validated['applicable_on_admission'] ?? true;
+        // A field the form did not send keeps the value it already had. Falling
+        // back to a fixed default here silently cleared the flags on every edit.
+        $validated['is_optional'] = $request->boolean('is_optional', (bool) $item->is_optional);
+        $validated['applicable_on_admission'] = $request->boolean(
+            'applicable_on_admission',
+            (bool) $item->applicable_on_admission
+        );
 
         $item->update($validated);
 
@@ -75,11 +97,21 @@ class FeeStructureItemController extends Controller
     /**
      * Remove the specified fee structure item.
      */
-    public function destroy(FeeStructureItem $item)
+    public function destroy(FeeStructure $feeStructure, FeeStructureItem $item)
     {
+        $this->assertBelongsToStructure($feeStructure, $item);
+
         $item->delete();
 
         return back()->with('success', 'Fee item removed successfully.');
+    }
+
+    /**
+     * An item may only be reached through the structure that owns it.
+     */
+    private function assertBelongsToStructure(FeeStructure $feeStructure, FeeStructureItem $item): void
+    {
+        abort_if($item->fee_structure_id !== $feeStructure->id, 404);
     }
 
     /**

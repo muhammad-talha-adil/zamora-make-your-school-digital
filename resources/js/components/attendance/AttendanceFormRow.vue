@@ -1,27 +1,27 @@
 <template>
-    <tr class="transition-colors hover:bg-gray-50 dark:hover:bg-gray-800">
+    <tr class="transition-colors hover:bg-accent">
         <!-- Serial Number -->
         <td class="px-2 md:px-4 py-3 whitespace-nowrap">
-            <div class="text-sm text-gray-600 dark:text-gray-300">{{ index }}</div>
+            <div class="text-sm text-muted-foreground">{{ index }}</div>
         </td>
 
         <!-- Student Info -->
         <td class="px-2 md:px-4 py-3 whitespace-nowrap">
             <div class="flex items-center">
-                <div class="h-8 w-8 md:h-10 md:w-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center shrink-0 relative">
-                    <span class="text-blue-600 dark:text-blue-400 text-xs md:text-sm font-medium">{{ student.name?.charAt(0) || 'S' }}</span>
+                <div class="h-8 w-8 md:h-10 md:w-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0 relative">
+                    <span class="text-primary text-xs md:text-sm font-medium">{{ student.name?.charAt(0) || 'S' }}</span>
                     <!-- Existing attendance indicator -->
-                    <div v-if="student.has_existing_attendance" class="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 md:h-3 md:w-3 bg-green-500 rounded-full border-2 border-white dark:border-gray-800" title="Already marked"></div>
+                    <div v-if="student.has_existing_attendance" class="absolute -top-0.5 -right-0.5 h-2.5 w-2.5 md:h-3 md:w-3 bg-success rounded-full border-2 border-white" title="Already marked"></div>
                 </div>
                 <div class="ml-2 md:ml-3">
-                    <div class="text-xs md:text-sm font-medium text-gray-900 dark:text-white flex items-center gap-1 md:gap-2">
+                    <div class="text-xs md:text-sm font-medium text-foreground flex items-center gap-1 md:gap-2">
                         {{ student.name }}
-                        <span v-if="student.has_existing_attendance" class="px-1 py-0.5 text-xs font-medium rounded bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400">
+                        <span v-if="student.has_existing_attendance" class="px-1 py-0.5 text-xs font-medium rounded bg-success/10 text-success">
                             {{ student.existing_attendance?.attendance_status_code }}
                         </span>
                     </div>
-                    <div class="text-xs text-gray-500 hidden sm:block">{{ student.registration_no }}</div>
-                    <div v-if="student.current_enrollment" class="text-xs text-gray-400 mt-0.5 hidden md:block">
+                    <div class="text-xs text-muted-foreground hidden sm:block">{{ student.registration_no }}</div>
+                    <div v-if="student.current_enrollment" class="text-xs text-muted-foreground mt-0.5 hidden md:block">
                         {{ student.current_enrollment.class?.name || '' }} - {{ student.current_enrollment.section?.name || '' }}
                     </div>
                 </div>
@@ -30,7 +30,7 @@
 
         <!-- Admission No -->
         <td class="px-2 md:px-4 py-3 whitespace-nowrap hidden md:table-cell">
-            <div class="text-sm text-gray-600 dark:text-gray-300">{{ student.admission_no }}</div>
+            <div class="text-sm text-muted-foreground">{{ student.admission_no }}</div>
         </td>
 
         <!-- Status Selector -->
@@ -39,7 +39,7 @@
                 :value="modelValue.attendance_status_id"
                 @change="onStatusChange"
                 :disabled="disabled"
-                class="w-full min-w-[100px] rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-2 md:px-3 py-1.5 md:py-2 text-xs md:text-sm"
+                class="w-full min-w-[100px] rounded-md border border-border bg-card text-foreground px-2 md:px-3 py-1.5 md:py-2 text-xs md:text-sm"
                 :class="{ 'opacity-50 cursor-not-allowed': disabled }"
             >
                 <option value="">Select</option>
@@ -56,7 +56,7 @@
                 @input="onCheckInChange"
                 type="time"
                 :disabled="disabled"
-                class="w-full min-w-[80px] rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-2 md:px-3 py-1.5 md:py-2 text-xs md:text-sm"
+                class="w-full min-w-[80px] rounded-md border border-border bg-card text-foreground px-2 md:px-3 py-1.5 md:py-2 text-xs md:text-sm"
                 :class="{ 'opacity-50 cursor-not-allowed': disabled }"
             />
         </td>
@@ -68,7 +68,7 @@
                 @input="onCheckOutChange"
                 type="time"
                 :disabled="disabled"
-                class="w-full min-w-[80px] rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-2 md:px-3 py-1.5 md:py-2 text-xs md:text-sm"
+                class="w-full min-w-[80px] rounded-md border border-border bg-card text-foreground px-2 md:px-3 py-1.5 md:py-2 text-xs md:text-sm"
                 :class="{ 'opacity-50 cursor-not-allowed': disabled }"
             />
         </td>
@@ -80,7 +80,7 @@
                     :value="modelValue.leave_type_id"
                     @change="onLeaveTypeChange"
                     :disabled="disabled"
-                    class="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-2 md:px-3 py-1.5 md:py-2 text-xs md:text-sm"
+                    class="w-full rounded-md border border-border bg-card text-foreground px-2 md:px-3 py-1.5 md:py-2 text-xs md:text-sm"
                     :class="{ 'opacity-50 cursor-not-allowed': disabled }"
                 >
                     <option value="">Select</option>
@@ -90,11 +90,11 @@
                 </select>
             </div>
             <div v-else-if="isOnLeave" class="text-sm">
-                <span class="px-2 py-1 text-xs font-medium rounded bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400">
+                <span class="px-2 py-1 text-xs font-medium rounded bg-warning/10 text-warning">
                     {{ leaveReason }}
                 </span>
             </div>
-            <div v-else class="text-sm text-gray-400">-</div>
+            <div v-else class="text-sm text-muted-foreground">-</div>
         </td>
 
         <!-- Remarks -->
@@ -105,7 +105,7 @@
                 type="text"
                 :disabled="disabled"
                 placeholder="Add..."
-                class="w-full min-w-[80px] rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-2 md:px-3 py-1.5 md:py-2 text-xs md:text-sm"
+                class="w-full min-w-[80px] rounded-md border border-border bg-card text-foreground px-2 md:px-3 py-1.5 md:py-2 text-xs md:text-sm"
                 :class="{ 'opacity-50 cursor-not-allowed': disabled }"
             />
         </td>

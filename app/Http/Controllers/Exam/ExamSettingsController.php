@@ -3,19 +3,35 @@
 namespace App\Http\Controllers\Exam;
 
 use App\Http\Controllers\Controller;
+use App\Models\Exam\Exam;
 use App\Models\Exam\ExamType;
 use App\Models\Exam\GradeSystem;
 use App\Models\Exam\GradeSystemItem;
+use App\Services\Exam\GradeResolver;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 class ExamSettingsController extends Controller
 {
+    public function __construct(private GradeResolver $grades) {}
+
+    /**
+     * Every action here changes how the whole school is graded, so they are all
+     * the one ability. The route middleware checks it too; this is the second
+     * lock, for anything reached another way.
+     */
+    private function mustManageSettings(): void
+    {
+        $this->authorize('manageSettings', Exam::class);
+    }
+
     /**
      * Display exam settings page.
      */
     public function indexPage()
     {
+        $this->mustManageSettings();
+
         $gradeSystems = GradeSystem::with('gradeSystemItems')
             ->orderBy('name')
             ->get();
@@ -33,6 +49,8 @@ class ExamSettingsController extends Controller
      */
     public function gradeScalesPage()
     {
+        $this->mustManageSettings();
+
         $gradeScales = GradeSystem::with('gradeSystemItems')
             ->orderBy('name')
             ->get();
@@ -47,6 +65,8 @@ class ExamSettingsController extends Controller
      */
     public function createGradeScalePage()
     {
+        $this->mustManageSettings();
+
         return Inertia::render('Exam/Settings/GradeScales/Create');
     }
 
@@ -55,6 +75,8 @@ class ExamSettingsController extends Controller
      */
     public function editGradeScalePage($id)
     {
+        $this->mustManageSettings();
+
         $gradeScale = GradeSystem::with('gradeSystemItems')
             ->findOrFail($id);
 
@@ -68,6 +90,8 @@ class ExamSettingsController extends Controller
      */
     public function getGradeScales()
     {
+        $this->mustManageSettings();
+
         $gradeScales = GradeSystem::with('gradeSystemItems')
             ->orderBy('name')
             ->get();
@@ -80,6 +104,8 @@ class ExamSettingsController extends Controller
      */
     public function storeGradeScale(Request $request)
     {
+        $this->mustManageSettings();
+
         $validated = $request->validate([
             'name' => 'required|string|max:255|unique:grade_systems,name',
             'rounding_mode' => 'nullable|in:round,floor,ceil,half_up,half_down',
@@ -97,6 +123,8 @@ class ExamSettingsController extends Controller
      */
     public function updateGradeScale(Request $request, $id)
     {
+        $this->mustManageSettings();
+
         $gradeScale = GradeSystem::findOrFail($id);
 
         $validated = $request->validate([
@@ -116,6 +144,8 @@ class ExamSettingsController extends Controller
      */
     public function deleteGradeScale($id)
     {
+        $this->mustManageSettings();
+
         $gradeScale = GradeSystem::findOrFail($id);
         $gradeScale->delete();
 
@@ -127,6 +157,8 @@ class ExamSettingsController extends Controller
      */
     public function setDefaultGradeScale(Request $request, $id)
     {
+        $this->mustManageSettings();
+
         $gradeScale = GradeSystem::findOrFail($id);
 
         // Unset default from all other grade scales
@@ -143,6 +175,8 @@ class ExamSettingsController extends Controller
      */
     public function setActiveGradeScale(Request $request, $id)
     {
+        $this->mustManageSettings();
+
         $gradeScale = GradeSystem::findOrFail($id);
 
         // Deactivate all other grade scales
@@ -159,6 +193,8 @@ class ExamSettingsController extends Controller
      */
     public function getGradeScaleItems($id)
     {
+        $this->mustManageSettings();
+
         $gradeScale = GradeSystem::findOrFail($id);
         $items = $gradeScale->gradeSystemItems()->orderBy('min_percentage', 'desc')->get();
 
@@ -170,6 +206,8 @@ class ExamSettingsController extends Controller
      */
     public function storeGradeScaleItem(Request $request, $id)
     {
+        $this->mustManageSettings();
+
         $gradeScale = GradeSystem::findOrFail($id);
 
         $validated = $request->validate([
@@ -181,6 +219,12 @@ class ExamSettingsController extends Controller
             'is_pass' => 'nullable|boolean',
         ]);
 
+        if ($problems = $this->grades->problemsWith(
+            array_merge($this->grades->bandsOf($gradeScale), [$validated])
+        )) {
+            return response()->json(['message' => $problems[0], 'errors' => ['bands' => $problems]], 422);
+        }
+
         $item = $gradeScale->gradeSystemItems()->create($validated);
 
         return response()->json(['data' => $item], 201);
@@ -191,6 +235,8 @@ class ExamSettingsController extends Controller
      */
     public function updateGradeScaleItem(Request $request, $id, $itemId)
     {
+        $this->mustManageSettings();
+
         $gradeScale = GradeSystem::findOrFail($id);
         $item = GradeSystemItem::where('grade_system_id', $id)->findOrFail($itemId);
 
@@ -203,6 +249,14 @@ class ExamSettingsController extends Controller
             'is_pass' => 'nullable|boolean',
         ]);
 
+        // The band being edited is left out of the comparison, or it would
+        // always be found to overlap itself.
+        if ($problems = $this->grades->problemsWith(
+            array_merge($this->grades->bandsOf($gradeScale, (int) $itemId), [$validated])
+        )) {
+            return response()->json(['message' => $problems[0], 'errors' => ['bands' => $problems]], 422);
+        }
+
         $item->update($validated);
 
         return response()->json(['data' => $item]);
@@ -213,6 +267,8 @@ class ExamSettingsController extends Controller
      */
     public function deleteGradeScaleItem($id, $itemId)
     {
+        $this->mustManageSettings();
+
         $gradeScale = GradeSystem::findOrFail($id);
         $item = GradeSystemItem::where('grade_system_id', $id)->findOrFail($itemId);
 

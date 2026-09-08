@@ -40,6 +40,8 @@ class ExamRevaluationRequest extends Model
      */
     public function examRevaluationActions(): HasMany
     {
-        return $this->hasMany(ExamRevaluationAction::class);
+        // The column is `request_id`, not the `exam_revaluation_request_id`
+        // Eloquent would guess, so this relation returned nothing at all.
+        return $this->hasMany(ExamRevaluationAction::class, 'request_id');
     }
 }

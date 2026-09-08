@@ -4,10 +4,10 @@
 
         <div class="space-y-6 p-4 md:p-6">
             <div>
-                <h1 class="text-lg md:text-2xl font-bold text-gray-900 dark:text-white">
+                <h1 class="text-lg md:text-2xl font-bold text-foreground">
                     Create Exam Paper
                 </h1>
-                <p class="mt-1 text-xs md:text-sm text-gray-600 dark:text-gray-400">
+                <p class="mt-1 text-xs md:text-sm text-muted-foreground">
                     Add exam papers to the date sheet - Select class, section, and enter paper details
                 </p>
             </div>
@@ -20,21 +20,21 @@
             </Alert>
 
             <!-- Success Alert -->
-            <Alert v-if="successMessage" variant="default" class="mb-4 bg-green-50 border-green-200 dark:bg-green-900/20 dark:border-green-800">
-                <AlertCircle class="h-4 w-4 text-green-600" />
-                <AlertTitle class="text-green-800 dark:text-green-400">Success</AlertTitle>
-                <AlertDescription class ="text-green-700 dark:text-green-300">{{ successMessage }}</AlertDescription>
+            <Alert v-if="successMessage" variant="default" class="mb-4 bg-success/10 border-success/40">
+                <AlertCircle class="h-4 w-4 text-success" />
+                <AlertTitle class="text-success">Success</AlertTitle>
+                <AlertDescription class ="text-success">{{ successMessage }}</AlertDescription>
             </Alert>
 
             <!-- Step 1: Selection Filters -->
-            <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-                <h2 class="text-md font-semibold text-gray-900 dark:text-white mb-4">
+            <div class="bg-card rounded-lg border border-border p-6">
+                <h2 class="text-md font-semibold text-foreground mb-4">
                     Step 1: Select Exam Details
                 </h2>
 
                 <!-- Pre-selected exam notice -->
-                <div v-if="isExamPreSelected" class="mb-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
-                    <p class="text-sm text-blue-800 dark:text-blue-300">
+                <div v-if="isExamPreSelected" class="mb-4 p-3 bg-primary/10 border border-primary/40 rounded-lg">
+                    <p class="text-sm text-primary">
                         <Icon icon="info" class="inline h-4 w-4 mr-1" />
                         You are adding papers for a specific exam. The exam selection is locked.
                     </p>
@@ -49,15 +49,15 @@
                             v-model="filters.exam_id"
                             @change="onSelectionChange"
                             :disabled="isExamPreSelected"
-                            class="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 text-sm"
-                            :class="{ 'border-red-500': validationErrors.exam_id, 'bg-gray-100 dark:bg-gray-700': isExamPreSelected }"
+                            class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm"
+                            :class="{ 'border-destructive': validationErrors.exam_id, 'bg-muted': isExamPreSelected }"
                         >
                             <option value="">Select Exam</option>
                             <option v-for="exam in props.exams" :key="exam.id" :value="exam.id">
                                 {{ exam.name }}
                             </option>
                         </select>
-                        <p v-if="validationErrors.exam_id" class="text-xs text-red-500">{{ validationErrors.exam_id }}</p>
+                        <p v-if="validationErrors.exam_id" class="text-xs text-destructive">{{ validationErrors.exam_id }}</p>
                     </div>
 
                     <!-- Campus Selection -->
@@ -67,15 +67,15 @@
                             id="campus_id"
                             v-model="filters.campus_id"
                             @change="onSelectionChange"
-                            class="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 text-sm"
-                            :class="{ 'border-red-500': validationErrors.campus_id }"
+                            class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm"
+                            :class="{ 'border-destructive': validationErrors.campus_id }"
                         >
                             <option value="">Select Campus</option>
                             <option v-for="campus in props.campuses" :key="campus.id" :value="campus.id">
                                 {{ campus.name }}
                             </option>
                         </select>
-                        <p v-if="validationErrors.campus_id" class="text-xs text-red-500">{{ validationErrors.campus_id }}</p>
+                        <p v-if="validationErrors.campus_id" class="text-xs text-destructive">{{ validationErrors.campus_id }}</p>
                     </div>
 
                     <!-- Class Selection -->
@@ -85,15 +85,15 @@
                             id="class_id"
                             v-model="filters.class_id"
                             @change="onClassChange"
-                            class="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 text-sm"
-                            :class="{ 'border-red-500': validationErrors.class_id }"
+                            class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm"
+                            :class="{ 'border-destructive': validationErrors.class_id }"
                         >
                             <option value="">Select Class</option>
                             <option v-for="cls in props.classes" :key="cls.id" :value="cls.id">
                                 {{ cls.name }}
                             </option>
                         </select>
-                        <p v-if="validationErrors.class_id" class="text-xs text-red-500">{{ validationErrors.class_id }}</p>
+                        <p v-if="validationErrors.class_id" class="text-xs text-destructive">{{ validationErrors.class_id }}</p>
                     </div>
 
                     <!-- Section Selection -->
@@ -104,8 +104,8 @@
                             v-model="filters.section_id"
                             :disabled="!filters.class_id"
                             @change="onSectionChange"
-                            class="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 text-sm"
-                            :class="{ 'border-red-500': validationErrors.section_id }"
+                            class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm"
+                            :class="{ 'border-destructive': validationErrors.section_id }"
                         >
                             <option value="">Select Section</option>
                             <option value="all">All Sections</option>
@@ -113,7 +113,7 @@
                                 {{ section.name }}
                             </option>
                         </select>
-                        <p v-if="filters.section_id === 'all'" class="text-xs text-blue-600 dark:text-blue-400">
+                        <p v-if="filters.section_id === 'all'" class="text-xs text-primary">
                             Paper will apply to all sections in this class
                         </p>
                     </div>
@@ -127,7 +127,7 @@
                         @click="loadPapersOrSubjects" 
                         :disabled="!filters.exam_id || !filters.class_id || loadingSubjects"
                         variant="secondary"
-                        class="bg-gray-100 text-gray-800 border-gray-300 hover:bg-gray-200 dark:bg-gray-700 dark:text-white dark:border-gray-600 dark:hover:bg-gray-600"
+                        class="bg-muted text-foreground border-border hover:bg-accent"
                     >
                         <Icon icon="search" class="mr-1" />
                         {{ loadingSubjects ? 'Loading...' : 'Load Subjects' }}
@@ -136,62 +136,62 @@
             </div>
 
             <!-- Step 2: Subject Papers Table -->
-            <div v-if="subjectPapers.length > 0 || existingPapers.length > 0" class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+            <div v-if="subjectPapers.length > 0 || existingPapers.length > 0" class="bg-card rounded-lg border border-border p-6">
                 <!-- Existing Papers Section -->
                 <div v-if="existingPapers.length > 0" class="mb-6">
-                    <h3 class="text-md font-semibold text-gray-900 dark:text-white mb-3 flex items-center gap-2">
+                    <h3 class="text-md font-semibold text-foreground mb-3 flex items-center gap-2">
                         <Icon icon="file-text" class="h-4 w-4" />
                         Existing Papers ({{ existingPapers.length }})
                     </h3>
                     
                     <!-- Desktop Table View -->
-                    <div class="hidden md:block overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
-                        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                            <thead class="bg-gray-50 dark:bg-gray-800">
+                    <div class="hidden md:block overflow-x-auto rounded-lg border border-border">
+                        <table class="min-w-full divide-y divide-border">
+                            <thead class="bg-muted">
                                 <tr>
-                                    <th class="px-3 py-3 text-left text-xs font-semibold text-gray-600 uppercase dark:text-gray-300 w-12">Sr#</th>
-                                    <th class="px-3 py-3 text-left text-xs font-semibold text-gray-600 uppercase dark:text-gray-300">Subject</th>
-                                    <th class="px-3 py-3 text-left text-xs font-semibold text-gray-600 uppercase dark:text-gray-300">Date</th>
-                                    <th class="px-3 py-3 text-left text-xs font-semibold text-gray-600 uppercase dark:text-gray-300">Time</th>
-                                    <th class="px-3 py-3 text-left text-xs font-semibold text-gray-600 uppercase dark:text-gray-300">Total</th>
-                                    <th class="px-3 py-3 text-left text-xs font-semibold text-gray-600 uppercase dark:text-gray-300">Pass</th>
-                                    <th class="px-3 py-3 text-left text-xs font-semibold text-gray-600 uppercase dark:text-gray-300">Status</th>
-                                    <th class="px-3 py-3 text-left text-xs font-semibold text-gray-600 uppercase dark:text-gray-300">Scope</th>
-                                    <th class="px-3 py-3 text-left text-xs font-semibold text-gray-600 uppercase dark:text-gray-300">Action</th>
+                                    <th class="px-3 py-3 text-left text-xs font-semibold text-muted-foreground uppercase w-12">Sr#</th>
+                                    <th class="px-3 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Subject</th>
+                                    <th class="px-3 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Date</th>
+                                    <th class="px-3 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Time</th>
+                                    <th class="px-3 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Total</th>
+                                    <th class="px-3 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Pass</th>
+                                    <th class="px-3 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Status</th>
+                                    <th class="px-3 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Scope</th>
+                                    <th class="px-3 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Action</th>
                                 </tr>
                             </thead>
-                            <tbody class="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-900">
-                                <tr v-for="(paper, index) in existingPapers" :key="paper.id" class="hover:bg-gray-50 dark:hover:bg-gray-800">
-                                    <td class="px-3 py-3 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                            <tbody class="divide-y divide-border bg-card">
+                                <tr v-for="(paper, index) in existingPapers" :key="paper.id" class="hover:bg-accent">
+                                    <td class="px-3 py-3 whitespace-nowrap text-sm text-foreground">
                                         {{ index + 1 }}
                                     </td>
-                                    <td class="px-3 py-3 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                                    <td class="px-3 py-3 whitespace-nowrap text-sm text-foreground">
                                         {{ paper.subject?.name }}
                                     </td>
-                                    <td class="px-3 py-3 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                                    <td class="px-3 py-3 whitespace-nowrap text-sm text-foreground">
                                         <template v-if="editingPaperId === paper.id">
                                             <Input 
                                                 v-model="editingPaper.paper_date" 
                                                 type="date" 
-                                                class="w-32 h-7 text-xs dark:bg-gray-800 dark:border-gray-600 dark:text-white"
+                                                class="w-32 h-7 text-xs"
                                             />
                                         </template>
                                         <template v-else>
                                             {{ formatDate(paper.paper_date) }}
                                         </template>
                                     </td>
-                                    <td class="px-3 py-3 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                                    <td class="px-3 py-3 whitespace-nowrap text-sm text-foreground">
                                         <template v-if="editingPaperId === paper.id">
                                             <div class="flex gap-1">
                                                 <Input 
                                                     v-model="editingPaper.start_time" 
                                                     type="time" 
-                                                    class="w-20 h-7 text-xs dark:bg-gray-800 dark:border-gray-600 dark:text-white"
+                                                    class="w-20 h-7 text-xs"
                                                 />
                                                 <Input 
                                                     v-model="editingPaper.end_time" 
                                                     type="time" 
-                                                    class="w-20 h-7 text-xs dark:bg-gray-800 dark:border-gray-600 dark:text-white"
+                                                    class="w-20 h-7 text-xs"
                                                 />
                                             </div>
                                         </template>
@@ -199,24 +199,24 @@
                                             {{ paper.start_time }} - {{ paper.end_time }}
                                         </template>
                                     </td>
-                                    <td class="px-3 py-3 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                                    <td class="px-3 py-3 whitespace-nowrap text-sm text-foreground">
                                         <template v-if="editingPaperId === paper.id">
                                             <Input 
                                                 v-model="editingPaper.total_marks" 
                                                 type="number" 
-                                                class="w-20 h-7 text-xs dark:bg-gray-800 dark:border-gray-600 dark:text-white"
+                                                class="w-20 h-7 text-xs"
                                             />
                                         </template>
                                         <template v-else>
                                             {{ paper.total_marks }}
                                         </template>
                                     </td>
-                                    <td class="px-3 py-3 whitespace-nowrap text-sm text-gray-900 dark:text-white">
+                                    <td class="px-3 py-3 whitespace-nowrap text-sm text-foreground">
                                         <template v-if="editingPaperId === paper.id">
                                             <Input 
                                                 v-model="editingPaper.passing_marks" 
                                                 type="number" 
-                                                class="w-20 h-7 text-xs dark:bg-gray-800 dark:border-gray-600 dark:text-white"
+                                                class="w-20 h-7 text-xs"
                                             />
                                         </template>
                                         <template v-else>
@@ -229,7 +229,7 @@
                                         </span>
                                     </td>
                                     <td class="px-3 py-3 whitespace-nowrap">
-                                        <span class="text-xs px-2 py-1 rounded-full bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400">
+                                        <span class="text-xs px-2 py-1 rounded-full bg-primary/10 text-primary">
                                             {{ paper.scope_type || 'N/A' }}
                                         </span>
                                     </td>
@@ -270,7 +270,7 @@
                                                     variant="outline"
                                                     @click="deletePaper(paper.id)"
                                                     :disabled="deletingPaperId === paper.id"
-                                                    class="h-6 px-2 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20"
+                                                    class="h-6 px-2 text-destructive hover:text-destructive hover:bg-destructive/20"
                                                 >
                                                     <Icon icon="trash" class="h-3 w-3" />
                                                 </Button>
@@ -287,22 +287,22 @@
                         <div 
                             v-for="(paper, index) in existingPapers" 
                             :key="paper.id"
-                            class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-3"
+                            class="bg-card rounded-lg border border-border p-3"
                         >
-                            <div class="flex justify-between items-start mb-2">
-                                <div class="font-medium text-gray-900 dark:text-white">
+                            <div class="flex flex-wrap gap-2 justify-between items-start mb-2">
+                                <div class="font-medium text-foreground">
                                     {{ index + 1 }}. {{ paper.subject?.name }}
                                 </div>
                                 <div class="flex items-center gap-2">
                                     <span :class="getStatusClass(paper.status)">
                                         {{ paper.status }}
                                     </span>
-                                    <span class="text-xs px-2 py-1 rounded-full bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400">
+                                    <span class="text-xs px-2 py-1 rounded-full bg-primary/10 text-primary">
                                         {{ paper.scope_type || 'N/A' }}
                                     </span>
                                 </div>
                             </div>
-                            <div class="grid grid-cols-3 gap-2 text-xs text-gray-600 dark:text-gray-400">
+                            <div class="grid grid-cols-3 gap-2 text-xs text-muted-foreground">
                                 <div>
                                     <span class="font-medium">Date:</span> {{ formatDate(paper.paper_date) }}
                                 </div>
@@ -313,7 +313,7 @@
                                     <span class="font-medium">Marks:</span> {{ paper.total_marks }}/{{ paper.passing_marks }}
                                 </div>
                             </div>
-                            <div class="flex justify-end gap-1 mt-2 pt-2 border-t border-gray-200 dark:border-gray-700">
+                            <div class="flex flex-wrap justify-end gap-1 mt-2 pt-2 border-t border-border">
                                 <template v-if="editingPaperId === paper.id">
                                     <Button 
                                         size="sm" 
@@ -347,7 +347,7 @@
                                         variant="outline"
                                         @click="deletePaper(paper.id)"
                                         :disabled="deletingPaperId === paper.id"
-                                        class="h-6 w-6 p-0 text-red-600 hover:text-red-700 hover:bg-red-50 dark:hover:bg-red-900/20"
+                                        class="h-6 w-6 p-0 text-destructive hover:text-destructive hover:bg-destructive/20"
                                     >
                                         <Icon icon="trash-2" class="h-3 w-3" />
                                     </Button>
@@ -360,7 +360,7 @@
                 <!-- Add New Papers Section -->
                 <div v-if="subjectPapers.length > 0">
                     <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-4">
-                        <h2 class="text-md font-semibold text-gray-900 dark:text-white">
+                        <h2 class="text-md font-semibold text-foreground">
                             {{ existingPapers.length > 0 ? 'Add More Papers' : 'Step 2: Enter Paper Details' }}
                         </h2>
                         <div class="flex gap-2">
@@ -376,10 +376,10 @@
                     </div>
 
                     <!-- Global Settings for Time and Marks -->
-                    <div class="mb-4 p-4 bg-gray-50 dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700">
+                    <div class="mb-4 p-4 bg-muted rounded-lg border border-border">
                         <!-- Exam Date Range Notice -->
-                        <div v-if="examDateRange" class="mb-3 p-2 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
-                            <p class="text-xs text-blue-800 dark:text-blue-300">
+                        <div v-if="examDateRange" class="mb-3 p-2 bg-primary/10 border border-primary/40 rounded-lg">
+                            <p class="text-xs text-primary">
                                 <Icon icon="calendar" class="inline h-3 w-3 mr-1" />
                                 Valid dates for this exam: <strong>{{ examDateRange.start_date }}</strong> to <strong>{{ examDateRange.end_date }}</strong>
                             </p>
@@ -391,7 +391,7 @@
                                     id="global_start_time"
                                     v-model="globalSettings.start_time" 
                                     type="time" 
-                                    class="w-full h-9 text-sm dark:bg-gray-800 dark:border-gray-600 dark:text-white"
+                                    class="w-full h-9 text-sm"
                                 />
                             </div>
                             <div class="flex-1 min-w-[150px]">
@@ -400,7 +400,7 @@
                                     id="global_end_time"
                                     v-model="globalSettings.end_time" 
                                     type="time" 
-                                    class="w-full h-9 text-sm dark:bg-gray-800 dark:border-gray-600 dark:text-white"
+                                    class="w-full h-9 text-sm"
                                 />
                             </div>
                             <div class="flex-1 min-w-[150px]">
@@ -409,7 +409,7 @@
                                     id="global_paper_date"
                                     v-model="globalSettings.paper_date" 
                                     type="date" 
-                                    class="w-full h-9 text-sm dark:bg-gray-800 dark:border-gray-600 dark:text-white"
+                                    class="w-full h-9 text-sm"
                                     :min="examDateRange?.start_date"
                                     :max="examDateRange?.end_date"
                                 />
@@ -424,7 +424,7 @@
                                     min="0"
                                     step="0.01"
                                     placeholder="100"
-                                    class="w-full h-9 text-sm dark:bg-gray-800 dark:border-gray-600 dark:text-white"
+                                    class="w-full h-9 text-sm"
                                 />
                             </div>
                             <div class="flex-1 min-w-[150px]">
@@ -436,7 +436,7 @@
                                     min="0"
                                     step="0.01"
                                     placeholder="33"
-                                    class="w-full h-9 text-sm dark:bg-gray-800 dark:border-gray-600 dark:text-white"
+                                    class="w-full h-9 text-sm"
                                 />
                             </div>
                             <Button 
@@ -449,80 +449,80 @@
                                 Apply to Selected
                             </Button>
                         </div>
-                        <p class="mt-2 text-xs text-gray-500 dark:text-gray-400">
+                        <p class="mt-2 text-xs text-muted-foreground">
                             Set the same time and marks for selected papers. This will apply to all checked papers.
                         </p>
                     </div>
 
                     <!-- Papers Table - Desktop -->
-                    <div class="hidden md:block overflow-x-auto rounded-lg border border-gray-200 dark:border-gray-700">
-                        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                            <thead class="bg-gray-50 dark:bg-gray-800">
+                    <div class="hidden md:block overflow-x-auto rounded-lg border border-border">
+                        <table class="min-w-full divide-y divide-border">
+                            <thead class="bg-muted">
                                 <tr>
-                                    <th class="px-2 py-3 text-center text-xs font-semibold text-gray-600 uppercase dark:text-gray-300 w-10">
+                                    <th class="px-2 py-3 text-center text-xs font-semibold text-muted-foreground uppercase w-10">
                                         <input
                                             type="checkbox"
                                             :checked="allSelected"
                                             :indeterminate="someSelected"
                                             @change="toggleSelectAll"
-                                            class="w-4 h-4 rounded border-gray-300 dark:border-gray-600"
+                                            class="w-4 h-4 rounded border-border"
                                         />
                                     </th>
-                                    <th class="px-2 py-3 text-left text-xs font-semibold text-gray-600 uppercase dark:text-gray-300 w-10">
+                                    <th class="px-2 py-3 text-left text-xs font-semibold text-muted-foreground uppercase w-10">
                                         Sr#
                                     </th>
-                                    <th class="px-2 py-3 text-left text-xs font-semibold text-gray-600 uppercase dark:text-gray-300 min-w-32">
+                                    <th class="px-2 py-3 text-left text-xs font-semibold text-muted-foreground uppercase min-w-32">
                                         Subject
                                     </th>
-                                    <th class="px-2 py-3 text-left text-xs font-semibold text-gray-600 uppercase dark:text-gray-300 w-32">
+                                    <th class="px-2 py-3 text-left text-xs font-semibold text-muted-foreground uppercase w-32">
                                         Date
                                     </th>
-                                    <th class="px-2 py-3 text-left text-xs font-semibold text-gray-600 uppercase dark:text-gray-300 w-24">
+                                    <th class="px-2 py-3 text-left text-xs font-semibold text-muted-foreground uppercase w-24">
                                         Start
                                     </th>
-                                    <th class="px-2 py-3 text-left text-xs font-semibold text-gray-600 uppercase dark:text-gray-300 w-24">
+                                    <th class="px-2 py-3 text-left text-xs font-semibold text-muted-foreground uppercase w-24">
                                         End
                                     </th>
-                                    <th class="px-2 py-3 text-left text-xs font-semibold text-gray-600 uppercase dark:text-gray-300 w-20">
+                                    <th class="px-2 py-3 text-left text-xs font-semibold text-muted-foreground uppercase w-20">
                                         Total
                                     </th>
-                                    <th class="px-2 py-3 text-left text-xs font-semibold text-gray-600 uppercase dark:text-gray-300 w-20">
+                                    <th class="px-2 py-3 text-left text-xs font-semibold text-muted-foreground uppercase w-20">
                                         Pass
                                     </th>
-                                    <th class="px-2 py-3 text-center text-xs font-semibold text-gray-600 uppercase dark:text-gray-300 w-16">
+                                    <th class="px-2 py-3 text-center text-xs font-semibold text-muted-foreground uppercase w-16">
                                         Status
                                     </th>
-                                    <th class="px-2 py-3 text-center text-xs font-semibold text-gray-600 uppercase dark:text-gray-300 w-16">
+                                    <th class="px-2 py-3 text-center text-xs font-semibold text-muted-foreground uppercase w-16">
                                         Action
                                     </th>
                                 </tr>
                             </thead>
-                            <tbody class="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-900">
+                            <tbody class="divide-y divide-border bg-card">
                                 <tr 
                                     v-for="(paper, index) in subjectPapers" 
                                     :key="paper.subject_id"
-                                    class="transition-colors hover:bg-gray-50 dark:hover:bg-gray-800"
-                                    :class="{ 'bg-red-50 dark:bg-red-900/10': paper.exists || paper.error }"
+                                    class="transition-colors hover:bg-accent"
+                                    :class="{ 'bg-destructive/10': paper.exists || paper.error }"
                                 >
                                     <td class="px-2 py-2 whitespace-nowrap text-center">
                                         <input
                                             type="checkbox"
                                             v-model="paper.selected"
                                             :disabled="paper.saved || paper.exists"
-                                            class="w-4 h-4 rounded border-gray-300 dark:border-gray-600"
+                                            class="w-4 h-4 rounded border-border"
                                         />
                                     </td>
-                                    <td class="px-2 py-2 whitespace-nowrap text-xs text-gray-900 dark:text-white">
+                                    <td class="px-2 py-2 whitespace-nowrap text-xs text-foreground">
                                         {{ index + 1 }}
                                     </td>
                                     <td class="px-2 py-2 whitespace-nowrap">
-                                        <div class="text-xs font-medium text-gray-900 dark:text-white truncate max-w-32">
+                                        <div class="text-xs font-medium text-foreground truncate max-w-32">
                                             {{ paper.subject_name }}
                                         </div>
-                                        <div v-if="paper.exists" class="text-xs text-red-600 dark:text-red-400">
+                                        <div v-if="paper.exists" class="text-xs text-destructive">
                                             Already added
                                         </div>
-                                        <div v-if="paper.error" class="text-xs text-red-600 dark:text-red-400">
+                                        <div v-if="paper.error" class="text-xs text-destructive">
                                             {{ paper.error }}
                                         </div>
                                     </td>
@@ -531,8 +531,8 @@
                                             v-model="paper.paper_date" 
                                             type="date" 
                                             :disabled="!paper.selected"
-                                            class="w-full h-7 text-xs dark:bg-gray-800 dark:border-gray-600 dark:text-white"
-                                            :class="{ 'border-red-500': !paper.paper_date && paper.touched, 'opacity-50': !paper.selected }"
+                                            class="w-full h-7 text-xs"
+                                            :class="{ 'border-destructive': !paper.paper_date && paper.touched, 'opacity-50': !paper.selected }"
                                             :min="examDateRange?.start_date"
                                             :max="examDateRange?.end_date"
                                         />
@@ -542,8 +542,8 @@
                                             v-model="paper.start_time" 
                                             type="time" 
                                             :disabled="!paper.selected"
-                                            class="w-full h-7 text-xs dark:bg-gray-800 dark:border-gray-600 dark:text-white"
-                                            :class="{ 'border-red-500': !paper.start_time && paper.touched, 'opacity-50': !paper.selected }"
+                                            class="w-full h-7 text-xs"
+                                            :class="{ 'border-destructive': !paper.start_time && paper.touched, 'opacity-50': !paper.selected }"
                                         />
                                     </td>
                                     <td class="px-2 py-2 whitespace-nowrap">
@@ -551,8 +551,8 @@
                                             v-model="paper.end_time" 
                                             type="time" 
                                             :disabled="!paper.selected"
-                                            class="w-full h-7 text-xs dark:bg-gray-800 dark:border-gray-600 dark:text-white"
-                                            :class="{ 'border-red-500': !paper.end_time && paper.touched, 'opacity-50': !paper.selected }"
+                                            class="w-full h-7 text-xs"
+                                            :class="{ 'border-destructive': !paper.end_time && paper.touched, 'opacity-50': !paper.selected }"
                                         />
                                     </td>
                                     <td class="px-2 py-2 whitespace-nowrap">
@@ -563,8 +563,8 @@
                                             step="0.01"
                                             placeholder="100"
                                             :disabled="!paper.selected"
-                                            class="w-full h-7 text-xs dark:bg-gray-800 dark:border-gray-600 dark:text-white"
-                                            :class="{ 'border-red-500': !paper.total_marks && paper.touched, 'opacity-50': !paper.selected }"
+                                            class="w-full h-7 text-xs"
+                                            :class="{ 'border-destructive': !paper.total_marks && paper.touched, 'opacity-50': !paper.selected }"
                                         />
                                     </td>
                                     <td class="px-2 py-2 whitespace-nowrap">
@@ -575,26 +575,26 @@
                                             step="0.01"
                                             placeholder="33"
                                             :disabled="!paper.selected"
-                                            class="w-full h-7 text-xs dark:bg-gray-800 dark:border-gray-600 dark:text-white"
-                                            :class="{ 'border-red-500': !paper.passing_marks && paper.touched, 'opacity-50': !paper.selected }"
+                                            class="w-full h-7 text-xs"
+                                            :class="{ 'border-destructive': !paper.passing_marks && paper.touched, 'opacity-50': !paper.selected }"
                                         />
                                     </td>
                                     <td class="px-2 py-2 whitespace-nowrap text-center">
                                         <span 
                                             v-if="paper.saved"
-                                            class="inline-flex items-center px-1.5 py-0.5 text-xs font-medium rounded-full bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
+                                            class="inline-flex items-center px-1.5 py-0.5 text-xs font-medium rounded-full bg-success/10 text-success"
                                         >
                                             Saved
                                         </span>
                                         <span 
                                             v-else-if="paper.exists"
-                                            class="inline-flex items-center px-1.5 py-0.5 text-xs font-medium rounded-full bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400"
+                                            class="inline-flex items-center px-1.5 py-0.5 text-xs font-medium rounded-full bg-warning/10 text-warning"
                                         >
                                             Exists
                                         </span>
                                         <span 
                                             v-else
-                                            class="inline-flex items-center px-1.5 py-0.5 text-xs font-medium rounded-full bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300"
+                                            class="inline-flex items-center px-1.5 py-0.5 text-xs font-medium rounded-full bg-muted text-foreground"
                                         >
                                             Pending
                                         </span>
@@ -620,34 +620,34 @@
                         <div 
                             v-for="(paper, index) in subjectPapers" 
                             :key="paper.subject_id"
-                            class="bg-white dark:bg-gray-800 rounded-lg border p-3 space-y-2"
-                            :class="paper.exists || paper.error ? 'border-red-300 dark:border-red-700' : 'border-gray-200 dark:border-gray-700'"
+                            class="bg-card rounded-lg border p-3 space-y-2"
+                            :class="paper.exists || paper.error ? 'border-destructive/40' : 'border-border'"
                         >
-                            <div class="flex justify-between items-start">
-                                <div class="text-sm font-medium text-gray-900 dark:text-white">
+                            <div class="flex flex-wrap gap-2 justify-between items-start">
+                                <div class="text-sm font-medium text-foreground">
                                     {{ index + 1 }}. {{ paper.subject_name }}
                                 </div>
                                 <span 
                                     v-if="paper.saved"
-                                    class="inline-flex items-center px-1.5 py-0.5 text-xs font-medium rounded-full bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400"
+                                    class="inline-flex items-center px-1.5 py-0.5 text-xs font-medium rounded-full bg-success/10 text-success"
                                 >
                                     Saved
                                 </span>
                                 <span 
                                     v-else-if="paper.exists"
-                                    class="inline-flex items-center px-1.5 py-0.5 text-xs font-medium rounded-full bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400"
+                                    class="inline-flex items-center px-1.5 py-0.5 text-xs font-medium rounded-full bg-warning/10 text-warning"
                                 >
                                     Exists
                                 </span>
                                 <span 
                                     v-else
-                                    class="inline-flex items-center px-1.5 py-0.5 text-xs font-medium rounded-full bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300"
+                                    class="inline-flex items-center px-1.5 py-0.5 text-xs font-medium rounded-full bg-muted text-foreground"
                                 >
                                     Pending
                                 </span>
                             </div>
                             
-                            <div v-if="paper.error" class="text-xs text-red-600 dark:text-red-400">
+                            <div v-if="paper.error" class="text-xs text-destructive">
                                 {{ paper.error }}
                             </div>
                             
@@ -657,8 +657,8 @@
                                     <Input 
                                         v-model="paper.paper_date" 
                                         type="date" 
-                                        class="w-full h-8 text-xs dark:bg-gray-800 dark:border-gray-600 dark:text-white"
-                                        :class="{ 'border-red-500': !paper.paper_date && paper.touched }"
+                                        class="w-full h-8 text-xs"
+                                        :class="{ 'border-destructive': !paper.paper_date && paper.touched }"
                                         :min="examDateRange?.start_date"
                                         :max="examDateRange?.end_date"
                                     />
@@ -668,8 +668,8 @@
                                     <Input 
                                         v-model="paper.start_time" 
                                         type="time" 
-                                        class="w-full h-8 text-xs dark:bg-gray-800 dark:border-gray-600 dark:text-white"
-                                        :class="{ 'border-red-500': !paper.start_time && paper.touched }"
+                                        class="w-full h-8 text-xs"
+                                        :class="{ 'border-destructive': !paper.start_time && paper.touched }"
                                     />
                                 </div>
                                 <div>
@@ -677,8 +677,8 @@
                                     <Input 
                                         v-model="paper.end_time" 
                                         type="time" 
-                                        class="w-full h-8 text-xs dark:bg-gray-800 dark:border-gray-600 dark:text-white"
-                                        :class="{ 'border-red-500': !paper.end_time && paper.touched }"
+                                        class="w-full h-8 text-xs"
+                                        :class="{ 'border-destructive': !paper.end_time && paper.touched }"
                                     />
                                 </div>
                                 <div>
@@ -689,8 +689,8 @@
                                         min="0"
                                         step="0.01"
                                         placeholder="100"
-                                        class="w-full h-8 text-xs dark:bg-gray-800 dark:border-gray-600 dark:text-white"
-                                        :class="{ 'border-red-500': !paper.total_marks && paper.touched }"
+                                        class="w-full h-8 text-xs"
+                                        :class="{ 'border-destructive': !paper.total_marks && paper.touched }"
                                     />
                                 </div>
                                 <div class="col-span-2">
@@ -701,13 +701,13 @@
                                         min="0"
                                         step="0.01"
                                         placeholder="33"
-                                        class="w-full h-8 text-xs dark:bg-gray-800 dark:border-gray-600 dark:text-white"
-                                        :class="{ 'border-red-500': !paper.passing_marks && paper.touched }"
+                                        class="w-full h-8 text-xs"
+                                        :class="{ 'border-destructive': !paper.passing_marks && paper.touched }"
                                     />
                                 </div>
                             </div>
                             
-                            <div class="flex justify-end pt-1">
+                            <div class="flex flex-wrap gap-2 justify-end pt-1">
                                 <Button 
                                     size="sm" 
                                     variant="outline"
@@ -722,7 +722,7 @@
                     </div>
 
                     <!-- Summary -->
-                    <div class="mt-4 flex flex-wrap gap-4 text-sm text-gray-600 dark:text-gray-400">
+                    <div class="mt-4 flex flex-wrap gap-4 text-sm text-muted-foreground">
                         <span>Saved: {{ savedCount }}</span>
                         <span>Pending: {{ pendingCount }}</span>
                         <span>Selected: {{ selectedCount }}</span>
@@ -732,23 +732,23 @@
             </div>
 
             <!-- No subjects loaded message -->
-            <div v-else-if="subjectsLoaded && !loadingSubjects" class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 text-center">
-                <p class="text-gray-500 dark:text-gray-400">
+            <div v-else-if="subjectsLoaded && !loadingSubjects" class="bg-card rounded-lg border border-border p-6 text-center">
+                <p class="text-muted-foreground">
                     No subjects found for the selected class and section.
                 </p>
             </div>
 
             <!-- Loading State -->
-            <div v-if="loadingSubjects" class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 text-center">
+            <div v-if="loadingSubjects" class="bg-card rounded-lg border border-border p-6 text-center">
                 <div class="flex justify-center items-center gap-2">
-                    <Icon icon="loader" class="h-5 w-5 animate-spin dark:text-gray-400" />
-                    <p class="text-gray-500 dark:text-gray-400">Loading...</p>
+                    <Icon icon="loader" class="h-5 w-5 animate-spin" />
+                    <p class="text-muted-foreground">Loading...</p>
                 </div>
             </div>
 
             <!-- Back Button -->
             <div class="flex justify-start">
-                <Button variant="outline" @click="router.visit(route('exam.index-page'))" class="text-gray-700 bg-white border-gray-300 hover:bg-gray-50 dark:text-white dark:border-gray-600 dark:bg-gray-700 dark:hover:bg-gray-600">
+                <Button variant="outline" @click="router.visit(route('exam.index-page'))" class="text-muted-foreground bg-card border-border hover:bg-accent">
                     Back
                 </Button>
             </div>
@@ -1136,9 +1136,9 @@ const formatDate = (date: string) => {
 
 const getStatusClass = (status: string) => {
     const classes: Record<string, string> = {
-        'scheduled': 'inline-flex items-center px-2 py-1 text-xs font-medium rounded-full bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400',
-        'completed': 'inline-flex items-center px-2 py-1 text-xs font-medium rounded-full bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
-        'cancelled': 'inline-flex items-center px-2 py-1 text-xs font-medium rounded-full bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
+        'scheduled': 'inline-flex items-center px-2 py-1 text-xs font-medium rounded-full bg-primary/10 text-primary',
+        'completed': 'inline-flex items-center px-2 py-1 text-xs font-medium rounded-full bg-success/10 text-success',
+        'cancelled': 'inline-flex items-center px-2 py-1 text-xs font-medium rounded-full bg-destructive/10 text-destructive',
     };
     return classes[status] || classes['scheduled'];
 };

@@ -261,6 +261,8 @@ class Student extends Model
             ->where('direction', WalletDirection::DEBIT)
             ->sum('amount');
 
-        return $credits - $debits;
+        // `sum()` returns whatever the driver gives back -- an int, a float or
+        // a numeric string depending on the column and engine.
+        return (float) $credits - (float) $debits;
     }
 }

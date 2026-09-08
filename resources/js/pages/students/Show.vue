@@ -6,10 +6,10 @@
             <!-- Header -->
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 md:gap-4">
                 <div>
-                    <h1 class="text-lg md:text-2xl font-bold text-gray-900 dark:text-white">
+                    <h1 class="text-lg md:text-2xl font-bold text-foreground">
                         Student Details
                     </h1>
-                    <p class="mt-1 text-xs md:text-sm text-gray-600 dark:text-gray-400">
+                    <p class="mt-1 text-xs md:text-sm text-muted-foreground">
                         View complete student and guardian information
                     </p>
                 </div>
@@ -28,28 +28,28 @@
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <!-- Student Profile Card -->
                 <div class="lg:col-span-1">
-                    <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 text-center">
+                    <div class="bg-card rounded-lg border border-border p-6 text-center">
                         <!-- Student Photo -->
                         <div class="mb-4">
-                            <div v-if="student?.image" class="h-32 w-32 mx-auto rounded-full overflow-hidden border-4 border-gray-100 dark:border-gray-700">
+                            <div v-if="student?.image" class="h-32 w-32 mx-auto rounded-full overflow-hidden border-4 border-border">
                                 <img
                                     :src="student.image"
                                     alt="Student Photo"
                                     class="h-full w-full object-cover"
                                 />
                             </div>
-                            <div v-else class="h-32 w-32 mx-auto rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center border-4 border-gray-100 dark:border-gray-700">
-                                <span class="text-4xl font-bold text-blue-600 dark:text-blue-400">
+                            <div v-else class="h-32 w-32 mx-auto rounded-full bg-primary/10 flex items-center justify-center border-4 border-border">
+                                <span class="text-4xl font-bold text-primary">
                                     {{ student?.user?.name?.charAt(0) || 'S' }}
                                 </span>
                             </div>
                         </div>
 
                         <!-- Student Name -->
-                        <h2 class="text-xl font-bold text-gray-900 dark:text-white">
+                        <h2 class="text-xl font-bold text-foreground">
                             {{ student?.user?.name || 'N/A' }}
                         </h2>
-                        <p class="text-gray-500 text-sm mt-1">
+                        <p class="text-muted-foreground text-sm mt-1">
                             {{ student?.registration_no }}
                         </p>
 
@@ -59,8 +59,8 @@
                                 :class="[
                                     'px-3 py-1 text-sm font-medium rounded-full',
                                     student?.student_status?.name === 'Active'
-                                        ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
-                                        : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
+                                        ? 'bg-success/10 text-success'
+                                        : 'bg-muted text-foreground'
                                 ]"
                             >
                                 {{ student?.student_status?.name || 'Unknown' }}
@@ -68,85 +68,85 @@
                         </div>
 
                         <!-- Quick Info -->
-                        <div class="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700 text-left">
+                        <div class="mt-6 pt-6 border-t border-border text-left">
                             <div class="space-y-3">
                                 <div class="flex items-center gap-3">
-                                    <Icon icon="calendar" class="h-5 w-5 text-gray-400" />
+                                    <Icon icon="calendar" class="h-5 w-5 text-muted-foreground" />
                                     <div>
-                                        <p class="text-xs text-gray-500">Date of Birth</p>
-                                        <p class="text-sm font-medium text-gray-900 dark:text-white">
+                                        <p class="text-xs text-muted-foreground">Date of Birth</p>
+                                        <p class="text-sm font-medium text-foreground">
                                             {{ formatDate(student?.dob) }}
                                         </p>
                                     </div>
                                 </div>
                                 <div class="flex items-center gap-3">
-                                    <Icon icon="user" class="h-5 w-5 text-gray-400" />
+                                    <Icon icon="user" class="h-5 w-5 text-muted-foreground" />
                                     <div>
-                                        <p class="text-xs text-gray-500">Gender</p>
-                                        <p class="text-sm font-medium text-gray-900 dark:text-white">
+                                        <p class="text-xs text-muted-foreground">Gender</p>
+                                        <p class="text-sm font-medium text-foreground">
                                             {{ student?.gender?.name || '-' }}
                                         </p>
                                     </div>
                                 </div>
                                 <div v-if="student?.b_form" class="flex items-center gap-3">
-                                    <Icon icon="id-card" class="h-5 w-5 text-gray-400" />
+                                    <Icon icon="id-card" class="h-5 w-5 text-muted-foreground" />
                                     <div>
-                                        <p class="text-xs text-gray-500">B-Form</p>
-                                        <p class="text-sm font-medium text-gray-900 dark:text-white">
+                                        <p class="text-xs text-muted-foreground">B-Form</p>
+                                        <p class="text-sm font-medium text-foreground">
                                             {{ student?.b_form }}
                                         </p>
                                     </div>
                                 </div>
                                 <div class="flex items-center gap-3">
-                                    <Icon icon="building" class="h-5 w-5 text-gray-400" />
+                                    <Icon icon="building" class="h-5 w-5 text-muted-foreground" />
                                     <div>
-                                        <p class="text-xs text-gray-500">Campus</p>
-                                        <p class="text-sm font-medium text-gray-900 dark:text-white">
+                                        <p class="text-xs text-muted-foreground">Campus</p>
+                                        <p class="text-sm font-medium text-foreground">
                                             {{ currentEnrollment?.campus?.name || '-' }}
                                         </p>
                                     </div>
                                 </div>
                                 <div class="flex items-center gap-3">
-                                    <Icon icon="book" class="h-5 w-5 text-gray-400" />
+                                    <Icon icon="book" class="h-5 w-5 text-muted-foreground" />
                                     <div>
-                                        <p class="text-xs text-gray-500">Class / Section</p>
-                                        <p class="text-sm font-medium text-gray-900 dark:text-white">
+                                        <p class="text-xs text-muted-foreground">Class / Section</p>
+                                        <p class="text-sm font-medium text-foreground">
                                             {{ currentEnrollment?.class?.name || '-' }} - {{ currentEnrollment?.section?.name || '-' }}
                                         </p>
                                     </div>
                                 </div>
                                 <div class="flex items-center gap-3">
-                                    <Icon icon="calendar" class="h-5 w-5 text-gray-400" />
+                                    <Icon icon="calendar" class="h-5 w-5 text-muted-foreground" />
                                     <div>
-                                        <p class="text-xs text-gray-500">Academic Session</p>
-                                        <p class="text-sm font-medium text-gray-900 dark:text-white">
+                                        <p class="text-xs text-muted-foreground">Academic Session</p>
+                                        <p class="text-sm font-medium text-foreground">
                                             {{ currentEnrollment?.session?.name || '-' }}
                                         </p>
                                     </div>
                                 </div>
                                 <div class="flex items-center gap-3">
-                                    <Icon icon="dollar-sign" class="h-5 w-5 text-gray-400" />
+                                    <Icon icon="dollar-sign" class="h-5 w-5 text-muted-foreground" />
                                     <div>
-                                        <p class="text-xs text-gray-500">Monthly Fee</p>
-                                        <p class="text-sm font-medium text-gray-900 dark:text-white">
+                                        <p class="text-xs text-muted-foreground">Monthly Fee</p>
+                                        <p class="text-sm font-medium text-foreground">
                                             {{ formatCurrency(currentEnrollment?.monthly_fee) }}
                                         </p>
                                     </div>
                                 </div>
                                 <div class="flex items-center gap-3">
-                                    <Icon icon="dollar-sign" class="h-5 w-5 text-gray-400" />
+                                    <Icon icon="dollar-sign" class="h-5 w-5 text-muted-foreground" />
                                     <div>
-                                        <p class="text-xs text-gray-500">Annual Fee</p>
-                                        <p class="text-sm font-medium text-gray-900 dark:text-white">
+                                        <p class="text-xs text-muted-foreground">Annual Fee</p>
+                                        <p class="text-sm font-medium text-foreground">
                                             {{ formatCurrency(currentEnrollment?.annual_fee) }}
                                         </p>
                                     </div>
                                 </div>
                                 <div class="flex items-center gap-3">
-                                    <Icon icon="calendar" class="h-5 w-5 text-gray-400" />
+                                    <Icon icon="calendar" class="h-5 w-5 text-muted-foreground" />
                                     <div>
-                                        <p class="text-xs text-gray-500">Admission Date</p>
-                                        <p class="text-sm font-medium text-gray-900 dark:text-white">
+                                        <p class="text-xs text-muted-foreground">Admission Date</p>
+                                        <p class="text-sm font-medium text-foreground">
                                             {{ formatDate(student?.admission_date) }}
                                         </p>
                                     </div>
@@ -159,94 +159,94 @@
                 <!-- Details Cards -->
                 <div class="lg:col-span-2 space-y-6">
                     <!-- Father Information Card -->
-                    <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                    <div class="bg-card rounded-lg border border-border p-6">
+                        <h3 class="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
                             <Icon icon="user-check" class="h-5 w-5 text-primary" />
                             Father Information
                         </h3>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
-                                <p class="text-xs text-gray-500">Name</p>
-                                <p class="text-sm font-medium text-gray-900 dark:text-white">{{ getGuardianByRelation('father')?.name || '-' }}</p>
+                                <p class="text-xs text-muted-foreground">Name</p>
+                                <p class="text-sm font-medium text-foreground">{{ getGuardianByRelation('father')?.name || '-' }}</p>
                             </div>
                             <div>
-                                <p class="text-xs text-gray-500">Phone</p>
-                                <p class="text-sm font-medium text-gray-900 dark:text-white">{{ getGuardianByRelation('father')?.phone || '-' }}</p>
+                                <p class="text-xs text-muted-foreground">Phone</p>
+                                <p class="text-sm font-medium text-foreground">{{ getGuardianByRelation('father')?.phone || '-' }}</p>
                             </div>
                             <div>
-                                <p class="text-xs text-gray-500">Email</p>
-                                <p class="text-sm font-medium text-gray-900 dark:text-white">{{ getGuardianByRelation('father')?.email || '-' }}</p>
+                                <p class="text-xs text-muted-foreground">Email</p>
+                                <p class="text-sm font-medium text-foreground">{{ getGuardianByRelation('father')?.email || '-' }}</p>
                             </div>
                             <div>
-                                <p class="text-xs text-gray-500">CNIC</p>
-                                <p class="text-sm font-medium text-gray-900 dark:text-white">{{ getGuardianByRelation('father')?.cnic || '-' }}</p>
+                                <p class="text-xs text-muted-foreground">CNIC</p>
+                                <p class="text-sm font-medium text-foreground">{{ getGuardianByRelation('father')?.cnic || '-' }}</p>
                             </div>
                         </div>
                     </div>
 
                     <!-- Mother Information Card -->
-                    <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                    <div class="bg-card rounded-lg border border-border p-6">
+                        <h3 class="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
                             <Icon icon="user-plus" class="h-5 w-5 text-primary" />
                             Mother Information
                         </h3>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
-                                <p class="text-xs text-gray-500">Name</p>
-                                <p class="text-sm font-medium text-gray-900 dark:text-white">{{ getGuardianByRelation('mother')?.name || '-' }}</p>
+                                <p class="text-xs text-muted-foreground">Name</p>
+                                <p class="text-sm font-medium text-foreground">{{ getGuardianByRelation('mother')?.name || '-' }}</p>
                             </div>
                             <div>
-                                <p class="text-xs text-gray-500">Phone</p>
-                                <p class="text-sm font-medium text-gray-900 dark:text-white">{{ getGuardianByRelation('mother')?.phone || '-' }}</p>
+                                <p class="text-xs text-muted-foreground">Phone</p>
+                                <p class="text-sm font-medium text-foreground">{{ getGuardianByRelation('mother')?.phone || '-' }}</p>
                             </div>
                             <div>
-                                <p class="text-xs text-gray-500">Email</p>
-                                <p class="text-sm font-medium text-gray-900 dark:text-white">{{ getGuardianByRelation('mother')?.email || '-' }}</p>
+                                <p class="text-xs text-muted-foreground">Email</p>
+                                <p class="text-sm font-medium text-foreground">{{ getGuardianByRelation('mother')?.email || '-' }}</p>
                             </div>
                             <div>
-                                <p class="text-xs text-gray-500">CNIC</p>
-                                <p class="text-sm font-medium text-gray-900 dark:text-white">{{ getGuardianByRelation('mother')?.cnic || '-' }}</p>
+                                <p class="text-xs text-muted-foreground">CNIC</p>
+                                <p class="text-sm font-medium text-foreground">{{ getGuardianByRelation('mother')?.cnic || '-' }}</p>
                             </div>
                         </div>
                     </div>
 
                     <!-- Other Guardian Card -->
-                    <div v-if="otherGuardian" class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                    <div v-if="otherGuardian" class="bg-card rounded-lg border border-border p-6">
+                        <h3 class="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
                             <Icon icon="users" class="h-5 w-5 text-primary" />
                             Other Guardian
                         </h3>
                         <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                             <div>
-                                <p class="text-xs text-gray-500">Name</p>
-                                <p class="text-sm font-medium text-gray-900 dark:text-white">{{ otherGuardian.name || '-' }}</p>
+                                <p class="text-xs text-muted-foreground">Name</p>
+                                <p class="text-sm font-medium text-foreground">{{ otherGuardian.name || '-' }}</p>
                             </div>
                             <div>
-                                <p class="text-xs text-gray-500">Relation</p>
-                                <p class="text-sm font-medium text-gray-900 dark:text-white">{{ getGuardianRelation(otherGuardian) }}</p>
+                                <p class="text-xs text-muted-foreground">Relation</p>
+                                <p class="text-sm font-medium text-foreground">{{ getGuardianRelation(otherGuardian) }}</p>
                             </div>
                             <div>
-                                <p class="text-xs text-gray-500">Phone</p>
-                                <p class="text-sm font-medium text-gray-900 dark:text-white">{{ otherGuardian.phone || '-' }}</p>
+                                <p class="text-xs text-muted-foreground">Phone</p>
+                                <p class="text-sm font-medium text-foreground">{{ otherGuardian.phone || '-' }}</p>
                             </div>
                             <div>
-                                <p class="text-xs text-gray-500">Email</p>
-                                <p class="text-sm font-medium text-gray-900 dark:text-white">{{ otherGuardian.email || '-' }}</p>
+                                <p class="text-xs text-muted-foreground">Email</p>
+                                <p class="text-sm font-medium text-foreground">{{ otherGuardian.email || '-' }}</p>
                             </div>
                             <div>
-                                <p class="text-xs text-gray-500">CNIC</p>
-                                <p class="text-sm font-medium text-gray-900 dark:text-white">{{ otherGuardian.cnic || '-' }}</p>
+                                <p class="text-xs text-muted-foreground">CNIC</p>
+                                <p class="text-sm font-medium text-foreground">{{ otherGuardian.cnic || '-' }}</p>
                             </div>
                         </div>
                     </div>
 
                     <!-- Description Card -->
-                    <div v-if="student?.description" class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                    <div v-if="student?.description" class="bg-card rounded-lg border border-border p-6">
+                        <h3 class="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
                             <Icon icon="file-text" class="h-5 w-5 text-primary" />
                             Description
                         </h3>
-                        <p class="text-sm text-gray-600 dark:text-gray-400 whitespace-pre-wrap">
+                        <p class="text-sm text-muted-foreground whitespace-pre-wrap">
                             {{ student.description }}
                         </p>
                     </div>

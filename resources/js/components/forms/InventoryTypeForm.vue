@@ -261,7 +261,7 @@ const resetForm = () => {
                             <div class="p-1 bg-muted rounded">
                                 <Icon icon="tag" class="h-3.5 w-3.5 text-muted-foreground" />
                             </div>
-                            Type Name <span class="text-red-500">*</span>
+                            Type Name <span class="text-destructive">*</span>
                         </Label>
                         <div class="relative">
                             <Input
@@ -270,12 +270,12 @@ const resetForm = () => {
                                 placeholder="Enter inventory type name"
                                 required
                                 class="pl-10 h-11"
-                                :class="{ 'border-red-500': nameExistsError }"
+                                :class="{ 'border-destructive': nameExistsError }"
                             />
                             <Icon icon="tag" class="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
                         </div>
                         <InputError :message="errors.name" />
-                        <p v-if="nameExistsError" class="text-sm text-red-500 mt-1">
+                        <p v-if="nameExistsError" class="text-sm text-destructive mt-1">
                             {{ nameExistsError }}
                         </p>
                         <p v-else-if="checkingName" class="text-sm text-muted-foreground mt-1">
@@ -289,12 +289,12 @@ const resetForm = () => {
                             <div class="p-1 bg-muted rounded">
                                 <Icon icon="building" class="h-3.5 w-3.5 text-muted-foreground" />
                             </div>
-                            Campus <span class="text-red-500">*</span>
+                            Campus <span class="text-destructive">*</span>
                         </Label>
                         <select
                             id="campus"
                             v-model="form.campus_id"
-                            class="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 text-sm h-11"
+                            class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm h-11"
                             required
                         >
                             <option v-for="campus in campusesWithAll" :key="campus.id" :value="campus.id">
@@ -306,7 +306,7 @@ const resetForm = () => {
                 </div>
 
                 <!-- Actions -->
-                <div class="flex justify-end gap-3 pt-2">
+                <div class="flex flex-wrap justify-end gap-3 pt-2">
                     <DialogClose as-child>
                         <Button type="button" variant="outline" @click="resetForm" class="h-10">
                             <Icon icon="x" class="mr-2 h-4 w-4" />

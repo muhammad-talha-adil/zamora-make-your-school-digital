@@ -1,28 +1,28 @@
 <template>
-    <div class="rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-800">
-        <h2 class="mb-4 flex items-center gap-2 text-lg font-semibold text-gray-900 dark:text-white">
+    <div class="rounded-lg border border-border bg-card p-6">
+        <h2 class="mb-4 flex items-center gap-2 text-lg font-semibold text-foreground">
             <Icon icon="credit-card" class="h-5 w-5 text-primary" />
             Fee Structure
         </h2>
 
         <!-- No Class Selected Yet -->
-        <div v-if="!classId || !sessionId || !campusId" class="text-center py-8 text-gray-500">
-            <Icon icon="info" class="mx-auto mb-2 h-12 w-12 text-gray-400" />
+        <div v-if="!classId || !sessionId || !campusId" class="text-center py-8 text-muted-foreground">
+            <Icon icon="info" class="mx-auto mb-2 h-12 w-12 text-muted-foreground" />
             <p>Please select Branch, Session, Class, and Section if required to view the fee structure.</p>
         </div>
 
         <!-- Fee Structure Loading -->
         <div v-else-if="feeStructureLoading" class="text-center py-8">
             <Icon icon="loader" class="mx-auto h-8 w-8 animate-spin text-primary" />
-            <p class="mt-2 text-gray-500">Loading fee structure...</p>
+            <p class="mt-2 text-muted-foreground">Loading fee structure...</p>
         </div>
 
         <!-- No Fee Structure Found -->
         <div v-else-if="!feeStructure" class="text-center py-8">
-            <div class="rounded-lg border border-yellow-200 bg-yellow-50 p-4 dark:border-yellow-800 dark:bg-yellow-900/20">
-                <Icon icon="alert-triangle" class="mx-auto mb-2 h-8 w-8 text-yellow-600" />
-                <p class="font-medium text-yellow-800 dark:text-yellow-100">No Fee Structure Found</p>
-                <p class="mt-1 text-sm text-yellow-700 dark:text-yellow-300">
+            <div class="rounded-lg border border-warning/40 bg-warning/10 p-4">
+                <Icon icon="alert-triangle" class="mx-auto mb-2 h-8 w-8 text-warning" />
+                <p class="font-medium text-warning">No Fee Structure Found</p>
+                <p class="mt-1 text-sm text-warning">
                     No active fee structure exists for the selected branch, session, class, and section combination.
                     Please create the matching fee structure first.
                 </p>
@@ -36,7 +36,7 @@
         <!-- Fee Structure Found - Show Options -->
         <div v-else>
             <!-- Fee Mode Tabs -->
-            <div class="mb-4 border-b border-gray-200 dark:border-gray-700">
+            <div class="mb-4 border-b border-border">
                 <nav class="-mb-px flex space-x-4">
                     <button
                         type="button"
@@ -44,7 +44,7 @@
                         :class="[
                             feeMode === 'structure'
                                 ? 'border-primary text-primary'
-                                : 'border-transparent text-gray-500 hover:text-gray-700 dark:hover:text-gray-300',
+                                : 'border-transparent text-muted-foreground hover:text-foreground',
                             'whitespace-nowrap border-b-2 px-1 py-2 text-sm font-medium transition-colors'
                         ]"
                     >
@@ -57,7 +57,7 @@
                         :class="[
                             feeMode === 'discount'
                                 ? 'border-primary text-primary'
-                                : 'border-transparent text-gray-500 hover:text-gray-700 dark:hover:text-gray-300',
+                                : 'border-transparent text-muted-foreground hover:text-foreground',
                             'whitespace-nowrap border-b-2 px-1 py-2 text-sm font-medium transition-colors'
                         ]"
                     >
@@ -70,7 +70,7 @@
                         :class="[
                             feeMode === 'manual'
                                 ? 'border-primary text-primary'
-                                : 'border-transparent text-gray-500 hover:text-gray-700 dark:hover:text-gray-300',
+                                : 'border-transparent text-muted-foreground hover:text-foreground',
                             'whitespace-nowrap border-b-2 px-1 py-2 text-sm font-medium transition-colors'
                         ]"
                     >
@@ -81,18 +81,18 @@
             </div>
 
             <!-- Fee Structure Summary -->
-            <div class="mb-4 rounded-lg bg-blue-50 p-4 dark:bg-blue-900/20">
-                <div class="flex items-center justify-between">
+            <div class="mb-4 rounded-lg bg-primary/10 p-4">
+                <div class="flex flex-wrap gap-2 items-center justify-between">
                     <div>
-                        <p class="font-medium text-blue-900 dark:text-blue-100">
+                        <p class="font-medium text-primary">
                             {{ feeStructure.title }}
                         </p>
-                        <p class="text-sm text-blue-700 dark:text-blue-300">
+                        <p class="text-sm text-primary">
                             Monthly: <span class="font-semibold">Rs. {{ feeStructure.monthly_fee?.toLocaleString() }}</span> | 
                             Annual: <span class="font-semibold">Rs. {{ feeStructure.annual_fee?.toLocaleString() }}</span>
                         </p>
                     </div>
-                    <span class="rounded-full bg-green-100 px-3 py-1 text-xs font-medium text-green-800 dark:bg-green-900 dark:text-green-200">
+                    <span class="rounded-full bg-success/10 px-3 py-1 text-xs font-medium text-success">
                         Active
                     </span>
                 </div>
@@ -100,14 +100,14 @@
 
             <!-- OPTION A: Use Fee Structure As-Is -->
             <div v-if="feeMode === 'structure'">
-                <p class="mb-4 text-sm text-gray-600 dark:text-gray-400">
+                <p class="mb-4 text-sm text-muted-foreground">
                     The student will be charged according to the fee structure above. No custom fees or discounts applied.
                 </p>
             </div>
 
             <!-- OPTION B: Apply Discount -->
             <div v-else-if="feeMode === 'discount'">
-                <p class="mb-4 text-sm text-gray-600 dark:text-gray-400">
+                <p class="mb-4 text-sm text-muted-foreground">
                     Apply discounts to specific fee heads. The discount will persist for the entire academic year.
                 </p>
 
@@ -119,7 +119,7 @@
                             id="discount_type"
                             v-model="selectedDiscountType"
                             @change="onDiscountTypeChange"
-                            class="h-11 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+                            class="h-11 w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground"
                         >
                             <option value="">Select Discount Type</option>
                             <option
@@ -143,9 +143,9 @@
                                 step="0.01"
                                 placeholder="0.00"
                                 readonly
-                                class="bg-gray-100 dark:bg-gray-700"
+                                class="bg-muted"
                             />
-                            <span class="text-sm text-gray-500 whitespace-nowrap">
+                            <span class="text-sm text-muted-foreground whitespace-nowrap">
                                 {{ selectedDiscountTypeObj?.value_type === 'percent' ? '%' : 'Rs.' }}
                             </span>
                         </div>
@@ -158,7 +158,7 @@
                     <div
                         v-for="item in feeStructure.items"
                         :key="item.id"
-                        class="flex items-center justify-between rounded-lg border border-gray-200 p-3 dark:border-gray-700"
+                        class="flex flex-wrap gap-2 items-center justify-between rounded-lg border border-border p-3"
                     >
                         <div class="flex items-center gap-3">
                             <input
@@ -166,32 +166,32 @@
                                 :id="'discount_' + item.fee_head_id"
                                 v-model="discountSelectedFeeHeads"
                                 :value="item.fee_head_id"
-                                class="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                                class="h-4 w-4 rounded border-border text-primary focus:ring-primary"
                             />
                             <div>
                                 <Label :for="'discount_' + item.fee_head_id" class="cursor-pointer font-medium">
                                     {{ item.fee_head }}
                                 </Label>
-                                <p class="text-xs text-gray-500">
+                                <p class="text-xs text-muted-foreground">
                                     Original: Rs. {{ item.amount?.toLocaleString() }} | {{ item.frequency }}
-                                    <span v-if="item.is_optional" class="text-orange-600">(Optional)</span>
+                                    <span v-if="item.is_optional" class="text-warning">(Optional)</span>
                                 </p>
                             </div>
                         </div>
                         <div class="text-right">
                             <p class="text-sm font-medium">Rs. {{ item.amount?.toLocaleString() }}</p>
-                            <p class="text-xs text-gray-500">{{ item.frequency }}</p>
+                            <p class="text-xs text-muted-foreground">{{ item.frequency }}</p>
                         </div>
                     </div>
                 </div>
 
                 <!-- Applied Discounts Summary -->
-                <div v-if="appliedDiscounts.length > 0" class="mt-4 rounded-lg bg-green-50 p-4 dark:bg-green-900/20">
-                    <p class="mb-2 font-medium text-green-800 dark:text-green-100">
+                <div v-if="appliedDiscounts.length > 0" class="mt-4 rounded-lg bg-success/10 p-4">
+                    <p class="mb-2 font-medium text-success">
                         Applied Discounts:
                     </p>
                     <ul class="space-y-1">
-                        <li v-for="(discount, idx) in appliedDiscounts" :key="idx" class="text-sm text-green-700 dark:text-green-300">
+                        <li v-for="(discount, idx) in appliedDiscounts" :key="idx" class="text-sm text-success">
                             • {{ discount.fee_head }}: {{ discount.value }}{{ discount.value_type === 'percent' ? '%' : ' Rs.' }} off
                         </li>
                     </ul>
@@ -200,7 +200,7 @@
 
             <!-- OPTION C: Manual Entry -->
             <div v-else-if="feeMode === 'manual'">
-                <p class="mb-4 text-sm text-gray-600 dark:text-gray-400">
+                <p class="mb-4 text-sm text-muted-foreground">
                     Enter custom fee amounts for each fee head. You must select fee heads from the structure.
                     For mandatory fee heads, selection is required. Optional fee heads can be skipped.
                 </p>
@@ -211,8 +211,8 @@
                     <div
                         v-for="item in feeStructure.items"
                         :key="item.id"
-                        class="rounded-lg border border-gray-200 p-4 dark:border-gray-700"
-                        :class="{ 'border-red-300 bg-red-50 dark:bg-red-900/10': !item.is_optional && !manualFeeEntries.some(e => e.fee_head_id === item.fee_head_id) }"
+                        class="rounded-lg border border-border p-4"
+                        :class="{ 'border-destructive/40 bg-destructive/10': !item.is_optional && !manualFeeEntries.some(e => e.fee_head_id === item.fee_head_id) }"
                     >
                         <div class="flex items-start gap-3">
                             <div class="mt-1 flex h-5 items-center">
@@ -221,20 +221,20 @@
                                     :id="'manual_' + item.fee_head_id"
                                     v-model="manualSelectedFeeHeads"
                                     :value="item.fee_head_id"
-                                    class="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                                    class="h-4 w-4 rounded border-border text-primary focus:ring-primary"
                                 />
                             </div>
                             <div class="flex-1">
-                                <div class="mb-2 flex items-center justify-between">
+                                <div class="mb-2 flex flex-wrap gap-2 items-center justify-between">
                                     <div>
                                         <Label :for="'manual_' + item.fee_head_id" class="cursor-pointer font-medium">
                                             {{ item.fee_head }}
                                         </Label>
-                                        <span v-if="!item.is_optional" class="ml-2 text-xs text-red-600">*Mandatory</span>
-                                        <span v-else class="ml-2 text-xs text-orange-600">(Optional)</span>
+                                        <span v-if="!item.is_optional" class="ml-2 text-xs text-destructive">*Mandatory</span>
+                                        <span v-else class="ml-2 text-xs text-warning">(Optional)</span>
                                     </div>
                                     <div class="text-right">
-                                        <p class="text-sm text-gray-500">
+                                        <p class="text-sm text-muted-foreground">
                                             Original: Rs. {{ item.amount?.toLocaleString() }}
                                         </p>
                                     </div>
@@ -255,11 +255,11 @@
                                                 class="w-full"
                                             />
                                         </div>
-                                        <div class="w-32 text-sm text-gray-500">
-                                            <span v-if="(manualFeeAmounts[item.fee_head_id] || 0) < item.amount" class="text-green-600">
+                                        <div class="w-32 text-sm text-muted-foreground">
+                                            <span v-if="(manualFeeAmounts[item.fee_head_id] || 0) < item.amount" class="text-success">
                                                 {{ calculateDiscountPercentage(item.amount, manualFeeAmounts[item.fee_head_id] || 0) }}% off
                                             </span>
-                                            <span v-else-if="(manualFeeAmounts[item.fee_head_id] || 0) > item.amount" class="text-red-600">
+                                            <span v-else-if="(manualFeeAmounts[item.fee_head_id] || 0) > item.amount" class="text-destructive">
                                                 +{{ calculateDiscountPercentage(item.amount, manualFeeAmounts[item.fee_head_id] || 0) }}% more
                                             </span>
                                         </div>
@@ -277,20 +277,20 @@
                         id="manual_reason"
                         v-model="manualReason"
                         rows="2"
-                        class="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-gray-900 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+                        class="w-full rounded-md border border-border bg-card px-3 py-2 text-foreground"
                         placeholder="Explain why manual entry is being used..."
                     ></textarea>
                 </div>
 
                 <!-- Manual Entry Summary -->
-                <div v-if="manualFeeEntries.length > 0" class="mt-4 rounded-lg bg-purple-50 p-4 dark:bg-purple-900/20">
-                    <p class="mb-2 font-medium text-purple-800 dark:text-purple-100">
+                <div v-if="manualFeeEntries.length > 0" class="mt-4 rounded-lg bg-primary/10 p-4">
+                    <p class="mb-2 font-medium text-primary">
                         Custom Fee Entries:
                     </p>
                     <ul class="space-y-1">
-                        <li v-for="(entry, idx) in manualFeeEntries" :key="idx" class="text-sm text-purple-700 dark:text-purple-300">
+                        <li v-for="(entry, idx) in manualFeeEntries" :key="idx" class="text-sm text-primary">
                             • {{ entry.fee_head }}: Rs. {{ entry.amount?.toLocaleString() }}
-                            <span v-if="entry.discount_percentage" class="text-green-600">({{ entry.discount_percentage }}% {{ entry.discount_percentage > 0 ? 'discount' : 'adjustment' }})</span>
+                            <span v-if="entry.discount_percentage" class="text-success">({{ entry.discount_percentage }}% {{ entry.discount_percentage > 0 ? 'discount' : 'adjustment' }})</span>
                         </li>
                     </ul>
                 </div>

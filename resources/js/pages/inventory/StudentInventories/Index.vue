@@ -166,10 +166,10 @@ const formatDate = (date: string) => {
         <div class="space-y-6 p-4 md:p-6">
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
-                    <h1 class="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">
+                    <h1 class="text-xl sm:text-2xl font-bold text-foreground">
                         Student Inventory Assignments
                     </h1>
-                    <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                    <p class="mt-1 text-sm text-muted-foreground">
                         Track inventory items assigned to students.
                     </p>
                 </div>
@@ -181,13 +181,13 @@ const formatDate = (date: string) => {
 
             <!-- Filters -->
             <div class="flex flex-wrap gap-3">
-                <select v-model="campusFilter" class="w-full sm:w-48 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 text-sm min-h-11">
+                <select v-model="campusFilter" class="w-full sm:w-48 rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm min-h-11">
                     <option value="">All Campuses</option>
                     <option v-for="campus in props.campuses" :key="campus.id" :value="campus.id">
                         {{ campus.name }}
                     </option>
                 </select>
-                <select v-model="statusFilter" class="w-full sm:w-40 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 text-sm min-h-11">
+                <select v-model="statusFilter" class="w-full sm:w-40 rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm min-h-11">
                     <option value="">All Status</option>
                     <option value="assigned">Assigned</option>
                     <option value="partial_return">Partial Return</option>
@@ -196,60 +196,60 @@ const formatDate = (date: string) => {
             </div>
 
             <!-- Table -->
-            <div class="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-900">
+            <div class="overflow-hidden rounded-lg border border-border bg-card shadow-sm">
                 <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                        <thead class="bg-gray-50 dark:bg-gray-800">
+                    <table class="min-w-full divide-y divide-border">
+                        <thead class="bg-muted">
                             <tr>
-                                <th scope="col" class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">
+                                <th scope="col" class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">
                                     #
                                 </th>
-                                <th scope="col" class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">
+                                <th scope="col" class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">
                                     Student
                                 </th>
-                                <th scope="col" class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">
+                                <th scope="col" class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">
                                     Item
                                 </th>
-                                <th scope="col" class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">
+                                <th scope="col" class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">
                                     Quantity
                                 </th>
-                                <th scope="col" class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">
+                                <th scope="col" class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">
                                     Price
                                 </th>
-                                <th scope="col" class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">
+                                <th scope="col" class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">
                                     Status
                                 </th>
-                                <th scope="col" class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">
+                                <th scope="col" class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">
                                     Date
                                 </th>
-                                <th scope="col" class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">
+                                <th scope="col" class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">
                                     Actions
                                 </th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-900">
-                            <tr v-for="(item, index) in studentInventoriesData" :key="item.id" class="transition-colors hover:bg-gray-50 dark:hover:bg-gray-800">
+                        <tbody class="divide-y divide-border bg-card">
+                            <tr v-for="(item, index) in studentInventoriesData" :key="item.id" class="transition-colors hover:bg-accent">
                                 <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="text-sm text-gray-600 dark:text-gray-300">
+                                    <div class="text-sm text-muted-foreground">
                                         {{ (pagination.from || 0) + index }}
                                     </div>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <div>
-                                        <div class="text-sm font-medium text-gray-900 dark:text-white">
+                                        <div class="text-sm font-medium text-foreground">
                                             {{ item.student_name }}
                                         </div>
-                                        <div class="text-xs text-gray-500">
+                                        <div class="text-xs text-muted-foreground">
                                             {{ item.registration_number }}
                                         </div>
                                     </div>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <div>
-                                        <div class="text-sm font-medium text-gray-900 dark:text-white">
+                                        <div class="text-sm font-medium text-foreground">
                                             {{ item.item_name_snapshot }}
                                         </div>
-                                        <div class="text-xs text-gray-500 truncate max-w-xs">
+                                        <div class="text-xs text-muted-foreground truncate max-w-xs">
                                             {{ item.description_snapshot || 'No description' }}
                                         </div>
                                     </div>
@@ -257,13 +257,13 @@ const formatDate = (date: string) => {
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <div class="text-sm">
                                         <span class="font-bold">{{ item.quantity - item.returned_quantity }}</span>
-                                        <span class="text-gray-500"> / {{ item.quantity }}</span>
+                                        <span class="text-muted-foreground"> / {{ item.quantity }}</span>
                                     </div>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <div class="text-sm">
-                                        <span class="line-through text-gray-400">{{ formatCurrency(item.unit_price_snapshot) }}</span>
-                                        <span class="font-bold text-green-600 ml-2">{{ formatCurrency(calculateFinalPrice(item)) }}</span>
+                                        <span class="line-through text-muted-foreground">{{ formatCurrency(item.unit_price_snapshot) }}</span>
+                                        <span class="font-bold text-success ml-2">{{ formatCurrency(calculateFinalPrice(item)) }}</span>
                                     </div>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
@@ -272,7 +272,7 @@ const formatDate = (date: string) => {
                                     </Badge>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="text-sm text-gray-600 dark:text-gray-300">
+                                    <div class="text-sm text-muted-foreground">
                                         {{ formatDate(item.assigned_date) }}
                                     </div>
                                 </td>
@@ -300,7 +300,7 @@ const formatDate = (date: string) => {
 
             <!-- Pagination -->
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                <div class="text-sm text-gray-600">
+                <div class="text-sm text-muted-foreground">
                     Showing {{ pagination.from }} to {{ pagination.to }} of {{ pagination.total }} entries
                 </div>
                 <div class="flex flex-wrap gap-1">

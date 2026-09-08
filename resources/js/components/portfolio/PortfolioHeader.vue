@@ -21,7 +21,7 @@ const toggleTheme = () => {
 <template>
     <header class="fixed top-0 z-50 w-full border-b border-border bg-card shadow-sm">
         <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div class="flex items-center justify-between py-4">
+            <div class="flex flex-wrap gap-2 items-center justify-between py-4">
                 <!-- Logo/Title -->
                 <div class="flex items-center">
                     <img :src="logoPath" alt="Logo" class="h-8 w-8 mr-2" />

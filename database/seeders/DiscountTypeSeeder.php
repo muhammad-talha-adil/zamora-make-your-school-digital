@@ -85,10 +85,42 @@ class DiscountTypeSeeder extends Seeder
                 'requires_approval' => false,
                 'is_active' => true,
             ],
+            [
+                'name' => 'Hafiz-e-Quran Concession',
+                'code' => 'HAFIZ',
+                'value_type' => 'percent',
+                'default_value' => 25,
+                'description' => 'Concession for a student who has memorised the Quran',
+                'requires_approval' => true,
+                'is_active' => true,
+            ],
+            [
+                'name' => 'Zakat-eligible Concession',
+                'code' => 'ZAKAT',
+                'value_type' => 'percent',
+                'default_value' => 100,
+                'description' => 'Fee met from the zakat fund for an eligible family',
+                'requires_approval' => true,
+                'is_active' => true,
+            ],
+            [
+                'name' => 'Staff Child Concession',
+                'code' => 'STAFF_CHILD',
+                'value_type' => 'percent',
+                'default_value' => 75,
+                'description' => 'Concession for a child of a serving member of staff, over and above the staff rate',
+                'requires_approval' => true,
+                'is_active' => true,
+            ],
         ];
 
+        // Keyed on the code so the seeder can be run again without duplicating
+        // the concessions a school has already started using.
         foreach ($discountTypes as $discountType) {
-            DiscountType::create($discountType);
+            DiscountType::updateOrCreate(
+                ['code' => $discountType['code']],
+                $discountType
+            );
         }
 
         $this->command->info('Discount types seeded successfully!');

@@ -8,7 +8,6 @@ use App\Models\StaffDepartment;
 use App\Models\StaffDesignation;
 use App\Models\StaffProfile;
 use App\Models\User;
-use App\Models\UserRole;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 
@@ -17,7 +16,7 @@ class StaffSeeder extends Seeder
     public function run(): void
     {
         $campuses = Campus::where('is_active', true)->get();
-        $roles = Role::get()->keyBy('slug');
+        $roles = Role::get()->keyBy('name');
         $departments = StaffDepartment::get()->keyBy('name');
         $designations = StaffDesignation::get()->keyBy('name');
 
@@ -149,14 +148,7 @@ class StaffSeeder extends Seeder
             );
 
             if (isset($roles[$seed['role']])) {
-                UserRole::updateOrCreate(
-                    [
-                        'user_id' => $user->id,
-                        'role_id' => $roles[$seed['role']]->id,
-                        'campus_id' => $campus?->id,
-                    ],
-                    ['is_active' => true]
-                );
+                $user->syncRoles([$roles[$seed['role']]]);
             }
         }
 

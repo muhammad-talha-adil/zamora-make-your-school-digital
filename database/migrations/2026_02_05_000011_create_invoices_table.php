@@ -12,7 +12,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('campus_id')->constrained('campuses')->onDelete('cascade');
             $table->foreignId('student_id')->constrained('users')->onDelete('cascade')->comment('FK to students table');
-            $table->foreignId('session_id')->constrained('sessions')->onDelete('cascade');
+            $table->foreignId('session_id')->constrained('academic_sessions')->onDelete('cascade');
             $table->string('invoice_number')->comment('unique per campus/session');
             $table->date('invoice_date');
             $table->decimal('total_amount', 10, 2);

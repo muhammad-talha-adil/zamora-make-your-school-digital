@@ -125,6 +125,50 @@ class StudentEnrollmentRecord extends Model
     }
 
     /**
+     * The enrollment periods that were open on a given date.
+     *
+     * This is the difference between "where is this child now" and "where was
+     * this child then", and the whole reason the enrollment periods exist. A
+     * register opened for a past date, or a report run for a past month, must
+     * be built from the roll as it stood — not from today's, which files a
+     * child who moved from 5-A to 5-B in November under 5-B for the whole year
+     * and drops anyone who has since left entirely.
+     *
+     * Periods are back to back, so exactly one covers any date the child was
+     * on the roll.
+     */
+    public function scopeCoveringDate($query, $date)
+    {
+        $date = $date instanceof \DateTimeInterface
+            ? $date->format('Y-m-d')
+            : (string) $date;
+
+        return $query->whereDate('admission_date', '<=', $date)
+            ->where(function ($q) use ($date) {
+                $q->whereNull('leave_date')
+                    ->orWhereDate('leave_date', '>=', $date);
+            });
+    }
+
+    /**
+     * The enrollment periods that overlap a span of dates.
+     *
+     * A monthly report wants every child who was on the roll at any point in
+     * the month, including one who left half way through it.
+     */
+    public function scopeOverlappingPeriod($query, $from, $to)
+    {
+        $from = $from instanceof \DateTimeInterface ? $from->format('Y-m-d') : (string) $from;
+        $to = $to instanceof \DateTimeInterface ? $to->format('Y-m-d') : (string) $to;
+
+        return $query->whereDate('admission_date', '<=', $to)
+            ->where(function ($q) use ($from) {
+                $q->whereNull('leave_date')
+                    ->orWhereDate('leave_date', '>=', $from);
+            });
+    }
+
+    /**
      * Scope for a specific student.
      */
     public function scopeByStudent($query, $studentId)

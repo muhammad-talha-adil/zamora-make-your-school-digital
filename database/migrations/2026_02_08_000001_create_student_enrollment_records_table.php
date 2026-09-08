@@ -34,7 +34,11 @@ return new class extends Migration
             $table->foreignId('class_id')
                 ->constrained('school_classes')
                 ->onDelete('restrict');
+            // Nullable: a class may have no sections at all, and the admission
+            // form allows the section to be left blank in that case. A NOT NULL
+            // column here rejected those admissions at the database instead.
             $table->foreignId('section_id')
+                ->nullable()
                 ->constrained('sections')
                 ->onDelete('restrict');
             $table->foreignId('campus_id')

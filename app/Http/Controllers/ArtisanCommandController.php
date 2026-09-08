@@ -97,9 +97,9 @@ class ArtisanCommandController extends Controller
             $results[$command] = $result === 0 ? 'Success' : 'Failed';
         }
 
-return redirect()->route('artisan.ui')
-             ->with('success', 'Cache cleared successfully!')
-             ->with('results', $results);
+        return redirect()->route('artisan.ui')
+            ->with('success', 'Cache cleared successfully!')
+            ->with('results', $results);
     }
 
     /**
@@ -120,9 +120,9 @@ return redirect()->route('artisan.ui')
             $results[$command] = $result === 0 ? 'Success' : 'Failed';
         }
 
-return redirect()->route('artisan.ui')
-             ->with('success', 'Cache rebuilt successfully!')
-             ->with('results', $results);
+        return redirect()->route('artisan.ui')
+            ->with('success', 'Cache rebuilt successfully!')
+            ->with('results', $results);
     }
 
     /**

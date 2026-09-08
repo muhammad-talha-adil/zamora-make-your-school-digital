@@ -113,6 +113,7 @@ Route::prefix('fee')->name('fee.')->middleware($middleware)->group(function () {
 
         // Print - must be defined before {voucher} route
         Route::get('/{voucher}/print', [FeeVoucherController::class, 'print'])->name('print');
+        Route::get('/{voucher}/challan', [FeeVoucherController::class, 'challan'])->name('challan');
         Route::get('/print-batch', [FeeVoucherController::class, 'printBatch'])->name('print-batch');
         Route::post('/{voucher}/log-print', [FeeVoucherController::class, 'logPrint'])->name('log-print');
 

@@ -2,10 +2,10 @@
     <div class="space-y-6">
         <!-- Father Information Card (Primary Guardian) -->
         <div
-            class="rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-800"
+            class="rounded-lg border border-border bg-card p-6"
         >
             <h2
-                class="mb-4 flex items-center gap-2 text-lg font-semibold text-gray-900 dark:text-white"
+                class="mb-4 flex items-center gap-2 text-lg font-semibold text-foreground"
             >
                 <Icon icon="user-check" class="h-5 w-5 text-primary" />
                 Father Information (Primary Guardian)
@@ -18,7 +18,7 @@
                 <div class="space-y-2">
                     <Label for="father_name"
                         >Father's Name
-                        <span class="text-red-500">*</span></Label
+                        <span class="text-destructive">*</span></Label
                     >
                     <Input
                         id="father_name"
@@ -26,7 +26,7 @@
                         type="text"
                         placeholder="Enter father's name"
                         :class="{
-                            'border-red-500': errors.father_name,
+                            'border-destructive': errors.father_name,
                         }"
                         required
                     />
@@ -37,7 +37,7 @@
                 <div class="space-y-2 relative">
                     <Label for="father_phone"
                         >Father's Phone
-                        <span class="text-red-500">*</span></Label
+                        <span class="text-destructive">*</span></Label
                     >
                     <div class="relative">
                         <Input
@@ -49,7 +49,7 @@
                             @input="onFatherPhoneInput"
                             :disabled="guardianLookupLoading"
                             :class="{
-                                'border-red-500': errors.father_phone,
+                                'border-destructive': errors.father_phone,
                             }"
                             required
                         />
@@ -57,10 +57,10 @@
                         <Icon
                             v-if="guardianLookupLoading"
                             icon="loader"
-                            class="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-gray-400"
+                            class="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground"
                         />
                     </div>
-                    <p class="text-xs text-gray-500"></p>
+                    <p class="text-xs text-muted-foreground"></p>
                     <InputError :message="errors.father_phone" />
                 </div>
 
@@ -73,7 +73,7 @@
                         type="email"
                         placeholder="Enter email address"
                         :class="{
-                            'border-red-500': errors.father_email,
+                            'border-destructive': errors.father_email,
                         }"
                     />
                     <InputError :message="errors.father_email" />
@@ -91,11 +91,11 @@
                         @input="handleFatherCnicInput"
                         :disabled="!!linkedGuardianId"
                         :class="{
-                            'border-red-500': errors.father_cnic,
+                            'border-destructive': errors.father_cnic,
                             'cursor-not-allowed opacity-50': !!linkedGuardianId,
                         }"
                     />
-                    <p class="text-xs text-gray-500"></p>
+                    <p class="text-xs text-muted-foreground"></p>
                     <InputError :message="errors.father_cnic" />
                 </div>
 
@@ -109,7 +109,7 @@
                         placeholder="Enter occupation"
                         :disabled="!!linkedGuardianId"
                         :class="{
-                            'border-red-500': errors.father_occupation,
+                            'border-destructive': errors.father_occupation,
                             'cursor-not-allowed opacity-50': !!linkedGuardianId,
                         }"
                     />
@@ -126,7 +126,7 @@
                         placeholder="Enter address"
                         :disabled="!!linkedGuardianId"
                         :class="{
-                            'border-red-500': errors.father_address,
+                            'border-destructive': errors.father_address,
                             'cursor-not-allowed opacity-50': !!linkedGuardianId,
                         }"
                     />
@@ -137,14 +137,14 @@
                 <div class="space-y-2">
                     <Label for="father_relation_id"
                         >Relation
-                        <span class="text-red-500">*</span></Label
+                        <span class="text-destructive">*</span></Label
                     >
                     <select
                         id="father_relation_id"
                         v-model="form.father_relation_id"
-                        class="h-11 w-full cursor-not-allowed rounded-md border border-gray-300 bg-gray-100 px-3 py-2 text-sm text-gray-900 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                        class="h-11 w-full cursor-not-allowed rounded-md border border-border bg-muted px-3 py-2 text-sm text-foreground"
                         :class="{
-                            'border-red-500': errors.father_relation_id,
+                            'border-destructive': errors.father_relation_id,
                         }"
                         required
                         disabled
@@ -153,23 +153,23 @@
                             Father
                         </option>
                     </select>
-                    <p class="text-xs text-gray-500"></p>
+                    <p class="text-xs text-muted-foreground"></p>
                     <InputError :message="errors.father_relation_id" />
                 </div>
             </div>
         </div>
 
         <!-- Other Guardian Toggle Checkbox -->
-        <div class="rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-800">
-            <div class="flex items-center justify-between">
+        <div class="rounded-lg border border-border bg-card p-6">
+            <div class="flex flex-wrap gap-2 items-center justify-between">
                 <div class="flex items-center gap-3">
                     <input
                         type="checkbox"
                         id="includeOtherGuardian"
                         v-model="includeOtherGuardian"
-                        class="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                        class="h-4 w-4 rounded border-border text-primary focus:ring-primary"
                     />
-                    <Label for="includeOtherGuardian" class="text-lg font-semibold text-gray-900 dark:text-white cursor-pointer">
+                    <Label for="includeOtherGuardian" class="text-lg font-semibold text-foreground cursor-pointer">
                         Add Another Guardian
                     </Label>
                 </div>
@@ -179,10 +179,10 @@
         <!-- Other Guardian Information Card (Optional) -->
         <div
             v-if="showOtherGuardianSection"
-            class="rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-800"
+            class="rounded-lg border border-border bg-card p-6"
         >
             <h2
-                class="mb-4 flex items-center gap-2 text-lg font-semibold text-gray-900 dark:text-white"
+                class="mb-4 flex items-center gap-2 text-lg font-semibold text-foreground"
             >
                 <Icon icon="users" class="h-5 w-5 text-primary" />
                 Other Guardian (Optional)
@@ -213,7 +213,7 @@
                         maxlength="12"
                         @input="handleOtherPhoneInput"
                     />
-                    <p class="text-xs text-gray-500"></p>
+                    <p class="text-xs text-muted-foreground"></p>
                 </div>
 
                 <!-- Other Guardian Email -->
@@ -225,7 +225,7 @@
                         type="email"
                         placeholder="Enter email address"
                         :class="{
-                            'border-red-500': errors.other_email,
+                            'border-destructive': errors.other_email,
                         }"
                     />
                     <InputError :message="errors.other_email" />
@@ -241,9 +241,9 @@
                         placeholder="12345-1234567-1"
                         maxlength="15"
                         @input="handleOtherCnicInput"
-                        :class="{ 'border-red-500': errors.other_cnic }"
+                        :class="{ 'border-destructive': errors.other_cnic }"
                     />
-                    <p class="text-xs text-gray-500"></p>
+                    <p class="text-xs text-muted-foreground"></p>
                     <InputError :message="errors.other_cnic" />
                 </div>
 
@@ -253,7 +253,7 @@
                     <select
                         id="other_relation_id"
                         v-model="form.other_relation_id"
-                        class="h-11 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+                        class="h-11 w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground"
                     >
                         <option value="">Select Relation</option>
                         <option

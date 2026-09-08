@@ -10,7 +10,7 @@
                     @change="handleChange"
                     class="h-11"
                 />
-                <p v-if="hint" class="mt-1 text-xs text-gray-500">
+                <p v-if="hint" class="mt-1 text-xs text-muted-foreground">
                     {{ hint }}
                 </p>
                 <InputError :message="error" />
@@ -20,7 +20,7 @@
                 <img
                     :src="previewUrl"
                     :alt="previewAlt"
-                    class="h-20 w-20 rounded-lg border border-gray-200 object-cover dark:border-gray-700"
+                    class="h-20 w-20 rounded-lg border border-border object-cover"
                 />
                 <Button
                     type="button"
@@ -38,7 +38,7 @@
                 <img
                     :src="currentImageUrl"
                     :alt="previewAlt"
-                    class="h-20 w-20 rounded-lg border border-gray-200 object-cover dark:border-gray-700"
+                    class="h-20 w-20 rounded-lg border border-border object-cover"
                 />
                 <Button
                     type="button"
@@ -54,11 +54,11 @@
             <!-- Placeholder -->
             <div
                 v-else
-                class="flex h-20 w-20 items-center justify-center rounded-lg border border-gray-200 bg-gray-100 dark:border-gray-700 dark:bg-gray-700"
+                class="flex h-20 w-20 items-center justify-center rounded-lg border border-border bg-muted"
             >
                 <Icon
                     icon="user"
-                    class="h-10 w-10 text-gray-400"
+                    class="h-10 w-10 text-muted-foreground"
                 />
             </div>
         </div>

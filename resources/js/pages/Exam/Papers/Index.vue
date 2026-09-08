@@ -6,10 +6,10 @@
             <!-- Header -->
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 md:gap-4">
                 <div>
-                    <h1 class="text-lg md:text-2xl font-bold text-gray-900 dark:text-white">
+                    <h1 class="text-lg md:text-2xl font-bold text-foreground">
                         Exam Papers / Date Sheet
                     </h1>
-                    <p class="mt-1 text-xs md:text-sm text-gray-600 dark:text-gray-400">
+                    <p class="mt-1 text-xs md:text-sm text-muted-foreground">
                         View and manage papers schedule for exams
                     </p>
                 </div>
@@ -23,7 +23,7 @@
                         id="filter-exam"
                         v-model="filters.exam_id"
                         @change="applyFilters"
-                        class="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 text-sm min-h-10 md:min-h-11"
+                        class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm min-h-10 md:min-h-11"
                     >
                         <option value="">All Exams</option>
                         <option v-for="exam in props.exams" :key="exam.id" :value="exam.id">
@@ -37,7 +37,7 @@
                         id="filter-class"
                         v-model="filters.class_id"
                         @change="applyFilters"
-                        class="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 text-sm min-h-10 md:min-h-11"
+                        class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm min-h-10 md:min-h-11"
                     >
                         <option value="">All Classes</option>
                         <option v-for="cls in props.classes" :key="cls.id" :value="cls.id">
@@ -48,82 +48,82 @@
             </div>
 
             <!-- Papers Table -->
-            <div class="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-900">
+            <div class="overflow-hidden rounded-lg border border-border bg-card shadow-sm">
                 <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                        <thead class="bg-gray-50 dark:bg-gray-800">
+                    <table class="min-w-full divide-y divide-border">
+                        <thead class="bg-muted">
                             <tr>
-                                <th class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">
+                                <th class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">
                                     Date
                                 </th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">
+                                <th class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">
                                     Subject
                                 </th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">
+                                <th class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">
                                     Exam
                                 </th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">
+                                <th class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">
                                     Scope
                                 </th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">
+                                <th class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">
                                     Target
                                 </th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">
+                                <th class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">
                                     Time
                                 </th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">
+                                <th class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">
                                     Marks
                                 </th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">
+                                <th class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">
                                     Status
                                 </th>
-                                <th class="px-4 py-3 text-right text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">
+                                <th class="px-4 py-3 text-right text-xs font-semibold tracking-wider text-muted-foreground uppercase">
                                     Actions
                                 </th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-900">
-                            <tr v-for="paper in props.papers" :key="paper.id" class="transition-colors hover:bg-gray-50 dark:hover:bg-gray-800">
+                        <tbody class="divide-y divide-border bg-card">
+                            <tr v-for="paper in props.papers" :key="paper.id" class="transition-colors hover:bg-accent">
                                 <td class="px-4 py-3 whitespace-nowrap">
-                                    <div class="text-sm text-gray-900 dark:text-white">{{ paper.paper_date }}</div>
+                                    <div class="text-sm text-foreground">{{ paper.paper_date }}</div>
                                 </td>
                                 <td class="px-4 py-3 whitespace-nowrap">
-                                    <div class="text-sm font-medium text-gray-900 dark:text-white">{{ paper.subject?.name }}</div>
+                                    <div class="text-sm font-medium text-foreground">{{ paper.subject?.name }}</div>
                                 </td>
                                 <td class="px-4 py-3 whitespace-nowrap">
-                                    <div class="text-sm text-gray-600 dark:text-gray-300">{{ paper.exam?.name }}</div>
+                                    <div class="text-sm text-muted-foreground">{{ paper.exam?.name }}</div>
                                 </td>
                                 <td class="px-4 py-3 whitespace-nowrap">
                                     <span
                                         :class="[
                                             'px-2 py-1 text-xs font-medium rounded-full',
-                                            paper.scope_type === 'SCHOOL' ? 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400' :
-                                            paper.scope_type === 'CLASS' ? 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400' :
-                                            'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
+                                            paper.scope_type === 'SCHOOL' ? 'bg-primary/10 text-primary' :
+                                            paper.scope_type === 'CLASS' ? 'bg-primary/10 text-primary' :
+                                            'bg-success/10 text-success'
                                         ]"
                                     >
                                         {{ paper.scope_type }}
                                     </span>
                                 </td>
                                 <td class="px-4 py-3 whitespace-nowrap">
-                                    <div class="text-sm text-gray-600 dark:text-gray-300">
+                                    <div class="text-sm text-muted-foreground">
                                         <span v-if="paper.scope_type === 'SCHOOL'">All School</span>
                                         <span v-else-if="paper.scope_type === 'CLASS'">{{ paper.class?.name }}</span>
                                         <span v-else>{{ paper.class?.name }} - {{ paper.section?.name }}</span>
                                     </div>
                                 </td>
                                 <td class="px-4 py-3 whitespace-nowrap">
-                                    <div class="text-sm text-gray-600 dark:text-gray-300">{{ paper.start_time }} - {{ paper.end_time }}</div>
+                                    <div class="text-sm text-muted-foreground">{{ paper.start_time }} - {{ paper.end_time }}</div>
                                 </td>
                                 <td class="px-4 py-3 whitespace-nowrap">
-                                    <div class="text-sm text-gray-600 dark:text-gray-300">{{ paper.total_marks }} / {{ paper.passing_marks }}</div>
+                                    <div class="text-sm text-muted-foreground">{{ paper.total_marks }} / {{ paper.passing_marks }}</div>
                                 </td>
                                 <td class="px-4 py-3 whitespace-nowrap">
                                     <span
                                         :class="[
                                             'px-2 py-1 text-xs font-medium rounded-full',
-                                            paper.status === 'cancelled' ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400' :
-                                            'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
+                                            paper.status === 'cancelled' ? 'bg-destructive/10 text-destructive' :
+                                            'bg-success/10 text-success'
                                         ]"
                                     >
                                         {{ paper.status === 'cancelled' ? 'Cancelled' : 'Scheduled' }}
@@ -142,7 +142,7 @@
                 </div>
             </div>
 
-            <div v-if="props.papers.length === 0" class="text-center py-8 text-gray-500">
+            <div v-if="props.papers.length === 0" class="text-center py-8 text-muted-foreground">
                 No papers found.
             </div>
         </div>

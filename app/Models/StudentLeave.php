@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Enums\LeaveStatus;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -18,13 +19,20 @@ class StudentLeave extends Model
         'end_date',
         'description',
         'status',
+        'applied_by',
+        'applied_at',
         'approved_by',
+        'decided_at',
+        'decision_note',
+        'attachment_path',
     ];
 
     protected $casts = [
         'start_date' => 'date',
         'end_date' => 'date',
-        'status' => 'enum',
+        'applied_at' => 'datetime',
+        'decided_at' => 'datetime',
+        'status' => LeaveStatus::class,
     ];
 
     /**
@@ -72,7 +80,7 @@ class StudentLeave extends Model
      */
     public function scopePending($query)
     {
-        return $query->where('status', 'pending');
+        return $query->where('status', LeaveStatus::PENDING);
     }
 
     /**
@@ -80,7 +88,7 @@ class StudentLeave extends Model
      */
     public function scopeApproved($query)
     {
-        return $query->where('status', 'approved');
+        return $query->where('status', LeaveStatus::APPROVED);
     }
 
     /**
@@ -88,7 +96,7 @@ class StudentLeave extends Model
      */
     public function scopeRejected($query)
     {
-        return $query->where('status', 'rejected');
+        return $query->where('status', LeaveStatus::REJECTED);
     }
 
     /**
@@ -96,7 +104,7 @@ class StudentLeave extends Model
      */
     public function isApproved(): bool
     {
-        return $this->status === 'approved';
+        return $this->status === LeaveStatus::APPROVED;
     }
 
     /**
@@ -104,6 +112,6 @@ class StudentLeave extends Model
      */
     public function isPending(): bool
     {
-        return $this->status === 'pending';
+        return $this->status === LeaveStatus::PENDING;
     }
 }

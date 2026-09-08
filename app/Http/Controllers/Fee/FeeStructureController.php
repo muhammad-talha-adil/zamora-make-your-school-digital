@@ -6,13 +6,17 @@ use App\Enums\Fee\FeeFrequency;
 use App\Enums\Fee\FeeHeadCategory;
 use App\Enums\Fee\FeeStructureStatus;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Fee\StoreFeeStructureRequest;
+use App\Http\Requests\Fee\UpdateFeeStructureRequest;
 use App\Models\Campus;
 use App\Models\Fee\FeeHead;
 use App\Models\Fee\FeeStructure;
+use App\Models\Fee\FeeVoucher;
 use App\Models\Month;
 use App\Models\SchoolClass;
 use App\Models\Section;
 use App\Models\Session;
+use App\Models\StudentEnrollmentRecord;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -94,21 +98,9 @@ class FeeStructureController extends Controller
     /**
      * Store a newly created fee structure.
      */
-    public function store(Request $request)
+    public function store(StoreFeeStructureRequest $request)
     {
-        $validated = $request->validate([
-            'title' => 'required|string|max:200',
-            'session_id' => 'required|exists:academic_sessions,id',
-            'campus_id' => 'required|exists:campuses,id',
-            'class_id' => 'nullable|exists:school_classes,id',
-            'section_ids' => 'nullable|array', // Changed from section_id
-            'section_ids.*' => 'exists:sections,id', // Validate each section ID
-            'status' => 'required|in:draft,active,inactive',
-            'notes' => 'nullable|string',
-            'items' => 'nullable|array',
-            'items.*.fee_head_id' => 'required_with:items|exists:fee_heads,id',
-            'items.*.amount' => 'required_with:items|numeric|min:0',
-        ]);
+        $validated = $request->validated();
 
         // Get session to auto-fill effective dates
         $session = Session::find($validated['session_id']);
@@ -144,6 +136,7 @@ class FeeStructureController extends Controller
 
         foreach ($sectionsToCreate as $sectionId) {
             $structureData = $validated;
+            unset($structureData['items']);
             $structureData['section_id'] = $sectionId;
 
             $structure = FeeStructure::create($structureData);
@@ -152,16 +145,7 @@ class FeeStructureController extends Controller
             // Create fee structure items for this structure
             if (! empty($validated['items'])) {
                 foreach ($validated['items'] as $item) {
-                    $feeHead = FeeHead::find($item['fee_head_id']);
-                    $frequency = $feeHead?->default_frequency instanceof FeeFrequency
-                        ? $feeHead->default_frequency->value
-                        : ($feeHead?->default_frequency ?? 'monthly');
-
-                    $structure->items()->create([
-                        'fee_head_id' => $item['fee_head_id'],
-                        'amount' => $item['amount'],
-                        'frequency' => $frequency,
-                    ]);
+                    $structure->items()->create($this->itemAttributes($item));
                 }
             }
         }
@@ -300,24 +284,18 @@ class FeeStructureController extends Controller
             'sections' => Section::select('id', 'name', 'class_id')->get(),
             'months' => Month::select('id', 'name', 'month_number')->orderBy('month_number')->get(),
             'feeHeads' => FeeHead::active()->select('id', 'name', 'category', 'default_frequency')->ordered()->get(),
+            // So the office can see that an edit reaches real students before
+            // it saves, rather than finding out from the next fee run.
+            'usage' => $this->usageOf($feeStructure),
         ]);
     }
 
     /**
      * Update the specified fee structure.
      */
-    public function update(Request $request, FeeStructure $feeStructure)
+    public function update(UpdateFeeStructureRequest $request, FeeStructure $feeStructure)
     {
-        $validated = $request->validate([
-            'title' => 'required|string|max:200',
-            'session_id' => 'required|exists:academic_sessions,id',
-            'campus_id' => 'required|exists:campuses,id',
-            'class_id' => 'nullable|exists:school_classes,id',
-            'section_ids' => 'nullable|array',
-            'section_ids.*' => 'exists:sections,id',
-            'status' => 'required|in:draft,active,inactive',
-            'notes' => 'nullable|string',
-        ]);
+        $validated = $request->validated();
 
         // Get session to auto-fill effective dates
         $session = Session::find($validated['session_id']);
@@ -375,9 +353,18 @@ class FeeStructureController extends Controller
 
         // First, update the main structure being edited
         $mainStructureData = $validated;
+        unset($mainStructureData['items']);
         $mainStructureData['section_id'] = $sectionIds[0] ?? null;
         $feeStructure->update($mainStructureData);
         $structures[] = $feeStructure;
+
+        // The edit screen changes charges one at a time through
+        // `fee.structures.items.*` and sends no `items` key, so its updates must
+        // leave them alone. A caller that does send the key states the whole set
+        // and gets it synced; sending an empty array clears the charges.
+        if ($request->has('items')) {
+            $this->syncItems($feeStructure, $validated['items'] ?? []);
+        }
 
         // Sync fee items from main structure to all related structures
         $mainItems = $feeStructure->items()->get();
@@ -437,6 +424,26 @@ class FeeStructureController extends Controller
      */
     public function destroy(FeeStructure $feeStructure)
     {
+        $inUse = $this->usageOf($feeStructure);
+
+        // Deleting a structure students are enrolled on, or that vouchers were
+        // raised from, leaves those records pointing at a trashed row. The
+        // school deactivates it instead, which stops it being picked up for new
+        // vouchers while the history stays readable.
+        if ($inUse['enrollments'] > 0 || $inUse['vouchers'] > 0) {
+            $message = sprintf(
+                'This fee structure is in use by %d student(s) and %d voucher(s), so it cannot be deleted. Deactivate it instead.',
+                $inUse['enrollments'],
+                $inUse['vouchers'],
+            );
+
+            if (request()->expectsJson()) {
+                return response()->json(['success' => false, 'message' => $message], 422);
+            }
+
+            return redirect()->route('fee.structures.index')->with('error', $message);
+        }
+
         $feeStructure->delete();
 
         if (request()->expectsJson()) {
@@ -448,6 +455,93 @@ class FeeStructureController extends Controller
 
         return redirect()->route('fee.structures.index')
             ->with('success', 'Fee structure deleted successfully.');
+    }
+
+    /**
+     * How many records depend on a fee structure.
+     *
+     * Shown before an edit so the office knows the change reaches real
+     * students, and checked before a delete.
+     *
+     * @return array{enrollments: int, vouchers: int}
+     */
+    private function usageOf(FeeStructure $feeStructure): array
+    {
+        return [
+            'enrollments' => StudentEnrollmentRecord::where('fee_structure_id', $feeStructure->id)->count(),
+            'vouchers' => FeeVoucher::whereHas(
+                'enrollmentRecord',
+                fn ($q) => $q->where('fee_structure_id', $feeStructure->id)
+            )->count(),
+        ];
+    }
+
+    /**
+     * Brings a structure's charges in line with the set the caller sent.
+     *
+     * Matched on the fee head, which the request already forbids appearing
+     * twice: a repriced charge keeps its row, so the voucher lines that name it
+     * as their source still point at something real. Heads no longer in the set
+     * are removed.
+     *
+     * Each charge is replaced by what was sent, so an omitted flag goes back to
+     * its default. That is the opposite of the single-item endpoint, which
+     * edits one row in place and keeps what the form left out — here the caller
+     * is stating the whole set, and any other reading would make it impossible
+     * to turn a flag off.
+     *
+     * @param  array<int, array<string, mixed>>  $items
+     */
+    private function syncItems(FeeStructure $feeStructure, array $items): void
+    {
+        $keep = [];
+
+        foreach ($items as $item) {
+            $attributes = $this->itemAttributes($item);
+
+            $existing = $feeStructure->items()
+                ->where('fee_head_id', $attributes['fee_head_id'])
+                ->first();
+
+            $keep[] = $existing
+                ? tap($existing)->update($attributes)->id
+                : $feeStructure->items()->create($attributes)->id;
+        }
+
+        $feeStructure->items()->whereNotIn('id', $keep)->delete();
+    }
+
+    /**
+     * The columns a fee structure item is created from.
+     *
+     * `frequency` comes from the form when given, so one structure can bill a
+     * head monthly where another bills it yearly; it falls back to the fee
+     * head's own default, which used to be the only possible value.
+     *
+     * @param  array<string, mixed>  $item
+     * @return array<string, mixed>
+     */
+    private function itemAttributes(array $item): array
+    {
+        $feeHead = FeeHead::find($item['fee_head_id']);
+
+        $default = $feeHead?->default_frequency instanceof FeeFrequency
+            ? $feeHead->default_frequency->value
+            : ($feeHead?->default_frequency ?? 'monthly');
+
+        return [
+            'fee_head_id' => $item['fee_head_id'],
+            'amount' => $item['amount'],
+            'frequency' => $item['frequency'] ?? $default,
+            'is_optional' => $item['is_optional'] ?? false,
+            'applicable_on_admission' => $item['applicable_on_admission'] ?? false,
+            'is_transport_related' => $item['is_transport_related'] ?? false,
+            'starts_from_month_id' => $item['starts_from_month_id'] ?? null,
+            'ends_at_month_id' => $item['ends_at_month_id'] ?? null,
+            'billing_month_id' => $item['billing_month_id'] ?? null,
+            'billing_year' => $item['billing_year'] ?? null,
+            'notes' => $item['notes'] ?? null,
+        ];
     }
 
     /**

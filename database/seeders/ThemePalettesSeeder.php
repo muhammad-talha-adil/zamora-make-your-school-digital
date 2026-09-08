@@ -426,7 +426,12 @@ class ThemePalettesSeeder extends Seeder
             // Delete existing colors and recreate (ke update bhi ho jaye)
             $palette->colors()->delete();
 
-            foreach ($paletteData['colors'] as $slot => $hex) {
+            // Every palette above defines only the chrome slots; the action
+            // colours are shared per mode so buttons, badges and status text
+            // resolve from the database instead of being hardcoded in Vue.
+            $colors = $paletteData['colors'] + self::actionColors($paletteData['mode']);
+
+            foreach ($colors as $slot => $hex) {
                 ThemePaletteColor::create([
                     'theme_palette_id' => $palette->id,
                     'slot' => $slot,
@@ -434,5 +439,44 @@ class ThemePalettesSeeder extends Seeder
                 ]);
             }
         }
+    }
+
+    /**
+     * Status colours for a mode.
+     *
+     * Dark variants are lighter so they keep contrast on a dark card, and
+     * their foregrounds flip to a dark ink wherever the fill is bright.
+     *
+     * @return array<string, string>
+     */
+    private static function actionColors(string $mode): array
+    {
+        if ($mode === 'dark') {
+            return [
+                'primary' => '#3B82F6',
+                'primary_text' => '#0B1220',
+                'success' => '#22C55E',
+                'success_text' => '#0B1220',
+                'danger' => '#EF4444',
+                'danger_text' => '#FFFFFF',
+                'warning' => '#F59E0B',
+                'warning_text' => '#0B1220',
+                'info' => '#06B6D4',
+                'info_text' => '#0B1220',
+            ];
+        }
+
+        return [
+            'primary' => '#2563EB',
+            'primary_text' => '#FFFFFF',
+            'success' => '#16A34A',
+            'success_text' => '#FFFFFF',
+            'danger' => '#DC2626',
+            'danger_text' => '#FFFFFF',
+            'warning' => '#D97706',
+            'warning_text' => '#FFFFFF',
+            'info' => '#0891B2',
+            'info_text' => '#FFFFFF',
+        ];
     }
 }

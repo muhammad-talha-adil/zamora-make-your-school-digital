@@ -541,8 +541,8 @@ watch(() => form.purchase_id, (newPurchaseId) => {
         <DialogContent class="sm:max-w-5xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
                 <DialogTitle class="flex items-center gap-2">
-                    <div class="p-2 bg-red-100 dark:bg-red-900/20 rounded-lg">
-                        <Icon icon="rotate-ccw" class="h-5 w-5 text-red-600" />
+                    <div class="p-2 bg-destructive/10 rounded-lg">
+                        <Icon icon="rotate-ccw" class="h-5 w-5 text-destructive" />
                     </div>
                     {{ isEditMode ? 'Edit Purchase Return' : 'New Purchase Return' }}
                 </DialogTitle>
@@ -559,14 +559,14 @@ watch(() => form.purchase_id, (newPurchaseId) => {
                                 <div class="p-1 bg-muted rounded">
                                     <Icon icon="building" class="h-3.5 w-3.5 text-muted-foreground" />
                                 </div>
-                                Campus <span class="text-red-500">*</span>
+                                Campus <span class="text-destructive">*</span>
                             </Label>
                             <select
                                 id="campus_id"
                                 v-model="form.campus_id"
                                 @change="onCampusChange"
-                                class="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 text-sm h-11"
-                                :class="{ 'border-red-500': errors.campus_id }"
+                                class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm h-11"
+                                :class="{ 'border-destructive': errors.campus_id }"
                                 required
                             >
                                 <option value="">Select Campus</option>
@@ -583,7 +583,7 @@ watch(() => form.purchase_id, (newPurchaseId) => {
                                 <div class="p-1 bg-muted rounded">
                                     <Icon icon="truck" class="h-3.5 w-3.5 text-muted-foreground" />
                                 </div>
-                                Supplier <span class="text-red-500">*</span>
+                                Supplier <span class="text-destructive">*</span>
                             </Label>
                             <ComboboxInput
                                 v-model="form.supplier_id"
@@ -620,14 +620,14 @@ watch(() => form.purchase_id, (newPurchaseId) => {
                             <div class="p-1 bg-muted rounded">
                                 <Icon icon="calendar" class="h-3.5 w-3.5 text-muted-foreground" />
                             </div>
-                            Return Date <span class="text-red-500">*</span>
+                            Return Date <span class="text-destructive">*</span>
                         </Label>
                         <Input
                             id="return_date"
                             v-model="form.return_date"
                             type="date"
                             class="h-11"
-                            :class="{ 'border-red-500': errors.return_date }"
+                            :class="{ 'border-destructive': errors.return_date }"
                             required
                         />
                         <InputError :message="errors.return_date" />
@@ -635,12 +635,12 @@ watch(() => form.purchase_id, (newPurchaseId) => {
 
                     <!-- Return Items -->
                     <div class="space-y-3">
-                        <div class="flex items-center justify-between">
+                        <div class="flex flex-wrap gap-2 items-center justify-between">
                             <Label class="flex items-center gap-2">
                                 <div class="p-1 bg-muted rounded">
                                     <Icon icon="list" class="h-3.5 w-3.5 text-muted-foreground" />
                                 </div>
-                                Return Items <span class="text-red-500">*</span>
+                                Return Items <span class="text-destructive">*</span>
                             </Label>
                             <Button type="button" variant="outline" size="sm" @click="addItem" class="h-8">
                                 <Icon icon="plus" class="mr-1 h-3 w-3" />
@@ -650,22 +650,22 @@ watch(() => form.purchase_id, (newPurchaseId) => {
 
                         <div class="border rounded-lg overflow-hidden">
                             <div class="overflow-x-auto">
-                                <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                                    <thead class="bg-gray-50 dark:bg-gray-800">
+                                <table class="min-w-full divide-y divide-border">
+                                    <thead class="bg-muted">
                                         <tr>
-                                            <th class="px-2 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase w-12">Sr#</th>
-                                            <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Item</th>
-                                            <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Available</th>
-                                            <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Quantity <span class="text-red-500">*</span></th>
-                                            <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Unit Price <span class="text-red-500">*</span></th>
-                                            <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase w-32">Total</th>
-                                            <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Reason</th>
+                                            <th class="px-2 py-3 text-left text-xs font-medium text-muted-foreground uppercase w-12">Sr#</th>
+                                            <th class="px-3 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Item</th>
+                                            <th class="px-3 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Available</th>
+                                            <th class="px-3 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Quantity <span class="text-destructive">*</span></th>
+                                            <th class="px-3 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Unit Price <span class="text-destructive">*</span></th>
+                                            <th class="px-3 py-3 text-left text-xs font-medium text-muted-foreground uppercase w-32">Total</th>
+                                            <th class="px-3 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Reason</th>
                                             <th class="px-3 py-3"></th>
                                         </tr>
                                     </thead>
-                                    <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+                                    <tbody class="divide-y divide-border">
                                         <tr v-for="(item, index) in form.items" :key="index">
-                                            <td class="px-2 py-3 text-sm text-gray-500 dark:text-gray-400">
+                                            <td class="px-2 py-3 text-sm text-muted-foreground">
                                                 {{ index + 1 }}
                                             </td>
                                             <td class="px-3 py-3">
@@ -678,7 +678,7 @@ watch(() => form.purchase_id, (newPurchaseId) => {
                                                             item.unit_price = pi.purchase_rate;
                                                         }
                                                     }"
-                                                    class="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-2 py-1.5 text-sm h-10"
+                                                    class="w-full rounded-md border border-border bg-card text-foreground px-2 py-1.5 text-sm h-10"
                                                     required
                                                 >
                                                     <option :value="null">Select Item</option>
@@ -688,7 +688,7 @@ watch(() => form.purchase_id, (newPurchaseId) => {
                                                 </select>
                                             </td>
                                             <td class="px-3 py-3 text-sm">
-                                                <span :class="item.available_for_return > 0 ? 'text-green-600' : 'text-red-500'">
+                                                <span :class="item.available_for_return > 0 ? 'text-success' : 'text-destructive'">
                                                     {{ item.available_for_return }}
                                                 </span>
                                             </td>
@@ -703,7 +703,7 @@ watch(() => form.purchase_id, (newPurchaseId) => {
                                                         :title="'Max: ' + item.available_for_return"
                                                         required
                                                     />
-                                                    <span v-if="item.quantity > item.available_for_return" class="text-xs text-red-500 whitespace-nowrap">
+                                                    <span v-if="item.quantity > item.available_for_return" class="text-xs text-destructive whitespace-nowrap">
                                                         (Max: {{ item.available_for_return }})
                                                     </span>
                                                 </div>
@@ -756,12 +756,12 @@ watch(() => form.purchase_id, (newPurchaseId) => {
                                                     @click="removeItem(index)"
                                                     class="h-8 w-8 p-0"
                                                 >
-                                                    <Icon icon="trash" class="h-4 w-4 text-red-500" />
+                                                    <Icon icon="trash" class="h-4 w-4 text-destructive" />
                                                 </Button>
                                             </td>
                                         </tr>
                                         <tr v-if="form.items.length === 0">
-                                            <td colspan="8" class="px-4 py-8 text-center text-gray-500">
+                                            <td colspan="8" class="px-4 py-8 text-center text-muted-foreground">
                                                 <div v-if="loading">
                                                     <Icon icon="loader" class="h-6 w-6 animate-spin mx-auto mb-2" />
                                                     Loading items...
@@ -779,10 +779,10 @@ watch(() => form.purchase_id, (newPurchaseId) => {
                     </div>
 
                     <!-- Total -->
-                    <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 flex justify-end">
+                    <div class="bg-muted rounded-lg p-4 flex flex-wrap gap-2 justify-end">
                         <div class="text-right">
-                            <div class="text-sm text-gray-600 dark:text-gray-400">Total Return Amount</div>
-                            <div class="text-2xl font-bold text-gray-900 dark:text-white">{{ formatCurrency(totalAmount) }}</div>
+                            <div class="text-sm text-muted-foreground">Total Return Amount</div>
+                            <div class="text-2xl font-bold text-foreground">{{ formatCurrency(totalAmount) }}</div>
                         </div>
                     </div>
 
@@ -798,14 +798,14 @@ watch(() => form.purchase_id, (newPurchaseId) => {
                             id="note"
                             v-model="form.note"
                             rows="2"
-                            class="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 min-h-20"
+                            class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 min-h-20"
                             placeholder="Additional notes..."
                         ></textarea>
                     </div>
                 </div>
 
                 <!-- Actions -->
-                <div class="flex justify-end gap-3 pt-2">
+                <div class="flex flex-wrap justify-end gap-3 pt-2">
                     <DialogClose as-child>
                         <Button type="button" variant="outline" @click="resetForm" class="h-10">
                             <Icon icon="x" class="mr-2 h-4 w-4" />

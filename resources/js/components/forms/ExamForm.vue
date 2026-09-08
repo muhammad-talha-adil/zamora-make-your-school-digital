@@ -177,24 +177,24 @@ const resetForm = () => {
                 <div class="grid gap-4 py-4">
                     <div class="grid gap-4 md:grid-cols-2">
                         <div class="grid gap-2">
-                            <Label for="name">Exam Name <span class="text-red-500">*</span></Label>
+                            <Label for="name">Exam Name <span class="text-destructive">*</span></Label>
                             <Input
                                 id="name"
                                 v-model="form.name"
                                 type="text"
                                 placeholder="Enter exam name"
-                                :class="{ 'border-red-500': errors.name }"
+                                :class="{ 'border-destructive': errors.name }"
                             />
                             <InputError :message="errors.name" />
                         </div>
 
                         <div class="grid gap-2">
-                            <Label for="exam_type_id">Exam Type <span class="text-red-500">*</span></Label>
+                            <Label for="exam_type_id">Exam Type <span class="text-destructive">*</span></Label>
                             <select
                                 id="exam_type_id"
                                 v-model="form.exam_type_id"
-                                class="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 text-sm"
-                                :class="{ 'border-red-500': errors.exam_type_id }"
+                                class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm"
+                                :class="{ 'border-destructive': errors.exam_type_id }"
                             >
                                 <option value="">Select Exam Type</option>
                                 <option v-for="type in props.examTypes" :key="type.id" :value="type.id">
@@ -205,12 +205,12 @@ const resetForm = () => {
                         </div>
 
                         <div class="grid gap-2">
-                            <Label for="session_id">Session <span class="text-red-500">*</span></Label>
+                            <Label for="session_id">Session <span class="text-destructive">*</span></Label>
                             <select
                                 id="session_id"
                                 v-model="form.session_id"
-                                class="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 text-sm"
-                                :class="{ 'border-red-500': errors.session_id }"
+                                class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm"
+                                :class="{ 'border-destructive': errors.session_id }"
                             >
                                 <option value="">Select Session</option>
                                 <option v-for="session in props.sessions" :key="session.id" :value="String(session.id)">
@@ -221,23 +221,23 @@ const resetForm = () => {
                         </div>
 
                         <div class="grid gap-2">
-                            <Label for="start_date">Start Date <span class="text-red-500">*</span></Label>
+                            <Label for="start_date">Start Date <span class="text-destructive">*</span></Label>
                             <Input
                                 id="start_date"
                                 v-model="form.start_date"
                                 type="date"
-                                :class="{ 'border-red-500': errors.start_date }"
+                                :class="{ 'border-destructive': errors.start_date }"
                             />
                             <InputError :message="errors.start_date" />
                         </div>
 
                         <div class="grid gap-2">
-                            <Label for="end_date">End Date <span class="text-red-500">*</span></Label>
+                            <Label for="end_date">End Date <span class="text-destructive">*</span></Label>
                             <Input
                                 id="end_date"
                                 v-model="form.end_date"
                                 type="date"
-                                :class="{ 'border-red-500': errors.end_date }"
+                                :class="{ 'border-destructive': errors.end_date }"
                             />
                             <InputError :message="errors.end_date" />
                         </div>

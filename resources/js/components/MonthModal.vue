@@ -44,26 +44,26 @@ const open = ref(false);
             <div class="space-y-6">
                 <!-- Table -->
                 <div class="space-y-4">
-                    <div class="bg-white dark:bg-gray-900 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden shadow-sm">
+                    <div class="bg-card rounded-lg border border-border overflow-hidden shadow-sm">
                         <div class="overflow-x-auto">
-                            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                                <thead class="bg-gray-50 dark:bg-gray-800">
+                            <table class="min-w-full divide-y divide-border">
+                                <thead class="bg-muted">
                                     <tr>
-                                        <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">#</th>
-                                        <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">Month Number</th>
-                                        <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">Name</th>
+                                        <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">#</th>
+                                        <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Month Number</th>
+                                        <th scope="col" class="px-6 py-4 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">Name</th>
                                     </tr>
                                 </thead>
-                                <tbody class="bg-white dark:bg-gray-900 divide-y divide-gray-200 dark:divide-gray-700">
-                                    <tr v-for="(month, index) in months" :key="month.id" class="hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors">
+                                <tbody class="bg-card divide-y divide-border">
+                                    <tr v-for="(month, index) in months" :key="month.id" class="hover:bg-accent transition-colors">
                                         <td class="px-6 py-4 whitespace-nowrap">
-                                            <div class="text-sm text-gray-600 dark:text-gray-300">{{ index + 1 }}</div>
+                                            <div class="text-sm text-muted-foreground">{{ index + 1 }}</div>
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap">
-                                            <div class="text-sm text-gray-600 dark:text-gray-300">{{ month.month_number }}</div>
+                                            <div class="text-sm text-muted-foreground">{{ month.month_number }}</div>
                                         </td>
                                         <td class="px-6 py-4 whitespace-nowrap">
-                                            <div class="text-sm font-medium text-gray-900 dark:text-white">{{ month.name }}</div>
+                                            <div class="text-sm font-medium text-foreground">{{ month.name }}</div>
                                         </td>
                                     </tr>
                                 </tbody>

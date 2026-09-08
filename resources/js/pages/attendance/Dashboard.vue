@@ -6,10 +6,10 @@
             <!-- Header -->
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 md:gap-4">
                 <div>
-                    <h1 class="text-lg md:text-2xl font-bold text-gray-900 dark:text-white">
+                    <h1 class="text-lg md:text-2xl font-bold text-foreground">
                         Attendance Dashboard
                     </h1>
-                    <p class="mt-1 text-xs md:text-sm text-gray-600 dark:text-gray-400">
+                    <p class="mt-1 text-xs md:text-sm text-muted-foreground">
                         Overview of today's attendance status
                     </p>
                 </div>
@@ -26,12 +26,12 @@
             </div>
 
             <!-- Filters -->
-            <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
+            <div class="bg-card rounded-lg border border-border p-4">
                 <div class="flex flex-col sm:flex-row gap-4">
                     <select
                         v-model="filters.campus_id"
                         @change="applyFilters"
-                        class="w-full sm:w-48 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 text-sm"
+                        class="w-full sm:w-48 rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm"
                     >
                         <option value="">All Campuses</option>
                         <option v-for="campus in props.campuses" :key="campus.id" :value="campus.id">
@@ -41,7 +41,7 @@
                     <select
                         v-model="filters.session_id"
                         @change="applyFilters"
-                        class="w-full sm:w-48 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 text-sm"
+                        class="w-full sm:w-48 rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm"
                     >
                         <option value="">All Sessions</option>
                         <option v-for="session in props.sessions" :key="session.id" :value="session.id">
@@ -58,31 +58,31 @@
             <!-- Today's Stats Cards -->
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                 <!-- Total Students -->
-                <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-                    <div class="flex items-center justify-between">
+                <div class="bg-card rounded-lg border border-border p-4">
+                    <div class="flex flex-wrap gap-2 items-center justify-between">
                         <div>
-                            <p class="text-sm text-gray-500 dark:text-gray-400">Total Students</p>
-                            <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ props.todayStats.total_students }}</p>
+                            <p class="text-sm text-muted-foreground">Total Students</p>
+                            <p class="text-2xl font-bold text-foreground">{{ props.todayStats.total_students }}</p>
                         </div>
-                        <div class="h-12 w-12 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
-                            <Icon icon="users" class="h-6 w-6 text-blue-600 dark:text-blue-400" />
+                        <div class="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center">
+                            <Icon icon="users" class="h-6 w-6 text-primary" />
                         </div>
                     </div>
                 </div>
 
                 <!-- Attendance Rate -->
-                <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-                    <div class="flex items-center justify-between">
+                <div class="bg-card rounded-lg border border-border p-4">
+                    <div class="flex flex-wrap gap-2 items-center justify-between">
                         <div>
-                            <p class="text-sm text-gray-500 dark:text-gray-400">Attendance Rate</p>
-                            <p class="text-2xl font-bold text-green-600">{{ props.todayStats.attendance_percentage }}%</p>
+                            <p class="text-sm text-muted-foreground">Attendance Rate</p>
+                            <p class="text-2xl font-bold text-success">{{ props.todayStats.attendance_percentage }}%</p>
                         </div>
-                        <div class="h-12 w-12 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
-                            <Icon icon="trending-up" class="h-6 w-6 text-green-600 dark:text-green-400" />
+                        <div class="h-12 w-12 rounded-full bg-success/10 flex items-center justify-center">
+                            <Icon icon="trending-up" class="h-6 w-6 text-success" />
                         </div>
                     </div>
                     <div v-if="props.yesterdayStats.attendance_percentage > 0" class="mt-2 text-xs">
-                        <span :class="props.todayStats.attendance_percentage >= props.yesterdayStats.attendance_percentage ? 'text-green-600' : 'text-red-600'">
+                        <span :class="props.todayStats.attendance_percentage >= props.yesterdayStats.attendance_percentage ? 'text-success' : 'text-destructive'">
                             {{ props.todayStats.attendance_percentage >= props.yesterdayStats.attendance_percentage ? '+' : '' }}{{ (props.todayStats.attendance_percentage - props.yesterdayStats.attendance_percentage).toFixed(1) }}%
                         </span>
                         vs yesterday
@@ -90,27 +90,27 @@
                 </div>
 
                 <!-- Present -->
-                <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-                    <div class="flex items-center justify-between">
+                <div class="bg-card rounded-lg border border-border p-4">
+                    <div class="flex flex-wrap gap-2 items-center justify-between">
                         <div>
-                            <p class="text-sm text-gray-500 dark:text-gray-400">Present</p>
-                            <p class="text-2xl font-bold text-green-600">{{ props.todayStats.present }}</p>
+                            <p class="text-sm text-muted-foreground">Present</p>
+                            <p class="text-2xl font-bold text-success">{{ props.todayStats.present }}</p>
                         </div>
-                        <div class="h-12 w-12 rounded-full bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
-                            <Icon icon="user-check" class="h-6 w-6 text-green-600 dark:text-green-400" />
+                        <div class="h-12 w-12 rounded-full bg-success/10 flex items-center justify-center">
+                            <Icon icon="user-check" class="h-6 w-6 text-success" />
                         </div>
                     </div>
                 </div>
 
                 <!-- Absent -->
-                <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-                    <div class="flex items-center justify-between">
+                <div class="bg-card rounded-lg border border-border p-4">
+                    <div class="flex flex-wrap gap-2 items-center justify-between">
                         <div>
-                            <p class="text-sm text-gray-500 dark:text-gray-400">Absent</p>
-                            <p class="text-2xl font-bold text-red-600">{{ props.todayStats.absent }}</p>
+                            <p class="text-sm text-muted-foreground">Absent</p>
+                            <p class="text-2xl font-bold text-destructive">{{ props.todayStats.absent }}</p>
                         </div>
-                        <div class="h-12 w-12 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center">
-                            <Icon icon="user-x" class="h-6 w-6 text-red-600 dark:text-red-400" />
+                        <div class="h-12 w-12 rounded-full bg-destructive/10 flex items-center justify-center">
+                            <Icon icon="user-x" class="h-6 w-6 text-destructive" />
                         </div>
                     </div>
                 </div>
@@ -119,17 +119,17 @@
             <!-- Second Row -->
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
                 <!-- Classes Progress -->
-                <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 lg:col-span-2">
-                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Classes Progress</h3>
+                <div class="bg-card rounded-lg border border-border p-4 lg:col-span-2">
+                    <h3 class="text-lg font-semibold text-foreground mb-4">Classes Progress</h3>
                     <div class="flex items-center gap-4 mb-4">
                         <div class="flex-1">
-                            <div class="flex justify-between text-sm mb-1">
-                                <span class="text-gray-600 dark:text-gray-400">Classes with Attendance</span>
-                                <span class="font-medium text-gray-900 dark:text-white">{{ props.classesWithAttendance }} / {{ props.totalClasses }}</span>
+                            <div class="flex flex-wrap gap-2 justify-between text-sm mb-1">
+                                <span class="text-muted-foreground">Classes with Attendance</span>
+                                <span class="font-medium text-foreground">{{ props.classesWithAttendance }} / {{ props.totalClasses }}</span>
                             </div>
-                            <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
+                            <div class="w-full bg-muted rounded-full h-2">
                                 <div 
-                                    class="bg-blue-600 h-2 rounded-full transition-all" 
+                                    class="bg-primary h-2 rounded-full transition-all" 
                                     :style="{ width: `${(props.classesWithAttendance / props.totalClasses) * 100}%` }"
                                 ></div>
                             </div>
@@ -138,34 +138,34 @@
                     
                     <!-- Class Summary Table -->
                     <div class="overflow-x-auto">
-                        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                            <thead class="bg-gray-50 dark:bg-gray-700">
+                        <table class="min-w-full divide-y divide-border">
+                            <thead class="bg-muted">
                                 <tr>
-                                    <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Class</th>
-                                    <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Present</th>
-                                    <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Absent</th>
-                                    <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Leave</th>
-                                    <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Late</th>
-                                    <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Status</th>
+                                    <th class="px-3 py-2 text-left text-xs font-medium text-muted-foreground uppercase">Class</th>
+                                    <th class="px-3 py-2 text-left text-xs font-medium text-muted-foreground uppercase">Present</th>
+                                    <th class="px-3 py-2 text-left text-xs font-medium text-muted-foreground uppercase">Absent</th>
+                                    <th class="px-3 py-2 text-left text-xs font-medium text-muted-foreground uppercase">Leave</th>
+                                    <th class="px-3 py-2 text-left text-xs font-medium text-muted-foreground uppercase">Late</th>
+                                    <th class="px-3 py-2 text-left text-xs font-medium text-muted-foreground uppercase">Status</th>
                                 </tr>
                             </thead>
-                            <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
-                                <tr v-for="cls in props.classSummaries" :key="cls.id" class="hover:bg-gray-50 dark:hover:bg-gray-800">
-                                    <td class="px-3 py-2 text-sm font-medium text-gray-900 dark:text-white">
+                            <tbody class="divide-y divide-border">
+                                <tr v-for="cls in props.classSummaries" :key="cls.id" class="hover:bg-accent">
+                                    <td class="px-3 py-2 text-sm font-medium text-foreground">
                                         {{ cls.class_name }} - {{ cls.section_name }}
                                     </td>
-                                    <td class="px-3 py-2 text-sm text-green-600">{{ cls.present }}</td>
-                                    <td class="px-3 py-2 text-sm text-red-600">{{ cls.absent }}</td>
-                                    <td class="px-3 py-2 text-sm text-yellow-600">{{ cls.leave }}</td>
-                                    <td class="px-3 py-2 text-sm text-orange-600">{{ cls.late }}</td>
+                                    <td class="px-3 py-2 text-sm text-success">{{ cls.present }}</td>
+                                    <td class="px-3 py-2 text-sm text-destructive">{{ cls.absent }}</td>
+                                    <td class="px-3 py-2 text-sm text-warning">{{ cls.leave }}</td>
+                                    <td class="px-3 py-2 text-sm text-warning">{{ cls.late }}</td>
                                     <td class="px-3 py-2">
-                                        <span :class="cls.is_locked ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'" class="px-2 py-0.5 text-xs font-medium rounded-full">
+                                        <span :class="cls.is_locked ? 'bg-destructive/10 text-destructive' : 'bg-success/10 text-success'" class="px-2 py-0.5 text-xs font-medium rounded-full">
                                             {{ cls.is_locked ? 'Locked' : 'Open' }}
                                         </span>
                                     </td>
                                 </tr>
                                 <tr v-if="props.classSummaries.length === 0">
-                                    <td colspan="6" class="px-3 py-4 text-center text-sm text-gray-500">
+                                    <td colspan="6" class="px-3 py-4 text-center text-sm text-muted-foreground">
                                         No attendance records for today
                                     </td>
                                 </tr>
@@ -175,24 +175,24 @@
                 </div>
 
                 <!-- Upcoming Holidays -->
-                <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Upcoming Holidays</h3>
+                <div class="bg-card rounded-lg border border-border p-4">
+                    <h3 class="text-lg font-semibold text-foreground mb-4">Upcoming Holidays</h3>
                     <div class="space-y-3">
                         <div 
                             v-for="holiday in props.upcomingHolidays" 
                             :key="holiday.id"
-                            class="flex items-start gap-3 p-2 rounded-lg bg-gray-50 dark:bg-gray-700"
+                            class="flex items-start gap-3 p-2 rounded-lg bg-muted"
                         >
-                            <Icon icon="calendar" class="h-5 w-5 text-red-500 mt-0.5" />
+                            <Icon icon="calendar" class="h-5 w-5 text-destructive mt-0.5" />
                             <div>
-                                <p class="text-sm font-medium text-gray-900 dark:text-white">{{ holiday.title }}</p>
-                                <p class="text-xs text-gray-500 dark:text-gray-400">
+                                <p class="text-sm font-medium text-foreground">{{ holiday.title }}</p>
+                                <p class="text-xs text-muted-foreground">
                                     {{ formatDateRange(holiday.start_date, holiday.end_date) }}
                                 </p>
-                                <span v-if="holiday.is_national" class="text-xs text-blue-600 dark:text-blue-400">National</span>
+                                <span v-if="holiday.is_national" class="text-xs text-primary">National</span>
                             </div>
                         </div>
-                        <div v-if="props.upcomingHolidays.length === 0" class="text-center text-sm text-gray-500 py-4">
+                        <div v-if="props.upcomingHolidays.length === 0" class="text-center text-sm text-muted-foreground py-4">
                             No upcoming holidays
                         </div>
                     </div>
@@ -200,37 +200,37 @@
             </div>
 
             <!-- Recent Attendance -->
-            <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-                <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Recent Attendance Records</h3>
+            <div class="bg-card rounded-lg border border-border p-4">
+                <h3 class="text-lg font-semibold text-foreground mb-4">Recent Attendance Records</h3>
                 <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                        <thead class="bg-gray-50 dark:bg-gray-700">
+                    <table class="min-w-full divide-y divide-border">
+                        <thead class="bg-muted">
                             <tr>
-                                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Date</th>
-                                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Class</th>
-                                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Section</th>
-                                <th class="px-4 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Status</th>
+                                <th class="px-4 py-2 text-left text-xs font-medium text-muted-foreground uppercase">Date</th>
+                                <th class="px-4 py-2 text-left text-xs font-medium text-muted-foreground uppercase">Class</th>
+                                <th class="px-4 py-2 text-left text-xs font-medium text-muted-foreground uppercase">Section</th>
+                                <th class="px-4 py-2 text-left text-xs font-medium text-muted-foreground uppercase">Status</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
-                            <tr v-for="record in props.recentAttendances" :key="record.id" class="hover:bg-gray-50 dark:hover:bg-gray-800">
-                                <td class="px-4 py-2 text-sm text-gray-900 dark:text-white">
+                        <tbody class="divide-y divide-border">
+                            <tr v-for="record in props.recentAttendances" :key="record.id" class="hover:bg-accent">
+                                <td class="px-4 py-2 text-sm text-foreground">
                                     {{ formatDate(record.attendance_date) }}
                                 </td>
-                                <td class="px-4 py-2 text-sm text-gray-600 dark:text-gray-300">
+                                <td class="px-4 py-2 text-sm text-muted-foreground">
                                     {{ record.class?.name || 'N/A' }}
                                 </td>
-                                <td class="px-4 py-2 text-sm text-gray-600 dark:text-gray-300">
+                                <td class="px-4 py-2 text-sm text-muted-foreground">
                                     {{ record.section?.name || 'All' }}
                                 </td>
                                 <td class="px-4 py-2">
-                                    <span :class="record.is_locked ? 'bg-red-100 text-red-800' : 'bg-green-100 text-green-800'" class="px-2 py-0.5 text-xs font-medium rounded-full">
+                                    <span :class="record.is_locked ? 'bg-destructive/10 text-destructive' : 'bg-success/10 text-success'" class="px-2 py-0.5 text-xs font-medium rounded-full">
                                         {{ record.is_locked ? 'Locked' : 'Open' }}
                                     </span>
                                 </td>
                             </tr>
                             <tr v-if="props.recentAttendances.length === 0">
-                                <td colspan="4" class="px-4 py-4 text-center text-sm text-gray-500">
+                                <td colspan="4" class="px-4 py-4 text-center text-sm text-muted-foreground">
                                     No recent attendance records
                                 </td>
                             </tr>

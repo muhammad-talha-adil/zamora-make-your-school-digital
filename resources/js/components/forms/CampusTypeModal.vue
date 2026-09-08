@@ -304,7 +304,7 @@ const deleteCampusType = (campusType: { id: number; name: string }) => {
                                                 </span>
                                             </td>
                                             <td class="px-4 py-3 text-sm font-medium whitespace-nowrap text-right">
-                                                <div class="flex items-center justify-end gap-1">
+                                                <div class="flex flex-wrap items-center justify-end gap-1">
                                                     <Button 
                                                         variant="ghost" 
                                                         size="icon" 
@@ -332,7 +332,7 @@ const deleteCampusType = (campusType: { id: number; name: string }) => {
                         </div>
 
                         <!-- Pagination -->
-                        <div v-if="totalPages > 1" class="flex items-center justify-between">
+                        <div v-if="totalPages > 1" class="flex flex-wrap gap-2 items-center justify-between">
                             <div class="text-sm text-muted-foreground">
                                 Showing {{ (currentPage - 1) * perPage + 1 }} to {{ Math.min(currentPage * perPage, allCampusTypes.length) }} of {{ allCampusTypes.length }} entries
                             </div>
@@ -372,7 +372,7 @@ const deleteCampusType = (campusType: { id: number; name: string }) => {
             </div>
 
             <!-- Footer -->
-            <div class="flex justify-end pt-4 border-t mt-auto">
+            <div class="flex flex-wrap gap-2 justify-end pt-4 border-t mt-auto">
                 <Button type="button" variant="outline" @click="closeModal">
                     <Icon icon="check" class="mr-2 h-4 w-4" />
                     Done

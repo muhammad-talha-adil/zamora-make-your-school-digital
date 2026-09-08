@@ -12,7 +12,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('campus_id')->constrained('campuses')->onDelete('cascade');
             $table->foreignId('student_id')->constrained('users')->onDelete('cascade')->comment('FK to students table');
-            $table->foreignId('session_id')->constrained('sessions')->onDelete('cascade');
+            $table->foreignId('session_id')->constrained('academic_sessions')->onDelete('cascade');
             $table->foreignId('fee_type_id')->constrained('fee_types')->onDelete('cascade');
             $table->decimal('amount', 10, 2);
             $table->decimal('discount_amount', 10, 2)->default(0);
@@ -21,7 +21,10 @@ return new class extends Migration
             $table->enum('status', ['pending', 'partial', 'paid', 'overdue'])->default('pending');
             $table->date('assigned_date');
             $table->date('due_date');
-            $table->foreignId('invoice_id')->nullable()->constrained('invoices')->onDelete('set null');
+            // `invoices` is created by the next migration. Both tables are
+            // dropped again when billing moves to the unified schema, so
+            // the constraint is not re-added.
+            $table->foreignId('invoice_id')->nullable();
             $table->timestamp('created_at')->useCurrent();
             $table->timestamp('updated_at')->useCurrent()->useCurrentOnUpdate();
             $table->timestamp('deleted_at')->nullable();

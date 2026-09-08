@@ -13,7 +13,7 @@ class MenuSeeder extends Seeder
     public function run(): void
     {
         // Clear existing menus to prevent duplicates on re-run
-        \App\Models\Menu::query()->delete();
+        Menu::query()->delete();
 
         // Main navigation items
         Menu::create([

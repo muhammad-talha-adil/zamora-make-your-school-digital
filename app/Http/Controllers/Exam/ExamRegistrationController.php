@@ -33,6 +33,7 @@ class ExamRegistrationController extends Controller
         $registrations = ExamStudentRegistration::with(['student.user', 'exam', 'class', 'section'])
             ->when($examId, fn ($q) => $q->where('exam_id', $examId))
             ->when($classId, fn ($q) => $q->where('class_id', $classId))
+            ->visibleTo($request->user())
             ->get();
 
         return Inertia::render('Exam/Registrations/Index', [
@@ -56,6 +57,7 @@ class ExamRegistrationController extends Controller
 
         $registrations = ExamStudentRegistration::with(['student.user', 'exam', 'class', 'section'])
             ->when($examId, fn ($q) => $q->where('exam_id', $examId))
+            ->visibleTo($request->user())
             ->get();
 
         return response()->json(['data' => $registrations]);
@@ -66,6 +68,8 @@ class ExamRegistrationController extends Controller
      */
     public function generateFromEnrollments(Request $request)
     {
+        $this->authorize('manageRegistrations', Exam::class);
+
         $validated = $request->validate([
             'exam_id' => 'required|exists:exams,id',
             'class_id' => 'nullable|exists:school_classes,id',
@@ -86,6 +90,8 @@ class ExamRegistrationController extends Controller
      */
     public function store(StoreRegistrationRequest $request)
     {
+        $this->authorize('manageRegistrations', Exam::class);
+
         $registration = $this->registrationService->registerStudent($request->validated());
 
         return response()->json(['message' => 'Registration created successfully', 'data' => $registration], 201);
@@ -96,6 +102,8 @@ class ExamRegistrationController extends Controller
      */
     public function bulkRegister(Request $request)
     {
+        $this->authorize('manageRegistrations', Exam::class);
+
         $validated = $request->validate([
             'exam_id' => 'required|exists:exams,id',
             'student_ids' => 'required|array',
@@ -133,6 +141,8 @@ class ExamRegistrationController extends Controller
      */
     public function withdraw($id)
     {
+        $this->authorize('manageRegistrations', Exam::class);
+
         $registration = ExamStudentRegistration::findOrFail($id);
         $registration = $this->registrationService->withdraw($registration);
 

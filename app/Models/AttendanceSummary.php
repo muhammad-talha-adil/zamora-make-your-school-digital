@@ -16,7 +16,11 @@ class AttendanceSummary extends Model
         'absent_count',
         'leave_count',
         'late_count',
+        'half_day_count',
         'total_days',
+        'expected_days',
+        'present_equivalent',
+        'computed_at',
     ];
 
     protected $casts = [
@@ -26,7 +30,11 @@ class AttendanceSummary extends Model
         'absent_count' => 'integer',
         'leave_count' => 'integer',
         'late_count' => 'integer',
+        'half_day_count' => 'integer',
         'total_days' => 'integer',
+        'expected_days' => 'integer',
+        'present_equivalent' => 'float',
+        'computed_at' => 'datetime',
     ];
 
     /**
@@ -46,15 +54,38 @@ class AttendanceSummary extends Model
     }
 
     /**
-     * Get the attendance percentage.
+     * The attendance percentage a report card prints.
+     *
+     * Measured against the days the child was **expected**, not the days
+     * somebody happened to mark: a child marked on three days out of twenty-two
+     * used to read as 100%. Weighted too, so a half day counts as half.
+     *
+     * Falls back to the marked days when the expected figure has not been
+     * computed — an old row from before the summary was rebuildable — so the
+     * number is never divided by nothing.
      */
     public function getAttendancePercentageAttribute(): float
     {
-        if ($this->total_days === 0) {
-            return 0;
+        $expected = $this->expected_days ?: $this->total_days;
+
+        if (! $expected) {
+            return 0.0;
         }
 
-        return round(($this->present_count / $this->total_days) * 100, 2);
+        $present = $this->present_equivalent ?: $this->present_count;
+
+        return round(($present / $expected) * 100, 2);
+    }
+
+    /**
+     * Days the child was expected but no register records them either way.
+     *
+     * A class whose register was never taken shows here rather than quietly
+     * flattering everyone's percentage.
+     */
+    public function getUnmarkedDaysAttribute(): int
+    {
+        return max((int) $this->expected_days - (int) $this->total_days, 0);
     }
 
     /**

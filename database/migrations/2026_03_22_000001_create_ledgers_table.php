@@ -21,7 +21,9 @@ return new class extends Migration
             $table->text('description')->nullable();
             $table->string('reference_type', 100)->nullable();
             $table->unsignedBigInteger('reference_id')->nullable();
-            $table->foreignId('category_id')->nullable()->constrained('ledger_categories')->onDelete('set null');
+            // `ledger_categories` is created by the next migration;
+            // constraint added by 2026_09_07_000003_add_deferred_foreign_keys.
+            $table->foreignId('category_id')->nullable();
             $table->string('payment_method', 50)->nullable();
             $table->string('reference_number', 100)->nullable();
             $table->foreignId('campus_id')->constrained()->onDelete('cascade');

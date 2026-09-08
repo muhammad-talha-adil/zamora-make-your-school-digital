@@ -17,7 +17,10 @@ return new class extends Migration
             $table->string('code')->nullable();
             $table->text('description')->nullable();
             $table->boolean('is_active')->default(true);
-            $table->foreignId('class_id')->constrained()->onDelete('cascade');
+            // The table is `school_classes`; without naming it, Laravel infers
+            // `classes`, which does not exist and leaves the section rows with
+            // no foreign key at all.
+            $table->foreignId('class_id')->constrained('school_classes')->onDelete('cascade');
             $table->timestamps();
             $table->softDeletes();
         });

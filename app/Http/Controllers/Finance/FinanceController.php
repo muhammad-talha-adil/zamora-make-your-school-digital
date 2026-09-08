@@ -15,6 +15,7 @@ use Inertia\Inertia;
 class FinanceController extends Controller
 {
     protected $financeService;
+
     protected $studentBillingService;
 
     public function __construct(FinanceService $financeService, StudentBillingService $studentBillingService)

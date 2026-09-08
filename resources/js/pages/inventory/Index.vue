@@ -144,14 +144,14 @@ interface QuickAction {
 }
 
 const quickActions: QuickAction[] = [
-    { key: 'types', label: 'Add Type', icon: 'tag', color: 'text-blue-600', colorBg: 'bg-blue-100' },
-    { key: 'supplier', label: 'Add Supplier', icon: 'truck', color: 'text-emerald-600', colorBg: 'bg-emerald-100' },
-    { key: 'item', label: 'Add Item', icon: 'box', color: 'text-violet-600', colorBg: 'bg-violet-100' },
-    { key: 'purchase', label: 'New Purchase', icon: 'shopping-cart', color: 'text-amber-600', colorBg: 'bg-amber-100' },
-    { key: 'assign', label: 'Assign', icon: 'user-plus', color: 'text-cyan-600', colorBg: 'bg-cyan-100' },
-    { key: 'purchaseReturn', label: 'Purchase Return', icon: 'rotate-ccw', color: 'text-orange-600', colorBg: 'bg-orange-100' },
-    { key: 'return', label: 'Process Return', icon: 'rotate-cw', color: 'text-rose-600', colorBg: 'bg-rose-100' },
-    { key: 'adjustment', label: 'Adjust Stock', icon: 'sliders', color: 'text-slate-600', colorBg: 'bg-slate-100' },
+    { key: 'types', label: 'Add Type', icon: 'tag', color: 'text-primary', colorBg: 'bg-primary/10' },
+    { key: 'supplier', label: 'Add Supplier', icon: 'truck', color: 'text-success', colorBg: 'bg-success/10' },
+    { key: 'item', label: 'Add Item', icon: 'box', color: 'text-primary', colorBg: 'bg-primary/10' },
+    { key: 'purchase', label: 'New Purchase', icon: 'shopping-cart', color: 'text-warning', colorBg: 'bg-warning/10' },
+    { key: 'assign', label: 'Assign', icon: 'user-plus', color: 'text-info', colorBg: 'bg-info/10' },
+    { key: 'purchaseReturn', label: 'Purchase Return', icon: 'rotate-ccw', color: 'text-warning', colorBg: 'bg-warning/10' },
+    { key: 'return', label: 'Process Return', icon: 'rotate-cw', color: 'text-destructive', colorBg: 'bg-destructive/10' },
+    { key: 'adjustment', label: 'Adjust Stock', icon: 'sliders', color: 'text-muted-foreground', colorBg: 'bg-muted' },
 ];
 
 // State
@@ -248,72 +248,72 @@ const statCards = computed(() => [
         title: 'Types',
         value: stats.value.types,
         icon: 'tags',
-        color: 'text-blue-600 dark:text-blue-400',
-        bgColor: 'bg-blue-50 dark:bg-blue-900/30',
+        color: 'text-primary',
+        bgColor: 'bg-primary/10',
         href: '/inventory/types',
     },
     {
         title: 'Items',
         value: stats.value.items,
         icon: 'box',
-        color: 'text-emerald-600 dark:text-emerald-400',
-        bgColor: 'bg-emerald-50 dark:bg-emerald-900/30',
+        color: 'text-success',
+        bgColor: 'bg-success/10',
         href: '/inventory/items',
     },
     {
         title: 'Total Stock',
         value: stats.value.totalStock.toLocaleString(),
         icon: 'package',
-        color: 'text-violet-600 dark:text-violet-400',
-        bgColor: 'bg-violet-50 dark:bg-violet-900/30',
+        color: 'text-primary',
+        bgColor: 'bg-primary/10',
         href: '/inventory/stocks',
     },
     {
         title: 'Available',
         value: stats.value.availableStock.toLocaleString(),
         icon: 'check-circle',
-        color: 'text-teal-600 dark:text-teal-400',
-        bgColor: 'bg-teal-50 dark:bg-teal-900/30',
+        color: 'text-success',
+        bgColor: 'bg-success/10',
         href: '/inventory/stocks',
     },
     {
         title: 'Low Stock',
         value: stats.value.lowStockItems,
         icon: 'alert-triangle',
-        color: stats.value.lowStockItems > 0 ? 'text-red-600 dark:text-red-400' : 'text-slate-500',
-        bgColor: stats.value.lowStockItems > 0 ? 'bg-red-50 dark:bg-red-900/30' : 'bg-slate-50 dark:bg-slate-800',
+        color: stats.value.lowStockItems > 0 ? 'text-destructive' : 'text-muted-foreground',
+        bgColor: stats.value.lowStockItems > 0 ? 'bg-destructive/10' : 'bg-muted',
         href: '/inventory/stocks?low_stock_only=true',
     },
     {
         title: 'Purchases',
         value: stats.value.purchases,
         icon: 'shopping-cart',
-        color: 'text-amber-600 dark:text-amber-400',
-        bgColor: 'bg-amber-50 dark:bg-amber-900/30',
+        color: 'text-warning',
+        bgColor: 'bg-warning/10',
         href: '/inventory/purchases',
     },
     {
         title: 'Value',
         value: `$${stats.value.totalPurchaseValue.toLocaleString()}`,
         icon: 'dollar-sign',
-        color: 'text-emerald-600 dark:text-emerald-400',
-        bgColor: 'bg-emerald-50 dark:bg-emerald-900/30',
+        color: 'text-success',
+        bgColor: 'bg-success/10',
         href: '/inventory/purchases',
     },
     {
         title: 'Assigned',
         value: stats.value.assignedItems,
         icon: 'user-check',
-        color: 'text-cyan-600 dark:text-cyan-400',
-        bgColor: 'bg-cyan-50 dark:bg-cyan-900/30',
+        color: 'text-info',
+        bgColor: 'bg-info/10',
         href: '/inventory/student-inventory',
     },
     {
         title: 'Returns',
         value: stats.value.pendingReturns,
         icon: 'rotate-ccw',
-        color: 'text-rose-600 dark:text-rose-400',
-        bgColor: 'bg-rose-50 dark:bg-rose-900/30',
+        color: 'text-destructive',
+        bgColor: 'bg-destructive/10',
         href: '/inventory/returns',
     },
 ]);
@@ -372,10 +372,10 @@ const getActivityIcon = (type: string) => {
 
 const getActivityColor = (type: string) => {
     switch (type) {
-        case 'purchase': return 'text-indigo-600 bg-indigo-100 dark:text-indigo-400 dark:bg-indigo-900/50';
-        case 'assignment': return 'text-emerald-600 bg-emerald-100 dark:text-emerald-400 dark:bg-emerald-900/50';
-        case 'return': return 'text-amber-600 bg-amber-100 dark:text-amber-400 dark:bg-amber-900/50';
-        default: return 'text-slate-600 bg-slate-100 dark:text-slate-400 dark:bg-slate-800';
+        case 'purchase': return 'text-primary bg-primary/10';
+        case 'assignment': return 'text-success bg-success/10';
+        case 'return': return 'text-warning bg-warning/10';
+        default: return 'text-muted-foreground bg-muted';
     }
 };
 
@@ -495,24 +495,24 @@ const handleCampusChange = (event: Event) => {
             <!-- Header -->
             <header class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
-                    <h1 class="text-2xl md:text-3xl font-bold text-gray-900 dark:text-white">
+                    <h1 class="text-2xl md:text-3xl font-bold text-foreground">
                         Inventory Management
                     </h1>
-                    <p class="mt-1 text-sm md:text-base text-gray-600 dark:text-gray-400">
+                    <p class="mt-1 text-sm md:text-base text-muted-foreground">
                         Track and manage your school inventory, purchases, and distributions.
                     </p>
                 </div>
                 <div class="flex items-center gap-3">
                     <!-- Campus Selector -->
                     <div class="flex items-center gap-2">
-                        <label for="campus-select" class="text-sm font-medium text-gray-700 dark:text-gray-300">
+                        <label for="campus-select" class="text-sm font-medium text-muted-foreground">
                             Campus:
                         </label>
                         <select
                             id="campus-select"
                             :value="selectedCampusId || ''"
                             @change="handleCampusChange"
-                            class="px-3 py-2 text-sm rounded-lg border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white focus:ring-2 focus:ring-primary/50 focus:border-primary"
+                            class="px-3 py-2 text-sm rounded-lg border border-border bg-card text-foreground focus:ring-2 focus:ring-primary/50 focus:border-primary"
                         >
                             <option value="">All Campuses</option>
                             <option v-for="campus in campuses" :key="campus.id" :value="campus.id">
@@ -533,11 +533,11 @@ const handleCampusChange = (event: Event) => {
                     <article 
                         v-for="stat in statCards" 
                         :key="stat.title"
-                        class="group bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 md:p-5 hover:shadow-lg hover:border-gray-300 dark:hover:border-gray-600 transition-all duration-200"
+                        class="group bg-card rounded-xl border border-border p-4 md:p-5 hover:shadow-lg hover:border-border transition-all duration-200"
                     >
-                        <div class="flex items-start justify-between">
+                        <div class="flex flex-wrap gap-2 items-start justify-between">
                             <div>
-                                <p class="text-xs md:text-sm font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+                                <p class="text-xs md:text-sm font-medium text-muted-foreground uppercase tracking-wide">
                                     {{ stat.title }}
                                 </p>
                                 <p class="mt-2 text-2xl md:text-3xl font-bold" :class="stat.color">
@@ -560,8 +560,8 @@ const handleCampusChange = (event: Event) => {
             </section>
 
             <!-- Quick Actions -->
-            <section aria-label="Quick Actions" class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 md:p-6">
-                <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+            <section aria-label="Quick Actions" class="bg-card rounded-xl border border-border p-4 md:p-6">
+                <h2 class="text-lg font-semibold text-foreground mb-4">
                     Quick Actions
                 </h2>
                 <div class="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-2 md:gap-3">
@@ -573,7 +573,7 @@ const handleCampusChange = (event: Event) => {
                         <Button
                             variant="outline"
                             size="sm"
-                            class="w-full h-10 md:h-11 justify-center gap-1.5 px-2 text-xs md:text-sm truncate border-gray-200 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700/50 focus:ring-2 focus:ring-primary/50"
+                            class="w-full h-10 md:h-11 justify-center gap-1.5 px-2 text-xs md:text-sm truncate border-border hover:bg-accent focus:ring-2 focus:ring-primary/50"
                             @click="openModal(action.key)"
                             :title="action.label"
                         >
@@ -587,20 +587,20 @@ const handleCampusChange = (event: Event) => {
             <!-- Main Content Grid -->
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-4 md:gap-6">
                 <!-- Recent Activity -->
-                <section aria-labelledby="activity-heading" class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 md:p-6">
-                    <header class="flex items-center justify-between mb-4">
-                        <h2 id="activity-heading" class="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-                            <Icon icon="clock" class="h-5 w-5 text-gray-500" />
+                <section aria-labelledby="activity-heading" class="bg-card rounded-xl border border-border p-4 md:p-6">
+                    <header class="flex flex-wrap gap-2 items-center justify-between mb-4">
+                        <h2 id="activity-heading" class="text-lg font-semibold text-foreground flex items-center gap-2">
+                            <Icon icon="clock" class="h-5 w-5 text-muted-foreground" />
                             Recent Activity
                         </h2>
                     </header>
                     
                     <div v-if="loading" class="flex justify-center py-12" aria-label="Loading activities">
-                        <Icon icon="loader" class="animate-spin h-8 w-8 text-gray-400" />
+                        <Icon icon="loader" class="animate-spin h-8 w-8 text-muted-foreground" />
                     </div>
                     
-                    <div v-else-if="recentActivities.length === 0" class="text-center py-12 text-gray-500">
-                        <Icon icon="activity" :size="48" class="mx-auto mb-3 text-gray-300 dark:text-gray-600" />
+                    <div v-else-if="recentActivities.length === 0" class="text-center py-12 text-muted-foreground">
+                        <Icon icon="activity" :size="48" class="mx-auto mb-3 text-muted-foreground" />
                         <p>No recent activity</p>
                     </div>
                     
@@ -608,16 +608,16 @@ const handleCampusChange = (event: Event) => {
                         <li 
                             v-for="activity in recentActivities" 
                             :key="activity.id"
-                            class="flex items-start gap-3 p-3 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors focus-within:bg-gray-50 dark:focus-within:bg-gray-700/50 focus-within:ring-2 focus-within:ring-primary/20 rounded-md"
+                            class="flex items-start gap-3 p-3 rounded-md hover:bg-accent transition-colors focus-within:bg-accent focus-within:ring-2 focus-within:ring-primary/20 rounded-md"
                         >
                             <div :class="['p-2 rounded-full shrink-0', getActivityColor(activity.type)]">
                                 <Icon :icon="getActivityIcon(activity.type)" :size="16" />
                             </div>
                             <div class="flex-1 min-w-0">
-                                <p class="text-sm font-medium text-gray-900 dark:text-white truncate">
+                                <p class="text-sm font-medium text-foreground truncate">
                                     {{ activity.description }}
                                 </p>
-                                <time class="text-xs text-gray-500 dark:text-gray-400">
+                                <time class="text-xs text-muted-foreground">
                                     {{ formatDate(activity.date) }}
                                 </time>
                             </div>
@@ -626,41 +626,41 @@ const handleCampusChange = (event: Event) => {
                 </section>
 
                 <!-- Low Stock Alerts -->
-                <section aria-labelledby="alerts-heading" class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 md:p-6">
-                    <header class="flex items-center justify-between mb-4">
-                        <h2 id="alerts-heading" class="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-                            <Icon icon="alert-triangle" :class="`h-5 w-5 ${stats.lowStockItems > 0 ? 'text-red-500' : 'text-gray-500'}`" />
+                <section aria-labelledby="alerts-heading" class="bg-card rounded-xl border border-border p-4 md:p-6">
+                    <header class="flex flex-wrap gap-2 items-center justify-between mb-4">
+                        <h2 id="alerts-heading" class="text-lg font-semibold text-foreground flex items-center gap-2">
+                            <Icon icon="alert-triangle" :class="`h-5 w-5 ${stats.lowStockItems > 0 ? 'text-destructive' : 'text-muted-foreground'}`" />
                             Low Stock Alerts
                         </h2>
                     </header>
                     
                     <div v-if="loading" class="flex justify-center py-12" aria-label="Loading alerts">
-                        <Icon icon="loader" class="animate-spin h-8 w-8 text-gray-400" />
+                        <Icon icon="loader" class="animate-spin h-8 w-8 text-muted-foreground" />
                     </div>
                     
-                    <div v-else-if="lowStockItems.length === 0" class="text-center py-12 text-gray-500">
-                        <Icon icon="check-circle" :size="48" class="mx-auto mb-3 text-emerald-400" />
+                    <div v-else-if="lowStockItems.length === 0" class="text-center py-12 text-muted-foreground">
+                        <Icon icon="check-circle" :size="48" class="mx-auto mb-3 text-success" />
                         <p>All items are well stocked!</p>
                     </div>
                     
                     <div v-else class="space-y-3">
-                        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-red-50 dark:bg-red-900/20 rounded-lg gap-3 border border-red-100 dark:border-red-900/30">
+                        <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between p-4 bg-destructive/10 rounded-lg gap-3 border border-destructive/40">
                             <div class="flex items-center gap-3">
-                                <div class="p-2 bg-red-100 dark:bg-red-900/40 rounded-full">
-                                    <Icon icon="alert-triangle" class="h-5 w-5 text-red-600 dark:text-red-400" />
+                                <div class="p-2 bg-destructive/10 rounded-full">
+                                    <Icon icon="alert-triangle" class="h-5 w-5 text-destructive" />
                                 </div>
                                 <div>
-                                    <p class="text-sm font-semibold text-gray-900 dark:text-white">
+                                    <p class="text-sm font-semibold text-foreground">
                                         {{ lowStockItems.length }} items need restocking
                                     </p>
-                                    <p class="text-xs text-gray-500 dark:text-gray-400">
+                                    <p class="text-xs text-muted-foreground">
                                         Review and update stock levels
                                     </p>
                                 </div>
                             </div>
                             <a 
                                 href="/inventory/stocks?low_stock_only=true" 
-                                class="inline-flex items-center gap-1 text-sm font-medium text-red-600 dark:text-red-400 hover:text-red-700 dark:hover:text-red-300 focus:outline-none focus:ring-2 focus:ring-red-500/50 rounded px-3 py-1.5"
+                                class="inline-flex items-center gap-1 text-sm font-medium text-destructive hover:text-destructive focus:outline-none focus:ring-2 focus:ring-destructive/50 rounded px-3 py-1.5"
                             >
                                 View all
                                 <Icon icon="arrow-right" class="h-4 w-4" />
@@ -669,26 +669,26 @@ const handleCampusChange = (event: Event) => {
                         
                         <!-- List actual low stock items -->
                         <div class="mt-3 space-y-2">
-                            <h3 class="text-sm font-medium text-gray-700 dark:text-gray-300">Items below threshold:</h3>
-                            <ul class="divide-y divide-gray-200 dark:divide-gray-700">
+                            <h3 class="text-sm font-medium text-muted-foreground">Items below threshold:</h3>
+                            <ul class="divide-y divide-border">
                                 <li 
                                     v-for="item in lowStockItems.slice(0, 5)" 
                                     :key="item.id"
-                                    class="py-2 flex justify-between items-center"
+                                    class="py-2 flex flex-wrap gap-2 justify-between items-center"
                                 >
                                     <div class="flex-1 min-w-0">
-                                        <p class="text-sm font-medium text-gray-900 dark:text-white truncate">
+                                        <p class="text-sm font-medium text-foreground truncate">
                                             {{ item.item_name }}
                                         </p>
-                                        <p class="text-xs text-gray-500 dark:text-gray-400">
+                                        <p class="text-xs text-muted-foreground">
                                             Threshold: {{ item.low_stock_threshold }}
                                         </p>
                                     </div>
                                     <div class="text-right ml-4">
-                                        <p class="text-sm font-semibold text-red-600 dark:text-red-400">
+                                        <p class="text-sm font-semibold text-destructive">
                                             {{ item.available_quantity }}
                                         </p>
-                                        <p class="text-xs text-gray-500 dark:text-gray-400">available</p>
+                                        <p class="text-xs text-muted-foreground">available</p>
                                     </div>
                                 </li>
                             </ul>
@@ -698,37 +698,37 @@ const handleCampusChange = (event: Event) => {
             </div>
 
             <!-- Overview Section -->
-            <section aria-labelledby="overview-heading" class="bg-white dark:bg-gray-800 rounded-xl border border-gray-200 dark:border-gray-700 p-4 md:p-6">
-                <h2 id="overview-heading" class="text-lg font-semibold text-gray-900 dark:text-white mb-6">
+            <section aria-labelledby="overview-heading" class="bg-card rounded-xl border border-border p-4 md:p-6">
+                <h2 id="overview-heading" class="text-lg font-semibold text-foreground mb-6">
                     Inventory Overview
                 </h2>
                 
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
                     <!-- By Type -->
-                    <article class="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4">
-                        <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-4 flex items-center gap-2">
+                    <article class="bg-muted rounded-lg p-4">
+                        <h3 class="text-sm font-semibold text-muted-foreground mb-4 flex items-center gap-2">
                             <Icon icon="tags" class="h-4 w-4" />
                             By Type
                         </h3>
                         <div v-if="loading" class="space-y-3" aria-label="Loading types">
-                            <div v-for="i in 3" :key="i" class="h-10 bg-gray-200 dark:bg-gray-600 rounded animate-pulse"></div>
+                            <div v-for="i in 3" :key="i" class="h-10 bg-muted rounded animate-pulse"></div>
                         </div>
-                        <div v-else-if="inventoryTypes.length === 0" class="text-center py-6 text-gray-500 text-sm">
-                            <Icon icon="inbox" :size="32" class="mx-auto mb-2 text-gray-300" />
+                        <div v-else-if="inventoryTypes.length === 0" class="text-center py-6 text-muted-foreground text-sm">
+                            <Icon icon="inbox" :size="32" class="mx-auto mb-2 text-muted-foreground" />
                             <p>No types found</p>
                         </div>
                         <div v-else class="space-y-2">
-                            <div class="flex justify-between items-center p-2 rounded bg-white dark:bg-gray-800">
-                                <span class="text-sm text-gray-600 dark:text-gray-400">Total Types</span>
-                                <span class="text-sm font-semibold text-gray-900 dark:text-white">{{ inventoryTypes.length }}</span>
+                            <div class="flex flex-wrap gap-2 justify-between items-center p-2 rounded bg-card">
+                                <span class="text-sm text-muted-foreground">Total Types</span>
+                                <span class="text-sm font-semibold text-foreground">{{ inventoryTypes.length }}</span>
                             </div>
                             <div 
                                 v-for="type in inventoryTypes.slice(0, 4)" 
                                 :key="type.id"
-                                class="flex justify-between items-center p-2 rounded bg-white dark:bg-gray-800"
+                                class="flex flex-wrap gap-2 justify-between items-center p-2 rounded bg-card"
                             >
-                                <span class="text-sm text-gray-600 dark:text-gray-400 truncate max-w-37.5" :title="type.name">{{ type.name }}</span>
-                                <span class="text-sm font-semibold text-gray-900 dark:text-white">
+                                <span class="text-sm text-muted-foreground truncate max-w-37.5" :title="type.name">{{ type.name }}</span>
+                                <span class="text-sm font-semibold text-foreground">
                                     {{ inventoryItems.filter(item => item.inventory_type_id === type.id).length }}
                                 </span>
                             </div>
@@ -736,63 +736,63 @@ const handleCampusChange = (event: Event) => {
                     </article>
 
                     <!-- Stock Status -->
-                    <article class="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4">
-                        <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-4 flex items-center gap-2">
+                    <article class="bg-muted rounded-lg p-4">
+                        <h3 class="text-sm font-semibold text-muted-foreground mb-4 flex items-center gap-2">
                             <Icon icon="package" class="h-4 w-4" />
                             Stock Status
                         </h3>
                         <div v-if="loading" class="space-y-4" aria-label="Loading stock status">
-                            <div v-for="i in 3" :key="i" class="h-6 bg-gray-200 dark:bg-gray-600 rounded animate-pulse"></div>
+                            <div v-for="i in 3" :key="i" class="h-6 bg-muted rounded animate-pulse"></div>
                         </div>
-                        <div v-else-if="inventoryItems.length === 0" class="text-center py-6 text-gray-500 text-sm">
-                            <Icon icon="inbox" :size="32" class="mx-auto mb-2 text-gray-300" />
+                        <div v-else-if="inventoryItems.length === 0" class="text-center py-6 text-muted-foreground text-sm">
+                            <Icon icon="inbox" :size="32" class="mx-auto mb-2 text-muted-foreground" />
                             <p>No items found</p>
                         </div>
                         <template v-else>
                             <!-- Healthy -->
                             <div class="mb-4">
-                                <div class="flex justify-between text-sm mb-1.5">
-                                    <span class="text-gray-600 dark:text-gray-400">Healthy</span>
-                                    <span class="font-medium text-emerald-600 dark:text-emerald-400">{{ stockStatus.healthy }}%</span>
+                                <div class="flex flex-wrap gap-2 justify-between text-sm mb-1.5">
+                                    <span class="text-muted-foreground">Healthy</span>
+                                    <span class="font-medium text-success">{{ stockStatus.healthy }}%</span>
                                 </div>
-                                <div class="h-2.5 bg-gray-200 dark:bg-gray-600 rounded-full overflow-hidden">
-                                    <div class="h-full bg-emerald-500 rounded-full transition-all duration-500" :style="{ width: stockStatus.healthy + '%' }"></div>
+                                <div class="h-2.5 bg-muted rounded-full overflow-hidden">
+                                    <div class="h-full bg-success rounded-full transition-all duration-500" :style="{ width: stockStatus.healthy + '%' }"></div>
                                 </div>
                             </div>
                             <!-- Low Stock -->
                             <div class="mb-4">
-                                <div class="flex justify-between text-sm mb-1.5">
-                                    <span class="text-gray-600 dark:text-gray-400">Low Stock</span>
-                                    <span class="font-medium text-amber-600 dark:text-amber-400">{{ stockStatus.low }}%</span>
+                                <div class="flex flex-wrap gap-2 justify-between text-sm mb-1.5">
+                                    <span class="text-muted-foreground">Low Stock</span>
+                                    <span class="font-medium text-warning">{{ stockStatus.low }}%</span>
                                 </div>
-                                <div class="h-2.5 bg-gray-200 dark:bg-gray-600 rounded-full overflow-hidden">
-                                    <div class="h-full bg-amber-500 rounded-full transition-all duration-500" :style="{ width: stockStatus.low + '%' }"></div>
+                                <div class="h-2.5 bg-muted rounded-full overflow-hidden">
+                                    <div class="h-full bg-warning rounded-full transition-all duration-500" :style="{ width: stockStatus.low + '%' }"></div>
                                 </div>
                             </div>
                             <!-- Out of Stock -->
                             <div>
-                                <div class="flex justify-between text-sm mb-1.5">
-                                    <span class="text-gray-600 dark:text-gray-400">Out of Stock</span>
-                                    <span class="font-medium text-red-600 dark:text-red-400">{{ stockStatus.outOfStock }}%</span>
+                                <div class="flex flex-wrap gap-2 justify-between text-sm mb-1.5">
+                                    <span class="text-muted-foreground">Out of Stock</span>
+                                    <span class="font-medium text-destructive">{{ stockStatus.outOfStock }}%</span>
                                 </div>
-                                <div class="h-2.5 bg-gray-200 dark:bg-gray-600 rounded-full overflow-hidden">
-                                    <div class="h-full bg-red-500 rounded-full transition-all duration-500" :style="{ width: stockStatus.outOfStock + '%' }"></div>
+                                <div class="h-2.5 bg-muted rounded-full overflow-hidden">
+                                    <div class="h-full bg-destructive rounded-full transition-all duration-500" :style="{ width: stockStatus.outOfStock + '%' }"></div>
                                 </div>
                             </div>
                         </template>
                     </article>
 
                     <!-- Top Moving Items -->
-                    <article class="bg-gray-50 dark:bg-gray-700/50 rounded-lg p-4">
-                        <h3 class="text-sm font-semibold text-gray-700 dark:text-gray-300 mb-4 flex items-center gap-2">
+                    <article class="bg-muted rounded-lg p-4">
+                        <h3 class="text-sm font-semibold text-muted-foreground mb-4 flex items-center gap-2">
                             <Icon icon="trending-up" class="h-4 w-4" />
                             Top Moving Items
                         </h3>
                         <div v-if="loading" class="space-y-3" aria-label="Loading top items">
-                            <div v-for="i in 5" :key="i" class="h-12 bg-gray-200 dark:bg-gray-600 rounded animate-pulse"></div>
+                            <div v-for="i in 5" :key="i" class="h-12 bg-muted rounded animate-pulse"></div>
                         </div>
-                        <div v-else-if="topMovingItems.length === 0" class="text-center py-6 text-gray-500 text-sm">
-                            <Icon icon="bar-chart" :size="32" class="mx-auto mb-2 text-gray-300" />
+                        <div v-else-if="topMovingItems.length === 0" class="text-center py-6 text-muted-foreground text-sm">
+                            <Icon icon="bar-chart" :size="32" class="mx-auto mb-2 text-muted-foreground" />
                             <p>No data available</p>
                             <p class="text-xs mt-1">Start recording purchases</p>
                         </div>
@@ -800,20 +800,20 @@ const handleCampusChange = (event: Event) => {
                             <li 
                                 v-for="(item, index) in topMovingItems" 
                                 :key="index"
-                                class="flex items-center justify-between p-2 rounded bg-white dark:bg-gray-800"
+                                class="flex flex-wrap gap-2 items-center justify-between p-2 rounded bg-card"
                             >
                                 <div class="flex items-center gap-3 min-w-0">
                                     <div class="w-7 h-7 rounded-full bg-primary/10 flex items-center justify-center text-xs font-bold text-primary shrink-0">
                                         {{ index + 1 }}
                                     </div>
                                     <div class="min-w-0">
-                                        <p class="text-sm font-medium text-gray-900 dark:text-white truncate">{{ item.name }}</p>
-                                        <p class="text-xs text-gray-500 dark:text-gray-400">{{ item.purchaseCount }} purchases</p>
+                                        <p class="text-sm font-medium text-foreground truncate">{{ item.name }}</p>
+                                        <p class="text-xs text-muted-foreground">{{ item.purchaseCount }} purchases</p>
                                     </div>
                                 </div>
                                 <div class="text-right shrink-0">
-                                    <p class="text-sm font-semibold text-gray-900 dark:text-white">{{ item.quantity }}</p>
-                                    <p class="text-xs text-gray-500 dark:text-gray-400">units</p>
+                                    <p class="text-sm font-semibold text-foreground">{{ item.quantity }}</p>
+                                    <p class="text-xs text-muted-foreground">units</p>
                                 </div>
                             </li>
                         </ul>

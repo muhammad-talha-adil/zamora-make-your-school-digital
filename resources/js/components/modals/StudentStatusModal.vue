@@ -11,12 +11,12 @@
             <form @submit.prevent="submitForm" class="space-y-4">
                 <!-- Status Dropdown -->
                 <div class="space-y-2">
-                    <Label for="status_id">Status <span class="text-red-500">*</span></Label>
+                    <Label for="status_id">Status <span class="text-destructive">*</span></Label>
                     <select
                         id="status_id"
                         v-model="form.status_id"
-                        class="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 text-sm h-11"
-                        :class="{ 'border-red-500': errors.status_id }"
+                        class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm h-11"
+                        :class="{ 'border-destructive': errors.status_id }"
                         required
                     >
                         <option value="">Select Status</option>
@@ -34,14 +34,14 @@
                         id="status_description"
                         v-model="form.status_description"
                         rows="3"
-                        class="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 min-h-20"
+                        class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 min-h-20"
                         placeholder="Enter reason for status change..."
                     ></textarea>
                 </div>
 
                 <!-- Warning Message -->
-                <div class="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-md p-3">
-                    <p class="text-sm text-amber-800 dark:text-amber-200">
+                <div class="bg-warning/10 border border-warning/40 rounded-md p-3">
+                    <p class="text-sm text-warning">
                         <Icon icon="alert-triangle" class="inline h-4 w-4 mr-1" />
                         The student account will be deactivated upon submission.
                     </p>

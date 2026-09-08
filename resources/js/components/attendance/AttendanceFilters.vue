@@ -3,7 +3,7 @@
         <!-- Campus Filter -->
         <select
             v-model="filters.campus_id"
-            class="w-full sm:w-44 md:w-48 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 text-sm min-h-10 md:min-h-11"
+            class="w-full sm:w-44 md:w-48 rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm min-h-10 md:min-h-11"
         >
             <option value="">All Campuses</option>
             <option v-for="campus in props.campuses" :key="campus.id" :value="campus.id">
@@ -14,7 +14,7 @@
         <!-- Session Filter -->
         <select
             v-model="filters.session_id"
-            class="w-full sm:w-44 md:w-48 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 text-sm min-h-10 md:min-h-11"
+            class="w-full sm:w-44 md:w-48 rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm min-h-10 md:min-h-11"
         >
             <option value="">All Sessions</option>
             <option v-for="session in props.sessions" :key="session.id" :value="session.id">
@@ -26,7 +26,7 @@
         <select
             v-model="filters.class_id"
             @change="onClassChange"
-            class="w-full sm:w-44 md:w-48 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 text-sm min-h-10 md:min-h-11"
+            class="w-full sm:w-44 md:w-48 rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm min-h-10 md:min-h-11"
         >
             <option value="">All Classes</option>
             <option v-for="cls in props.classes" :key="cls.id" :value="cls.id">
@@ -37,7 +37,7 @@
         <!-- Section Filter -->
         <select
             v-model="filters.section_id"
-            class="w-full sm:w-44 md:w-48 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 text-sm min-h-10 md:min-h-11"
+            class="w-full sm:w-44 md:w-48 rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm min-h-10 md:min-h-11"
         >
             <option value="">All Sections</option>
             <option v-for="section in filteredSections" :key="section.id" :value="section.id">
@@ -49,13 +49,13 @@
         <input
             v-model="filters.date"
             type="date"
-            class="w-full sm:w-44 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 text-sm min-h-10 md:min-h-11"
+            class="w-full sm:w-44 rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm min-h-10 md:min-h-11"
         />
 
         <!-- Locked Filter -->
         <select
             v-model="filters.locked"
-            class="w-full sm:w-40 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 text-sm min-h-10 md:min-h-11"
+            class="w-full sm:w-40 rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm min-h-10 md:min-h-11"
         >
             <option value="">All Status</option>
             <option value="1">Locked</option>
@@ -63,7 +63,7 @@
         </select>
 
         <!-- Load Button -->
-        <Button variant="default" size="sm" @click="applyFilters" class="min-h-10 md:min-h-11 bg-blue-600 hover:bg-blue-700">
+        <Button variant="default" size="sm" @click="applyFilters" class="min-h-10 md:min-h-11 bg-primary hover:bg-primary/90">
             <Icon icon="search" class="mr-1 h-4 w-4" />
             Load
         </Button>

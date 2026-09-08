@@ -2,22 +2,20 @@
 
 namespace App\Models;
 
+use App\Enums\AttendanceStatusCode;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Facades\DB;
 
 class Attendance extends Model
 {
     /**
-     * Attendance status codes.
+     * Worked out once per model; see `statusCounts()`.
+     *
+     * @var array<string, int>|null
      */
-    public const STATUS_PRESENT = 'P';
-
-    public const STATUS_ABSENT = 'A';
-
-    public const STATUS_LEAVE = 'L';
-
-    public const STATUS_LATE = 'LT';
+    private ?array $statusCounts = null;
 
     protected $fillable = [
         'attendance_date',
@@ -87,40 +85,121 @@ class Attendance extends Model
      */
     public function getTotalStudentsAttribute(): int
     {
-        return $this->attendanceStudents()->count();
+        return $this->relationLoaded('attendanceStudents')
+            ? $this->attendanceStudents->count()
+            : $this->attendanceStudents()->count();
     }
 
     /**
-     * Get the number of present students.
+     * How many students hold each status on this register, keyed by code.
+     *
+     * One grouped query, held for the life of the model. Each of the counts
+     * below used to run its own `whereHas` count, so a list of registers cost
+     * three queries per row before anything else was asked of it.
+     *
+     * When the rows are already loaded — which the dashboard and the show
+     * screen do — they are counted in memory and no query runs at all.
+     *
+     * @return array<string, int>
      */
+    public function statusCounts(): array
+    {
+        if ($this->statusCounts !== null) {
+            return $this->statusCounts;
+        }
+
+        if ($this->relationLoaded('attendanceStudents')) {
+            return $this->statusCounts = $this->attendanceStudents
+                ->groupBy(fn (AttendanceStudent $row) => $row->attendanceStatus?->code)
+                ->map->count()
+                ->filter(fn ($count, $code) => $code !== '')
+                ->all();
+        }
+
+        return $this->statusCounts = AttendanceStudent::query()
+            ->join('attendance_statuses', 'attendance_statuses.id', '=', 'attendance_students.attendance_status_id')
+            ->where('attendance_students.attendance_id', $this->id)
+            ->groupBy('attendance_statuses.code')
+            ->pluck(DB::raw('count(*)'), 'attendance_statuses.code')
+            ->map(fn ($count) => (int) $count)
+            ->all();
+    }
+
+    public function countOf(AttendanceStatusCode $code): int
+    {
+        return $this->statusCounts()[$code->value] ?? 0;
+    }
+
     public function getPresentCountAttribute(): int
     {
-        return $this->attendanceStudents()
-            ->whereHas('attendanceStatus', function ($query) {
-                $query->where('code', self::STATUS_PRESENT);
-            })->count();
+        return $this->countOf(AttendanceStatusCode::PRESENT);
     }
 
-    /**
-     * Get the number of absent students.
-     */
     public function getAbsentCountAttribute(): int
     {
-        return $this->attendanceStudents()
-            ->whereHas('attendanceStatus', function ($query) {
-                $query->where('code', self::STATUS_ABSENT);
-            })->count();
+        return $this->countOf(AttendanceStatusCode::ABSENT);
+    }
+
+    public function getLateCountAttribute(): int
+    {
+        return $this->countOf(AttendanceStatusCode::LATE);
+    }
+
+    public function getLeaveCountAttribute(): int
+    {
+        return $this->countOf(AttendanceStatusCode::LEAVE);
+    }
+
+    public function getHalfDayCountAttribute(): int
+    {
+        return $this->countOf(AttendanceStatusCode::HALF_DAY);
     }
 
     /**
-     * Get the number of late students.
+     * Only the registers a user is allowed to see.
+     *
+     * The policy answers "may I open this one"; a list needs the same question
+     * asked of every row at once, or a teacher's index quietly shows them every
+     * class in the school and only refuses when they click.
+     *
+     * Kept beside the policy's `coversRegister()` on purpose: they must always
+     * agree, and the tests assert that they do.
      */
-    public function getLateCountAttribute(): int
+    public function scopeVisibleTo($query, ?User $user)
     {
-        return $this->attendanceStudents()
-            ->whereHas('attendanceStatus', function ($query) {
-                $query->where('code', self::STATUS_LATE);
-            })->count();
+        if (! $user || $user->isSuperAdmin()) {
+            return $query;
+        }
+
+        $campusId = $user->campusId();
+
+        if ($campusId !== null) {
+            $query->where('campus_id', $campusId);
+        }
+
+        if (! $user->isClassRestricted()) {
+            return $query;
+        }
+
+        $assignments = $user->teachingAssignments()->active()->get(['class_id', 'section_id']);
+
+        if ($assignments->isEmpty()) {
+            // A teacher with no class yet sees nothing, rather than everything.
+            return $query->whereRaw('1 = 0');
+        }
+
+        return $query->where(function ($outer) use ($assignments) {
+            foreach ($assignments as $assignment) {
+                $outer->orWhere(function ($q) use ($assignment) {
+                    $q->where('class_id', $assignment->class_id);
+
+                    // A whole-class assignment covers every section in it.
+                    if ($assignment->section_id !== null) {
+                        $q->where('section_id', $assignment->section_id);
+                    }
+                });
+            }
+        });
     }
 
     /**

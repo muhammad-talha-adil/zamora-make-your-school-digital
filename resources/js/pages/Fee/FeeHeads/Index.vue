@@ -161,12 +161,12 @@ const deleteFeeHead = (feeHead: FeeHead) => {
 
 const getCategoryColor = (category: string) => {
     const colors = {
-        tuition: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400',
-        transport: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400',
-        hostel: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400',
-        library: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
-        examination: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
-        other: 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400',
+        tuition: 'bg-primary/10 text-primary',
+        transport: 'bg-warning/10 text-warning',
+        hostel: 'bg-primary/10 text-primary',
+        library: 'bg-success/10 text-success',
+        examination: 'bg-destructive/10 text-destructive',
+        other: 'bg-muted text-foreground',
     };
     return colors[category] || colors.other;
 };
@@ -201,10 +201,10 @@ const getFrequencyLabel = (frequency: string) => {
             <!-- Header -->
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 md:gap-4">
                 <div>
-                    <h1 class="text-lg md:text-2xl font-bold text-gray-900 dark:text-white">
+                    <h1 class="text-lg md:text-2xl font-bold text-foreground">
                         Fee Heads
                     </h1>
-                    <p class="mt-1 text-xs md:text-sm text-gray-600 dark:text-gray-400">
+                    <p class="mt-1 text-xs md:text-sm text-muted-foreground">
                         Manage fee categories and heads
                     </p>
                 </div>
@@ -232,7 +232,7 @@ const getFrequencyLabel = (frequency: string) => {
                         id="filter-category"
                         v-model="filters.category"
                         @change="applyFilters"
-                        class="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 text-sm min-h-10 md:min-h-11"
+                        class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm min-h-10 md:min-h-11"
                     >
                         <option value="">All Categories</option>
                         <option v-for="cat in props.categories" :key="cat.value" :value="cat.value">
@@ -246,7 +246,7 @@ const getFrequencyLabel = (frequency: string) => {
                         id="filter-active"
                         v-model="filters.is_active"
                         @change="applyFilters"
-                        class="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 text-sm min-h-10 md:min-h-11"
+                        class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm min-h-10 md:min-h-11"
                     >
                         <option value="">All Status</option>
                         <option value="true">Active</option>
@@ -260,19 +260,19 @@ const getFrequencyLabel = (frequency: string) => {
                 <div
                     v-for="(feeHead, index) in sortedFeeHeads"
                     :key="feeHead.id"
-                    class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 space-y-2"
+                    class="bg-card rounded-lg border border-border p-4 space-y-2"
                 >
-                    <div class="flex justify-between items-start">
+                    <div class="flex flex-wrap gap-2 justify-between items-start">
                         <div>
-                            <div class="text-xs text-gray-500">Sr# {{ ((pagination.from || 1) - 1) + index + 1 }}</div>
-                            <div class="font-medium text-gray-900 dark:text-white">{{ feeHead.name }}</div>
-                            <div class="text-xs text-gray-500">Code: {{ feeHead.code }}</div>
+                            <div class="text-xs text-muted-foreground">Sr# {{ ((pagination.from || 1) - 1) + index + 1 }}</div>
+                            <div class="font-medium text-foreground">{{ feeHead.name }}</div>
+                            <div class="text-xs text-muted-foreground">Code: {{ feeHead.code }}</div>
                         </div>
                         <span :class="['px-2 py-1 text-xs font-medium rounded-full', getCategoryColor(feeHead.category)]">
                             {{ getCategoryLabel(feeHead.category) }}
                         </span>
                     </div>
-                    <div class="text-sm text-gray-600 dark:text-gray-400 space-y-1 pt-2 border-t border-gray-100 dark:border-gray-700">
+                    <div class="text-sm text-muted-foreground space-y-1 pt-2 border-t border-border">
                         <div>Frequency: {{ getFrequencyLabel(feeHead.default_frequency) }}</div>
                         <div>Order: {{ feeHead.sort_order }}</div>
                     </div>
@@ -287,58 +287,58 @@ const getFrequencyLabel = (frequency: string) => {
                             <Icon icon="trash" class="mr-1" />Delete
                         </Button>
                     </div>
-                    <div v-if="feeHeadsData.length === 0" class="text-center py-8 text-gray-500">
+                    <div v-if="feeHeadsData.length === 0" class="text-center py-8 text-muted-foreground">
                         No fee heads found.
                     </div>
                 </div>
             </div>
 
             <!-- Desktop Table View -->
-            <div class="hidden lg:block overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-900">
+            <div class="hidden lg:block overflow-hidden rounded-lg border border-border bg-card shadow-sm">
                 <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                        <thead class="bg-gray-50 dark:bg-gray-800">
+                    <table class="min-w-full divide-y divide-border">
+                        <thead class="bg-muted">
                             <tr>
-                                <th scope="col" class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase dark:text-gray-300">
+                                <th scope="col" class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">
                                     Sr#
                                 </th>
-                                <th scope="col" class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase dark:text-gray-300">
+                                <th scope="col" class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">
                                     Order
                                 </th>
-                                <th scope="col" class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase dark:text-gray-300">
+                                <th scope="col" class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">
                                     Code
                                 </th>
-                                <th scope="col" class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase dark:text-gray-300">
+                                <th scope="col" class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">
                                     Name
                                 </th>
-                                <th scope="col" class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase dark:text-gray-300">
+                                <th scope="col" class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">
                                     Category
                                 </th>
-                                <th scope="col" class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase dark:text-gray-300">
+                                <th scope="col" class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">
                                     Frequency
                                 </th>
-                                <th scope="col" class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase dark:text-gray-300">
+                                <th scope="col" class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">
                                     Status
                                 </th>
-                                <th scope="col" class="px-4 py-3 text-right text-xs font-semibold text-gray-600 uppercase dark:text-gray-300">
+                                <th scope="col" class="px-4 py-3 text-right text-xs font-semibold text-muted-foreground uppercase">
                                     Actions
                                 </th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-900">
-                            <tr v-for="(feeHead, index) in sortedFeeHeads" :key="feeHead.id" class="transition-colors hover:bg-gray-50 dark:hover:bg-gray-800">
+                        <tbody class="divide-y divide-border bg-card">
+                            <tr v-for="(feeHead, index) in sortedFeeHeads" :key="feeHead.id" class="transition-colors hover:bg-accent">
                             <td class="px-4 py-3">
-                                <div class="text-sm font-medium text-gray-900 dark:text-white">{{ ((pagination.from || 1) - 1) + index + 1 }}</div>
+                                <div class="text-sm font-medium text-foreground">{{ ((pagination.from || 1) - 1) + index + 1 }}</div>
                             </td>
                                 <td class="px-4 py-3">
-                                    <div class="text-sm font-medium text-gray-900 dark:text-white">{{ feeHead.sort_order }}</div>
+                                    <div class="text-sm font-medium text-foreground">{{ feeHead.sort_order }}</div>
                                 </td>
                                 <td class="px-4 py-3">
-                                    <div class="text-sm font-medium text-gray-900 dark:text-white">{{ feeHead.code }}</div>
+                                    <div class="text-sm font-medium text-foreground">{{ feeHead.code }}</div>
                                 </td>
                                 <td class="px-4 py-3">
-                                    <div class="text-sm font-medium text-gray-900 dark:text-white">{{ feeHead.name }}</div>
-                                    <div v-if="feeHead.description" class="text-xs text-gray-500">{{ feeHead.description }}</div>
+                                    <div class="text-sm font-medium text-foreground">{{ feeHead.name }}</div>
+                                    <div v-if="feeHead.description" class="text-xs text-muted-foreground">{{ feeHead.description }}</div>
                                 </td>
                                 <td class="px-4 py-3">
                                     <span :class="['px-2 py-1 text-xs font-medium rounded-full', getCategoryColor(feeHead.category)]">
@@ -346,15 +346,15 @@ const getFrequencyLabel = (frequency: string) => {
                                     </span>
                                 </td>
                                 <td class="px-4 py-3">
-                                    <div class="text-sm text-gray-600 dark:text-gray-300">{{ getFrequencyLabel(feeHead.default_frequency) }}</div>
+                                    <div class="text-sm text-muted-foreground">{{ getFrequencyLabel(feeHead.default_frequency) }}</div>
                                 </td>
                                 <td class="px-4 py-3">
-                                    <span :class="['px-2 py-1 text-xs font-medium rounded-full', feeHead.is_active ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' : 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400']">
+                                    <span :class="['px-2 py-1 text-xs font-medium rounded-full', feeHead.is_active ? 'bg-success/10 text-success' : 'bg-muted text-foreground']">
                                         {{ feeHead.is_active ? 'Active' : 'Inactive' }}
                                     </span>
                                 </td>
                                 <td class="px-4 py-3 text-sm font-medium whitespace-nowrap">
-                                    <div class="flex gap-2 justify-end">
+                                    <div class="flex flex-wrap gap-2 justify-end">
                                         <Button @click="toggleActive(feeHead)" :variant="feeHead.is_active ? 'outline' : 'default'" size="sm" class="min-w-[80px]">
                                             {{ feeHead.is_active ? 'Deactivate' : 'Activate' }}
                                         </Button>
@@ -373,12 +373,12 @@ const getFrequencyLabel = (frequency: string) => {
             </div>
 
             <!-- Pagination -->
-            <div class="flex justify-between items-center pt-4">
+            <div class="flex flex-wrap gap-2 justify-between items-center pt-4">
                 <div class="flex items-center gap-4">
-                    <div class="text-sm text-gray-600 dark:text-gray-400">
+                    <div class="text-sm text-muted-foreground">
                         Showing {{ pagination.from }} to {{ pagination.to }} of {{ pagination.total }} entries
                     </div>
-                    <select v-model="perPage" class="rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 text-sm min-h-10 w-20">
+                    <select v-model="perPage" class="rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm min-h-10 w-20">
                         <option v-for="option in perPageOptions" :key="option.id" :value="option.id">
                             {{ option.name }}
                         </option>

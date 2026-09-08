@@ -416,10 +416,10 @@ const getFrequencyLabel = (freq: string) => {
             <!-- Header -->
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 md:gap-4">
                 <div>
-                    <h1 class="text-lg md:text-2xl font-bold text-gray-900 dark:text-white">
+                    <h1 class="text-lg md:text-2xl font-bold text-foreground">
                         Edit Fee Structure
                     </h1>
-                    <p class="mt-1 text-xs md:text-sm text-gray-600 dark:text-gray-400">
+                    <p class="mt-1 text-xs md:text-sm text-muted-foreground">
                         Update fee structure details and add fee items
                     </p>
                 </div>
@@ -436,12 +436,12 @@ const getFrequencyLabel = (freq: string) => {
             </div>
 
             <!-- Structure Details Form -->
-            <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 md:p-6">
+            <div class="bg-card rounded-lg border border-border p-4 md:p-6">
                 <form @submit.prevent="submitForm" class="space-y-6">
                     <!-- Basic Information -->
                     <div class="grid gap-4 md:grid-cols-2">
                         <div class="space-y-2">
-                            <Label for="title">Title <span class="text-red-500">*</span></Label>
+                            <Label for="title">Title <span class="text-destructive">*</span></Label>
                             <ComboboxInput
                                 id="title"
                                 v-model="form.title"
@@ -453,54 +453,54 @@ const getFrequencyLabel = (freq: string) => {
                                 classMinWidth="w-full"
                                 @update:modelValue="onTitleChange"
                             />
-                            <p v-if="errors.title" class="text-sm text-red-500">{{ errors.title }}</p>
+                            <p v-if="errors.title" class="text-sm text-destructive">{{ errors.title }}</p>
                         </div>
 
                         <div class="space-y-2">
-                            <Label for="status">Status <span class="text-red-500">*</span></Label>
+                            <Label for="status">Status <span class="text-destructive">*</span></Label>
                             <select
                                 id="status"
                                 v-model="form.status"
-                                :class="['w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 text-sm', { 'border-red-500': errors.status }]"
+                                :class="['w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm', { 'border-destructive': errors.status }]"
                             >
                                 <option value="draft">Draft</option>
                                 <option value="active">Active</option>
                                 <option value="inactive">Inactive</option>
                             </select>
-                            <p v-if="errors.status" class="text-sm text-red-500">{{ errors.status }}</p>
+                            <p v-if="errors.status" class="text-sm text-destructive">{{ errors.status }}</p>
                         </div>
                     </div>
 
                     <!-- Scope Selection -->
                     <div class="grid gap-4 md:grid-cols-2">
                         <div class="space-y-2">
-                            <Label for="session">Session <span class="text-red-500">*</span></Label>
+                            <Label for="session">Session <span class="text-destructive">*</span></Label>
                             <select
                                 id="session"
                                 v-model="form.session_id"
-                                :class="['w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 text-sm', { 'border-red-500': errors.session_id }]"
+                                :class="['w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm', { 'border-destructive': errors.session_id }]"
                             >
                                 <option value="">Select Session</option>
                                 <option v-for="session in props.sessions" :key="session.id" :value="session.id">
                                     {{ session.name }}
                                 </option>
                             </select>
-                            <p v-if="errors.session_id" class="text-sm text-red-500">{{ errors.session_id }}</p>
+                            <p v-if="errors.session_id" class="text-sm text-destructive">{{ errors.session_id }}</p>
                         </div>
 
                         <div class="space-y-2">
-                            <Label for="campus">Campus <span class="text-red-500">*</span></Label>
+                            <Label for="campus">Campus <span class="text-destructive">*</span></Label>
                             <select
                                 id="campus"
                                 v-model="form.campus_id"
-                                :class="['w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 text-sm', { 'border-red-500': errors.campus_id }]"
+                                :class="['w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm', { 'border-destructive': errors.campus_id }]"
                             >
                                 <option value="">Select Campus</option>
                                 <option v-for="campus in props.campuses" :key="campus.id" :value="campus.id">
                                     {{ campus.name }}
                                 </option>
                             </select>
-                            <p v-if="errors.campus_id" class="text-sm text-red-500">{{ errors.campus_id }}</p>
+                            <p v-if="errors.campus_id" class="text-sm text-destructive">{{ errors.campus_id }}</p>
                         </div>
                     </div>
 
@@ -512,14 +512,14 @@ const getFrequencyLabel = (freq: string) => {
                                 id="class"
                                 v-model="form.class_id"
                                 @change="onClassChange"
-                                class="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 text-sm"
+                                class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm"
                             >
                                 <option value="">Select Class</option>
                                 <option v-for="cls in props.classes" :key="cls.id" :value="cls.id">
                                     {{ cls.name }}
                                 </option>
                             </select>
-                            <p class="text-xs text-gray-500">Leave empty to apply to all classes</p>
+                            <p class="text-xs text-muted-foreground">Leave empty to apply to all classes</p>
                         </div>
 
                         <div class="space-y-2">
@@ -528,7 +528,7 @@ const getFrequencyLabel = (freq: string) => {
                                 id="section"
                                 v-model="form.section_id"
                                 :disabled="!form.class_id"
-                                :class="['w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 text-sm', { 'opacity-50': !form.class_id, 'border-red-500': errors.section_id }]"
+                                :class="['w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm', { 'opacity-50': !form.class_id, 'border-destructive': errors.section_id }]"
                             >
                                 <option value="">Select Section</option>
                                 <option v-if="form.class_id && filteredSections.length > 0" value="all">All Sections ({{ filteredSections.length }})</option>
@@ -536,7 +536,7 @@ const getFrequencyLabel = (freq: string) => {
                                     {{ section.name }}
                                 </option>
                             </select>
-                            <p class="text-xs text-gray-500">
+                            <p class="text-xs text-muted-foreground">
                                 <span v-if="form.section_id === 'all'">Applied to all sections of this class</span>
                                 <span v-else-if="form.section_id">Applied to single section</span>
                                 <span v-else>Select a section or "All Sections" to apply to all</span>
@@ -547,17 +547,17 @@ const getFrequencyLabel = (freq: string) => {
                     <!-- Effective Dates -->
                     <div class="grid gap-4 md:grid-cols-2">
                         <div class="space-y-2">
-                            <Label for="effective_from">Effective From <span class="text-red-500">*</span></Label>
+                            <Label for="effective_from">Effective From <span class="text-destructive">*</span></Label>
                             <Input
                                 id="effective_from"
                                 v-model="form.effective_from"
                                 type="date"
                                 disabled
-                                :class="{ 'border-red-500': errors.effective_from }"
+                                :class="{ 'border-destructive': errors.effective_from }"
                             />
                             <!-- Hidden input to ensure value is submitted -->
                             <input type="hidden" name="effective_from" :value="form.effective_from" />
-                            <p v-if="errors.effective_from" class="text-sm text-red-500">{{ errors.effective_from }}</p>
+                            <p v-if="errors.effective_from" class="text-sm text-destructive">{{ errors.effective_from }}</p>
                         </div>
 
                         <div class="space-y-2">
@@ -570,7 +570,7 @@ const getFrequencyLabel = (freq: string) => {
                             />
                             <!-- Hidden input to ensure value is submitted -->
                             <input type="hidden" name="effective_to" :value="form.effective_to" />
-                            <p class="text-xs text-gray-500">Leave empty for indefinite</p>
+                            <p class="text-xs text-muted-foreground">Leave empty for indefinite</p>
                         </div>
                     </div>
 
@@ -581,13 +581,13 @@ const getFrequencyLabel = (freq: string) => {
                             id="notes"
                             v-model="form.notes"
                             rows="3"
-                            class="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 text-sm"
+                            class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm"
                             placeholder="Any additional notes about this fee structure..."
                         ></textarea>
                     </div>
 
                     <!-- Submit -->
-                    <div class="flex justify-end gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
+                    <div class="flex flex-wrap justify-end gap-3 pt-4 border-t border-border">
                         <Button type="button" variant="outline" @click="cancel">
                             Cancel
                         </Button>
@@ -600,11 +600,11 @@ const getFrequencyLabel = (freq: string) => {
             </div>
 
             <!-- Fee Items Section -->
-            <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 md:p-6">
-                <div class="flex justify-between items-center mb-4">
+            <div class="bg-card rounded-lg border border-border p-4 md:p-6">
+                <div class="flex flex-wrap gap-2 justify-between items-center mb-4">
                     <div>
-                        <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Fee Items</h2>
-                        <p class="text-sm text-gray-500">Add fee items to this structure</p>
+                        <h2 class="text-lg font-semibold text-foreground">Fee Items</h2>
+                        <p class="text-sm text-muted-foreground">Add fee items to this structure</p>
                     </div>
                     <Button @click="openAddItemForm" v-if="!showItemForm">
                         <Icon icon="plus" class="mr-2 h-4 w-4" />
@@ -613,45 +613,45 @@ const getFrequencyLabel = (freq: string) => {
                 </div>
 
                 <!-- Add/Edit Item Form -->
-                <div v-if="showItemForm" class="mb-6 p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
+                <div v-if="showItemForm" class="mb-6 p-4 bg-muted rounded-lg">
                     <h3 class="font-semibold mb-4">{{ editingItem ? 'Edit Fee Item' : 'Add New Fee Item' }}</h3>
                     <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
                         <div class="space-y-2">
-                            <Label>Fee Head <span class="text-red-500">*</span></Label>
+                            <Label>Fee Head <span class="text-destructive">*</span></Label>
                             <select
                                 v-model="itemForm.fee_head_id"
-                                :class="['w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 text-sm', { 'border-red-500': itemErrors.fee_head_id }]"
+                                :class="['w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm', { 'border-destructive': itemErrors.fee_head_id }]"
                             >
                                 <option value="">Select Fee Head</option>
                                 <option v-for="fh in (!editingItem ? availableFeeHeads : props.feeHeads)" :key="fh.id" :value="fh.id">
                                     {{ fh.name }}
                                 </option>
                             </select>
-                            <p v-if="itemErrors.fee_head_id" class="text-sm text-red-500">{{ itemErrors.fee_head_id }}</p>
+                            <p v-if="itemErrors.fee_head_id" class="text-sm text-destructive">{{ itemErrors.fee_head_id }}</p>
                         </div>
 
                         <div class="space-y-2">
-                            <Label>Amount <span class="text-red-500">*</span></Label>
+                            <Label>Amount <span class="text-destructive">*</span></Label>
                             <Input
                                 v-model="itemForm.amount"
                                 type="number"
                                 min="0"
                                 step="0.01"
                                 placeholder="0.00"
-                                :class="{ 'border-red-500': itemErrors.amount }"
+                                :class="{ 'border-destructive': itemErrors.amount }"
                             />
-                            <p v-if="itemErrors.amount" class="text-sm text-red-500">{{ itemErrors.amount }}</p>
+                            <p v-if="itemErrors.amount" class="text-sm text-destructive">{{ itemErrors.amount }}</p>
                         </div>
 
                         <div class="space-y-2">
                             <Label>Frequency</Label>
-                            <div class="text-sm text-gray-600 dark:text-gray-400 p-2 bg-gray-100 dark:bg-gray-600 rounded">
+                            <div class="text-sm text-muted-foreground p-2 bg-muted rounded">
                                 Auto-set from Fee Head
                             </div>
                         </div>
                     </div>
 
-                    <div class="flex justify-end gap-2 mt-4">
+                    <div class="flex flex-wrap justify-end gap-2 mt-4">
                         <Button variant="outline" @click="closeItemForm">
                             Cancel
                         </Button>
@@ -663,85 +663,85 @@ const getFrequencyLabel = (freq: string) => {
 
                 <!-- Items Table -->
                 <div v-if="structure.items && structure.items.length > 0" class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                        <thead class="bg-gray-50 dark:bg-gray-800">
+                    <table class="min-w-full divide-y divide-border">
+                        <thead class="bg-muted">
                             <tr>
-                                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase dark:text-gray-300">
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">
                                     Fee Head
                                 </th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase dark:text-gray-300">
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">
                                     Frequency
                                 </th>
-                                <th class="px-4 py-3 text-right text-xs font-semibold text-gray-600 uppercase dark:text-gray-300">
+                                <th class="px-4 py-3 text-right text-xs font-semibold text-muted-foreground uppercase">
                                     Amount
                                 </th>
-                                <th class="px-4 py-3 text-right text-xs font-semibold text-gray-600 uppercase dark:text-gray-300">
+                                <th class="px-4 py-3 text-right text-xs font-semibold text-muted-foreground uppercase">
                                     Actions
                                 </th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-900">
-                            <tr v-for="item in structure.items" :key="item.id" class="transition-colors hover:bg-gray-50 dark:hover:bg-gray-800">
+                        <tbody class="divide-y divide-border bg-card">
+                            <tr v-for="item in structure.items" :key="item.id" class="transition-colors hover:bg-accent">
                                 <td class="px-4 py-3 whitespace-nowrap">
-                                    <div class="text-sm font-medium text-gray-900 dark:text-white">{{ item.fee_head?.name || 'N/A' }}</div>
+                                    <div class="text-sm font-medium text-foreground">{{ item.fee_head?.name || 'N/A' }}</div>
                                 </td>
                                 <td class="px-4 py-3 whitespace-nowrap">
                                     <span :class="['px-2 py-1 text-xs font-medium rounded-full', 
-                                        item.frequency === 'monthly' ? 'bg-blue-100 text-blue-800' :
-                                        item.frequency === 'yearly' ? 'bg-purple-100 text-purple-800' :
-                                        'bg-green-100 text-green-800'
+                                        item.frequency === 'monthly' ? 'bg-primary/10 text-primary' :
+                                        item.frequency === 'yearly' ? 'bg-primary/10 text-primary' :
+                                        'bg-success/10 text-success'
                                     ]">
                                         {{ getFrequencyLabel(item.frequency) }}
                                     </span>
                                 </td>
                                 <td class="px-4 py-3 text-sm font-medium whitespace-nowrap text-right">
-                                    <div class="text-gray-900 dark:text-white">{{ formatCurrency(item.amount) }}</div>
+                                    <div class="text-foreground">{{ formatCurrency(item.amount) }}</div>
                                 </td>
                                 <td class="px-4 py-3 whitespace-nowrap text-right">
-                                    <div class="flex justify-end gap-2">
+                                    <div class="flex flex-wrap justify-end gap-2">
                                         <Button variant="ghost" size="sm" @click="openEditItemForm(item)">
                                             <Icon icon="edit" class="h-4 w-4" />
                                         </Button>
                                         <Button variant="ghost" size="sm" @click="deleteItem(item.id)">
-                                            <Icon icon="trash-2" class="h-4 w-4 text-red-500" />
+                                            <Icon icon="trash-2" class="h-4 w-4 text-destructive" />
                                         </Button>
                                     </div>
                                 </td>
                             </tr>
                         </tbody>
-                        <tfoot class="bg-gray-50 dark:bg-gray-800">
+                        <tfoot class="bg-muted">
                             <tr>
-                                <td colspan="2" class="px-4 py-3 text-sm font-semibold text-gray-900 dark:text-white text-right">
+                                <td colspan="2" class="px-4 py-3 text-sm font-semibold text-foreground text-right">
                                     Monthly Total
                                 </td>
-                                <td class="px-4 py-3 text-sm font-bold text-gray-900 dark:text-white text-right">
+                                <td class="px-4 py-3 text-sm font-bold text-foreground text-right">
                                     {{ formatCurrency(totalMonthly) }}
                                 </td>
                                 <td></td>
                             </tr>
                             <tr>
-                                <td colspan="2" class="px-4 py-3 text-sm font-semibold text-gray-900 dark:text-white text-right">
+                                <td colspan="2" class="px-4 py-3 text-sm font-semibold text-foreground text-right">
                                     Yearly Total
                                 </td>
-                                <td class="px-4 py-3 text-sm font-bold text-gray-900 dark:text-white text-right">
+                                <td class="px-4 py-3 text-sm font-bold text-foreground text-right">
                                     {{ formatCurrency(totalYearly) }}
                                 </td>
                                 <td></td>
                             </tr>
                             <tr>
-                                <td colspan="2" class="px-4 py-3 text-sm font-semibold text-gray-900 dark:text-white text-right">
+                                <td colspan="2" class="px-4 py-3 text-sm font-semibold text-foreground text-right">
                                     One Time Total
                                 </td>
-                                <td class="px-4 py-3 text-sm font-bold text-gray-900 dark:text-white text-right">
+                                <td class="px-4 py-3 text-sm font-bold text-foreground text-right">
                                     {{ formatCurrency(totalOneTime) }}
                                 </td>
                                 <td></td>
                             </tr>
-                            <tr class="border-t-2 border-gray-300 dark:border-gray-600">
-                                <td colspan="2" class="px-4 py-3 text-sm font-bold text-gray-900 dark:text-white text-right">
+                            <tr class="border-t-2 border-border">
+                                <td colspan="2" class="px-4 py-3 text-sm font-bold text-foreground text-right">
                                     Grand Total
                                 </td>
-                                <td class="px-4 py-3 text-sm font-bold text-lg text-gray-900 dark:text-white text-right">
+                                <td class="px-4 py-3 text-sm font-bold text-lg text-foreground text-right">
                                     {{ formatCurrency(grandTotal) }}
                                 </td>
                                 <td></td>
@@ -751,7 +751,7 @@ const getFrequencyLabel = (freq: string) => {
                 </div>
 
                 <!-- Empty State -->
-                <div v-else class="text-center py-8 text-gray-500">
+                <div v-else class="text-center py-8 text-muted-foreground">
                     <Icon icon="inbox" class="h-12 w-12 mx-auto mb-2 opacity-50" />
                     <p>No fee items added yet.</p>
                     <p class="text-sm">Click "Add Fee Item" to start adding fees.</p>

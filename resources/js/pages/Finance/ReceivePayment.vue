@@ -215,16 +215,16 @@ const formatMoney = (amount: number) => {
         <div class="space-y-6 p-4 md:p-6">
             <!-- Header -->
             <div>
-                <h1 class="text-lg md:text-2xl font-bold text-gray-900 dark:text-white">
+                <h1 class="text-lg md:text-2xl font-bold text-foreground">
                     Receive Payment
                 </h1>
-                <p class="mt-1 text-xs md:text-sm text-gray-600 dark:text-gray-400">
+                <p class="mt-1 text-xs md:text-sm text-muted-foreground">
                     Record a payment received from student or other sources
                 </p>
             </div>
 
             <!-- Form -->
-            <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+            <div class="bg-card rounded-lg border border-border p-6">
                 <form @submit.prevent="submitForm" class="space-y-6">
                     
                     <!-- Payment Type Radio Buttons -->
@@ -237,7 +237,7 @@ const formatMoney = (amount: number) => {
                                         type="radio" 
                                         v-model="form.payment_type" 
                                         value="student"
-                                        class="w-4 h-4 text-blue-600"
+                                        class="w-4 h-4 text-primary"
                                     />
                                     <span class="text-sm font-medium">Student</span>
                                 </label>
@@ -246,7 +246,7 @@ const formatMoney = (amount: number) => {
                                         type="radio" 
                                         v-model="form.payment_type" 
                                         value="other"
-                                        class="w-4 h-4 text-blue-600"
+                                        class="w-4 h-4 text-primary"
                                     />
                                     <span class="text-sm font-medium">Other</span>
                                 </label>
@@ -262,7 +262,7 @@ const formatMoney = (amount: number) => {
                                 id="campus_id" 
                                 v-model="form.campus_id"
                                 required
-                                class="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white px-3 py-2"
+                                class="mt-1 block w-full rounded-md border border-border bg-card text-foreground px-3 py-2"
                             >
                                 <option value="">Select Campus</option>
                                 <option v-for="campus in props.campuses" :key="campus.id" :value="campus.id">
@@ -276,7 +276,7 @@ const formatMoney = (amount: number) => {
                                 id="class_id" 
                                 v-model="form.class_id"
                                 required
-                                class="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white px-3 py-2"
+                                class="mt-1 block w-full rounded-md border border-border bg-card text-foreground px-3 py-2"
                                 :disabled="!form.campus_id"
                             >
                                 <option value="">Select Class</option>
@@ -290,7 +290,7 @@ const formatMoney = (amount: number) => {
                             <select 
                                 id="section_id" 
                                 v-model="form.section_id"
-                                class="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white px-3 py-2"
+                                class="mt-1 block w-full rounded-md border border-border bg-card text-foreground px-3 py-2"
                                 :disabled="!form.class_id"
                             >
                                 <option value="">All Sections</option>
@@ -326,26 +326,26 @@ const formatMoney = (amount: number) => {
                     </div>
 
                     <!-- Loading indicator -->
-                    <div v-if="isLoadingDetails" class="flex items-center justify-center p-4 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                        <Icon icon="loader" class="h-5 w-5 animate-spin text-gray-400 mr-2" />
-                        <span class="text-gray-500 dark:text-gray-400">Loading student details...</span>
+                    <div v-if="isLoadingDetails" class="flex items-center justify-center p-4 bg-muted rounded-lg">
+                        <Icon icon="loader" class="h-5 w-5 animate-spin text-muted-foreground mr-2" />
+                        <span class="text-muted-foreground">Loading student details...</span>
                     </div>
 
                     <!-- Previous Balance Breakdown -->
-                    <div v-if="form.payment_type === 'student' && form.student_id && !isLoadingDetails && Object.keys(balanceBreakdown).length > 0" class="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
+                    <div v-if="form.payment_type === 'student' && form.student_id && !isLoadingDetails && Object.keys(balanceBreakdown).length > 0" class="bg-warning/10 border border-warning/40 rounded-lg p-4">
                         <div class="flex items-start gap-3">
-                            <Icon icon="alert-triangle" class="h-5 w-5 text-yellow-600 dark:text-yellow-400 flex-shrink-0 mt-0.5" />
+                            <Icon icon="alert-triangle" class="h-5 w-5 text-warning flex-shrink-0 mt-0.5" />
                             <div class="flex-1">
-                                <p class="font-medium text-yellow-800 dark:text-yellow-200 mb-2">Previous Outstanding Balances</p>
+                                <p class="font-medium text-warning mb-2">Previous Outstanding Balances</p>
                                 <div class="space-y-1">
-                                    <div v-for="(amount, head) in balanceBreakdown" :key="head" class="flex justify-between text-sm">
-                                        <span class="text-gray-600 dark:text-gray-400">{{ head }}:</span>
-                                        <span class="font-medium text-red-600">{{ formatMoney(amount) }}</span>
+                                    <div v-for="(amount, head) in balanceBreakdown" :key="head" class="flex flex-wrap gap-2 justify-between text-sm">
+                                        <span class="text-muted-foreground">{{ head }}:</span>
+                                        <span class="font-medium text-destructive">{{ formatMoney(amount) }}</span>
                                     </div>
                                 </div>
-                                <div class="mt-3 pt-2 border-t border-yellow-300 dark:border-yellow-700 flex justify-between font-medium">
+                                <div class="mt-3 pt-2 border-t border-warning/40 flex flex-wrap gap-2 justify-between font-medium">
                                     <span>Total Outstanding:</span>
-                                    <span class="text-red-600">{{ formatMoney(totalPreviousBalance) }}</span>
+                                    <span class="text-destructive">{{ formatMoney(totalPreviousBalance) }}</span>
                                 </div>
                             </div>
                         </div>
@@ -358,7 +358,7 @@ const formatMoney = (amount: number) => {
                             id="voucher_id" 
                             v-model="form.voucher_id"
                             required
-                            class="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white px-3 py-2"
+                            class="mt-1 block w-full rounded-md border border-border bg-card text-foreground px-3 py-2"
                         >
                             <option value="">Select Voucher</option>
                             <option v-for="voucher in studentVouchers" :key="voucher.id" :value="voucher.id">
@@ -366,7 +366,7 @@ const formatMoney = (amount: number) => {
                                 (Balance: {{ formatMoney(voucher.balance_amount) }})
                             </option>
                         </select>
-                        <p v-if="errors.voucher_id && errors.voucher_id[0]" class="mt-1 text-sm text-red-600">{{ errors.voucher_id[0] }}</p>
+                        <p v-if="errors.voucher_id && errors.voucher_id[0]" class="mt-1 text-sm text-destructive">{{ errors.voucher_id[0] }}</p>
                     </div>
 
                     <!-- Payer Name (for Other payment type) -->
@@ -377,7 +377,7 @@ const formatMoney = (amount: number) => {
                             v-model="form.payer_name" 
                             type="text"
                             required
-                            class="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white px-3 py-2"
+                            class="mt-1 block w-full rounded-md border border-border bg-card text-foreground px-3 py-2"
                             placeholder="Enter payer name"
                         />
                     </div>
@@ -392,10 +392,10 @@ const formatMoney = (amount: number) => {
                             step="0.01" 
                             min="0"
                             required
-                            class="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white px-3 py-2"
+                            class="mt-1 block w-full rounded-md border border-border bg-card text-foreground px-3 py-2"
                             placeholder="Enter amount"
                         />
-                        <p v-if="errors.amount && errors.amount[0]" class="mt-1 text-sm text-red-600">{{ errors.amount[0] }}</p>
+                        <p v-if="errors.amount && errors.amount[0]" class="mt-1 text-sm text-destructive">{{ errors.amount[0] }}</p>
                     </div>
 
                     <!-- Payment Method -->
@@ -405,14 +405,14 @@ const formatMoney = (amount: number) => {
                             id="payment_method" 
                             v-model="form.payment_method"
                             required
-                            class="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white px-3 py-2"
+                            class="mt-1 block w-full rounded-md border border-border bg-card text-foreground px-3 py-2"
                         >
                             <option value="">Select Payment Method</option>
                             <option v-for="method in paymentMethods" :key="method.id" :value="method.code">
                                 {{ method.name }}
                             </option>
                         </select>
-                        <p v-if="errors.payment_method && errors.payment_method[0]" class="mt-1 text-sm text-red-600">{{ errors.payment_method[0] }}</p>
+                        <p v-if="errors.payment_method && errors.payment_method[0]" class="mt-1 text-sm text-destructive">{{ errors.payment_method[0] }}</p>
                     </div>
 
                     <!-- Category (only for Other payment type) -->
@@ -422,14 +422,14 @@ const formatMoney = (amount: number) => {
                             id="category_id" 
                             v-model="form.category_id"
                             required
-                            class="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white px-3 py-2"
+                            class="mt-1 block w-full rounded-md border border-border bg-card text-foreground px-3 py-2"
                         >
                             <option value="">Select Category</option>
                             <option v-for="cat in categories" :key="cat.id" :value="cat.id">
                                 {{ cat.name }}
                             </option>
                         </select>
-                        <p v-if="errors.category_id && errors.category_id[0]" class="mt-1 text-sm text-red-600">{{ errors.category_id[0] }}</p>
+                        <p v-if="errors.category_id && errors.category_id[0]" class="mt-1 text-sm text-destructive">{{ errors.category_id[0] }}</p>
                     </div>
 
                     <!-- Transaction Date -->
@@ -440,9 +440,9 @@ const formatMoney = (amount: number) => {
                             v-model="form.transaction_date" 
                             type="date" 
                             required
-                            class="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white px-3 py-2"
+                            class="mt-1 block w-full rounded-md border border-border bg-card text-foreground px-3 py-2"
                         />
-                        <p v-if="errors.transaction_date && errors.transaction_date[0]" class="mt-1 text-sm text-red-600">{{ errors.transaction_date[0] }}</p>
+                        <p v-if="errors.transaction_date && errors.transaction_date[0]" class="mt-1 text-sm text-destructive">{{ errors.transaction_date[0] }}</p>
                     </div>
 
                     <!-- Description -->
@@ -451,14 +451,14 @@ const formatMoney = (amount: number) => {
                         <textarea 
                             id="description" 
                             v-model="form.description"
-                            class="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white px-3 py-2"
+                            class="mt-1 block w-full rounded-md border border-border bg-card text-foreground px-3 py-2"
                             rows="2"
                             placeholder="Add any notes..."
                         ></textarea>
                     </div>
 
                     <!-- Actions -->
-                    <div class="flex justify-end gap-3">
+                    <div class="flex flex-wrap justify-end gap-3">
                         <Button type="button" variant="outline" @click="router.visit('/finance')">
                             Cancel
                         </Button>

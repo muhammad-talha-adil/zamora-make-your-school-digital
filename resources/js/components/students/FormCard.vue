@@ -1,10 +1,10 @@
 <template>
     <div
-        class="rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-800"
+        class="rounded-lg border border-border bg-card p-6"
     >
         <h2
             v-if="title"
-            class="mb-4 flex items-center gap-2 text-lg font-semibold text-gray-900 dark:text-white"
+            class="mb-4 flex items-center gap-2 text-lg font-semibold text-foreground"
         >
             <Icon v-if="icon" :icon="icon" class="h-5 w-5 text-primary" />
             {{ title }}

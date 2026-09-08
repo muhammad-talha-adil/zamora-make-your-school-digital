@@ -75,16 +75,16 @@ const resetFilters = () => {
         <div class="space-y-6 p-4 md:p-6">
             <!-- Header -->
             <div>
-                <h1 class="text-xl md:text-2xl font-bold text-gray-900 dark:text-white">
+                <h1 class="text-xl md:text-2xl font-bold text-foreground">
                     Outstanding Report
                 </h1>
-                <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                <p class="mt-1 text-sm text-muted-foreground">
                     Unpaid and partially paid vouchers summary
                 </p>
             </div>
 
             <!-- Filters -->
-            <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
+            <div class="bg-card rounded-lg border border-border p-4">
                 <div class="grid gap-4 md:grid-cols-3">
                     <div class="space-y-2">
                         <Label for="campus_id">Campus</Label>
@@ -113,74 +113,74 @@ const resetFilters = () => {
 
             <!-- Summary Cards -->
             <div class="grid gap-4 md:grid-cols-3">
-                <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-                    <p class="text-sm text-gray-500 dark:text-gray-400">Total Outstanding</p>
-                    <p class="text-2xl font-bold text-red-600 dark:text-red-400">{{ formatCurrency(props.summary.total_outstanding) }}</p>
+                <div class="bg-card rounded-lg border border-border p-4">
+                    <p class="text-sm text-muted-foreground">Total Outstanding</p>
+                    <p class="text-2xl font-bold text-destructive">{{ formatCurrency(props.summary.total_outstanding) }}</p>
                 </div>
-                <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-                    <p class="text-sm text-gray-500 dark:text-gray-400">Total Vouchers</p>
-                    <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ props.summary.voucher_count }}</p>
+                <div class="bg-card rounded-lg border border-border p-4">
+                    <p class="text-sm text-muted-foreground">Total Vouchers</p>
+                    <p class="text-2xl font-bold text-foreground">{{ props.summary.voucher_count }}</p>
                 </div>
-                <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-                    <p class="text-sm text-gray-500 dark:text-gray-400">Students with Dues</p>
-                    <p class="text-2xl font-bold text-gray-900 dark:text-white">{{ props.summary.student_count }}</p>
+                <div class="bg-card rounded-lg border border-border p-4">
+                    <p class="text-sm text-muted-foreground">Students with Dues</p>
+                    <p class="text-2xl font-bold text-foreground">{{ props.summary.student_count }}</p>
                 </div>
             </div>
 
             <!-- By Class -->
-            <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-                <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Outstanding by Class</h3>
+            <div class="bg-card rounded-lg border border-border p-4">
+                <h3 class="text-lg font-semibold text-foreground mb-4">Outstanding by Class</h3>
                 <div class="overflow-x-auto">
                     <table class="w-full text-sm">
                         <thead>
-                            <tr class="border-b border-gray-200 dark:border-gray-700">
-                                <th class="text-left py-2 text-gray-500 dark:text-gray-400">Class</th>
-                                <th class="text-right py-2 text-gray-500 dark:text-gray-400">Vouchers</th>
-                                <th class="text-right py-2 text-gray-500 dark:text-gray-400">Outstanding</th>
+                            <tr class="border-b border-border">
+                                <th class="text-left py-2 text-muted-foreground">Class</th>
+                                <th class="text-right py-2 text-muted-foreground">Vouchers</th>
+                                <th class="text-right py-2 text-muted-foreground">Outstanding</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <tr v-for="item in props.byClass" :key="item.class_id" class="border-b border-gray-100 dark:border-gray-700">
-                                <td class="py-2 text-gray-900 dark:text-white">{{ item.class?.name || 'N/A' }}</td>
-                                <td class="py-2 text-right text-gray-600 dark:text-gray-300">{{ item.count }}</td>
-                                <td class="py-2 text-right text-red-600 dark:text-red-400 font-medium">{{ formatCurrency(item.total) }}</td>
+                            <tr v-for="item in props.byClass" :key="item.class_id" class="border-b border-border">
+                                <td class="py-2 text-foreground">{{ item.class?.name || 'N/A' }}</td>
+                                <td class="py-2 text-right text-muted-foreground">{{ item.count }}</td>
+                                <td class="py-2 text-right text-destructive font-medium">{{ formatCurrency(item.total) }}</td>
                             </tr>
                         </tbody>
                     </table>
-                    <div v-if="props.byClass.length === 0" class="text-center text-gray-500 dark:text-gray-400 py-4">
+                    <div v-if="props.byClass.length === 0" class="text-center text-muted-foreground py-4">
                         No outstanding vouchers
                     </div>
                 </div>
             </div>
 
             <!-- Top Defaulters -->
-            <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-                <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Top Defaulters</h3>
+            <div class="bg-card rounded-lg border border-border p-4">
+                <h3 class="text-lg font-semibold text-foreground mb-4">Top Defaulters</h3>
                 <div class="overflow-x-auto">
                     <table class="w-full text-sm">
                         <thead>
-                            <tr class="border-b border-gray-200 dark:border-gray-700">
-                                <th class="text-left py-2 text-gray-500 dark:text-gray-400">Student</th>
-                                <th class="text-right py-2 text-gray-500 dark:text-gray-400">Vouchers</th>
-                                <th class="text-right py-2 text-gray-500 dark:text-gray-400">Outstanding</th>
+                            <tr class="border-b border-border">
+                                <th class="text-left py-2 text-muted-foreground">Student</th>
+                                <th class="text-right py-2 text-muted-foreground">Vouchers</th>
+                                <th class="text-right py-2 text-muted-foreground">Outstanding</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <tr v-for="defaulter in props.topDefaulters" :key="defaulter.student_id" class="border-b border-gray-100 dark:border-gray-700">
+                            <tr v-for="defaulter in props.topDefaulters" :key="defaulter.student_id" class="border-b border-border">
                                 <td class="py-2">
-                                    <div class="text-gray-900 dark:text-white font-medium">
+                                    <div class="text-foreground font-medium">
                                         {{ defaulter.student?.name || 'N/A' }}
                                     </div>
-                                    <div class="text-xs text-gray-500 dark:text-gray-400">
+                                    <div class="text-xs text-muted-foreground">
                                         {{ defaulter.student?.registration_number }}
                                     </div>
                                 </td>
-                                <td class="py-2 text-right text-gray-600 dark:text-gray-300">{{ defaulter.voucher_count }}</td>
-                                <td class="py-2 text-right text-red-600 dark:text-red-400 font-medium">{{ formatCurrency(defaulter.total_outstanding) }}</td>
+                                <td class="py-2 text-right text-muted-foreground">{{ defaulter.voucher_count }}</td>
+                                <td class="py-2 text-right text-destructive font-medium">{{ formatCurrency(defaulter.total_outstanding) }}</td>
                             </tr>
                         </tbody>
                     </table>
-                    <div v-if="props.topDefaulters.length === 0" class="text-center text-gray-500 dark:text-gray-400 py-4">
+                    <div v-if="props.topDefaulters.length === 0" class="text-center text-muted-foreground py-4">
                         No defaulters found
                     </div>
                 </div>

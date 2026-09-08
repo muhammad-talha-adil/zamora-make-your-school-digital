@@ -226,7 +226,7 @@ const resetForm = () => {
                 <div class="grid gap-6 py-4">
                     <!-- Student Information -->
                     <div class="space-y-4">
-                        <h4 class="text-sm font-semibold text-gray-900 dark:text-white">Student Information</h4>
+                        <h4 class="text-sm font-semibold text-foreground">Student Information</h4>
 
                         <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                             <div class="grid gap-2">
@@ -322,7 +322,7 @@ const resetForm = () => {
 
                     <!-- Academic Information -->
                     <div class="space-y-4">
-                        <h4 class="text-sm font-semibold text-gray-900 dark:text-white">Academic Information</h4>
+                        <h4 class="text-sm font-semibold text-foreground">Academic Information</h4>
 
                         <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                             <div class="grid gap-2">
@@ -375,7 +375,7 @@ const resetForm = () => {
 
                     <!-- Guardian Information -->
                     <div class="space-y-4">
-                        <h4 class="text-sm font-semibold text-gray-900 dark:text-white">Guardian Information</h4>
+                        <h4 class="text-sm font-semibold text-foreground">Guardian Information</h4>
 
                         <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                             <div class="grid gap-2">
@@ -452,14 +452,14 @@ const resetForm = () => {
                                 <Input
                                     :value="cities.find(c => c.id === form.guardian_city_id)?.district || ''"
                                     readonly
-                                    class="bg-gray-50 dark:bg-gray-800"
+                                    class="bg-muted"
                                     placeholder="Auto-filled"
                                 />
-                                <Label class="text-xs text-gray-500">Tahsil</Label>
+                                <Label class="text-xs text-muted-foreground">Tahsil</Label>
                                 <Input
                                     :value="cities.find(c => c.id === form.guardian_city_id)?.tahsil || ''"
                                     readonly
-                                    class="bg-gray-50 dark:bg-gray-800"
+                                    class="bg-muted"
                                     placeholder="Auto-filled"
                                 />
                             </div>

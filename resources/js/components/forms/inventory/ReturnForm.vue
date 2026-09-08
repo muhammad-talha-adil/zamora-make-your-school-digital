@@ -159,8 +159,8 @@ const submitForm = () => {
         <DialogContent class="sm:max-w-lg">
             <DialogHeader>
                 <DialogTitle class="flex items-center gap-2">
-                    <div class="p-2 bg-green-100 dark:bg-green-900/20 rounded-lg">
-                        <Icon icon="rotate-ccw" class="h-5 w-5 text-green-600" />
+                    <div class="p-2 bg-success/10 rounded-lg">
+                        <Icon icon="rotate-ccw" class="h-5 w-5 text-success" />
                     </div>
                     Process Inventory Return
                 </DialogTitle>
@@ -175,13 +175,13 @@ const submitForm = () => {
                             <div class="p-1 bg-muted rounded">
                                 <Icon icon="building" class="h-3.5 w-3.5 text-muted-foreground" />
                             </div>
-                            Campus <span class="text-red-500">*</span>
+                            Campus <span class="text-destructive">*</span>
                         </Label>
                         <select
                             id="campus_id"
                             v-model="form.campus_id"
-                            class="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 text-sm h-11"
-                            :class="{ 'border-red-500': errors.campus_id }"
+                            class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm h-11"
+                            :class="{ 'border-destructive': errors.campus_id }"
                             required
                         >
                             <option value="">Select Campus</option>
@@ -198,13 +198,13 @@ const submitForm = () => {
                             <div class="p-1 bg-muted rounded">
                                 <Icon icon="user" class="h-3.5 w-3.5 text-muted-foreground" />
                             </div>
-                            Student Assignment <span class="text-red-500">*</span>
+                            Student Assignment <span class="text-destructive">*</span>
                         </Label>
                         <select
                             id="student_inventory_id"
                             v-model="form.student_inventory_id"
-                            class="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 text-sm h-11"
-                            :class="{ 'border-red-500': errors.student_inventory_id }"
+                            class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm h-11"
+                            :class="{ 'border-destructive': errors.student_inventory_id }"
                             required
                         >
                             <option value="">Select Assignment</option>
@@ -216,30 +216,30 @@ const submitForm = () => {
                     </div>
 
                     <!-- Selected Inventory Info -->
-                    <div v-if="selectedInventory" class="p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
-                        <div class="grid grid-cols-2 gap-4">
+                    <div v-if="selectedInventory" class="p-4 bg-muted rounded-lg">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
-                                <div class="text-sm text-gray-500">Student</div>
+                                <div class="text-sm text-muted-foreground">Student</div>
                                 <div class="font-medium">{{ selectedInventory.student_name }}</div>
-                                <div class="text-xs text-gray-400">{{ selectedInventory.registration_number }}</div>
+                                <div class="text-xs text-muted-foreground">{{ selectedInventory.registration_number }}</div>
                             </div>
                             <div>
-                                <div class="text-sm text-gray-500">Item</div>
+                                <div class="text-sm text-muted-foreground">Item</div>
                                 <div class="font-medium">{{ selectedInventory.item_name }}</div>
                             </div>
                         </div>
-                        <div class="grid grid-cols-3 gap-2 md:gap-4 mt-4 pt-4 border-t border-gray-200 dark:border-gray-700">
+                        <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 md:gap-4 mt-4 pt-4 border-t border-border">
                             <div class="text-center">
-                                <div class="text-sm text-gray-500">Total</div>
+                                <div class="text-sm text-muted-foreground">Total</div>
                                 <div class="font-bold">{{ selectedInventory.quantity }}</div>
                             </div>
                             <div class="text-center">
-                                <div class="text-sm text-gray-500">Returned</div>
-                                <div class="font-bold text-amber-600">{{ selectedInventory.returned_quantity }}</div>
+                                <div class="text-sm text-muted-foreground">Returned</div>
+                                <div class="font-bold text-warning">{{ selectedInventory.returned_quantity }}</div>
                             </div>
                             <div class="text-center">
-                                <div class="text-sm text-gray-500">Remaining</div>
-                                <div class="font-bold text-green-600">{{ selectedInventory.remaining }}</div>
+                                <div class="text-sm text-muted-foreground">Remaining</div>
+                                <div class="font-bold text-success">{{ selectedInventory.remaining }}</div>
                             </div>
                         </div>
                     </div>
@@ -250,7 +250,7 @@ const submitForm = () => {
                             <div class="p-1 bg-muted rounded">
                                 <Icon icon="hash" class="h-3.5 w-3.5 text-muted-foreground" />
                             </div>
-                            Return Quantity <span class="text-red-500">*</span>
+                            Return Quantity <span class="text-destructive">*</span>
                         </Label>
                         <Input
                             id="quantity"
@@ -259,11 +259,11 @@ const submitForm = () => {
                             min="1"
                             :max="maxReturnable"
                             class="h-11"
-                            :class="{ 'border-red-500': errors.quantity }"
+                            :class="{ 'border-destructive': errors.quantity }"
                             required
                         />
                         <InputError :message="errors.quantity" />
-                        <p v-if="maxReturnable > 0" class="text-sm text-gray-500">Maximum: {{ maxReturnable }} items</p>
+                        <p v-if="maxReturnable > 0" class="text-sm text-muted-foreground">Maximum: {{ maxReturnable }} items</p>
                     </div>
 
                     <!-- Return Date -->
@@ -294,28 +294,28 @@ const submitForm = () => {
                             id="note"
                             v-model="form.note"
                             rows="2"
-                            class="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 min-h-20"
+                            class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 min-h-20"
                             placeholder="Reason for return or additional notes..."
                         ></textarea>
                     </div>
 
                     <!-- Refund Info -->
-                    <div v-if="selectedInventory" class="p-4 bg-green-50 dark:bg-green-900/20 rounded-lg">
+                    <div v-if="selectedInventory" class="p-4 bg-success/10 rounded-lg">
                         <div class="flex flex-col sm:flex-row justify-between items-center gap-4">
                             <div>
-                                <div class="text-sm text-gray-500">Refund per item</div>
-                                <div class="text-lg font-bold text-green-600">{{ formatCurrency(finalPrice) }}</div>
+                                <div class="text-sm text-muted-foreground">Refund per item</div>
+                                <div class="text-lg font-bold text-success">{{ formatCurrency(finalPrice) }}</div>
                             </div>
                             <div class="text-center sm:text-right">
-                                <div class="text-sm text-gray-500">Total Refund</div>
-                                <div class="text-2xl font-bold text-green-600">{{ formatCurrency(totalRefund) }}</div>
+                                <div class="text-sm text-muted-foreground">Total Refund</div>
+                                <div class="text-2xl font-bold text-success">{{ formatCurrency(totalRefund) }}</div>
                             </div>
                         </div>
                     </div>
                 </div>
 
                 <!-- Actions -->
-                <div class="flex justify-end gap-3 pt-2">
+                <div class="flex flex-wrap justify-end gap-3 pt-2">
                     <DialogClose as-child>
                         <Button type="button" variant="outline" @click="resetForm" class="h-10">
                             <Icon icon="x" class="mr-2 h-4 w-4" />

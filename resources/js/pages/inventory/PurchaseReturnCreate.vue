@@ -511,10 +511,10 @@ onMounted(async () => {
             <!-- Header -->
             <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                 <div>
-                    <h1 class="text-2xl font-bold text-gray-900 dark:text-white">
+                    <h1 class="text-2xl font-bold text-foreground">
                         {{ isEditMode ? 'Edit Purchase Return' : 'New Purchase Return' }}
                     </h1>
-                    <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                    <p class="mt-1 text-sm text-muted-foreground">
                         {{ isEditMode ? 'Edit an existing purchase return order' : 'Create a new purchase return order' }}
                     </p>
                 </div>
@@ -535,14 +535,14 @@ onMounted(async () => {
                         <div class="space-y-2">
                             <Label for="campus_id" class="flex items-center gap-2">
                                 <Icon icon="building" class="h-4 w-4" />
-                                Campus <span class="text-red-500">*</span>
+                                Campus <span class="text-destructive">*</span>
                             </Label>
                             <select
                                 id="campus_id"
                                 v-model="form.campus_id"
                                 @change="onCampusChange"
-                                class="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 text-sm h-11"
-                                :class="{ 'border-red-500': errors.campus_id }"
+                                class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm h-11"
+                                :class="{ 'border-destructive': errors.campus_id }"
                                 required
                             >
                                 <option value="">Select Campus</option>
@@ -557,7 +557,7 @@ onMounted(async () => {
                         <div class="space-y-2">
                             <Label for="supplier_id" class="flex items-center gap-2">
                                 <Icon icon="truck" class="h-4 w-4" />
-                                Supplier <span class="text-red-500">*</span>
+                                Supplier <span class="text-destructive">*</span>
                             </Label>
                             <ComboboxInput
                                 v-model="form.supplier_id"
@@ -573,14 +573,14 @@ onMounted(async () => {
                         <div class="space-y-2">
                             <Label for="purchase_id" class="flex items-center gap-2">
                                 <Icon icon="shopping-cart" class="h-4 w-4" />
-                                Original Purchase <span class="text-red-500">*</span>
+                                Original Purchase <span class="text-destructive">*</span>
                             </Label>
                             <!-- In edit mode, show a simple disabled input with the purchase details -->
                             <div v-if="isEditMode && props.return?.purchase">
                                 <Input
                                     :modelValue="props.return.purchase.display_text || props.return.purchase.purchase_id || 'Purchase #' + props.return.purchase.id"
                                     disabled
-                                    class="h-11 bg-gray-100 dark:bg-gray-700"
+                                    class="h-11 bg-muted"
                                 />
                             </div>
                             <!-- In create mode, show the combobox -->
@@ -600,14 +600,14 @@ onMounted(async () => {
                     <div class="space-y-2">
                         <Label for="return_date" class="flex items-center gap-2">
                             <Icon icon="calendar" class="h-4 w-4" />
-                            Return Date <span class="text-red-500">*</span>
+                            Return Date <span class="text-destructive">*</span>
                         </Label>
                         <Input
                             id="return_date"
                             v-model="form.return_date"
                             type="date"
                             class="h-11 w-full sm:max-w-md"
-                            :class="{ 'border-red-500': errors.return_date }"
+                            :class="{ 'border-destructive': errors.return_date }"
                             required
                         />
                         <InputError :message="errors.return_date" />
@@ -626,20 +626,20 @@ onMounted(async () => {
 
                     <div class="border rounded-lg overflow-x-auto">
                         <div class="min-w-[900px]">
-                            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                                <thead class="bg-gray-50 dark:bg-gray-800">
+                            <table class="min-w-full divide-y divide-border">
+                                <thead class="bg-muted">
                                     <tr>
-                                        <th class="px-2 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Item</th>
-                                        <th class="px-2 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Available</th>
-                                        <th class="px-2 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Quantity</th>
-                                        <th class="px-2 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Unit Price</th>
-                                        <th class="px-2 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Original Price</th>
-                                        <th class="px-2 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Total</th>
-                                        <th class="px-2 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Reason</th>
+                                        <th class="px-2 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Item</th>
+                                        <th class="px-2 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Available</th>
+                                        <th class="px-2 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Quantity</th>
+                                        <th class="px-2 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Unit Price</th>
+                                        <th class="px-2 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Original Price</th>
+                                        <th class="px-2 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Total</th>
+                                        <th class="px-2 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Reason</th>
                                         <th class="px-2 py-3"></th>
                                     </tr>
                                 </thead>
-                                <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+                                <tbody class="divide-y divide-border">
                                     <tr v-for="(item, index) in form.items" :key="index">
                                         <td class="px-2 py-3">
                                             <div class="flex flex-col gap-1">
@@ -652,7 +652,7 @@ onMounted(async () => {
                                                             item.unit_price = pi.purchase_rate;
                                                         }
                                                     }"
-                                                    class="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-2 py-1.5 text-sm h-10 min-w-[140px]"
+                                                    class="w-full rounded-md border border-border bg-card text-foreground px-2 py-1.5 text-sm h-10 min-w-[140px]"
                                                     required
                                                 >
                                                     <option :value="null">Select</option>
@@ -664,7 +664,7 @@ onMounted(async () => {
                                         </td>
                                         <td class="px-2 py-3">
                                             <div class="flex flex-col gap-1 h-10 justify-center">
-                                                <span :class="item.available_for_return > 0 ? 'text-green-600' : 'text-red-500'">
+                                                <span :class="item.available_for_return > 0 ? 'text-success' : 'text-destructive'">
                                                     {{ item.available_for_return }}
                                                 </span>
                                             </div>
@@ -679,7 +679,7 @@ onMounted(async () => {
                                                     class="w-16 h-10 text-sm"
                                                     required
                                                 />
-                                                <span v-if="item.quantity > item.available_for_return" class="text-xs text-red-500 whitespace-nowrap">
+                                                <span v-if="item.quantity > item.available_for_return" class="text-xs text-destructive whitespace-nowrap">
                                                     Max: {{ item.available_for_return }}
                                                 </span>
                                             </div>
@@ -738,24 +738,24 @@ onMounted(async () => {
                                                 @click="removeItem(index)"
                                                 class="h-10 w-8 p-0 flex-shrink-0"
                                             >
-                                                <Icon icon="trash" class="h-4 w-4 text-red-500" />
+                                                <Icon icon="trash" class="h-4 w-4 text-destructive" />
                                             </Button>
                                         </td>
                                     </tr>
                                     <tr v-if="form.items.length === 0">
-                                        <td colspan="8" class="px-4 py-8 text-center text-gray-500">
+                                        <td colspan="8" class="px-4 py-8 text-center text-muted-foreground">
                                             <div v-if="loading">
                                                 <Icon icon="loader" class="h-6 w-6 animate-spin mx-auto mb-2" />
                                                 Loading items...
                                             </div>
                                             <div v-else-if="!form.supplier_id">
-                                                <p class="text-sm text-gray-500">Please select a supplier first</p>
+                                                <p class="text-sm text-muted-foreground">Please select a supplier first</p>
                                             </div>
                                             <div v-else-if="purchases.length === 0">
-                                                <p class="text-sm text-gray-500">No purchases found for selected supplier</p>
+                                                <p class="text-sm text-muted-foreground">No purchases found for selected supplier</p>
                                             </div>
                                             <div v-else>
-                                                <p class="text-sm text-gray-500">Select a purchase order to load items</p>
+                                                <p class="text-sm text-muted-foreground">Select a purchase order to load items</p>
                                             </div>
                                         </td>
                                     </tr>
@@ -768,10 +768,10 @@ onMounted(async () => {
 
                 <!-- Total & Notes Card -->
                 <div class="bg-card rounded-lg border p-4 md:p-5 space-y-4">
-                    <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4">
+                    <div class="bg-muted rounded-lg p-4">
                         <div class="text-right">
-                            <div class="text-sm text-gray-600 dark:text-gray-400">Total Return Amount</div>
-                            <div class="text-2xl font-bold text-gray-900 dark:text-white">{{ formatCurrency(totalAmount) }}</div>
+                            <div class="text-sm text-muted-foreground">Total Return Amount</div>
+                            <div class="text-2xl font-bold text-foreground">{{ formatCurrency(totalAmount) }}</div>
                         </div>
                     </div>
 
@@ -784,7 +784,7 @@ onMounted(async () => {
                             id="note"
                             v-model="form.note"
                             rows="2"
-                            class="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 min-h-20"
+                            class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 min-h-20"
                             placeholder="Additional notes..."
                         ></textarea>
                     </div>

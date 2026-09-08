@@ -173,10 +173,10 @@ const handleSaved = () => {
             <!-- Header -->
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
-                    <h1 class="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">
+                    <h1 class="text-xl sm:text-2xl font-bold text-foreground">
                         Inventory Types
                     </h1>
-                    <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                    <p class="mt-1 text-sm text-muted-foreground">
                         Manage inventory categories and types for your school.
                     </p>
                 </div>
@@ -188,7 +188,7 @@ const handleSaved = () => {
 
             <!-- Filters -->
             <div class="flex flex-wrap gap-3 items-center">
-                <select v-model="campusFilter" class="w-full sm:w-48 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 text-sm min-h-11">
+                <select v-model="campusFilter" class="w-full sm:w-48 rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm min-h-11">
                     <option value="">All Campuses</option>
                     <option v-for="campus in props.campuses" :key="campus.id" :value="campus.id">
                         {{ campus.name }}
@@ -204,8 +204,8 @@ const handleSaved = () => {
                     {{ showInactive ? 'Back to Active' : 'Inactive' }}
                 </Button>
                 <div class="flex items-center gap-2 ml-auto">
-                    <label class="text-sm text-gray-600 dark:text-gray-400">Show:</label>
-                    <select v-model="perPage" class="w-20 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-2 py-2 text-sm min-h-11">
+                    <label class="text-sm text-muted-foreground">Show:</label>
+                    <select v-model="perPage" class="w-20 rounded-md border border-border bg-card text-foreground px-2 py-2 text-sm min-h-11">
                         <option v-for="option in perPageOptions" :key="option" :value="option">
                             {{ option }}
                         </option>
@@ -214,45 +214,45 @@ const handleSaved = () => {
             </div>
 
             <!-- Table -->
-            <div class="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-900">
+            <div class="overflow-hidden rounded-lg border border-border bg-card shadow-sm">
                 <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                        <thead class="bg-gray-50 dark:bg-gray-800">
+                    <table class="min-w-full divide-y divide-border">
+                        <thead class="bg-muted">
                             <tr>
-                                <th scope="col" class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">
+                                <th scope="col" class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">
                                     Sr#
                                 </th>
-                                <th scope="col" class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">
+                                <th scope="col" class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">
                                     Name
                                 </th>
-                                <th scope="col" class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">
+                                <th scope="col" class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">
                                     Campus
                                 </th>
-                                <th scope="col" class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">
+                                <th scope="col" class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">
                                     Items
                                 </th>
-                                <th scope="col" class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">
+                                <th scope="col" class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">
                                     Status
                                 </th>
-                                <th scope="col" class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">
+                                <th scope="col" class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">
                                     Actions
                                 </th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-900">
-                            <tr v-for="(type, index) in inventoryTypesData" :key="type.id" class="transition-colors hover:bg-gray-50 dark:hover:bg-gray-800">
+                        <tbody class="divide-y divide-border bg-card">
+                            <tr v-for="(type, index) in inventoryTypesData" :key="type.id" class="transition-colors hover:bg-accent">
                                 <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="text-sm text-gray-600 dark:text-gray-300">
+                                    <div class="text-sm text-muted-foreground">
                                         {{ (pagination.from || 0) + index }}
                                     </div>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="text-sm font-medium text-gray-900 dark:text-white">
+                                    <div class="text-sm font-medium text-foreground">
                                         {{ type.name }}
                                     </div>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
-                                    <div class="text-sm text-gray-600 dark:text-gray-300">
+                                    <div class="text-sm text-muted-foreground">
                                         {{ type.campus_name || 'N/A' }}
                                     </div>
                                 </td>
@@ -304,7 +304,7 @@ const handleSaved = () => {
 
             <!-- Pagination -->
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                <div class="text-sm text-gray-600">
+                <div class="text-sm text-muted-foreground">
                     Showing {{ pagination.from }} to {{ pagination.to }} of {{ pagination.total }} entries
                 </div>
                 <div class="flex flex-wrap gap-1">

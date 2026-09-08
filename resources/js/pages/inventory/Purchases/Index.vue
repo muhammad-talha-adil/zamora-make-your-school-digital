@@ -170,10 +170,10 @@ const summaryStats = computed(() => {
             <!-- Header -->
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 md:gap-4">
                 <div>
-                    <h1 class="text-lg md:text-2xl font-bold text-gray-900 dark:text-white">
+                    <h1 class="text-lg md:text-2xl font-bold text-foreground">
                         Inventory Purchases
                     </h1>
-                    <p class="mt-1 text-xs md:text-sm text-gray-600 dark:text-gray-400">
+                    <p class="mt-1 text-xs md:text-sm text-muted-foreground">
                         Track and manage purchase orders and stock additions.
                     </p>
                 </div>
@@ -188,18 +188,18 @@ const summaryStats = computed(() => {
 
             <!-- Summary -->
             <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 md:gap-4">
-                <div class="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm border border-gray-200 dark:border-gray-700">
-                    <div class="text-xs md:text-sm text-gray-500">Total Purchases</div>
+                <div class="bg-card rounded-lg p-4 shadow-sm border border-border">
+                    <div class="text-xs md:text-sm text-muted-foreground">Total Purchases</div>
                     <div class="text-xl md:text-2xl font-bold">{{ summaryStats.totalPurchases }}</div>
                 </div>
-                <div class="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm border border-gray-200 dark:border-gray-700">
-                    <div class="text-xs md:text-sm text-gray-500">Total Value</div>
-                    <div class="text-xl md:text-2xl font-bold text-green-600">
+                <div class="bg-card rounded-lg p-4 shadow-sm border border-border">
+                    <div class="text-xs md:text-sm text-muted-foreground">Total Value</div>
+                    <div class="text-xl md:text-2xl font-bold text-success">
                         {{ formatCurrency(summaryStats.totalValue) }}
                     </div>
                 </div>
-                <div class="bg-white dark:bg-gray-800 rounded-lg p-4 shadow-sm border border-gray-200 dark:border-gray-700">
-                    <div class="text-xs md:text-sm text-gray-500">Total Items</div>
+                <div class="bg-card rounded-lg p-4 shadow-sm border border-border">
+                    <div class="text-xs md:text-sm text-muted-foreground">Total Items</div>
                     <div class="text-xl md:text-2xl font-bold">
                         {{ summaryStats.totalItems.toLocaleString() }}
                     </div>
@@ -211,7 +211,7 @@ const summaryStats = computed(() => {
                 <select 
                     v-model="campusFilter" 
                     @change="() => fetchPurchases()"
-                    class="w-full sm:w-44 md:w-48 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 text-sm min-h-10 md:min-h-11"
+                    class="w-full sm:w-44 md:w-48 rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm min-h-10 md:min-h-11"
                 >
                     <option value="">All Campuses</option>
                     <option v-for="campus in props.campuses" :key="campus.id" :value="campus.id">
@@ -225,20 +225,20 @@ const summaryStats = computed(() => {
                 <div 
                     v-for="purchase in purchasesData" 
                     :key="purchase.id" 
-                    class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 space-y-2"
+                    class="bg-card rounded-lg border border-border p-4 space-y-2"
                 >
-                    <div class="flex justify-between items-start">
+                    <div class="flex flex-wrap gap-2 justify-between items-start">
                         <div>
-                            <div class="font-medium text-gray-900 dark:text-white">{{ purchase.supplier?.name || 'N/A' }}</div>
-                            <div class="text-xs text-gray-500">#{{ purchase.id }}</div>
+                            <div class="font-medium text-foreground">{{ purchase.supplier?.name || 'N/A' }}</div>
+                            <div class="text-xs text-muted-foreground">#{{ purchase.id }}</div>
                         </div>
                         <div class="text-right">
-                            <div class="font-bold text-green-600">{{ formatCurrency(purchase.total_amount) }}</div>
-                            <div class="text-xs text-gray-500">{{ purchase.items_count }} items</div>
+                            <div class="font-bold text-success">{{ formatCurrency(purchase.total_amount) }}</div>
+                            <div class="text-xs text-muted-foreground">{{ purchase.items_count }} items</div>
                         </div>
                     </div>
-                    <div class="flex justify-between text-sm">
-                        <span class="text-gray-500">{{ formatDate(purchase.purchase_date) }}</span>
+                    <div class="flex flex-wrap gap-2 justify-between text-sm">
+                        <span class="text-muted-foreground">{{ formatDate(purchase.purchase_date) }}</span>
                         <Badge variant="secondary">{{ purchase.campus_name }}</Badge>
                     </div>
                     <div class="flex gap-2 pt-2">
@@ -250,54 +250,54 @@ const summaryStats = computed(() => {
                         </Button>
                     </div>
                 </div>
-                <div v-if="purchasesData.length === 0" class="text-center py-8 text-gray-500">
+                <div v-if="purchasesData.length === 0" class="text-center py-8 text-muted-foreground">
                     No purchases found.
                 </div>
             </div>
 
             <!-- Desktop Table View (visible only on large screens) -->
-            <div class="hidden lg:block overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-900">
+            <div class="hidden lg:block overflow-hidden rounded-lg border border-border bg-card shadow-sm">
                 <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                        <thead class="bg-gray-50 dark:bg-gray-800">
+                    <table class="min-w-full divide-y divide-border">
+                        <thead class="bg-muted">
                             <tr>
-                                <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">
+                                <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">
                                     #
                                 </th>
-                                <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">
+                                <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">
                                     Supplier
                                 </th>
-                                <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">
+                                <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">
                                     Date
                                 </th>
-                                <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">
+                                <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">
                                     Campus
                                 </th>
-                                <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">
+                                <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">
                                     Items
                                 </th>
-                                <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">
+                                <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">
                                     Total
                                 </th>
-                                <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">
+                                <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">
                                     Actions
                                 </th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-900">
-                            <tr v-for="purchase in purchasesData" :key="purchase.id" class="transition-colors hover:bg-gray-50 dark:hover:bg-gray-800">
+                        <tbody class="divide-y divide-border bg-card">
+                            <tr v-for="purchase in purchasesData" :key="purchase.id" class="transition-colors hover:bg-accent">
                                 <td class="px-4 py-3 whitespace-nowrap">
-                                    <div class="text-sm text-gray-600 dark:text-gray-300">
+                                    <div class="text-sm text-muted-foreground">
                                         {{ purchase.id }}
                                     </div>
                                 </td>
                                 <td class="px-4 py-3 whitespace-nowrap">
-                                    <div class="text-sm font-medium text-gray-900 dark:text-white">
+                                    <div class="text-sm font-medium text-foreground">
                                         {{ purchase.supplier?.name || 'N/A' }}
                                     </div>
                                 </td>
                                 <td class="px-4 py-3 whitespace-nowrap">
-                                    <div class="text-sm text-gray-600 dark:text-gray-300">
+                                    <div class="text-sm text-muted-foreground">
                                         {{ formatDate(purchase.purchase_date) }}
                                     </div>
                                 </td>
@@ -307,12 +307,12 @@ const summaryStats = computed(() => {
                                     </Badge>
                                 </td>
                                 <td class="px-4 py-3 whitespace-nowrap">
-                                    <div class="text-sm text-gray-600 dark:text-gray-300">
+                                    <div class="text-sm text-muted-foreground">
                                         {{ purchase.items_count }} items
                                     </div>
                                 </td>
                                 <td class="px-4 py-3 whitespace-nowrap">
-                                    <div class="text-sm font-bold text-green-600">
+                                    <div class="text-sm font-bold text-success">
                                         {{ formatCurrency(purchase.total_amount) }}
                                     </div>
                                 </td>
@@ -334,10 +334,10 @@ const summaryStats = computed(() => {
 
             <!-- Pagination -->
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-                <div class="text-xs md:text-sm text-gray-600">
+                <div class="text-xs md:text-sm text-muted-foreground">
                     Showing {{ pagination.from }} to {{ pagination.to }} of {{ pagination.total }} entries
                 </div>
-                <div class="text-xs md:text-sm text-gray-500">
+                <div class="text-xs md:text-sm text-muted-foreground">
                     {{ purchasesData.length }} purchases loaded
                 </div>
             </div>

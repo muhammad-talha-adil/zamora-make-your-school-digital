@@ -150,12 +150,12 @@ const resetForm = () => {
 
                 <div class="grid gap-4 py-4">
                     <div class="grid gap-2">
-                        <Label for="name">Name <span class="text-red-500">*</span></Label>
+                        <Label for="name">Name <span class="text-destructive">*</span></Label>
                         <Input
                             id="name"
                             v-model="form.name"
                             placeholder="e.g., Mid Term, Final Term"
-                            :class="{ 'border-red-500': errors.name }"
+                            :class="{ 'border-destructive': errors.name }"
                         />
                         <InputError :message="errors.name" />
                     </div>
@@ -166,7 +166,7 @@ const resetForm = () => {
                             id="short_name"
                             v-model="form.short_name"
                             placeholder="e.g., MT, FT"
-                            :class="{ 'border-red-500': errors.short_name }"
+                            :class="{ 'border-destructive': errors.short_name }"
                         />
                         <InputError :message="errors.short_name" />
                     </div>
@@ -176,7 +176,7 @@ const resetForm = () => {
                             id="is_active"
                             v-model="form.is_active"
                             type="checkbox"
-                            class="rounded border-gray-300 text-indigo-600 shadow-sm focus:ring-indigo-500"
+                            class="rounded border-border text-primary shadow-sm focus:ring-primary"
                         />
                         <Label for="is_active">Active</Label>
                     </div>

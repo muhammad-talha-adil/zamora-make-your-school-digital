@@ -52,10 +52,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // Menu Settings Routes
     Route::get('settings/menu-settings', [MenuController::class, 'index'])->name('menus.index');
     Route::get('settings/menus/all', [MenuController::class, 'apiIndex'])->name('menus.all');
-    Route::get('settings/menus/create', [MenuController::class, 'create'])->name('menus.create')->middleware('permission:settings.manage');
-    Route::post('settings/menus', [MenuController::class, 'store'])->name('menus.store')->middleware('permission:settings.manage');
-    Route::get('settings/menus/{menu}/edit', [MenuController::class, 'edit'])->name('menus.edit')->middleware('permission:settings.manage');
-    Route::patch('settings/menus/{menu}', [MenuController::class, 'update'])->name('menus.update')->middleware('permission:settings.manage');
+    Route::get('settings/menus/create', [MenuController::class, 'create'])->name('menus.create')->middleware('permission:school.menu.manage');
+    Route::post('settings/menus', [MenuController::class, 'store'])->name('menus.store')->middleware('permission:school.menu.manage');
+    Route::get('settings/menus/{menu}/edit', [MenuController::class, 'edit'])->name('menus.edit')->middleware('permission:school.menu.manage');
+    Route::patch('settings/menus/{menu}', [MenuController::class, 'update'])->name('menus.update')->middleware('permission:school.menu.manage');
     Route::delete('settings/menus/{menu}', [MenuController::class, 'destroy'])->name('menus.destroy');
     Route::patch('settings/menus/{menu}/inactivate', [MenuController::class, 'inactivate'])->name('menus.inactivate');
     Route::patch('settings/menus/{menu}/activate', [MenuController::class, 'activate'])->name('menus.activate');

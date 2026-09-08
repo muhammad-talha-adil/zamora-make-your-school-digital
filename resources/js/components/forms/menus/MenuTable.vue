@@ -62,46 +62,46 @@ const updatePerPage = (value: number) => {
 
 <template>
     <div class="space-y-4">
-        <div class="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-900">
+        <div class="overflow-hidden rounded-lg border border-border bg-card shadow-sm">
             <div class="overflow-x-auto">
-                <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                    <thead class="bg-gray-50 dark:bg-gray-800">
+                <table class="min-w-full divide-y divide-border">
+                    <thead class="bg-muted">
                         <tr>
-                            <th scope="col" class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">
+                            <th scope="col" class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">
                                 #
                             </th>
-                            <th scope="col" class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">
+                            <th scope="col" class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">
                                 Title
                             </th>
-                            <th scope="col" class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">
+                            <th scope="col" class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">
                                 Type
                             </th>
-                            <th scope="col" class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">
+                            <th scope="col" class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">
                                 Parent Menu
                             </th>
-                            <th scope="col" class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">
+                            <th scope="col" class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">
                                 Order
                             </th>
-                            <th scope="col" class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">
+                            <th scope="col" class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">
                                 Status
                             </th>
-                            <th scope="col" class="px-6 py-4 text-right text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">
+                            <th scope="col" class="px-6 py-4 text-right text-xs font-semibold tracking-wider text-muted-foreground uppercase">
                                 Actions
                             </th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-900">
-                        <tr v-for="(menu, index) in menusData" :key="menu.id" class="transition-colors hover:bg-gray-50 dark:hover:bg-gray-800">
+                    <tbody class="divide-y divide-border bg-card">
+                        <tr v-for="(menu, index) in menusData" :key="menu.id" class="transition-colors hover:bg-accent">
                             <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="text-sm text-gray-600 dark:text-gray-300">
+                                <div class="text-sm text-muted-foreground">
                                     {{ pagination.from ? pagination.from + index : (index as number) + 1 }}
                                 </div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="text-sm font-medium text-gray-900 dark:text-white">
+                                <div class="text-sm font-medium text-foreground">
                                     {{ menu.title }}
                                 </div>
-                                <div v-if="menu.hierarchy_label && menu.hierarchy_label !== menu.title" class="text-xs text-gray-500 dark:text-gray-400">
+                                <div v-if="menu.hierarchy_label && menu.hierarchy_label !== menu.title" class="text-xs text-muted-foreground">
                                     {{ menu.hierarchy_label }}
                                 </div>
                             </td>
@@ -111,21 +111,21 @@ const updatePerPage = (value: number) => {
                                 </Badge>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="text-sm text-gray-600 dark:text-gray-300">
+                                <div class="text-sm text-muted-foreground">
                                     {{ menu.parent_title || 'Top Level' }}
                                 </div>
                                 <div
                                     v-if="menu.parent_hierarchy_label && menu.parent_hierarchy_label !== menu.parent_title"
-                                    class="text-xs text-gray-500 dark:text-gray-400"
+                                    class="text-xs text-muted-foreground"
                                 >
                                     {{ menu.parent_hierarchy_label }}
                                 </div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="inline-flex min-w-14 items-center justify-center rounded-md bg-gray-100 px-3 py-1 text-sm font-semibold text-gray-800 dark:bg-gray-800 dark:text-gray-100">
+                                <div class="inline-flex min-w-14 items-center justify-center rounded-md bg-muted px-3 py-1 text-sm font-semibold text-foreground">
                                     {{ menu.order }}
                                 </div>
-                                <div class="mt-2 text-xs font-medium text-gray-500 dark:text-gray-400">
+                                <div class="mt-2 text-xs font-medium text-muted-foreground">
                                     {{ menu.parent_title ? 'Sibling order' : 'Top level' }}
                                 </div>
                             </td>
@@ -184,15 +184,15 @@ const updatePerPage = (value: number) => {
             </div>
         </div>
 
-        <div class="flex justify-between items-center">
+        <div class="flex flex-wrap gap-2 justify-between items-center">
             <div class="flex items-center gap-4">
-                <div class="text-sm text-gray-600 dark:text-gray-300">
+                <div class="text-sm text-muted-foreground">
                     Showing {{ pagination.from || 0 }} to {{ pagination.to || 0 }} of {{ pagination.total || 0 }} entries
                 </div>
                 <select 
                     :value="pagination.per_page || 10" 
                     @change="updatePerPage(($event.target as any).value)"
-                    class="w-20 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-2 py-1 text-sm"
+                    class="w-20 rounded-md border border-border bg-card text-foreground px-2 py-1 text-sm"
                 >
                     <option value="10">10</option>
                     <option value="25">25</option>

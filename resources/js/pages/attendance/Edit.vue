@@ -6,10 +6,10 @@
             <!-- Header -->
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 md:gap-4">
                 <div>
-                    <h1 class="text-lg md:text-2xl font-bold text-gray-900 dark:text-white">
+                    <h1 class="text-lg md:text-2xl font-bold text-foreground">
                         Edit Attendance
                     </h1>
-                    <p class="mt-1 text-xs md:text-sm text-gray-600 dark:text-gray-400">
+                    <p class="mt-1 text-xs md:text-sm text-muted-foreground">
                         {{ formatDate(props.attendance.attendance_date) }} - {{ props.attendance.class?.name }} {{ props.attendance.section?.name }}
                     </p>
                 </div>
@@ -20,20 +20,20 @@
             </div>
 
             <!-- Students Table -->
-            <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+            <div class="bg-card rounded-lg border border-border overflow-hidden">
                 <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                        <thead class="bg-gray-50 dark:bg-gray-700">
+                    <table class="min-w-full divide-y divide-border">
+                        <thead class="bg-muted">
                             <tr>
-                                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase dark:text-gray-300">Student</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase dark:text-gray-300">Admission No</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase dark:text-gray-300">Status</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase dark:text-gray-300">Check In</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase dark:text-gray-300">Check Out</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase dark:text-gray-300">Remarks</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Student</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Admission No</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Status</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Check In</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Check Out</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Remarks</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-gray-200 dark:divide-gray-700 bg-white dark:bg-gray-800">
+                        <tbody class="divide-y divide-border bg-card">
                             <AttendanceFormRow
                                 v-for="(attendanceStudent, index) in attendanceStudents"
                                 :key="attendanceStudent.id"
@@ -47,7 +47,7 @@
                 </div>
 
                 <!-- Submit Button -->
-                <div v-if="!props.attendance.is_locked" class="p-4 border-t border-gray-200 dark:border-gray-700">
+                <div v-if="!props.attendance.is_locked" class="p-4 border-t border-border">
                     <Button @click="submitAttendance" :disabled="isSubmitting" class="w-full sm:w-auto">
                         <Icon v-if="isSubmitting" icon="loader" class="mr-1 animate-spin" />
                         {{ isSubmitting ? 'Updating...' : 'Update Attendance' }}
@@ -56,10 +56,10 @@
             </div>
 
             <!-- Locked Warning -->
-            <div v-if="props.attendance.is_locked" class="bg-red-100 dark:bg-red-900/30 border border-red-300 dark:border-red-700 rounded-lg p-4">
+            <div v-if="props.attendance.is_locked" class="bg-destructive/10 border border-destructive/40 rounded-lg p-4">
                 <div class="flex items-center gap-2">
-                    <Icon icon="lock" class="h-5 w-5 text-red-600 dark:text-red-400" />
-                    <span class="text-sm font-medium text-red-800 dark:text-red-200">
+                    <Icon icon="lock" class="h-5 w-5 text-destructive" />
+                    <span class="text-sm font-medium text-destructive">
                         This attendance record is locked and cannot be modified.
                     </span>
                 </div>

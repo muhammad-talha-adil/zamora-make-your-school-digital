@@ -4,8 +4,8 @@ namespace App\Http\Controllers\Fee;
 
 use App\Http\Controllers\Controller;
 use App\Models\Fee\DiscountType;
-use Illuminate\Http\Request;
 use Illuminate\Database\QueryException;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 

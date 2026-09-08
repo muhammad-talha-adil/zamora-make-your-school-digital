@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Exam;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Exam\SaveMarksRequest;
 use App\Models\Campus;
 use App\Models\Exam\Exam;
 use App\Models\Exam\ExamPaper;
@@ -13,8 +14,10 @@ use App\Models\SchoolClass;
 use App\Models\Section;
 use App\Models\Student;
 use App\Models\StudentEnrollmentRecord;
+use App\Services\Exam\ExamGraceService;
 use App\Services\Exam\ExamMarkingService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -100,6 +103,8 @@ class ExamMarkingController extends Controller
 
         $exam = Exam::findOrFail($examId);
 
+        $this->authorize('viewAny', ExamResultHeader::class);
+
         // Check if exam is locked
         if ($exam->is_locked) {
             return response()->json(['error' => 'This exam is locked. Cannot enter marks.'], 403);
@@ -108,6 +113,9 @@ class ExamMarkingController extends Controller
         // Get papers filtered by class and section
         $papersQuery = ExamPaper::with(['subject', 'class', 'section', 'campus'])
             ->where('exam_id', $examId)
+            // The grid shows the sections this user is responsible for, and no
+            // others. The policy guards one record; this filters the list.
+            ->visibleTo($request->user())
             ->where('status', '!=', 'cancelled');
 
         // Filter papers by class if specified
@@ -276,76 +284,57 @@ class ExamMarkingController extends Controller
 
     /**
      * Save a single row of marks (API).
+     *
+     * The work is the service's. This used to carry its own copy of it, which
+     * disagreed with the service in what it wrote and with the bulk path in how
+     * it added things up.
      */
-    public function saveRow(Request $request)
+    public function saveRow(SaveMarksRequest $request)
     {
-        $validated = $request->validate([
-            'exam_id' => 'required|exists:exams,id',
-            'student_id' => 'required|exists:students,id',
-            'enrollment_id' => 'nullable|exists:student_enrollment_records,id',
-            'marks' => 'required|array',
-        ]);
-
-        $exam = Exam::findOrFail($validated['exam_id']);
+        $exam = Exam::findOrFail($request->validated('exam_id'));
 
         if ($exam->is_locked) {
             return response()->json(['error' => 'This exam is locked'], 403);
         }
 
-        $studentId = $validated['student_id'];
-        $enrollmentId = $validated['enrollment_id'];
-        $marksData = $validated['marks'];
-
-        // Get enrollment info
-        $enrollment = StudentEnrollmentRecord::find($enrollmentId);
-
-        // Get or create result header
-        $header = ExamResultHeader::firstOrCreate(
+        $this->authorizeMarking($exam, [
             [
-                'exam_id' => $validated['exam_id'],
-                'student_id' => $studentId,
+                'student_id' => $request->validated('student_id'),
+                'marks' => $request->validated('marks'),
             ],
-            [
-                'campus_id' => $enrollment?->campus_id,
-                'class_id' => $enrollment?->class_id,
-                'section_id' => $enrollment?->section_id,
-                'status' => 'draft',
-            ]
+        ]);
+
+        $this->markingService->saveStudentMarks(
+            $exam,
+            (int) $request->validated('student_id'),
+            (array) $request->validated('marks'),
+            StudentEnrollmentRecord::find($request->validated('enrollment_id'))
         );
-
-        // Save each paper's marks
-        foreach ($marksData as $paperId => $markData) {
-            $paper = ExamPaper::findOrFail($paperId);
-
-            ExamResultLine::updateOrCreate(
-                [
-                    'result_header_id' => $header->id,
-                    'exam_paper_id' => $paperId,
-                ],
-                [
-                    'student_id' => $studentId,
-                    'total_marks_snapshot' => $paper->total_marks,
-                    'passing_marks_snapshot' => $paper->passing_marks,
-                    'obtained_marks' => $markData['obtained'] ?? null,
-                    'is_absent' => $markData['is_absent'] ?? false,
-                ]
-            );
-        }
-
-        // Recalculate totals
-        $this->recalculateHeader($header);
 
         return response()->json(['message' => 'Marks saved successfully']);
     }
 
     /**
      * Save bulk marks (API).
+     *
+     * It used to `merge()` each student into the request and call `saveRow()`
+     * again, so one bad row aborted the rest half-written. Each student is now
+     * validated on the way in and saved in one transaction.
      */
     public function saveBulk(Request $request)
     {
         $validated = $request->validate([
-            'exam_id' => 'required|exists:exams,id',
-            'students' => 'required|array',
+            'exam_id' => ['required', 'integer', 'exists:exams,id'],
+            'students' => ['required', 'array', 'min:1'],
+            'students.*.student_id' => ['required', 'integer', 'exists:students,id'],
+            'students.*.enrollment_id' => ['nullable', 'integer', 'exists:student_enrollment_records,id'],
+            'students.*.marks' => ['required', 'array'],
+            'students.*.marks.*.obtained' => ['nullable', 'numeric', 'min:0'],
+            'students.*.marks.*.obtained_marks' => ['nullable', 'numeric', 'min:0'],
+            'students.*.marks.*.is_absent' => ['nullable', 'boolean'],
+            'students.*.marks.*.is_exempt' => ['nullable', 'boolean'],
+            'students.*.marks.*.subject_role' => ['nullable', 'string', 'in:core,elective,additional'],
+            'students.*.marks.*.remarks' => ['nullable', 'string', 'max:500'],
         ]);
 
         $exam = Exam::findOrFail($validated['exam_id']);
@@ -354,60 +343,176 @@ class ExamMarkingController extends Controller
             return response()->json(['error' => 'This exam is locked'], 403);
         }
 
-        foreach ($validated['students'] as $studentData) {
-            $request->merge([
-                'exam_id' => $validated['exam_id'],
-                'student_id' => $studentData['student_id'],
-                'enrollment_id' => $studentData['enrollment_id'] ?? null,
-                'marks' => $studentData['marks'] ?? [],
-            ]);
+        $papers = $this->markingService->papersOf($exam);
 
-            // Call saveRow logic for each student
-            $this->saveRow($request);
+        // Bounded by the paper, and the paper has to be this exam's — checked
+        // for the whole batch before any of it is written.
+        foreach ($validated['students'] as $index => $studentData) {
+            foreach ($studentData['marks'] as $paperId => $mark) {
+                if (! $papers->has((int) $paperId)) {
+                    return response()->json([
+                        'error' => "Paper {$paperId} does not belong to this exam.",
+                    ], 422);
+                }
+
+                $obtained = $mark['obtained_marks'] ?? $mark['obtained'] ?? null;
+
+                if ($obtained !== null && $obtained !== '' &&
+                    (float) $obtained > (float) $papers->get((int) $paperId)->total_marks) {
+                    return response()->json([
+                        'error' => "Marks for paper {$paperId} are more than the paper total.",
+                    ], 422);
+                }
+            }
         }
+
+        // The same read of the papers serves the bounds check, the
+        // authorisation and the save.
+        $this->authorizeMarking($exam, $validated['students'], $papers);
+
+        $this->markingService->saveBatch($exam, $validated['students'], $papers);
 
         return response()->json(['message' => 'Bulk save completed successfully']);
     }
 
     /**
-     * Recalculate result header totals and grade.
+     * Give (or take away) grace marks on one paper.
+     *
+     * Grace is deliberately not part of a mark entry. It is a decision somebody
+     * takes about a child who missed the pass mark by two, and it is recorded
+     * as grace with a reason and the person who gave it — never merged into the
+     * obtained marks, or the school cannot answer the parent holding the answer
+     * sheet.
+     *
+     * It sits behind `exam.marks.verify` rather than `exam.marks.enter`: the
+     * teacher who marked the paper is not the person who decides to lift it.
      */
-    private function recalculateHeader(ExamResultHeader $header)
+    public function giveGrace(Request $request, int|string $lineId, ExamGraceService $grace)
     {
-        $lines = $header->examResultLines;
-
-        $totalObtained = 0;
-        $totalMaxMarks = 0;
-
-        foreach ($lines as $line) {
-            if (! $line->is_absent && $line->obtained_marks !== null) {
-                $totalObtained += $line->obtained_marks;
-                $totalMaxMarks += $line->total_marks_snapshot;
-            }
-        }
-
-        $percentage = $totalMaxMarks > 0 ? round(($totalObtained / $totalMaxMarks) * 100, 2) : 0;
-
-        // Calculate grade
-        $gradeSystem = GradeSystem::getActiveGradeSystem();
-        $gradeItem = null;
-
-        if ($gradeSystem) {
-            foreach ($gradeSystem->gradeSystemItems as $item) {
-                if ($percentage >= $item->min_percentage) {
-                    $gradeItem = $item;
-                    if ($item->max_percentage !== null && $percentage <= $item->max_percentage) {
-                        break;
-                    }
-                }
-            }
-        }
-
-        $header->update([
-            'total_obtained_cache' => $totalObtained,
-            'overall_percentage_cache' => $percentage,
-            'overall_grade_item_id_cache' => $gradeItem?->id,
+        $validated = $request->validate([
+            'grace_marks' => ['nullable', 'numeric', 'min:0'],
+            'reason' => ['nullable', 'string', 'max:500'],
         ]);
+
+        $line = ExamResultLine::findOrFail($lineId);
+        $this->authorize('verify', $line->resultHeader);
+
+        $line = $grace->give(
+            $line,
+            $validated['grace_marks'] === null ? null : (float) $validated['grace_marks'],
+            $validated['reason'] ?? null,
+            $request->user()
+        );
+
+        return response()->json([
+            'message' => 'Grace marks saved',
+            'data' => [
+                'line' => $line,
+                'headroom' => $grace->headroomOn($line),
+                'shortfall' => $grace->shortfallOn($line),
+            ],
+        ]);
+    }
+
+    /**
+     * Which children in a class are a mark or two short of a pass.
+     *
+     * The list a school actually works from when it sits down to give grace:
+     * "these six are within three marks".
+     */
+    public function graceCandidates(Request $request, ExamGraceService $grace)
+    {
+        $validated = $request->validate([
+            'exam_id' => ['required', 'integer', 'exists:exams,id'],
+            'class_id' => ['nullable', 'integer', 'exists:school_classes,id'],
+            'section_id' => ['nullable', 'integer', 'exists:sections,id'],
+            'within' => ['nullable', 'numeric', 'min:0', 'max:20'],
+        ]);
+
+        $this->authorize('viewAny', ExamResultHeader::class);
+
+        $within = (float) ($validated['within'] ?? 3);
+
+        $headers = ExamResultHeader::where('exam_id', $validated['exam_id'])
+            ->when($validated['class_id'] ?? null, fn ($q, $id) => $q->where('class_id', $id))
+            ->when($validated['section_id'] ?? null, fn ($q, $id) => $q->where('section_id', $id))
+            ->visibleTo($request->user())
+            ->with(['student.user', 'examResultLines.examPaper.subject'])
+            ->get();
+
+        $candidates = [];
+
+        foreach ($headers as $header) {
+            foreach ($header->examResultLines as $line) {
+                $short = $grace->shortfallOn($line);
+
+                if ($short === null || $short <= 0 || $short > $within) {
+                    continue;
+                }
+
+                $candidates[] = [
+                    'result_line_id' => $line->id,
+                    'student_id' => $header->student_id,
+                    'student_name' => $header->student?->user?->name,
+                    'subject' => $line->examPaper?->subject?->name,
+                    'obtained' => (float) $line->obtained_marks,
+                    'passing' => (float) $line->passing_marks_snapshot,
+                    'short_by' => $short,
+                    'headroom' => $grace->headroomOn($line),
+                ];
+            }
+        }
+
+        usort($candidates, fn ($a, $b) => $a['short_by'] <=> $b['short_by']);
+
+        return response()->json(['data' => $candidates]);
+    }
+
+    /**
+     * Whether this user may mark these children, on these papers.
+     *
+     * There was no authorisation anywhere in this module. Any signed-in user —
+     * a student, a guardian, a driver — could enter and change marks for every
+     * child in every class of every campus.
+     *
+     * Two things are checked, because they are two different questions. The
+     * **paper** says which campus, class and section the marks belong to, and a
+     * teacher may only mark the sections they have been given. The **result**,
+     * where one already exists, says how far along the workflow it is: a
+     * verified or published result is not edited in place, it is reopened
+     * first, which is somebody else's decision.
+     *
+     * @param  array<int, array<string, mixed>>  $rows
+     * @param  Collection<int, ExamPaper>|null  $papers
+     */
+    private function authorizeMarking(Exam $exam, array $rows, $papers = null): void
+    {
+        $paperIds = [];
+        $studentIds = [];
+
+        foreach ($rows as $row) {
+            $studentIds[] = (int) $row['student_id'];
+
+            foreach (array_keys((array) ($row['marks'] ?? [])) as $paperId) {
+                $paperIds[(int) $paperId] = true;
+            }
+        }
+
+        $marked = $papers
+            ? $papers->only(array_keys($paperIds))
+            : $this->markingService->papersOf($exam, array_keys($paperIds));
+
+        foreach ($marked as $paper) {
+            $this->authorize('create', [ExamResultHeader::class, $paper]);
+        }
+
+        $existing = ExamResultHeader::where('exam_id', $exam->id)
+            ->whereIn('student_id', array_unique($studentIds))
+            ->get();
+
+        foreach ($existing as $header) {
+            $this->authorize('enterMarks', $header);
+        }
     }
 
     /**
@@ -416,6 +521,7 @@ class ExamMarkingController extends Controller
     public function submitForVerification($resultHeaderId)
     {
         $header = ExamResultHeader::findOrFail($resultHeaderId);
+        $this->authorize('enterMarks', $header);
         $header->update(['status' => 'submitted']);
 
         return response()->json(['message' => 'Submitted for verification successfully', 'data' => $header]);
@@ -427,6 +533,7 @@ class ExamMarkingController extends Controller
     public function reopen($resultHeaderId)
     {
         $header = ExamResultHeader::findOrFail($resultHeaderId);
+        $this->authorize('reopen', $header);
         $header->update(['status' => 'draft']);
 
         return response()->json(['message' => 'Result reopened successfully', 'data' => $header]);
@@ -438,6 +545,7 @@ class ExamMarkingController extends Controller
     public function lockStudentResult($resultHeaderId)
     {
         $header = ExamResultHeader::findOrFail($resultHeaderId);
+        $this->authorize('verify', $header);
         $header->update(['is_locked' => true]);
 
         return response()->json(['message' => 'Student result locked successfully', 'data' => $header]);

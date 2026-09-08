@@ -1,0 +1,490 @@
+# Completed module log
+
+A finished module's record, moved here when `CURRENT-MODULE.md` is refilled with
+the next one. Append-only: what was found, what was decided, and why.
+
+---
+
+# Module: Attendance — **complete**
+
+Every finding is closed and every suggestion is built.
+
+**Reviewed:** 2026-09-08 · business logic, services, controllers, models,
+migrations, relations, policy, routes
+
+**What was read.** `AttendanceService`, `AttendanceController` (1,067 lines),
+`AttendancePolicy`, the four attendance migrations, `Attendance`,
+`AttendanceStudent`, `AttendanceStatus`, `AttendanceSummary`, `StudentLeave`,
+`Holiday`, `routes/attendance.php`, the seeders, and the Vue pages that post to
+these endpoints.
+
+**Open:** nothing. Ready for the next module.
+
+---
+
+## Fixed
+
+**S4, S6, S7, S8, S10** · 2026-09-08
+
+With S3 and S9 done the day before, every suggestion from the review is now
+built. What each one is — and, as importantly, where each one deliberately
+stops:
+
+- **S4 — Ramzan and winter timings — complete.** `attendance_timings` holds a
+  clock per period of the year; the **narrowest** period wins, so a campus
+  states its regular timing across the session and drops Ramzan inside it
+  without having to switch the regular one off and on again around it.
+
+  And the register now **asks**: `LateArrivalResolver` sits on all three write
+  paths — new register, whole-class save, edit screen — so a check-in past the
+  deadline marks the child late by itself. Deliberately narrow: it upgrades
+  *present* to *late* and does nothing else. A teacher who marked late meant it
+  (a child can reach the gate on time and the classroom ten minutes later), and
+  absent, leave and half day are statements about the whole day that an arrival
+  time cannot contradict. A campus with no clock set — every campus until one is
+  configured — sees no change.
+
+- **S6 — biometric and RFID, backend only, as you asked.**
+  `attendance_devices`, `attendance_device_identities` (what the machine calls a
+  person) and `attendance_device_punches`. `AttendancePunchImporter` takes a
+  list of punches, matches them, and refuses to store the same punch twice —
+  re-reading a machine's log is the normal way to recover from a failure.
+  *Left here at your instruction.* **No device driver**, which is the point —
+  every make speaks its own protocol. `dailySummary()` gives the first arrival
+  and last departure of a day as a **read**; nothing writes them onto a register.
+  Picking that up means choosing a machine first.
+
+- **S7 — late arrival fine, optional.** Off by default and stays off until a
+  campus turns it on. Grace count, per-late amount and a monthly cap; the charge
+  is recomputed from the month's summary rather than added to, and left alone
+  once billed. Attendance works it out, the fee run bills it, and
+  `student_late_arrival_fines` is the whole of what passes between them.
+
+- **S8 — monthly attendance for a report card.** `ReportCardAttendanceService`
+  gives a child or a whole class "days present out of working days" for a term,
+  with a test that it agrees with the class report.
+  *Deferred to the exam module, at your instruction.* The figures are ready and
+  tested; the result card that prints them is the exam module's, and this will
+  be finished there.
+
+- **S10 — leave application.** Corrected to your point: **there is no guardian
+  portal.** A guardian signs in to the student's portal, so one endpoint serves
+  the child, the family and the office, and who applied is recorded rather than
+  inferred. Whoever may change a class's register may decide its leave — the two
+  are the same responsibility, so they are answered in one place.
+  *Deferred to the portal, at your instruction.* Backend and routes are done and
+  tested; the screens come when the student portal is built.
+
+Tests: `Policy/Case_01_TimingsTest` (10), `Policy/Case_02_LateArrivalFineTest`
+(10), `Devices/Case_01_PunchImportTest` (11),
+`Reports/Case_06_ReportCardAttendanceTest` (11),
+`Leave/Case_01_LeaveApplicationTest` (14), `Policy/Case_03_AutoLateMarkingTest`
+(13).
+
+---
+
+**A13 + S9, S3** · 2026-09-08
+
+**A13 — a teacher sees their own classes and nobody else's.** Nothing in the
+system recorded which class a teacher was responsible for, so the policy could
+not ask the question: every method was a bare permission check that ignored the
+record, and any teacher holding `attendance.view` could read **every campus's**
+registers.
+
+`teacher_class_assignments` records it — subject teacher or class teacher, per
+session, with the campus coming off the staff profile where it already lived.
+Exactly one class teacher per section is enforced in the database, not trusted
+to a screen.
+
+Access now has three widths, decided in one place (`coversRegister()`) so the
+policy methods cannot drift apart:
+
+| Width | Who | Sees |
+|---|---|---|
+| School | developer, owner, super admin | every campus |
+| Campus | campus admin, head teacher | their campus, every class in it |
+| Class | teacher | only the sections they are given |
+
+A policy guards opening one record; a list needs the same question asked of
+every row, so `Attendance::visibleTo()` sits beside it and the tests assert the
+two agree. A teacher with no class yet sees **nothing**, which is the safer way
+round to be wrong. Reports are scoped the same way, and the class picker offers
+only classes the user may actually open.
+
+Reopening a closed register is deliberately narrower than closing one: a head
+teacher may sign a register off, but only a campus admin or above may open it
+again. That is the point of closing it.
+
+**S9 — registers close themselves.** `attendance_policies.lock_after_days` per
+campus, and `php artisan attendance:lock-settled` (with `--dry-run`). Zero — the
+default — closes nothing, so a school that has not asked for this sees no
+change.
+
+**S3 — children who have stopped coming.** `ConsecutiveAbsenceService` finds a
+run of unexplained absences that is **still going**; a run that ended is not a
+child drifting away, and flagging them buries the child who is. Approved leave
+neither counts nor breaks a run — the family told the school, which is the
+opposite of the signal being looked for.
+
+Two older suites needed a class assignment added, which is the new rule working:
+a teacher who is given no class can no longer touch a register.
+
+Tests: `tests/Feature/Attendance/Access/Case_01_ClassScopingTest` (17),
+`Case_02_AutoLockTest` (8), and
+`tests/Feature/Attendance/Reports/Case_05_ConsecutiveAbsenceTest` (10).
+
+---
+
+**A27 — deleted** · 2026-09-08
+
+`storeIndividual()` had no route, no caller anywhere, and — decisively — never
+refreshed the summaries or recorded the absence alerts. Routing it would have
+left the derived records stale behind it. What it did, adding a child who was
+missed, the class register does properly: with the lock checked, the summary
+rebuilt and the guardian told.
+
+`AttendanceService::validateTimes()` and `markAllStudents()` went with it. The
+first had that one caller and the form requests do the checking now; the second
+never had a caller at all.
+
+**A25 — kept, by your decision** · 2026-09-08
+
+`student_leave_records` stays, for the history of a child leaving. The
+duplication is real but only partial, and the halves are worth naming:
+
+| | `student_enrollment_records` | `student_leave_records` |
+|---|---|---|
+| **when** they left | `leave_date` — the source of truth; the period model depends on it | duplicate |
+| **status** at departure | `student_status_id` | duplicate |
+| **why** they left | not held anywhere | `description` |
+
+The enrollment record answers *when*, the leave record answers *why*, and
+nothing currently writes the second. That belongs to the Student module's
+leaving flow, which does not exist yet — carried forward rather than built here.
+
+---
+
+**A12** · 2026-09-08
+
+The module could only answer "where is this child **now**". Every roster and
+every report was built from the open enrollment, so opening September listed
+today's roll, a child who moved from 5-A to 5-B in November appeared under 5-B
+for the whole year, and a child who had since left vanished from the report
+along with the months they were actually present.
+
+The enrollment periods exist precisely so history survives this. Two scopes now
+express the questions the module was failing to ask:
+
+- `coveringDate($date)` — the period that was open on a day. Used by the roster
+  and by the whole-class save, so a back-dated register is filed under the
+  section the child was in **then**.
+- `overlappingPeriod($from, $to)` — every period touching a span. Used by both
+  reports, so a child who left mid-month is still on them, with a denominator
+  that stops on the day they left rather than running to the end of the month.
+
+`registersTouchedBy()` was reading today's sections too, which meant the lock
+check on a back-dated save looked at the wrong registers.
+
+Tests: `Case_11_HistoryTest` (11) — the move, the leaver, the back-dated
+register, and both reports agreeing with each other.
+
+---
+
+**A8** · 2026-09-08
+
+The last of the tables that copy the enrollment's section across while being
+NOT NULL themselves — the enrollment and the fee tables were done during the fee
+review, attendance was left because it belonged here. Those children could not
+be marked present at all.
+
+The unique index needed the same care it needed on the enrollment table: a
+database treats each NULL as distinct, so `[date, class, section]` stops
+protecting anything once the section is null and a class could quietly collect a
+second register for the same day. A generated column substituting zero for NULL
+gives the constraint something real to compare; SQLite says the same thing as
+two partial indexes.
+
+Two things in the controller had to follow. `registersTouchedBy()` built its
+section list with `->filter()`, which **drops nulls** — so for a section-less
+class the lock query looked for nothing and the lock was never checked at all.
+And `where('section_id', null)` is not the question `whereNull('section_id')`
+asks, so every lookup now goes through `scopedToSection()`.
+
+Tests: `Case_10_ClassWithoutSectionsTest` (9), including the lock case.
+
+---
+
+**A5, A16, A22** · 2026-09-08
+
+- **A5 — the cache.** Saving a holiday called `Cache::flush()` **three times in
+  a loop**, throwing away the whole application cache with it. The holiday
+  answers are cached per date and per campus, so there is no one key to forget
+  and no pattern delete on the database store — the keys carry a version now,
+  and `forgetHolidays()` moves it forward, which retires every existing entry at
+  once and leaves everything else alone. The per-request copy of the status ids
+  is cleared too; it was not, so a status added mid-request stayed invisible.
+- **A16 — one query, not three.** `statusCounts()` groups once and the accessors
+  read from it, and when the rows are already loaded — the dashboard, the show
+  screen — nothing is queried at all. `leave_count` and `half_day_count` were
+  added while there, and `total_students` no longer queries a loaded relation.
+- **A22 — the student report.** The route binds the child; the method ignored
+  the binding and demanded a `student_id` in the query string, so calling the
+  route as named failed validation before it did anything. It takes the bound
+  model now, and the month comes from `AttendanceReportRequest`, which defaults
+  to the current one rather than refusing a report opened from a menu. The
+  report also gained the same expected-days denominator the class report uses,
+  with a test that the two agree.
+
+Tests: `Case_09_CacheAndCountsTest` (7) and
+`tests/Feature/Attendance/Reports/Case_04_StudentReportTest` (8).
+
+---
+
+**A14, A17, A18, A23, A24** · 2026-09-08
+
+- **A14 — `App\Enums\AttendanceStatusCode`.** The four codes plus the half day
+  were string constants on **two** models at once and compared as bare strings
+  in a dozen places. One enum now, and both copies are gone.
+
+  Deliberately **not** a cast on `attendance_statuses.code`: that column stays a
+  plain string so a school can add its own status — "Short Leave" at a weight of
+  0.5 — which a cast would turn into a `ValueError` the moment the row was read.
+  The enum names the codes the application reasons about; the table holds every
+  code the school uses, and the counting reads the weight off the row. There is
+  a test for exactly this.
+- **A24 — form requests.** `StoreBulkAttendanceRequest`,
+  `UpdateAttendanceRequest` and `StudentsForAttendanceRequest`. The last of
+  those replaces the module's only hand-built `Validator`, whose errors reached
+  the screen in a different shape from every other endpoint's.
+- **A17 — `section_id` is checked properly.** It must be a section that exists
+  **and belongs to the class being marked**, or the zero that means the whole
+  class — which is now a named constant on the request that receives it rather
+  than a bare literal in three places. Any integer used to reach the insert and
+  come back as "Failed to record attendance: SQLSTATE…".
+- **A18 — the times are validated on the path that is used.** Check-out before
+  check-in, and a check-out with no check-in, are both refused on the bulk save
+  as they already were on the other two.
+- **A23 — `check_in` and `check_out` are left as strings.** Cast as datetimes,
+  a clock time gained an arbitrary date part and Eloquent wrote a full
+  `Y-m-d H:i:s` back into a column that holds only a time. The JSON the screens
+  receive is unchanged.
+
+Two more caught while writing the rules: a status the school has **switched off**
+is now refused on a new register, and the **same student twice in one
+submission** is refused rather than having the second row silently overwrite the
+first.
+
+Tests: `Case_07_ValidationTest` (16) and `Case_08_StatusCodesTest` (8).
+
+---
+
+**A7, A9, A26 + S1, S2, S5** · 2026-09-08
+
+Settled first, since A7 was a decision: **the summary table stays, as a derived
+cache and never a source of truth.** A report card and a government return both
+want "days present out of working days" per child per month, and recomputing a
+year of registers for a whole school on every request is not something to do
+twice. What makes that safe is that a month is always **recomputed**, never
+adjusted, and `php artisan attendance:rebuild-summaries` reconstructs any of it
+from `attendance_students`.
+
+- **S5 — `attendance_policies`** per campus, optionally per session, shaped like
+  `fee_policies`: which ISO weekdays the campus works, which are short days, and
+  whether absences are told to guardians. A campus that has set nothing gets a
+  Monday-to-Saturday week rather than no denominator at all.
+- **A26 — a real denominator.** `WorkingDayCalculator` counts the days a child
+  was actually expected: the campus's working weekdays, less holidays (asked
+  through the same method the register guard uses, so the two cannot drift), less
+  anything outside their enrollment. A child admitted on the 20th is not absent
+  for the first nineteen days.
+- **S2 — half day.** `attendance_statuses` gained a `weight`, and every count is
+  read off the status row instead of testing the code. Half Day is seeded at 0.5;
+  a school can add "Short Leave" at 0.5 and the reports follow with no code
+  change. Late is weighted 1.0 — the child was in class, and the lateness is
+  recorded to be chased, not to dock the attendance.
+- **A7 — the summaries are written.** Rebuilt inside the same transaction as the
+  register save, so a summary that disagrees with its register cannot exist.
+  `expected_days`, `present_equivalent`, `half_day_count` and `computed_at` are
+  new; `attendance_percentage` measures against expected days, and
+  `unmarked_days` surfaces the days nobody took a register at all rather than
+  letting them flatter everyone's figure.
+- **A9 — `unique_monthly_summary`** is the unique constraint its name always
+  claimed to be.
+- **S1 — absence alerts.** `attendance_absence_alerts` records what is owed to
+  which guardian, with the message as it went out — it is the answer to "nobody
+  told me", so the row survives sending. One per child per day however often the
+  register is saved. Only absence qualifies: a child on approved leave is
+  expected to be away, and a late arrival is in school. A family with no number
+  on record is marked **skipped**, not failed, because that is a contact detail
+  to fill in rather than a delivery that went wrong. The gateway is
+  `config/attendance.php` and defaults to the log, so the pipeline is complete
+  and testable before an SMS vendor is chosen.
+
+Also closed on the way past: **A21** — `AttendanceStatus` can set `is_active`
+now, and has `active()` and `ordered()` scopes.
+
+One design decision worth recording: a campus's **short day does not halve the
+denominator**. A child who attends the whole of a short Friday has done
+everything asked of them, so it counts as one expected day like any other —
+halving it would let a full attender finish above 100%. The school's short day
+and the child's half day are different things, and only the second is a weight.
+
+Tests: `tests/Feature/Attendance/Reports/Case_02_WorkingDaysTest` (10),
+`Case_03_MonthlySummaryTest` (14), and
+`tests/Feature/Attendance/Alerts/Case_01_AbsenceAlertTest` (12).
+
+---
+
+**A1, A3, A4** · 2026-09-08
+
+- **A1 — the lock now holds on the path that is actually used.** `storeBulk`
+  resolves the registers a save would touch and authorises `update` on each
+  before the transaction opens, so both the permission and the lock are
+  enforced and a refusal is a 403 rather than a swallowed error. The whole-class
+  save is covered too: if any one section's register is locked, the save is
+  refused. `storeIndividual` got the same guard.
+- **A3 — `unique_student_attendance` is a unique constraint now**, not an index
+  wearing the name. `2026_09_08_000007_enforce_one_attendance_row_per_student.php`
+  removes existing duplicates first, keeping the most recently written row for
+  each student, and `upsertStudentAttendance()` was rewritten as an
+  `updateOrCreate` keyed on the pair the constraint covers.
+- **A4 — a register can only change its own rows.** The row ids are validated
+  with `Rule::exists(...)->where('attendance_id', $attendance->id)` and fetched
+  through `$attendance->attendanceStudents()`, so an id from another class is
+  refused twice over.
+
+One further bug surfaced while fixing them: **an existing register was never
+found**. `attendance_date` is stored as a datetime whose time part is zero, and
+every lookup compared it against a plain `Y-m-d` string, which does not match.
+The saves therefore always tried to insert a second register for the same day —
+invisible on MySQL, which coerces the comparison, and a constraint violation on
+SQLite. All three lookups now go through `registersOn()`, which uses
+`whereDate`. Without this the lock check in A1 could not find the register it
+was supposed to be checking.
+
+Also cleaned up while in there: the bare `0` meaning "all sections" is now the
+named constant `AttendanceController::ALL_SECTIONS`, compared as an integer
+rather than with `==`.
+
+Tests in `tests/Feature/Attendance/Register/` — `Case_01_LockTest` (9),
+`Case_02_DuplicateMarkingTest` (6), `Case_03_CrossRegisterTamperingTest` (5),
+with `tests/Support/AttendanceWorld.php` as the shared setup. The lock cases act
+as a **teacher**, not the developer: `Gate::before` grants developers every
+ability without consulting a policy, so a developer never meets the lock at all.
+
+**A2, A6, A10, A11** — with **A15, A19, A20** pulled in · 2026-09-08
+
+- **A2 — leave detection runs.** `getStatusId()` now accepts a code as well as
+  a name; it returned null for every code before, so the block behind it never
+  executed. `markAllStudents()` had the same fault.
+- **A15 — and it fires when the id is a string.** Fixing A2 alone would not have
+  been enough: the id arrives from a request as `"3"`, and the comparison was
+  strict. The four call sites now go through `AttendanceService::isLeaveStatus()`,
+  which compares as integers.
+- **A20 — `StudentLeave` was unusable.** `'status' => 'enum'` is not a Laravel
+  cast; it threw `InvalidCastException` the moment the attribute was read, so
+  A2's detection could not have worked even with the lookup fixed. Replaced with
+  a proper `App\Enums\LeaveStatus` backed enum, and the model's scopes and
+  checks now use it.
+- **A6 — the locked edit screen.** The return type is `Response|RedirectResponse`.
+  Note what the tests showed: a teacher is stopped by the policy with a 403 and
+  never reaches the guard; the only caller that reaches it is a developer, whom
+  `Gate::before` lets past the policy. That is the path that used to throw.
+- **A10 — the primary guardian.** `where('is_primary', true)`, not a `type`
+  column that does not exist.
+- **A11 — the holiday guard.** Moved into `assertNotAHoliday()` and applied on
+  all three write paths. The whole-class path had no check at all; the
+  individual path computed the answer and discarded it.
+- **A19 — and the screen now agrees with the save.** `checkHoliday` reported any
+  holiday as a holiday, so it blocked days marked as working days that the save
+  would have accepted. It answers on `isAttendanceAllowed()` now and returns
+  that flag alongside.
+
+Two further bugs surfaced while fixing them, both blocking the work:
+
+1. **The class report returned a 500 whenever any student had no records in the
+   month.** `calculateStats()` demanded an Eloquent collection and the report
+   passes `collect()` — a plain one — as the empty default. Since running the
+   report before a class has been marked is the ordinary case, this was close to
+   permanently broken. Typed to the base collection now.
+2. **Holidays were never found**, the same date comparison as before:
+   `start_date <= '2026-04-06'` is false when the stored value is
+   `'2026-04-06 00:00:00'`. Invisible on MySQL, which coerces; fatal on SQLite.
+   `getHoliday()` uses `whereDate` now. Without it the holiday guard could not
+   be verified at all.
+
+Tests: `Case_04_LeaveDetectionTest` (10), `Case_05_HolidayGuardTest` (9),
+`Case_06_LockedEditScreenTest` (4), and `tests/Feature/Attendance/Reports/Case_01_GuardianContactTest` (4).
+
+---
+
+
+## Waiting on another module
+
+Three suggestions are built as far as this module can take them, and stop where
+another begins. None is a gap in attendance:
+
+| | Waiting on | What is already done |
+|---|---|---|
+| **S6** biometric / RFID | a machine being chosen | tables, importer, matching, duplicate handling — everything but the driver |
+| **S8** report card attendance | the exam module | `ReportCardAttendanceService`, tested to agree with the class report |
+| **S10** leave application | the student portal | tables, service, requests, controller, five routes |
+
+
+## Carried forward
+
+**The leaving flow is not built.** `student_leave_records` is kept for the
+reason a child left (A25), and nothing writes it. Whoever builds "mark this
+child as left" in the Student module must close the enrollment period **and**
+record the reason, or the table stays empty and "why did they go" stays
+unanswerable.
+
+**From the Fee module.**
+
+**A8 above is the attendance half of the section-less class decision.** The exam
+tables were already nullable and needed nothing.
+
+---
+
+# Module: Exam — closed 2026-09-09
+
+**Reviewed** 2026-09-08 · business logic, services, controllers, models,
+migrations, relations, routes. **16 findings and 8 suggestions, all done.**
+201 tests.
+
+**What it was.** The schema was the best-designed part of this system — marks
+snapshotted against the paper they were sat under, real unique constraints,
+revaluation given its own request-and-action tables. The code on top had not
+kept that promise.
+
+## Findings
+
+| | |
+|---|---|
+| **E1** | No authorisation anywhere. Every route on `auth` alone, no policy, not one `authorize()` call — any signed-in user could read and change every child's marks, publish results, lock an exam. Now three policies sharing one `ChecksExamReach` trait, `permission:` middleware on every route, and `visibleTo()` scopes so lists cannot leak what records refuse. |
+| **E2** | Three routines wrote marks and disagreed. The injected service was never called. |
+| **E3** | Absent was taken out of *both* sides: a child who sat one paper of eight and scored 45/50 read **90%**. Absent now scores zero; exempt stays out of both. |
+| **E4** | A verified or published result dropped back to draft on any edit. |
+| **E5, E12** | Bulk registration asked for `status` on a table with no `status` column — it had never once worked. Now reads the roll **as it stood when the exam was sat**. |
+| **E6, E7** | Marks were unbounded (150 out of 100 accepted) and a paper need not belong to the exam. |
+| **E8, E9** | The grading scale ignored `campus_id` and `session_id`. `GradeResolver`: campus, then session, narrowest wins. Overlapping bands refused at save. |
+| **E10, E11** | `publish()` set a timestamp the status disagreed with and published an empty exam silently; `lock()` never wrote `locked_by`. |
+| **E13** | Nothing checked a child was registered. Registration is now implicit **and recorded**. |
+| **E14** | A phantom `student_id` write. |
+| **E15** | A bulk save was one transaction and one header rebuild per child. |
+| **E16** | Revaluation wrote four columns the table does not have; approve/reject/apply returned English and changed nothing. |
+
+## Suggestions
+
+| | |
+|---|---|
+| **S1** | Position in class — both widths, ties 1/2/2/4, unfinished results unranked. |
+| **S2, S4** | The result card, printable, one to a page — with the attendance line that attendance **S8** had been holding. |
+| **S3** | Grace marks, recorded **as grace** with a reason and an actor, never merged into the obtained marks. |
+| **S5** | `exams.result_weight` and `AnnualResultService` — the terms weighted into a year. |
+| **S6** | Pass and fail: per subject, plus the school's aggregate where set. Promotion left to the Student module. |
+| **S7** | `SubjectRole` — core, elective, additional. |
+| **S8** | The datesheet, grouped by day, cancelled papers struck through not dropped. |
+
+**Left to the next module:** promotion to the next class (Student), and the Vue
+screens for grace, subject roles, the card and the datesheet.

@@ -15,6 +15,10 @@ class School extends Model
         'slogan',
         'address',
         'phone',
+        'bank_name',
+        'bank_account_title',
+        'bank_account_no',
+        'bank_branch',
         'logo_path',
         'is_active',
     ];

@@ -6,10 +6,10 @@
             <!-- Header -->
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 md:gap-4">
                 <div>
-                    <h1 class="text-lg md:text-2xl font-bold text-gray-900 dark:text-white">
+                    <h1 class="text-lg md:text-2xl font-bold text-foreground">
                         Exam Registrations
                     </h1>
-                    <p class="mt-1 text-xs md:text-sm text-gray-600 dark:text-gray-400">
+                    <p class="mt-1 text-xs md:text-sm text-muted-foreground">
                         Manage student registrations for exam groups
                     </p>
                 </div>
@@ -23,7 +23,7 @@
                         id="filter-group"
                         v-model="filters.group_id"
                         @change="applyFilters"
-                        class="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 text-sm min-h-10 md:min-h-11"
+                        class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm min-h-10 md:min-h-11"
                     >
                         <option value="">All Groups</option>
                         <option v-for="group in props.groups" :key="group.id" :value="group.id">
@@ -34,14 +34,14 @@
             </div>
 
             <!-- Group Info -->
-            <div v-if="props.group" class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+            <div v-if="props.group" class="bg-primary/10 border border-primary/40 rounded-lg p-4">
                 <div class="flex items-center gap-3">
-                    <Icon icon="info" class="h-5 w-5 text-blue-500" />
+                    <Icon icon="info" class="h-5 w-5 text-primary" />
                     <div>
-                        <p class="font-medium text-blue-900 dark:text-blue-200">
+                        <p class="font-medium text-primary">
                             {{ props.group.exam_offering?.exam?.name }} - {{ props.group.class?.name }} {{ props.group.section?.name }}
                         </p>
-                        <p class="text-sm text-blue-700 dark:text-blue-300">
+                        <p class="text-sm text-primary">
                             {{ props.group.exam_offering?.campus?.name }}
                         </p>
                     </div>
@@ -55,45 +55,45 @@
             </div>
 
             <!-- Registrations Table -->
-            <div class="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-900">
+            <div class="overflow-hidden rounded-lg border border-border bg-card shadow-sm">
                 <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                        <thead class="bg-gray-50 dark:bg-gray-800">
+                    <table class="min-w-full divide-y divide-border">
+                        <thead class="bg-muted">
                             <tr>
-                                <th class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">
+                                <th class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">
                                     Roll No
                                 </th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">
+                                <th class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">
                                     Student
                                 </th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">
+                                <th class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">
                                     Registration No
                                 </th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">
+                                <th class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">
                                     Status
                                 </th>
-                                <th class="px-4 py-3 text-right text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">
+                                <th class="px-4 py-3 text-right text-xs font-semibold tracking-wider text-muted-foreground uppercase">
                                     Actions
                                 </th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-900">
-                            <tr v-for="registration in props.registrations" :key="registration.id" class="transition-colors hover:bg-gray-50 dark:hover:bg-gray-800">
+                        <tbody class="divide-y divide-border bg-card">
+                            <tr v-for="registration in props.registrations" :key="registration.id" class="transition-colors hover:bg-accent">
                                 <td class="px-4 py-3 whitespace-nowrap">
-                                    <div class="text-sm text-gray-900 dark:text-white">{{ registration.roll_no_snapshot || '-' }}</div>
+                                    <div class="text-sm text-foreground">{{ registration.roll_no_snapshot || '-' }}</div>
                                 </td>
                                 <td class="px-4 py-3 whitespace-nowrap">
-                                    <div class="text-sm font-medium text-gray-900 dark:text-white">{{ registration.student?.user?.name }}</div>
+                                    <div class="text-sm font-medium text-foreground">{{ registration.student?.user?.name }}</div>
                                 </td>
                                 <td class="px-4 py-3 whitespace-nowrap">
-                                    <div class="text-sm text-gray-600 dark:text-gray-300">{{ registration.student?.registration_no }}</div>
+                                    <div class="text-sm text-muted-foreground">{{ registration.student?.registration_no }}</div>
                                 </td>
                                 <td class="px-4 py-3 whitespace-nowrap">
                                     <span
                                         :class="[
                                             'px-2 py-1 text-xs font-medium rounded-full',
-                                            registration.status === 'registered' ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' :
-                                            'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
+                                            registration.status === 'registered' ? 'bg-success/10 text-success' :
+                                            'bg-destructive/10 text-destructive'
                                         ]"
                                     >
                                         {{ registration.status }}
@@ -106,7 +106,7 @@
                                             variant="outline" 
                                             size="sm" 
                                             @click="withdrawRegistration(registration.id)"
-                                            class="min-h-8 text-red-600"
+                                            class="min-h-8 text-destructive"
                                         >
                                             <Icon icon="user-minus" class="mr-1 h-3 w-3" />Withdraw
                                         </Button>
@@ -118,7 +118,7 @@
                 </div>
             </div>
 
-            <div v-if="props.registrations.length === 0" class="text-center py-8 text-gray-500">
+            <div v-if="props.registrations.length === 0" class="text-center py-8 text-muted-foreground">
                 No registrations found.
             </div>
         </div>

@@ -330,16 +330,16 @@ const generateVouchers = () => {
         <div class="space-y-6 p-4 md:p-6">
             <!-- Header -->
             <div>
-                <h1 class="text-lg md:text-2xl font-bold text-gray-900 dark:text-white">
+                <h1 class="text-lg md:text-2xl font-bold text-foreground">
                     Generate Fee Vouchers
                 </h1>
-                <p class="mt-1 text-xs md:text-sm text-gray-600 dark:text-gray-400">
+                <p class="mt-1 text-xs md:text-sm text-muted-foreground">
                     Create monthly fee vouchers for students based on their fee structures
                 </p>
             </div>
 
             <!-- Form -->
-            <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+            <div class="bg-card rounded-lg border border-border p-6">
                 <form @submit.prevent="generateVouchers" class="space-y-6">
                     <!-- Session, Campus, Class Row -->
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -350,7 +350,7 @@ const generateVouchers = () => {
                                 id="session_id"
                                 v-model="form.session_id"
                                 required
-                                class="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white px-3 py-2"
+                                class="mt-1 block w-full rounded-md border border-border bg-card text-foreground px-3 py-2"
                             >
                                 <option value="">Select Session</option>
                                 <option v-for="session in props.sessions" :key="session.id" :value="session.id">
@@ -366,7 +366,7 @@ const generateVouchers = () => {
                                 id="campus_id"
                                 v-model="form.campus_id"
                                 required
-                                class="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white px-3 py-2"
+                                class="mt-1 block w-full rounded-md border border-border bg-card text-foreground px-3 py-2"
                             >
                                 <option value="">Select Campus</option>
                                 <option v-for="campus in props.campuses" :key="campus.id" :value="campus.id">
@@ -382,7 +382,7 @@ const generateVouchers = () => {
                                 id="class_id"
                                 v-model="form.class_id"
                                 required
-                                class="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white px-3 py-2"
+                                class="mt-1 block w-full rounded-md border border-border bg-card text-foreground px-3 py-2"
                             >
                                 <option value="">Select Class</option>
                                 <option v-for="cls in props.classes" :key="cls.id" :value="cls.id">
@@ -402,7 +402,7 @@ const generateVouchers = () => {
                                 v-model="form.section_id"
                                 :disabled="!form.class_id || filteredSections.length === 0"
                                 :class="[
-                                    'mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white px-3 py-2',
+                                    'mt-1 block w-full rounded-md border border-border bg-card text-foreground px-3 py-2',
                                     (!form.class_id || filteredSections.length === 0) ? 'cursor-not-allowed opacity-50' : '',
                                 ]"
                             >
@@ -420,7 +420,7 @@ const generateVouchers = () => {
                                 id="year"
                                 v-model="form.year"
                                 required
-                                class="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white px-3 py-2"
+                                class="mt-1 block w-full rounded-md border border-border bg-card text-foreground px-3 py-2"
                             >
                                 <option v-for="year in years" :key="year" :value="year">
                                     {{ year }}
@@ -446,19 +446,19 @@ const generateVouchers = () => {
                             <label
                                 v-for="month in props.months"
                                 :key="month.id"
-                                class="flex min-h-11 items-center gap-2 cursor-pointer rounded border border-gray-200 p-2 dark:border-gray-700 hover:bg-gray-50 dark:hover:bg-gray-700"
-                                :class="form.month_ids.includes(month.id) ? 'bg-blue-50 dark:bg-blue-900/30 border-blue-500' : 'bg-white dark:bg-gray-800'"
+                                class="flex min-h-11 items-center gap-2 cursor-pointer rounded border border-border p-2 hover:bg-accent"
+                                :class="form.month_ids.includes(month.id) ? 'bg-primary/10 border-primary' : 'bg-card'"
                             >
                                 <input
                                     type="checkbox"
                                     :checked="form.month_ids.includes(month.id)"
                                     @change="toggleMonth(month.id)"
-                                    class="w-4 h-4 text-blue-600 rounded"
+                                    class="w-4 h-4 text-primary rounded"
                                 />
                                 <span class="text-sm">{{ month.name }}</span>
                             </label>
                         </div>
-                        <p class="mt-2 text-sm text-gray-500 dark:text-gray-400">
+                        <p class="mt-2 text-sm text-muted-foreground">
                             Selected: {{ form.month_ids.length }} month(s)
                         </p>
                     </div>
@@ -469,7 +469,7 @@ const generateVouchers = () => {
                             type="checkbox"
                             id="include_previous_unpaid"
                             v-model="form.include_previous_unpaid"
-                            class="w-4 h-4 text-blue-600 rounded"
+                            class="w-4 h-4 text-primary rounded"
                         />
                         <Label for="include_previous_unpaid" class="cursor-pointer">
                             Include previous unpaid balance in voucher
@@ -481,7 +481,7 @@ const generateVouchers = () => {
                             type="checkbox"
                             id="include_inventory_dues"
                             v-model="form.include_inventory_dues"
-                            class="w-4 h-4 text-blue-600 rounded"
+                            class="w-4 h-4 text-primary rounded"
                         />
                         <Label for="include_inventory_dues" class="cursor-pointer">
                             Include open inventory dues in generated vouchers
@@ -493,7 +493,7 @@ const generateVouchers = () => {
                             type="checkbox"
                             id="include_transport_dues"
                             v-model="form.include_transport_dues"
-                            class="w-4 h-4 text-blue-600 rounded"
+                            class="w-4 h-4 text-primary rounded"
                         />
                         <Label for="include_transport_dues" class="cursor-pointer">
                             Include open transport dues in generated vouchers
@@ -501,7 +501,7 @@ const generateVouchers = () => {
                     </div>
 
                     <!-- Custom Fee Heads Section -->
-                    <div class="border-t border-gray-200 dark:border-gray-700 pt-6">
+                    <div class="border-t border-border pt-6">
                         <div class="mb-4 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
                             <Label>Add Custom Fee Heads (Optional)</Label>
                             <Button type="button" variant="outline" size="sm" @click="showCustomFeeModal = true">
@@ -515,54 +515,54 @@ const generateVouchers = () => {
                             <div
                                 v-for="(fee, index) in form.custom_fee_heads"
                                 :key="index"
-                                class="flex items-center justify-between p-3 bg-gray-50 dark:bg-gray-700 rounded-lg"
+                                class="flex flex-wrap gap-2 items-center justify-between p-3 bg-muted rounded-lg"
                             >
                                 <div>
                                     <span class="font-medium">{{ getFeeHeadName(fee.fee_head_id) }}</span>
-                                    <span class="ml-2 text-gray-600 dark:text-gray-400">- Rs. {{ fee.amount.toLocaleString() }}</span>
+                                    <span class="ml-2 text-muted-foreground">- Rs. {{ fee.amount.toLocaleString() }}</span>
                                 </div>
                                 <Button type="button" variant="ghost" size="sm" @click="removeCustomFeeHead(index)">
-                                    <Icon icon="trash-2" class="h-4 w-4 text-red-500" />
+                                    <Icon icon="trash-2" class="h-4 w-4 text-destructive" />
                                 </Button>
                             </div>
                         </div>
-                        <p v-else class="text-sm text-gray-500 dark:text-gray-400">
+                        <p v-else class="text-sm text-muted-foreground">
                             No custom fee heads added. These will be added to all generated vouchers.
                         </p>
                     </div>
 
                     <!-- Fee Structure Display -->
-                    <div v-if="form.session_id && form.campus_id && form.class_id" class="border-t border-gray-200 dark:border-gray-700 pt-6">
+                    <div v-if="form.session_id && form.campus_id && form.class_id" class="border-t border-border pt-6">
                         <Label class="mb-3 block">Applicable Fee Structure</Label>
                         
                         <!-- Loading State -->
-                        <div v-if="feeStructureLoading" class="flex items-center justify-center p-6 bg-gray-50 dark:bg-gray-700 rounded-lg">
-                            <Icon icon="loader" class="h-6 w-6 animate-spin text-gray-400" />
-                            <span class="ml-2 text-gray-500 dark:text-gray-400">Loading fee structure...</span>
+                        <div v-if="feeStructureLoading" class="flex items-center justify-center p-6 bg-muted rounded-lg">
+                            <Icon icon="loader" class="h-6 w-6 animate-spin text-muted-foreground" />
+                            <span class="ml-2 text-muted-foreground">Loading fee structure...</span>
                         </div>
                         
                         <!-- Fee Structure Found -->
-                        <div v-else-if="applicableFeeStructure" class="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-4">
+                        <div v-else-if="applicableFeeStructure" class="bg-success/10 border border-success/40 rounded-lg p-4">
                             <div class="flex items-start gap-3">
-                                <Icon icon="check-circle" class="h-5 w-5 text-green-600 dark:text-green-400 flex-shrink-0 mt-0.5" />
+                                <Icon icon="check-circle" class="h-5 w-5 text-success flex-shrink-0 mt-0.5" />
                                 <div class="flex-1">
                                     <div class="flex flex-col gap-4 md:flex-row md:items-start md:justify-between">
                                         <div>
-                                            <p class="font-semibold text-green-800 dark:text-green-300">
+                                            <p class="font-semibold text-success">
                                                 {{ applicableFeeStructure.title }}
                                             </p>
-                                            <p class="text-sm text-green-600 dark:text-green-400">
+                                            <p class="text-sm text-success">
                                                 {{ getSourceLabel(feeStructureSource) }} structure
                                             </p>
                                         </div>
                                         <div class="text-right">
-                                            <p class="text-lg font-bold text-green-700 dark:text-green-300">
+                                            <p class="text-lg font-bold text-success">
                                                 Rs. {{ applicableFeeStructure.total_monthly.toLocaleString() }}/month
                                             </p>
-                                            <p v-if="applicableFeeStructure.total_annual > 0" class="text-sm text-green-600 dark:text-green-400">
+                                            <p v-if="applicableFeeStructure.total_annual > 0" class="text-sm text-success">
                                                 + Rs. {{ applicableFeeStructure.total_annual.toLocaleString() }}/annual
                                             </p>
-                                            <p v-if="applicableFeeStructure.total_one_time > 0" class="text-sm text-green-600 dark:text-green-400">
+                                            <p v-if="applicableFeeStructure.total_one_time > 0" class="text-sm text-success">
                                                 + Rs. {{ applicableFeeStructure.total_one_time.toLocaleString() }}/one-time
                                             </p>
                                         </div>
@@ -571,18 +571,18 @@ const generateVouchers = () => {
                                     <!-- Fee Items Table -->
                                     <div class="mt-3 overflow-x-auto">
                                         <table class="w-full text-sm text-left">
-                                            <thead class="bg-green-100 dark:bg-green-800/50">
+                                            <thead class="bg-success/10">
                                                 <tr>
-                                                    <th class="px-3 py-2 text-green-800 dark:text-green-300">Fee Head</th>
-                                                    <th class="px-3 py-2 text-green-800 dark:text-green-300">Type</th>
-                                                    <th class="px-3 py-2 text-right text-green-800 dark:text-green-300">Amount</th>
+                                                    <th class="px-3 py-2 text-success">Fee Head</th>
+                                                    <th class="px-3 py-2 text-success">Type</th>
+                                                    <th class="px-3 py-2 text-right text-success">Amount</th>
                                                 </tr>
                                             </thead>
-                                            <tbody class="divide-y divide-green-100 dark:divide-green-800">
-                                                <tr v-for="item in applicableFeeStructure.items" :key="item.id" class="hover:bg-green-50 dark:hover:bg-green-900/10">
-                                                    <td class="px-3 py-2 text-green-700 dark:text-green-400">{{ item.fee_head?.name || 'N/A' }}</td>
-                                                    <td class="px-3 py-2 text-green-600 dark:text-green-500 capitalize">{{ item.frequency }}</td>
-                                                    <td class="px-3 py-2 text-right font-medium text-green-700 dark:text-green-400">Rs. {{ item.amount.toLocaleString() }}</td>
+                                            <tbody class="divide-y divide-success/40">
+                                                <tr v-for="item in applicableFeeStructure.items" :key="item.id" class="hover:bg-success/20">
+                                                    <td class="px-3 py-2 text-success">{{ item.fee_head?.name || 'N/A' }}</td>
+                                                    <td class="px-3 py-2 text-success capitalize">{{ item.frequency }}</td>
+                                                    <td class="px-3 py-2 text-right font-medium text-success">Rs. {{ item.amount.toLocaleString() }}</td>
                                                 </tr>
                                             </tbody>
                                         </table>
@@ -592,12 +592,12 @@ const generateVouchers = () => {
                         </div>
                         
                         <!-- No Fee Structure Found -->
-                        <div v-else class="bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-800 rounded-lg p-4">
+                        <div v-else class="bg-warning/10 border border-warning/40 rounded-lg p-4">
                             <div class="flex items-start gap-3">
-                                <Icon icon="alert-triangle" class="h-5 w-5 text-yellow-600 dark:text-yellow-400 flex-shrink-0 mt-0.5" />
+                                <Icon icon="alert-triangle" class="h-5 w-5 text-warning flex-shrink-0 mt-0.5" />
                                 <div>
-                                    <p class="font-medium text-yellow-800 dark:text-yellow-300">No Fee Structure Found</p>
-                                    <p class="text-sm text-yellow-600 dark:text-yellow-400 mt-1">
+                                    <p class="font-medium text-warning">No Fee Structure Found</p>
+                                    <p class="text-sm text-warning mt-1">
                                         {{ noFeeStructureMessage }}
                                     </p>
                                     <Button type="button" variant="outline" size="sm" class="mt-2" @click="router.visit(route('fee.structures.create'))">
@@ -610,10 +610,10 @@ const generateVouchers = () => {
                     </div>
 
                     <!-- Info -->
-                    <div class="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4">
+                    <div class="bg-primary/10 border border-primary/40 rounded-lg p-4">
                         <div class="flex gap-3">
-                            <Icon icon="info" class="h-5 w-5 text-blue-600 dark:text-blue-400 flex-shrink-0" />
-                            <div class="text-sm text-blue-800 dark:text-blue-300">
+                            <Icon icon="info" class="h-5 w-5 text-primary flex-shrink-0" />
+                            <div class="text-sm text-primary">
                                 <p class="font-medium">How it works:</p>
                                 <ul class="list-disc list-inside mt-1 space-y-1">
                                     <li>Only students with active enrollments will be included</li>
@@ -644,7 +644,7 @@ const generateVouchers = () => {
 
         <!-- Custom Fee Head Modal -->
         <div v-if="showCustomFeeModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50 px-4 py-6">
-            <div class="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-lg bg-white p-6 dark:bg-gray-800">
+            <div class="max-h-[90vh] w-full max-w-md overflow-y-auto rounded-lg bg-card p-6">
                 <h3 class="text-lg font-semibold mb-4">Add Custom Fee Head</h3>
                 
                 <div class="space-y-4">
@@ -653,7 +653,7 @@ const generateVouchers = () => {
                         <select
                             id="custom_fee_head_id"
                             v-model="selectedFeeHeadId"
-                            class="mt-1 block w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white px-3 py-2"
+                            class="mt-1 block w-full rounded-md border border-border bg-card text-foreground px-3 py-2"
                         >
                             <option value="">Select Fee Head</option>
                             <option v-for="feeHead in props.feeHeads" :key="feeHead.id" :value="feeHead.id">
@@ -675,7 +675,7 @@ const generateVouchers = () => {
                     </div>
                 </div>
 
-                <div class="flex justify-end gap-3 mt-6">
+                <div class="flex flex-wrap justify-end gap-3 mt-6">
                     <Button type="button" variant="outline" @click="showCustomFeeModal = false">
                         Cancel
                     </Button>

@@ -18,6 +18,13 @@
         </include>
     </source>
     <php>
+        <!--
+            The suite boots a fresh application per test and the route files
+            alone are large; at PHP's 128M default the run died part-way with
+            an out-of-memory error that looked like a failure in whichever
+            test happened to be last.
+        -->
+        <ini name="memory_limit" value="1G"/>
         <env name="APP_ENV" value="testing"/>
         <env name="APP_MAINTENANCE_DRIVER" value="file"/>
         <env name="BCRYPT_ROUNDS" value="4"/>

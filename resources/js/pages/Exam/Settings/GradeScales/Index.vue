@@ -69,17 +69,17 @@ const deleteScale = () => {
 
 <template>
   <div class="p-6">
-    <div class="flex justify-between items-center mb-6">
+    <div class="flex flex-wrap gap-2 justify-between items-center mb-6">
       <h1 class="text-2xl font-bold">Grade Scales</h1>
       <button
         @click="createNew"
-        class="bg-blue-600 text-white px-4 py-2 rounded-lg hover:bg-blue-700"
+        class="bg-primary text-primary-foreground px-4 py-2 rounded-lg hover:bg-primary/90"
       >
         Create New Scale
       </button>
     </div>
     
-    <div v-if="gradeScales.length === 0" class="text-center py-12 text-gray-500">
+    <div v-if="gradeScales.length === 0" class="text-center py-12 text-muted-foreground">
       No grade scales found. Create one to get started.
     </div>
     
@@ -87,22 +87,22 @@ const deleteScale = () => {
       <div 
         v-for="scale in gradeScales" 
         :key="scale.id"
-        class="bg-white rounded-lg shadow p-6"
-        :class="{ 'ring-2 ring-blue-500': scale.is_active }"
+        class="bg-card rounded-lg shadow p-6"
+        :class="{ 'ring-2 ring-primary': scale.is_active }"
       >
-        <div class="flex justify-between items-start mb-4">
+        <div class="flex flex-wrap gap-2 justify-between items-start mb-4">
           <div>
             <h3 class="text-lg font-semibold">{{ scale.name }}</h3>
             <div class="flex gap-2 mt-1">
               <span 
                 v-if="scale.is_active" 
-                class="bg-green-100 text-green-800 text-xs px-2 py-1 rounded"
+                class="bg-success/10 text-success text-xs px-2 py-1 rounded"
               >
                 Active
               </span>
               <span 
                 v-if="scale.is_default" 
-                class="bg-blue-100 text-blue-800 text-xs px-2 py-1 rounded"
+                class="bg-primary/10 text-primary text-xs px-2 py-1 rounded"
               >
                 Default
               </span>
@@ -112,14 +112,14 @@ const deleteScale = () => {
             <button
               v-if="!scale.is_active"
               @click="setActive(scale.id)"
-              class="text-blue-600 hover:text-blue-800 text-sm"
+              class="text-primary hover:text-primary text-sm"
               :disabled="loading"
             >
               Set Active
             </button>
             <button
               @click="editScale(scale.id)"
-              class="text-gray-600 hover:text-gray-800"
+              class="text-muted-foreground hover:text-foreground"
             >
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
@@ -128,7 +128,7 @@ const deleteScale = () => {
             <button
               v-if="!scale.is_active && !scale.is_default"
               @click="confirmDelete(scale)"
-              class="text-red-600 hover:text-red-800"
+              class="text-destructive hover:text-destructive"
             >
               <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
@@ -137,7 +137,7 @@ const deleteScale = () => {
           </div>
         </div>
         
-        <div class="text-sm text-gray-500">
+        <div class="text-sm text-muted-foreground">
           {{ scale.grade_system_items?.length || 0 }} grade items
         </div>
       </div>
@@ -145,21 +145,21 @@ const deleteScale = () => {
     
     <!-- Delete Modal -->
     <div v-if="showDeleteModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-      <div class="bg-white rounded-lg p-6 max-w-md">
+      <div class="bg-card rounded-lg p-6 max-w-md">
         <h3 class="text-lg font-semibold mb-4">Delete Grade Scale</h3>
-        <p class="text-gray-600 mb-6">
+        <p class="text-muted-foreground mb-6">
           Are you sure you want to delete "{{ scaleToDelete?.name }}"? This action cannot be undone.
         </p>
-        <div class="flex justify-end gap-4">
+        <div class="flex flex-wrap justify-end gap-4">
           <button
             @click="showDeleteModal = false"
-            class="px-4 py-2 border rounded-lg hover:bg-gray-50"
+            class="px-4 py-2 border rounded-lg hover:bg-accent"
           >
             Cancel
           </button>
           <button
             @click="deleteScale"
-            class="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-700"
+            class="px-4 py-2 bg-destructive text-destructive-foreground rounded-lg hover:bg-destructive/90"
           >
             Delete
           </button>

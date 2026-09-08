@@ -5,14 +5,14 @@
             <div
                 v-for="attendance in props.attendances.data"
                 :key="attendance.id"
-                class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 space-y-3"
+                class="bg-card rounded-lg border border-border p-4 space-y-3"
             >
-                <div class="flex justify-between items-start">
+                <div class="flex flex-wrap gap-2 justify-between items-start">
                     <div>
-                        <div class="font-medium text-gray-900 dark:text-white">
+                        <div class="font-medium text-foreground">
                             {{ formatDate(attendance.attendance_date) }}
                         </div>
-                        <div class="text-xs text-gray-500">
+                        <div class="text-xs text-muted-foreground">
                             {{ attendance.campus?.name }}
                         </div>
                     </div>
@@ -20,15 +20,15 @@
                         :class="[
                             'px-2 py-1 text-xs font-medium rounded-full shrink-0',
                             attendance.is_locked
-                                ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
-                                : 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
+                                ? 'bg-destructive/10 text-destructive'
+                                : 'bg-success/10 text-success'
                         ]"
                     >
                         {{ attendance.is_locked ? 'Locked' : 'Unlocked' }}
                     </span>
                 </div>
                 
-                <div class="text-sm text-gray-600 dark:text-gray-400 space-y-1 pt-2 border-t border-gray-100 dark:border-gray-700">
+                <div class="text-sm text-muted-foreground space-y-1 pt-2 border-t border-border">
                     <div class="flex items-center gap-2">
                         <Icon icon="book" class="h-4 w-4" />
                         <span>{{ attendance.class?.name }} - {{ attendance.section?.name }}</span>
@@ -40,14 +40,14 @@
                 </div>
 
                 <!-- Stats -->
-                <div class="flex gap-2 pt-2 border-t border-gray-100 dark:border-gray-700">
+                <div class="flex gap-2 pt-2 border-t border-border">
                     <div class="flex-1 text-center">
-                        <div class="text-lg font-bold text-green-600">{{ getPresentCount(attendance) }}</div>
-                        <div class="text-xs text-gray-500">Present</div>
+                        <div class="text-lg font-bold text-success">{{ getPresentCount(attendance) }}</div>
+                        <div class="text-xs text-muted-foreground">Present</div>
                     </div>
                     <div class="flex-1 text-center">
-                        <div class="text-lg font-bold text-red-600">{{ getAbsentCount(attendance) }}</div>
-                        <div class="text-xs text-gray-500">Absent</div>
+                        <div class="text-lg font-bold text-destructive">{{ getAbsentCount(attendance) }}</div>
+                        <div class="text-xs text-muted-foreground">Absent</div>
                     </div>
                 </div>
 
@@ -67,49 +67,49 @@
                 </div>
             </div>
             
-            <div v-if="props.attendances.data.length === 0" class="text-center py-8 text-gray-500">
+            <div v-if="props.attendances.data.length === 0" class="text-center py-8 text-muted-foreground">
                 No attendance records found.
             </div>
         </div>
 
         <!-- Desktop Table View -->
-        <div class="hidden lg:block overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-900">
+        <div class="hidden lg:block overflow-hidden rounded-lg border border-border bg-card shadow-sm">
             <div class="overflow-x-auto">
-                <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                    <thead class="bg-gray-50 dark:bg-gray-800">
+                <table class="min-w-full divide-y divide-border">
+                    <thead class="bg-muted">
                         <tr>
-                            <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300 w-16">#</th>
-                            <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">Date</th>
-                            <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">Campus</th>
-                            <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">Class / Section</th>
-                            <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">Stats</th>
-                            <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">Status</th>
-                            <th scope="col" class="px-4 py-3 text-right text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">Actions</th>
+                            <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase w-16">#</th>
+                            <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">Date</th>
+                            <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">Campus</th>
+                            <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">Class / Section</th>
+                            <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">Stats</th>
+                            <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">Status</th>
+                            <th scope="col" class="px-4 py-3 text-right text-xs font-semibold tracking-wider text-muted-foreground uppercase">Actions</th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-900">
-                        <tr v-for="(attendance, index) in props.attendances.data" :key="attendance.id" class="transition-colors hover:bg-gray-50 dark:hover:bg-gray-800">
-                            <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
+                    <tbody class="divide-y divide-border bg-card">
+                        <tr v-for="(attendance, index) in props.attendances.data" :key="attendance.id" class="transition-colors hover:bg-accent">
+                            <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-foreground">
                                 {{ props.attendances.from + index }}
                             </td>
                             <td class="px-4 py-3 whitespace-nowrap">
-                                <div class="text-sm font-medium text-gray-900 dark:text-white">{{ formatDate(attendance.attendance_date) }}</div>
+                                <div class="text-sm font-medium text-foreground">{{ formatDate(attendance.attendance_date) }}</div>
                             </td>
                             <td class="px-4 py-3 whitespace-nowrap">
-                                <div class="text-sm text-gray-600 dark:text-gray-300">{{ attendance.campus?.name }}</div>
+                                <div class="text-sm text-muted-foreground">{{ attendance.campus?.name }}</div>
                             </td>
                             <td class="px-4 py-3 whitespace-nowrap">
-                                <div class="text-sm text-gray-600 dark:text-gray-300">{{ attendance.class?.name }}</div>
-                                <div class="text-xs text-gray-500">{{ attendance.section?.name }}</div>
+                                <div class="text-sm text-muted-foreground">{{ attendance.class?.name }}</div>
+                                <div class="text-xs text-muted-foreground">{{ attendance.section?.name }}</div>
                             </td>
                             <td class="px-4 py-3 whitespace-nowrap">
                                 <div class="flex gap-2">
-                                    <span class="px-2 py-1 text-xs font-medium rounded bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400">P: {{ getPresentCount(attendance) }}</span>
-                                    <span class="px-2 py-1 text-xs font-medium rounded bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400">A: {{ getAbsentCount(attendance) }}</span>
+                                    <span class="px-2 py-1 text-xs font-medium rounded bg-success/10 text-success">P: {{ getPresentCount(attendance) }}</span>
+                                    <span class="px-2 py-1 text-xs font-medium rounded bg-destructive/10 text-destructive">A: {{ getAbsentCount(attendance) }}</span>
                                 </div>
                             </td>
                             <td class="px-4 py-3 whitespace-nowrap">
-                                <span :class="['px-2 py-1 text-xs font-medium rounded-full', attendance.is_locked ? 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400' : 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400']">
+                                <span :class="['px-2 py-1 text-xs font-medium rounded-full', attendance.is_locked ? 'bg-destructive/10 text-destructive' : 'bg-success/10 text-success']">
                                     {{ attendance.is_locked ? 'Locked' : 'Unlocked' }}
                                 </span>
                             </td>
@@ -131,11 +131,11 @@
 
         <!-- Pagination -->
         <div v-if="props.attendances.links" class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mt-4">
-            <div class="text-xs md:text-sm text-gray-600">
+            <div class="text-xs md:text-sm text-muted-foreground">
                 Showing {{ props.attendances.from }} to {{ props.attendances.to }} of {{ props.attendances.total }} entries
             </div>
             <div class="flex flex-wrap gap-1">
-                <Link v-for="link in props.attendances.links" :key="link.label" :href="link.url || '#'" :class="['px-3 py-2 text-sm rounded-md transition-colors min-h-10 flex items-center justify-center', link.active ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-300 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600']" preserve-state>
+                <Link v-for="link in props.attendances.links" :key="link.label" :href="link.url || '#'" :class="['px-3 py-2 text-sm rounded-md transition-colors min-h-10 flex items-center justify-center', link.active ? 'bg-primary text-primary-foreground' : 'bg-card text-muted-foreground hover:bg-accent border border-border']" preserve-state>
                     <span v-html="link.label"></span>
                 </Link>
             </div>

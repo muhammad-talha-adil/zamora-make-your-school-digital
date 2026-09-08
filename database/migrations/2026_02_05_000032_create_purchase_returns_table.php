@@ -42,7 +42,9 @@ return new class extends Migration
             $table->foreignId('purchase_return_id')->constrained('purchase_returns')->onDelete('cascade');
             $table->foreignId('inventory_item_id')->constrained('inventory_items')->onDelete('cascade');
             $table->foreignId('purchase_item_id')->nullable()->constrained('inventory_purchase_items')->onDelete('set null');
-            $table->foreignId('reason_id')->nullable()->constrained('reasons')->onDelete('set null')->comment('Reason for return');
+            // `reasons` is created later; constraint added by
+            // 2026_09_07_000003_add_deferred_foreign_keys.
+            $table->foreignId('reason_id')->nullable()->comment('Reason for return');
             $table->integer('quantity')->comment('Quantity being returned');
             $table->decimal('unit_price', 12, 2)->comment('Price per unit at time of return');
             $table->decimal('total', 12, 2)->comment('Total value of returned items');

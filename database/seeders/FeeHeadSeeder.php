@@ -176,6 +176,21 @@ class FeeHeadSeeder extends Seeder
                 'is_active' => true,
                 'description' => 'Miscellaneous charges',
             ],
+            [
+                // Carries an unpaid balance onto the next month's voucher.
+                // Voucher generation used to create this head on the fly with a
+                // category the enum does not have, which threw the first time a
+                // student fell behind.
+                'name' => 'Previous Balance',
+                'code' => 'PREVIOUS_BALANCE',
+                'category' => 'misc',
+                'is_recurring' => false,
+                'default_frequency' => 'once',
+                'is_optional' => false,
+                'sort_order' => 60,
+                'is_active' => true,
+                'description' => 'Unpaid balance brought forward from earlier vouchers',
+            ],
         ];
 
         foreach ($feeHeads as $feeHead) {

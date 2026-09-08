@@ -33,7 +33,7 @@ class StudentPolicy
     {
         $this->logAuthorization($user, 'viewAny');
 
-        return $user->can('students.view') || $user->can('students.view_any');
+        return $user->can('students.view');
     }
 
     /**
@@ -49,7 +49,7 @@ class StudentPolicy
         }
 
         // Allow students to view their own data
-        if ($user->can('students.view_self') && $this->isOwnStudent($user, $student)) {
+        if ($user->can('students.view.own') && $this->isOwnStudent($user, $student)) {
             return true;
         }
 
@@ -74,12 +74,12 @@ class StudentPolicy
         $this->logAuthorization($user, 'update', $student);
 
         // Allow if user has specific student update permission
-        if ($user->can('students.update')) {
+        if ($user->can('students.edit')) {
             return true;
         }
 
         // Allow students to update their own data (limited fields)
-        if ($user->can('students.update_self') && $this->isOwnStudent($user, $student)) {
+        if ($user->can('students.edit.own') && $this->isOwnStudent($user, $student)) {
             return true;
         }
 
@@ -95,7 +95,7 @@ class StudentPolicy
 
         // Prevent deletion of students with active enrollments
         if ($student->currentEnrollment) {
-            return $user->can('students.delete_with_enrollment');
+            return $user->can('students.force.delete');
         }
 
         return $user->can('students.delete');
@@ -118,7 +118,7 @@ class StudentPolicy
     {
         $this->logAuthorization($user, 'forceDelete', $student);
 
-        return $user->can('students.force_delete');
+        return $user->can('students.force.delete');
     }
 
     /**
@@ -128,7 +128,7 @@ class StudentPolicy
     {
         $this->logAuthorization($user, 'changeStatus', $student);
 
-        return $user->can('students.change_status');
+        return $user->can('students.status.change');
     }
 
     /**

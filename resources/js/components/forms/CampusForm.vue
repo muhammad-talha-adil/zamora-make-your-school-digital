@@ -201,7 +201,7 @@ const handleCampusTypeSaved = (campusType: { id: number; name: string } | undefi
             <Button
                 :variant="props.variant"
                 :size="props.size"
-                :class="props.campus ? 'min-h-8 border-sky-200 text-sky-700 hover:bg-sky-50 hover:text-sky-800 dark:border-sky-800 dark:text-sky-300 dark:hover:bg-sky-950/40 dark:hover:text-sky-200' : ''"
+                :class="props.campus ? 'min-h-8 border-info/40 text-info hover:bg-info/20 hover:text-info' : ''"
             >
                 <Icon v-if="props.campus" icon="edit" class="mr-1" />
                 <Icon v-else icon="map-pin" class="mr-1" />
@@ -227,7 +227,7 @@ const handleCampusTypeSaved = (campusType: { id: number; name: string } | undefi
                             <div class="p-1 bg-muted rounded">
                                 <Icon icon="building" class="h-3.5 w-3.5 text-muted-foreground" />
                             </div>
-                            Campus Name <span class="text-red-500">*</span>
+                            Campus Name <span class="text-destructive">*</span>
                         </Label>
                         <div class="relative">
                             <Input
@@ -248,7 +248,7 @@ const handleCampusTypeSaved = (campusType: { id: number; name: string } | undefi
                                  <div class="p-1 bg-muted rounded">
                                      <Icon icon="tag" class="h-3.5 w-3.5 text-muted-foreground" />
                                  </div>
-                                 Campus Type <span class="text-red-500">*</span>
+                                 Campus Type <span class="text-destructive">*</span>
                              </Label>
                              <div class="flex gap-2">
                                  <div class="relative flex-1">
@@ -298,7 +298,7 @@ const handleCampusTypeSaved = (campusType: { id: number; name: string } | undefi
                 </div>
 
                 <!-- Actions -->
-                <div class="flex justify-end gap-3 pt-2">
+                <div class="flex flex-wrap justify-end gap-3 pt-2">
                     <DialogClose as-child>
                         <Button type="button" variant="outline" @click="resetForm" class="h-10">
                             <Icon icon="x" class="mr-2 h-4 w-4" />

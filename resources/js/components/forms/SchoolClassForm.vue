@@ -152,7 +152,7 @@ const resetForm = () => {
             <Button
                 :variant="props.variant"
                 :size="props.size"
-                :class="props.schoolClass ? 'min-h-8 border-sky-200 text-sky-700 hover:bg-sky-50 hover:text-sky-800 dark:border-sky-800 dark:text-sky-300 dark:hover:bg-sky-950/40 dark:hover:text-sky-200' : ''"
+                :class="props.schoolClass ? 'min-h-8 border-info/40 text-info hover:bg-info/20 hover:text-info' : ''"
             >
                 <Icon v-if="props.schoolClass" icon="edit" class="mr-1" />
                 <Icon v-else icon="plus" class="mr-1" />
@@ -173,23 +173,23 @@ const resetForm = () => {
 
                 <div class="grid gap-4 py-4">
                     <div class="grid gap-2">
-                        <Label for="name">Name <span class="text-red-500">*</span></Label>
+                        <Label for="name">Name <span class="text-destructive">*</span></Label>
                         <Input
                             id="name"
                             v-model="form.name"
                             placeholder='e.g., "Class 10", "Grade 11"'
-                            :class="{ 'border-red-500': errors.name }"
+                            :class="{ 'border-destructive': errors.name }"
                         />
                         <InputError :message="errors.name" />
                     </div>
 
                     <div class="grid gap-2">
-                        <Label for="code">Code <span class="text-red-500">*</span></Label>
+                        <Label for="code">Code <span class="text-destructive">*</span></Label>
                         <Input
                             id="code"
                             v-model="form.code"
                             placeholder='e.g., "CLS-001", "GRD-10"'
-                            :class="{ 'border-red-500': errors.code }"
+                            :class="{ 'border-destructive': errors.code }"
                         />
                         <InputError :message="errors.code" />
                     </div>
@@ -200,7 +200,7 @@ const resetForm = () => {
                             id="description"
                             v-model="form.description"
                             placeholder="Enter class description (optional)"
-                            :class="{ 'border-red-500': errors.description }"
+                            :class="{ 'border-destructive': errors.description }"
                         />
                         <InputError :message="errors.description" />
                     </div>

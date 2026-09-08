@@ -2,8 +2,10 @@
 
 namespace App\Http\Controllers\Fee;
 
+use App\Enums\Fee\FineType;
 use App\Http\Controllers\Controller;
 use App\Models\Campus;
+use App\Models\Fee\FeeFineRule;
 use App\Models\Fee\FeeHead;
 use App\Models\Fee\FeeStructure;
 use App\Models\Fee\FeeVoucher;
@@ -458,6 +460,100 @@ class FeeVoucherController extends Controller
             'cohortSummary' => $cohortSummary,
             'cohortVouchers' => $cohortVouchers,
         ]);
+    }
+
+    /**
+     * The three-part bank challan a parent takes to the counter.
+     *
+     * Fee here is collected at a bank branch, not at the school, so the slip
+     * has to carry everything the teller needs: the amount, the due date and a
+     * reference number they can key in. It prints in three parts — the bank
+     * keeps one, returns one to the school with the day's scroll, and the
+     * parent keeps the third as proof of payment.
+     */
+    public function challan(FeeVoucher $voucher)
+    {
+        $voucher->load([
+            'student',
+            'voucherMonth',
+            'items.feeHead',
+            'campus',
+            'schoolClass',
+            'section',
+        ]);
+
+        $school = School::where('is_active', true)->first();
+
+        $fineRule = FeeFineRule::query()
+            ->active()
+            ->where('campus_id', $voucher->campus_id)
+            ->where('session_id', $voucher->session_id)
+            ->first();
+
+        return response()->view('fee.vouchers.challan', [
+            'voucher' => $voucher,
+            'school' => $school,
+            'bankAccount' => $this->bankAccountLine($school),
+            'amountInWords' => $this->amountInWords((float) $voucher->balance_amount),
+            'lateFineNote' => $fineRule ? $this->lateFineNote($fineRule) : null,
+        ])->header('Content-Type', 'text/html');
+    }
+
+    /**
+     * The account the teller credits, as one line.
+     */
+    private function bankAccountLine(?School $school): ?string
+    {
+        if (! $school || ! $school->bank_account_no) {
+            return null;
+        }
+
+        return collect([
+            $school->bank_name,
+            $school->bank_branch,
+            $school->bank_account_title,
+            'A/C '.$school->bank_account_no,
+        ])->filter()->implode(' · ');
+    }
+
+    /**
+     * "One thousand two hundred" — a challan is a financial instrument and the
+     * figure has to appear in words as well as digits.
+     *
+     * `intl` is present here, but a challan that cannot be printed stops fee
+     * collection, so a server without the extension falls back to the figure
+     * rather than failing.
+     */
+    private function amountInWords(float $amount): string
+    {
+        $rupees = (int) round($amount);
+
+        if (! class_exists(\NumberFormatter::class)) {
+            return number_format($rupees);
+        }
+
+        $formatter = new \NumberFormatter('en', \NumberFormatter::SPELLOUT);
+
+        return ucfirst((string) $formatter->format($rupees));
+    }
+
+    /**
+     * What the parent is told they will pay if they miss the due date.
+     */
+    private function lateFineNote(FeeFineRule $rule): string
+    {
+        $after = $rule->grace_days > 0
+            ? ' after '.$rule->grace_days.' days'
+            : '';
+
+        return match ($rule->fine_type) {
+            FineType::SLAB => 'After due date: Rs. '.number_format((float) $rule->initial_amount, 0)
+                .' + Rs. '.number_format((float) $rule->daily_amount, 0).' per day'.$after,
+            FineType::FIXED_PER_DAY => 'After due date: Rs. '
+                .number_format((float) $rule->fine_value, 0).' per day'.$after,
+            FineType::FIXED_ONCE => 'After due date: Rs. '.number_format((float) $rule->fine_value, 0).$after,
+            FineType::PERCENT => 'After due date: '.rtrim(rtrim((string) $rule->fine_value, '0'), '.').'% fine'.$after,
+        };
     }
 
     /**

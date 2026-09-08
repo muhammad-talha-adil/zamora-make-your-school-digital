@@ -6,42 +6,42 @@
             <!-- Header -->
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
-                    <h1 class="text-xl md:text-2xl font-bold text-gray-900 dark:text-white">
+                    <h1 class="text-xl md:text-2xl font-bold text-foreground">
                         Artisan Commands
                     </h1>
-                    <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                    <p class="mt-1 text-sm text-muted-foreground">
                         Run Laravel artisan commands from the UI
                     </p>
                 </div>
-                <div class="text-sm text-yellow-600 dark:text-yellow-400 bg-yellow-100 dark:bg-yellow-900/30 px-3 py-1 rounded">
+                <div class="text-sm text-warning bg-warning/10 px-3 py-1 rounded">
                     ⚠️ Development Mode Only
                 </div>
             </div>
 
             <!-- Alert Messages -->
-            <div v-if="successMessage" class="bg-green-100 dark:bg-green-900/30 border border-green-200 dark:border-green-800 rounded-lg p-4">
+            <div v-if="successMessage" class="bg-success/10 border border-success/40 rounded-lg p-4">
                 <div class="flex items-center gap-2">
-                    <Icon icon="check-circle" class="h-5 w-5 text-green-600 dark:text-green-400" />
-                    <span class="text-green-700 dark:text-green-300">{{ successMessage }}</span>
+                    <Icon icon="check-circle" class="h-5 w-5 text-success" />
+                    <span class="text-success">{{ successMessage }}</span>
                 </div>
             </div>
 
-            <div v-if="errorMessage" class="bg-red-100 dark:bg-red-900/30 border border-red-200 dark:border-red-800 rounded-lg p-4">
+            <div v-if="errorMessage" class="bg-destructive/10 border border-destructive/40 rounded-lg p-4">
                 <div class="flex items-center gap-2">
-                    <Icon icon="alert-circle" class="h-5 w-5 text-red-600 dark:text-red-400" />
-                    <span class="text-red-700 dark:text-red-300">{{ errorMessage }}</span>
+                    <Icon icon="alert-circle" class="h-5 w-5 text-destructive" />
+                    <span class="text-destructive">{{ errorMessage }}</span>
                 </div>
             </div>
 
             <!-- Command Output -->
-            <div v-if="commandOutput" class="bg-gray-900 dark:bg-gray-950 rounded-lg p-4">
-                <div class="flex items-center justify-between mb-2">
-                    <h3 class="text-sm font-semibold text-gray-300">Command Output</h3>
-                    <button @click="commandOutput = ''" class="text-gray-400 hover:text-gray-200">
+            <div v-if="commandOutput" class="bg-card rounded-lg p-4">
+                <div class="flex flex-wrap gap-2 items-center justify-between mb-2">
+                    <h3 class="text-sm font-semibold text-muted-foreground">Command Output</h3>
+                    <button @click="commandOutput = ''" class="text-muted-foreground hover:text-foreground">
                         <Icon icon="x" class="h-4 w-4" />
                     </button>
                 </div>
-                <pre class="text-green-400 text-sm overflow-x-auto whitespace-pre-wrap">{{ commandOutput }}</pre>
+                <pre class="text-success text-sm overflow-x-auto whitespace-pre-wrap">{{ commandOutput }}</pre>
             </div>
 
             <!-- Main Grid -->
@@ -49,12 +49,12 @@
                 <!-- Column 1: Database Commands -->
                 <div class="space-y-6">
                     <!-- Migrations -->
-                    <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+                    <div class="bg-card rounded-lg border border-border p-6">
                         <div class="flex items-center gap-3 mb-4">
-                            <div class="p-2 bg-blue-100 dark:bg-blue-900/30 rounded-lg">
-                                <Icon icon="database" class="h-5 w-5 text-blue-600 dark:text-blue-400" />
+                            <div class="p-2 bg-primary/10 rounded-lg">
+                                <Icon icon="database" class="h-5 w-5 text-primary" />
                             </div>
-                            <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Migrations</h2>
+                            <h2 class="text-lg font-semibold text-foreground">Migrations</h2>
                         </div>
                         <div class="grid grid-cols-2 gap-3">
                             <Button 
@@ -125,12 +125,12 @@
                     </div>
 
                     <!-- Seeders -->
-                    <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+                    <div class="bg-card rounded-lg border border-border p-6">
                         <div class="flex items-center gap-3 mb-4">
-                            <div class="p-2 bg-green-100 dark:bg-green-900/30 rounded-lg">
-                                <Icon icon="plant" class="h-5 w-5 text-green-600 dark:text-green-400" />
+                            <div class="p-2 bg-success/10 rounded-lg">
+                                <Icon icon="plant" class="h-5 w-5 text-success" />
                             </div>
-                            <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Seeders</h2>
+                            <h2 class="text-lg font-semibold text-foreground">Seeders</h2>
                         </div>
                         
                         <div class="space-y-3">
@@ -147,9 +147,9 @@
                             
                             <!-- Divider -->
                             <div class="flex items-center gap-2">
-                                <div class="flex-1 h-px bg-gray-200 dark:bg-gray-700"></div>
-                                <span class="text-xs text-gray-500">OR</span>
-                                <div class="flex-1 h-px bg-gray-200 dark:bg-gray-700"></div>
+                                <div class="flex-1 h-px bg-muted"></div>
+                                <span class="text-xs text-muted-foreground">OR</span>
+                                <div class="flex-1 h-px bg-muted"></div>
                             </div>
                             
                             <!-- Run Specific Seeder -->
@@ -157,7 +157,7 @@
                                 <Label>Run Specific Seeder</Label>
                                 <select 
                                     v-model="selectedSeeder"
-                                    class="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-sm text-gray-900 dark:text-white"
+                                    class="w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground"
                                 >
                                     <option value="">Select a seeder...</option>
                                     <option v-for="seeder in seeders" :key="seeder" :value="seeder">
@@ -178,20 +178,20 @@
                     </div>
 
                     <!-- Pending Migrations -->
-                    <div v-if="pendingMigrations.length > 0" class="bg-white dark:bg-gray-800 rounded-lg border border-yellow-200 dark:border-yellow-700 p-6">
+                    <div v-if="pendingMigrations.length > 0" class="bg-card rounded-lg border border-warning/40 p-6">
                         <div class="flex items-center gap-3 mb-4">
-                            <div class="p-2 bg-yellow-100 dark:bg-yellow-900/30 rounded-lg">
-                                <Icon icon="alert-triangle" class="h-5 w-5 text-yellow-600 dark:text-yellow-400" />
+                            <div class="p-2 bg-warning/10 rounded-lg">
+                                <Icon icon="alert-triangle" class="h-5 w-5 text-warning" />
                             </div>
-                            <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Pending Migrations</h2>
-                            <span class="bg-yellow-100 dark:bg-yellow-900 text-yellow-700 dark:text-yellow-300 text-xs px-2 py-1 rounded-full">
+                            <h2 class="text-lg font-semibold text-foreground">Pending Migrations</h2>
+                            <span class="bg-warning/10 text-warning text-xs px-2 py-1 rounded-full">
                                 {{ pendingMigrations.length }} pending
                             </span>
                         </div>
                         
                         <div class="space-y-2">
-                            <div class="max-h-40 overflow-y-auto space-y-1 bg-gray-50 dark:bg-gray-900 p-2 rounded">
-                                <div v-for="migration in pendingMigrations" :key="migration" class="text-xs text-gray-600 dark:text-gray-400 font-mono">
+                            <div class="max-h-40 overflow-y-auto space-y-1 bg-muted p-2 rounded">
+                                <div v-for="migration in pendingMigrations" :key="migration" class="text-xs text-muted-foreground font-mono">
                                     {{ migration }}
                                 </div>
                             </div>
@@ -201,7 +201,7 @@
                                 <Label>Run Specific Migration</Label>
                                 <select 
                                     v-model="selectedMigration"
-                                    class="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-sm text-gray-900 dark:text-white"
+                                    class="w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground"
                                 >
                                     <option value="">Select a migration...</option>
                                     <option v-for="migration in pendingMigrations" :key="migration" :value="migration">
@@ -225,12 +225,12 @@
                 <!-- Column 2: Cache & Other Commands -->
                 <div class="space-y-6">
                     <!-- Cache -->
-                    <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+                    <div class="bg-card rounded-lg border border-border p-6">
                         <div class="flex items-center gap-3 mb-4">
-                            <div class="p-2 bg-purple-100 dark:bg-purple-900/30 rounded-lg">
-                                <Icon icon="zap" class="h-5 w-5 text-purple-600 dark:text-purple-400" />
+                            <div class="p-2 bg-primary/10 rounded-lg">
+                                <Icon icon="zap" class="h-5 w-5 text-primary" />
                             </div>
-                            <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Cache</h2>
+                            <h2 class="text-lg font-semibold text-foreground">Cache</h2>
                         </div>
                         <div class="grid grid-cols-2 gap-3">
                             <Button 
@@ -255,12 +255,12 @@
                     </div>
 
                     <!-- Queue -->
-                    <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+                    <div class="bg-card rounded-lg border border-border p-6">
                         <div class="flex items-center gap-3 mb-4">
-                            <div class="p-2 bg-orange-100 dark:bg-orange-900/30 rounded-lg">
-                                <Icon icon="layers" class="h-5 w-5 text-orange-600 dark:text-orange-400" />
+                            <div class="p-2 bg-warning/10 rounded-lg">
+                                <Icon icon="layers" class="h-5 w-5 text-warning" />
                             </div>
-                            <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Queue</h2>
+                            <h2 class="text-lg font-semibold text-foreground">Queue</h2>
                         </div>
                         <div class="grid grid-cols-3 gap-3">
                             <Button 
@@ -294,12 +294,12 @@
                     </div>
 
                     <!-- Other Commands -->
-                    <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+                    <div class="bg-card rounded-lg border border-border p-6">
                         <div class="flex items-center gap-3 mb-4">
-                            <div class="p-2 bg-cyan-100 dark:bg-cyan-900/30 rounded-lg">
-                                <Icon icon="terminal" class="h-5 w-5 text-cyan-600 dark:text-cyan-400" />
+                            <div class="p-2 bg-info/10 rounded-lg">
+                                <Icon icon="terminal" class="h-5 w-5 text-info" />
                             </div>
-                            <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Other Commands</h2>
+                            <h2 class="text-lg font-semibold text-foreground">Other Commands</h2>
                         </div>
                         <div class="space-y-3">
                             <Button 
@@ -324,12 +324,12 @@
                     </div>
 
                     <!-- Custom Command -->
-                    <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+                    <div class="bg-card rounded-lg border border-border p-6">
                         <div class="flex items-center gap-3 mb-4">
-                            <div class="p-2 bg-red-100 dark:bg-red-900/30 rounded-lg">
-                                <Icon icon="command" class="h-5 w-5 text-red-600 dark:text-red-400" />
+                            <div class="p-2 bg-destructive/10 rounded-lg">
+                                <Icon icon="command" class="h-5 w-5 text-destructive" />
                             </div>
-                            <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Custom Command</h2>
+                            <h2 class="text-lg font-semibold text-foreground">Custom Command</h2>
                         </div>
                         <div class="space-y-2">
                             <Input 

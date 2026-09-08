@@ -140,27 +140,27 @@ const summaryStats = computed(() => ({
 
 const getStockStatusBadge = (stock: InventoryStockRow) => {
     if (stock.available_quantity <= 0) {
-        return { label: 'Critical', className: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400' };
+        return { label: 'Critical', className: 'bg-destructive/10 text-destructive' };
     }
 
     if (stock.available_quantity < stock.low_stock_threshold) {
-        return { label: 'Warning', className: 'bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-400' };
+        return { label: 'Warning', className: 'bg-warning/10 text-warning' };
     }
 
-    return { label: 'Healthy', className: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400' };
+    return { label: 'Healthy', className: 'bg-success/10 text-success' };
 };
 
 const getStatusBadge = (isActive: boolean) => {
     return isActive
-        ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
-        : 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-300';
+        ? 'bg-success/10 text-success'
+        : 'bg-muted text-foreground';
 };
 
 const getAdjustmentBadge = (type: string) => {
     const map: Record<string, string> = {
-        add: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
-        subtract: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
-        set: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400',
+        add: 'bg-success/10 text-success',
+        subtract: 'bg-destructive/10 text-destructive',
+        set: 'bg-primary/10 text-primary',
     };
 
     return map[type] || map.set;
@@ -325,24 +325,24 @@ const loadStocksPage = (url: string) => fetchStocks(url);
         <div class="space-y-6 p-4 md:p-6">
             <div class="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
                 <div>
-                    <h1 class="text-lg font-bold text-gray-900 dark:text-white md:text-2xl">
+                    <h1 class="text-lg font-bold text-foreground md:text-2xl">
                         Items & Stock
                     </h1>
-                    <p class="mt-1 text-xs text-gray-600 dark:text-gray-400 md:text-sm">
+                    <p class="mt-1 text-xs text-muted-foreground md:text-sm">
                         Manage inventory types, items, live stock levels, and stock adjustments.
                     </p>
                 </div>
             </div>
 
-            <div class="border-b border-gray-200 dark:border-gray-700">
+            <div class="border-b border-border">
                 <nav class="-mb-px grid grid-cols-2 gap-x-4 gap-y-1 md:grid-cols-4">
                     <button
                         type="button"
                         @click="onTabChange('stocks')"
                         :class="[
                             activeTab === 'stocks'
-                                ? 'border-blue-600 text-blue-600 dark:border-blue-400 dark:text-blue-400'
-                                : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300',
+                                ? 'border-primary text-primary'
+                                : 'border-transparent text-muted-foreground hover:border-border hover:text-foreground',
                             'flex items-center justify-center border-b-2 px-2 py-3 text-sm font-medium whitespace-nowrap'
                         ]"
                     >
@@ -354,8 +354,8 @@ const loadStocksPage = (url: string) => fetchStocks(url);
                         @click="onTabChange('items')"
                         :class="[
                             activeTab === 'items'
-                                ? 'border-blue-600 text-blue-600 dark:border-blue-400 dark:text-blue-400'
-                                : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300',
+                                ? 'border-primary text-primary'
+                                : 'border-transparent text-muted-foreground hover:border-border hover:text-foreground',
                             'flex items-center justify-center border-b-2 px-2 py-3 text-sm font-medium whitespace-nowrap'
                         ]"
                     >
@@ -367,8 +367,8 @@ const loadStocksPage = (url: string) => fetchStocks(url);
                         @click="onTabChange('adjustments')"
                         :class="[
                             activeTab === 'adjustments'
-                                ? 'border-blue-600 text-blue-600 dark:border-blue-400 dark:text-blue-400'
-                                : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300',
+                                ? 'border-primary text-primary'
+                                : 'border-transparent text-muted-foreground hover:border-border hover:text-foreground',
                             'flex items-center justify-center border-b-2 px-2 py-3 text-sm font-medium whitespace-nowrap'
                         ]"
                     >
@@ -380,8 +380,8 @@ const loadStocksPage = (url: string) => fetchStocks(url);
                         @click="onTabChange('types')"
                         :class="[
                             activeTab === 'types'
-                                ? 'border-blue-600 text-blue-600 dark:border-blue-400 dark:text-blue-400'
-                                : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300',
+                                ? 'border-primary text-primary'
+                                : 'border-transparent text-muted-foreground hover:border-border hover:text-foreground',
                             'flex items-center justify-center border-b-2 px-2 py-3 text-sm font-medium whitespace-nowrap'
                         ]"
                     >
@@ -391,14 +391,14 @@ const loadStocksPage = (url: string) => fetchStocks(url);
                 </nav>
             </div>
 
-            <div class="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-800">
+            <div class="rounded-lg border border-border bg-card p-4">
                 <div class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-5">
                     <div class="space-y-2">
                         <Label for="campus-filter">Campus</Label>
                         <select
                             id="campus-filter"
                             v-model="campusFilter"
-                            class="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                            class="w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground"
                         >
                             <option value="">All Campuses</option>
                             <option v-for="campus in props.campuses" :key="campus.id" :value="String(campus.id)">
@@ -412,7 +412,7 @@ const loadStocksPage = (url: string) => fetchStocks(url);
                         <select
                             id="status-filter"
                             v-model="statusFilter"
-                            class="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                            class="w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground"
                         >
                             <option value="active">Active</option>
                             <option value="inactive">Inactive</option>
@@ -424,7 +424,7 @@ const loadStocksPage = (url: string) => fetchStocks(url);
                         <select
                             id="stock-visibility"
                             v-model="lowStockOnly"
-                            class="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                            class="w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground"
                         >
                             <option :value="false">All Stock</option>
                             <option :value="true">Low Stock Only</option>
@@ -445,7 +445,7 @@ const loadStocksPage = (url: string) => fetchStocks(url);
                         <select
                             id="adjustment-type-filter"
                             v-model="adjustmentTypeFilter"
-                            class="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                            class="w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground"
                         >
                             <option value="">All Types</option>
                             <option value="add">Add</option>
@@ -459,7 +459,7 @@ const loadStocksPage = (url: string) => fetchStocks(url);
                         <select
                             id="adjustment-item-filter"
                             v-model="adjustmentItemFilter"
-                            class="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                            class="w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground"
                         >
                             <option value="">All Items</option>
                             <option v-for="item in adjustmentItems" :key="item.id" :value="String(item.id)">
@@ -488,7 +488,7 @@ const loadStocksPage = (url: string) => fetchStocks(url);
                                 <select
                                     id="per-page-types"
                                     v-model="perPageTypes"
-                                    class="w-20 rounded-md border border-gray-300 bg-white px-2 py-2 text-sm text-gray-900 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                                    class="w-20 rounded-md border border-border bg-card px-2 py-2 text-sm text-foreground"
                                 >
                                     <option v-for="option in perPageOptions" :key="option" :value="option">{{ option }}</option>
                                 </select>
@@ -498,7 +498,7 @@ const loadStocksPage = (url: string) => fetchStocks(url);
                                 <select
                                     id="per-page-items"
                                     v-model="perPageItems"
-                                    class="w-20 rounded-md border border-gray-300 bg-white px-2 py-2 text-sm text-gray-900 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                                    class="w-20 rounded-md border border-border bg-card px-2 py-2 text-sm text-foreground"
                                 >
                                     <option v-for="option in perPageOptions" :key="option" :value="option">{{ option }}</option>
                                 </select>
@@ -508,7 +508,7 @@ const loadStocksPage = (url: string) => fetchStocks(url);
                                 <select
                                     id="per-page-stocks"
                                     v-model="perPageStocks"
-                                    class="w-20 rounded-md border border-gray-300 bg-white px-2 py-2 text-sm text-gray-900 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                                    class="w-20 rounded-md border border-border bg-card px-2 py-2 text-sm text-foreground"
                                 >
                                     <option v-for="option in perPageOptions" :key="option" :value="option">{{ option }}</option>
                                 </select>
@@ -539,50 +539,50 @@ const loadStocksPage = (url: string) => fetchStocks(url);
             </div>
 
             <div v-if="activeTab === 'stocks'" class="grid grid-cols-2 gap-4 md:grid-cols-4">
-                <div class="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-900">
-                    <div class="text-2xl font-bold text-gray-900 dark:text-white">{{ summaryStats.totalItems }}</div>
-                    <div class="text-xs text-gray-500 dark:text-gray-400">Tracked Stock Rows</div>
+                <div class="rounded-lg border border-border bg-card p-4">
+                    <div class="text-2xl font-bold text-foreground">{{ summaryStats.totalItems }}</div>
+                    <div class="text-xs text-muted-foreground">Tracked Stock Rows</div>
                 </div>
-                <div class="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-900">
-                    <div class="text-2xl font-bold text-gray-900 dark:text-white">{{ summaryStats.totalStock }}</div>
-                    <div class="text-xs text-gray-500 dark:text-gray-400">Total Quantity</div>
+                <div class="rounded-lg border border-border bg-card p-4">
+                    <div class="text-2xl font-bold text-foreground">{{ summaryStats.totalStock }}</div>
+                    <div class="text-xs text-muted-foreground">Total Quantity</div>
                 </div>
-                <div class="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-900">
-                    <div class="text-2xl font-bold text-green-600">{{ summaryStats.availableStock }}</div>
-                    <div class="text-xs text-gray-500 dark:text-gray-400">Available Quantity</div>
+                <div class="rounded-lg border border-border bg-card p-4">
+                    <div class="text-2xl font-bold text-success">{{ summaryStats.availableStock }}</div>
+                    <div class="text-xs text-muted-foreground">Available Quantity</div>
                 </div>
-                <div class="rounded-lg border border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-900">
-                    <div class="text-2xl font-bold text-amber-600">{{ summaryStats.lowStock }}</div>
-                    <div class="text-xs text-gray-500 dark:text-gray-400">Low Stock Alerts</div>
+                <div class="rounded-lg border border-border bg-card p-4">
+                    <div class="text-2xl font-bold text-warning">{{ summaryStats.lowStock }}</div>
+                    <div class="text-xs text-muted-foreground">Low Stock Alerts</div>
                 </div>
             </div>
 
-            <div v-if="activeTab === 'types'" class="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-900">
+            <div v-if="activeTab === 'types'" class="overflow-hidden rounded-lg border border-border bg-card shadow-sm">
                 <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                        <thead class="bg-gray-50 dark:bg-gray-800">
+                    <table class="min-w-full divide-y divide-border">
+                        <thead class="bg-muted">
                             <tr>
-                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-300">Sr#</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-300">Name</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-300">Campus</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-300">Items</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-300">Status</th>
-                                <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-300">Actions</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Sr#</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Name</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Campus</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Items</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Status</th>
+                                <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">Actions</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-900">
-                            <tr v-for="(type, index) in inventoryTypesData" :key="type.id" class="transition-colors hover:bg-gray-50 dark:hover:bg-gray-800">
-                                <td class="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">{{ ((paginationTypes.from || 1) - 1) + index + 1 }}</td>
-                                <td class="px-4 py-3 text-sm font-medium text-gray-900 dark:text-white">{{ type.name }}</td>
-                                <td class="px-4 py-3 text-sm text-gray-600 dark:text-gray-300">{{ type.campus_name }}</td>
-                                <td class="px-4 py-3 text-sm text-gray-600 dark:text-gray-300">{{ type.items_count }}</td>
+                        <tbody class="divide-y divide-border bg-card">
+                            <tr v-for="(type, index) in inventoryTypesData" :key="type.id" class="transition-colors hover:bg-accent">
+                                <td class="px-4 py-3 text-sm text-muted-foreground">{{ ((paginationTypes.from || 1) - 1) + index + 1 }}</td>
+                                <td class="px-4 py-3 text-sm font-medium text-foreground">{{ type.name }}</td>
+                                <td class="px-4 py-3 text-sm text-muted-foreground">{{ type.campus_name }}</td>
+                                <td class="px-4 py-3 text-sm text-muted-foreground">{{ type.items_count }}</td>
                                 <td class="px-4 py-3">
                                     <span :class="['rounded-full px-2 py-1 text-xs font-medium', getStatusBadge(type.is_active)]">
                                         {{ type.is_active ? 'Active' : 'Inactive' }}
                                     </span>
                                 </td>
                                 <td class="px-4 py-3 text-sm font-medium">
-                                    <div class="flex justify-end gap-2">
+                                    <div class="flex flex-wrap justify-end gap-2">
                                         <InventoryTypeForm
                                             :inventory-type="type"
                                             :campuses="props.campuses"
@@ -608,37 +608,37 @@ const loadStocksPage = (url: string) => fetchStocks(url);
                 </div>
             </div>
 
-            <div v-if="activeTab === 'items'" class="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-900">
+            <div v-if="activeTab === 'items'" class="overflow-hidden rounded-lg border border-border bg-card shadow-sm">
                 <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                        <thead class="bg-gray-50 dark:bg-gray-800">
+                    <table class="min-w-full divide-y divide-border">
+                        <thead class="bg-muted">
                             <tr>
-                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-300">Sr#</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-300">Name</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-300">Type</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-300">Campus</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-300">Current Stock</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-300">Status</th>
-                                <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-300">Actions</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Sr#</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Name</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Type</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Campus</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Current Stock</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Status</th>
+                                <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">Actions</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-900">
-                            <tr v-for="(item, index) in inventoryItemsData" :key="item.id" class="transition-colors hover:bg-gray-50 dark:hover:bg-gray-800">
-                                <td class="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">{{ ((paginationItems.from || 1) - 1) + index + 1 }}</td>
+                        <tbody class="divide-y divide-border bg-card">
+                            <tr v-for="(item, index) in inventoryItemsData" :key="item.id" class="transition-colors hover:bg-accent">
+                                <td class="px-4 py-3 text-sm text-muted-foreground">{{ ((paginationItems.from || 1) - 1) + index + 1 }}</td>
                                 <td class="px-4 py-3">
-                                    <div class="text-sm font-medium text-gray-900 dark:text-white">{{ item.name }}</div>
-                                    <div v-if="item.description" class="text-xs text-gray-500">{{ item.description }}</div>
+                                    <div class="text-sm font-medium text-foreground">{{ item.name }}</div>
+                                    <div v-if="item.description" class="text-xs text-muted-foreground">{{ item.description }}</div>
                                 </td>
-                                <td class="px-4 py-3 text-sm text-gray-600 dark:text-gray-300">{{ item.inventory_type_name }}</td>
-                                <td class="px-4 py-3 text-sm text-gray-600 dark:text-gray-300">{{ item.campus_name }}</td>
-                                <td class="px-4 py-3 text-sm text-gray-600 dark:text-gray-300">{{ item.current_stock ?? 0 }}</td>
+                                <td class="px-4 py-3 text-sm text-muted-foreground">{{ item.inventory_type_name }}</td>
+                                <td class="px-4 py-3 text-sm text-muted-foreground">{{ item.campus_name }}</td>
+                                <td class="px-4 py-3 text-sm text-muted-foreground">{{ item.current_stock ?? 0 }}</td>
                                 <td class="px-4 py-3">
                                     <span :class="['rounded-full px-2 py-1 text-xs font-medium', getStatusBadge(item.is_active)]">
                                         {{ item.is_active ? 'Active' : 'Inactive' }}
                                     </span>
                                 </td>
                                 <td class="px-4 py-3 text-sm font-medium">
-                                    <div class="flex justify-end gap-2">
+                                    <div class="flex flex-wrap justify-end gap-2">
                                         <ItemForm
                                             :inventory-item="item"
                                             :campuses="props.campuses"
@@ -665,32 +665,32 @@ const loadStocksPage = (url: string) => fetchStocks(url);
                 </div>
             </div>
 
-            <div v-if="activeTab === 'stocks'" class="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-900">
+            <div v-if="activeTab === 'stocks'" class="overflow-hidden rounded-lg border border-border bg-card shadow-sm">
                 <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                        <thead class="bg-gray-50 dark:bg-gray-800">
+                    <table class="min-w-full divide-y divide-border">
+                        <thead class="bg-muted">
                             <tr>
-                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-300">Sr#</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-300">Item</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-300">Campus</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-300">Quantity</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-300">Available</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-300">Reserved</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-300">Threshold</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-300">Status</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Sr#</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Item</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Campus</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Quantity</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Available</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Reserved</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Threshold</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Status</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-900">
-                            <tr v-for="(stock, index) in stocksData" :key="stock.id" class="transition-colors hover:bg-gray-50 dark:hover:bg-gray-800">
-                                <td class="px-4 py-3 text-sm text-gray-500 dark:text-gray-400">{{ ((paginationStocks.from || 1) - 1) + index + 1 }}</td>
-                                <td class="px-4 py-3 text-sm font-medium text-gray-900 dark:text-white">{{ stock.item_name }}</td>
-                                <td class="px-4 py-3 text-sm text-gray-600 dark:text-gray-300">{{ stock.campus_name }}</td>
-                                <td class="px-4 py-3 text-sm text-gray-600 dark:text-gray-300">{{ stock.quantity }}</td>
-                                <td class="px-4 py-3 text-sm font-semibold" :class="stock.available_quantity <= 0 ? 'text-red-600 dark:text-red-400' : stock.is_low_stock ? 'text-amber-600 dark:text-amber-400' : 'text-green-600 dark:text-green-400'">
+                        <tbody class="divide-y divide-border bg-card">
+                            <tr v-for="(stock, index) in stocksData" :key="stock.id" class="transition-colors hover:bg-accent">
+                                <td class="px-4 py-3 text-sm text-muted-foreground">{{ ((paginationStocks.from || 1) - 1) + index + 1 }}</td>
+                                <td class="px-4 py-3 text-sm font-medium text-foreground">{{ stock.item_name }}</td>
+                                <td class="px-4 py-3 text-sm text-muted-foreground">{{ stock.campus_name }}</td>
+                                <td class="px-4 py-3 text-sm text-muted-foreground">{{ stock.quantity }}</td>
+                                <td class="px-4 py-3 text-sm font-semibold" :class="stock.available_quantity <= 0 ? 'text-destructive' : stock.is_low_stock ? 'text-warning' : 'text-success'">
                                     {{ stock.available_quantity }}
                                 </td>
-                                <td class="px-4 py-3 text-sm text-gray-600 dark:text-gray-300">{{ stock.reserved_quantity }}</td>
-                                <td class="px-4 py-3 text-sm text-gray-600 dark:text-gray-300">{{ stock.low_stock_threshold }}</td>
+                                <td class="px-4 py-3 text-sm text-muted-foreground">{{ stock.reserved_quantity }}</td>
+                                <td class="px-4 py-3 text-sm text-muted-foreground">{{ stock.low_stock_threshold }}</td>
                                 <td class="px-4 py-3">
                                     <span :class="['rounded-full px-2 py-1 text-xs font-medium', getStockStatusBadge(stock).className]">
                                         {{ getStockStatusBadge(stock).label }}
@@ -702,49 +702,49 @@ const loadStocksPage = (url: string) => fetchStocks(url);
                 </div>
             </div>
 
-            <div v-if="activeTab === 'adjustments'" class="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-900">
+            <div v-if="activeTab === 'adjustments'" class="overflow-hidden rounded-lg border border-border bg-card shadow-sm">
                 <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                        <thead class="bg-gray-50 dark:bg-gray-800">
+                    <table class="min-w-full divide-y divide-border">
+                        <thead class="bg-muted">
                             <tr>
-                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-300">Date</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-300">Item</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-300">Campus</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-300">Type</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-300">Qty</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-300">Before / After</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-300">Reference</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-gray-600 dark:text-gray-300">Reason</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Date</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Item</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Campus</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Type</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Qty</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Before / After</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Reference</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Reason</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-900">
-                            <tr v-for="adjustment in adjustmentsData" :key="adjustment.id" class="transition-colors hover:bg-gray-50 dark:hover:bg-gray-800">
-                                <td class="px-4 py-3 text-sm text-gray-600 dark:text-gray-300">{{ formatDateTime(adjustment.created_at) }}</td>
-                                <td class="px-4 py-3 text-sm font-medium text-gray-900 dark:text-white">{{ adjustment.item_name }}</td>
-                                <td class="px-4 py-3 text-sm text-gray-600 dark:text-gray-300">{{ adjustment.campus_name }}</td>
+                        <tbody class="divide-y divide-border bg-card">
+                            <tr v-for="adjustment in adjustmentsData" :key="adjustment.id" class="transition-colors hover:bg-accent">
+                                <td class="px-4 py-3 text-sm text-muted-foreground">{{ formatDateTime(adjustment.created_at) }}</td>
+                                <td class="px-4 py-3 text-sm font-medium text-foreground">{{ adjustment.item_name }}</td>
+                                <td class="px-4 py-3 text-sm text-muted-foreground">{{ adjustment.campus_name }}</td>
                                 <td class="px-4 py-3">
                                     <span :class="['rounded-full px-2 py-1 text-xs font-medium', getAdjustmentBadge(adjustment.type)]">
                                         {{ formatAdjustmentType(adjustment.type) }}
                                     </span>
                                 </td>
-                                <td class="px-4 py-3 text-sm text-gray-600 dark:text-gray-300">{{ adjustment.quantity }}</td>
-                                <td class="px-4 py-3 text-sm text-gray-600 dark:text-gray-300">{{ adjustment.previous_quantity }} / {{ adjustment.new_quantity }}</td>
-                                <td class="px-4 py-3 text-sm text-gray-600 dark:text-gray-300">{{ adjustment.reference_number || '-' }}</td>
-                                <td class="px-4 py-3 text-sm text-gray-600 dark:text-gray-300">{{ adjustment.reason }}</td>
+                                <td class="px-4 py-3 text-sm text-muted-foreground">{{ adjustment.quantity }}</td>
+                                <td class="px-4 py-3 text-sm text-muted-foreground">{{ adjustment.previous_quantity }} / {{ adjustment.new_quantity }}</td>
+                                <td class="px-4 py-3 text-sm text-muted-foreground">{{ adjustment.reference_number || '-' }}</td>
+                                <td class="px-4 py-3 text-sm text-muted-foreground">{{ adjustment.reason }}</td>
                             </tr>
                         </tbody>
                     </table>
                 </div>
-                <div v-if="loadingAdjustments" class="py-8 text-center text-gray-500 dark:text-gray-400">
+                <div v-if="loadingAdjustments" class="py-8 text-center text-muted-foreground">
                     Loading adjustments...
                 </div>
-                <div v-else-if="adjustmentsData.length === 0" class="py-8 text-center text-gray-500 dark:text-gray-400">
+                <div v-else-if="adjustmentsData.length === 0" class="py-8 text-center text-muted-foreground">
                     No adjustments found.
                 </div>
             </div>
 
             <div v-if="activeTab === 'types'" class="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
-                <div class="text-xs text-gray-600 dark:text-gray-400 md:text-sm">
+                <div class="text-xs text-muted-foreground md:text-sm">
                     Showing {{ paginationTypes.from || 0 }} to {{ paginationTypes.to || 0 }} of {{ paginationTypes.total || 0 }} entries
                 </div>
                 <div class="flex flex-wrap gap-1">
@@ -756,8 +756,8 @@ const loadStocksPage = (url: string) => fetchStocks(url);
                         :class="[
                             'min-h-10 rounded-md px-3 py-2 text-sm transition-colors',
                             link.active
-                                ? 'bg-blue-600 text-white'
-                                : 'border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700'
+                                ? 'bg-primary text-primary-foreground'
+                                : 'border border-border bg-card text-muted-foreground hover:bg-accent disabled:cursor-not-allowed disabled:opacity-50'
                         ]"
                         @click="link.url && loadTypesPage(link.url)"
                     >
@@ -767,7 +767,7 @@ const loadStocksPage = (url: string) => fetchStocks(url);
             </div>
 
             <div v-if="activeTab === 'items'" class="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
-                <div class="text-xs text-gray-600 dark:text-gray-400 md:text-sm">
+                <div class="text-xs text-muted-foreground md:text-sm">
                     Showing {{ paginationItems.from || 0 }} to {{ paginationItems.to || 0 }} of {{ paginationItems.total || 0 }} entries
                 </div>
                 <div class="flex flex-wrap gap-1">
@@ -779,8 +779,8 @@ const loadStocksPage = (url: string) => fetchStocks(url);
                         :class="[
                             'min-h-10 rounded-md px-3 py-2 text-sm transition-colors',
                             link.active
-                                ? 'bg-blue-600 text-white'
-                                : 'border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700'
+                                ? 'bg-primary text-primary-foreground'
+                                : 'border border-border bg-card text-muted-foreground hover:bg-accent disabled:cursor-not-allowed disabled:opacity-50'
                         ]"
                         @click="link.url && loadItemsPage(link.url)"
                     >
@@ -790,7 +790,7 @@ const loadStocksPage = (url: string) => fetchStocks(url);
             </div>
 
             <div v-if="activeTab === 'stocks'" class="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
-                <div class="text-xs text-gray-600 dark:text-gray-400 md:text-sm">
+                <div class="text-xs text-muted-foreground md:text-sm">
                     Showing {{ paginationStocks.from || 0 }} to {{ paginationStocks.to || 0 }} of {{ paginationStocks.total || 0 }} entries
                 </div>
                 <div class="flex flex-wrap gap-1">
@@ -802,8 +802,8 @@ const loadStocksPage = (url: string) => fetchStocks(url);
                         :class="[
                             'min-h-10 rounded-md px-3 py-2 text-sm transition-colors',
                             link.active
-                                ? 'bg-blue-600 text-white'
-                                : 'border border-gray-300 bg-white text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-600 dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700'
+                                ? 'bg-primary text-primary-foreground'
+                                : 'border border-border bg-card text-muted-foreground hover:bg-accent disabled:cursor-not-allowed disabled:opacity-50'
                         ]"
                         @click="link.url && loadStocksPage(link.url)"
                     >

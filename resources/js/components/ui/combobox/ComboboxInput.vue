@@ -11,12 +11,12 @@
     />
     <div
       v-if="isOpen && displayItems.length > 0"
-      class="absolute top-full left-0 z-[100] mt-1 w-full rounded-md border border-gray-300 bg-white shadow-lg max-h-60 overflow-auto dark:border-gray-600 dark:bg-gray-800"
+      class="absolute top-full left-0 z-[100] mt-1 w-full rounded-md border border-border bg-card shadow-lg max-h-60 overflow-auto"
     >
        <div
          v-for="item in displayItems"
          :key="item.id"
-         class="px-3 py-2 hover:bg-gray-100 dark:hover:bg-gray-700 cursor-pointer text-gray-900 dark:text-white whitespace-nowrap"
+         class="px-3 py-2 hover:bg-accent cursor-pointer text-foreground whitespace-nowrap"
          @mousedown.prevent
          @click="selectItem(item)"
        >
@@ -25,9 +25,9 @@
     </div>
     <div
       v-if="isOpen && displayItems.length === 0 && query.length > 0"
-      class="absolute top-full left-0 z-[100] mt-1 w-full rounded-md border border-gray-300 bg-white shadow-lg dark:border-gray-600 dark:bg-gray-800"
+      class="absolute top-full left-0 z-[100] mt-1 w-full rounded-md border border-border bg-card shadow-lg"
     >
-      <div class="px-3 py-2 text-gray-500 dark:text-gray-400">
+      <div class="px-3 py-2 text-muted-foreground">
         No results found
       </div>
     </div>

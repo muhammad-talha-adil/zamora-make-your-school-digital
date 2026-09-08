@@ -276,18 +276,18 @@ onUnmounted(() => {
             class="drp-trigger cursor-pointer"
             @click.stop="toggleDropdown"
         >
-            <div class="flex items-center gap-2 border border-gray-300 rounded-md bg-white px-3 py-1.5 min-w-[240px]">
-                <Icon icon="calendar" class="w-4 h-4 text-gray-500" />
+            <div class="flex items-center gap-2 border border-border rounded-md bg-card px-3 py-1.5 min-w-[240px]">
+                <Icon icon="calendar" class="w-4 h-4 text-muted-foreground" />
                 <input
                     type="text"
-                    class="flex-1 border-none outline-none text-sm text-gray-700 bg-transparent cursor-pointer"
+                    class="flex-1 border-none outline-none text-sm text-muted-foreground bg-transparent cursor-pointer"
                     :value="displayValue"
                     :placeholder="placeholder"
                     readonly
                 />
                 <button 
                     v-if="hasValue" 
-                    class="text-gray-400 hover:text-gray-600"
+                    class="text-muted-foreground hover:text-foreground"
                     @click.stop="clearRange"
                 >
                     <Icon icon="x" class="w-3 h-3" />
@@ -298,20 +298,20 @@ onUnmounted(() => {
         <!-- Dropdown -->
         <div 
             v-if="isOpen"
-            class="absolute z-[999999] mt-1 bg-white border border-gray-300 rounded-lg shadow-lg"
+            class="absolute z-[999999] mt-1 bg-card border border-border rounded-lg shadow-lg"
             style="min-width: 636px;"
             @click.stop
         >
             <!-- Main Content - Full Width Background -->
             <div class="flex">
                 <!-- Left sidebar with ranges -->
-                <div class="w-[150px] p-2.5 border-r border-gray-200 bg-white">
-                    <div class="text-xs font-bold text-gray-500 uppercase mb-2 pl-2">Select</div>
+                <div class="w-[150px] p-2.5 border-r border-border bg-card">
+                    <div class="text-xs font-bold text-muted-foreground uppercase mb-2 pl-2">Select</div>
                     <div class="flex flex-col">
                         <button
                             v-for="range in quickRanges"
                             :key="range.label"
-                            class="w-full text-left px-2 py-1.5 text-sm text-gray-700 rounded hover:bg-gray-100"
+                            class="w-full text-left px-2 py-1.5 text-sm text-muted-foreground rounded hover:bg-accent"
                             @click="selectQuickRange(range)"
                         >
                             {{ range.label }}
@@ -320,21 +320,21 @@ onUnmounted(() => {
                 </div>
                 
                 <!-- Calendars -->
-                <div class="flex-1 p-2.5 bg-white">
+                <div class="flex-1 p-2.5 bg-card">
                     <div class="flex gap-2">
                         <!-- Left Calendar -->
                         <div class="flex-1">
                             <!-- Calendar Header -->
-                            <div class="flex items-center justify-between mb-2">
+                            <div class="flex flex-wrap gap-2 items-center justify-between mb-2">
                                 <button
-                                    class="p-1 hover:bg-gray-100 rounded"
+                                    class="p-1 hover:bg-accent rounded"
                                     @click="prevMonth"
                                 >
-                                    <Icon icon="chevron-left" class="w-4 h-4 text-gray-600" />
+                                    <Icon icon="chevron-left" class="w-4 h-4 text-muted-foreground" />
                                 </button>
                                 <div class="flex gap-1">
                                     <select 
-                                        class="text-sm font-medium text-gray-700 bg-transparent border border-gray-300 rounded px-1 py-0.5 cursor-pointer"
+                                        class="text-sm font-medium text-muted-foreground bg-transparent border border-border rounded px-1 py-0.5 cursor-pointer"
                                         :value="leftMonthIndex"
                                         @change="setLeftMonth(Number(($event.target as HTMLSelectElement).value), leftYear)"
                                     >
@@ -343,7 +343,7 @@ onUnmounted(() => {
                                         </option>
                                     </select>
                                     <select 
-                                        class="text-sm font-medium text-gray-700 bg-transparent border border-gray-300 rounded px-1 py-0.5 cursor-pointer"
+                                        class="text-sm font-medium text-muted-foreground bg-transparent border border-border rounded px-1 py-0.5 cursor-pointer"
                                         :value="leftYear"
                                         @change="setLeftMonth(leftMonthIndex, Number(($event.target as HTMLSelectElement).value))"
                                     >
@@ -357,7 +357,7 @@ onUnmounted(() => {
                             
                             <!-- Days of week -->
                             <div class="grid grid-cols-7 mb-1">
-                                <span v-for="day in ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa']" :key="day" class="text-center text-xs font-bold text-gray-500 py-1">
+                                <span v-for="day in ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa']" :key="day" class="text-center text-xs font-bold text-muted-foreground py-1">
                                     {{ day }}
                                 </span>
                             </div>
@@ -369,9 +369,9 @@ onUnmounted(() => {
                                         v-if="day"
                                         class="text-sm rounded transition-colors flex items-center justify-center font-normal w-7 h-7 mx-auto"
                                         :class="{
-                                            'bg-blue-600 text-white hover:bg-blue-700': isSameDay(day, startDate) || isSameDay(day, endDate),
-                                            'bg-blue-100 text-gray-900': isDateInRange(day) || isDateInHoverRange(day),
-                                            'hover:bg-gray-100 text-gray-700': !isSameDay(day, startDate) && !isSameDay(day, endDate),
+                                            'bg-primary text-primary-foreground hover:bg-primary/90': isSameDay(day, startDate) || isSameDay(day, endDate),
+                                            'bg-primary/10 text-foreground': isDateInRange(day) || isDateInHoverRange(day),
+                                            'hover:bg-accent text-muted-foreground': !isSameDay(day, startDate) && !isSameDay(day, endDate),
                                         }"
                                         @click="selectDate(day)"
                                         @mouseenter="handleHover(day)"
@@ -387,11 +387,11 @@ onUnmounted(() => {
                         <!-- Right Calendar -->
                         <div class="flex-1">
                             <!-- Calendar Header -->
-                            <div class="flex items-center justify-between mb-2">
+                            <div class="flex flex-wrap gap-2 items-center justify-between mb-2">
                                 <div></div>
                                 <div class="flex gap-1">
                                     <select 
-                                        class="text-sm font-medium text-gray-700 bg-transparent border border-gray-300 rounded px-1 py-0.5 cursor-pointer"
+                                        class="text-sm font-medium text-muted-foreground bg-transparent border border-border rounded px-1 py-0.5 cursor-pointer"
                                         :value="rightMonthIndex"
                                         @change="setLeftMonth(Number(($event.target as HTMLSelectElement).value), rightYear)"
                                     >
@@ -400,7 +400,7 @@ onUnmounted(() => {
                                         </option>
                                     </select>
                                     <select 
-                                        class="text-sm font-medium text-gray-700 bg-transparent border border-gray-300 rounded px-1 py-0.5 cursor-pointer"
+                                        class="text-sm font-medium text-muted-foreground bg-transparent border border-border rounded px-1 py-0.5 cursor-pointer"
                                         :value="rightYear"
                                         @change="setLeftMonth(rightMonthIndex === 11 ? 0 : rightMonthIndex, Number(($event.target as HTMLSelectElement).value))"
                                     >
@@ -410,16 +410,16 @@ onUnmounted(() => {
                                     </select>
                                 </div>
                                 <button
-                                    class="p-1 hover:bg-gray-100 rounded"
+                                    class="p-1 hover:bg-accent rounded"
                                     @click="nextMonth"
                                 >
-                                    <Icon icon="chevron-right" class="w-4 h-4 text-gray-600" />
+                                    <Icon icon="chevron-right" class="w-4 h-4 text-muted-foreground" />
                                 </button>
                             </div>
                             
                             <!-- Days of week -->
                             <div class="grid grid-cols-7 mb-1">
-                                <span v-for="day in ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa']" :key="day" class="text-center text-xs font-bold text-gray-500 py-1">
+                                <span v-for="day in ['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa']" :key="day" class="text-center text-xs font-bold text-muted-foreground py-1">
                                     {{ day }}
                                 </span>
                             </div>
@@ -431,9 +431,9 @@ onUnmounted(() => {
                                         v-if="day"
                                         class="text-sm rounded transition-colors flex items-center justify-center font-normal w-7 h-7 mx-auto"
                                         :class="{
-                                            'bg-blue-600 text-white hover:bg-blue-700': isSameDay(day, startDate) || isSameDay(day, endDate),
-                                            'bg-blue-100 text-gray-900': isDateInRange(day) || isDateInHoverRange(day),
-                                            'hover:bg-gray-100 text-gray-700': !isSameDay(day, startDate) && !isSameDay(day, endDate),
+                                            'bg-primary text-primary-foreground hover:bg-primary/90': isSameDay(day, startDate) || isSameDay(day, endDate),
+                                            'bg-primary/10 text-foreground': isDateInRange(day) || isDateInHoverRange(day),
+                                            'hover:bg-accent text-muted-foreground': !isSameDay(day, startDate) && !isSameDay(day, endDate),
                                         }"
                                         @click="selectDate(day)"
                                         @mouseenter="handleHover(day)"
@@ -450,21 +450,21 @@ onUnmounted(() => {
             </div>
             
             <!-- Footer -->
-            <div v-if="hasValue" class="flex items-center justify-between p-2.5 border-t border-gray-200 bg-gray-50 rounded-b-lg">
-                <div class="text-sm text-gray-700">
+            <div v-if="hasValue" class="flex flex-wrap gap-2 items-center justify-between p-2.5 border-t border-border bg-muted rounded-b-lg">
+                <div class="text-sm text-muted-foreground">
                     <span v-if="startDate">{{ formatDateDisplay(startDate) }}</span>
                     <span v-if="startDate && endDate"> - </span>
                     <span v-if="endDate">{{ formatDateDisplay(endDate) }}</span>
                 </div>
                 <div class="flex gap-2">
                     <button 
-                        class="px-3 py-1.5 text-sm rounded border border-gray-300 bg-white text-gray-700 hover:bg-gray-100"
+                        class="px-3 py-1.5 text-sm rounded border border-border bg-card text-muted-foreground hover:bg-accent"
                         @click="clearRange"
                     >
                         Clear
                     </button>
                     <button 
-                        class="px-3 py-1.5 text-sm rounded bg-blue-600 text-white hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
+                        class="px-3 py-1.5 text-sm rounded bg-primary text-primary-foreground hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed"
                         :disabled="!startDate || !endDate"
                         @click="applyRange"
                     >

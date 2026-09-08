@@ -32,7 +32,7 @@ return new class extends Migration
             $table->softDeletes();
 
             // Foreign key constraints
-            $table->foreign('session_id')->references('id')->on('sessions')->onDelete('cascade');
+            $table->foreign('session_id')->references('id')->on('academic_sessions')->onDelete('cascade');
             $table->foreign('exam_type_id')->references('id')->on('exam_types')->onDelete('restrict');
             $table->foreign('locked_by')->references('id')->on('users')->onDelete('set null');
 

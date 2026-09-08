@@ -97,22 +97,22 @@ const formatDate = (date: string) => {
 const getKindClasses = (kind: string) => {
     switch (kind) {
         case 'income':
-            return 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-300';
+            return 'bg-success/10 text-success';
         case 'expense':
-            return 'bg-red-100 text-red-700 dark:bg-red-900/30 dark:text-red-300';
+            return 'bg-destructive/10 text-destructive';
         case 'collection':
-            return 'bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300';
+            return 'bg-success/10 text-success';
         case 'adjustment':
-            return 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-300';
+            return 'bg-warning/10 text-warning';
         default:
-            return 'bg-blue-100 text-blue-700 dark:bg-blue-900/30 dark:text-blue-300';
+            return 'bg-primary/10 text-primary';
     }
 };
 
 const getSystemClasses = (system: string) => {
     return system === 'journal'
-        ? 'bg-slate-900 text-white dark:bg-slate-100 dark:text-slate-900'
-        : 'bg-slate-100 text-slate-700 dark:bg-slate-800 dark:text-slate-200';
+        ? 'bg-card text-card-foreground'
+        : 'bg-muted text-muted-foreground';
 };
 
 const applyFilters = () => {
@@ -156,20 +156,20 @@ const openPage = (url: string | null) => {
         <div class="space-y-6 p-4 md:p-6">
             <div class="flex flex-col gap-4 md:flex-row md:items-end md:justify-between">
                 <div>
-                    <h1 class="text-2xl font-bold text-gray-900 dark:text-white">
+                    <h1 class="text-2xl font-bold text-foreground">
                         Finance Transactions
                     </h1>
-                    <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                    <p class="mt-1 text-sm text-muted-foreground">
                         Combined view of posted journals and direct finance ledger activity.
                     </p>
                 </div>
             </div>
 
-            <div class="rounded-2xl border border-gray-200 bg-white p-4 shadow-sm dark:border-gray-700 dark:bg-gray-800 md:p-6">
+            <div class="rounded-2xl border border-border bg-card p-4 shadow-sm md:p-6">
                 <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-6">
                     <div>
-                        <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Campus</label>
-                        <select v-model="filters.campus_id" class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-900 dark:text-white">
+                        <label class="mb-2 block text-sm font-medium text-muted-foreground">Campus</label>
+                        <select v-model="filters.campus_id" class="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm">
                             <option value="">All Campuses</option>
                             <option v-for="campus in campuses" :key="campus.id" :value="campus.id">
                                 {{ campus.name }}
@@ -178,8 +178,8 @@ const openPage = (url: string | null) => {
                     </div>
 
                     <div>
-                        <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">System</label>
-                        <select v-model="filters.system" class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-900 dark:text-white">
+                        <label class="mb-2 block text-sm font-medium text-muted-foreground">System</label>
+                        <select v-model="filters.system" class="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm">
                             <option value="">All Systems</option>
                             <option value="journal">Journals</option>
                             <option value="ledger">Ledger</option>
@@ -187,8 +187,8 @@ const openPage = (url: string | null) => {
                     </div>
 
                     <div>
-                        <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Module</label>
-                        <select v-model="filters.module" class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-900 dark:text-white">
+                        <label class="mb-2 block text-sm font-medium text-muted-foreground">Module</label>
+                        <select v-model="filters.module" class="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm">
                             <option value="">All Modules</option>
                             <option value="fee">Fee</option>
                             <option value="inventory">Inventory</option>
@@ -199,8 +199,8 @@ const openPage = (url: string | null) => {
                     </div>
 
                     <div>
-                        <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Kind</label>
-                        <select v-model="filters.kind" class="w-full rounded-lg border border-gray-300 bg-white px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-900 dark:text-white">
+                        <label class="mb-2 block text-sm font-medium text-muted-foreground">Kind</label>
+                        <select v-model="filters.kind" class="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm">
                             <option value="">All Kinds</option>
                             <option value="receivable">Receivable</option>
                             <option value="collection">Collection</option>
@@ -211,19 +211,19 @@ const openPage = (url: string | null) => {
                     </div>
 
                     <div>
-                        <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">From Date</label>
+                        <label class="mb-2 block text-sm font-medium text-muted-foreground">From Date</label>
                         <Input v-model="filters.date_from" type="date" />
                     </div>
 
                     <div>
-                        <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">To Date</label>
+                        <label class="mb-2 block text-sm font-medium text-muted-foreground">To Date</label>
                         <Input v-model="filters.date_to" type="date" />
                     </div>
                 </div>
 
                 <div class="mt-4 grid gap-4 md:grid-cols-[minmax(0,1fr)_auto_auto] md:items-end">
                     <div>
-                        <label class="mb-2 block text-sm font-medium text-gray-700 dark:text-gray-300">Search</label>
+                        <label class="mb-2 block text-sm font-medium text-muted-foreground">Search</label>
                         <Input
                             v-model="filters.search"
                             placeholder="Search by ref no, description, student, supplier..."
@@ -234,32 +234,32 @@ const openPage = (url: string | null) => {
                 </div>
             </div>
 
-            <div class="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-800">
+            <div class="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
                 <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                        <thead class="bg-gray-50 dark:bg-gray-900/70">
+                    <table class="min-w-full divide-y divide-border">
+                        <thead class="bg-muted">
                             <tr>
-                                <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Date</th>
-                                <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Reference</th>
-                                <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">System</th>
-                                <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Module / Kind</th>
-                                <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Student / Counterparty</th>
-                                <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Description</th>
-                                <th class="px-6 py-4 text-right text-xs font-semibold uppercase tracking-wide text-gray-500 dark:text-gray-400">Amount</th>
+                                <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Date</th>
+                                <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Reference</th>
+                                <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">System</th>
+                                <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Module / Kind</th>
+                                <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Student / Counterparty</th>
+                                <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Description</th>
+                                <th class="px-6 py-4 text-right text-xs font-semibold uppercase tracking-wide text-muted-foreground">Amount</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+                        <tbody class="divide-y divide-border">
                             <tr
                                 v-for="transaction in transactions"
                                 :key="transaction.id"
-                                class="hover:bg-gray-50 dark:hover:bg-gray-900/40"
+                                class="hover:bg-accent"
                             >
-                                <td class="px-6 py-4 text-sm text-gray-700 dark:text-gray-200">
+                                <td class="px-6 py-4 text-sm text-muted-foreground">
                                     {{ formatDate(transaction.transaction_date) }}
                                 </td>
                                 <td class="px-6 py-4">
-                                    <div class="font-medium text-gray-900 dark:text-white">{{ transaction.reference_no }}</div>
-                                    <div class="text-xs text-gray-500 dark:text-gray-400">{{ transaction.category_name || '-' }}</div>
+                                    <div class="font-medium text-foreground">{{ transaction.reference_no }}</div>
+                                    <div class="text-xs text-muted-foreground">{{ transaction.category_name || '-' }}</div>
                                 </td>
                                 <td class="px-6 py-4">
                                     <span :class="['inline-flex rounded-full px-2.5 py-1 text-xs font-semibold capitalize', getSystemClasses(transaction.system)]">
@@ -267,26 +267,26 @@ const openPage = (url: string | null) => {
                                     </span>
                                 </td>
                                 <td class="px-6 py-4">
-                                    <div class="text-sm font-medium capitalize text-gray-900 dark:text-white">{{ transaction.module }}</div>
+                                    <div class="text-sm font-medium capitalize text-foreground">{{ transaction.module }}</div>
                                     <span :class="['mt-1 inline-flex rounded-full px-2.5 py-1 text-xs font-medium capitalize', getKindClasses(transaction.kind)]">
                                         {{ transaction.kind }}
                                     </span>
                                 </td>
-                                <td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-300">
+                                <td class="px-6 py-4 text-sm text-muted-foreground">
                                     <div>{{ transaction.student_name || 'No student linked' }}</div>
-                                    <div class="text-xs text-gray-500 dark:text-gray-400">
+                                    <div class="text-xs text-muted-foreground">
                                         {{ transaction.counterparty_name || transaction.campus_name || '-' }}
                                     </div>
                                 </td>
-                                <td class="px-6 py-4 text-sm text-gray-600 dark:text-gray-300">
+                                <td class="px-6 py-4 text-sm text-muted-foreground">
                                     {{ transaction.description }}
                                 </td>
-                                <td class="px-6 py-4 text-right text-sm font-semibold text-gray-900 dark:text-white">
+                                <td class="px-6 py-4 text-right text-sm font-semibold text-foreground">
                                     {{ formatMoney(transaction.amount) }}
                                 </td>
                             </tr>
                             <tr v-if="transactions.length === 0">
-                                <td colspan="7" class="px-6 py-12 text-center text-sm text-gray-500 dark:text-gray-400">
+                                <td colspan="7" class="px-6 py-12 text-center text-sm text-muted-foreground">
                                     No finance transactions matched the current filters.
                                 </td>
                             </tr>
@@ -294,8 +294,8 @@ const openPage = (url: string | null) => {
                     </table>
                 </div>
 
-                <div class="flex flex-col gap-4 border-t border-gray-200 px-6 py-4 text-sm dark:border-gray-700 md:flex-row md:items-center md:justify-between">
-                    <p class="text-gray-600 dark:text-gray-300">
+                <div class="flex flex-col gap-4 border-t border-border px-6 py-4 text-sm md:flex-row md:items-center md:justify-between">
+                    <p class="text-muted-foreground">
                         Showing {{ props.transactions.from ?? 0 }} to {{ props.transactions.to ?? 0 }} of {{ props.transactions.total }} entries
                     </p>
                     <div class="flex flex-wrap items-center gap-2">
@@ -309,8 +309,8 @@ const openPage = (url: string | null) => {
                             :class="[
                                 'rounded-lg border px-3 py-2 text-sm transition',
                                 link.active
-                                    ? 'border-blue-600 bg-blue-600 text-white'
-                                    : 'border-gray-300 bg-white text-gray-700 hover:bg-gray-50 disabled:cursor-not-allowed disabled:opacity-50 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-200 dark:hover:bg-gray-800',
+                                    ? 'border-primary bg-primary text-primary-foreground'
+                                    : 'border-border bg-card text-muted-foreground hover:bg-accent disabled:cursor-not-allowed disabled:opacity-50',
                             ]"
                         />
                     </div>

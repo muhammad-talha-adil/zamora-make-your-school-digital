@@ -98,12 +98,12 @@ const deleteReturn = () => {
 
         <div class="space-y-6 p-4 md:p-6">
             <!-- Header -->
-            <div class="flex items-center justify-between">
+            <div class="flex flex-wrap gap-2 items-center justify-between">
                 <div>
-                    <h1 class="text-2xl font-bold text-gray-900 dark:text-white">
+                    <h1 class="text-2xl font-bold text-foreground">
                         Purchase Return #{{ props.return.id }}
                     </h1>
-                    <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                    <p class="mt-1 text-sm text-muted-foreground">
                         View purchase return details
                     </p>
                 </div>
@@ -131,33 +131,33 @@ const deleteReturn = () => {
                     
                     <div class="grid grid-cols-2 gap-4">
                         <div>
-                            <span class="text-sm text-gray-500 dark:text-gray-400">Return Number</span>
+                            <span class="text-sm text-muted-foreground">Return Number</span>
                             <p class="font-medium">{{ props.return.return_number || 'N/A' }}</p>
                         </div>
                         <div>
-                            <span class="text-sm text-gray-500 dark:text-gray-400">Return Date</span>
+                            <span class="text-sm text-muted-foreground">Return Date</span>
                             <p class="font-medium">{{ formatDate(props.return.return_date) }}</p>
                         </div>
                         <div>
-                            <span class="text-sm text-gray-500 dark:text-gray-400">Campus</span>
+                            <span class="text-sm text-muted-foreground">Campus</span>
                             <p class="font-medium">{{ props.return.campus?.name || 'N/A' }}</p>
                         </div>
                         <div>
-                            <span class="text-sm text-gray-500 dark:text-gray-400">Supplier</span>
+                            <span class="text-sm text-muted-foreground">Supplier</span>
                             <p class="font-medium">{{ props.return.supplier?.name || 'N/A' }}</p>
                         </div>
                         <div>
-                            <span class="text-sm text-gray-500 dark:text-gray-400">Original Purchase</span>
+                            <span class="text-sm text-muted-foreground">Original Purchase</span>
                             <p class="font-medium">{{ props.return.purchase?.purchase_id || 'N/A' }}</p>
                         </div>
                         <div>
-                            <span class="text-sm text-gray-500 dark:text-gray-400">Created By</span>
+                            <span class="text-sm text-muted-foreground">Created By</span>
                             <p class="font-medium">{{ props.return.user?.name || 'N/A' }}</p>
                         </div>
                     </div>
 
                     <div v-if="props.return.note">
-                        <span class="text-sm text-gray-500 dark:text-gray-400">Note</span>
+                        <span class="text-sm text-muted-foreground">Note</span>
                         <p class="font-medium">{{ props.return.note }}</p>
                     </div>
                 </div>
@@ -167,17 +167,17 @@ const deleteReturn = () => {
                     <h2 class="text-lg font-semibold">Summary</h2>
                     
                     <div class="space-y-3">
-                        <div class="flex justify-between items-center">
-                            <span class="text-gray-500 dark:text-gray-400">Total Items</span>
+                        <div class="flex flex-wrap gap-2 justify-between items-center">
+                            <span class="text-muted-foreground">Total Items</span>
                             <span class="font-medium">{{ props.return.items.length }}</span>
                         </div>
-                        <div class="flex justify-between items-center">
-                            <span class="text-gray-500 dark:text-gray-400">Total Quantity</span>
+                        <div class="flex flex-wrap gap-2 justify-between items-center">
+                            <span class="text-muted-foreground">Total Quantity</span>
                             <span class="font-medium">{{ props.return.items.reduce((sum, item) => sum + item.quantity, 0) }}</span>
                         </div>
-                        <div class="border-t pt-3 flex justify-between items-center">
+                        <div class="border-t pt-3 flex flex-wrap gap-2 justify-between items-center">
                             <span class="text-lg font-semibold">Total Amount</span>
-                            <span class="text-2xl font-bold text-green-600 dark:text-green-400">
+                            <span class="text-2xl font-bold text-success">
                                 {{ formatCurrency(props.return.total_amount) }}
                             </span>
                         </div>
@@ -190,30 +190,30 @@ const deleteReturn = () => {
                 <h2 class="text-lg font-semibold">Return Items</h2>
                 
                 <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                        <thead class="bg-gray-50 dark:bg-gray-800">
+                    <table class="min-w-full divide-y divide-border">
+                        <thead class="bg-muted">
                             <tr>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">#</th>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Item</th>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Quantity</th>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Unit Price</th>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Total</th>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase">Reason</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase">#</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Item</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Quantity</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Unit Price</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Total</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Reason</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-gray-200 dark:divide-gray-700 bg-white dark:bg-gray-900">
-                            <tr v-for="(item, index) in props.return.items" :key="item.id" class="hover:bg-gray-50 dark:hover:bg-gray-800">
-                                <td class="px-4 py-3 text-sm text-gray-600 dark:text-gray-300">{{ index + 1 }}</td>
-                                <td class="px-4 py-3 text-sm font-medium text-gray-900 dark:text-white">
+                        <tbody class="divide-y divide-border bg-card">
+                            <tr v-for="(item, index) in props.return.items" :key="item.id" class="hover:bg-accent">
+                                <td class="px-4 py-3 text-sm text-muted-foreground">{{ index + 1 }}</td>
+                                <td class="px-4 py-3 text-sm font-medium text-foreground">
                                     {{ item.inventory_item?.name || 'Unknown Item' }}
                                 </td>
-                                <td class="px-4 py-3 text-sm text-gray-600 dark:text-gray-300">{{ item.quantity }}</td>
-                                <td class="px-4 py-3 text-sm text-gray-600 dark:text-gray-300">{{ formatCurrency(item.unit_price) }}</td>
-                                <td class="px-4 py-3 text-sm font-medium text-gray-900 dark:text-white">{{ formatCurrency(item.total) }}</td>
-                                <td class="px-4 py-3 text-sm text-gray-600 dark:text-gray-300">{{ item.reason || '-' }}</td>
+                                <td class="px-4 py-3 text-sm text-muted-foreground">{{ item.quantity }}</td>
+                                <td class="px-4 py-3 text-sm text-muted-foreground">{{ formatCurrency(item.unit_price) }}</td>
+                                <td class="px-4 py-3 text-sm font-medium text-foreground">{{ formatCurrency(item.total) }}</td>
+                                <td class="px-4 py-3 text-sm text-muted-foreground">{{ item.reason || '-' }}</td>
                             </tr>
                             <tr v-if="props.return.items.length === 0">
-                                <td colspan="6" class="px-4 py-8 text-center text-sm text-gray-500">No items found</td>
+                                <td colspan="6" class="px-4 py-8 text-center text-sm text-muted-foreground">No items found</td>
                             </tr>
                         </tbody>
                     </table>

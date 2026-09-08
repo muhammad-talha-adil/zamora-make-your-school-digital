@@ -263,10 +263,10 @@ const submitForm = () => {
 
         <div class="space-y-6 p-4 md:p-6">
             <div>
-                <h1 class="text-lg font-bold text-gray-900 dark:text-white md:text-2xl">
+                <h1 class="text-lg font-bold text-foreground md:text-2xl">
                     Record Fee Payment
                 </h1>
-                <p class="mt-1 text-xs text-gray-600 dark:text-gray-400 md:text-sm">
+                <p class="mt-1 text-xs text-muted-foreground md:text-sm">
                     Record a new fee payment from a student
                 </p>
             </div>
@@ -284,31 +284,31 @@ const submitForm = () => {
                                 autocomplete="off"
                             />
                             <div v-if="isSearching" class="absolute right-3 top-3">
-                                <Icon icon="loader" class="h-4 w-4 animate-spin text-gray-400" />
+                                <Icon icon="loader" class="h-4 w-4 animate-spin text-muted-foreground" />
                             </div>
                             <div
                                 v-if="searchResults.length > 0"
-                                class="absolute z-10 mt-1 max-h-72 w-full overflow-auto rounded-md border border-gray-200 bg-white shadow-lg dark:border-gray-700 dark:bg-gray-800"
+                                class="absolute z-10 mt-1 max-h-72 w-full overflow-auto rounded-md border border-border bg-card shadow-lg"
                             >
                                 <button
                                     v-for="student in searchResults"
                                     :key="student.id"
                                     type="button"
                                     @click="selectStudent(student)"
-                                    class="w-full px-4 py-3 text-left hover:bg-gray-100 dark:hover:bg-gray-700"
+                                    class="w-full px-4 py-3 text-left hover:bg-accent"
                                 >
-                                    <div class="font-medium text-gray-900 dark:text-white">{{ student.name }}</div>
-                                    <div class="text-sm text-gray-500">
+                                    <div class="font-medium text-foreground">{{ student.name }}</div>
+                                    <div class="text-sm text-muted-foreground">
                                         {{ student.registration_number }}
                                         <span v-if="student.admission_no"> | {{ student.admission_no }}</span>
                                     </div>
-                                    <div v-if="student.matched_voucher_no" class="text-xs text-blue-600 dark:text-blue-400">
+                                    <div v-if="student.matched_voucher_no" class="text-xs text-primary">
                                         Matched voucher: {{ student.matched_voucher_no }}
                                     </div>
                                 </button>
                             </div>
                         </div>
-                        <div v-if="selectedStudent" class="mt-2 rounded-md bg-blue-50 px-3 py-2 text-sm text-blue-700 dark:bg-blue-950/30 dark:text-blue-300">
+                        <div v-if="selectedStudent" class="mt-2 rounded-md bg-primary/10 px-3 py-2 text-sm text-primary">
                             Selected: {{ selectedStudent.name }} ({{ selectedStudent.registration_number }})
                         </div>
                         <input v-model="form.student_id" type="hidden" required />
@@ -330,7 +330,7 @@ const submitForm = () => {
                             id="payment_method"
                             v-model="form.payment_method"
                             required
-                            class="w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                            class="w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground"
                         >
                             <option v-for="method in paymentMethods" :key="method.value" :value="method.value">
                                 {{ method.label }}
@@ -371,65 +371,65 @@ const submitForm = () => {
                     </div>
                 </div>
 
-                <div class="overflow-hidden rounded-lg border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-800">
-                    <div class="border-b border-gray-200 px-6 py-4 dark:border-gray-700">
-                        <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Voucher Dues</h2>
-                        <p class="mt-1 text-sm text-gray-500 dark:text-gray-400">
+                <div class="overflow-hidden rounded-lg border border-border bg-card">
+                    <div class="border-b border-border px-6 py-4">
+                        <h2 class="text-lg font-semibold text-foreground">Voucher Dues</h2>
+                        <p class="mt-1 text-sm text-muted-foreground">
                             Select exactly which fee or inventory dues you want to settle for this student.
                         </p>
                     </div>
 
-                    <div v-if="isLoadingVouchers" class="py-10 text-center text-gray-500 dark:text-gray-400">
+                    <div v-if="isLoadingVouchers" class="py-10 text-center text-muted-foreground">
                         Loading unpaid dues...
                     </div>
 
-                    <div v-else-if="availableVouchers.length === 0" class="py-10 text-center text-gray-500 dark:text-gray-400">
+                    <div v-else-if="availableVouchers.length === 0" class="py-10 text-center text-muted-foreground">
                         No unpaid voucher dues found for the selected student.
                     </div>
 
                     <div v-else class="overflow-x-auto">
-                        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                            <thead class="bg-gray-50 dark:bg-gray-800">
+                        <table class="min-w-full divide-y divide-border">
+                            <thead class="bg-muted">
                                 <tr>
-                                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase text-gray-600 dark:text-gray-300">
+                                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase text-muted-foreground">
                                         Select
                                     </th>
-                                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase text-gray-600 dark:text-gray-300">
+                                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase text-muted-foreground">
                                         Voucher No
                                     </th>
-                                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase text-gray-600 dark:text-gray-300">
+                                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase text-muted-foreground">
                                         Month
                                     </th>
-                                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase text-gray-600 dark:text-gray-300">
+                                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase text-muted-foreground">
                                         Module
                                     </th>
-                                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase text-gray-600 dark:text-gray-300">
+                                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase text-muted-foreground">
                                         Due Item
                                     </th>
-                                    <th class="px-4 py-3 text-right text-xs font-semibold uppercase text-gray-600 dark:text-gray-300">
+                                    <th class="px-4 py-3 text-right text-xs font-semibold uppercase text-muted-foreground">
                                         Due
                                     </th>
-                                    <th class="px-4 py-3 text-right text-xs font-semibold uppercase text-gray-600 dark:text-gray-300">
+                                    <th class="px-4 py-3 text-right text-xs font-semibold uppercase text-muted-foreground">
                                         Pay Amount
                                     </th>
                                 </tr>
                             </thead>
-                            <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
+                            <tbody class="divide-y divide-border">
                                 <tr
                                     v-for="voucher in availableVouchers"
                                     :key="voucher.id"
-                                    class="hover:bg-gray-50 dark:hover:bg-gray-800"
+                                    class="hover:bg-accent"
                                 >
                                     <td colspan="6" class="px-0 py-0">
-                                        <div class="border-b border-gray-200 bg-gray-100 px-4 py-3 dark:border-gray-700 dark:bg-gray-900/40">
+                                        <div class="border-b border-border bg-muted px-4 py-3">
                                             <div class="flex flex-col gap-1 md:flex-row md:items-center md:justify-between">
-                                                <div class="font-medium text-gray-900 dark:text-white">
+                                                <div class="font-medium text-foreground">
                                                     {{ voucher.voucher_no }}
-                                                    <span class="ml-2 text-sm font-normal text-gray-500 dark:text-gray-400">
+                                                    <span class="ml-2 text-sm font-normal text-muted-foreground">
                                                         {{ voucher.voucher_month?.name || 'N/A' }} {{ voucher.voucher_year }}
                                                     </span>
                                                 </div>
-                                                <div class="text-sm text-gray-600 dark:text-gray-300">
+                                                <div class="text-sm text-muted-foreground">
                                                     Voucher balance: {{ formatCurrency(voucher.balance_amount) }}
                                                 </div>
                                             </div>
@@ -439,7 +439,7 @@ const submitForm = () => {
                                                 <tr
                                                     v-for="item in voucher.items"
                                                     :key="item.id"
-                                                    class="border-t border-gray-100 dark:border-gray-800"
+                                                    class="border-t border-border"
                                                 >
                                                     <td class="px-4 py-3 align-top">
                                                         <input
@@ -449,27 +449,27 @@ const submitForm = () => {
                                                             @change="toggleCharge(voucher.id, item)"
                                                         />
                                                     </td>
-                                                    <td class="px-4 py-3 align-top text-sm text-gray-600 dark:text-gray-300">
+                                                    <td class="px-4 py-3 align-top text-sm text-muted-foreground">
                                                         {{ voucher.voucher_month?.name || 'N/A' }} {{ voucher.voucher_year }}
                                                     </td>
                                                     <td class="px-4 py-3 align-top">
                                                         <span
                                                             :class="item.source_module === 'inventory'
-                                                                ? 'inline-flex rounded-full bg-orange-100 px-2 py-1 text-xs font-medium text-orange-700 dark:bg-orange-900/30 dark:text-orange-300'
-                                                                : 'inline-flex rounded-full bg-blue-100 px-2 py-1 text-xs font-medium text-blue-700 dark:bg-blue-900/30 dark:text-blue-300'"
+                                                                ? 'inline-flex rounded-full bg-warning/10 px-2 py-1 text-xs font-medium text-warning'
+                                                                : 'inline-flex rounded-full bg-primary/10 px-2 py-1 text-xs font-medium text-primary'"
                                                         >
                                                             {{ item.source_module === 'inventory' ? 'Inventory' : 'Fee' }}
                                                         </span>
                                                     </td>
                                                     <td class="px-4 py-3 align-top">
-                                                        <div class="font-medium text-gray-900 dark:text-white">
+                                                        <div class="font-medium text-foreground">
                                                             {{ item.fee_head_name || item.description }}
                                                         </div>
-                                                        <div class="text-sm text-gray-500 dark:text-gray-400">
+                                                        <div class="text-sm text-muted-foreground">
                                                             {{ item.description }}
                                                         </div>
                                                     </td>
-                                                    <td class="px-4 py-3 align-top text-right text-gray-600 dark:text-gray-300">
+                                                    <td class="px-4 py-3 align-top text-right text-muted-foreground">
                                                         {{ formatCurrency(item.balance_amount) }}
                                                     </td>
                                                     <td class="px-4 py-3 align-top">
@@ -494,22 +494,22 @@ const submitForm = () => {
                     </div>
                 </div>
 
-                <div class="rounded-lg border border-gray-200 bg-gray-50 p-6 dark:border-gray-700 dark:bg-gray-800">
-                    <div class="mb-4 flex items-center justify-between">
-                        <h2 class="text-lg font-semibold text-gray-900 dark:text-white">Payment Summary</h2>
+                <div class="rounded-lg border border-border bg-muted p-6">
+                    <div class="mb-4 flex flex-wrap gap-2 items-center justify-between">
+                        <h2 class="text-lg font-semibold text-foreground">Payment Summary</h2>
                     </div>
                     <div class="grid grid-cols-1 gap-4 text-center md:grid-cols-3">
                         <div>
-                            <p class="text-sm text-gray-500">Received</p>
-                            <p class="text-xl font-bold text-gray-900 dark:text-white">{{ formatCurrency(form.received_amount) }}</p>
+                            <p class="text-sm text-muted-foreground">Received</p>
+                            <p class="text-xl font-bold text-foreground">{{ formatCurrency(form.received_amount) }}</p>
                         </div>
                         <div>
-                            <p class="text-sm text-gray-500">Allocated</p>
-                            <p class="text-xl font-bold text-blue-600">{{ formatCurrency(totalAllocated) }}</p>
+                            <p class="text-sm text-muted-foreground">Allocated</p>
+                            <p class="text-xl font-bold text-primary">{{ formatCurrency(totalAllocated) }}</p>
                         </div>
                         <div>
-                            <p class="text-sm text-gray-500">Wallet Credit</p>
-                            <p :class="['text-xl font-bold', remainingAmount > 0 ? 'text-green-600' : 'text-gray-600 dark:text-gray-300']">
+                            <p class="text-sm text-muted-foreground">Wallet Credit</p>
+                            <p :class="['text-xl font-bold', remainingAmount > 0 ? 'text-success' : 'text-muted-foreground']">
                                 {{ formatCurrency(Math.max(0, remainingAmount)) }}
                             </p>
                         </div>
@@ -522,11 +522,11 @@ const submitForm = () => {
                         id="remarks"
                         v-model="form.remarks"
                         rows="3"
-                        class="mt-1 block w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-gray-900 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                        class="mt-1 block w-full rounded-md border border-border bg-card px-3 py-2 text-foreground"
                     ></textarea>
                 </div>
 
-                <div class="flex justify-end gap-3">
+                <div class="flex flex-wrap justify-end gap-3">
                     <Button type="button" variant="outline" @click="router.visit(route('fee.payments.index'))">
                         Cancel
                     </Button>

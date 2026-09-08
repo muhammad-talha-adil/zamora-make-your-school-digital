@@ -2,22 +2,12 @@
 
 namespace App\Models;
 
+use App\Enums\AttendanceStatusCode;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class AttendanceStudent extends Model
 {
-    /**
-     * Attendance status codes.
-     */
-    public const STATUS_PRESENT = 'P';
-
-    public const STATUS_ABSENT = 'A';
-
-    public const STATUS_LEAVE = 'L';
-
-    public const STATUS_LATE = 'LT';
-
     protected $fillable = [
         'attendance_id',
         'student_id',
@@ -29,10 +19,16 @@ class AttendanceStudent extends Model
         'remarks',
     ];
 
-    protected $casts = [
-        'check_in' => 'datetime:H:i:s',
-        'check_out' => 'datetime:H:i:s',
-    ];
+    /**
+     * `check_in` and `check_out` are `TIME` columns and are left as strings.
+     *
+     * They were cast to datetimes, which gave a clock time an arbitrary date
+     * part — Eloquent then wrote a full `Y-m-d H:i:s` back into a column that
+     * holds only a time. A time of day is not a moment in history, and nothing
+     * in the module wants the date half; the JSON the screens receive is the
+     * same `HH:MM:SS` either way.
+     */
+    protected $casts = [];
 
     /**
      * Get the attendance session for this student record.
@@ -79,7 +75,7 @@ class AttendanceStudent extends Model
      */
     public function isPresent(): bool
     {
-        return $this->attendanceStatus?->code === self::STATUS_PRESENT;
+        return (bool) $this->attendanceStatus?->hasCode(AttendanceStatusCode::PRESENT);
     }
 
     /**
@@ -87,7 +83,7 @@ class AttendanceStudent extends Model
      */
     public function isAbsent(): bool
     {
-        return $this->attendanceStatus?->code === self::STATUS_ABSENT;
+        return (bool) $this->attendanceStatus?->hasCode(AttendanceStatusCode::ABSENT);
     }
 
     /**
@@ -95,7 +91,7 @@ class AttendanceStudent extends Model
      */
     public function isOnLeave(): bool
     {
-        return $this->attendanceStatus?->code === self::STATUS_LEAVE || $this->studentLeave !== null;
+        return $this->attendanceStatus?->hasCode(AttendanceStatusCode::LEAVE) || $this->studentLeave !== null;
     }
 
     /**
@@ -103,6 +99,6 @@ class AttendanceStudent extends Model
      */
     public function isLate(): bool
     {
-        return $this->attendanceStatus?->code === self::STATUS_LATE;
+        return (bool) $this->attendanceStatus?->hasCode(AttendanceStatusCode::LATE);
     }
 }

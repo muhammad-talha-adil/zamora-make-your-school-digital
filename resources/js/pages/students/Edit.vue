@@ -6,10 +6,10 @@
             <!-- Header -->
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 md:gap-4">
                 <div>
-                    <h1 class="text-lg md:text-2xl font-bold text-gray-900 dark:text-white">
+                    <h1 class="text-lg md:text-2xl font-bold text-foreground">
                         Edit Student
                     </h1>
-                    <p class="mt-1 text-xs md:text-sm text-gray-600 dark:text-gray-400">
+                    <p class="mt-1 text-xs md:text-sm text-muted-foreground">
                         Update student and guardian information
                     </p>
                 </div>
@@ -22,18 +22,18 @@
             <!-- Sibling Match Alert -->
             <div
                 v-if="siblingMatch"
-                class="rounded-lg border border-blue-200 bg-blue-50 p-4 dark:border-blue-800 dark:bg-blue-900/20"
+                class="rounded-lg border border-primary/40 bg-primary/10 p-4"
             >
                 <div class="flex items-center gap-3">
                     <Icon
                         icon="users"
-                        class="h-5 w-5 text-blue-600 dark:text-blue-400"
+                        class="h-5 w-5 text-primary"
                     />
                     <div class="flex-1">
-                        <p class="font-medium text-blue-900 dark:text-blue-100">
+                        <p class="font-medium text-primary">
                             Guardian Found!
                         </p>
-                        <p class="text-sm text-blue-700 dark:text-blue-300">
+                        <p class="text-sm text-primary">
                             A guardian with this phone number exists ({{ siblingMatch.name }}). Information has been updated.
                         </p>
                     </div>
@@ -49,8 +49,8 @@
 
             <form @submit.prevent="submitForm" class="space-y-6" enctype="multipart/form-data">
                 <!-- Student Information Card -->
-                <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-                    <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                <div class="bg-card rounded-lg border border-border p-6">
+                    <h2 class="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
                         <Icon icon="user" class="h-5 w-5 text-primary" />
                         Student Information
                     </h2>
@@ -58,41 +58,42 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         <!-- Student Name -->
                         <div class="space-y-2">
-                            <Label for="name">Student Name <span class="text-red-500">*</span></Label>
+                            <Label for="name">Student Name <span class="text-destructive">*</span></Label>
                             <Input
                                 id="name"
                                 v-model="form.name"
                                 type="text"
                                 placeholder="Enter student name"
-                                :class="{ 'border-red-500': errors.name }"
+                                :class="{ 'border-destructive': errors.name }"
                                 required
                             />
                             <InputError :message="errors.name" />
                         </div>
 
                         <div class="space-y-2">
-                            <Label for="student_email">Student Email <p class="text-xs text-gray-500">(Auto-generated)</p></Label>
+                            <Label for="student_email">Student Email <p class="text-xs text-muted-foreground">(Auto-generated)</p></Label>
                             <Input
                                 id="student_email"
                                 :model-value="generatedEmailPreview"
                                 type="email"
                                 disabled
-                                class="bg-gray-50 dark:bg-gray-700"
+                                class="bg-muted"
                             />
                         </div>
 
-                        <!-- Admission No -->
+                        <!-- Admission No (issued at admission, read-only) -->
                         <div class="space-y-2">
-                            <Label for="admission_no">Admission No <span class="text-red-500">*</span></Label>
+                            <Label for="admission_no">Admission No</Label>
                             <Input
                                 id="admission_no"
-                                v-model="form.admission_no"
+                                :model-value="form.admission_no"
                                 type="text"
-                                placeholder="Enter admission number"
-                                :class="{ 'border-red-500': errors.admission_no }"
-                                required
+                                readonly
+                                class="bg-muted"
                             />
-                            <InputError :message="errors.admission_no" />
+                            <p class="text-xs text-muted-foreground">
+                                Issued at admission and used on vouchers and result cards, so it cannot be changed.
+                            </p>
                         </div>
 
                         <!-- Registration No (Read-only) -->
@@ -103,34 +104,46 @@
                                 :model-value="studentData?.registration_no || ''"
                                 type="text"
                                 readonly
-                                class="bg-gray-100 dark:bg-gray-700"
+                                class="bg-muted"
+                            />
+                        </div>
+
+                        <!-- Student Code (Read-only) -->
+                        <div class="space-y-2">
+                            <Label for="student_code">Student Code</Label>
+                            <Input
+                                id="student_code"
+                                :model-value="studentData?.student_code || ''"
+                                type="text"
+                                readonly
+                                class="bg-muted"
                             />
                         </div>
 
                         <!-- Date of Birth with Age Calculation -->
                         <div class="space-y-2">
-                            <Label for="dob">Date of Birth <span class="text-red-500">*</span></Label>
+                            <Label for="dob">Date of Birth <span class="text-destructive">*</span></Label>
                             <Input
                                 id="dob"
                                 v-model="form.dob"
                                 type="date"
-                                :class="{ 'border-red-500': errors.dob }"
+                                :class="{ 'border-destructive': errors.dob }"
                                 required
                             />
-                            <div v-if="calculatedAge" class="text-xs text-gray-500">
-                                Calculated Age: <span class="font-medium text-blue-600">{{ calculatedAge }}</span>
+                            <div v-if="calculatedAge" class="text-xs text-muted-foreground">
+                                Calculated Age: <span class="font-medium text-primary">{{ calculatedAge }}</span>
                             </div>
                             <InputError :message="errors.dob" />
                         </div>
 
                         <!-- Gender -->
                         <div class="space-y-2">
-                            <Label for="gender_id">Gender <span class="text-red-500">*</span></Label>
+                            <Label for="gender_id">Gender <span class="text-destructive">*</span></Label>
                             <select
                                 id="gender_id"
                                 v-model="form.gender_id"
-                                class="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 text-sm h-11"
-                                :class="{ 'border-red-500': errors.gender_id }"
+                                class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm h-11"
+                                :class="{ 'border-destructive': errors.gender_id }"
                                 required
                             >
                                 <option value="">Select Gender</option>
@@ -149,19 +162,19 @@
                                 v-model="form.b_form"
                                 type="text"
                                 placeholder="Enter B-Form number"
-                                :class="{ 'border-red-500': errors.b_form }"
+                                :class="{ 'border-destructive': errors.b_form }"
                             />
                             <InputError :message="errors.b_form" />
                         </div>
 
                         <!-- Campus -->
                         <div class="space-y-2">
-                            <Label for="campus_id">Campus <span class="text-red-500">*</span></Label>
+                            <Label for="campus_id">Campus <span class="text-destructive">*</span></Label>
                             <select
                                 id="campus_id"
                                 v-model="form.campus_id"
-                                class="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 text-sm h-11"
-                                :class="{ 'border-red-500': errors.campus_id }"
+                                class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm h-11"
+                                :class="{ 'border-destructive': errors.campus_id }"
                                 :required="campuses.length > 1"
                             >
                                 <option v-if="campuses.length > 1" value="">Select Campus</option>
@@ -174,12 +187,12 @@
 
                         <!-- Session -->
                         <div class="space-y-2">
-                            <Label for="session_id">Academic Session <span class="text-red-500">*</span></Label>
+                            <Label for="session_id">Academic Session <span class="text-destructive">*</span></Label>
                             <select
                                 id="session_id"
                                 v-model="form.session_id"
-                                class="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 text-sm h-11"
-                                :class="{ 'border-red-500': errors.session_id }"
+                                class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm h-11"
+                                :class="{ 'border-destructive': errors.session_id }"
                                 required
                             >
                                 <option value="">Select Session</option>
@@ -192,12 +205,12 @@
 
                         <!-- Class -->
                         <div class="space-y-2">
-                            <Label for="class_id">Class <span class="text-red-500">*</span></Label>
+                            <Label for="class_id">Class <span class="text-destructive">*</span></Label>
                             <select
                                 id="class_id"
                                 v-model="form.class_id"
-                                class="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 text-sm h-11"
-                                :class="{ 'border-red-500': errors.class_id }"
+                                class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm h-11"
+                                :class="{ 'border-destructive': errors.class_id }"
                                 required
                             >
                                 <option value="">Select Class</option>
@@ -210,12 +223,12 @@
 
                         <!-- Section -->
                         <div v-if="showSectionField" class="space-y-2">
-                            <Label for="section_id">Section <span v-if="filteredSections.length > 1" class="text-red-500">*</span></Label>
+                            <Label for="section_id">Section <span v-if="filteredSections.length > 1" class="text-destructive">*</span></Label>
                             <select
                                 id="section_id"
                                 v-model="form.section_id"
-                                class="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 text-sm h-11"
-                                :class="{ 'border-red-500': errors.section_id }"
+                                class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm h-11"
+                                :class="{ 'border-destructive': errors.section_id }"
                                 :required="filteredSections.length > 1"
                             >
                                 <option v-if="filteredSections.length > 1" value="">Select Section</option>
@@ -228,12 +241,12 @@
 
                         <!-- Status - EDITABLE IN EDIT FORM -->
                         <div class="space-y-2">
-                            <Label for="student_status_id">Status <span class="text-red-500">*</span></Label>
+                            <Label for="student_status_id">Status <span class="text-destructive">*</span></Label>
                             <select
                                 id="student_status_id"
                                 v-model="form.student_status_id"
-                                class="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 text-sm h-11"
-                                :class="{ 'border-red-500': errors.student_status_id }"
+                                class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm h-11"
+                                :class="{ 'border-destructive': errors.student_status_id }"
                                 required
                             >
                                 <option value="">Select Status</option>
@@ -261,7 +274,7 @@
                                 id="description"
                                 v-model="form.description"
                                 rows="3"
-                                class="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 min-h-20"
+                                class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 min-h-20"
                                 placeholder="Additional notes about the student..."
                             ></textarea>
                         </div>
@@ -291,7 +304,7 @@
                                         @change="handleImageChange"
                                         class="h-11"
                                     />
-                                    <p class="text-xs text-gray-500 mt-1">Upload JPG, PNG, GIF, or WebP (max 2MB)</p>
+                                    <p class="text-xs text-muted-foreground mt-1">Upload JPG, PNG, GIF, or WebP (max 2MB)</p>
                                     <InputError :message="errors.image" />
                                 </div>
                                 <!-- Image Preview or Current Image -->
@@ -299,7 +312,7 @@
                                     <img
                                         :src="imagePreview"
                                         alt="Student Preview"
-                                        class="h-20 w-20 rounded-lg object-cover border border-gray-200 dark:border-gray-700"
+                                        class="h-20 w-20 rounded-lg object-cover border border-border"
                                     />
                                     <Button
                                         type="button"
@@ -316,7 +329,7 @@
                                     <img
                                         :src="studentData.image"
                                         alt="Current Photo"
-                                        class="h-20 w-20 rounded-lg object-cover border border-gray-200 dark:border-gray-700"
+                                        class="h-20 w-20 rounded-lg object-cover border border-border"
                                     />
                                     <Button
                                         type="button"
@@ -329,8 +342,8 @@
                                         <Icon icon="x" class="h-3 w-3" />
                                     </Button>
                                 </div>
-                                <div v-else class="h-20 w-20 rounded-lg bg-gray-100 dark:bg-gray-700 flex items-center justify-center border border-gray-200 dark:border-gray-700">
-                                    <Icon icon="user" class="h-10 w-10 text-gray-400" />
+                                <div v-else class="h-20 w-20 rounded-lg bg-muted flex items-center justify-center border border-border">
+                                    <Icon icon="user" class="h-10 w-10 text-muted-foreground" />
                                 </div>
                             </div>
                             <input v-if="removeCurrentImage" type="hidden" name="remove_image" value="1" />
@@ -339,8 +352,8 @@
                 </div>
 
                 <!-- Father Information Card -->
-                <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-                    <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                <div class="bg-card rounded-lg border border-border p-6">
+                    <h2 class="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
                         <Icon icon="user-check" class="h-5 w-5 text-primary" />
                         Father Information (Primary Guardian)
                     </h2>
@@ -348,13 +361,13 @@
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         <!-- Father Name -->
                         <div class="space-y-2">
-                            <Label for="father_name">Father's Name <span class="text-red-500">*</span></Label>
+                            <Label for="father_name">Father's Name <span class="text-destructive">*</span></Label>
                             <Input
                                 id="father_name"
                                 v-model="form.father_name"
                                 type="text"
                                 placeholder="Enter father's name"
-                                :class="{ 'border-red-500': errors.father_name }"
+                                :class="{ 'border-destructive': errors.father_name }"
                                 required
                             />
                             <InputError :message="errors.father_name" />
@@ -362,7 +375,7 @@
 
                         <!-- Father Phone -->
                         <div class="space-y-2 relative">
-                            <Label for="father_phone">Father's Phone <span class="text-red-500">*</span></Label>
+                            <Label for="father_phone">Father's Phone <span class="text-destructive">*</span></Label>
                             <div class="relative">
                                 <Input
                                     id="father_phone"
@@ -372,17 +385,17 @@
                                     maxlength="12"
                                     @input="onFatherPhoneInput"
                                     :disabled="guardianLookupLoading"
-                                    :class="{ 'border-red-500': errors.father_phone }"
+                                    :class="{ 'border-destructive': errors.father_phone }"
                                     required
                                 />
                                 <!-- Loading spinner -->
                                 <Icon
                                     v-if="guardianLookupLoading"
                                     icon="loader"
-                                    class="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-gray-400"
+                                    class="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground"
                                 />
                             </div>
-                            <p class="text-xs text-gray-500">Format: 0300-1234567</p>
+                            <p class="text-xs text-muted-foreground">Format: 0300-1234567</p>
                             <InputError :message="errors.father_phone" />
                         </div>
 
@@ -394,7 +407,7 @@
                                 v-model="form.father_email"
                                 type="email"
                                 placeholder="Enter email address"
-                                :class="{ 'border-red-500': errors.father_email }"
+                                :class="{ 'border-destructive': errors.father_email }"
                             />
                             <InputError :message="errors.father_email" />
                         </div>
@@ -409,19 +422,19 @@
                                 placeholder="12345-1234567-1"
                                 maxlength="15"
                                 @input="handleFatherCnicInput"
-                                :class="{ 'border-red-500': errors.father_cnic }"
+                                :class="{ 'border-destructive': errors.father_cnic }"
                             />
-                            <p class="text-xs text-gray-500"></p>
+                            <p class="text-xs text-muted-foreground"></p>
                             <InputError :message="errors.father_cnic" />
                         </div>
 
                         <!-- Father Relation -->
                         <div class="space-y-2">
-                            <Label for="father_relation_id">Relation <span class="text-red-500">*</span></Label>
+                            <Label for="father_relation_id">Relation <span class="text-destructive">*</span></Label>
                             <select
                                 id="father_relation_id"
                                 v-model="form.father_relation_id"
-                                class="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-white px-3 py-2 text-sm h-11 cursor-not-allowed"
+                                class="w-full rounded-md border border-border bg-muted text-foreground px-3 py-2 text-sm h-11 cursor-not-allowed"
                                 required
                                 disabled
                             >
@@ -435,16 +448,16 @@
                 
 
                 <!-- Other Guardian Toggle Checkbox -->
-                <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-                    <div class="flex items-center justify-between">
+                <div class="bg-card rounded-lg border border-border p-6">
+                    <div class="flex flex-wrap gap-2 items-center justify-between">
                         <div class="flex items-center gap-3">
                             <input
                                 type="checkbox"
                                 id="includeOtherGuardian"
                                 v-model="includeOtherGuardian"
-                                class="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                                class="h-4 w-4 rounded border-border text-primary focus:ring-primary"
                             />
-                            <Label for="includeOtherGuardian" class="text-lg font-semibold text-gray-900 dark:text-white cursor-pointer">
+                            <Label for="includeOtherGuardian" class="text-lg font-semibold text-foreground cursor-pointer">
                                 Add Another Guardian
                             </Label>
                         </div>
@@ -452,8 +465,8 @@
                 </div>
 
                 <!-- Other Guardian Card -->
-                <div v-if="showOtherGuardianSection" class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-                    <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4 flex items-center gap-2">
+                <div v-if="showOtherGuardianSection" class="bg-card rounded-lg border border-border p-6">
+                    <h2 class="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
                         <Icon icon="users" class="h-5 w-5 text-primary" />
                         Other Guardian (Optional)
                     </h2>
@@ -481,7 +494,7 @@
                                 maxlength="12"
                                 @input="handleOtherPhoneInput"
                             />
-                            <p class="text-xs text-gray-500">Format: 0300-1234567</p>
+                            <p class="text-xs text-muted-foreground">Format: 0300-1234567</p>
                         </div>
 
                         <!-- Other Guardian Email -->
@@ -492,7 +505,7 @@
                                 v-model="form.other_email"
                                 type="email"
                                 placeholder="Enter email address"
-                                :class="{ 'border-red-500': errors.other_email }"
+                                :class="{ 'border-destructive': errors.other_email }"
                             />
                             <InputError :message="errors.other_email" />
                         </div>
@@ -507,9 +520,9 @@
                                 placeholder="12345-1234567-1"
                                 maxlength="15"
                                 @input="handleOtherCnicInput"
-                                :class="{ 'border-red-500': errors.other_cnic }"
+                                :class="{ 'border-destructive': errors.other_cnic }"
                             />
-                            <p class="text-xs text-gray-500"></p>
+                            <p class="text-xs text-muted-foreground"></p>
                             <InputError :message="errors.other_cnic" />
                         </div>
 
@@ -519,7 +532,7 @@
                             <select
                                 id="other_relation_id"
                                 v-model="form.other_relation_id"
-                                class="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 text-sm h-11"
+                                class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm h-11"
                             >
                                 <option value="">Select Relation</option>
                                 <option v-for="relation in otherRelations" :key="relation.id" :value="relation.id">
@@ -569,6 +582,7 @@ interface Props {
         id: number;
         admission_no: string;
         registration_no?: string;
+        student_code?: string;
         dob: string;
         gender_id: number;
         b_form: string;

@@ -14,7 +14,11 @@ return new class extends Migration
         Schema::create('inventory_returns', function (Blueprint $table) {
             $table->id();
             $table->foreignId('campus_id')->constrained('campuses')->onDelete('cascade');
-            $table->foreignId('student_inventory_id')->constrained('student_inventory')->onDelete('cascade');
+            // Referenced `student_inventory`, which no table of that name
+            // is ever created; the real table is `student_inventory_records`,
+            // and it is created later. Constraint added by
+            // 2026_09_07_000003_add_deferred_foreign_keys.
+            $table->foreignId('student_inventory_id');
             $table->integer('quantity');
             $table->date('return_date');
             $table->text('note')->nullable();

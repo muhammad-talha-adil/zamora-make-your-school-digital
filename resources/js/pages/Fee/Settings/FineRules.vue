@@ -414,12 +414,12 @@ const fineTypeOptions = [
 
         <div class="space-y-6 p-4 md:p-6">
             <!-- Header -->
-            <div class="flex justify-between items-center">
+            <div class="flex flex-wrap gap-2 justify-between items-center">
                 <div>
-                    <h1 class="text-xl md:text-2xl font-bold text-gray-900 dark:text-white">
+                    <h1 class="text-xl md:text-2xl font-bold text-foreground">
                         Fine Rules
                     </h1>
-                    <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                    <p class="mt-1 text-sm text-muted-foreground">
                         Configure late fee payment fines
                     </p>
                 </div>
@@ -429,14 +429,14 @@ const fineTypeOptions = [
             </div>
 
             <!-- Filters -->
-            <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
+            <div class="bg-card rounded-lg border border-border p-4">
                 <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
                     <div class="space-y-2">
                         <Label for="filter-campus">Campus</Label>
                         <select 
                             id="filter-campus"
                             v-model="filterCampus"
-                            class="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-sm text-gray-900 dark:text-white"
+                            class="w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground"
                         >
                             <option value="">All Campuses</option>
                             <option v-for="campus in props.campuses" :key="campus.id" :value="campus.id.toString()">
@@ -449,7 +449,7 @@ const fineTypeOptions = [
                         <select 
                             id="filter-session"
                             v-model="filterSession"
-                            class="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-sm text-gray-900 dark:text-white"
+                            class="w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground"
                         >
                             <option value="">All Sessions</option>
                             <option v-for="session in props.sessions" :key="session.id" :value="session.id.toString()">
@@ -462,7 +462,7 @@ const fineTypeOptions = [
                         <select 
                             id="filter-class"
                             v-model="filterClass"
-                            class="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-sm text-gray-900 dark:text-white"
+                            class="w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground"
                         >
                             <option value="">All Classes</option>
                             <option v-for="cls in props.classes" :key="cls.id" :value="cls.id.toString()">
@@ -475,7 +475,7 @@ const fineTypeOptions = [
                         <select 
                             id="filter-status"
                             v-model="filterActive"
-                            class="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-sm text-gray-900 dark:text-white"
+                            class="w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground"
                         >
                             <option value="">All Status</option>
                             <option value="true">Active</option>
@@ -494,49 +494,49 @@ const fineTypeOptions = [
             </div>
 
             <!-- Fine Rules Table -->
-            <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+            <div class="bg-card rounded-lg border border-border overflow-hidden">
                 <div class="overflow-x-auto">
                     <table class="w-full text-sm">
-                        <thead class="bg-gray-50 dark:bg-gray-700">
+                        <thead class="bg-muted">
                             <tr>
-                                <th class="text-left py-3 px-4 text-gray-500 dark:text-gray-400">Sr#</th>
-                                <th class="text-left py-3 px-4 text-gray-500 dark:text-gray-400">Name</th>
-                                <th class="text-left py-3 px-4 text-gray-500 dark:text-gray-400">Scope</th>
-                                <th class="text-left py-3 px-4 text-gray-500 dark:text-gray-400">Grace Days</th>
-                                <th class="text-left py-3 px-4 text-gray-500 dark:text-gray-400">Fine Type</th>
-                                <th class="text-right py-3 px-4 text-gray-500 dark:text-gray-400">Value</th>
-                                <th class="text-left py-3 px-4 text-gray-500 dark:text-gray-400">Effective From</th>
-                                <th class="text-left py-3 px-4 text-gray-500 dark:text-gray-400">Fee Head</th>
-                                <th class="text-center py-3 px-4 text-gray-500 dark:text-gray-400">Status</th>
-                                <th class="text-center py-3 px-4 text-gray-500 dark:text-gray-400">Actions</th>
+                                <th class="text-left py-3 px-4 text-muted-foreground">Sr#</th>
+                                <th class="text-left py-3 px-4 text-muted-foreground">Name</th>
+                                <th class="text-left py-3 px-4 text-muted-foreground">Scope</th>
+                                <th class="text-left py-3 px-4 text-muted-foreground">Grace Days</th>
+                                <th class="text-left py-3 px-4 text-muted-foreground">Fine Type</th>
+                                <th class="text-right py-3 px-4 text-muted-foreground">Value</th>
+                                <th class="text-left py-3 px-4 text-muted-foreground">Effective From</th>
+                                <th class="text-left py-3 px-4 text-muted-foreground">Fee Head</th>
+                                <th class="text-center py-3 px-4 text-muted-foreground">Status</th>
+                                <th class="text-center py-3 px-4 text-muted-foreground">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <tr v-for="(rule, index) in fineRulesData" :key="rule.id" class="border-t border-gray-200 dark:border-gray-700">
-                                <td class="py-3 px-4 text-gray-600 dark:text-gray-300">{{ index + 1 }}</td>
-                                <td class="py-3 px-4 text-gray-900 dark:text-white font-medium">{{ rule.name }}</td>
-                                <td class="py-3 px-4 text-gray-600 dark:text-gray-300">
+                            <tr v-for="(rule, index) in fineRulesData" :key="rule.id" class="border-t border-border">
+                                <td class="py-3 px-4 text-muted-foreground">{{ index + 1 }}</td>
+                                <td class="py-3 px-4 text-foreground font-medium">{{ rule.name }}</td>
+                                <td class="py-3 px-4 text-muted-foreground">
                                     <div class="text-xs">
                                         <div>{{ rule.campus?.name || 'All' }}</div>
-                                        <div v-if="rule.schoolClass" class="text-gray-500">{{ rule.schoolClass.name }}</div>
+                                        <div v-if="rule.schoolClass" class="text-muted-foreground">{{ rule.schoolClass.name }}</div>
                                     </div>
                                 </td>
-                                <td class="py-3 px-4 text-gray-600 dark:text-gray-300">{{ rule.grace_days }} days</td>
-                                <td class="py-3 px-4 text-gray-600 dark:text-gray-300">{{ getFineTypeLabel(rule.fine_type) }}</td>
-                                <td class="py-3 px-4 text-right text-gray-900 dark:text-white">
+                                <td class="py-3 px-4 text-muted-foreground">{{ rule.grace_days }} days</td>
+                                <td class="py-3 px-4 text-muted-foreground">{{ getFineTypeLabel(rule.fine_type) }}</td>
+                                <td class="py-3 px-4 text-right text-foreground">
                                     {{ rule.fine_value }}<span v-if="rule.fine_type === 'percent'">%</span>
                                 </td>
-                                <td class="py-3 px-4 text-gray-600 dark:text-gray-300">
+                                <td class="py-3 px-4 text-muted-foreground">
                                     {{ formatDate(rule.effective_from) }}
-                                    <span v-if="rule.effective_to" class="text-xs text-gray-500"> - {{ formatDate(rule.effective_to) }}</span>
+                                    <span v-if="rule.effective_to" class="text-xs text-muted-foreground"> - {{ formatDate(rule.effective_to) }}</span>
                                 </td>
-                                <td class="py-3 px-4 text-gray-600 dark:text-gray-300">
+                                <td class="py-3 px-4 text-muted-foreground">
                                     {{ rule.feeHead?.name || 'All Fees' }}
                                 </td>
                                 <td class="py-3 px-4 text-center">
                                     <button 
                                         @click="toggleStatus(rule)"
-                                        :class="['inline-flex items-center px-2 py-1 rounded-full text-xs font-medium cursor-pointer hover:opacity-80', rule.is_active ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200' : 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200']"
+                                        :class="['inline-flex items-center px-2 py-1 rounded-full text-xs font-medium cursor-pointer hover:opacity-80', rule.is_active ? 'bg-success/10 text-success' : 'bg-muted text-foreground']"
                                     >
                                         {{ rule.is_active ? 'Active' : 'Inactive' }}
                                     </button>
@@ -561,10 +561,10 @@ const fineTypeOptions = [
                             </tr>
                         </tbody>
                     </table>
-                    <div v-if="isLoading" class="text-center text-gray-500 dark:text-gray-400 py-8">
+                    <div v-if="isLoading" class="text-center text-muted-foreground py-8">
                         Loading fine rules...
                     </div>
-                    <div v-else-if="fineRulesData.length === 0" class="text-center text-gray-500 dark:text-gray-400 py-8">
+                    <div v-else-if="fineRulesData.length === 0" class="text-center text-muted-foreground py-8">
                         No fine rules configured yet. Click "Add Fine Rule" to create one.
                     </div>
                 </div>
@@ -572,8 +572,8 @@ const fineTypeOptions = [
 
             <!-- Create/Edit Modal -->
             <div v-if="showCreateModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-                <div class="bg-white dark:bg-gray-800 rounded-lg p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto">
-                    <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">
+                <div class="bg-card rounded-lg p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto">
+                    <h2 class="text-lg font-semibold text-foreground mb-4">
                         {{ editingRule ? 'Edit Fine Rule' : 'Add Fine Rule' }}
                     </h2>
                     <form @submit.prevent="submitForm" class="space-y-4">
@@ -585,9 +585,9 @@ const fineTypeOptions = [
                                 v-model="form.name" 
                                 required 
                                 placeholder="e.g. Late Fee Fine for Monthly Tuition" 
-                                :class="formErrors.name ? 'border-red-500' : ''"
+                                :class="formErrors.name ? 'border-destructive' : ''"
                             />
-                            <p v-if="formErrors.name" class="text-xs text-red-500">{{ formErrors.name }}</p>
+                            <p v-if="formErrors.name" class="text-xs text-destructive">{{ formErrors.name }}</p>
                         </div>
 
                         <!-- Campus & Session -->
@@ -598,14 +598,14 @@ const fineTypeOptions = [
                                     id="campus_id"
                                     v-model="form.campus_id"
                                     required
-                                    :class="['w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-sm text-gray-900 dark:text-white', formErrors.campus_id ? 'border-red-500' : '']"
+                                    :class="['w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground', formErrors.campus_id ? 'border-destructive' : '']"
                                 >
                                     <option value="">Select Campus</option>
                                     <option v-for="campus in props.campuses" :key="campus.id" :value="campus.id.toString()">
                                         {{ campus.name }}
                                     </option>
                                 </select>
-                                <p v-if="formErrors.campus_id" class="text-xs text-red-500">{{ formErrors.campus_id }}</p>
+                                <p v-if="formErrors.campus_id" class="text-xs text-destructive">{{ formErrors.campus_id }}</p>
                             </div>
                             <div class="space-y-2">
                                 <Label for="session_id">Session *</Label>
@@ -613,14 +613,14 @@ const fineTypeOptions = [
                                     id="session_id"
                                     v-model="form.session_id"
                                     required
-                                    :class="['w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-sm text-gray-900 dark:text-white', formErrors.session_id ? 'border-red-500' : '']"
+                                    :class="['w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground', formErrors.session_id ? 'border-destructive' : '']"
                                 >
                                     <option value="">Select Session</option>
                                     <option v-for="session in props.sessions" :key="session.id" :value="session.id.toString()">
                                         {{ session.name }}
                                     </option>
                                 </select>
-                                <p v-if="formErrors.session_id" class="text-xs text-red-500">{{ formErrors.session_id }}</p>
+                                <p v-if="formErrors.session_id" class="text-xs text-destructive">{{ formErrors.session_id }}</p>
                             </div>
                         </div>
 
@@ -631,7 +631,7 @@ const fineTypeOptions = [
                                 <select 
                                     id="class_id"
                                     v-model="form.class_id"
-                                    class="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-sm text-gray-900 dark:text-white"
+                                    class="w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground"
                                 >
                                     <option value="">All Classes</option>
                                     <option v-for="cls in props.classes" :key="cls.id" :value="cls.id.toString()">
@@ -645,14 +645,14 @@ const fineTypeOptions = [
                                     id="section_id"
                                     v-model="form.section_id"
                                     :disabled="!form.class_id"
-                                    :class="['w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-sm text-gray-900 dark:text-white', formErrors.section_id ? 'border-red-500' : '']"
+                                    :class="['w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground', formErrors.section_id ? 'border-destructive' : '']"
                                 >
                                     <option value="">All Sections</option>
                                     <option v-for="section in filteredSections" :key="section.id" :value="section.id.toString()">
                                         {{ section.name }}
                                     </option>
                                 </select>
-                                <p v-if="formErrors.section_id" class="text-xs text-red-500">{{ formErrors.section_id }}</p>
+                                <p v-if="formErrors.section_id" class="text-xs text-destructive">{{ formErrors.section_id }}</p>
                             </div>
                         </div>
 
@@ -662,14 +662,14 @@ const fineTypeOptions = [
                             <select 
                                 id="fee_head_id"
                                 v-model="form.fee_head_id"
-                                class="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-sm text-gray-900 dark:text-white"
+                                class="w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground"
                             >
                                 <option value="">All Fee Heads</option>
                                 <option v-for="fh in props.feeHeads" :key="fh.id" :value="fh.id.toString()">
                                     {{ fh.name }}
                                 </option>
                             </select>
-                            <p class="text-xs text-gray-500">Leave empty to apply to all fee types</p>
+                            <p class="text-xs text-muted-foreground">Leave empty to apply to all fee types</p>
                         </div>
 
                         <!-- Grace Days & Fine Type -->
@@ -682,10 +682,10 @@ const fineTypeOptions = [
                                     type="number" 
                                     min="0" 
                                     required 
-                                    :class="formErrors.grace_days ? 'border-red-500' : ''"
+                                    :class="formErrors.grace_days ? 'border-destructive' : ''"
                                 />
-                                <p class="text-xs text-gray-500">Days before fine applies</p>
-                                <p v-if="formErrors.grace_days" class="text-xs text-red-500">{{ formErrors.grace_days }}</p>
+                                <p class="text-xs text-muted-foreground">Days before fine applies</p>
+                                <p v-if="formErrors.grace_days" class="text-xs text-destructive">{{ formErrors.grace_days }}</p>
                             </div>
                             <div class="space-y-2">
                                 <Label for="fine_type">Fine Type *</Label>
@@ -693,7 +693,7 @@ const fineTypeOptions = [
                                     id="fine_type"
                                     v-model="form.fine_type"
                                     required
-                                    class="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-sm text-gray-900 dark:text-white"
+                                    class="w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground"
                                 >
                                     <option v-for="opt in fineTypeOptions" :key="opt.value" :value="opt.value">
                                         {{ opt.label }}
@@ -715,13 +715,13 @@ const fineTypeOptions = [
                                 min="0" 
                                 :max="showPercentage ? 100 : undefined"
                                 required 
-                                :class="formErrors.fine_value ? 'border-red-500' : ''"
+                                :class="formErrors.fine_value ? 'border-destructive' : ''"
                             />
-                            <p class="text-xs text-gray-500">
+                            <p class="text-xs text-muted-foreground">
                                 <span v-if="showPercentage">Enter percentage (0-100)</span>
                                 <span v-else>Enter fixed amount in PKR</span>
                             </p>
-                            <p v-if="formErrors.fine_value" class="text-xs text-red-500">{{ formErrors.fine_value }}</p>
+                            <p v-if="formErrors.fine_value" class="text-xs text-destructive">{{ formErrors.fine_value }}</p>
                         </div>
 
                         <!-- Effective Dates -->
@@ -733,9 +733,9 @@ const fineTypeOptions = [
                                     v-model="form.effective_from" 
                                     type="date" 
                                     required 
-                                    :class="formErrors.effective_from ? 'border-red-500' : ''"
+                                    :class="formErrors.effective_from ? 'border-destructive' : ''"
                                 />
-                                <p v-if="formErrors.effective_from" class="text-xs text-red-500">{{ formErrors.effective_from }}</p>
+                                <p v-if="formErrors.effective_from" class="text-xs text-destructive">{{ formErrors.effective_from }}</p>
                             </div>
                             <div class="space-y-2">
                                 <Label for="effective_to">Effective To (Optional)</Label>
@@ -743,9 +743,9 @@ const fineTypeOptions = [
                                     id="effective_to" 
                                     v-model="form.effective_to" 
                                     type="date"
-                                    :class="formErrors.effective_to ? 'border-red-500' : ''"
+                                    :class="formErrors.effective_to ? 'border-destructive' : ''"
                                 />
-                                <p v-if="formErrors.effective_to" class="text-xs text-red-500">{{ formErrors.effective_to }}</p>
+                                <p v-if="formErrors.effective_to" class="text-xs text-destructive">{{ formErrors.effective_to }}</p>
                             </div>
                         </div>
 
@@ -755,13 +755,13 @@ const fineTypeOptions = [
                                 type="checkbox" 
                                 id="is_active" 
                                 v-model="form.is_active" 
-                                class="rounded border-gray-300 dark:border-gray-600"
+                                class="rounded border-border"
                             />
                             <Label for="is_active" class="text-sm font-normal">Active</Label>
                         </div>
 
                         <!-- Form Actions -->
-                        <div class="flex justify-end gap-3 pt-4">
+                        <div class="flex flex-wrap justify-end gap-3 pt-4">
                             <Button type="button" variant="outline" @click="closeModal">Cancel</Button>
                             <Button type="submit" :disabled="isSubmitting">
                                 {{ isSubmitting ? 'Saving...' : (editingRule ? 'Update' : 'Create') }}

@@ -5,9 +5,7 @@ namespace App\Repositories;
 use App\Enums\Fee\ApprovalStatus;
 use App\Models\Campus;
 use App\Models\Fee\DiscountType;
-use App\Models\Fee\FeeHead;
 use App\Models\Fee\StudentDiscount;
-use App\Models\Fee\StudentFeeAssignment;
 use App\Models\Gender;
 use App\Models\Guardian;
 use App\Models\Relation;
@@ -201,7 +199,7 @@ class StudentRepository
         $lastStudent = Student::orderBy('id', 'desc')->first();
         $nextNumber = $lastStudent ? (int) substr($lastStudent->admission_no, 4) + 1 : 1;
 
-        return 'ADM-'.str_pad($nextNumber, 5, '0', STR_PAD_LEFT);
+        return 'ADM-'.str_pad((string) $nextNumber, 5, '0', STR_PAD_LEFT);
     }
 
     /**
@@ -213,7 +211,7 @@ class StudentRepository
             ->max('student_code');
         $nextNumber = $maxStudentCode ? (int) str_replace('STU-', '', $maxStudentCode) + 1 : 1;
 
-        return 'STU-'.str_pad($nextNumber, 6, '0', STR_PAD_LEFT);
+        return 'STU-'.str_pad((string) $nextNumber, 6, '0', STR_PAD_LEFT);
     }
 
     /**
@@ -223,7 +221,7 @@ class StudentRepository
     {
         $maxId = Student::max('id') ?? 0;
 
-        return 'REG-'.date('Y').'-'.str_pad($maxId + 1, 5, '0', STR_PAD_LEFT);
+        return 'REG-'.date('Y').'-'.str_pad((string) ($maxId + 1), 5, '0', STR_PAD_LEFT);
     }
 
     /**
@@ -325,8 +323,12 @@ class StudentRepository
                 'manual_discount_reason' => $data['manual_discount_reason'] ?? null,
             ]);
 
-            // 7. Create student fee assignments for custom fees set at admission
-            $this->createFeeAssignmentsFromAdmission($enrollment, $data);
+            // The fee agreed at admission lives on the enrollment itself
+            // (`fee_mode`, `custom_fee_entries`, `monthly_fee`, `annual_fee`).
+            // It used to be copied into `student_fee_assignments` as well,
+            // which left the same figure in two places with nothing saying
+            // which one billing should trust. That table is now reserved for
+            // deliberate mid-session overrides.
 
             // 8. Create student discounts if fee_mode is 'discount' or 'manual'
             if (($data['fee_mode'] ?? null) === 'discount' && ! empty($data['discounts'])) {
@@ -362,12 +364,12 @@ class StudentRepository
      */
     private function handleFatherGuardian(array $data, Student $student): Guardian
     {
-        // Check if guardian_id is provided (linking existing guardian)
+        // Check if guardian_id is provided (linking existing guardian).
+        //
+        // Cast to int: `find()` given an array returns a Collection, so an
+        // unexpected shape would otherwise flow on as one.
         if (! empty($data['guardian_id'])) {
-            $fatherGuardian = Guardian::find($data['guardian_id']);
-            if (! $fatherGuardian) {
-                throw new \RuntimeException('Guardian not found for the given ID');
-            }
+            $fatherGuardian = Guardian::findOrFail((int) $data['guardian_id']);
         } else {
             $fatherPhone = ! empty($data['father_phone']) ? $data['father_phone'] : null;
             $fatherGuardian = $this->guardianService->findOrCreateByPhone($fatherPhone, [
@@ -380,15 +382,34 @@ class StudentRepository
             ]);
         }
 
-        // Link father as primary guardian
+        // Link father as primary guardian.
+        //
+        // `father_relation_id` is only required alongside `father_name`, so an
+        // admission that links an existing guardian — the sibling case — does
+        // not carry it. Reading it unconditionally raised an undefined-key
+        // error and rolled the whole admission back.
         StudentGuardian::create([
             'student_id' => $student->id,
             'guardian_id' => $fatherGuardian->id,
-            'relation_id' => $data['father_relation_id'],
+            'relation_id' => $data['father_relation_id']
+                ?? $this->existingRelationFor($fatherGuardian),
             'is_primary' => true,
         ]);
 
         return $fatherGuardian;
+    }
+
+    /**
+     * The relation an already-linked guardian is recorded under elsewhere.
+     *
+     * Falls back to the guardian's most recent link so a sibling admission
+     * keeps the same relationship the family already has on file.
+     */
+    private function existingRelationFor(Guardian $guardian): ?int
+    {
+        return StudentGuardian::where('guardian_id', $guardian->id)
+            ->latest('id')
+            ->value('relation_id');
     }
 
     /**
@@ -463,23 +484,27 @@ class StudentRepository
             $currentEnrollment = $student->currentEnrollment;
 
             if ($currentEnrollment) {
-                $currentEnrollment->update([
-                    'session_id' => $data['session_id'],
-                    'class_id' => $data['class_id'],
-                    'section_id' => $data['section_id'] ?? null,
-                    'campus_id' => $data['campus_id'],
-                    'admission_date' => $data['admission_date'] ?? $currentEnrollment->admission_date,
-                    'student_status_id' => $data['student_status_id'],
-                    'description' => $data['description'] ?? null,
-                    'monthly_fee' => $data['monthly_fee'] ?? 0,
-                    'annual_fee' => $data['annual_fee'] ?? 0,
-                    // NEW: Fee structure integration fields
-                    'fee_structure_id' => $data['fee_structure_id'] ?? null,
-                    'fee_mode' => $data['fee_mode'] ?? 'structure',
-                    'custom_fee_entries' => $data['custom_fee_entries'] ?? null,
-                    'manual_discount_percentage' => $data['manual_discount_percentage'] ?? null,
-                    'manual_discount_reason' => $data['manual_discount_reason'] ?? null,
-                ]);
+                if ($this->isPlacementChange($currentEnrollment, $data)) {
+                    // A move to another class, section, campus or session opens
+                    // a new period rather than overwriting the old one, so the
+                    // record still shows where the child sat, and on what fee,
+                    // for each part of the year.
+                    $currentEnrollment = $this->openNewPeriod($student, $currentEnrollment, $data);
+                } else {
+                    $currentEnrollment->update([
+                        'admission_date' => $data['admission_date'] ?? $currentEnrollment->admission_date,
+                        'student_status_id' => $data['student_status_id'],
+                        'description' => $data['description'] ?? null,
+                        'monthly_fee' => $data['monthly_fee'] ?? 0,
+                        'annual_fee' => $data['annual_fee'] ?? 0,
+                        // NEW: Fee structure integration fields
+                        'fee_structure_id' => $data['fee_structure_id'] ?? null,
+                        'fee_mode' => $data['fee_mode'] ?? 'structure',
+                        'custom_fee_entries' => $data['custom_fee_entries'] ?? null,
+                        'manual_discount_percentage' => $data['manual_discount_percentage'] ?? null,
+                        'manual_discount_reason' => $data['manual_discount_reason'] ?? null,
+                    ]);
+                }
 
                 $currentEnrollment->discounts()->delete();
                 if (($data['fee_mode'] ?? 'structure') === 'discount' && ! empty($data['discounts'])) {
@@ -506,8 +531,6 @@ class StudentRepository
                     'manual_discount_percentage' => $data['manual_discount_percentage'] ?? null,
                     'manual_discount_reason' => $data['manual_discount_reason'] ?? null,
                 ]);
-
-                $this->createFeeAssignmentsFromAdmission($currentEnrollment, $data);
 
                 if (($data['fee_mode'] ?? 'structure') === 'discount' && ! empty($data['discounts'])) {
                     $this->createDiscountsFromAdmission($currentEnrollment, $data);
@@ -554,6 +577,79 @@ class StudentRepository
     }
 
     /**
+     * Whether the submitted placement differs from where the student sits now.
+     *
+     * Fee amounts and descriptions are edits to the current period; a change of
+     * class, section, campus or session is a move to a new one.
+     *
+     * @param  array<string, mixed>  $data
+     */
+    private function isPlacementChange(StudentEnrollmentRecord $current, array $data): bool
+    {
+        $submitted = [
+            'session_id' => $data['session_id'] ?? null,
+            'class_id' => $data['class_id'] ?? null,
+            'section_id' => $data['section_id'] ?? null,
+            'campus_id' => $data['campus_id'] ?? null,
+        ];
+
+        foreach ($submitted as $column => $value) {
+            if ($value === null) {
+                continue;
+            }
+
+            if ((int) $current->{$column} !== (int) $value) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
+     * Closes the current enrollment period and opens the next one.
+     *
+     * The closed row keeps the class, section and fee the student was on, and
+     * the new row points back at it, so the year reads as a sequence of periods
+     * rather than a single row that has been overwritten.
+     *
+     * @param  array<string, mixed>  $data
+     */
+    private function openNewPeriod(
+        Student $student,
+        StudentEnrollmentRecord $current,
+        array $data
+    ): StudentEnrollmentRecord {
+        $movedOn = $data['admission_date'] ?? now()->toDateString();
+
+        // A period cannot end before it began; a back-dated move closes the
+        // previous row on its own start date, leaving a zero-length period.
+        $closedOn = max($movedOn, $current->admission_date->toDateString());
+
+        $current->update(['leave_date' => $closedOn]);
+
+        return StudentEnrollmentRecord::create([
+            'student_id' => $student->id,
+            'session_id' => $data['session_id'],
+            'class_id' => $data['class_id'],
+            'section_id' => $data['section_id'] ?? null,
+            'campus_id' => $data['campus_id'],
+            'admission_date' => $movedOn,
+            'leave_date' => null,
+            'student_status_id' => $data['student_status_id'],
+            'previous_enrollment_id' => $current->id,
+            'description' => $data['description'] ?? null,
+            'monthly_fee' => $data['monthly_fee'] ?? 0,
+            'annual_fee' => $data['annual_fee'] ?? 0,
+            'fee_structure_id' => $data['fee_structure_id'] ?? null,
+            'fee_mode' => $data['fee_mode'] ?? 'structure',
+            'custom_fee_entries' => $data['custom_fee_entries'] ?? null,
+            'manual_discount_percentage' => $data['manual_discount_percentage'] ?? null,
+            'manual_discount_reason' => $data['manual_discount_reason'] ?? null,
+        ]);
+    }
+
+    /**
      * Change student status (leave or re-admission).
      */
     public function changeStatus(Student $student, array $data): Student
@@ -576,7 +672,9 @@ class StudentRepository
             return $student;
         });
 
-        return $student->fresh();
+        // `fresh()` is null only if the row vanished mid-request; the caller is
+        // promised a Student, so fall back to the instance in hand.
+        return $student->fresh() ?? $student;
     }
 
     /**
@@ -697,7 +795,9 @@ class StudentRepository
             return $student;
         });
 
-        return $student->fresh();
+        // `fresh()` is null only if the row vanished mid-request; the caller is
+        // promised a Student, so fall back to the instance in hand.
+        return $student->fresh() ?? $student;
     }
 
     /**
@@ -726,81 +826,6 @@ class StudentRepository
         return Section::where('class_id', $classId)
             ->orderBy('name')
             ->get(['id', 'name']);
-    }
-
-    /**
-     * Create student fee assignments from admission custom fees.
-     * This ensures custom monthly/annual fees set at admission are used in voucher generation.
-     */
-    private function createFeeAssignmentsFromAdmission(StudentEnrollmentRecord $enrollment, array $data): void
-    {
-        // Get or create Monthly and Annual fee heads
-        $monthlyFeeHead = FeeHead::where('code', 'MONTHLY_TUITION')->first();
-        $annualFeeHead = FeeHead::where('code', 'ANNUAL')->first();
-
-        // If custom monthly fee is set and different from structure, create assignment
-        if (! empty($data['monthly_fee']) && $monthlyFeeHead) {
-            // Check if there's an existing active custom assignment
-            $existingMonthlyAssignment = StudentFeeAssignment::where('student_id', $enrollment->student_id)
-                ->where('fee_head_id', $monthlyFeeHead->id)
-                ->where('assignment_type', 'custom')
-                ->where('is_active', true)
-                ->first();
-
-            if (! $existingMonthlyAssignment) {
-                StudentFeeAssignment::create([
-                    'student_id' => $enrollment->student_id,
-                    'student_enrollment_record_id' => $enrollment->id,
-                    'session_id' => $enrollment->session_id,
-                    'campus_id' => $enrollment->campus_id,
-                    'class_id' => $enrollment->class_id,
-                    'section_id' => $enrollment->section_id,
-                    'fee_head_id' => $monthlyFeeHead->id,
-                    'assignment_type' => 'custom',
-                    'value_type' => 'fixed',
-                    'amount' => $data['monthly_fee'],
-                    'effective_from' => $enrollment->admission_date,
-                    'is_active' => true,
-                    'reason' => 'Set at admission',
-                    'created_by' => auth()->id(),
-                ]);
-            }
-        }
-
-        // If custom annual fee is set and different from structure, create assignment
-        if (! empty($data['annual_fee']) && $annualFeeHead) {
-            $existingAnnualAssignment = StudentFeeAssignment::where('student_id', $enrollment->student_id)
-                ->where('fee_head_id', $annualFeeHead->id)
-                ->where('assignment_type', 'custom')
-                ->where('is_active', true)
-                ->first();
-
-            if (! $existingAnnualAssignment) {
-                StudentFeeAssignment::create([
-                    'student_id' => $enrollment->student_id,
-                    'student_enrollment_record_id' => $enrollment->id,
-                    'session_id' => $enrollment->session_id,
-                    'campus_id' => $enrollment->campus_id,
-                    'class_id' => $enrollment->class_id,
-                    'section_id' => $enrollment->section_id,
-                    'fee_head_id' => $annualFeeHead->id,
-                    'assignment_type' => 'custom',
-                    'value_type' => 'fixed',
-                    'amount' => $data['annual_fee'],
-                    'effective_from' => $enrollment->admission_date,
-                    'is_active' => true,
-                    'reason' => 'Set at admission',
-                    'created_by' => auth()->id(),
-                ]);
-            }
-        }
-
-        Log::info('Fee assignments created from admission', [
-            'student_id' => $enrollment->student_id,
-            'enrollment_id' => $enrollment->id,
-            'monthly_fee' => $data['monthly_fee'] ?? null,
-            'annual_fee' => $data['annual_fee'] ?? null,
-        ]);
     }
 
     /**
@@ -854,8 +879,15 @@ class StudentRepository
     private function syncPrimaryGuardian(Student $student, array $data): void
     {
         $primaryLink = $student->studentGuardians->firstWhere('is_primary', true);
+
+        // An update that only touches the student or their placement carries no
+        // guardian fields, and there is nothing to sync.
+        if (empty($data['father_name']) && empty($data['guardian_id'])) {
+            return;
+        }
+
         $payload = [
-            'name' => $data['father_name'],
+            'name' => $data['father_name'] ?? $primaryLink?->guardian?->user?->name,
             'email' => $data['father_email'] ?? null,
             'phone' => $data['father_phone'] ?? null,
             'cnic' => $data['father_cnic'] ?? null,
@@ -873,7 +905,7 @@ class StudentRepository
         if ($primaryLink) {
             $primaryLink->update([
                 'guardian_id' => $guardian->id,
-                'relation_id' => $data['father_relation_id'],
+                'relation_id' => $data['father_relation_id'] ?? $primaryLink->relation_id,
                 'is_primary' => true,
             ]);
         } else {
@@ -929,21 +961,47 @@ class StudentRepository
         }
     }
 
+    /**
+     * Resolves which guardian record an edit refers to.
+     *
+     * The edit form has one guardian section, so a changed phone almost always
+     * means the number was corrected, not that a different person took over.
+     * Matching strictly on phone treated it as a different person and created a
+     * second guardian, splitting the family in two and leaving the sibling
+     * lookup — which matches on phone — pointing at the abandoned record.
+     *
+     * A student is moved to a different guardian through `guardian_id`, which
+     * the caller handles before this is reached.
+     *
+     * @param  array<string, mixed>  $payload
+     */
     private function resolveGuardianForUpdate(?Guardian $existingGuardian, array $payload): Guardian
     {
         $cleanPhone = ! empty($payload['phone'])
             ? preg_replace('/[^0-9]/', '', $payload['phone'])
             : null;
 
-        if ($existingGuardian && (($cleanPhone && $existingGuardian->phone === $cleanPhone) || ! $cleanPhone)) {
-            $existingGuardian->update([
-                'phone' => $cleanPhone,
-                'cnic' => $payload['cnic'] ?? $existingGuardian->cnic,
-                'occupation' => $payload['occupation'] ?? $existingGuardian->occupation,
-                'address' => $payload['address'] ?? $existingGuardian->address,
-            ]);
+        if ($existingGuardian) {
+            // If the number now belongs to somebody already on file, that is a
+            // genuine re-link rather than a correction.
+            $holder = $cleanPhone
+                ? Guardian::where('phone', $cleanPhone)
+                    ->whereKeyNot($existingGuardian->getKey())
+                    ->first()
+                : null;
 
-            return $this->guardianService->updateGuardian($existingGuardian, $payload);
+            if (! $holder) {
+                $existingGuardian->update([
+                    'phone' => $cleanPhone ?? $existingGuardian->phone,
+                    'cnic' => $payload['cnic'] ?? $existingGuardian->cnic,
+                    'occupation' => $payload['occupation'] ?? $existingGuardian->occupation,
+                    'address' => $payload['address'] ?? $existingGuardian->address,
+                ]);
+
+                return $this->guardianService->updateGuardian($existingGuardian, $payload);
+            }
+
+            return $this->guardianService->updateGuardian($holder, $payload);
         }
 
         $guardian = $this->guardianService->findOrCreateByPhone($cleanPhone, $payload);

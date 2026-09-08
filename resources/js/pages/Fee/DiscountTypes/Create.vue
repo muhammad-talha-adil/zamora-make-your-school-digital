@@ -90,10 +90,10 @@ const cancel = () => {
             <!-- Header -->
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 md:gap-4">
                 <div>
-                    <h1 class="text-lg md:text-2xl font-bold text-gray-900 dark:text-white">
+                    <h1 class="text-lg md:text-2xl font-bold text-foreground">
                         Create Discount Type
                     </h1>
-                    <p class="mt-1 text-xs md:text-sm text-gray-600 dark:text-gray-400">
+                    <p class="mt-1 text-xs md:text-sm text-muted-foreground">
                         Create a new discount type
                     </p>
                 </div>
@@ -110,41 +110,41 @@ const cancel = () => {
             </div>
 
             <!-- Form -->
-            <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 md:p-6">
+            <div class="bg-card rounded-lg border border-border p-4 md:p-6">
                 <form @submit.prevent="submitForm" class="space-y-6">
                     <!-- Name & Code -->
                     <div class="grid gap-4 md:grid-cols-2">
                         <div class="space-y-2">
-                            <Label for="name">Name <span class="text-red-500">*</span></Label>
+                            <Label for="name">Name <span class="text-destructive">*</span></Label>
                             <Input
                                 id="name"
                                 v-model="form.name"
                                 placeholder="e.g., Sibling Discount"
-                                :class="{ 'border-red-500': errors.name }"
+                                :class="{ 'border-destructive': errors.name }"
                             />
-                            <p v-if="errors.name" class="text-sm text-red-500">{{ errors.name }}</p>
+                            <p v-if="errors.name" class="text-sm text-destructive">{{ errors.name }}</p>
                         </div>
 
                         <div class="space-y-2">
-                            <Label for="code">Code <span class="text-red-500">*</span></Label>
+                            <Label for="code">Code <span class="text-destructive">*</span></Label>
                             <Input
                                 id="code"
                                 v-model="form.code"
                                 placeholder="e.g., SIB_DISC"
-                                :class="{ 'border-red-500': errors.code }"
+                                :class="{ 'border-destructive': errors.code }"
                             />
-                            <p v-if="errors.code" class="text-sm text-red-500">{{ errors.code }}</p>
+                            <p v-if="errors.code" class="text-sm text-destructive">{{ errors.code }}</p>
                         </div>
                     </div>
 
                     <!-- Default Value -->
                     <div class="grid gap-4 md:grid-cols-2">
                         <div class="space-y-2">
-                            <Label for="default_value_type">Value Type <span class="text-red-500">*</span></Label>
+                            <Label for="default_value_type">Value Type <span class="text-destructive">*</span></Label>
                             <select
                                 id="default_value_type"
                                 v-model="form.default_value_type"
-                                class="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 text-sm"
+                                class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm"
                             >
                                 <option value="percent">Percentage (%)</option>
                                 <option value="fixed">Fixed Amount (PKR)</option>
@@ -152,7 +152,7 @@ const cancel = () => {
                         </div>
 
                         <div class="space-y-2">
-                            <Label for="default_value">Default Value <span class="text-red-500">*</span></Label>
+                            <Label for="default_value">Default Value <span class="text-destructive">*</span></Label>
                             <Input
                                 id="default_value"
                                 v-model="form.default_value"
@@ -160,9 +160,9 @@ const cancel = () => {
                                 step="0.01"
                                 min="0"
                                 placeholder="0.00"
-                                :class="{ 'border-red-500': errors.default_value }"
+                                :class="{ 'border-destructive': errors.default_value }"
                             />
-                            <p v-if="errors.default_value" class="text-sm text-red-500">{{ errors.default_value }}</p>
+                            <p v-if="errors.default_value" class="text-sm text-destructive">{{ errors.default_value }}</p>
                         </div>
                     </div>
 
@@ -173,7 +173,7 @@ const cancel = () => {
                             <select
                                 id="requires_approval"
                                 v-model="form.requires_approval"
-                                class="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 text-sm"
+                                class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm"
                             >
                                 <option :value="false">No</option>
                                 <option :value="true">Yes</option>
@@ -185,7 +185,7 @@ const cancel = () => {
                             <select
                                 id="is_active"
                                 v-model="form.is_active"
-                                class="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 text-sm"
+                                class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm"
                             >
                                 <option :value="true">Active</option>
                                 <option :value="false">Inactive</option>
@@ -194,7 +194,7 @@ const cancel = () => {
                     </div>
 
                     <!-- Submit -->
-                    <div class="flex justify-end gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
+                    <div class="flex flex-wrap justify-end gap-3 pt-4 border-t border-border">
                         <Button type="button" variant="outline" @click="cancel">
                             Cancel
                         </Button>

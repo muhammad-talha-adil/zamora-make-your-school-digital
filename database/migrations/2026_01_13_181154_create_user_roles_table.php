@@ -15,7 +15,11 @@ return new class extends Migration
             $table->id();
             $table->foreignId('user_id')->constrained('users')->onDelete('cascade');
             $table->foreignId('role_id')->constrained('roles')->onDelete('cascade');
-            $table->foreignId('campus_id')->nullable()->constrained('campuses')->onDelete('cascade');
+            // No constraint: `campuses` is not created until a later migration,
+            // so the reference could never be satisfied. It went unnoticed while
+            // the tables were MyISAM, which ignores foreign keys outright.
+            // The table itself is dropped once roles move to spatie/permission.
+            $table->foreignId('campus_id')->nullable();
             $table->boolean('is_active')->default(true);
             $table->timestamps();
             $table->softDeletes();

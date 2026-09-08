@@ -101,25 +101,25 @@ function submitForm(mode: string) {
 
         <SettingsLayout>
             <div class="space-y-8">
-                <div class="flex items-center justify-between gap-4">
+                <div class="flex flex-wrap items-center justify-between gap-4">
                     <div>
-                        <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Appearance</h1>
-                        <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">Manage Light and Dark mode color themes for the dashboard.</p>
+                        <h1 class="text-2xl font-bold text-foreground">Appearance</h1>
+                        <p class="mt-1 text-sm text-muted-foreground">Manage Light and Dark mode color themes for the dashboard.</p>
                     </div>
-                    <span class="inline-flex items-center rounded-full bg-red-100 px-2.5 py-0.5 text-xs font-medium text-red-800 dark:bg-red-500/15 dark:text-red-200">
+                    <span class="inline-flex items-center rounded-full bg-destructive/10 px-2.5 py-0.5 text-xs font-medium text-destructive">
                         Admin Only
                     </span>
                 </div>
 
                 <!-- Tabs -->
-                <div class="border-b border-gray-200 dark:border-gray-700">
+                <div class="border-b border-border">
                     <nav class="-mb-px flex space-x-8">
                         <button
                             @click="activeTab = 'light'"
                             :class="[
                                 activeTab === 'light'
-                                    ? 'border-indigo-500 text-indigo-600 dark:text-indigo-400'
-                                    : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300',
+                                    ? 'border-primary text-primary'
+                                    : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border',
                                 'whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm'
                             ]"
                         >
@@ -129,8 +129,8 @@ function submitForm(mode: string) {
                             @click="activeTab = 'dark'"
                             :class="[
                                 activeTab === 'dark'
-                                    ? 'border-indigo-500 text-indigo-600 dark:text-indigo-400'
-                                    : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 hover:border-gray-300',
+                                    ? 'border-primary text-primary'
+                                    : 'border-transparent text-muted-foreground hover:text-foreground hover:border-border',
                                 'whitespace-nowrap py-2 px-1 border-b-2 font-medium text-sm'
                             ]"
                         >
@@ -143,13 +143,13 @@ function submitForm(mode: string) {
                 <div v-if="activeTab === 'light'">
                     <form @submit.prevent="submitForm('light')" class="space-y-8">
                         <!-- Live Preview -->
-                        <div class="bg-gray-50 dark:bg-gray-800 rounded-xl p-8 border border-gray-200 dark:border-gray-700">
-                            <h3 class="text-lg font-semibold mb-6 text-gray-900 dark:text-white">Live Preview</h3>
-                            <div class="bg-white rounded-xl shadow-lg overflow-hidden h-96" :style="{ backgroundColor: lightForm.colors.content_bg || '#f9fafb' }">
+                        <div class="bg-muted rounded-xl p-8 border border-border">
+                            <h3 class="text-lg font-semibold mb-6 text-foreground">Live Preview</h3>
+                            <div class="bg-card rounded-xl shadow-lg overflow-hidden h-96" :style="{ backgroundColor: lightForm.colors.content_bg || '#f9fafb' }">
                                 <div class="flex h-full">
                                     <!-- Sidebar -->
-                                    <div class="w-64 p-6 border-r border-gray-200" :style="{ backgroundColor: lightForm.colors.sidebar_bg || '#ffffff', color: lightForm.colors.sidebar_text || '#000000' }">
-                                        <div class="text-xs text-gray-500 dark:text-gray-400 mb-4 font-medium">Sidebar</div>
+                                    <div class="w-64 p-6 border-r border-border" :style="{ backgroundColor: lightForm.colors.sidebar_bg || '#ffffff', color: lightForm.colors.sidebar_text || '#000000' }">
+                                        <div class="text-xs text-muted-foreground mb-4 font-medium">Sidebar</div>
                                         <div class="space-y-3">
                                             <div class="h-4 bg-current opacity-20 rounded"></div>
                                             <div class="h-4 bg-current opacity-20 rounded w-3/4"></div>
@@ -158,15 +158,15 @@ function submitForm(mode: string) {
                                     </div>
                                     <div class="flex-1">
                                         <!-- Header -->
-                                        <div class="p-6 border-b border-gray-200" :style="{ backgroundColor: lightForm.colors.header_bg || '#ffffff', color: lightForm.colors.header_text || '#000000' }">
-                                            <div class="text-xs text-gray-500 dark:text-gray-400 mb-4 font-medium">Header</div>
+                                        <div class="p-6 border-b border-border" :style="{ backgroundColor: lightForm.colors.header_bg || '#ffffff', color: lightForm.colors.header_text || '#000000' }">
+                                            <div class="text-xs text-muted-foreground mb-4 font-medium">Header</div>
                                             <div class="h-5 bg-current opacity-20 rounded w-1/3"></div>
                                         </div>
                                         <!-- Content -->
                                         <div class="p-8">
-                                            <div class="text-xs text-gray-500 dark:text-gray-400 mb-4 font-medium">Content</div>
+                                            <div class="text-xs text-muted-foreground mb-4 font-medium">Content</div>
                                             <div class="rounded-xl p-6 shadow-sm" :style="{ backgroundColor: lightForm.colors.card_bg || '#ffffff', color: lightForm.colors.card_text || '#000000' }">
-                                                <div class="text-xs text-gray-500 dark:text-gray-400 mb-4 font-medium">Card</div>
+                                                <div class="text-xs text-muted-foreground mb-4 font-medium">Card</div>
                                                 <div class="h-4 bg-current opacity-20 rounded mb-3"></div>
                                                 <div class="h-4 bg-current opacity-20 rounded w-3/4"></div>
                                             </div>
@@ -178,7 +178,7 @@ function submitForm(mode: string) {
 
                         <!-- Palette Selection -->
                         <div>
-                            <h3 class="text-lg font-semibold mb-6 text-gray-900 dark:text-white">Choose a Palette</h3>
+                            <h3 class="text-lg font-semibold mb-6 text-foreground">Choose a Palette</h3>
                             <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                                 <PaletteCard
                                     v-for="palette in props.palettes.light"
@@ -188,12 +188,12 @@ function submitForm(mode: string) {
                                     @select="selectPalette('light', $event)"
                                 />
                             </div>
-                            <p v-if="lightForm.selected_palette_id" class="mt-4 text-sm text-gray-600 dark:text-gray-400">You can fine-tune colors below</p>
+                            <p v-if="lightForm.selected_palette_id" class="mt-4 text-sm text-muted-foreground">You can fine-tune colors below</p>
                         </div>
 
                         <!-- Basic Colors -->
                         <div>
-                            <h3 class="text-lg font-semibold mb-6 text-gray-900 dark:text-white">Basic Colors</h3>
+                            <h3 class="text-lg font-semibold mb-6 text-foreground">Basic Colors</h3>
 
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <ColorGroup
@@ -239,8 +239,8 @@ function submitForm(mode: string) {
                         </div>
 
                         <!-- Advanced Settings -->
-                        <details class="rounded-xl border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-900">
-                            <summary class="cursor-pointer p-6 text-sm font-semibold hover:bg-gray-50 dark:hover:bg-gray-800 rounded-t-xl text-gray-900 dark:text-white">Advanced Customization</summary>
+                        <details class="rounded-xl border border-border bg-card">
+                            <summary class="cursor-pointer p-6 text-sm font-semibold hover:bg-accent rounded-t-xl text-foreground">Advanced Customization</summary>
                             <div class="p-6 pt-0 space-y-6">
                                 <ColorGroup
                                     title="Active States"
@@ -260,13 +260,13 @@ function submitForm(mode: string) {
                 <div v-if="activeTab === 'dark'">
                     <form @submit.prevent="submitForm('dark')" class="space-y-8">
                         <!-- Live Preview -->
-                        <div class="bg-gray-50 dark:bg-gray-800 rounded-xl p-8 border border-gray-200 dark:border-gray-700">
-                            <h3 class="text-lg font-semibold mb-6 text-gray-900 dark:text-white">Live Preview</h3>
-                            <div class="bg-gray-900 rounded-xl shadow-lg overflow-hidden h-96" :style="{ backgroundColor: darkForm.colors.content_bg || '#1f2937' }">
+                        <div class="bg-muted rounded-xl p-8 border border-border">
+                            <h3 class="text-lg font-semibold mb-6 text-foreground">Live Preview</h3>
+                            <div class="bg-card rounded-xl shadow-lg overflow-hidden h-96" :style="{ backgroundColor: darkForm.colors.content_bg || '#1f2937' }">
                                 <div class="flex h-full">
                                     <!-- Sidebar -->
-                                    <div class="w-64 p-6 border-r border-gray-700" :style="{ backgroundColor: darkForm.colors.sidebar_bg || '#1f2937', color: darkForm.colors.sidebar_text || '#ffffff' }">
-                                        <div class="text-xs text-gray-400 mb-4 font-medium">Sidebar</div>
+                                    <div class="w-64 p-6 border-r border-border" :style="{ backgroundColor: darkForm.colors.sidebar_bg || '#1f2937', color: darkForm.colors.sidebar_text || '#ffffff' }">
+                                        <div class="text-xs text-muted-foreground mb-4 font-medium">Sidebar</div>
                                         <div class="space-y-3">
                                             <div class="h-4 bg-current opacity-30 rounded"></div>
                                             <div class="h-4 bg-current opacity-30 rounded w-3/4"></div>
@@ -275,15 +275,15 @@ function submitForm(mode: string) {
                                     </div>
                                     <div class="flex-1">
                                         <!-- Header -->
-                                        <div class="p-6 border-b border-gray-700" :style="{ backgroundColor: darkForm.colors.header_bg || '#1f2937', color: darkForm.colors.header_text || '#ffffff' }">
-                                            <div class="text-xs text-gray-400 mb-4 font-medium">Header</div>
+                                        <div class="p-6 border-b border-border" :style="{ backgroundColor: darkForm.colors.header_bg || '#1f2937', color: darkForm.colors.header_text || '#ffffff' }">
+                                            <div class="text-xs text-muted-foreground mb-4 font-medium">Header</div>
                                             <div class="h-5 bg-current opacity-30 rounded w-1/3"></div>
                                         </div>
                                         <!-- Content -->
                                         <div class="p-8">
-                                            <div class="text-xs text-gray-400 mb-4 font-medium">Content</div>
+                                            <div class="text-xs text-muted-foreground mb-4 font-medium">Content</div>
                                             <div class="rounded-xl p-6 shadow-sm" :style="{ backgroundColor: darkForm.colors.card_bg || '#374151', color: darkForm.colors.card_text || '#ffffff' }">
-                                                <div class="text-xs text-gray-400 mb-4 font-medium">Card</div>
+                                                <div class="text-xs text-muted-foreground mb-4 font-medium">Card</div>
                                                 <div class="h-4 bg-current opacity-30 rounded mb-3"></div>
                                                 <div class="h-4 bg-current opacity-30 rounded w-3/4"></div>
                                             </div>
@@ -295,7 +295,7 @@ function submitForm(mode: string) {
 
                         <!-- Palette Selection -->
                         <div>
-                            <h3 class="text-lg font-semibold mb-6 text-gray-900 dark:text-white">Choose a Palette</h3>
+                            <h3 class="text-lg font-semibold mb-6 text-foreground">Choose a Palette</h3>
                             <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-6">
                                 <PaletteCard
                                     v-for="palette in props.palettes.dark"
@@ -305,12 +305,12 @@ function submitForm(mode: string) {
                                     @select="selectPalette('dark', $event)"
                                 />
                             </div>
-                            <p v-if="darkForm.selected_palette_id" class="mt-4 text-sm text-gray-600 dark:text-gray-400">You can fine-tune colors below</p>
+                            <p v-if="darkForm.selected_palette_id" class="mt-4 text-sm text-muted-foreground">You can fine-tune colors below</p>
                         </div>
 
                         <!-- Basic Colors -->
                         <div>
-                            <h3 class="text-lg font-semibold mb-6 text-gray-900 dark:text-white">Basic Colors</h3>
+                            <h3 class="text-lg font-semibold mb-6 text-foreground">Basic Colors</h3>
 
                             <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
                                 <ColorGroup
@@ -356,8 +356,8 @@ function submitForm(mode: string) {
                         </div>
 
                         <!-- Advanced Settings -->
-                        <details class="rounded-xl border border-gray-200 bg-white dark:border-gray-700 dark:bg-gray-900">
-                            <summary class="cursor-pointer p-6 text-sm font-semibold hover:bg-gray-50 dark:hover:bg-gray-800 rounded-t-xl text-gray-900 dark:text-white">Advanced Customization</summary>
+                        <details class="rounded-xl border border-border bg-card">
+                            <summary class="cursor-pointer p-6 text-sm font-semibold hover:bg-accent rounded-t-xl text-foreground">Advanced Customization</summary>
                             <div class="p-6 pt-0 space-y-6">
                                 <ColorGroup
                                     title="Active States"
@@ -374,19 +374,19 @@ function submitForm(mode: string) {
                 </div>
 
                 <!-- Bottom Actions -->
-                <div class="-mx-4 border-t border-gray-200 bg-white p-4 dark:border-gray-700 dark:bg-gray-900">
-                    <div class="flex justify-between items-center">
+                <div class="-mx-4 border-t border-border bg-card p-4">
+                    <div class="flex flex-wrap gap-2 justify-between items-center">
                         <button
                             type="button"
                             @click="selectPalette(activeTab, activeTab === 'light' ? lightForm.selected_palette_id : darkForm.selected_palette_id)"
-                            class="inline-flex items-center rounded-md border border-transparent bg-gray-600 px-4 py-2 text-xs font-semibold uppercase tracking-widest text-white hover:bg-gray-700"
+                            class="inline-flex items-center rounded-md border border-transparent bg-muted px-4 py-2 text-xs font-semibold uppercase tracking-widest text-muted-foreground hover:bg-card"
                         >
                             Reset to Palette
                         </button>
                         <button
                             @click="submitForm(activeTab)"
                             :disabled="(activeTab === 'light' ? lightForm.processing : darkForm.processing)"
-                            class="inline-flex items-center rounded-md border border-transparent bg-indigo-600 px-6 py-2 text-xs font-semibold uppercase tracking-widest text-white hover:bg-indigo-700 disabled:cursor-not-allowed disabled:opacity-60"
+                            class="inline-flex items-center rounded-md border border-transparent bg-primary px-6 py-2 text-xs font-semibold uppercase tracking-widest text-primary-foreground hover:bg-primary/90 disabled:cursor-not-allowed disabled:opacity-60"
                         >
                             Save {{ activeTab === 'light' ? 'Light' : 'Dark' }} Mode
                         </button>

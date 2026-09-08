@@ -7,18 +7,22 @@ use App\Models\Exam\Exam;
 use App\Models\Exam\ExamPaper;
 use App\Models\Exam\ExamResultHeader;
 use App\Models\Exam\ExamStudentRegistration;
-use App\Models\Exam\GradeSystem;
 use App\Models\Exam\GradeSystemItem;
+use App\Services\Exam\GradeResolver;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 class ExamDashboardController extends Controller
 {
+    public function __construct(private GradeResolver $grades) {}
+
     /**
      * Display exam dashboard page.
      */
     public function indexPage()
     {
+        $this->authorize('viewAny', Exam::class);
+
         return Inertia::render('Exam/Dashboard/Index');
     }
 
@@ -27,7 +31,10 @@ class ExamDashboardController extends Controller
      */
     public function getStats(Request $request)
     {
+        $this->authorize('viewAny', Exam::class);
+
         $examId = $request->query('exam_id');
+        $viewer = $request->user();
 
         // ============================
         // Overview Statistics
@@ -37,13 +44,13 @@ class ExamDashboardController extends Controller
         $totalExams = Exam::count();
 
         // Total papers count
-        $totalPapers = ExamPaper::count();
+        $totalPapers = ExamPaper::visibleTo($viewer)->count();
 
         // Total registrations count
-        $totalRegistrations = ExamStudentRegistration::count();
+        $totalRegistrations = ExamStudentRegistration::visibleTo($viewer)->count();
 
         // Total results entered
-        $totalResults = ExamResultHeader::count();
+        $totalResults = ExamResultHeader::visibleTo($viewer)->count();
 
         // Exams by status
         $examsByStatus = Exam::select('status')
@@ -54,7 +61,8 @@ class ExamDashboardController extends Controller
             ->toArray();
 
         // Papers by status
-        $papersByStatus = ExamPaper::select('status')
+        $papersByStatus = ExamPaper::visibleTo($viewer)
+            ->select('status')
             ->selectRaw('COUNT(*) as count')
             ->groupBy('status')
             ->get()
@@ -86,6 +94,7 @@ class ExamDashboardController extends Controller
         // Upcoming Papers (next 7 days)
         // ============================
         $upcomingPapers = ExamPaper::with(['exam', 'subject', 'class', 'section'])
+            ->visibleTo($viewer)
             ->where('paper_date', '>=', now()->toDateString())
             ->where('paper_date', '<=', now()->addDays(7)->toDateString())
             ->where('status', '!=', 'cancelled')
@@ -112,6 +121,7 @@ class ExamDashboardController extends Controller
         // Today's Papers
         // ============================
         $todayPapers = ExamPaper::with(['exam', 'subject', 'class', 'section'])
+            ->visibleTo($viewer)
             ->where('paper_date', now()->toDateString())
             ->where('status', '!=', 'cancelled')
             ->orderBy('start_time')
@@ -161,10 +171,13 @@ class ExamDashboardController extends Controller
             $exam = Exam::findOrFail($examId);
 
             // Get total registered students
-            $totalRegistered = ExamStudentRegistration::where('exam_id', $examId)->count();
+            $totalRegistered = ExamStudentRegistration::where('exam_id', $examId)
+                ->visibleTo($viewer)
+                ->count();
 
             // Get students with results
             $markedStudents = ExamResultHeader::where('exam_id', $examId)
+                ->visibleTo($viewer)
                 ->whereNotNull('total_obtained_cache')
                 ->count();
 
@@ -179,6 +192,7 @@ class ExamDashboardController extends Controller
 
             // Grade distribution
             $gradeDistributionData = ExamResultHeader::where('exam_id', $examId)
+                ->visibleTo($viewer)
                 ->whereNotNull('overall_grade_item_id_cache')
                 ->select('overall_grade_item_id_cache')
                 ->selectRaw('COUNT(*) as count')
@@ -196,6 +210,7 @@ class ExamDashboardController extends Controller
 
             // Toppers for this exam
             $toppers = ExamResultHeader::where('exam_id', $examId)
+                ->visibleTo($viewer)
                 ->whereNotNull('total_obtained_cache')
                 ->with(['student.user', 'class', 'section'])
                 ->orderByDesc('overall_percentage_cache')
@@ -240,7 +255,13 @@ class ExamDashboardController extends Controller
             'toppers' => $toppers,
 
             // Settings
-            'active_grade_system' => GradeSystem::getActiveGradeSystem(),
+            // Resolved by campus and session, like everywhere else that
+            // grades. `getActiveGradeSystem()` took whichever row came back
+            // first.
+            'active_grade_system' => $this->grades->systemFor(
+                $viewer?->campusId(),
+                $examId ? Exam::find($examId)?->session_id : null
+            ),
         ]);
     }
 }

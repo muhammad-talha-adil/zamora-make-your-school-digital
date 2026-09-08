@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Enums\AttendanceStatusCode;
 use App\Models\Attendance;
 use App\Models\AttendanceStatus;
 use App\Models\AttendanceStudent;
@@ -10,6 +11,7 @@ use App\Models\Student;
 use App\Models\StudentLeave;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Support\Collection as SupportCollection;
 use Illuminate\Support\Facades\Cache;
 
 class AttendanceService
@@ -23,6 +25,22 @@ class AttendanceService
      * Cache TTL in minutes.
      */
     private const CACHE_TTL = 60; // 1 hour
+
+    /**
+     * Bumped to retire every cached holiday answer at once. See
+     * `forgetHolidays()`.
+     */
+    private const HOLIDAY_VERSION_KEY = 'attendance:holiday-cache-version';
+
+    /**
+     * The seeded status codes and the names this service knows them by.
+     */
+    private const CODE_TO_NAME = [
+        AttendanceStatusCode::PRESENT->value => 'present',
+        AttendanceStatusCode::ABSENT->value => 'absent',
+        AttendanceStatusCode::LEAVE->value => 'leave',
+        AttendanceStatusCode::LATE->value => 'late',
+    ];
 
     /**
      * Check if a date is a holiday for a campus.
@@ -47,21 +65,26 @@ class AttendanceService
      */
     public function getHoliday(string $date, ?int $campusId = null): ?Holiday
     {
-        $cacheKey = "holiday:{$date}:".($campusId ?? 'national');
+        $cacheKey = 'holiday:v'.$this->holidayCacheVersion().":{$date}:".($campusId ?? 'national');
 
         return Cache::remember($cacheKey, self::CACHE_TTL, function () use ($date, $campusId) {
-            // First check non-recurring holidays
+            /*
+             * Non-recurring holidays first, compared with `whereDate`: the
+             * columns are cast to dates and hold a datetime whose time part is
+             * zero, so `start_date <= '2026-04-06'` was false for a holiday
+             * that starts on that very day.
+             */
             $holiday = Holiday::where(function ($query) use ($date, $campusId) {
                 $query->where('is_national', true)
                     ->orWhere(function ($q) use ($date, $campusId) {
                         if ($campusId) {
                             $q->where('campus_id', $campusId);
                         }
-                        $q->where('start_date', '<=', $date)
-                            ->where('end_date', '>=', $date);
+                        $q->whereDate('start_date', '<=', $date)
+                            ->whereDate('end_date', '>=', $date);
                     });
-            })->where('start_date', '<=', $date)
-                ->where('end_date', '>=', $date)
+            })->whereDate('start_date', '<=', $date)
+                ->whereDate('end_date', '>=', $date)
                 ->where(function ($q) {
                     $q->whereNull('recurrence_type')
                         ->orWhere('recurrence_type', 'none');
@@ -112,7 +135,7 @@ class AttendanceService
      */
     public function getHolidaysInRange(string $startDate, string $endDate, ?int $campusId = null): Collection
     {
-        return Cache::remember("holidays:{$startDate}:{$endDate}:".($campusId ?? 'all'), self::CACHE_TTL, function () use ($startDate, $endDate, $campusId) {
+        return Cache::remember('holidays:v'.$this->holidayCacheVersion().":{$startDate}:{$endDate}:".($campusId ?? 'all'), self::CACHE_TTL, function () use ($startDate, $endDate, $campusId) {
             $start = Carbon::parse($startDate);
             $end = Carbon::parse($endDate);
 
@@ -149,7 +172,7 @@ class AttendanceService
     public function detectStudentLeave(int $studentId, string $date): ?StudentLeave
     {
         return StudentLeave::where('student_id', $studentId)
-            ->where('status', 'approved')
+            ->approved()
             ->where('start_date', '<=', $date)
             ->where('end_date', '>=', $date)
             ->first();
@@ -163,10 +186,10 @@ class AttendanceService
         if ($this->statusIds === null) {
             $this->statusIds = Cache::remember('attendance_status_ids', self::CACHE_TTL, function () {
                 return [
-                    'present' => AttendanceStatus::where('code', Attendance::STATUS_PRESENT)->first()?->id,
-                    'absent' => AttendanceStatus::where('code', Attendance::STATUS_ABSENT)->first()?->id,
-                    'leave' => AttendanceStatus::where('code', Attendance::STATUS_LEAVE)->first()?->id,
-                    'late' => AttendanceStatus::where('code', Attendance::STATUS_LATE)->first()?->id,
+                    'present' => AttendanceStatus::where('code', AttendanceStatusCode::PRESENT->value)->first()?->id,
+                    'absent' => AttendanceStatus::where('code', AttendanceStatusCode::ABSENT->value)->first()?->id,
+                    'leave' => AttendanceStatus::where('code', AttendanceStatusCode::LEAVE->value)->first()?->id,
+                    'late' => AttendanceStatus::where('code', AttendanceStatusCode::LATE->value)->first()?->id,
                 ];
             });
         }
@@ -175,13 +198,37 @@ class AttendanceService
     }
 
     /**
-     * Get a specific status ID by code.
+     * The id of a status, by its code.
+     *
+     * The lookup used to index the word-keyed array above with a code — every
+     * caller passes `'L'`, the keys are `'leave'` — so it returned null every
+     * single time and the automatic leave detection behind it never once ran.
+     * Both spellings are accepted now, because both are in use.
      */
     public function getStatusId(string $code): ?int
     {
         $statusIds = $this->getStatusIds();
+        $key = strtolower($code);
 
-        return $statusIds[strtolower($code)] ?? null;
+        if (array_key_exists($key, $statusIds)) {
+            return $statusIds[$key];
+        }
+
+        return $statusIds[self::CODE_TO_NAME[strtoupper($code)] ?? ''] ?? null;
+    }
+
+    /**
+     * Whether an id is the "on leave" status.
+     *
+     * Compared loosely on purpose: the id arrives from a request, where it may
+     * be the string `"3"` rather than the integer `3`, and a strict comparison
+     * against the looked-up id was false in exactly the cases that mattered.
+     */
+    public function isLeaveStatus(mixed $statusId): bool
+    {
+        $leaveId = $this->getStatusId(AttendanceStatusCode::LEAVE->value);
+
+        return $leaveId !== null && (int) $statusId === $leaveId;
     }
 
     /**
@@ -195,47 +242,89 @@ class AttendanceService
     }
 
     /**
-     * Clear the attendance cache.
+     * Forgets everything this service has cached, and nothing else.
+     *
+     * It used to call `Cache::flush()` — three times, in a loop — which threw
+     * away the entire application cache on every holiday saved: the permission
+     * cache, the theme palette, whatever else was in there, for every campus
+     * and every signed-in user.
      */
     public function clearCache(): void
     {
         Cache::forget('attendance_status_ids');
         Cache::forget('attendance_statuses');
-        // Clear holiday cache patterns
-        Cache::flush(); // In production, use pattern-based deletion
+
+        // The per-request copy has to go as well, or a status added in this
+        // request is still invisible to the rest of it.
+        $this->statusIds = null;
+
+        $this->forgetHolidays();
+    }
+
+    /**
+     * Invalidates every cached holiday answer.
+     *
+     * A holiday is cached per date and per campus, so there is no one key to
+     * forget and no pattern delete on the database or file stores. Moving the
+     * version forward makes every existing entry unreachable at once; they are
+     * never read again and fall out on their own TTL.
+     */
+    public function forgetHolidays(): void
+    {
+        Cache::forever(self::HOLIDAY_VERSION_KEY, $this->holidayCacheVersion() + 1);
+    }
+
+    private function holidayCacheVersion(): int
+    {
+        return (int) Cache::rememberForever(self::HOLIDAY_VERSION_KEY, fn () => 1);
     }
 
     /**
      * Calculate attendance statistics from a collection of records.
+     *
+     * Typed to the base collection on purpose. Demanding an Eloquent one threw
+     * a TypeError for any student with no records in the period — `collect()`
+     * is the empty default the class report passes — so the whole report
+     * returned a 500 the moment one child had not been marked.
+     *
+     * @param  SupportCollection<int, AttendanceStudent>  $records
+     * @return array{present: int, absent: int, leave: int, late: int, total: int}
      */
-    public function calculateStats(Collection $records): array
+    public function calculateStats(SupportCollection $records): array
     {
         $stats = [
             'present' => 0,
             'absent' => 0,
             'leave' => 0,
             'late' => 0,
+            'half_day' => 0,
             'total' => $records->count(),
+
+            // Weighted by what each status is worth, so a half day counts as
+            // half and a school that adds its own status is counted too.
+            'present_equivalent' => 0.0,
         ];
 
         foreach ($records as $record) {
-            $code = $record->attendanceStatus?->code;
+            $status = $record->attendanceStatus;
 
-            switch ($code) {
-                case Attendance::STATUS_PRESENT:
-                    $stats['present']++;
-                    break;
-                case Attendance::STATUS_ABSENT:
-                    $stats['absent']++;
-                    break;
-                case Attendance::STATUS_LEAVE:
-                    $stats['leave']++;
-                    break;
-                case Attendance::STATUS_LATE:
-                    $stats['late']++;
-                    break;
+            if (! $status) {
+                continue;
             }
+
+            $stats['present_equivalent'] += $status->presentWeight();
+
+            match ($status->code) {
+                AttendanceStatusCode::PRESENT->value => $stats['present']++,
+                AttendanceStatusCode::ABSENT->value => $stats['absent']++,
+                AttendanceStatusCode::LEAVE->value => $stats['leave']++,
+                AttendanceStatusCode::LATE->value => $stats['late']++,
+                AttendanceStatusCode::HALF_DAY->value => $stats['half_day']++,
+                default => null,
+            };
         }
+
+        $stats['present_equivalent'] = round($stats['present_equivalent'], 2);
 
         return $stats;
     }
@@ -253,47 +342,22 @@ class AttendanceService
     }
 
     /**
-     * Validate check-in and check-out times.
-     */
-    public function validateTimes(?string $checkIn, ?string $checkOut): array
-    {
-        $errors = [];
-
-        if ($checkIn && $checkOut) {
-            $checkInTime = Carbon::parse($checkIn);
-            $checkOutTime = Carbon::parse($checkOut);
-
-            if ($checkOutTime->lessThanOrEqualTo($checkInTime)) {
-                $errors[] = 'Check-out time must be after check-in time.';
-            }
-        }
-
-        return $errors;
-    }
-
-    /**
-     * Mark all students with a specific status.
-     */
-    public function markAllStudents(array &$studentAttendances, string $statusCode): void
-    {
-        $statusId = $this->getStatusId($statusCode);
-
-        if ($statusId) {
-            foreach ($studentAttendances as &$attendance) {
-                $attendance['attendance_status_id'] = $statusId;
-            }
-        }
-    }
-
-    /**
-     * Get students eligible for attendance on a date with existing attendance data.
+     * The children on the roll of a class on a given date.
+     *
+     * Built from the enrollment period that covered **that date**, not from the
+     * open one. Opening a past date used to list today's roll: a child who
+     * moved from 5-A to 5-B in November appeared under 5-B when September was
+     * opened, and a child who had since left was missing from the register they
+     * were actually on.
      */
     public function getEligibleStudents($classId, $sectionId = null, ?int $sessionId = null, ?int $campusId = null, ?string $date = null)
     {
+        $onDate = $date ?: now()->toDateString();
+
         $query = Student::with(['user:id,name', 'currentEnrollment.class', 'currentEnrollment.section', 'studentLeaves'])
-            ->whereHas('currentEnrollment', function ($q) use ($classId, $sectionId, $sessionId, $campusId) {
-                $q->where('class_id', $classId)
-                    ->whereNull('leave_date');
+            ->whereHas('enrollmentRecords', function ($q) use ($classId, $sectionId, $sessionId, $campusId, $onDate) {
+                $q->coveringDate($onDate)
+                    ->where('class_id', $classId);
 
                 // Only filter by section if a specific section is selected (not null/empty for "all sections")
                 if ($sectionId !== null && $sectionId !== '' && $sectionId !== 'all') {
@@ -317,7 +381,9 @@ class AttendanceService
         if ($date) {
             $attendanceRecords = AttendanceStudent::with(['attendanceStatus', 'studentLeave'])
                 ->whereHas('attendance', function ($q) use ($date, $classId, $sectionId, $sessionId, $campusId) {
-                    $q->where('attendance_date', $date)
+                    // `whereDate`: the column holds a datetime whose time part
+                    // is zero, so a plain `Y-m-d` string never matched it.
+                    $q->whereDate('attendance_date', $date)
                         ->where('class_id', $classId);
 
                     // Filter by section if a specific section is selected

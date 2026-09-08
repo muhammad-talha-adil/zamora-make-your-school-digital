@@ -119,7 +119,15 @@ class StoreStudentRequest extends FormRequest
                 'before:today',
                 // Ensure student is at least 3 years old and not more than 25 years old
                 function ($attribute, $value, $fail) {
-                    $dob = Carbon::parse($value);
+                    // Closures still run when `date` has already failed, so an
+                    // unparsable value has to be skipped here; parsing it threw
+                    // and turned a validation message into a 500.
+                    try {
+                        $dob = Carbon::parse($value);
+                    } catch (\Throwable) {
+                        return;
+                    }
+
                     $minAge = 3;
                     $maxAge = 25;
 
@@ -305,8 +313,17 @@ class StoreStudentRequest extends FormRequest
                 'email:rfc,dns',
                 'max:255',
             ],
+            /*
+             * Required alongside the guardian's name.
+             *
+             * The phone is how the school reaches the family, and it is also
+             * what `findOrCreateByPhone()` matches on when a sibling is admitted
+             * later, so an admission without one leaves a guardian who can
+             * never be found again. The edit form has always required it;
+             * admission now matches.
+             */
             'father_phone' => [
-                'nullable',
+                'required_without:guardian_id',
                 'string',
                 'max:20',
                 'regex:/^[0-9+\-\s]+$/',
@@ -344,7 +361,11 @@ class StoreStudentRequest extends FormRequest
                 'max:500',
             ],
             'father_relation_id' => [
-                'required_with:father_name',
+                // Always required: a student_guardians row is written either
+                // way, and its relation_id is NOT NULL. Only requiring this
+                // alongside `father_name` let a guardian-linking admission
+                // through validation and then fail at the insert.
+                'required',
                 'integer',
                 Rule::exists('relations', 'id'),
             ],

@@ -196,13 +196,13 @@ const submit = () => {
                             <Input
                                 id="title"
                                 v-model="form.title"
-                                :class="{ 'border-red-500': (errors as any).title }"
+                                :class="{ 'border-destructive': (errors as any).title }"
                                 placeholder="e.g., Independence Day"
                             />
                             <InputError :message="(errors as any).title" />
                         </div>
 
-                        <div class="grid grid-cols-2 gap-4">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                             <div>
                                 <Label for="start_date" class="flex items-center">
                                     <Icon icon="calendar" class="mr-1 h-4 w-4" />
@@ -212,7 +212,7 @@ const submit = () => {
                                     id="start_date"
                                     type="date"
                                     v-model="form.start_date"
-                                    :class="{ 'border-red-500': (errors as any).start_date }"
+                                    :class="{ 'border-destructive': (errors as any).start_date }"
                                 />
                                 <InputError :message="(errors as any).start_date" />
                             </div>
@@ -225,7 +225,7 @@ const submit = () => {
                                     id="end_date"
                                     type="date"
                                     v-model="form.end_date"
-                                    :class="{ 'border-red-500': (errors as any).end_date }"
+                                    :class="{ 'border-destructive': (errors as any).end_date }"
                                 />
                                 <InputError :message="(errors as any).end_date" />
                             </div>
@@ -250,15 +250,15 @@ const submit = () => {
                             <select
                                 id="campus_id"
                                 v-model="form.campus_id"
-                                class="w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-                                :class="{ 'border-red-500': (errors as any).campus_id }"
+                                class="w-full rounded-md border border-border px-3 py-2 shadow-sm focus:border-primary focus:ring-primary focus:outline-none"
+                                :class="{ 'border-destructive': (errors as any).campus_id }"
                             >
                                 <option value="">All Campuses</option>
                                 <option v-for="campus in campuses" :key="campus.id" :value="campus.id">
                                     {{ campus.name }}
                                 </option>
                             </select>
-                            <p class="text-xs text-gray-500 mt-1">Select a specific campus or "All Campuses"</p>
+                            <p class="text-xs text-muted-foreground mt-1">Select a specific campus or "All Campuses"</p>
                             <InputError :message="(errors as any).campus_id" />
                         </div>
 
@@ -270,7 +270,7 @@ const submit = () => {
                             <select
                                 id="recurrence_type"
                                 v-model="form.recurrence_type"
-                                class="w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                                class="w-full rounded-md border border-border px-3 py-2 shadow-sm focus:border-primary focus:ring-primary focus:outline-none"
                             >
                                 <option v-for="option in recurrenceOptions" :key="option.value" :value="option.value">
                                     {{ option.label }}
@@ -288,7 +288,7 @@ const submit = () => {
                                 type="date"
                                 v-model="form.recurrence_end_date"
                             />
-                            <p class="text-xs text-gray-500 mt-1">When should this recurring holiday stop?</p>
+                            <p class="text-xs text-muted-foreground mt-1">When should this recurring holiday stop?</p>
                         </div>
 
                         <div class="flex items-center space-x-2">
@@ -301,7 +301,7 @@ const submit = () => {
                                 Allow Attendance on this Holiday
                             </Label>
                         </div>
-                        <p class="text-xs text-gray-500 ml-6">If enabled, attendance can be marked on this holiday</p>
+                        <p class="text-xs text-muted-foreground ml-6">If enabled, attendance can be marked on this holiday</p>
 
                         <div>
                             <Label for="description" class="flex items-center">
@@ -312,15 +312,15 @@ const submit = () => {
                                 id="description"
                                 v-model="form.description"
                                 rows="3"
-                                class="w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-                                :class="{ 'border-red-500': (errors as any).description }"
+                                class="w-full rounded-md border border-border px-3 py-2 shadow-sm focus:border-primary focus:ring-primary focus:outline-none"
+                                :class="{ 'border-destructive': (errors as any).description }"
                                 placeholder="Optional description"
                             ></textarea>
                             <InputError :message="(errors as any).description" />
                         </div>
                     </form>
                 </CardContent>
-                <CardFooter class="flex justify-end space-x-2">
+                <CardFooter class="flex flex-wrap justify-end gap-2">
                     <Button variant="outline" @click="closeModal">
                         Cancel
                     </Button>

@@ -4,6 +4,7 @@ namespace App\Models\Exam;
 
 use App\Models\Campus;
 use App\Models\Session;
+use App\Services\Exam\GradeResolver;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -51,10 +52,18 @@ class GradeSystem extends Model
     }
 
     /**
-     * Get the active grade scale (only one active at a time).
+     * The active grade scale, ignoring campus and session.
+     *
+     * @deprecated Use `App\Services\Exam\GradeResolver::systemFor()`.
+     *
+     * This table has always carried `campus_id` and `session_id`, and this
+     * method read neither: a multi-campus school got whichever row the database
+     * returned first, and last year's scale was applied to this year's results.
+     * It is kept only so an older screen does not fatal; nothing in the exam
+     * module calls it any more.
      */
     public static function getActiveGradeSystem()
     {
-        return static::where('is_active', true)->first();
+        return app(GradeResolver::class)->systemFor();
     }
 }

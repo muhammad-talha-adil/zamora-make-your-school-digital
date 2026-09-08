@@ -278,10 +278,10 @@ onMounted(async () => {
             <!-- Header -->
             <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                 <div>
-                    <h1 class="text-2xl font-bold text-gray-900 dark:text-white">
+                    <h1 class="text-2xl font-bold text-foreground">
                         Process Return
                     </h1>
-                    <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                    <p class="mt-1 text-sm text-muted-foreground">
                         Return inventory items from student assignment
                     </p>
                 </div>
@@ -298,26 +298,26 @@ onMounted(async () => {
                     
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div>
-                            <label class="text-sm font-medium text-gray-500 dark:text-gray-400">Student Name</label>
-                            <p class="text-lg font-semibold text-gray-900 dark:text-white">
+                            <label class="text-sm font-medium text-muted-foreground">Student Name</label>
+                            <p class="text-lg font-semibold text-foreground">
                                 {{ props.studentInventory.student_name }}
                             </p>
                         </div>
                         <div>
-                            <label class="text-sm font-medium text-gray-500 dark:text-gray-400">Registration #</label>
-                            <p class="text-lg font-semibold text-gray-900 dark:text-white">
+                            <label class="text-sm font-medium text-muted-foreground">Registration #</label>
+                            <p class="text-lg font-semibold text-foreground">
                                 {{ props.studentInventory.registration_number }}
                             </p>
                         </div>
                         <div>
-                            <label class="text-sm font-medium text-gray-500 dark:text-gray-400">Class - Section</label>
-                            <p class="text-lg font-semibold text-gray-900 dark:text-white">
+                            <label class="text-sm font-medium text-muted-foreground">Class - Section</label>
+                            <p class="text-lg font-semibold text-foreground">
                                 {{ props.studentInventory.class_name }} - {{ props.studentInventory.section_name }}
                             </p>
                         </div>
                         <div>
-                            <label class="text-sm font-medium text-gray-500 dark:text-gray-400">Campus</label>
-                            <p class="text-lg font-semibold text-gray-900 dark:text-white">
+                            <label class="text-sm font-medium text-muted-foreground">Campus</label>
+                            <p class="text-lg font-semibold text-foreground">
                                 {{ props.studentInventory.campus_name }}
                             </p>
                         </div>
@@ -329,57 +329,57 @@ onMounted(async () => {
                     <h2 class="text-lg font-semibold">Select Items to Return</h2>
 
                     <div class="border rounded-lg overflow-x-auto">
-                        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700 whitespace-nowrap">
-                            <thead class="bg-gray-50 dark:bg-gray-800">
+                        <table class="min-w-full divide-y divide-border whitespace-nowrap">
+                            <thead class="bg-muted">
                                 <tr>
-                                    <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider w-10">
+                                    <th class="px-3 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider w-10">
                                         <input 
                                             type="checkbox" 
                                             :checked="allSelected"
                                             :indeterminate="someSelected"
                                             @change="toggleSelectAll(($event.target as HTMLInputElement).checked)"
-                                            class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                                            class="h-4 w-4 rounded border-border text-primary focus:ring-primary"
                                         />
                                     </th>
-                                    <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Item</th>
-                                    <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Unit Price</th>
-                                    <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Qty Assigned</th>
-                                    <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Already Returned</th>
-                                    <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Remaining</th>
-                                    <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Return Qty</th>
-                                    <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Return Price</th>
-                                    <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Reason</th>
-                                    <th class="px-3 py-3 text-left text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wider">Refund</th>
+                                    <th class="px-3 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Item</th>
+                                    <th class="px-3 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Unit Price</th>
+                                    <th class="px-3 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Qty Assigned</th>
+                                    <th class="px-3 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Already Returned</th>
+                                    <th class="px-3 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Remaining</th>
+                                    <th class="px-3 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Return Qty</th>
+                                    <th class="px-3 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Return Price</th>
+                                    <th class="px-3 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Reason</th>
+                                    <th class="px-3 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Refund</th>
                                 </tr>
                             </thead>
-                            <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
-                                <tr v-for="item in props.studentInventory.items.filter(i => i.remaining_quantity > 0)" :key="item.id" class="hover:bg-gray-50 dark:hover:bg-gray-800/50">
+                            <tbody class="divide-y divide-border">
+                                <tr v-for="item in props.studentInventory.items.filter(i => i.remaining_quantity > 0)" :key="item.id" class="hover:bg-accent">
                                     <td class="px-3 py-4">
                                         <input 
                                             type="checkbox" 
                                             :checked="form.items.find(f => f.student_inventory_item_id === item.id)?.selected || false"
                                             @change="toggleItemSelection(item.id)"
-                                            class="h-4 w-4 rounded border-gray-300 text-indigo-600 focus:ring-indigo-500"
+                                            class="h-4 w-4 rounded border-border text-primary focus:ring-primary"
                                         />
                                     </td>
                                     <td class="px-3 py-4">
-                                        <div class="text-sm font-medium text-gray-900 dark:text-white break-words max-w-[200px]">
+                                        <div class="text-sm font-medium text-foreground break-words max-w-[200px]">
                                             {{ item.item_name_snapshot }}
                                         </div>
-                                        <div class="text-xs text-gray-500 break-words max-w-[200px]" v-if="item.description_snapshot">
+                                        <div class="text-xs text-muted-foreground break-words max-w-[200px]" v-if="item.description_snapshot">
                                             {{ item.description_snapshot }}
                                         </div>
                                     </td>
-                                    <td class="px-3 py-4 text-sm text-gray-900 dark:text-white">
+                                    <td class="px-3 py-4 text-sm text-foreground">
                                         {{ formatCurrency(item.unit_price_snapshot) }}
                                     </td>
-                                    <td class="px-3 py-4 text-sm text-gray-900 dark:text-white">
+                                    <td class="px-3 py-4 text-sm text-foreground">
                                         {{ item.quantity }}
                                     </td>
-                                    <td class="px-3 py-4 text-sm text-gray-900 dark:text-white">
+                                    <td class="px-3 py-4 text-sm text-foreground">
                                         {{ item.returned_quantity }}
                                     </td>
-                                    <td class="px-3 py-4 text-sm font-medium text-gray-900 dark:text-white">
+                                    <td class="px-3 py-4 text-sm font-medium text-foreground">
                                         {{ item.remaining_quantity }}
                                     </td>
                                     <td class="px-3 py-4">
@@ -437,12 +437,12 @@ onMounted(async () => {
                                             />
                                         </div>
                                     </td>
-                                    <td class="px-3 py-4 text-sm font-medium text-gray-900 dark:text-white">
+                                    <td class="px-3 py-4 text-sm font-medium text-foreground">
                                         {{ formatCurrency(getFinalPrice(item, form.items.find(f => f.student_inventory_item_id === item.id)) * getItemQuantity(item.id)) }}
                                     </td>
                                 </tr>
                                 <tr v-if="props.studentInventory.items.every(i => i.remaining_quantity === 0)">
-                                    <td colspan="10" class="px-4 py-8 text-center text-gray-500">
+                                    <td colspan="10" class="px-4 py-8 text-center text-muted-foreground">
                                         All items have been returned.
                                     </td>
                                 </tr>
@@ -458,7 +458,7 @@ onMounted(async () => {
                         <div class="space-y-2">
                             <Label for="return_date" class="flex items-center gap-2">
                                 <Icon icon="calendar" class="h-4 w-4" />
-                                Return Date <span class="text-red-500">*</span>
+                                Return Date <span class="text-destructive">*</span>
                             </Label>
                             <Input
                                 id="return_date"
@@ -475,8 +475,8 @@ onMounted(async () => {
                                 <Icon icon="dollar-sign" class="h-4 w-4" />
                                 Total Refund
                             </Label>
-                            <div class="h-11 flex items-center px-3 bg-gray-100 dark:bg-gray-800 rounded-md">
-                                <span class="text-xl font-bold text-green-600">
+                            <div class="h-11 flex items-center px-3 bg-muted rounded-md">
+                                <span class="text-xl font-bold text-success">
                                     {{ formatCurrency(totalRefund) }}
                                 </span>
                             </div>
@@ -493,7 +493,7 @@ onMounted(async () => {
                             id="note"
                             v-model="form.note"
                             rows="3"
-                            class="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2"
+                            class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2"
                             placeholder="Reason for return or additional notes..."
                         ></textarea>
                     </div>

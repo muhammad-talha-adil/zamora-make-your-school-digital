@@ -95,6 +95,9 @@ class ExamPaperController extends Controller
 
         $papers = ExamPaper::with(['exam', 'subject', 'class', 'section', 'campus'])
             ->when($examId, fn ($q) => $q->where('exam_id', $examId))
+            // The policy guards one paper; this filters the list, so a list
+            // screen cannot show what the record screen would refuse.
+            ->visibleTo($request->user())
             ->get();
 
         return response()->json(['data' => $papers]);
@@ -118,7 +121,13 @@ class ExamPaperController extends Controller
             $validated['section_id'] = null;
         }
 
+        $this->authorize('create', ExamPaper::class);
+
         $paper = ExamPaper::create($validated);
+
+        // Checked again now the paper knows where it sits, so a teacher cannot
+        // timetable a paper into a class that is not theirs.
+        $this->authorize('update', $paper);
 
         return response()->json(['message' => 'Exam paper created successfully', 'data' => $paper], 201);
     }
@@ -129,6 +138,8 @@ class ExamPaperController extends Controller
     public function update(UpdateExamPaperRequest $request, $id)
     {
         $paper = ExamPaper::findOrFail($id);
+        $this->authorize('update', $paper);
+
         $validated = $request->validated();
 
         // Scope validation
@@ -152,6 +163,8 @@ class ExamPaperController extends Controller
      */
     public function bulkCreate(BulkCreateExamPaperRequest $request)
     {
+        $this->authorize('create', ExamPaper::class);
+
         $validated = $request->validated();
         $examId = $validated['exam_id'];
         $scopeType = $validated['scope_type'];
@@ -243,6 +256,8 @@ class ExamPaperController extends Controller
     public function cancel($id)
     {
         $paper = ExamPaper::findOrFail($id);
+        $this->authorize('update', $paper);
+
         $paper->update(['status' => 'cancelled']);
 
         return response()->json(['message' => 'Exam paper cancelled successfully', 'data' => $paper]);
@@ -254,6 +269,8 @@ class ExamPaperController extends Controller
     public function destroy($id)
     {
         $paper = ExamPaper::findOrFail($id);
+        $this->authorize('delete', $paper);
+
         $paper->delete();
 
         return response()->json(['message' => 'Exam paper deleted successfully']);
@@ -479,6 +496,8 @@ class ExamPaperController extends Controller
      */
     public function storeSinglePaper(Request $request)
     {
+        $this->authorize('create', ExamPaper::class);
+
         // Enhanced validation with clear error messages
         $validated = $request->validate([
             'exam_id' => 'required|exists:exams,id',
@@ -650,6 +669,8 @@ class ExamPaperController extends Controller
      */
     public function storeBulkPapers(Request $request)
     {
+        $this->authorize('create', ExamPaper::class);
+
         // Enhanced validation with clear error messages
         $validated = $request->validate([
             'exam_id' => 'required|exists:exams,id',

@@ -9,16 +9,16 @@
         isOpen ? 'translate-x-0' : '-translate-x-full md:translate-x-0',
         (collapsed && !tempExpand) ? 'md:w-16' : 'md:w-64'
       ]"
-      :style="{ backgroundColor: 'var(--sidebar-bg)', color: 'var(--sidebar-text)', borderColor: 'var(--sidebar-text)' }"
+      :style="{ backgroundColor: 'var(--sidebar-bg)', color: 'var(--sidebar-text)', borderColor: 'var(--sidebar-border)' }"
       @mouseenter="onMouseEnter"
       @mouseleave="onMouseLeave"
     >
       <div class="flex h-full flex-col">
         <!-- Sidebar Header -->
-        <div :class="['border-b flex items-center justify-between shrink-0', (collapsed && !tempExpand) ? 'p-2' : 'p-4']" :style="{ borderColor: 'var(--sidebar-text)' }">
+        <div :class="['border-b flex items-center justify-between shrink-0', (collapsed && !tempExpand) ? 'p-2' : 'p-4']" :style="{ borderColor: 'var(--sidebar-border)' }">
           <AppLogo v-if="!collapsed || tempExpand" />
           <div v-else class="flex aspect-square size-8 items-center justify-center rounded-md bg-sidebar-primary text-sidebar-primary-foreground">
-            <AppLogoIcon class="size-5 fill-current text-white dark:text-black" />
+            <AppLogoIcon class="size-5 fill-current text-white" />
           </div>
           <!-- Close button for mobile -->
           <button
@@ -92,7 +92,7 @@
             </nav>
 
             <!-- Bottom Menu -->
-            <div :class="['mt-auto py-4 border-t space-y-2', (collapsed && !tempExpand) ? 'px-2' : 'px-4']" :style="{ borderColor: 'var(--sidebar-text)' }">
+            <div :class="['mt-auto py-4 border-t space-y-2', (collapsed && !tempExpand) ? 'px-2' : 'px-4']" :style="{ borderColor: 'var(--sidebar-border)' }">
               <template v-for="item in footerNavItems" :key="item.title">
                 <div v-if="item.children && item.children.length > 0" class="space-y-1">
                   <button
@@ -181,34 +181,38 @@
     <div
       v-if="isOpen"
       @click="closeSidebar"
-      class="fixed inset-0 z-40 bg-black bg-opacity-50 md:hidden"
+      class="fixed inset-0 z-40 bg-black/50 md:hidden"
     ></div>
 
     <!-- Main Content Area -->
     <div class="flex-1 min-w-0 flex flex-col">
       <!-- Header -->
-      <header class="shadow-sm border-b" :style="{ backgroundColor: 'var(--header-bg)', color: 'var(--header-text)', borderColor: 'var(--header-text)' }">
-        <div class="flex items-center justify-between px-4 py-3">
+      <header class="shadow-sm border-b" :style="{ backgroundColor: 'var(--header-bg)', color: 'var(--header-text)', borderColor: 'var(--sidebar-border)' }">
+        <div class="flex items-center gap-2 sm:gap-4 px-3 sm:px-4 py-3">
           <!-- Hamburger Menu -->
           <button
             @click="toggleSidebar"
-            class="p-2 rounded-md hover:opacity-75"
+            aria-label="Toggle navigation"
+            class="shrink-0 p-2 rounded-md hover:opacity-75"
             :style="{ color: 'var(--header-text)' }"
           >
             <Menu class="w-6 h-6" />
           </button>
 
           <!-- Title -->
-          <h1 class="text-xl font-semibold md:ml-0 ml-auto" :style="{ color: 'var(--header-text)' }">{{ schoolName }}</h1>
+          <h1
+            class="min-w-0 flex-1 truncate text-base sm:text-lg md:text-xl font-semibold"
+            :style="{ color: 'var(--header-text)' }"
+          >{{ schoolName }}</h1>
 
           <!-- Right Side: User Menu -->
-          <div class="flex items-center space-x-4">
-            <span class="text-sm" :style="{ color: 'var(--header-text)' }">Welcome, {{ pageProps.auth?.user?.name || 'User' }}</span>
+          <div class="flex shrink-0 items-center gap-2 sm:gap-4">
+            <span class="hidden lg:inline text-sm truncate max-w-56" :style="{ color: 'var(--header-text)' }">Welcome, {{ pageProps.auth?.user?.name || 'User' }}</span>
             <Link
               href="/logout"
               method="post"
               as="button"
-              class="px-4 py-2 text-sm font-medium rounded-md transition-colors"
+              class="hidden sm:inline-flex px-3 sm:px-4 py-2 text-sm font-medium rounded-md transition-colors"
               :style="{ backgroundColor: 'var(--sidebar-text)', color: 'var(--sidebar-bg)' }"
             >
               Logout
@@ -218,7 +222,7 @@
       </header>
 
       <!-- Main Content -->
-      <main class="flex-1 p-6 overflow-y-auto" :style="{ backgroundColor: 'var(--content-bg)', color: 'var(--content-text)' }">
+      <main class="flex-1 min-w-0 p-4 sm:p-6 overflow-y-auto overflow-x-hidden" :style="{ backgroundColor: 'var(--content-bg)', color: 'var(--content-text)' }">
         <slot />
       </main>
 
@@ -309,28 +313,15 @@ const toggleTheme = () => {
 
 const schoolName = computed(() => pageProps.value.name || 'School Management System')
 
-const applyTheme = () => {
-  const theme = (pageProps.value.themeSettings as any)?.[resolvedAppearance.value] || {}
-  const root = document.documentElement.style
-  root.setProperty('--sidebar-bg', theme.sidebar_bg || '#ffffff')
-  root.setProperty('--sidebar-text', theme.sidebar_text || '#000000')
-  root.setProperty('--sidebar-active-bg', theme.sidebar_active_bg || '#f3f4f6')
-  root.setProperty('--sidebar-active-text', theme.sidebar_active_text || '#000000')
-  root.setProperty('--header-bg', theme.header_bg || '#ffffff')
-  root.setProperty('--header-text', theme.header_text || '#000000')
-  root.setProperty('--content-bg', theme.content_bg || '#f9fafb')
-  root.setProperty('--content-text', theme.content_text || '#000000')
-  root.setProperty('--card-bg', theme.card_bg || '#ffffff')
-  root.setProperty('--card-text', theme.card_text || '#000000')
-}
+/*
+  Palette variables are owned by useAppearance(), which derives every token
+  from the saved palette and keeps the `.dark` class in sync. This component
+  used to set a second, narrower copy of them with hardcoded white/black
+  fallbacks, which overrode the real theme whenever a slot was blank.
+*/
 
 onMounted(() => {
-  applyTheme()
   syncOpenMenuWithCurrentRoute()
-})
-
-watch(resolvedAppearance, () => {
-  applyTheme()
 })
 
 watch([mainNavItems, footerNavItems, currentUrl], () => {

@@ -88,23 +88,23 @@ const formatMoney = (amount: number) => {
         <div class="space-y-6 p-4 md:p-6 max-w-2xl mx-auto">
             <!-- Header -->
             <div>
-                <h1 class="text-xl md:text-2xl font-bold text-gray-900 dark:text-white">
+                <h1 class="text-xl md:text-2xl font-bold text-foreground">
                     Make Payment
                 </h1>
-                <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                <p class="mt-1 text-sm text-muted-foreground">
                     Record a payment made to supplier
                 </p>
             </div>
 
             <!-- Form -->
-            <form @submit.prevent="submitForm" class="space-y-6 bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+            <form @submit.prevent="submitForm" class="space-y-6 bg-card rounded-lg border border-border p-6">
                 <!-- Purchase -->
                 <div>
                     <Label for="purchase_id">Select Purchase</Label>
                     <select 
                         id="purchase_id" 
                         v-model="form.purchase_id"
-                        class="w-full mt-1 rounded-md border border-gray-300 dark:border-gray-600 dark:bg-gray-700 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        class="w-full mt-1 rounded-md border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
                         required
                     >
                         <option value="">Select Purchase</option>
@@ -112,7 +112,7 @@ const formatMoney = (amount: number) => {
                             {{ purchase.purchase_id }} - {{ purchase.supplier?.name }} (Due: {{ formatMoney(purchase.total_amount - purchase.paid_amount) }})
                         </option>
                     </select>
-                    <p v-if="errors.purchase_id" class="mt-1 text-sm text-red-600">{{ errors.purchase_id[0] }}</p>
+                    <p v-if="errors.purchase_id" class="mt-1 text-sm text-destructive">{{ errors.purchase_id[0] }}</p>
                 </div>
 
                 <!-- Amount -->
@@ -127,7 +127,7 @@ const formatMoney = (amount: number) => {
                         placeholder="Enter amount"
                         required
                     />
-                    <p v-if="errors.amount" class="mt-1 text-sm text-red-600">{{ errors.amount[0] }}</p>
+                    <p v-if="errors.amount" class="mt-1 text-sm text-destructive">{{ errors.amount[0] }}</p>
                 </div>
 
                 <!-- Payment Method -->
@@ -136,7 +136,7 @@ const formatMoney = (amount: number) => {
                     <select 
                         id="payment_method" 
                         v-model="form.payment_method"
-                        class="w-full mt-1 rounded-md border border-gray-300 dark:border-gray-600 dark:bg-gray-700 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        class="w-full mt-1 rounded-md border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
                         required
                     >
                         <option value="">Select Payment Method</option>
@@ -144,7 +144,7 @@ const formatMoney = (amount: number) => {
                             {{ method.name }}
                         </option>
                     </select>
-                    <p v-if="errors.payment_method" class="mt-1 text-sm text-red-600">{{ errors.payment_method[0] }}</p>
+                    <p v-if="errors.payment_method" class="mt-1 text-sm text-destructive">{{ errors.payment_method[0] }}</p>
                 </div>
 
                 <!-- Category -->
@@ -153,7 +153,7 @@ const formatMoney = (amount: number) => {
                     <select 
                         id="category_id" 
                         v-model="form.category_id"
-                        class="w-full mt-1 rounded-md border border-gray-300 dark:border-gray-600 dark:bg-gray-700 px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        class="w-full mt-1 rounded-md border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
                         required
                     >
                         <option value="">Select Category</option>
@@ -161,7 +161,7 @@ const formatMoney = (amount: number) => {
                             {{ cat.name }}
                         </option>
                     </select>
-                    <p v-if="errors.category_id" class="mt-1 text-sm text-red-600">{{ errors.category_id[0] }}</p>
+                    <p v-if="errors.category_id" class="mt-1 text-sm text-destructive">{{ errors.category_id[0] }}</p>
                 </div>
 
                 <!-- Transaction Date -->
@@ -173,7 +173,7 @@ const formatMoney = (amount: number) => {
                         type="date" 
                         required
                     />
-                    <p v-if="errors.transaction_date" class="mt-1 text-sm text-red-600">{{ errors.transaction_date[0] }}</p>
+                    <p v-if="errors.transaction_date" class="mt-1 text-sm text-destructive">{{ errors.transaction_date[0] }}</p>
                 </div>
 
                 <!-- Description -->
@@ -182,14 +182,14 @@ const formatMoney = (amount: number) => {
                     <textarea 
                         id="description" 
                         v-model="form.description"
-                        class="w-full mt-1 rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700"
+                        class="w-full mt-1 rounded-md border-border"
                         rows="3"
                         placeholder="Add any notes..."
                     ></textarea>
                 </div>
 
                 <!-- Buttons -->
-                <div class="flex justify-end gap-3">
+                <div class="flex flex-wrap justify-end gap-3">
                     <Button type="button" variant="outline" @click="router.visit('/finance')">
                         Cancel
                     </Button>

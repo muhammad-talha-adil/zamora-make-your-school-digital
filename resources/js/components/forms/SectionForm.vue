@@ -137,7 +137,7 @@ const resetForm = () => {
             <Button
                 :variant="props.variant"
                 :size="props.size"
-                :class="props.section ? 'min-h-8 border-sky-200 text-sky-700 hover:bg-sky-50 hover:text-sky-800 dark:border-sky-800 dark:text-sky-300 dark:hover:bg-sky-950/40 dark:hover:text-sky-200' : ''"
+                :class="props.section ? 'min-h-8 border-info/40 text-info hover:bg-info/20 hover:text-info' : ''"
             >
                 <Icon v-if="props.section" icon="edit" class="mr-1" />
                 <Icon v-else icon="plus" class="mr-1" />
@@ -158,24 +158,24 @@ const resetForm = () => {
 
                 <div class="grid gap-4 py-4">
                     <div class="grid gap-2">
-                        <Label for="name">Name <span class="text-red-500">*</span></Label>
+                        <Label for="name">Name <span class="text-destructive">*</span></Label>
                         <Input
                             id="name"
                             v-model="form.name"
                             placeholder="Enter section name"
-                            :class="{ 'border-red-500': errors.name }"
+                            :class="{ 'border-destructive': errors.name }"
                         />
                         <InputError :message="errors.name" />
                     </div>
 
                     <div class="grid gap-2">
-                        <Label for="class_id">Class <span class="text-red-500">*</span></Label>
+                        <Label for="class_id">Class <span class="text-destructive">*</span></Label>
                         <select
                             id="class_id"
                             v-model="form.class_id"
                             :class="[
-                                'w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2',
-                                errors.class_id ? 'border-red-500' : ''
+                                'w-full rounded-md border border-border bg-card text-foreground px-3 py-2',
+                                errors.class_id ? 'border-destructive' : ''
                             ]"
                         >
                             <option value="">Select a class</option>
@@ -192,7 +192,7 @@ const resetForm = () => {
                             id="code"
                             v-model="form.code"
                             placeholder="Enter section code"
-                            :class="{ 'border-red-500': errors.code }"
+                            :class="{ 'border-destructive': errors.code }"
                         />
                         <InputError :message="errors.code" />
                     </div>
@@ -203,7 +203,7 @@ const resetForm = () => {
                             id="description"
                             v-model="form.description"
                             placeholder="Enter section description (optional)"
-                            :class="{ 'border-red-500': errors.description }"
+                            :class="{ 'border-destructive': errors.description }"
                         />
                         <InputError :message="errors.description" />
                     </div>

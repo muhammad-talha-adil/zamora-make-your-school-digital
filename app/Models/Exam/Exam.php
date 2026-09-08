@@ -41,6 +41,9 @@ class Exam extends Model
         'start_date',
         'end_date',
         'status',
+        'result_weight',
+        'aggregate_pass_percentage',
+        'grace_marks_limit',
         'publish_at',
         'published_at',
         'is_locked',
@@ -49,6 +52,9 @@ class Exam extends Model
     ];
 
     protected $casts = [
+        'result_weight' => 'decimal:2',
+        'aggregate_pass_percentage' => 'decimal:2',
+        'grace_marks_limit' => 'decimal:2',
         'start_date' => 'date',
         'end_date' => 'date',
         'publish_at' => 'datetime',

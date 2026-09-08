@@ -6,10 +6,10 @@
             <!-- Header -->
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 md:gap-4">
                 <div>
-                    <h1 class="text-lg md:text-2xl font-bold text-gray-900 dark:text-white">
+                    <h1 class="text-lg md:text-2xl font-bold text-foreground">
                         Suppliers
                     </h1>
-                    <p class="mt-1 text-xs md:text-sm text-gray-600 dark:text-gray-400">
+                    <p class="mt-1 text-xs md:text-sm text-muted-foreground">
                         Manage your inventory suppliers
                     </p>
                 </div>
@@ -24,7 +24,7 @@
                 <select 
                     v-model="filters.campus_id"
                     @change="router.visit(route('inventory.suppliers.index') + `?campus_id=${filters.campus_id || ''}`)"
-                    class="w-full sm:w-44 md:w-48 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 text-sm min-h-10 md:min-h-11"
+                    class="w-full sm:w-44 md:w-48 rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm min-h-10 md:min-h-11"
                 >
                     <option value="">All Campuses</option>
                     <option v-for="campus in props.campuses" :key="campus.id" :value="campus.id">
@@ -36,12 +36,12 @@
                     type="text"
                     placeholder="Search suppliers..."
                     @input="debouncedSearch"
-                    class="w-full sm:w-64 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 text-sm min-h-10 md:min-h-11"
+                    class="w-full sm:w-64 rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm min-h-10 md:min-h-11"
                 />
                 <select 
                     v-model="filters.active_only"
                     @change="router.visit(route('inventory.suppliers.index') + `?campus_id=${filters.campus_id || ''}&active_only=${filters.active_only || ''}`)"
-                    class="w-full sm:w-40 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 text-sm min-h-10 md:min-h-11"
+                    class="w-full sm:w-40 rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm min-h-10 md:min-h-11"
                 >
                     <option :value="undefined">All Status</option>
                     <option :value="true">Active Only</option>
@@ -54,30 +54,30 @@
                 <div 
                     v-for="supplier in props.suppliers.data" 
                     :key="supplier.id" 
-                    class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 space-y-2"
+                    class="bg-card rounded-lg border border-border p-4 space-y-2"
                 >
-                    <div class="flex justify-between items-start">
+                    <div class="flex flex-wrap gap-2 justify-between items-start">
                         <div class="flex items-center gap-3">
-                            <div class="h-10 w-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center shrink-0">
-                                <span class="text-blue-600 dark:text-blue-400 font-medium">{{ supplier.name.charAt(0) }}</span>
+                            <div class="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                                <span class="text-primary font-medium">{{ supplier.name.charAt(0) }}</span>
                             </div>
                             <div>
-                                <div class="font-medium text-gray-900 dark:text-white">{{ supplier.name }}</div>
-                                <div class="text-xs text-gray-500">{{ supplier.campus?.name }}</div>
+                                <div class="font-medium text-foreground">{{ supplier.name }}</div>
+                                <div class="text-xs text-muted-foreground">{{ supplier.campus?.name }}</div>
                             </div>
                         </div>
                         <span
                             :class="[
                                 'px-2 py-1 text-xs font-medium rounded-full shrink-0',
                                 supplier.is_active
-                                    ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
-                                    : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
+                                    ? 'bg-success/10 text-success'
+                                    : 'bg-destructive/10 text-destructive'
                             ]"
                         >
                             {{ supplier.is_active ? 'Active' : 'Inactive' }}
                         </span>
                     </div>
-                    <div v-if="supplier.contact_person || supplier.phone || supplier.email" class="text-sm text-gray-600 dark:text-gray-400 space-y-1 pt-2 border-t border-gray-100 dark:border-gray-700">
+                    <div v-if="supplier.contact_person || supplier.phone || supplier.email" class="text-sm text-muted-foreground space-y-1 pt-2 border-t border-border">
                         <div v-if="supplier.contact_person" class="flex items-center gap-2">
                             <Icon icon="user" class="h-4 w-4" />
                             <span>{{ supplier.contact_person }}</span>
@@ -103,7 +103,7 @@
                             variant="outline" 
                             size="sm" 
                             @click="inactivateSupplier(supplier.id)"
-                            class="flex-1 text-yellow-600 hover:text-yellow-700"
+                            class="flex-1 text-warning hover:text-warning"
                         >
                             <Icon icon="eye-off" class="mr-1" />Inactivate
                         </Button>
@@ -112,72 +112,72 @@
                             variant="outline" 
                             size="sm" 
                             @click="activateSupplier(supplier.id)"
-                            class="flex-1 text-green-600 hover:text-green-700"
+                            class="flex-1 text-success hover:text-success"
                         >
                             <Icon icon="check-circle" class="mr-1" />Activate
                         </Button>
                     </div>
                 </div>
-                <div v-if="props.suppliers.data.length === 0" class="text-center py-8 text-gray-500">
+                <div v-if="props.suppliers.data.length === 0" class="text-center py-8 text-muted-foreground">
                     No suppliers found.
                 </div>
             </div>
 
             <!-- Desktop Table View (visible only on large screens) -->
-            <div class="hidden lg:block overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-900">
+            <div class="hidden lg:block overflow-hidden rounded-lg border border-border bg-card shadow-sm">
                 <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                        <thead class="bg-gray-50 dark:bg-gray-800">
+                    <table class="min-w-full divide-y divide-border">
+                        <thead class="bg-muted">
                             <tr>
-                                <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">
+                                <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">
                                     Supplier
                                 </th>
-                                <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">
+                                <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">
                                     Contact Person
                                 </th>
-                                <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">
+                                <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">
                                     Phone
                                 </th>
-                                <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">
+                                <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">
                                     Email
                                 </th>
-                                <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">
+                                <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">
                                     Status
                                 </th>
-                                <th scope="col" class="px-4 py-3 text-right text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">
+                                <th scope="col" class="px-4 py-3 text-right text-xs font-semibold tracking-wider text-muted-foreground uppercase">
                                     Actions
                                 </th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-900">
-                            <tr v-for="supplier in props.suppliers.data" :key="supplier.id" class="transition-colors hover:bg-gray-50 dark:hover:bg-gray-800">
+                        <tbody class="divide-y divide-border bg-card">
+                            <tr v-for="supplier in props.suppliers.data" :key="supplier.id" class="transition-colors hover:bg-accent">
                                 <td class="px-4 py-3 whitespace-nowrap">
                                     <div class="flex items-center">
-                                        <div class="h-10 w-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center shrink-0">
-                                            <span class="text-blue-600 dark:text-blue-400 font-medium">{{ supplier.name.charAt(0) }}</span>
+                                        <div class="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                                            <span class="text-primary font-medium">{{ supplier.name.charAt(0) }}</span>
                                         </div>
                                         <div class="ml-3">
-                                            <div class="text-sm font-medium text-gray-900 dark:text-white">{{ supplier.name }}</div>
-                                            <div class="text-xs text-gray-500">{{ supplier.campus?.name }}</div>
+                                            <div class="text-sm font-medium text-foreground">{{ supplier.name }}</div>
+                                            <div class="text-xs text-muted-foreground">{{ supplier.campus?.name }}</div>
                                         </div>
                                     </div>
                                 </td>
                                 <td class="px-4 py-3 whitespace-nowrap">
-                                    <div class="text-sm text-gray-600 dark:text-gray-300">{{ supplier.contact_person || '-' }}</div>
+                                    <div class="text-sm text-muted-foreground">{{ supplier.contact_person || '-' }}</div>
                                 </td>
                                 <td class="px-4 py-3 whitespace-nowrap">
-                                    <div class="text-sm text-gray-600 dark:text-gray-300">{{ supplier.phone || '-' }}</div>
+                                    <div class="text-sm text-muted-foreground">{{ supplier.phone || '-' }}</div>
                                 </td>
                                 <td class="px-4 py-3 whitespace-nowrap">
-                                    <div class="text-sm text-gray-600 dark:text-gray-300 truncate max-w-[200px]">{{ supplier.email || '-' }}</div>
+                                    <div class="text-sm text-muted-foreground truncate max-w-[200px]">{{ supplier.email || '-' }}</div>
                                 </td>
                                 <td class="px-4 py-3 whitespace-nowrap">
                                     <span
                                         :class="[
                                             'px-2 py-1 text-xs font-medium rounded-full',
                                             supplier.is_active
-                                                ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
-                                                : 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400'
+                                                ? 'bg-success/10 text-success'
+                                                : 'bg-destructive/10 text-destructive'
                                         ]"
                                     >
                                         {{ supplier.is_active ? 'Active' : 'Inactive' }}
@@ -196,7 +196,7 @@
                                             variant="outline" 
                                             size="sm" 
                                             @click="inactivateSupplier(supplier.id)"
-                                            class="min-h-8 text-yellow-600 hover:text-yellow-700"
+                                            class="min-h-8 text-warning hover:text-warning"
                                         >
                                             <Icon icon="eye-off" class="mr-1 h-3 w-3" />Inactivate
                                         </Button>
@@ -205,7 +205,7 @@
                                             variant="outline" 
                                             size="sm" 
                                             @click="activateSupplier(supplier.id)"
-                                            class="min-h-8 text-green-600 hover:text-green-700"
+                                            class="min-h-8 text-success hover:text-success"
                                         >
                                             <Icon icon="check-circle" class="mr-1 h-3 w-3" />Activate
                                         </Button>
@@ -219,7 +219,7 @@
 
             <!-- Pagination -->
             <div v-if="props.suppliers.links" class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-                <div class="text-xs md:text-sm text-gray-600">
+                <div class="text-xs md:text-sm text-muted-foreground">
                     Showing {{ props.suppliers.from }} to {{ props.suppliers.to }} of {{ props.suppliers.total }} entries
                 </div>
                 <div class="flex flex-wrap gap-1">
@@ -230,8 +230,8 @@
                         :class="[
                             'px-3 py-2 text-sm rounded-md transition-colors min-h-10 flex items-center justify-center',
                             link.active
-                                ? 'bg-blue-600 text-white'
-                                : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-300 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600'
+                                ? 'bg-primary text-primary-foreground'
+                                : 'bg-card text-muted-foreground hover:bg-accent border border-border'
                         ]"
                         preserve-state
                     >

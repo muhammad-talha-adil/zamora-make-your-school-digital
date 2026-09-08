@@ -2,9 +2,7 @@
 
 namespace Database\Seeders;
 
-use App\Models\Role;
 use App\Models\User;
-use App\Models\UserRole;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 
@@ -30,13 +28,7 @@ class UsersSeeder extends Seeder
             ]
         );
 
-        $developerRole = Role::where('slug', 'developer')->first();
-        if ($developerRole) {
-            UserRole::firstOrCreate(
-                ['user_id' => $developer->id, 'role_id' => $developerRole->id, 'campus_id' => null],
-                ['is_active' => true]
-            );
-        }
+        $developer->syncRoles(['developer']);
 
         // Create Owner user
         $owner = User::firstOrCreate(
@@ -50,13 +42,7 @@ class UsersSeeder extends Seeder
             ]
         );
 
-        $ownerRole = Role::where('slug', 'owner')->first();
-        if ($ownerRole) {
-            UserRole::firstOrCreate(
-                ['user_id' => $owner->id, 'role_id' => $ownerRole->id, 'campus_id' => null],
-                ['is_active' => true]
-            );
-        }
+        $owner->syncRoles(['owner']);
 
         // Create Super Admin user
         $superAdmin = User::firstOrCreate(
@@ -70,13 +56,7 @@ class UsersSeeder extends Seeder
             ]
         );
 
-        $superAdminRole = Role::where('slug', 'super_admin')->first();
-        if ($superAdminRole) {
-            UserRole::firstOrCreate(
-                ['user_id' => $superAdmin->id, 'role_id' => $superAdminRole->id, 'campus_id' => null],
-                ['is_active' => true]
-            );
-        }
+        $superAdmin->syncRoles(['super_admin']);
 
         // Create Admin user
         $admin = User::firstOrCreate(
@@ -90,13 +70,10 @@ class UsersSeeder extends Seeder
             ]
         );
 
-        $adminRole = Role::where('slug', 'admin')->first();
-        if ($adminRole) {
-            UserRole::firstOrCreate(
-                ['user_id' => $admin->id, 'role_id' => $adminRole->id, 'campus_id' => null],
-                ['is_active' => true]
-            );
-        }
+        // The fourth seeded account is a campus-level administrator; there is
+        // no separate `admin` role, which is why this previously assigned
+        // nothing at all.
+        $admin->syncRoles(['campus_admin']);
 
         $this->command->info('Users seeded successfully!');
     }

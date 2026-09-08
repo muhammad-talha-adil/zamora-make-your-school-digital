@@ -34,7 +34,12 @@ createInertiaApp({
             .mount(el);
     },
     progress: {
-        color: '#4B5563',
+        // Inertia writes this straight into an inline style, so the token has
+        // to be resolved here rather than passed through as a var() reference.
+        color:
+            getComputedStyle(document.documentElement)
+                .getPropertyValue('--primary')
+                .trim() || '#2563eb',
     },
 });
 

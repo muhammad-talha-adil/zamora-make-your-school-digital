@@ -19,6 +19,8 @@ class FeeStructureItem extends Model
         'fee_head_id',
         'amount',
         'frequency',
+        'instalment_count',
+        'instalment_month_ids',
         'applicable_on_admission',
         'billing_month_id',
         'billing_year',
@@ -32,6 +34,8 @@ class FeeStructureItem extends Model
     protected $casts = [
         'amount' => 'decimal:2',
         'frequency' => FeeFrequency::class,
+        'instalment_count' => 'integer',
+        'instalment_month_ids' => 'array',
         'applicable_on_admission' => 'boolean',
         'billing_month_id' => 'integer',
         'billing_year' => 'integer',
@@ -79,6 +83,57 @@ class FeeStructureItem extends Model
     public function endsAtMonth(): BelongsTo
     {
         return $this->belongsTo(Month::class, 'ends_at_month_id');
+    }
+
+    /**
+     * Whether this charge is collected in more than one instalment.
+     */
+    public function isInstalled(): bool
+    {
+        return ($this->instalment_count ?? 1) > 1 && ! empty($this->instalment_month_ids);
+    }
+
+    /**
+     * The month numbers the instalments fall in, in order.
+     *
+     * @return array<int, int>
+     */
+    public function instalmentMonthNumbers(): array
+    {
+        if (! $this->isInstalled()) {
+            return [];
+        }
+
+        return Month::whereIn('id', $this->instalment_month_ids)
+            ->orderBy('month_number')
+            ->pluck('month_number')
+            ->all();
+    }
+
+    /**
+     * What one instalment charges in the given month.
+     *
+     * The amount is split evenly and the final instalment absorbs whatever the
+     * division left over, so the instalments always add back up to the charge —
+     * a Rs 10,000 annual fee in three parts is 3,333.33 + 3,333.33 + 3,333.34,
+     * never Rs 9,999.99.
+     */
+    public function instalmentAmountForMonth(int $monthNumber): ?float
+    {
+        $months = $this->instalmentMonthNumbers();
+        $position = array_search($monthNumber, $months, true);
+
+        if ($position === false) {
+            return null;
+        }
+
+        $total = round((float) $this->amount, 2);
+        $count = count($months);
+        $each = round($total / $count, 2);
+
+        return $position === $count - 1
+            ? round($total - ($each * ($count - 1)), 2)
+            : $each;
     }
 
     /**

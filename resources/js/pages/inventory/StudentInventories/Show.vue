@@ -85,10 +85,10 @@ defineOptions({
             <!-- Header -->
             <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                 <div>
-                    <h1 class="text-2xl font-bold text-gray-900 dark:text-white">
+                    <h1 class="text-2xl font-bold text-foreground">
                         Student Inventory Assignment
                     </h1>
-                    <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                    <p class="mt-1 text-sm text-muted-foreground">
                         View inventory assignment details
                     </p>
                 </div>
@@ -104,13 +104,13 @@ defineOptions({
             <div class="bg-card rounded-lg border p-4 md:p-6 space-y-4">
                 <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 border-b pb-4">
                     <div>
-                        <h2 class="text-xl font-bold text-gray-900 dark:text-white">
+                        <h2 class="text-xl font-bold text-foreground">
                             {{ studentInventory.student_name }}
                         </h2>
-                        <p class="text-sm text-gray-500 dark:text-gray-400">
+                        <p class="text-sm text-muted-foreground">
                             Reg # {{ studentInventory.registration_number }} | {{ studentInventory.class_name || 'N/A' }} {{ studentInventory.section_name ? '- ' + studentInventory.section_name : '' }}
                         </p>
-                        <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">
+                        <p class="text-sm text-muted-foreground mt-1">
                             Created {{ formatDate(studentInventory.created_at) }}
                         </p>
                     </div>
@@ -121,47 +121,47 @@ defineOptions({
 
                 <!-- Summary Stats -->
                 <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                    <div class="p-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg text-center">
-                        <div class="text-sm text-gray-500 dark:text-gray-400">Campus</div>
-                        <div class="text-lg font-semibold text-gray-900 dark:text-white">{{ studentInventory.campus_name || 'N/A' }}</div>
+                    <div class="p-4 bg-primary/10 rounded-lg text-center">
+                        <div class="text-sm text-muted-foreground">Campus</div>
+                        <div class="text-lg font-semibold text-foreground">{{ studentInventory.campus_name || 'N/A' }}</div>
                     </div>
-                    <div class="p-4 bg-green-50 dark:bg-green-900/20 rounded-lg text-center">
-                        <div class="text-sm text-gray-500 dark:text-gray-400">Total Quantity</div>
-                        <div class="text-2xl font-bold text-gray-900 dark:text-white">{{ totalQuantity }}</div>
+                    <div class="p-4 bg-success/10 rounded-lg text-center">
+                        <div class="text-sm text-muted-foreground">Total Quantity</div>
+                        <div class="text-2xl font-bold text-foreground">{{ totalQuantity }}</div>
                     </div>
-                    <div class="p-4 bg-amber-50 dark:bg-amber-900/20 rounded-lg text-center">
-                        <div class="text-sm text-gray-500 dark:text-gray-400">Returned</div>
-                        <div class="text-2xl font-bold text-amber-600">{{ totalReturned }}</div>
+                    <div class="p-4 bg-warning/10 rounded-lg text-center">
+                        <div class="text-sm text-muted-foreground">Returned</div>
+                        <div class="text-2xl font-bold text-warning">{{ totalReturned }}</div>
                     </div>
-                    <div class="p-4 bg-purple-50 dark:bg-purple-900/20 rounded-lg text-center">
-                        <div class="text-sm text-gray-500 dark:text-gray-400">Remaining</div>
-                        <div class="text-2xl font-bold text-purple-600">{{ totalRemaining }}</div>
+                    <div class="p-4 bg-primary/10 rounded-lg text-center">
+                        <div class="text-sm text-muted-foreground">Remaining</div>
+                        <div class="text-2xl font-bold text-primary">{{ totalRemaining }}</div>
                     </div>
                 </div>
 
                 <!-- Value Summary -->
                 <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
                     <div>
-                        <label class="text-sm font-medium text-gray-500 dark:text-gray-400">Total Amount</label>
-                        <p class="text-lg font-semibold text-gray-900 dark:text-white">
+                        <label class="text-sm font-medium text-muted-foreground">Total Amount</label>
+                        <p class="text-lg font-semibold text-foreground">
                             {{ formatCurrency(studentInventory.total_amount) }}
                         </p>
                     </div>
                     <div>
-                        <label class="text-sm font-medium text-gray-500 dark:text-gray-400">Total Discount</label>
-                        <p class="text-lg font-semibold text-green-600">
+                        <label class="text-sm font-medium text-muted-foreground">Total Discount</label>
+                        <p class="text-lg font-semibold text-success">
                             {{ formatCurrency(studentInventory.total_discount) }}
                         </p>
                     </div>
                     <div>
-                        <label class="text-sm font-medium text-gray-500 dark:text-gray-400">Final Amount</label>
-                        <p class="text-xl font-bold text-gray-900 dark:text-white">
+                        <label class="text-sm font-medium text-muted-foreground">Final Amount</label>
+                        <p class="text-xl font-bold text-foreground">
                             {{ formatCurrency(studentInventory.final_amount) }}
                         </p>
                     </div>
                     <div>
-                        <label class="text-sm font-medium text-gray-500 dark:text-gray-400">Total Value</label>
-                        <p class="text-xl font-bold text-green-600">
+                        <label class="text-sm font-medium text-muted-foreground">Total Value</label>
+                        <p class="text-xl font-bold text-success">
                             {{ formatCurrency(totalValue) }}
                         </p>
                     </div>
@@ -171,52 +171,52 @@ defineOptions({
             <!-- Items Table Below -->
             <div class="bg-card rounded-lg border overflow-hidden">
                 <div class="px-4 md:px-6 py-4 border-b">
-                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+                    <h3 class="text-lg font-semibold text-foreground">
                         Item Details
                     </h3>
                 </div>
                 
                 <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                        <thead class="bg-gray-50 dark:bg-gray-800">
+                    <table class="min-w-full divide-y divide-border">
+                        <thead class="bg-muted">
                             <tr>
-                                <th class="px-3 md:px-6 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase">Sr#</th>
-                                <th class="px-3 md:px-6 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase">Item</th>
-                                <th class="px-3 md:px-6 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase">Description</th>
-                                <th class="px-3 md:px-6 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase">Qty</th>
-                                <th class="px-3 md:px-6 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase">Returned</th>
-                                <th class="px-3 md:px-6 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase">Remaining</th>
-                                <th class="px-3 md:px-6 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase">Unit Price</th>
-                                <th class="px-3 md:px-6 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase">Total</th>
-                                <th class="px-3 md:px-6 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase">Assigned Date</th>
-                                <th class="px-3 md:px-6 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase">Status</th>
+                                <th class="px-3 md:px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Sr#</th>
+                                <th class="px-3 md:px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Item</th>
+                                <th class="px-3 md:px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Description</th>
+                                <th class="px-3 md:px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Qty</th>
+                                <th class="px-3 md:px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Returned</th>
+                                <th class="px-3 md:px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Remaining</th>
+                                <th class="px-3 md:px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Unit Price</th>
+                                <th class="px-3 md:px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Total</th>
+                                <th class="px-3 md:px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Assigned Date</th>
+                                <th class="px-3 md:px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Status</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-gray-200 dark:divide-gray-700 bg-white dark:bg-gray-900">
-                            <tr v-for="(item, index) in studentInventory.items" :key="item.id" class="hover:bg-gray-50 dark:hover:bg-gray-800">
-                                <td class="px-3 md:px-6 py-4 text-sm text-gray-900 dark:text-white">{{ index + 1 }}</td>
-                                <td class="px-3 md:px-6 py-4 text-sm text-gray-900 dark:text-white">
+                        <tbody class="divide-y divide-border bg-card">
+                            <tr v-for="(item, index) in studentInventory.items" :key="item.id" class="hover:bg-accent">
+                                <td class="px-3 md:px-6 py-4 text-sm text-foreground">{{ index + 1 }}</td>
+                                <td class="px-3 md:px-6 py-4 text-sm text-foreground">
                                     {{ item.item_name_snapshot }}
                                 </td>
-                                <td class="px-3 md:px-6 py-4 text-sm text-gray-600 dark:text-gray-300">
+                                <td class="px-3 md:px-6 py-4 text-sm text-muted-foreground">
                                     {{ item.description_snapshot || '-' }}
                                 </td>
-                                <td class="px-3 md:px-6 py-4 text-sm text-gray-900 dark:text-white">
+                                <td class="px-3 md:px-6 py-4 text-sm text-foreground">
                                     {{ item.quantity }}
                                 </td>
-                                <td class="px-3 md:px-6 py-4 text-sm text-gray-900 dark:text-white">
+                                <td class="px-3 md:px-6 py-4 text-sm text-foreground">
                                     {{ item.returned_quantity }}
                                 </td>
-                                <td class="px-3 md:px-6 py-4 text-sm font-medium text-gray-900 dark:text-white">
+                                <td class="px-3 md:px-6 py-4 text-sm font-medium text-foreground">
                                     {{ item.remaining_quantity }}
                                 </td>
-                                <td class="px-3 md:px-6 py-4 text-sm text-gray-900 dark:text-white">
+                                <td class="px-3 md:px-6 py-4 text-sm text-foreground">
                                     {{ formatCurrency(item.unit_price_snapshot) }}
                                 </td>
-                                <td class="px-3 md:px-6 py-4 text-sm font-bold text-gray-900 dark:text-white">
+                                <td class="px-3 md:px-6 py-4 text-sm font-bold text-foreground">
                                     {{ formatCurrency(item.total_value) }}
                                 </td>
-                                <td class="px-3 md:px-6 py-4 text-sm text-gray-600 dark:text-gray-300">
+                                <td class="px-3 md:px-6 py-4 text-sm text-muted-foreground">
                                     {{ formatDate(studentInventory.assigned_date) }}
                                 </td>
                                 <td class="px-3 md:px-6 py-4">

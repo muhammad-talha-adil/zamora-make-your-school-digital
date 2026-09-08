@@ -51,7 +51,11 @@ return new class extends Migration
                 ->constrained('school_classes')
                 ->onDelete('restrict');
 
+            // Nullable, because the enrollment it is copied from is: a class
+            // need not be split into sections at all. A NOT NULL column here
+            // meant those students crashed the fee run and were never billed.
             $table->foreignId('section_id')
+                ->nullable()
                 ->constrained('sections')
                 ->onDelete('restrict');
 

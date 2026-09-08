@@ -218,17 +218,17 @@ onMounted(() => {
 
         <SettingsLayout>
             <div class="space-y-6">
-                <div class="flex justify-between items-center">
+                <div class="flex flex-wrap gap-2 justify-between items-center">
                     <div>
-                        <h1 class="text-2xl font-bold text-gray-900 dark:text-white">
+                        <h1 class="text-2xl font-bold text-foreground">
                             Menu Management
                         </h1>
-                        <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                        <p class="mt-1 text-sm text-muted-foreground">
                             Manage navigation menus for the application.
                         </p>
                     </div>
                     <div class="flex gap-2">
-                        <select v-model="statusFilter" class="w-32 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 text-sm">
+                        <select v-model="statusFilter" class="w-32 rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm">
                             <option value="">All</option>
                             <option value="active">Active</option>
                             <option value="inactive">Inactive</option>

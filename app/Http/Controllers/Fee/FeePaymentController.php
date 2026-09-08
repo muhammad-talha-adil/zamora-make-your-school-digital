@@ -7,12 +7,13 @@ use App\Enums\Fee\WalletTransactionType;
 use App\Http\Controllers\Controller;
 use App\Models\Campus;
 use App\Models\Fee\FeePayment;
-use App\Models\Fee\StudentFeeWalletTransaction;
 use App\Models\Fee\FeeVoucher;
+use App\Models\Fee\StudentFeeWalletTransaction;
+use App\Models\Finance\StudentAccountCharge;
 use App\Models\Student;
-use App\Services\FinanceService;
 use App\Services\Finance\StudentBillingService;
 use App\Services\Finance\UnifiedAccountingService;
+use App\Services\FinanceService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -196,7 +197,7 @@ class FeePaymentController extends Controller
             ->unique()
             ->values();
 
-        $charges = \App\Models\Finance\StudentAccountCharge::query()
+        $charges = StudentAccountCharge::query()
             ->whereIn('id', $chargeIds)
             ->where('student_id', $validated['student_id'])
             ->get()
@@ -312,7 +313,7 @@ class FeePaymentController extends Controller
             }
 
             foreach ($affectedChargeIds as $chargeId) {
-                $charge = \App\Models\Finance\StudentAccountCharge::find($chargeId);
+                $charge = StudentAccountCharge::find($chargeId);
                 if ($charge) {
                     $this->studentBillingService->syncChargeSettlement($charge);
                 }

@@ -5,28 +5,28 @@
         <div class="space-y-6 p-4 md:p-6">
             <!-- Header -->
             <div>
-                <h1 class="text-lg md:text-2xl font-bold text-gray-900 dark:text-white">
+                <h1 class="text-lg md:text-2xl font-bold text-foreground">
                     Exam Results
                 </h1>
-                <p class="mt-1 text-xs md:text-sm text-gray-600 dark:text-gray-400">
+                <p class="mt-1 text-xs md:text-sm text-muted-foreground">
                     View and manage exam results
                 </p>
             </div>
 
             <!-- Exam Selection Panel -->
-            <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 md:p-6">
+            <div class="bg-card rounded-lg border border-border p-4 md:p-6">
                 <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-6">
                     <!-- Exam Selection -->
                     <div class="md:col-span-2 lg:col-span-1 space-y-2">
                         <Label for="exam">
-                            Select Exam <span class="text-red-500">*</span>
+                            Select Exam <span class="text-destructive">*</span>
                         </Label>
                         <select
                             id="exam"
                             v-model="filters.exam_id"
                             :disabled="isExamLocked"
-                            class="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500 disabled:bg-gray-100 dark:disabled:bg-gray-800 disabled:cursor-not-allowed"
-                            :class="{ 'bg-blue-50 dark:bg-blue-900/20 border-blue-300 dark:border-blue-700': isExamLocked }"
+                            class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm focus:ring-2 focus:ring-primary focus:border-primary disabled:bg-muted disabled:cursor-not-allowed"
+                            :class="{ 'bg-primary/10 border-primary/40': isExamLocked }"
                         >
                             <option value="">Select Exam</option>
                             <option v-for="exam in exams" :key="exam.id" :value="exam.id">
@@ -41,7 +41,7 @@
                         <select
                             id="campus"
                             v-model="filters.campus_id"
-                            class="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm focus:ring-2 focus:ring-primary focus:border-primary"
                         >
                             <option value="all">All Campuses</option>
                             <option v-for="campus in filterOptions.campuses" :key="campus.id" :value="campus.id">
@@ -56,7 +56,7 @@
                         <select
                             id="class"
                             v-model="filters.class_id"
-                            class="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm focus:ring-2 focus:ring-primary focus:border-primary"
                         >
                             <option value="all">All Classes</option>
                             <option v-for="cls in filterOptions.classes" :key="cls.id" :value="cls.id">
@@ -71,7 +71,7 @@
                         <select
                             id="section"
                             v-model="filters.section_id"
-                            class="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                            class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm focus:ring-2 focus:ring-primary focus:border-primary"
                         >
                             <option value="all">All Sections</option>
                             <option v-for="section in filterOptions.sections" :key="section.id" :value="section.id">
@@ -88,7 +88,7 @@
                                 id="student-search"
                                 v-model="filters.search"
                                 placeholder="Search by name..."
-                                class="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                                class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm focus:ring-2 focus:ring-primary focus:border-primary"
                                 @keyup.enter="searchResults"
                             />
                         </div>
@@ -124,8 +124,8 @@
                 </div>
 
                 <!-- Selected Exam Notice -->
-                <div v-if="isExamLocked && selectedExamName" class="mt-4 p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
-                    <p class="text-sm text-blue-800 dark:text-blue-300">
+                <div v-if="isExamLocked && selectedExamName" class="mt-4 p-3 bg-primary/10 border border-primary/40 rounded-lg">
+                    <p class="text-sm text-primary">
                         <Icon icon="info" class="inline h-4 w-4 mr-1" />
                         Viewing results for: <strong>{{ selectedExamName }}</strong>
                     </p>
@@ -133,26 +133,26 @@
             </div>
 
             <!-- Error Message -->
-            <div v-if="error" class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4">
-                <p class="text-sm text-red-800 dark:text-red-300">{{ error }}</p>
+            <div v-if="error" class="bg-destructive/10 border border-destructive/40 rounded-lg p-4">
+                <p class="text-sm text-destructive">{{ error }}</p>
             </div>
 
             <!-- Loading State -->
-            <div v-if="loading && !initialLoad" class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-8 text-center">
-                <svg class="animate-spin h-8 w-8 mx-auto text-gray-400" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <div v-if="loading && !initialLoad" class="bg-card rounded-lg border border-border p-8 text-center">
+                <svg class="animate-spin h-8 w-8 mx-auto text-muted-foreground" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
                     <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                     <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
                 </svg>
-                <p class="mt-4 text-gray-600 dark:text-gray-400">Loading results...</p>
+                <p class="mt-4 text-muted-foreground">Loading results...</p>
             </div>
 
             <!-- Results Section -->
             <div v-else-if="hasSearched && !error">
                 <!-- Toppers Section -->
-                <div v-if="toppers.length > 0" class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
-                    <div class="bg-gray-100 dark:bg-gray-900 px-4 py-3 border-b border-gray-200 dark:border-gray-700">
-                        <h2 class="text-lg font-semibold text-gray-900 dark:text-white flex items-center gap-2">
-                            <Icon icon="award" class="h-5 w-5 text-yellow-500" />
+                <div v-if="toppers.length > 0" class="bg-card rounded-lg border border-border overflow-hidden">
+                    <div class="bg-muted px-4 py-3 border-b border-border">
+                        <h2 class="text-lg font-semibold text-foreground flex items-center gap-2">
+                            <Icon icon="award" class="h-5 w-5 text-warning" />
                             Top 5 Toppers
                         </h2>
                     </div>
@@ -161,7 +161,7 @@
                             <div 
                                 v-for="(topper, index) in toppers" 
                                 :key="topper.id"
-                                class="bg-gray-50 dark:bg-gray-900 rounded-lg p-3 border border-gray-200 dark:border-gray-700"
+                                class="bg-muted rounded-lg p-3 border border-border"
                             >
                                 <div class="flex items-center gap-2 mb-2">
                                     <div 
@@ -170,19 +170,19 @@
                                     >
                                         {{ index + 1 }}
                                     </div>
-                                    <Icon v-if="index === 0" icon="award" class="h-4 w-4 text-yellow-500" />
+                                    <Icon v-if="index === 0" icon="award" class="h-4 w-4 text-warning" />
                                 </div>
-                                <div class="font-medium text-gray-900 dark:text-white text-sm truncate">
+                                <div class="font-medium text-foreground text-sm truncate">
                                     {{ topper.student }}
                                 </div>
-                                <div class="text-xs text-gray-600 dark:text-gray-400">
+                                <div class="text-xs text-muted-foreground">
                                     {{ topper.class?.name }} - {{ topper.section?.name || 'N/A' }}
                                 </div>
                                 <div class="mt-2 flex items-baseline gap-1">
                                     <span class="text-lg font-bold" :class="getScoreColorClass(topper.percentage)">
                                         {{ topper.percentage }}%
                                     </span>
-                                    <span class="text-xs text-gray-500">
+                                    <span class="text-xs text-muted-foreground">
                                         ({{ topper.total_obtained }}/{{ topper.total_max_marks }})
                                     </span>
                                 </div>
@@ -192,21 +192,21 @@
                 </div>
 
                 <!-- All Results Table -->
-                <div v-if="results.length > 0" class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
-                    <div class="px-4 py-3 border-b border-gray-200 dark:border-gray-700 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
-                        <h3 class="text-lg font-semibold text-gray-900 dark:text-white">
+                <div v-if="results.length > 0" class="bg-card rounded-lg border border-border overflow-hidden">
+                    <div class="px-4 py-3 border-b border-border flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2">
+                        <h3 class="text-lg font-semibold text-foreground">
                             All Results
                         </h3>
-                        <span class="text-sm text-gray-600 dark:text-gray-400">
+                        <span class="text-sm text-muted-foreground">
                             Total: {{ pagination.total }} student{{ pagination.total !== 1 ? 's' : '' }}
                         </span>
                     </div>
                     
                     <!-- Mobile Card View -->
                     <div class="block lg:hidden">
-                        <div v-for="(result, index) in results" :key="result.id" class="p-4 border-b border-gray-200 dark:border-gray-700">
-                            <div class="flex justify-between items-start mb-2">
-                                <div class="font-medium text-gray-900 dark:text-white">
+                        <div v-for="(result, index) in results" :key="result.id" class="p-4 border-b border-border">
+                            <div class="flex flex-wrap gap-2 justify-between items-start mb-2">
+                                <div class="font-medium text-foreground">
                                     {{ (pagination.from || 0) + index }}. {{ result.student }}
                                 </div>
                                 <span 
@@ -216,19 +216,19 @@
                                     {{ result.overallGradeItem?.grade_letter || 'N/A' }}
                                 </span>
                             </div>
-                            <div class="text-sm text-gray-600 dark:text-gray-400 space-y-1">
+                            <div class="text-sm text-muted-foreground space-y-1">
                                 <div class="flex flex-wrap gap-2">
-                                    <span v-if="result.campus" class="bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded text-xs">
+                                    <span v-if="result.campus" class="bg-muted px-2 py-0.5 rounded text-xs">
                                         {{ result.campus.name }}
                                     </span>
-                                    <span class="bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded text-xs">
+                                    <span class="bg-muted px-2 py-0.5 rounded text-xs">
                                         {{ result.class?.name }}
                                     </span>
-                                    <span v-if="result.section" class="bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded text-xs">
+                                    <span v-if="result.section" class="bg-muted px-2 py-0.5 rounded text-xs">
                                         {{ result.section.name }}
                                     </span>
                                 </div>
-                                <div class="flex justify-between items-center">
+                                <div class="flex flex-wrap gap-2 justify-between items-center">
                                     <span>Marks: {{ result.total_obtained }}/{{ result.total_max_marks }}</span>
                                     <span class="font-semibold" :class="getScoreColorClass(result.percentage)">
                                         {{ result.percentage }}%
@@ -240,47 +240,47 @@
 
                     <!-- Desktop Table View -->
                     <div class="hidden lg:block overflow-x-auto">
-                        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                            <thead class="bg-gray-50 dark:bg-gray-900">
+                        <table class="min-w-full divide-y divide-border">
+                            <thead class="bg-muted">
                                 <tr>
-                                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider w-16">
+                                    <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider w-16">
                                         Rank
                                     </th>
-                                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">
+                                    <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                                         Student
                                     </th>
-                                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">
+                                    <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                                         Campus
                                     </th>
-                                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">
+                                    <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                                         Class
                                     </th>
-                                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">
+                                    <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                                         Section
                                     </th>
-                                    <th class="px-4 py-3 text-right text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">
+                                    <th class="px-4 py-3 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                                         Total Marks
                                     </th>
-                                    <th class="px-4 py-3 text-right text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">
+                                    <th class="px-4 py-3 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                                         Obtained
                                     </th>
-                                    <th class="px-4 py-3 text-right text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">
+                                    <th class="px-4 py-3 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                                         Percentage
                                     </th>
-                                    <th class="px-4 py-3 text-center text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">
+                                    <th class="px-4 py-3 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                                         Grade
                                     </th>
-                                    <th class="px-4 py-3 text-center text-xs font-semibold text-gray-600 dark:text-gray-300 uppercase tracking-wider">
+                                    <th class="px-4 py-3 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                                         Status
                                     </th>
                                 </tr>
                             </thead>
-                            <tbody class="divide-y divide-gray-200 dark:divide-gray-700 bg-white dark:bg-gray-800">
+                            <tbody class="divide-y divide-border bg-card">
                                 <tr 
                                     v-for="(result, index) in results" 
                                     :key="result.id" 
-                                    class="hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
-                                    :class="{ 'bg-yellow-50 dark:bg-yellow-900/10': isTopper(index) }"
+                                    class="hover:bg-accent transition-colors"
+                                    :class="{ 'bg-warning/10': isTopper(index) }"
                                 >
                                     <td class="px-4 py-3 whitespace-nowrap">
                                         <div class="flex items-center justify-center w-7 h-7 rounded-full text-sm font-bold"
@@ -290,32 +290,32 @@
                                         </div>
                                     </td>
                                     <td class="px-4 py-3 whitespace-nowrap">
-                                        <div class="text-sm font-medium text-gray-900 dark:text-white">
+                                        <div class="text-sm font-medium text-foreground">
                                             {{ result.student }}
                                         </div>
                                     </td>
                                     <td class="px-4 py-3 whitespace-nowrap">
-                                        <div class="text-sm text-gray-600 dark:text-gray-400">
+                                        <div class="text-sm text-muted-foreground">
                                             {{ result.campus?.name || 'N/A' }}
                                         </div>
                                     </td>
                                     <td class="px-4 py-3 whitespace-nowrap">
-                                        <div class="text-sm text-gray-600 dark:text-gray-400">
+                                        <div class="text-sm text-muted-foreground">
                                             {{ result.class?.name || 'N/A' }}
                                         </div>
                                     </td>
                                     <td class="px-4 py-3 whitespace-nowrap">
-                                        <div class="text-sm text-gray-600 dark:text-gray-400">
+                                        <div class="text-sm text-muted-foreground">
                                             {{ result.section?.name || 'N/A' }}
                                         </div>
                                     </td>
                                     <td class="px-4 py-3 whitespace-nowrap text-right">
-                                        <div class="text-sm text-gray-600 dark:text-gray-400">
+                                        <div class="text-sm text-muted-foreground">
                                             {{ result.total_max_marks }}
                                         </div>
                                     </td>
                                     <td class="px-4 py-3 whitespace-nowrap text-right">
-                                        <div class="text-sm font-medium text-gray-900 dark:text-white">
+                                        <div class="text-sm font-medium text-foreground">
                                             {{ result.total_obtained }}
                                         </div>
                                     </td>
@@ -336,9 +336,9 @@
                                         <span 
                                             class="px-2 py-1 rounded text-xs font-medium"
                                             :class="{
-                                                'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400': result.status === 'draft',
-                                                'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400': result.status === 'published',
-                                                'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400': result.status === 'locked',
+                                                'bg-warning/10 text-warning': result.status === 'draft',
+                                                'bg-success/10 text-success': result.status === 'published',
+                                                'bg-muted text-foreground': result.status === 'locked',
                                             }"
                                         >
                                             {{ result.status }}
@@ -350,8 +350,8 @@
                     </div>
 
                     <!-- Pagination -->
-                    <div v-if="pagination.last_page > 1" class="px-4 py-3 border-t border-gray-200 dark:border-gray-700 flex flex-col sm:flex-row justify-between items-center gap-3">
-                        <div class="text-sm text-gray-600 dark:text-gray-400">
+                    <div v-if="pagination.last_page > 1" class="px-4 py-3 border-t border-border flex flex-col sm:flex-row justify-between items-center gap-3">
+                        <div class="text-sm text-muted-foreground">
                             Showing {{ pagination.from }} to {{ pagination.to }} of {{ pagination.total }} entries
                         </div>
                         <div class="flex flex-wrap gap-1">
@@ -371,20 +371,20 @@
                 </div>
 
                 <!-- Empty Results -->
-                <div v-else class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-8 text-center">
-                    <Icon icon="inbox" class="h-12 w-12 mx-auto text-gray-400 mb-4" />
-                    <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-2">No Results Found</h3>
-                    <p class="text-gray-600 dark:text-gray-400">
+                <div v-else class="bg-card rounded-lg border border-border p-8 text-center">
+                    <Icon icon="inbox" class="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                    <h3 class="text-lg font-medium text-foreground mb-2">No Results Found</h3>
+                    <p class="text-muted-foreground">
                         No exam results found for the selected filters. Please try different criteria or select a different exam.
                     </p>
                 </div>
             </div>
 
             <!-- Initial State - Before Search -->
-            <div v-else-if="!hasSearched && !loading" class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-8 text-center">
-                <Icon icon="file-text" class="h-12 w-12 mx-auto text-gray-400 mb-4" />
-                <h3 class="text-lg font-medium text-gray-900 dark:text-white mb-2">Select an Exam</h3>
-                <p class="text-gray-600 dark:text-gray-400">
+            <div v-else-if="!hasSearched && !loading" class="bg-card rounded-lg border border-border p-8 text-center">
+                <Icon icon="file-text" class="h-12 w-12 mx-auto text-muted-foreground mb-4" />
+                <h3 class="text-lg font-medium text-foreground mb-2">Select an Exam</h3>
+                <p class="text-muted-foreground">
                     Choose an exam from the dropdown above and click "Search Results" to view the exam results.
                 </p>
             </div>
@@ -649,41 +649,41 @@ const resetFilters = () => {
 // Helper functions for styling
 const getTopperBadgeClass = (index: number) => {
     const classes = [
-        'bg-yellow-500',
-        'bg-gray-400',
-        'bg-orange-500',
-        'bg-gray-500',
-        'bg-gray-600',
+        'bg-warning',
+        'bg-muted',
+        'bg-warning',
+        'bg-muted',
+        'bg-muted',
     ];
-    return classes[index] || 'bg-gray-400';
+    return classes[index] || 'bg-muted';
 };
 
 const getRankClass = (index: number) => {
     const globalIndex = (pagination.value.from || 0) + index;
-    if (globalIndex === 0) return 'bg-yellow-500 text-white';
-    if (globalIndex === 1) return 'bg-gray-400 text-white';
-    if (globalIndex === 2) return 'bg-orange-500 text-white';
-    if (globalIndex < 5) return 'bg-gray-500 text-white';
-    return 'bg-gray-200 text-gray-700 dark:bg-gray-700 dark:text-gray-300';
+    if (globalIndex === 0) return 'bg-warning text-warning-foreground';
+    if (globalIndex === 1) return 'bg-muted text-muted-foreground';
+    if (globalIndex === 2) return 'bg-warning text-warning-foreground';
+    if (globalIndex < 5) return 'bg-muted text-muted-foreground';
+    return 'bg-muted text-muted-foreground';
 };
 
 const getScoreColorClass = (percentage: number) => {
-    if (percentage >= 90) return 'text-green-600 dark:text-green-400';
-    if (percentage >= 80) return 'text-blue-600 dark:text-blue-400';
-    if (percentage >= 70) return 'text-yellow-600 dark:text-yellow-400';
-    if (percentage >= 60) return 'text-orange-600 dark:text-orange-400';
-    return 'text-red-600 dark:text-red-400';
+    if (percentage >= 90) return 'text-success';
+    if (percentage >= 80) return 'text-primary';
+    if (percentage >= 70) return 'text-warning';
+    if (percentage >= 60) return 'text-warning';
+    return 'text-destructive';
 };
 
 const getGradeClass = (grade: string | undefined) => {
-    if (!grade) return 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300';
+    if (!grade) return 'bg-muted text-foreground';
     
     const gradeUpper = grade.toUpperCase();
-    if (gradeUpper === 'A+' || gradeUpper === 'A') return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400';
-    if (gradeUpper === 'B+' || gradeUpper === 'B') return 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400';
-    if (gradeUpper === 'C+' || gradeUpper === 'C') return 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400';
-    if (gradeUpper === 'D') return 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400';
-    return 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400';
+    if (gradeUpper === 'A+' || gradeUpper === 'A') return 'bg-success/10 text-success';
+    if (gradeUpper === 'B+' || gradeUpper === 'B') return 'bg-primary/10 text-primary';
+    if (gradeUpper === 'C+' || gradeUpper === 'C') return 'bg-warning/10 text-warning';
+    if (gradeUpper === 'D') return 'bg-warning/10 text-warning';
+    return 'bg-destructive/10 text-destructive';
 };
 
 // Initialize on mount

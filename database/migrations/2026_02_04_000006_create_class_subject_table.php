@@ -17,7 +17,8 @@ return new class extends Migration
     {
         Schema::create('class_subject', function (Blueprint $table) {
             $table->id();
-            $table->foreignId('class_id')->constrained()->onDelete('cascade');
+            // `school_classes`, not the `classes` Laravel would infer here.
+            $table->foreignId('class_id')->constrained('school_classes')->onDelete('cascade');
             $table->unsignedBigInteger('section_id')->nullable();
             $table->foreignId('subject_id')->constrained()->onDelete('cascade');
             $table->timestamps();

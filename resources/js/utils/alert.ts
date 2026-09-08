@@ -1,5 +1,24 @@
 import Swal from 'sweetalert2';
 
+/**
+ * Reads a design token off the root element.
+ *
+ * SweetAlert takes button colours as plain strings rather than CSS, so the
+ * current value has to be resolved at call time; hardcoding hexes here left
+ * the dialogs on a fixed red/blue whatever palette the school had chosen.
+ */
+export const themeToken = (name: string, fallback: string): string => {
+    if (typeof window === 'undefined') {
+        return fallback;
+    }
+
+    const value = getComputedStyle(document.documentElement)
+        .getPropertyValue(name)
+        .trim();
+
+    return value || fallback;
+};
+
 export const alert = {
     success: (message: string, title = 'Success') => {
         return Swal.fire({
@@ -55,8 +74,8 @@ export const alert = {
             text: message,
             icon: 'warning',
             showCancelButton: true,
-            confirmButtonColor: '#d33',
-            cancelButtonColor: '#3085d6',
+            confirmButtonColor: themeToken('--destructive', '#dc2626'),
+            cancelButtonColor: themeToken('--primary', '#2563eb'),
             confirmButtonText: confirmText,
             customClass: {
                 popup: 'swal2-popup',

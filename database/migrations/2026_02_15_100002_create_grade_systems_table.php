@@ -28,7 +28,7 @@ return new class extends Migration
 
             // Foreign key constraints
             $table->foreign('campus_id')->references('id')->on('campuses')->onDelete('set null');
-            $table->foreign('session_id')->references('id')->on('sessions')->onDelete('set null');
+            $table->foreign('session_id')->references('id')->on('academic_sessions')->onDelete('set null');
 
             // Indexes
             $table->index('is_default');

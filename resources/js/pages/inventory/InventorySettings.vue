@@ -239,9 +239,9 @@ const handleItemSaved = () => {
 };
 
 const getStockStatus = (quantity: number) => {
-    if (quantity <= 0) return { label: 'Out of Stock', variant: 'destructive' as const, color: 'text-red-600' };
-    if (quantity < 10) return { label: 'Low Stock', variant: 'secondary' as const, color: 'text-amber-600' };
-    return { label: 'In Stock', variant: 'default' as const, color: 'text-green-600' };
+    if (quantity <= 0) return { label: 'Out of Stock', variant: 'destructive' as const, color: 'text-destructive' };
+    if (quantity < 10) return { label: 'Low Stock', variant: 'secondary' as const, color: 'text-warning' };
+    return { label: 'In Stock', variant: 'default' as const, color: 'text-success' };
 };
 
 const loadTypesPage = (url: string) => {
@@ -259,23 +259,23 @@ const loadTypesPage = (url: string) => {
         <div class="space-y-4 md:space-y-6 p-4 md:p-6">
             <!-- Header -->
             <div>
-                <h1 class="text-lg md:text-2xl font-bold text-gray-900 dark:text-white">
+                <h1 class="text-lg md:text-2xl font-bold text-foreground">
                     Inventory Settings
                 </h1>
-                <p class="mt-1 text-xs md:text-sm text-gray-600 dark:text-gray-400">
+                <p class="mt-1 text-xs md:text-sm text-muted-foreground">
                     Manage inventory types and items for your school.
                 </p>
             </div>
 
             <!-- Tabs -->
-            <div class="border-b border-gray-200">
+            <div class="border-b border-border">
                 <nav class="-mb-px flex space-x-4 md:space-x-8 overflow-x-auto">
                     <button
                         @click="activeTab = 'types'"
                         :class="[
                             activeTab === 'types'
-                                ? 'border-indigo-500 text-indigo-600'
-                                : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300',
+                                ? 'border-primary text-primary'
+                                : 'border-transparent text-muted-foreground hover:border-border hover:text-foreground',
                             'border-b-2 px-2 md:px-1 py-3 text-sm font-medium whitespace-nowrap',
                         ]"
                     >
@@ -285,8 +285,8 @@ const loadTypesPage = (url: string) => {
                         @click="activeTab = 'items'"
                         :class="[
                             activeTab === 'items'
-                                ? 'border-indigo-500 text-indigo-600'
-                                : 'border-transparent text-gray-500 hover:border-gray-300 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300',
+                                ? 'border-primary text-primary'
+                                : 'border-transparent text-muted-foreground hover:border-border hover:text-foreground',
                             'border-b-2 px-2 md:px-1 py-3 text-sm font-medium whitespace-nowrap',
                         ]"
                     >
@@ -298,12 +298,12 @@ const loadTypesPage = (url: string) => {
             <!-- Types Tab -->
             <div v-if="activeTab === 'types'" class="space-y-4 md:space-y-6">
                 <!-- Types Header -->
-                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pb-4 border-b border-gray-200 dark:border-gray-700">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pb-4 border-b border-border">
                     <div>
-                        <h2 class="text-lg md:text-xl font-semibold text-gray-900 dark:text-white">
+                        <h2 class="text-lg md:text-xl font-semibold text-foreground">
                             Inventory Types
                         </h2>
-                        <p class="mt-1 text-xs md:text-sm text-gray-600 dark:text-gray-400">
+                        <p class="mt-1 text-xs md:text-sm text-muted-foreground">
                             Manage inventory categories and types.
                         </p>
                     </div>
@@ -318,7 +318,7 @@ const loadTypesPage = (url: string) => {
                     <select 
                         v-model="campusFilter" 
                         @change="reloadTypes" 
-                        class="w-full sm:w-44 md:w-48 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 text-sm min-h-10 md:min-h-11"
+                        class="w-full sm:w-44 md:w-48 rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm min-h-10 md:min-h-11"
                     >
                         <option value="">All Campuses</option>
                         <option v-for="campus in props.campuses" :key="campus.id" :value="campus.id">
@@ -327,8 +327,8 @@ const loadTypesPage = (url: string) => {
                     </select>
                     <div class="flex-1"></div>
                     <div class="flex items-center gap-2">
-                        <label class="text-sm text-gray-600 dark:text-gray-400">Show:</label>
-                        <select v-model="perPageTypes" @change="reloadTypes" class="w-20 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-2 py-2 text-sm min-h-11">
+                        <label class="text-sm text-muted-foreground">Show:</label>
+                        <select v-model="perPageTypes" @change="reloadTypes" class="w-20 rounded-md border border-border bg-card text-foreground px-2 py-2 text-sm min-h-11">
                             <option v-for="option in perPageOptions" :key="option" :value="option">
                                 {{ option }}
                             </option>
@@ -350,18 +350,18 @@ const loadTypesPage = (url: string) => {
                     <div 
                         v-for="type in inventoryTypesData" 
                         :key="type.id" 
-                        class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 space-y-2"
+                        class="bg-card rounded-lg border border-border p-4 space-y-2"
                     >
-                        <div class="flex justify-between items-start">
+                        <div class="flex flex-wrap gap-2 justify-between items-start">
                             <div>
-                                <div class="font-medium text-gray-900 dark:text-white">{{ type.name }}</div>
-                                <div class="text-xs text-gray-500">{{ type.campus_name || 'N/A' }}</div>
+                                <div class="font-medium text-foreground">{{ type.name }}</div>
+                                <div class="text-xs text-muted-foreground">{{ type.campus_name || 'N/A' }}</div>
                             </div>
                             <Badge :variant="type.is_active ? 'default' : 'destructive'">
                                 {{ type.is_active ? 'Active' : 'Inactive' }}
                             </Badge>
                         </div>
-                        <div class="flex justify-between items-center text-sm">
+                        <div class="flex flex-wrap gap-2 justify-between items-center text-sm">
                             <Badge variant="secondary">{{ type.items_count }} items</Badge>
                         </div>
                         <div class="flex gap-2 pt-2">
@@ -383,34 +383,34 @@ const loadTypesPage = (url: string) => {
                             </Button>
                         </div>
                     </div>
-                    <div v-if="inventoryTypesData.length === 0" class="text-center py-8 text-gray-500">
+                    <div v-if="inventoryTypesData.length === 0" class="text-center py-8 text-muted-foreground">
                         No types found.
                     </div>
                 </div>
 
                 <!-- Desktop Table View -->
-                <div class="hidden lg:block overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-900">
+                <div class="hidden lg:block overflow-hidden rounded-lg border border-border bg-card shadow-sm">
                     <div class="overflow-x-auto">
-                        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                            <thead class="bg-gray-50 dark:bg-gray-800">
+                        <table class="min-w-full divide-y divide-border">
+                            <thead class="bg-muted">
                                 <tr>
-                                    <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">Sr#</th>
-                                    <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">Name</th>
-                                    <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">Campus</th>
-                                    <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">Items</th>
-                                    <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">Status</th>
-                                    <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">Actions</th>
+                                    <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">Sr#</th>
+                                    <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">Name</th>
+                                    <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">Campus</th>
+                                    <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">Items</th>
+                                    <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">Status</th>
+                                    <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">Actions</th>
                                 </tr>
                             </thead>
-                            <tbody class="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-900">
-                                <tr v-for="(type, index) in inventoryTypesData" :key="type.id" class="transition-colors hover:bg-gray-50 dark:hover:bg-gray-800">
-                                    <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">
+                            <tbody class="divide-y divide-border bg-card">
+                                <tr v-for="(type, index) in inventoryTypesData" :key="type.id" class="transition-colors hover:bg-accent">
+                                    <td class="px-4 py-3 whitespace-nowrap text-sm text-muted-foreground">
                                         {{ (paginationTypes.from || 0) + index }}
                                     </td>
-                                    <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
+                                    <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-foreground">
                                         {{ type.name }}
                                     </td>
-                                    <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">
+                                    <td class="px-4 py-3 whitespace-nowrap text-sm text-muted-foreground">
                                         {{ type.campus_name || 'N/A' }}
                                     </td>
                                     <td class="px-4 py-3 whitespace-nowrap">
@@ -448,8 +448,8 @@ const loadTypesPage = (url: string) => {
                 </div>
 
                 <!-- Types Pagination -->
-                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
-                    <div class="text-xs md:text-sm text-gray-600 dark:text-gray-400">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pt-4 border-t border-border">
+                    <div class="text-xs md:text-sm text-muted-foreground">
                         Showing {{ paginationTypes.from }} to {{ paginationTypes.to }} of {{ paginationTypes.total }} entries
                     </div>
                     <div class="flex flex-wrap gap-1">
@@ -471,12 +471,12 @@ const loadTypesPage = (url: string) => {
             <!-- Items Tab -->
             <div v-if="activeTab === 'items'" class="space-y-4 md:space-y-6">
                 <!-- Items Header -->
-                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pb-4 border-b border-gray-200 dark:border-gray-700">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pb-4 border-b border-border">
                     <div>
-                        <h2 class="text-lg md:text-xl font-semibold text-gray-900 dark:text-white">
+                        <h2 class="text-lg md:text-xl font-semibold text-foreground">
                             Inventory Items
                         </h2>
-                        <p class="mt-1 text-xs md:text-sm text-gray-600 dark:text-gray-400">
+                        <p class="mt-1 text-xs md:text-sm text-muted-foreground">
                             Manage individual inventory items.
                         </p>
                     </div>
@@ -495,7 +495,7 @@ const loadTypesPage = (url: string) => {
                     <select 
                         v-model="campusFilter" 
                         @change="reloadItems" 
-                        class="w-full sm:w-44 md:w-48 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 text-sm min-h-10 md:min-h-11"
+                        class="w-full sm:w-44 md:w-48 rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm min-h-10 md:min-h-11"
                     >
                         <option value="">All Campuses</option>
                         <option v-for="campus in props.campuses" :key="campus.id" :value="campus.id">
@@ -505,7 +505,7 @@ const loadTypesPage = (url: string) => {
                     <select 
                         v-model="typeFilter" 
                         @change="reloadItems" 
-                        class="w-full sm:w-44 md:w-48 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 text-sm min-h-10 md:min-h-11"
+                        class="w-full sm:w-44 md:w-48 rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm min-h-10 md:min-h-11"
                     >
                         <option value="">All Types</option>
                         <option v-for="type in props.inventoryTypes.data" :key="type.id" :value="type.id">
@@ -514,8 +514,8 @@ const loadTypesPage = (url: string) => {
                     </select>
                     <div class="flex-1"></div>
                     <div class="flex items-center gap-2">
-                        <label class="text-sm text-gray-600 dark:text-gray-400">Show:</label>
-                        <select v-model="perPageItems" @change="reloadItems" class="w-20 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-2 py-2 text-sm min-h-11">
+                        <label class="text-sm text-muted-foreground">Show:</label>
+                        <select v-model="perPageItems" @change="reloadItems" class="w-20 rounded-md border border-border bg-card text-foreground px-2 py-2 text-sm min-h-11">
                             <option v-for="option in perPageOptions" :key="option" :value="option">
                                 {{ option }}
                             </option>
@@ -537,18 +537,18 @@ const loadTypesPage = (url: string) => {
                     <div 
                         v-for="item in inventoryItemsData" 
                         :key="item.id" 
-                        class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 space-y-2"
+                        class="bg-card rounded-lg border border-border p-4 space-y-2"
                     >
-                        <div class="flex justify-between items-start">
+                        <div class="flex flex-wrap gap-2 justify-between items-start">
                             <div>
-                                <div class="font-medium text-gray-900 dark:text-white">{{ item.name }}</div>
-                                <div class="text-xs text-gray-500 truncate">{{ item.description || 'No description' }}</div>
+                                <div class="font-medium text-foreground">{{ item.name }}</div>
+                                <div class="text-xs text-muted-foreground truncate">{{ item.description || 'No description' }}</div>
                             </div>
                             <Badge :variant="item.is_active ? 'default' : 'destructive'">
                                 {{ item.is_active ? 'Active' : 'Inactive' }}
                             </Badge>
                         </div>
-                        <div class="flex justify-between items-center text-sm">
+                        <div class="flex flex-wrap gap-2 justify-between items-center text-sm">
                             <Badge variant="secondary">{{ item.inventory_type_name || 'N/A' }}</Badge>
                             <div class="flex items-center gap-2">
                                 <span :class="['font-bold', getStockStatus(item.stock_quantity).color]">
@@ -559,7 +559,7 @@ const loadTypesPage = (url: string) => {
                                 </Badge>
                             </div>
                         </div>
-                        <div class="flex justify-between text-sm text-gray-500">
+                        <div class="flex flex-wrap gap-2 justify-between text-sm text-muted-foreground">
                             <span>Buy: {{ formatCurrency(item.purchase_rate) }}</span>
                             <span>Sell: {{ formatCurrency(item.sale_rate) }}</span>
                         </div>
@@ -572,41 +572,41 @@ const loadTypesPage = (url: string) => {
                             </Button>
                         </div>
                     </div>
-                    <div v-if="inventoryItemsData.length === 0" class="text-center py-8 text-gray-500">
+                    <div v-if="inventoryItemsData.length === 0" class="text-center py-8 text-muted-foreground">
                         No items found.
                     </div>
                 </div>
 
                 <!-- Desktop Table View -->
-                <div class="hidden lg:block overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-900">
+                <div class="hidden lg:block overflow-hidden rounded-lg border border-border bg-card shadow-sm">
                     <div class="overflow-x-auto">
-                        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                            <thead class="bg-gray-50 dark:bg-gray-800">
+                        <table class="min-w-full divide-y divide-border">
+                            <thead class="bg-muted">
                                 <tr>
-                                    <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">Sr#</th>
-                                    <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">Item</th>
-                                    <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">Type</th>
-                                    <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">Rates</th>
-                                    <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">Stock</th>
-                                    <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">Status</th>
-                                    <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">Actions</th>
+                                    <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">Sr#</th>
+                                    <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">Item</th>
+                                    <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">Type</th>
+                                    <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">Rates</th>
+                                    <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">Stock</th>
+                                    <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">Status</th>
+                                    <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">Actions</th>
                                 </tr>
                             </thead>
-                            <tbody class="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-900">
-                                <tr v-for="(item, index) in inventoryItemsData" :key="item.id" class="transition-colors hover:bg-gray-50 dark:hover:bg-gray-800">
-                                    <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">
+                            <tbody class="divide-y divide-border bg-card">
+                                <tr v-for="(item, index) in inventoryItemsData" :key="item.id" class="transition-colors hover:bg-accent">
+                                    <td class="px-4 py-3 whitespace-nowrap text-sm text-muted-foreground">
                                         {{ (paginationItems.from || 0) + index }}
                                     </td>
                                     <td class="px-4 py-3 whitespace-nowrap">
-                                        <div class="text-sm font-medium text-gray-900 dark:text-white">{{ item.name }}</div>
-                                        <div class="text-xs text-gray-500 truncate max-w-xs">{{ item.description || 'No description' }}</div>
+                                        <div class="text-sm font-medium text-foreground">{{ item.name }}</div>
+                                        <div class="text-xs text-muted-foreground truncate max-w-xs">{{ item.description || 'No description' }}</div>
                                     </td>
                                     <td class="px-4 py-3 whitespace-nowrap">
                                         <Badge variant="secondary">{{ item.inventory_type_name || 'N/A' }}</Badge>
                                     </td>
                                     <td class="px-4 py-3 whitespace-nowrap text-sm">
-                                        <div><span class="text-gray-500">Buy:</span> {{ formatCurrency(item.purchase_rate) }}</div>
-                                        <div><span class="text-gray-500">Sell:</span> {{ formatCurrency(item.sale_rate) }}</div>
+                                        <div><span class="text-muted-foreground">Buy:</span> {{ formatCurrency(item.purchase_rate) }}</div>
+                                        <div><span class="text-muted-foreground">Sell:</span> {{ formatCurrency(item.sale_rate) }}</div>
                                     </td>
                                     <td class="px-4 py-3 whitespace-nowrap">
                                         <div class="flex items-center gap-2">
@@ -640,8 +640,8 @@ const loadTypesPage = (url: string) => {
                 </div>
 
                 <!-- Items Pagination -->
-                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
-                    <div class="text-xs md:text-sm text-gray-600 dark:text-gray-400">
+                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pt-4 border-t border-border">
+                    <div class="text-xs md:text-sm text-muted-foreground">
                         Showing {{ paginationItems.from }} to {{ paginationItems.to }} of {{ paginationItems.total }} entries
                     </div>
                     <div class="flex flex-wrap gap-1">

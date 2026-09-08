@@ -146,7 +146,7 @@ const submit = () => {
                             <Input
                                 id="name"
                                 v-model="form.name"
-                                :class="{ 'border-red-500': (errors as any).name }"
+                                :class="{ 'border-destructive': (errors as any).name }"
                                 placeholder="e.g., Sick Leave"
                             />
                             <InputError :message="(errors as any).name" />
@@ -161,8 +161,8 @@ const submit = () => {
                                 id="description"
                                 v-model="form.description"
                                 rows="3"
-                                class="w-full rounded-md border border-gray-300 px-3 py-2 shadow-sm focus:border-indigo-500 focus:ring-indigo-500 focus:outline-none dark:border-gray-600 dark:bg-gray-700 dark:text-white"
-                                :class="{ 'border-red-500': (errors as any).description }"
+                                class="w-full rounded-md border border-border px-3 py-2 shadow-sm focus:border-primary focus:ring-primary focus:outline-none"
+                                :class="{ 'border-destructive': (errors as any).description }"
                                 placeholder="Optional description"
                             ></textarea>
                             <InputError :message="(errors as any).description" />
@@ -180,7 +180,7 @@ const submit = () => {
                         </div>
                     </form>
                 </CardContent>
-                <CardFooter class="flex justify-end space-x-2">
+                <CardFooter class="flex flex-wrap justify-end gap-2">
                     <Button variant="outline" @click="closeModal">
                         Cancel
                     </Button>

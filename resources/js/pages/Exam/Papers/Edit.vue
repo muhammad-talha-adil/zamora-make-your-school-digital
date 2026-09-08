@@ -4,23 +4,23 @@
 
         <div class="space-y-6 p-4 md:p-6 max-w-3xl">
             <div>
-                <h1 class="text-lg md:text-2xl font-bold text-gray-900 dark:text-white">
+                <h1 class="text-lg md:text-2xl font-bold text-foreground">
                     Edit Exam Paper
                 </h1>
-                <p class="mt-1 text-xs md:text-sm text-gray-600 dark:text-gray-400">
+                <p class="mt-1 text-xs md:text-sm text-muted-foreground">
                     Update exam paper details
                 </p>
             </div>
 
             <form @submit.prevent="submitForm" class="space-y-6">
-                <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 space-y-4">
+                <div class="bg-card rounded-lg border border-border p-6 space-y-4">
                     <div class="grid gap-4 md:grid-cols-2">
                         <div class="space-y-2">
                             <Label for="exam_group_id">Group *</Label>
                             <select
                                 id="exam_group_id"
                                 v-model="form.exam_group_id"
-                                class="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 text-sm"
+                                class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm"
                             >
                                 <option value="">Select Group</option>
                                 <option v-for="group in props.groups" :key="group.id" :value="group.id">
@@ -34,7 +34,7 @@
                             <select
                                 id="subject_id"
                                 v-model="form.subject_id"
-                                class="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 text-sm"
+                                class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm"
                             >
                                 <option value="">Select Subject</option>
                                 <option v-for="subject in props.subjects" :key="subject.id" :value="subject.id">
@@ -70,7 +70,7 @@
                     </div>
                 </div>
 
-                <div class="flex justify-end gap-3">
+                <div class="flex flex-wrap justify-end gap-3">
                     <Button type="button" variant="outline" @click="router.visit(route('exam.papers.index-page'))">
                         Cancel
                     </Button>

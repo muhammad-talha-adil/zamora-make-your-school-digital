@@ -2,23 +2,24 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-use Illuminate\Database\Eloquent\SoftDeletes;
+use Spatie\Permission\Models\Permission as SpatiePermission;
 
-class Permission extends Model
+/**
+ * A single ability, e.g. `fee.voucher.generate`.
+ *
+ * Extends Spatie's model, keeping the `module` / `label` / `description`
+ * columns this project uses to group and present permissions.
+ *
+ * `name` is the identifier checked in code. The old `key` column duplicated
+ * it and has been dropped.
+ */
+class Permission extends SpatiePermission
 {
-    use SoftDeletes;
-
     protected $fillable = [
-        'key',
+        'name',
+        'guard_name',
         'module',
         'label',
         'description',
     ];
-
-    public function roles(): BelongsToMany
-    {
-        return $this->belongsToMany(Role::class, 'role_permissions')->withTimestamps();
-    }
 }

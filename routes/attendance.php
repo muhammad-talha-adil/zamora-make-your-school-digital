@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\Settings\AttendanceSettingsController;
+use App\Http\Controllers\StudentLeaveController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -52,4 +53,25 @@ Route::prefix('attendance')->name('attendance.')->middleware(['auth', 'verified'
     // API routes - rate limited to prevent abuse
     Route::get('/api/students', [AttendanceController::class, 'getStudentsByClassSection'])->name('api.students')->middleware('throttle:60,1');
     Route::get('/api/check-holiday', [AttendanceController::class, 'checkHoliday'])->name('api.check-holiday')->middleware('throttle:60,1');
+});
+
+/*
+|--------------------------------------------------------------------------
+| Student leave applications
+|--------------------------------------------------------------------------
+|
+| There is no separate guardian portal — a guardian signs in to the student's
+| portal — so the applying endpoints serve the child, their guardian and the
+| office alike, and the controller records which of them it was.
+|
+*/
+Route::prefix('student-leaves')->name('student-leaves.')->middleware($middleware)->group(function () {
+    Route::get('/pending', [StudentLeaveController::class, 'pending'])->name('pending');
+    Route::get('/{student}', [StudentLeaveController::class, 'index'])->name('index');
+    Route::post('/{student}', [StudentLeaveController::class, 'store'])
+        ->name('store')->middleware('throttle:20,1');
+    Route::post('/{leave}/approve', [StudentLeaveController::class, 'approve'])
+        ->name('approve')->middleware('throttle:30,1');
+    Route::post('/{leave}/reject', [StudentLeaveController::class, 'reject'])
+        ->name('reject')->middleware('throttle:30,1');
 });

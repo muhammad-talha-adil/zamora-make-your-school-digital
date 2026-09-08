@@ -9,12 +9,12 @@
             >
                 <div>
                     <h1
-                        class="text-lg font-bold text-gray-900 md:text-2xl dark:text-white"
+                        class="text-lg font-bold text-foreground md:text-2xl"
                     >
                         New Student Admission
                     </h1>
                     <p
-                        class="mt-1 text-xs text-gray-600 md:text-sm dark:text-gray-400"
+                        class="mt-1 text-xs text-muted-foreground md:text-sm"
                     >
                         Admit a new student with guardian information
                     </p>
@@ -31,18 +31,18 @@
             <!-- Sibling Match Alert -->
             <div
                 v-if="siblingMatch"
-                class="rounded-lg border border-blue-200 bg-blue-50 p-4 dark:border-blue-800 dark:bg-blue-900/20"
+                class="rounded-lg border border-primary/40 bg-primary/10 p-4"
             >
                 <div class="flex items-center gap-3">
                     <Icon
                         icon="users"
-                        class="h-5 w-5 text-blue-600 dark:text-blue-400"
+                        class="h-5 w-5 text-primary"
                     />
                     <div class="flex-1">
-                        <p class="font-medium text-blue-900 dark:text-blue-100">
+                        <p class="font-medium text-primary">
                             Sibling Found!
                         </p>
-                        <p class="text-sm text-blue-700 dark:text-blue-300">
+                        <p class="text-sm text-primary">
                             A guardian with this phone number already exists ({{
                                 siblingMatch.name
                             }}). Father information has been auto-populated from
@@ -66,10 +66,10 @@
             >
                 <!-- Student Information Card -->
                 <div
-                    class="rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-800"
+                    class="rounded-lg border border-border bg-card p-6"
                 >
                     <h2
-                        class="mb-4 flex items-center gap-2 text-lg font-semibold text-gray-900 dark:text-white"
+                        class="mb-4 flex items-center gap-2 text-lg font-semibold text-foreground"
                     >
                         <Icon icon="user" class="h-5 w-5 text-primary" />
                         Student Information
@@ -82,14 +82,14 @@
                         <div class="space-y-2">
                             <Label for="name"
                                 >Student Name
-                                <span class="text-red-500">*</span></Label
+                                <span class="text-destructive">*</span></Label
                             >
                             <Input
                                 id="name"
                                 v-model="form.name"
                                 type="text"
                                 placeholder="Enter student name"
-                                :class="{ 'border-red-500': errors.name }"
+                                :class="{ 'border-destructive': errors.name }"
                                 required
                             />
                             <InputError :message="errors.name" />
@@ -97,7 +97,7 @@
 
                         <!-- Student Email (Auto-Generated Preview) -->
                         <div class="space-y-2">
-                            <Label for="student_email">Student Email <p class=" text-xs text-gray-500">
+                            <Label for="student_email">Student Email <p class=" text-xs text-muted-foreground">
                                     (Auto-generated)
                                 </p></Label>
                             <div class="relative">
@@ -107,7 +107,7 @@
                                     type="email"
                                     placeholder="Auto-generated based on name"
                                     disabled
-                                    class="bg-gray-50 dark:bg-gray-700"
+                                    class="bg-muted"
                                 />
                                
                             </div>
@@ -117,7 +117,7 @@
                         <div class="space-y-2">
                             <Label for="admission_no"
                                 >Admission No
-                                <span class="text-red-500">*</span></Label
+                                <span class="text-destructive">*</span></Label
                             >
                             <Input
                                 id="admission_no"
@@ -125,7 +125,7 @@
                                 type="text"
                                 placeholder="Enter admission number"
                                 :class="{
-                                    'border-red-500': errors.admission_no,
+                                    'border-destructive': errors.admission_no,
                                 }"
                                 required
                             />
@@ -136,21 +136,21 @@
                         <div class="space-y-2">
                             <Label for="dob"
                                 >Date of Birth
-                                <span class="text-red-500">*</span></Label
+                                <span class="text-destructive">*</span></Label
                             >
                             <Input
                                 id="dob"
                                 v-model="form.dob"
                                 type="date"
-                                :class="{ 'border-red-500': errors.dob }"
+                                :class="{ 'border-destructive': errors.dob }"
                                 required
                             />
                             <div
                                 v-if="calculatedAge"
-                                class="text-xs text-gray-500"
+                                class="text-xs text-muted-foreground"
                             >
                                 Calculated Age:
-                                <span class="font-medium text-blue-600">{{
+                                <span class="font-medium text-primary">{{
                                     calculatedAge
                                 }}</span>
                             </div>
@@ -161,13 +161,13 @@
                         <div class="space-y-2">
                             <Label for="gender_id"
                                 >Gender
-                                <span class="text-red-500">*</span></Label
+                                <span class="text-destructive">*</span></Label
                             >
                             <select
                                 id="gender_id"
                                 v-model="form.gender_id"
-                                class="h-11 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
-                                :class="{ 'border-red-500': errors.gender_id }"
+                                class="h-11 w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground"
+                                :class="{ 'border-destructive': errors.gender_id }"
                                 required
                             >
                                 <option value="">Select Gender</option>
@@ -192,9 +192,9 @@
                                 placeholder="12345-1234567-1"
                                 maxlength="15"
                                 @input="handleBFormInput"
-                                :class="{ 'border-red-500': errors.b_form }"
+                                :class="{ 'border-destructive': errors.b_form }"
                             />
-                            <p class="text-xs text-gray-500"></p>
+                            <p class="text-xs text-muted-foreground"></p>
                             <InputError :message="errors.b_form" />
                         </div>
 
@@ -202,13 +202,13 @@
                         <div class="space-y-2">
                             <Label for="campus_id"
                                 >Campus
-                                <span class="text-red-500">*</span></Label
+                                <span class="text-destructive">*</span></Label
                             >
                             <select
                                 id="campus_id"
                                 v-model="form.campus_id"
-                                class="h-11 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
-                                :class="{ 'border-red-500': errors.campus_id }"
+                                class="h-11 w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground"
+                                :class="{ 'border-destructive': errors.campus_id }"
                                 :required="campuses.length > 1"
                             >
                                 <option v-if="campuses.length > 1" value="">Select Campus</option>
@@ -227,13 +227,13 @@
                         <div class="space-y-2">
                             <Label for="session_id"
                                 >Academic Session
-                                <span class="text-red-500">*</span></Label
+                                <span class="text-destructive">*</span></Label
                             >
                             <select
                                 id="session_id"
                                 v-model="form.session_id"
-                                class="h-11 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
-                                :class="{ 'border-red-500': errors.session_id }"
+                                class="h-11 w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground"
+                                :class="{ 'border-destructive': errors.session_id }"
                                 required
                             >
                                 <option value="">Select Session</option>
@@ -252,13 +252,13 @@
                         <div class="space-y-2">
                             <Label for="class_id"
                                 >Class
-                                <span class="text-red-500">*</span></Label
+                                <span class="text-destructive">*</span></Label
                             >
                             <select
                                 id="class_id"
                                 v-model="form.class_id"
-                                class="h-11 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
-                                :class="{ 'border-red-500': errors.class_id }"
+                                class="h-11 w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground"
+                                :class="{ 'border-destructive': errors.class_id }"
                                 required
                             >
                                 <option value="">Select Class</option>
@@ -277,13 +277,13 @@
                         <div v-if="showSectionField" class="space-y-2">
                             <Label for="section_id"
                                 >Section
-                                <span v-if="filteredSections.length > 1" class="text-red-500">*</span></Label
+                                <span v-if="filteredSections.length > 1" class="text-destructive">*</span></Label
                             >
                             <select
                                 id="section_id"
                                 v-model="form.section_id"
-                                class="h-11 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
-                                :class="{ 'border-red-500': errors.section_id }"
+                                class="h-11 w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground"
+                                :class="{ 'border-destructive': errors.section_id }"
                                 :required="filteredSections.length > 1"
                             >
                                 <option v-if="filteredSections.length > 1" value="">Select Section</option>
@@ -302,14 +302,14 @@
                         <div class="space-y-2">
                             <Label for="student_status_id"
                                 >Status
-                                <span class="text-red-500">*</span></Label
+                                <span class="text-destructive">*</span></Label
                             >
                             <select
                                 id="student_status_id"
                                 v-model="form.student_status_id"
-                                class="h-11 w-full cursor-not-allowed rounded-md border border-gray-300 bg-gray-100 px-3 py-2 text-sm text-gray-900 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                                class="h-11 w-full cursor-not-allowed rounded-md border border-border bg-muted px-3 py-2 text-sm text-foreground"
                                 :class="{
-                                    'border-red-500': errors.student_status_id,
+                                    'border-destructive': errors.student_status_id,
                                 }"
                                 required
                                 disabled
@@ -323,7 +323,7 @@
                                     {{ status.name }}
                                 </option>
                             </select>
-                            <p class="text-xs text-gray-500">
+                            <p class="text-xs text-muted-foreground">
                                 Default status (Active)
                             </p>
                             <InputError :message="errors.student_status_id" />
@@ -346,7 +346,7 @@
                                 id="description"
                                 v-model="form.description"
                                 rows="3"
-                                class="min-h-20 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-gray-900 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+                                class="min-h-20 w-full rounded-md border border-border bg-card px-3 py-2 text-foreground"
                                 placeholder="Additional notes about the student..."
                             ></textarea>
                         </div>
@@ -363,7 +363,7 @@
                                         @change="handleImageChange"
                                         class="h-11"
                                     />
-                                    <p class="mt-1 text-xs text-gray-500">
+                                    <p class="mt-1 text-xs text-muted-foreground">
                                         Upload JPG, PNG, GIF, or WebP (max 2MB)
                                     </p>
                                     <InputError :message="imageError || undefined" />
@@ -373,7 +373,7 @@
                                     <img
                                         :src="imagePreview"
                                         alt="Student Preview"
-                                        class="h-20 w-20 rounded-lg border border-gray-200 object-cover dark:border-gray-700"
+                                        class="h-20 w-20 rounded-lg border border-border object-cover"
                                     />
                                     <Button
                                         type="button"
@@ -388,11 +388,11 @@
                                 </div>
                                 <div
                                     v-else
-                                    class="flex h-20 w-20 items-center justify-center rounded-lg border border-gray-200 bg-gray-100 dark:border-gray-700 dark:bg-gray-700"
+                                    class="flex h-20 w-20 items-center justify-center rounded-lg border border-border bg-muted"
                                 >
                                     <Icon
                                         icon="user"
-                                        class="h-10 w-10 text-gray-400"
+                                        class="h-10 w-10 text-muted-foreground"
                                     />
                                 </div>
                             </div>
@@ -411,10 +411,10 @@
 
                 <!-- Father Information Card (Primary Guardian) -->
                 <div
-                    class="rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-800"
+                    class="rounded-lg border border-border bg-card p-6"
                 >
                     <h2
-                        class="mb-4 flex items-center gap-2 text-lg font-semibold text-gray-900 dark:text-white"
+                        class="mb-4 flex items-center gap-2 text-lg font-semibold text-foreground"
                     >
                         <Icon icon="user-check" class="h-5 w-5 text-primary" />
                         Father Information (Primary Guardian)
@@ -427,7 +427,7 @@
                         <div class="space-y-2">
                             <Label for="father_name"
                                 >Father's Name
-                                <span class="text-red-500">*</span></Label
+                                <span class="text-destructive">*</span></Label
                             >
                             <Input
                                 id="father_name"
@@ -435,7 +435,7 @@
                                 type="text"
                                 placeholder="Enter father's name"
                                 :class="{
-                                    'border-red-500': errors.father_name,
+                                    'border-destructive': errors.father_name,
                                 }"
                                 required
                             />
@@ -446,7 +446,7 @@
                         <div class="space-y-2 relative">
                             <Label for="father_phone"
                                 >Father's Phone
-                                <span class="text-red-500">*</span></Label
+                                <span class="text-destructive">*</span></Label
                             >
                             <div class="relative">
                                 <Input
@@ -458,7 +458,7 @@
                                     @input="onFatherPhoneInput"
                                     :disabled="guardianLookupLoading"
                                     :class="{
-                                        'border-red-500': errors.father_phone,
+                                        'border-destructive': errors.father_phone,
                                     }"
                                     required
                                 />
@@ -466,10 +466,10 @@
                                 <Icon
                                     v-if="guardianLookupLoading"
                                     icon="loader"
-                                    class="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-gray-400"
+                                    class="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground"
                                 />
                             </div>
-                            <p class="text-xs text-gray-500"></p>
+                            <p class="text-xs text-muted-foreground"></p>
                             <InputError :message="errors.father_phone" />
                         </div>
 
@@ -482,7 +482,7 @@
                                 type="email"
                                 placeholder="Enter email address"
                                 :class="{
-                                    'border-red-500': errors.father_email,
+                                    'border-destructive': errors.father_email,
                                 }"
                             />
                             <InputError :message="errors.father_email" />
@@ -500,11 +500,11 @@
                                 @input="handleFatherCnicInput"
                                 :disabled="!!linkedGuardianId"
                                 :class="{
-                                    'border-red-500': errors.father_cnic,
+                                    'border-destructive': errors.father_cnic,
                                     'cursor-not-allowed opacity-50': !!linkedGuardianId,
                                 }"
                             />
-                            <p class="text-xs text-gray-500"></p>
+                            <p class="text-xs text-muted-foreground"></p>
                             <InputError :message="errors.father_cnic" />
                         </div>
 
@@ -518,7 +518,7 @@
                                 placeholder="Enter occupation"
                                 :disabled="!!linkedGuardianId"
                                 :class="{
-                                    'border-red-500': errors.father_occupation,
+                                    'border-destructive': errors.father_occupation,
                                     'cursor-not-allowed opacity-50': !!linkedGuardianId,
                                 }"
                             />
@@ -535,7 +535,7 @@
                                 placeholder="Enter address"
                                 :disabled="!!linkedGuardianId"
                                 :class="{
-                                    'border-red-500': errors.father_address,
+                                    'border-destructive': errors.father_address,
                                     'cursor-not-allowed opacity-50': !!linkedGuardianId,
                                 }"
                             />
@@ -546,14 +546,14 @@
                         <div class="space-y-2">
                             <Label for="father_relation_id"
                                 >Relation
-                                <span class="text-red-500">*</span></Label
+                                <span class="text-destructive">*</span></Label
                             >
                             <select
                                 id="father_relation_id"
                                 v-model="form.father_relation_id"
-                                class="h-11 w-full cursor-not-allowed rounded-md border border-gray-300 bg-gray-100 px-3 py-2 text-sm text-gray-900 dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                                class="h-11 w-full cursor-not-allowed rounded-md border border-border bg-muted px-3 py-2 text-sm text-foreground"
                                 :class="{
-                                    'border-red-500': errors.father_relation_id,
+                                    'border-destructive': errors.father_relation_id,
                                 }"
                                 required
                                 disabled
@@ -562,23 +562,23 @@
                                     Father
                                 </option>
                             </select>
-                            <p class="text-xs text-gray-500"></p>
+                            <p class="text-xs text-muted-foreground"></p>
                             <InputError :message="errors.father_relation_id" />
                         </div>
                     </div>
                 </div>
 
                 <!-- Other Guardian Toggle Checkbox -->
-                <div class="rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-800">
-                    <div class="flex items-center justify-between">
+                <div class="rounded-lg border border-border bg-card p-6">
+                    <div class="flex flex-wrap gap-2 items-center justify-between">
                         <div class="flex items-center gap-3">
                             <input
                                 type="checkbox"
                                 id="includeOtherGuardian"
                                 v-model="includeOtherGuardian"
-                                class="h-4 w-4 rounded border-gray-300 text-primary focus:ring-primary"
+                                class="h-4 w-4 rounded border-border text-primary focus:ring-primary"
                             />
-                            <Label for="includeOtherGuardian" class="text-lg font-semibold text-gray-900 dark:text-white cursor-pointer">
+                            <Label for="includeOtherGuardian" class="text-lg font-semibold text-foreground cursor-pointer">
                                 Add Another Guardian
                             </Label>
                         </div>
@@ -588,10 +588,10 @@
                 <!-- Other Guardian Information Card (Optional) -->
                 <div
                     v-if="showOtherGuardianSection"
-                    class="rounded-lg border border-gray-200 bg-white p-6 dark:border-gray-700 dark:bg-gray-800"
+                    class="rounded-lg border border-border bg-card p-6"
                 >
                     <h2
-                        class="mb-4 flex items-center gap-2 text-lg font-semibold text-gray-900 dark:text-white"
+                        class="mb-4 flex items-center gap-2 text-lg font-semibold text-foreground"
                     >
                         <Icon icon="users" class="h-5 w-5 text-primary" />
                         Other Guardian (Optional)
@@ -622,7 +622,7 @@
                                 maxlength="12"
                                 @input="handleOtherPhoneInput"
                             />
-                            <p class="text-xs text-gray-500"></p>
+                            <p class="text-xs text-muted-foreground"></p>
                         </div>
 
                         <!-- Other Guardian Email -->
@@ -634,7 +634,7 @@
                                 type="email"
                                 placeholder="Enter email address"
                                 :class="{
-                                    'border-red-500': errors.other_email,
+                                    'border-destructive': errors.other_email,
                                 }"
                             />
                             <InputError :message="errors.other_email" />
@@ -650,9 +650,9 @@
                                 placeholder="12345-1234567-1"
                                 maxlength="15"
                                 @input="handleOtherCnicInput"
-                                :class="{ 'border-red-500': errors.other_cnic }"
+                                :class="{ 'border-destructive': errors.other_cnic }"
                             />
-                            <p class="text-xs text-gray-500"></p>
+                            <p class="text-xs text-muted-foreground"></p>
                             <InputError :message="errors.other_cnic" />
                         </div>
 
@@ -662,7 +662,7 @@
                             <select
                                 id="other_relation_id"
                                 v-model="form.other_relation_id"
-                                class="h-11 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm text-gray-900 dark:border-gray-600 dark:bg-gray-800 dark:text-white"
+                                class="h-11 w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground"
                             >
                                 <option value="">Select Relation</option>
                                 <option

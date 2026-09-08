@@ -429,10 +429,10 @@ const submitForm = () => {
                 <Icon icon="arrow-left" class="mr-1 h-4 w-4" />
                 Back to Student Inventory
             </Button>
-            <h1 class="text-2xl font-bold text-gray-900 dark:text-white">
+            <h1 class="text-2xl font-bold text-foreground">
                 Assign Inventory to Student
             </h1>
-            <p class="text-gray-600 dark:text-gray-400 mt-1">
+            <p class="text-muted-foreground mt-1">
                 Assign inventory items to a student
             </p>
         </div>
@@ -450,13 +450,13 @@ const submitForm = () => {
                             <div class="p-1 bg-muted rounded">
                                 <Icon icon="building" class="h-3.5 w-3.5 text-muted-foreground" />
                             </div>
-                            Campus <span class="text-red-500">*</span>
+                            Campus <span class="text-destructive">*</span>
                         </Label>
                         <select
                             id="campus_id"
                             v-model="form.campus_id"
-                            class="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 text-sm h-11"
-                            :class="{ 'border-red-500': errors.campus_id }"
+                            class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm h-11"
+                            :class="{ 'border-destructive': errors.campus_id }"
                             required
                         >
                             <option value="">Select Campus</option>
@@ -473,7 +473,7 @@ const submitForm = () => {
                             <div class="p-1 bg-muted rounded">
                                 <Icon icon="user" class="h-3.5 w-3.5 text-muted-foreground" />
                             </div>
-                            Student <span class="text-red-500">*</span>
+                            Student <span class="text-destructive">*</span>
                         </Label>
                         <ComboboxInput
                             v-model="form.student_id"
@@ -485,11 +485,11 @@ const submitForm = () => {
                         <InputError :message="errors.student_id" />
                         
                         <!-- Student Info -->
-                        <div v-if="selectedStudent" class="mt-2 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                        <div v-if="selectedStudent" class="mt-2 p-3 bg-muted rounded-lg">
                             <div class="text-sm">
                                 <div class="font-medium">{{ selectedStudent.name }}</div>
-                                <div class="text-gray-500">{{ selectedStudent.registration_number }}</div>
-                                <div v-if="selectedStudent.class_name" class="text-gray-500">
+                                <div class="text-muted-foreground">{{ selectedStudent.registration_number }}</div>
+                                <div v-if="selectedStudent.class_name" class="text-muted-foreground">
                                     Class: {{ selectedStudent.class_name }}
                                     <span v-if="selectedStudent.section_name"> - {{ selectedStudent.section_name }}</span>
                                 </div>
@@ -517,7 +517,7 @@ const submitForm = () => {
 
             <!-- Inventory Items Card -->
             <div class="bg-card rounded-lg border p-6 space-y-4">
-                <div class="flex items-center justify-between">
+                <div class="flex flex-wrap gap-2 items-center justify-between">
                     <h2 class="text-lg font-semibold">Inventory Items</h2>
                     <Button type="button" variant="outline" size="sm" @click="addItem">
                         <Icon icon="plus" class="mr-1 h-4 w-4" />
@@ -526,14 +526,14 @@ const submitForm = () => {
                 </div>
 
                 <!-- No items message -->
-                <div v-if="form.items.length === 0" class="text-center py-8 text-gray-500 border rounded-lg">
-                    <Icon icon="box" :size="48" class="mx-auto mb-2 text-gray-300" />
+                <div v-if="form.items.length === 0" class="text-center py-8 text-muted-foreground border rounded-lg">
+                    <Icon icon="box" :size="48" class="mx-auto mb-2 text-muted-foreground" />
                     <p>No items added yet. Click "Add Item" to start.</p>
                 </div>
 
                 <!-- Items List -->
                 <div v-else class="space-y-4">
-                    <div v-for="(item, index) in form.items" :key="index" class="flex flex-col md:flex-row md:items-start gap-4 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                    <div v-for="(item, index) in form.items" :key="index" class="flex flex-col md:flex-row md:items-start gap-4 p-4 bg-muted rounded-lg">
                         <div class="flex-1 grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 lg:grid-cols-6 gap-3 w-full">
                             <!-- Item Type -->
                             <div class="col-span-2 sm:col-span-3 md:col-span-2 space-y-2">
@@ -541,7 +541,7 @@ const submitForm = () => {
                                 <select
                                     v-model="item.inventory_type_id"
                                     @change="onTypeChange(item)"
-                                    class="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white px-3 py-2 text-sm h-10"
+                                    class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm h-10"
                                 >
                                     <option :value="null">Select Type</option>
                                     <option v-for="type in inventoryTypes" :key="type.id" :value="type.id">
@@ -552,11 +552,11 @@ const submitForm = () => {
 
                             <!-- Item Selection -->
                             <div class="col-span-2 sm:col-span-3 md:col-span-2 space-y-2">
-                                <Label class="text-xs">Item <span class="text-red-500">*</span></Label>
+                                <Label class="text-xs">Item <span class="text-destructive">*</span></Label>
                                 <select
                                     v-model="item.inventory_item_id"
-                                    class="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white px-3 py-2 text-sm h-10"
-                                    :class="{ 'border-red-500': errors[`items.${index}.inventory_item_id`] }"
+                                    class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm h-10"
+                                    :class="{ 'border-destructive': errors[`items.${index}.inventory_item_id`] }"
                                     required
                                 >
                                     <option :value="null">
@@ -576,7 +576,7 @@ const submitForm = () => {
 
                             <!-- Quantity -->
                             <div class="col-span-1 sm:col-span-1 md:col-span-1 space-y-2">
-                                <Label class="text-xs">Qty <span class="text-red-500">*</span></Label>
+                                <Label class="text-xs">Qty <span class="text-destructive">*</span></Label>
                                 <Input
                                     v-model.number="item.quantity"
                                     type="number"
@@ -590,11 +590,11 @@ const submitForm = () => {
                             <!-- Sale Price (Read-only) -->
                             <div class="col-span-1 sm:col-span-1 md:col-span-1 space-y-2">
                                 <Label class="text-xs">Price</Label>
-                                <div class="h-10 px-3 py-2 bg-gray-100 dark:bg-gray-700 rounded-md text-sm flex items-center overflow-hidden">
-                                    <span v-if="item.inventory_item_id" class="font-medium text-green-600 text-xs">
+                                <div class="h-10 px-3 py-2 bg-muted rounded-md text-sm flex items-center overflow-hidden">
+                                    <span v-if="item.inventory_item_id" class="font-medium text-success text-xs">
                                         {{ formatCurrency(getItemSalePrice(item)) }}
                                     </span>
-                                    <span v-else class="text-gray-400">-</span>
+                                    <span v-else class="text-muted-foreground">-</span>
                                 </div>
                             </div>
 
@@ -627,7 +627,7 @@ const submitForm = () => {
                         </div>
 
                         <!-- Item Total & Remove -->
-                        <div class="flex flex-row md:flex-col items-center justify-between md:justify-start md:items-end gap-2 pt-0 md:pt-5 min-w-24 border-t md:border-t-0 border-gray-200 md:border-0 pt-3 md:pt-0">
+                        <div class="flex flex-row md:flex-col items-center justify-between md:justify-start md:items-end gap-2 pt-0 md:pt-5 min-w-24 border-t md:border-t-0 border-border md:border-0 pt-3 md:pt-0">
                             <div class="text-right">
                                 <div class="text-sm font-bold">{{ formatCurrency(calculateItemTotal(item)) }}</div>
                             </div>
@@ -636,7 +636,7 @@ const submitForm = () => {
                                 variant="ghost" 
                                 size="sm" 
                                 @click="removeItem(index)" 
-                                class="h-8 w-8 p-0 text-red-500 hover:text-red-700 hover:bg-red-50"
+                                class="h-8 w-8 p-0 text-destructive hover:text-destructive hover:bg-destructive/20"
                                 :title="form.items.length === 1 ? 'Cannot delete the only item' : 'Remove this item'"
                             >
                                 <Icon icon="trash" class="h-4 w-4" />
@@ -645,7 +645,7 @@ const submitForm = () => {
                     </div>
                     
                     <!-- No items available -->
-                    <div v-if="inventoryItems.length === 0 && !loadingItems && form.campus_id" class="text-center py-4 text-amber-600 bg-amber-50 dark:bg-amber-900/20 rounded-lg">
+                    <div v-if="inventoryItems.length === 0 && !loadingItems && form.campus_id" class="text-center py-4 text-warning bg-warning/10 rounded-lg">
                         <Icon icon="alert-triangle" class="mr-2 h-4 w-4 inline" />
                         No inventory items found for the selected campus and type.
                     </div>
@@ -653,23 +653,23 @@ const submitForm = () => {
             </div>
 
             <!-- Price Summary -->
-            <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-6 space-y-3">
-                <div class="flex justify-between items-center">
-                    <span class="text-gray-600 dark:text-gray-400">Original Amount:</span>
+            <div class="bg-muted rounded-lg p-6 space-y-3">
+                <div class="flex flex-wrap gap-2 justify-between items-center">
+                    <span class="text-muted-foreground">Original Amount:</span>
                     <span class="text-lg font-semibold">{{ formatCurrency(totalOriginalAmount) }}</span>
                 </div>
-                <div class="flex justify-between items-center">
-                    <span class="text-gray-600 dark:text-gray-400">Total Discount:</span>
-                    <span class="text-lg font-semibold text-red-500">- {{ formatCurrency(totalDiscount) }}</span>
+                <div class="flex flex-wrap gap-2 justify-between items-center">
+                    <span class="text-muted-foreground">Total Discount:</span>
+                    <span class="text-lg font-semibold text-destructive">- {{ formatCurrency(totalDiscount) }}</span>
                 </div>
-                <div class="border-t pt-3 flex justify-between items-center">
+                <div class="border-t pt-3 flex flex-wrap gap-2 justify-between items-center">
                     <span class="text-xl font-bold">Total Amount:</span>
-                    <span class="text-2xl font-bold text-green-600">{{ formatCurrency(totalAmount) }}</span>
+                    <span class="text-2xl font-bold text-success">{{ formatCurrency(totalAmount) }}</span>
                 </div>
             </div>
 
             <!-- Actions -->
-            <div class="flex justify-end gap-3 pt-2">
+            <div class="flex flex-wrap justify-end gap-3 pt-2">
                 <Button type="button" variant="outline" @click="resetForm" class="h-10">
                     <Icon icon="refresh-cw" class="mr-2 h-4 w-4" />
                     Reset

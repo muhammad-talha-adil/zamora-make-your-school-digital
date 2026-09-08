@@ -6,10 +6,10 @@
             <!-- Header -->
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 md:gap-4">
                 <div>
-                    <h1 class="text-lg md:text-2xl font-bold text-gray-900 dark:text-white">
+                    <h1 class="text-lg md:text-2xl font-bold text-foreground">
                         Students
                     </h1>
-                    <p class="mt-1 text-xs md:text-sm text-gray-600 dark:text-gray-400">
+                    <p class="mt-1 text-xs md:text-sm text-muted-foreground">
                         Manage student admissions and records
                     </p>
                 </div>
@@ -27,7 +27,7 @@
                         id="filter-campus"
                         v-model="filters.campus_id"
                         @change="applyFilters"
-                        class="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 text-sm min-h-10 md:min-h-11"
+                        class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm min-h-10 md:min-h-11"
                     >
                         <option value="">All Campuses</option>
                         <option v-for="campus in props.campuses" :key="campus.id" :value="campus.id">
@@ -41,7 +41,7 @@
                         id="filter-class"
                         v-model="filters.class_id"
                         @change="applyFilters"
-                        class="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 text-sm min-h-10 md:min-h-11"
+                        class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm min-h-10 md:min-h-11"
                     >
                         <option value="">All Classes</option>
                         <option v-for="cls in props.classes" :key="cls.id" :value="cls.id">
@@ -55,7 +55,7 @@
                         id="filter-section"
                         v-model="filters.section_id"
                         @change="applyFilters"
-                        class="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 text-sm min-h-10 md:min-h-11"
+                        class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm min-h-10 md:min-h-11"
                     >
                         <option value="">All Sections</option>
                         <option v-for="section in props.sections" :key="section.id" :value="section.id">
@@ -69,7 +69,7 @@
                         id="filter-gender"
                         v-model="filters.gender_id"
                         @change="applyFilters"
-                        class="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 text-sm min-h-10 md:min-h-11"
+                        class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm min-h-10 md:min-h-11"
                     >
                         <option value="">All Genders</option>
                         <option v-for="gender in props.genders" :key="gender.id" :value="gender.id">
@@ -83,7 +83,7 @@
                         id="filter-status"
                         v-model="filters.status"
                         @change="applyFilters"
-                        class="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 text-sm min-h-10 md:min-h-11"
+                        class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm min-h-10 md:min-h-11"
                     >
                         <option value="">All Status</option>
                         <option v-for="status in props.statuses" :key="status.id" :value="status.id">
@@ -107,7 +107,7 @@
                         v-if="filters.search"
                         @click="clearSearch"
                         type="button"
-                        class="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300"
+                        class="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
                         aria-label="Clear search"
                     >
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -122,30 +122,30 @@
                 <div
                     v-for="student in props.tableStudents.data"
                     :key="student.id"
-                    class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 space-y-2"
+                    class="bg-card rounded-lg border border-border p-4 space-y-2"
                 >
-                    <div class="flex justify-between items-start">
+                    <div class="flex flex-wrap gap-2 justify-between items-start">
                         <div class="flex items-center gap-3">
-                            <div class="h-10 w-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center shrink-0">
-                                <span class="text-blue-600 dark:text-blue-400 font-medium">{{ student.serial }}</span>
+                            <div class="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                                <span class="text-primary font-medium">{{ student.serial }}</span>
                             </div>
                             <div>
-                                <div class="font-medium text-gray-900 dark:text-white">{{ student.user?.name || 'N/A' }}</div>
-                                <div class="text-xs text-gray-500">{{ student.registration_no }}</div>
+                                <div class="font-medium text-foreground">{{ student.user?.name || 'N/A' }}</div>
+                                <div class="text-xs text-muted-foreground">{{ student.registration_no }}</div>
                             </div>
                         </div>
                         <span
                             :class="[
                                 'px-2 py-1 text-xs font-medium rounded-full shrink-0',
                                 student.student_status?.name === 'Active'
-                                    ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
-                                    : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
+                                    ? 'bg-success/10 text-success'
+                                    : 'bg-muted text-foreground'
                             ]"
                         >
                             {{ student.student_status?.name || 'Unknown' }}
                         </span>
                     </div>
-                    <div class="text-sm text-gray-600 dark:text-gray-400 space-y-1 pt-2 border-t border-gray-100 dark:border-gray-700">
+                    <div class="text-sm text-muted-foreground space-y-1 pt-2 border-t border-border">
                         <div class="flex items-center gap-2">
                             <Icon icon="building" class="h-4 w-4" />
                             <span>{{ getEnrollment(student).campus?.name || 'N/A' }}</span>
@@ -159,117 +159,111 @@
                             <span>{{ getEnrollment(student).session?.name || 'N/A' }}</span>
                         </div>
                     </div>
+                    <!-- Card view keeps labelled buttons: on a phone there is
+                         no hover to reveal an icon's meaning. -->
                     <div class="flex gap-2 pt-2">
                         <Button variant="outline" size="sm" @click="router.visit(route('students.show', student.id))" class="flex-1">
                             <Icon icon="eye" class="mr-1" />View
                         </Button>
                         <Button variant="outline" size="sm" @click="router.visit(route('students.edit', student.id))" class="flex-1">
-                            <Icon icon="edit" class="mr-1" />Edit
+                            <Icon icon="pencil" class="mr-1" />Edit
                         </Button>
                         <Button variant="outline" size="sm" @click="printStudent(student)" class="flex-1">
                             <Icon icon="printer" class="mr-1" />Print
                         </Button>
                     </div>
                 </div>
-                <div v-if="props.tableStudents.data.length === 0" class="text-center py-8 text-gray-500">
+                <div v-if="props.tableStudents.data.length === 0" class="text-center py-8 text-muted-foreground">
                     No students found.
                 </div>
             </div>
 
             <!-- Desktop Table View -->
-            <div class="hidden lg:block overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-900">
+            <div class="hidden lg:block overflow-hidden rounded-lg border border-border bg-card shadow-sm">
                 <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                        <thead class="bg-gray-50 dark:bg-gray-800">
+                    <table class="min-w-full divide-y divide-border">
+                        <thead class="bg-muted">
                             <tr>
-                                <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300 w-16">
+                                <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase w-16">
                                     #
                                 </th>
-                                <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">
+                                <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">
                                     Student
                                 </th>
-                                <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">
+                                <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">
                                     Admission No
                                 </th>
-                                <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">
+                                <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">
                                     Campus / Class / Section
                                 </th>
-                                <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">
+                                <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">
                                     Gender
                                 </th>
-                                <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">
+                                <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">
                                     Guardians
                                 </th>
-                                <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">
+                                <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">
                                     Status
                                 </th>
-                                <th scope="col" class="px-4 py-3 text-right text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">
+                                <th scope="col" class="px-4 py-3 text-right text-xs font-semibold tracking-wider text-muted-foreground uppercase">
                                     Actions
                                 </th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-900">
-                            <tr v-for="student in props.tableStudents.data" :key="student.id" class="transition-colors hover:bg-gray-50 dark:hover:bg-gray-800">
-                                <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900 dark:text-white">
+                        <tbody class="divide-y divide-border bg-card">
+                            <tr v-for="student in props.tableStudents.data" :key="student.id" class="transition-colors hover:bg-accent">
+                                <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-foreground">
                                     {{ student.serial }}
                                 </td>
                                 <td class="px-4 py-3 whitespace-nowrap">
                                     <div class="flex items-center">
-                                        <div class="h-10 w-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center shrink-0">
-                                            <span class="text-blue-600 dark:text-blue-400 font-medium">{{ student.user?.name?.charAt(0) || 'S' }}</span>
+                                        <div class="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                                            <span class="text-primary font-medium">{{ student.user?.name?.charAt(0) || 'S' }}</span>
                                         </div>
                                         <div class="ml-3">
-                                            <div class="text-sm font-medium text-gray-900 dark:text-white">{{ student.user?.name || 'N/A' }}</div>
-                                            <div class="text-xs text-gray-500">{{ student.registration_no }}</div>
+                                            <div class="text-sm font-medium text-foreground">{{ student.user?.name || 'N/A' }}</div>
+                                            <div class="text-xs text-muted-foreground">{{ student.registration_no }}</div>
                                         </div>
                                     </div>
                                 </td>
                                 <td class="px-4 py-3 whitespace-nowrap">
-                                    <div class="text-sm text-gray-600 dark:text-gray-300">{{ student.admission_no }}</div>
+                                    <div class="text-sm text-muted-foreground">{{ student.admission_no }}</div>
                                 </td>
                                 <td class="px-4 py-3 whitespace-nowrap">
-                                    <div class="text-sm text-gray-600 dark:text-gray-300">{{ getEnrollment(student).campus?.name || 'N/A' }}</div>
-                                    <div class="text-xs text-gray-500">{{ getEnrollment(student).class?.name || 'N/A' }} - {{ getEnrollment(student).section?.name || 'N/A' }}</div>
+                                    <div class="text-sm text-muted-foreground">{{ getEnrollment(student).campus?.name || 'N/A' }}</div>
+                                    <div class="text-xs text-muted-foreground">{{ getEnrollment(student).class?.name || 'N/A' }} - {{ getEnrollment(student).section?.name || 'N/A' }}</div>
                                 </td>
                                 <td class="px-4 py-3 whitespace-nowrap">
-                                    <div class="text-sm text-gray-600 dark:text-gray-300">{{ student.gender?.name || '-' }}</div>
+                                    <div class="text-sm text-muted-foreground">{{ student.gender?.name || '-' }}</div>
                                 </td>
                                 <td class="px-4 py-3 whitespace-nowrap">
-                                    <div v-if="getPrimaryGuardian(student)" class="text-sm text-gray-600 dark:text-gray-300">
+                                    <div v-if="getPrimaryGuardian(student)" class="text-sm text-muted-foreground">
                                         {{ getPrimaryGuardian(student).guardian?.user?.name || getPrimaryGuardian(student).relation?.name || 'Guardian' }}
                                     </div>
-                                    <div v-if="getPrimaryGuardian(student)?.guardian?.phone" class="text-xs text-gray-500">
+                                    <div v-if="getPrimaryGuardian(student)?.guardian?.phone" class="text-xs text-muted-foreground">
                                         {{ getPrimaryGuardian(student).guardian.phone }}
                                     </div>
-                                    <span v-if="!getPrimaryGuardian(student)" class="text-xs text-gray-400">No guardians</span>
+                                    <span v-if="!getPrimaryGuardian(student)" class="text-xs text-muted-foreground">No guardians</span>
                                 </td>
                                 <td class="px-4 py-3 whitespace-nowrap">
                                     <span
                                         :class="[
                                             'px-2 py-1 text-xs font-medium rounded-full',
                                             student.student_status?.name === 'Active'
-                                                ? 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400'
-                                                : 'bg-gray-100 text-gray-800 dark:bg-gray-700 dark:text-gray-300'
+                                                ? 'bg-success/10 text-success'
+                                                : 'bg-muted text-foreground'
                                         ]"
                                     >
                                         {{ student.student_status?.name || 'Unknown' }}
                                     </span>
                                 </td>
                                 <td class="px-4 py-3 text-sm font-medium whitespace-nowrap">
-                                    <div class="flex flex-wrap gap-2 justify-end">
-                                        <Button variant="outline" size="sm" @click="router.visit(route('students.show', student.id))" class="min-h-8">
-                                            <Icon icon="eye" class="mr-1 h-3 w-3" />View
-                                        </Button>
-                                        <Button variant="outline" size="sm" @click="router.visit(route('students.edit', student.id))" class="min-h-8">
-                                            <Icon icon="edit" class="mr-1 h-3 w-3" />Edit
-                                        </Button>
-                                        <Button variant="outline" size="sm" @click="printStudent(student)" class="min-h-8">
-                                            <Icon icon="printer" class="mr-1 h-3 w-3" />Print
-                                        </Button>
-                                        <Button variant="outline" size="sm" @click="openStatusModal(student)" class="min-h-8 text-red-600 hover:text-red-700">
-                                            <Icon icon="trash-2" class="mr-1 h-3 w-3" />Delete
-                                        </Button>
-                                    </div>
+                                    <RowActions>
+                                        <RowAction kind="view" :href="route('students.show', student.id)" />
+                                        <RowAction kind="edit" :href="route('students.edit', student.id)" />
+                                        <RowAction kind="print" @click="printStudent(student)" />
+                                        <RowAction kind="delete" @click="openStatusModal(student)" />
+                                    </RowActions>
                                 </td>
                             </tr>
                         </tbody>
@@ -279,7 +273,7 @@
 
             <!-- Pagination -->
             <div v-if="props.tableStudents.links" class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-                <div class="text-xs md:text-sm text-gray-600">
+                <div class="text-xs md:text-sm text-muted-foreground">
                     Showing {{ props.tableStudents.from }} to {{ props.tableStudents.to }} of {{ props.tableStudents.total }} entries
                 </div>
                 <div class="flex flex-wrap gap-1">
@@ -290,8 +284,8 @@
                         :class="[
                             'px-3 py-2 text-sm rounded-md transition-colors min-h-10 flex items-center justify-center',
                             link.active
-                                ? 'bg-blue-600 text-white'
-                                : 'bg-white text-gray-700 hover:bg-gray-50 border border-gray-300 dark:bg-gray-800 dark:text-gray-300 dark:border-gray-600'
+                                ? 'bg-primary text-primary-foreground'
+                                : 'bg-card text-muted-foreground hover:bg-accent border border-border'
                         ]"
                         preserve-state
                     >
@@ -323,6 +317,8 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import Icon from '@/components/Icon.vue';
+import RowAction from '@/components/tables/RowAction.vue';
+import RowActions from '@/components/tables/RowActions.vue';
 import StudentStatusModal from '@/components/modals/StudentStatusModal.vue';
 
 interface Props {

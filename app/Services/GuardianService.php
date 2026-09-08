@@ -5,7 +5,6 @@ namespace App\Services;
 use App\Models\Guardian;
 use App\Models\Role;
 use App\Models\User;
-use App\Models\UserRole;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Str;
 
@@ -177,26 +176,18 @@ class GuardianService
     /**
      * Assign the guardian role to a user.
      */
-    protected function assignGuardianRole(User $user): UserRole
+    protected function assignGuardianRole(User $user): void
     {
-        $guardianRole = Role::where('name', 'guardian')->first();
-
-        if (! $guardianRole) {
-            $guardianRole = Role::create([
-                'name' => 'guardian',
-                'slug' => 'guardian',
+        $role = Role::firstOrCreate(
+            ['name' => 'guardian', 'guard_name' => 'web'],
+            [
                 'label' => 'Guardian',
-                'scope_level' => 'FAMILY',
+                'scope_level' => Role::SCOPE_SELF,
                 'is_active' => true,
-            ]);
-        }
+            ]
+        );
 
-        return UserRole::create([
-            'user_id' => $user->id,
-            'role_id' => $guardianRole->id,
-            'campus_id' => null,
-            'is_active' => true,
-        ]);
+        $user->assignRole($role);
     }
 
     /**
@@ -263,6 +254,6 @@ class GuardianService
             ]);
         }
 
-        return $guardian->fresh();
+        return $guardian->fresh() ?? $guardian;
     }
 }

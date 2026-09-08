@@ -6,22 +6,22 @@
             <!-- Header -->
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 md:gap-4">
                 <div>
-                    <h1 class="text-lg md:text-2xl font-bold text-gray-900 dark:text-white">
+                    <h1 class="text-lg md:text-2xl font-bold text-foreground">
                         Class Attendance Report
                     </h1>
-                    <p class="mt-1 text-xs md:text-sm text-gray-600 dark:text-gray-400">
+                    <p class="mt-1 text-xs md:text-sm text-muted-foreground">
                         View attendance summary for a class
                     </p>
                 </div>
             </div>
 
             <!-- Filters -->
-            <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
+            <div class="bg-card rounded-lg border border-border p-4">
                 <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4">
                     <!-- Class -->
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Class</label>
-                        <select v-model="selectedClassId" class="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 text-sm">
+                        <label class="block text-sm font-medium text-muted-foreground mb-1">Class</label>
+                        <select v-model="selectedClassId" class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm">
                             <option value="">Select Class</option>
                             <option v-for="cls in props.classes" :key="cls.id" :value="cls.id">{{ cls.name }}</option>
                         </select>
@@ -29,8 +29,8 @@
 
                     <!-- Section -->
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Section</label>
-                        <select v-model="selectedSectionId" class="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 text-sm">
+                        <label class="block text-sm font-medium text-muted-foreground mb-1">Section</label>
+                        <select v-model="selectedSectionId" class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm">
                             <option value="">All Sections</option>
                             <option v-for="section in filteredSections" :key="section.id" :value="section.id">{{ section.name }}</option>
                         </select>
@@ -38,16 +38,16 @@
 
                     <!-- Month -->
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Month</label>
-                        <select v-model="selectedMonth" class="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 text-sm">
+                        <label class="block text-sm font-medium text-muted-foreground mb-1">Month</label>
+                        <select v-model="selectedMonth" class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm">
                             <option v-for="(name, index) in monthNames" :key="index + 1" :value="index + 1">{{ name }}</option>
                         </select>
                     </div>
 
                     <!-- Year -->
                     <div>
-                        <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Year</label>
-                        <select v-model="selectedYear" class="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 text-sm">
+                        <label class="block text-sm font-medium text-muted-foreground mb-1">Year</label>
+                        <select v-model="selectedYear" class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm">
                             <option v-for="year in yearRange" :key="year" :value="year">{{ year }}</option>
                         </select>
                     </div>
@@ -66,77 +66,77 @@
             <div v-if="showReport" class="space-y-4">
                 <!-- Summary Stats -->
                 <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
-                    <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-                        <div class="text-2xl font-bold text-gray-900 dark:text-white">{{ summary.length }}</div>
-                        <div class="text-sm text-gray-500">Total Students</div>
+                    <div class="bg-card rounded-lg border border-border p-4">
+                        <div class="text-2xl font-bold text-foreground">{{ summary.length }}</div>
+                        <div class="text-sm text-muted-foreground">Total Students</div>
                     </div>
-                    <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-                        <div class="text-2xl font-bold text-green-600">{{ totalPresent }}</div>
-                        <div class="text-sm text-gray-500">Present Days</div>
+                    <div class="bg-card rounded-lg border border-border p-4">
+                        <div class="text-2xl font-bold text-success">{{ totalPresent }}</div>
+                        <div class="text-sm text-muted-foreground">Present Days</div>
                     </div>
-                    <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-                        <div class="text-2xl font-bold text-red-600">{{ totalAbsent }}</div>
-                        <div class="text-sm text-gray-500">Absent Days</div>
+                    <div class="bg-card rounded-lg border border-border p-4">
+                        <div class="text-2xl font-bold text-destructive">{{ totalAbsent }}</div>
+                        <div class="text-sm text-muted-foreground">Absent Days</div>
                     </div>
-                    <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-                        <div class="text-2xl font-bold text-yellow-600">{{ totalLeave }}</div>
-                        <div class="text-sm text-gray-500">Leave Days</div>
+                    <div class="bg-card rounded-lg border border-border p-4">
+                        <div class="text-2xl font-bold text-warning">{{ totalLeave }}</div>
+                        <div class="text-sm text-muted-foreground">Leave Days</div>
                     </div>
-                    <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-                        <div class="text-2xl font-bold text-blue-600">{{ attendancePercentage }}%</div>
-                        <div class="text-sm text-gray-500">Attendance %</div>
+                    <div class="bg-card rounded-lg border border-border p-4">
+                        <div class="text-2xl font-bold text-primary">{{ attendancePercentage }}%</div>
+                        <div class="text-sm text-muted-foreground">Attendance %</div>
                     </div>
                 </div>
 
                 <!-- Students Table -->
-                <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+                <div class="bg-card rounded-lg border border-border overflow-hidden">
                     <div class="overflow-x-auto">
-                        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                            <thead class="bg-gray-50 dark:bg-gray-700">
+                        <table class="min-w-full divide-y divide-border">
+                            <thead class="bg-muted">
                                 <tr>
-                                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase dark:text-gray-300">Student</th>
-                                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase dark:text-gray-300">Reg No</th>
-                                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase dark:text-gray-300">Campus / Class / Section</th>
-                                    <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase dark:text-gray-300">Guardian</th>
-                                    <th class="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase dark:text-gray-300">Present</th>
-                                    <th class="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase dark:text-gray-300">Absent</th>
-                                    <th class="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase dark:text-gray-300">Leave</th>
-                                    <th class="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase dark:text-gray-300">Late</th>
-                                    <th class="px-4 py-3 text-center text-xs font-semibold text-gray-600 uppercase dark:text-gray-300">%</th>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Student</th>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Reg No</th>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Campus / Class / Section</th>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Guardian</th>
+                                    <th class="px-4 py-3 text-center text-xs font-semibold text-muted-foreground uppercase">Present</th>
+                                    <th class="px-4 py-3 text-center text-xs font-semibold text-muted-foreground uppercase">Absent</th>
+                                    <th class="px-4 py-3 text-center text-xs font-semibold text-muted-foreground uppercase">Leave</th>
+                                    <th class="px-4 py-3 text-center text-xs font-semibold text-muted-foreground uppercase">Late</th>
+                                    <th class="px-4 py-3 text-center text-xs font-semibold text-muted-foreground uppercase">%</th>
                                 </tr>
                             </thead>
-                            <tbody class="divide-y divide-gray-200 dark:divide-gray-700 bg-white dark:bg-gray-800">
-                                <tr v-for="student in summary" :key="student.student.id" class="transition-colors hover:bg-gray-50 dark:hover:bg-gray-700">
+                            <tbody class="divide-y divide-border bg-card">
+                                <tr v-for="student in summary" :key="student.student.id" class="transition-colors hover:bg-accent">
                                     <td class="px-4 py-3 whitespace-nowrap">
                                         <div class="flex items-center">
-                                            <div class="h-10 w-10 rounded-full bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center shrink-0">
-                                                <span class="text-blue-600 dark:text-blue-400 font-medium">{{ student.student.name.charAt(0) }}</span>
+                                            <div class="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
+                                                <span class="text-primary font-medium">{{ student.student.name.charAt(0) }}</span>
                                             </div>
                                             <div class="ml-3">
-                                                <div class="text-sm font-medium text-gray-900 dark:text-white">{{ student.student.name }}</div>
+                                                <div class="text-sm font-medium text-foreground">{{ student.student.name }}</div>
                                             </div>
                                         </div>
                                     </td>
-                                    <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">
+                                    <td class="px-4 py-3 whitespace-nowrap text-sm text-muted-foreground">
                                         {{ student.student.registration_no }}
                                     </td>
-                                    <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">
+                                    <td class="px-4 py-3 whitespace-nowrap text-sm text-muted-foreground">
                                         {{ student.enrollment_info || '-' }}
                                     </td>
-                                    <td class="px-4 py-3 whitespace-nowrap text-sm text-gray-600 dark:text-gray-300">
+                                    <td class="px-4 py-3 whitespace-nowrap text-sm text-muted-foreground">
                                         {{ student.guardian_info || '-' }}
                                     </td>
                                     <td class="px-4 py-3 text-center whitespace-nowrap">
-                                        <span class="text-green-600 font-medium">{{ student.present }}</span>
+                                        <span class="text-success font-medium">{{ student.present }}</span>
                                     </td>
                                     <td class="px-4 py-3 text-center whitespace-nowrap">
-                                        <span class="text-red-600 font-medium">{{ student.absent }}</span>
+                                        <span class="text-destructive font-medium">{{ student.absent }}</span>
                                     </td>
                                     <td class="px-4 py-3 text-center whitespace-nowrap">
-                                        <span class="text-yellow-600 font-medium">{{ student.leave }}</span>
+                                        <span class="text-warning font-medium">{{ student.leave }}</span>
                                     </td>
                                     <td class="px-4 py-3 text-center whitespace-nowrap">
-                                        <span class="text-blue-600 font-medium">{{ student.late }}</span>
+                                        <span class="text-primary font-medium">{{ student.late }}</span>
                                     </td>
                                     <td class="px-4 py-3 text-center whitespace-nowrap">
                                         <span :class="getPercentageClass(student)">{{ getPercentage(student) }}%</span>
@@ -149,9 +149,9 @@
             </div>
 
             <!-- No Data Message -->
-            <div v-else-if="hasSearched" class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-8 text-center">
-                <Icon icon="file-text" class="h-12 w-12 text-gray-400 mx-auto mb-4" />
-                <p class="text-gray-600 dark:text-gray-400">No report data found for the selected criteria.</p>
+            <div v-else-if="hasSearched" class="bg-card rounded-lg border border-border p-8 text-center">
+                <Icon icon="file-text" class="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <p class="text-muted-foreground">No report data found for the selected criteria.</p>
             </div>
         </div>
     </AppLayout>
@@ -230,9 +230,9 @@ const getPercentage = (student: any): number => {
 
 const getPercentageClass = (student: any): string => {
     const percentage = getPercentage(student);
-    if (percentage >= 90) return 'text-green-600 font-medium';
-    if (percentage >= 75) return 'text-blue-600 font-medium';
-    if (percentage >= 60) return 'text-yellow-600 font-medium';
-    return 'text-red-600 font-medium';
+    if (percentage >= 90) return 'text-success font-medium';
+    if (percentage >= 75) return 'text-primary font-medium';
+    if (percentage >= 60) return 'text-warning font-medium';
+    return 'text-destructive font-medium';
 };
 </script>

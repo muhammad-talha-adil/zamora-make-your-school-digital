@@ -6,25 +6,25 @@
             <!-- Header -->
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 md:gap-4">
                 <div>
-                    <h1 class="text-lg md:text-2xl font-bold text-gray-900 dark:text-white">
+                    <h1 class="text-lg md:text-2xl font-bold text-foreground">
                         Mark Attendance
                     </h1>
-                    <p class="mt-1 text-xs md:text-sm text-gray-600 dark:text-gray-400">
+                    <p class="mt-1 text-xs md:text-sm text-muted-foreground">
                         Record attendance for students
                     </p>
                 </div>
             </div>
 
             <!-- Selection Form -->
-            <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 md:p-6">
+            <div class="bg-card rounded-lg border border-border p-4 md:p-6">
                 <!-- Mobile: Stacked filters, Desktop: Horizontal -->
                 <div class="flex flex-col gap-4">
                     <!-- Row 1: Campus, Session, Class -->
                     <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                         <!-- Campus -->
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Campus</label>
-                            <select v-model="selectedCampusId" class="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 text-sm">
+                            <label class="block text-sm font-medium text-muted-foreground mb-1">Campus</label>
+                            <select v-model="selectedCampusId" class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm">
                                 <option value="">Select Campus</option>
                                 <option v-for="campus in props.campuses" :key="campus.id" :value="campus.id">{{ campus.name }}</option>
                             </select>
@@ -32,8 +32,8 @@
 
                         <!-- Session -->
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Session</label>
-                            <select v-model="selectedSessionId" class="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 text-sm">
+                            <label class="block text-sm font-medium text-muted-foreground mb-1">Session</label>
+                            <select v-model="selectedSessionId" class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm">
                                 <option value="">Select Session</option>
                                 <option v-for="session in props.sessions" :key="session.id" :value="session.id">{{ session.name }}</option>
                             </select>
@@ -41,8 +41,8 @@
 
                         <!-- Class -->
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Class</label>
-                            <select v-model="selectedClassId" @change="onSectionReset" class="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 text-sm">
+                            <label class="block text-sm font-medium text-muted-foreground mb-1">Class</label>
+                            <select v-model="selectedClassId" @change="onSectionReset" class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm">
                                 <option value="">Select Class</option>
                                 <option v-for="cls in props.classes" :key="cls.id" :value="cls.id">{{ cls.name }}</option>
                             </select>
@@ -53,11 +53,11 @@
                     <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                         <!-- Section -->
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Section</label>
+                            <label class="block text-sm font-medium text-muted-foreground mb-1">Section</label>
                             <select 
                                 v-model="selectedSectionId" 
                                 :disabled="!selectedClassId"
-                                class="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 text-sm"
+                                class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm"
                                 :class="{ 'opacity-50 cursor-not-allowed': !selectedClassId }"
                             >
                                 <option value="all">{{ selectedClassId ? 'All Sections' : 'Select Class First' }}</option>
@@ -67,8 +67,8 @@
 
                         <!-- Date -->
                         <div>
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Date</label>
-                            <input v-model="selectedDate" type="date" class="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 text-sm" />
+                            <label class="block text-sm font-medium text-muted-foreground mb-1">Date</label>
+                            <input v-model="selectedDate" type="date" class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm" />
                         </div>
 
                         <!-- Load Students Button & Reset -->
@@ -106,19 +106,19 @@
                     <!-- Global Check In/Out Times -->
                     <div class="flex flex-col sm:flex-row gap-3 sm:items-end">
                         <div class="flex-1">
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Global Check In</label>
+                            <label class="block text-sm font-medium text-muted-foreground mb-1">Global Check In</label>
                             <input 
                                 v-model="globalCheckIn" 
                                 type="time" 
-                                class="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 text-sm"
+                                class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm"
                             />
                         </div>
                         <div class="flex-1">
-                            <label class="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Global Check Out</label>
+                            <label class="block text-sm font-medium text-muted-foreground mb-1">Global Check Out</label>
                             <input 
                                 v-model="globalCheckOut" 
                                 type="time" 
-                                class="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 text-sm"
+                                class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm"
                             />
                         </div>
                         <Button variant="secondary" size="sm" @click="applyGlobalTimes" class="w-full sm:w-auto">Apply Times</Button>
@@ -127,14 +127,14 @@
             </div>
 
             <!-- Sunday Warning Message -->
-            <div v-if="props.isSunday" class="bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg p-4 md:p-6">
+            <div v-if="props.isSunday" class="bg-warning/10 border border-warning/40 rounded-lg p-4 md:p-6">
                 <div class="flex items-start">
-                    <Icon icon="calendar-x" class="h-6 w-6 md:h-8 md:w-8 text-amber-500 mr-3 md:mr-4 mt-1" />
+                    <Icon icon="calendar-x" class="h-6 w-6 md:h-8 md:w-8 text-warning mr-3 md:mr-4 mt-1" />
                     <div>
-                        <h3 class="text-base md:text-lg font-semibold text-amber-800 dark:text-amber-200">
+                        <h3 class="text-base md:text-lg font-semibold text-warning">
                             Attendance Cannot Be Marked on Sunday
                         </h3>
-                        <p class="mt-1 text-sm text-amber-700 dark:text-amber-300">
+                        <p class="mt-1 text-sm text-warning">
                             Sunday is a weekly holiday. Please select another date to mark attendance.
                         </p>
                     </div>
@@ -142,14 +142,14 @@
             </div>
 
             <!-- Holiday Warning Message -->
-            <div v-else-if="props.holiday" class="bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-lg p-4 md:p-6">
+            <div v-else-if="props.holiday" class="bg-destructive/10 border border-destructive/40 rounded-lg p-4 md:p-6">
                 <div class="flex items-start">
-                    <Icon icon="celebration" class="h-6 w-6 md:h-8 md:w-8 text-red-500 mr-3 md:mr-4 mt-1" />
+                    <Icon icon="celebration" class="h-6 w-6 md:h-8 md:w-8 text-destructive mr-3 md:mr-4 mt-1" />
                     <div class="flex-1">
-                        <h3 class="text-base md:text-lg font-semibold text-red-800 dark:text-red-200">
+                        <h3 class="text-base md:text-lg font-semibold text-destructive">
                             {{ props.holiday.is_national ? 'National Holiday' : 'Holiday' }}: {{ props.holiday.title }}
                         </h3>
-                        <p class="mt-1 text-sm text-red-700 dark:text-red-300">
+                        <p class="mt-1 text-sm text-destructive">
                             <template v-if="props.holiday.start_date === props.holiday.end_date">
                                 This holiday is observed on {{ formatDate(props.holiday.start_date) }}.
                             </template>
@@ -165,22 +165,22 @@
             </div>
 
             <!-- Students Table -->
-            <div v-else-if="students.length > 0" class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
+            <div v-else-if="students.length > 0" class="bg-card rounded-lg border border-border overflow-hidden">
                 <div class="overflow-x-auto -mx-4 md:mx-0">
-                    <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                        <thead class="bg-gray-50 dark:bg-gray-700">
+                    <table class="min-w-full divide-y divide-border">
+                        <thead class="bg-muted">
                             <tr>
-                                <th class="px-2 md:px-4 py-2 md:py-3 text-left text-xs font-semibold text-gray-600 uppercase dark:text-gray-300 w-12 md:w-16">Sr#</th>
-                                <th class="px-2 md:px-4 py-2 md:py-3 text-left text-xs font-semibold text-gray-600 uppercase dark:text-gray-300">Student</th>
-                                <th class="px-2 md:px-4 py-2 md:py-3 text-left text-xs font-semibold text-gray-600 uppercase dark:text-gray-300 hidden md:table-cell">Admission No</th>
-                                <th class="px-2 md:px-4 py-2 md:py-3 text-left text-xs font-semibold text-gray-600 uppercase dark:text-gray-300">Status</th>
-                                <th class="px-2 md:px-4 py-2 md:py-3 text-left text-xs font-semibold text-gray-600 uppercase dark:text-gray-300 hidden sm:table-cell">Check In</th>
-                                <th class="px-2 md:px-4 py-2 md:py-3 text-left text-xs font-semibold text-gray-600 uppercase dark:text-gray-300 hidden sm:table-cell">Check Out</th>
-                                <th class="px-2 md:px-4 py-2 md:py-3 text-left text-xs font-semibold text-gray-600 uppercase dark:text-gray-300 hidden lg:table-cell">Leave Type</th>
-                                <th class="px-2 md:px-4 py-2 md:py-3 text-left text-xs font-semibold text-gray-600 uppercase dark:text-gray-300 hidden lg:table-cell">Remarks</th>
+                                <th class="px-2 md:px-4 py-2 md:py-3 text-left text-xs font-semibold text-muted-foreground uppercase w-12 md:w-16">Sr#</th>
+                                <th class="px-2 md:px-4 py-2 md:py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Student</th>
+                                <th class="px-2 md:px-4 py-2 md:py-3 text-left text-xs font-semibold text-muted-foreground uppercase hidden md:table-cell">Admission No</th>
+                                <th class="px-2 md:px-4 py-2 md:py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Status</th>
+                                <th class="px-2 md:px-4 py-2 md:py-3 text-left text-xs font-semibold text-muted-foreground uppercase hidden sm:table-cell">Check In</th>
+                                <th class="px-2 md:px-4 py-2 md:py-3 text-left text-xs font-semibold text-muted-foreground uppercase hidden sm:table-cell">Check Out</th>
+                                <th class="px-2 md:px-4 py-2 md:py-3 text-left text-xs font-semibold text-muted-foreground uppercase hidden lg:table-cell">Leave Type</th>
+                                <th class="px-2 md:px-4 py-2 md:py-3 text-left text-xs font-semibold text-muted-foreground uppercase hidden lg:table-cell">Remarks</th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-gray-200 dark:divide-gray-700 bg-white dark:bg-gray-800">
+                        <tbody class="divide-y divide-border bg-card">
                             <AttendanceFormRow
                                 v-for="(student, index) in students"
                                 :key="student.id"
@@ -195,7 +195,7 @@
                 </div>
 
                 <!-- Submit Button -->
-                <div class="p-4 border-t border-gray-200 dark:border-gray-700">
+                <div class="p-4 border-t border-border">
                     <Button @click="submitAttendance" :disabled="isSubmitting" class="w-full sm:w-auto">
                         <Icon v-if="isSubmitting" icon="loader" class="mr-1 animate-spin" />
                         {{ isSubmitting ? 'Submitting...' : 'Submit Attendance' }}
@@ -204,9 +204,9 @@
             </div>
 
             <!-- No Students Message -->
-            <div v-else-if="selectedClassId && selectedSectionId" class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 md:p-8 text-center">
-                <Icon icon="users" class="h-10 w-10 md:h-12 md:w-12 text-gray-400 mx-auto mb-3 md:mb-4" />
-                <p class="text-sm md:text-base text-gray-600 dark:text-gray-400">No students found for the selected class and section.</p>
+            <div v-else-if="selectedClassId && selectedSectionId" class="bg-card rounded-lg border border-border p-6 md:p-8 text-center">
+                <Icon icon="users" class="h-10 w-10 md:h-12 md:w-12 text-muted-foreground mx-auto mb-3 md:mb-4" />
+                <p class="text-sm md:text-base text-muted-foreground">No students found for the selected class and section.</p>
             </div>
         </div>
     </AppLayout>

@@ -56,8 +56,8 @@ const handleDelete = () => {
         <DialogContent class="sm:max-w-2xl">
             <DialogHeader>
                 <DialogTitle class="flex items-center gap-2">
-                    <div class="p-2 bg-green-100 dark:bg-green-900/20 rounded-lg">
-                        <Icon icon="shopping-cart" class="w-5 h-5 text-green-600 dark:text-green-400" />
+                    <div class="p-2 bg-success/10 rounded-lg">
+                        <Icon icon="shopping-cart" class="w-5 h-5 text-success" />
                     </div>
                     Purchase Details
                 </DialogTitle>
@@ -65,43 +65,43 @@ const handleDelete = () => {
             
             <div v-if="purchaseData" class="space-y-4 py-4">
                 <!-- Purchase Info -->
-                <div class="grid grid-cols-2 gap-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                        <label class="text-xs font-medium text-gray-500 dark:text-gray-400">Purchase ID</label>
-                        <p class="text-gray-900 dark:text-white font-semibold">#{{ purchaseData.id }}</p>
+                        <label class="text-xs font-medium text-muted-foreground">Purchase ID</label>
+                        <p class="text-foreground font-semibold">#{{ purchaseData.id }}</p>
                     </div>
                     <div>
-                        <label class="text-xs font-medium text-gray-500 dark:text-gray-400">Date</label>
-                        <p class="text-gray-900 dark:text-white">{{ formatDate(purchaseData.purchase_date) }}</p>
+                        <label class="text-xs font-medium text-muted-foreground">Date</label>
+                        <p class="text-foreground">{{ formatDate(purchaseData.purchase_date) }}</p>
                     </div>
                     <div>
-                        <label class="text-xs font-medium text-gray-500 dark:text-gray-400">Campus</label>
-                        <p class="text-gray-900 dark:text-white">{{ purchaseData.campus_name || 'All Campuses' }}</p>
+                        <label class="text-xs font-medium text-muted-foreground">Campus</label>
+                        <p class="text-foreground">{{ purchaseData.campus_name || 'All Campuses' }}</p>
                     </div>
                     <div>
-                        <label class="text-xs font-medium text-gray-500 dark:text-gray-400">Supplier</label>
-                        <p class="text-gray-900 dark:text-white">{{ purchaseData.supplier?.name || '-' }}</p>
+                        <label class="text-xs font-medium text-muted-foreground">Supplier</label>
+                        <p class="text-foreground">{{ purchaseData.supplier?.name || '-' }}</p>
                     </div>
-                    <div class="col-span-2">
-                        <label class="text-xs font-medium text-gray-500 dark:text-gray-400">Total Amount</label>
-                        <p class="text-xl font-bold text-green-600 dark:text-green-400">{{ formatCurrency(purchaseData.total_amount) }}</p>
+                    <div class="sm:col-span-2">
+                        <label class="text-xs font-medium text-muted-foreground">Total Amount</label>
+                        <p class="text-xl font-bold text-success">{{ formatCurrency(purchaseData.total_amount) }}</p>
                     </div>
                 </div>
                 
                 <!-- Items -->
                 <div v-if="purchaseData.items_count > 0">
-                    <label class="text-xs font-medium text-gray-500 dark:text-gray-400">Items ({{ purchaseData.items_count }})</label>
-                    <div class="mt-2 border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
-                        <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                            <thead class="bg-gray-50 dark:bg-gray-700">
+                    <label class="text-xs font-medium text-muted-foreground">Items ({{ purchaseData.items_count }})</label>
+                    <div class="table-scroll mt-2 border border-border rounded-lg">
+                        <table class="min-w-full divide-y divide-border">
+                            <thead class="bg-muted">
                                 <tr>
-                                    <th class="px-3 py-2 text-left text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Item Name</th>
-                                    <th class="px-3 py-2 text-right text-xs font-medium text-gray-500 dark:text-gray-300 uppercase">Quantity</th>
+                                    <th class="px-3 py-2 text-left text-xs font-medium text-muted-foreground uppercase">Item Name</th>
+                                    <th class="px-3 py-2 text-right text-xs font-medium text-muted-foreground uppercase">Quantity</th>
                                 </tr>
                             </thead>
-                            <tbody class="divide-y divide-gray-200 dark:divide-gray-700 bg-white dark:bg-gray-800">
+                            <tbody class="divide-y divide-border bg-card">
                                 <tr>
-                                    <td colspan="2" class="px-3 py-3 text-sm text-gray-600 dark:text-gray-300">
+                                    <td colspan="2" class="px-3 py-3 text-sm text-muted-foreground">
                                         {{ purchaseData.item_names }}
                                     </td>
                                 </tr>
@@ -112,12 +112,12 @@ const handleDelete = () => {
                 
                 <!-- Note -->
                 <div v-if="purchaseData.note">
-                    <label class="text-xs font-medium text-gray-500 dark:text-gray-400">Note</label>
-                    <p class="text-gray-900 dark:text-white text-sm">{{ purchaseData.note }}</p>
+                    <label class="text-xs font-medium text-muted-foreground">Note</label>
+                    <p class="text-foreground text-sm">{{ purchaseData.note }}</p>
                 </div>
                 
                 <!-- Actions -->
-                <div class="flex justify-end gap-2 pt-4 border-t border-gray-200 dark:border-gray-700">
+                <div class="flex flex-wrap justify-end gap-2 pt-4 border-t border-border">
                     <Button variant="destructive" size="sm" @click="handleDelete">
                         <Icon icon="trash-2" class="w-4 h-4 mr-1" />
                         Delete
@@ -129,7 +129,7 @@ const handleDelete = () => {
                 </div>
             </div>
             
-            <div v-else class="py-8 text-center text-gray-500">
+            <div v-else class="py-8 text-center text-muted-foreground">
                 No purchase data available
             </div>
         </DialogContent>

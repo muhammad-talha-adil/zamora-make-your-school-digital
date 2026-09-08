@@ -187,22 +187,22 @@ const formatCurrency = (amount: number): string => {
 
 const getStatusColor = (status: string): string => {
     const colors: Record<string, string> = {
-        unpaid: 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
-        partial: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900 dark:text-yellow-200',
-        paid: 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200',
-        overdue: 'bg-orange-100 text-orange-800 dark:bg-orange-900 dark:text-orange-200',
-        cancelled: 'bg-gray-100 text-gray-800 dark:bg-gray-800 dark:text-gray-200',
+        unpaid: 'bg-destructive/10 text-destructive',
+        partial: 'bg-warning/10 text-warning',
+        paid: 'bg-success/10 text-success',
+        overdue: 'bg-warning/10 text-warning',
+        cancelled: 'bg-muted text-foreground',
     };
-    return colors[status] || 'bg-gray-100 text-gray-800';
+    return colors[status] || 'bg-muted text-foreground';
 };
 
 const getSummaryTone = (tone: 'green' | 'blue' | 'yellow' | 'red' | 'gray') => {
     const tones: Record<string, string> = {
-        green: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
-        blue: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400',
-        yellow: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400',
-        red: 'bg-red-100 text-red-800 dark:bg-red-900/30 dark:text-red-400',
-        gray: 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400',
+        green: 'bg-success/10 text-success',
+        blue: 'bg-primary/10 text-primary',
+        yellow: 'bg-warning/10 text-warning',
+        red: 'bg-destructive/10 text-destructive',
+        gray: 'bg-muted text-foreground',
     };
 
     return tones[tone];
@@ -353,10 +353,10 @@ const removeItem = async (item: FeeVoucherItem) => {
             <!-- Header -->
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 md:gap-4">
                 <div>
-                    <h1 class="text-lg md:text-2xl font-bold text-gray-900 dark:text-white">
+                    <h1 class="text-lg md:text-2xl font-bold text-foreground">
                         Edit Fee Voucher
                     </h1>
-                    <p class="mt-1 text-xs md:text-sm text-gray-600 dark:text-gray-400">
+                    <p class="mt-1 text-xs md:text-sm text-muted-foreground">
                         Voucher #{{ props.voucher.voucher_no }}
                     </p>
                 </div>
@@ -375,109 +375,109 @@ const removeItem = async (item: FeeVoucherItem) => {
             <!-- Voucher Info -->
             <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
                 <!-- Student Info Card -->
-                <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-                    <p class="text-xs text-gray-500 dark:text-gray-400">Student</p>
-                    <p class="text-sm font-medium text-gray-900 dark:text-white">
+                <div class="bg-card rounded-lg border border-border p-4">
+                    <p class="text-xs text-muted-foreground">Student</p>
+                    <p class="text-sm font-medium text-foreground">
                         {{ props.voucher.student?.name || 'N/A' }}
                     </p>
-                    <p class="text-xs text-gray-500 dark:text-gray-400">
+                    <p class="text-xs text-muted-foreground">
                         {{ props.voucher.student?.registration_number }}
                     </p>
                 </div>
 
                 <!-- Month/Year Card -->
-                <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-                    <p class="text-xs text-gray-500 dark:text-gray-400">Month</p>
-                    <p class="text-sm font-medium text-gray-900 dark:text-white">
+                <div class="bg-card rounded-lg border border-border p-4">
+                    <p class="text-xs text-muted-foreground">Month</p>
+                    <p class="text-sm font-medium text-foreground">
                         {{ props.voucher.voucherMonth?.name }} {{ props.voucher.voucher_year }}
                     </p>
                 </div>
 
                 <!-- Status Card -->
-                <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-                    <p class="text-xs text-gray-500 dark:text-gray-400">Class / Section</p>
-                    <p class="text-sm font-medium text-gray-900 dark:text-white">
+                <div class="bg-card rounded-lg border border-border p-4">
+                    <p class="text-xs text-muted-foreground">Class / Section</p>
+                    <p class="text-sm font-medium text-foreground">
                         {{ props.voucher.schoolClass?.name || 'N/A' }}
                         <span v-if="props.voucher.section"> / {{ props.voucher.section.name }}</span>
                     </p>
                 </div>
 
                 <!-- Status Card -->
-                <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-                    <p class="text-xs text-gray-500 dark:text-gray-400">Status</p>
+                <div class="bg-card rounded-lg border border-border p-4">
+                    <p class="text-xs text-muted-foreground">Status</p>
                     <span :class="['inline-flex items-center px-2 py-1 rounded-full text-xs font-medium', getStatusColor(props.voucher.status)]">
                         {{ props.voucher.status }}
                     </span>
                 </div>
 
                 <!-- Balance Card -->
-                <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
-                    <p class="text-xs text-gray-500 dark:text-gray-400">Balance</p>
-                    <p class="text-sm font-medium text-gray-900 dark:text-white">
+                <div class="bg-card rounded-lg border border-border p-4">
+                    <p class="text-xs text-muted-foreground">Balance</p>
+                    <p class="text-sm font-medium text-foreground">
                         {{ formatCurrency(props.voucher.balance_amount) }}
                     </p>
                 </div>
             </div>
 
             <!-- Amount Summary -->
-            <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 md:p-6">
-                <h3 class="text-sm font-medium text-gray-900 dark:text-white mb-4">Amount Summary</h3>
+            <div class="bg-card rounded-lg border border-border p-4 md:p-6">
+                <h3 class="text-sm font-medium text-foreground mb-4">Amount Summary</h3>
                 <div class="grid gap-3 md:grid-cols-2 lg:grid-cols-5">
                     <div>
-                        <p class="text-xs text-gray-500 dark:text-gray-400">Gross Amount</p>
-                        <p class="text-sm font-medium text-gray-900 dark:text-white">{{ formatCurrency(props.voucher.gross_amount) }}</p>
+                        <p class="text-xs text-muted-foreground">Gross Amount</p>
+                        <p class="text-sm font-medium text-foreground">{{ formatCurrency(props.voucher.gross_amount) }}</p>
                     </div>
                     <div>
-                        <p class="text-xs text-gray-500 dark:text-gray-400">Discount</p>
-                        <p class="text-sm font-medium text-green-600 dark:text-green-400">-{{ formatCurrency(props.voucher.discount_amount) }}</p>
+                        <p class="text-xs text-muted-foreground">Discount</p>
+                        <p class="text-sm font-medium text-success">-{{ formatCurrency(props.voucher.discount_amount) }}</p>
                     </div>
                     <div>
-                        <p class="text-xs text-gray-500 dark:text-gray-400">Fine</p>
-                        <p class="text-sm font-medium text-red-600 dark:text-red-400">+{{ formatCurrency(props.voucher.fine_amount) }}</p>
+                        <p class="text-xs text-muted-foreground">Fine</p>
+                        <p class="text-sm font-medium text-destructive">+{{ formatCurrency(props.voucher.fine_amount) }}</p>
                     </div>
                     <div>
-                        <p class="text-xs text-gray-500 dark:text-gray-400">Paid</p>
-                        <p class="text-sm font-medium text-blue-600 dark:text-blue-400">{{ formatCurrency(props.voucher.paid_amount) }}</p>
+                        <p class="text-xs text-muted-foreground">Paid</p>
+                        <p class="text-sm font-medium text-primary">{{ formatCurrency(props.voucher.paid_amount) }}</p>
                     </div>
                     <div>
-                        <p class="text-xs text-gray-500 dark:text-gray-400">Net Amount</p>
-                        <p class="text-sm font-bold text-gray-900 dark:text-white">{{ formatCurrency(props.voucher.net_amount) }}</p>
+                        <p class="text-xs text-muted-foreground">Net Amount</p>
+                        <p class="text-sm font-bold text-foreground">{{ formatCurrency(props.voucher.net_amount) }}</p>
                     </div>
                 </div>
             </div>
 
-            <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 md:p-6">
-                <h3 class="mb-4 text-sm font-medium text-gray-900 dark:text-white">Class Voucher Progress</h3>
-                <p class="mb-4 text-sm text-gray-600 dark:text-gray-400">
+            <div class="bg-card rounded-lg border border-border p-4 md:p-6">
+                <h3 class="mb-4 text-sm font-medium text-foreground">Class Voucher Progress</h3>
+                <p class="mb-4 text-sm text-muted-foreground">
                     This billing cycle currently has {{ cohortSummary.total }} student vouchers in the same class, section, month, and year.
                 </p>
                 <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
-                    <div class="rounded-lg border border-gray-200 p-3 dark:border-gray-700">
-                        <p class="text-xs text-gray-500 dark:text-gray-400">Paid</p>
+                    <div class="rounded-lg border border-border p-3">
+                        <p class="text-xs text-muted-foreground">Paid</p>
                         <span :class="['mt-2 inline-flex rounded-full px-2.5 py-1 text-xs font-medium', getSummaryTone('green')]">{{ cohortSummary.paid }}</span>
                     </div>
-                    <div class="rounded-lg border border-gray-200 p-3 dark:border-gray-700">
-                        <p class="text-xs text-gray-500 dark:text-gray-400">Partial</p>
+                    <div class="rounded-lg border border-border p-3">
+                        <p class="text-xs text-muted-foreground">Partial</p>
                         <span :class="['mt-2 inline-flex rounded-full px-2.5 py-1 text-xs font-medium', getSummaryTone('blue')]">{{ cohortSummary.partial }}</span>
                     </div>
-                    <div class="rounded-lg border border-gray-200 p-3 dark:border-gray-700">
-                        <p class="text-xs text-gray-500 dark:text-gray-400">Unpaid</p>
+                    <div class="rounded-lg border border-border p-3">
+                        <p class="text-xs text-muted-foreground">Unpaid</p>
                         <span :class="['mt-2 inline-flex rounded-full px-2.5 py-1 text-xs font-medium', getSummaryTone('yellow')]">{{ cohortSummary.unpaid }}</span>
                     </div>
-                    <div class="rounded-lg border border-gray-200 p-3 dark:border-gray-700">
-                        <p class="text-xs text-gray-500 dark:text-gray-400">Overdue</p>
+                    <div class="rounded-lg border border-border p-3">
+                        <p class="text-xs text-muted-foreground">Overdue</p>
                         <span :class="['mt-2 inline-flex rounded-full px-2.5 py-1 text-xs font-medium', getSummaryTone('red')]">{{ cohortSummary.overdue }}</span>
                     </div>
-                    <div class="rounded-lg border border-gray-200 p-3 dark:border-gray-700">
-                        <p class="text-xs text-gray-500 dark:text-gray-400">Cancelled</p>
+                    <div class="rounded-lg border border-border p-3">
+                        <p class="text-xs text-muted-foreground">Cancelled</p>
                         <span :class="['mt-2 inline-flex rounded-full px-2.5 py-1 text-xs font-medium', getSummaryTone('gray')]">{{ cohortSummary.cancelled }}</span>
                     </div>
                 </div>
             </div>
 
             <!-- Edit Form -->
-            <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 md:p-6">
-                <h3 class="text-sm font-medium text-gray-900 dark:text-white mb-4">Edit Voucher Details</h3>
+            <div class="bg-card rounded-lg border border-border p-4 md:p-6">
+                <h3 class="text-sm font-medium text-foreground mb-4">Edit Voucher Details</h3>
                 
                 <form @submit.prevent="submitForm" class="space-y-4">
                     <!-- Due Date -->
@@ -491,11 +491,11 @@ const removeItem = async (item: FeeVoucherItem) => {
                                 :class="[
                                     'h-9 w-full rounded-md border bg-transparent px-3 py-1 text-sm shadow-xs transition-[color,box-shadow] outline-none',
                                     'border-input dark:bg-input/30 focus-visible:border-ring focus-visible:ring-ring/50 focus-visible:ring-[3px]',
-                                    errors.due_date ? 'border-red-500' : '',
+                                    errors.due_date ? 'border-destructive' : '',
                                 ]"
                                 :disabled="isVoucherPaid"
                             />
-                            <p v-if="errors.due_date" class="text-sm text-red-500">{{ errors.due_date }}</p>
+                            <p v-if="errors.due_date" class="text-sm text-destructive">{{ errors.due_date }}</p>
                         </div>
                     </div>
 
@@ -506,14 +506,14 @@ const removeItem = async (item: FeeVoucherItem) => {
                             id="notes"
                             v-model="form.notes"
                             rows="3"
-                            class="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 text-sm"
+                            class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm"
                             placeholder="Additional notes..."
                             :disabled="isVoucherPaid"
                         ></textarea>
                     </div>
 
                     <!-- Submit -->
-                    <div class="flex justify-end gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
+                    <div class="flex flex-wrap justify-end gap-3 pt-4 border-t border-border">
                         <Button type="button" variant="outline" @click="cancel">
                             Cancel
                         </Button>
@@ -526,9 +526,9 @@ const removeItem = async (item: FeeVoucherItem) => {
             </div>
 
             <!-- Items -->
-            <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 md:p-6">
-                <div class="flex justify-between items-center mb-4">
-                    <h3 class="text-sm font-medium text-gray-900 dark:text-white">Voucher Items</h3>
+            <div class="bg-card rounded-lg border border-border p-4 md:p-6">
+                <div class="flex flex-wrap gap-2 justify-between items-center mb-4">
+                    <h3 class="text-sm font-medium text-foreground">Voucher Items</h3>
                     <Button 
                         v-if="!isVoucherPaid" 
                         size="sm" 
@@ -541,20 +541,20 @@ const removeItem = async (item: FeeVoucherItem) => {
                 <div class="overflow-x-auto">
                     <table class="w-full text-sm">
                         <thead>
-                            <tr class="border-b border-gray-200 dark:border-gray-700">
-                                <th class="text-left py-2 px-3 text-gray-500 dark:text-gray-400">Fee Head</th>
-                                <th class="text-left py-2 px-3 text-gray-500 dark:text-gray-400">Description</th>
-                                <th class="text-right py-2 px-3 text-gray-500 dark:text-gray-400">Amount</th>
-                                <th class="text-right py-2 px-3 text-gray-500 dark:text-gray-400">Discount</th>
-                                <th class="text-right py-2 px-3 text-gray-500 dark:text-gray-400">Net</th>
-                                <th v-if="!isVoucherPaid" class="text-right py-2 px-3 text-gray-500 dark:text-gray-400">Actions</th>
+                            <tr class="border-b border-border">
+                                <th class="text-left py-2 px-3 text-muted-foreground">Fee Head</th>
+                                <th class="text-left py-2 px-3 text-muted-foreground">Description</th>
+                                <th class="text-right py-2 px-3 text-muted-foreground">Amount</th>
+                                <th class="text-right py-2 px-3 text-muted-foreground">Discount</th>
+                                <th class="text-right py-2 px-3 text-muted-foreground">Net</th>
+                                <th v-if="!isVoucherPaid" class="text-right py-2 px-3 text-muted-foreground">Actions</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <tr v-for="item in props.voucher.items" :key="item.id" class="border-b border-gray-100 dark:border-gray-700">
+                            <tr v-for="item in props.voucher.items" :key="item.id" class="border-b border-border">
                                 <template v-if="editingItemId === item.id">
                                     <!-- Edit Mode -->
-                                    <td class="py-2 px-3 text-gray-900 dark:text-white">{{ item.fee_head?.name || 'N/A' }}</td>
+                                    <td class="py-2 px-3 text-foreground">{{ item.fee_head?.name || 'N/A' }}</td>
                                     <td class="py-2 px-3">
                                         <Input
                                             v-model="editItemForm.description"
@@ -562,7 +562,7 @@ const removeItem = async (item: FeeVoucherItem) => {
                                             class="h-8 text-sm"
                                         />
                                     </td>
-                                    <td class="py-2 px-3 text-right text-gray-600 dark:text-gray-300">
+                                    <td class="py-2 px-3 text-right text-muted-foreground">
                                         <Input
                                             v-model.number="editItemForm.amount"
                                             type="number"
@@ -578,39 +578,39 @@ const removeItem = async (item: FeeVoucherItem) => {
                                             class="h-8 text-sm w-24 text-right"
                                         />
                                     </td>
-                                    <td class="py-2 px-3 text-right text-gray-900 dark:text-white font-medium">{{ formatCurrency(item.net_amount) }}</td>
+                                    <td class="py-2 px-3 text-right text-foreground font-medium">{{ formatCurrency(item.net_amount) }}</td>
                                     <td class="py-2 px-3 text-right">
-                                        <div class="flex justify-end gap-1">
+                                        <div class="flex flex-wrap justify-end gap-1">
                                             <Button size="sm" variant="ghost" @click="saveEditItem(item)">
-                                                <Icon icon="check" class="h-4 w-4 text-green-600" />
+                                                <Icon icon="check" class="h-4 w-4 text-success" />
                                             </Button>
                                             <Button size="sm" variant="ghost" @click="cancelEditItem">
-                                                <Icon icon="x" class="h-4 w-4 text-red-600" />
+                                                <Icon icon="x" class="h-4 w-4 text-destructive" />
                                             </Button>
                                         </div>
                                     </td>
                                 </template>
                                 <template v-else>
                                     <!-- Display Mode -->
-                                    <td class="py-2 px-3 text-gray-900 dark:text-white">{{ item.fee_head?.name || 'N/A' }}</td>
-                                    <td class="py-2 px-3 text-gray-600 dark:text-gray-300">{{ item.description }}</td>
-                                    <td class="py-2 px-3 text-right text-gray-900 dark:text-white font-medium">{{ formatCurrency(item.amount) }}</td>
-                                    <td class="py-2 px-3 text-right text-green-600 dark:text-green-400">-{{ formatCurrency(item.discount_amount) }}</td>
-                                    <td class="py-2 px-3 text-right text-gray-900 dark:text-white font-medium">{{ formatCurrency(item.net_amount) }}</td>
+                                    <td class="py-2 px-3 text-foreground">{{ item.fee_head?.name || 'N/A' }}</td>
+                                    <td class="py-2 px-3 text-muted-foreground">{{ item.description }}</td>
+                                    <td class="py-2 px-3 text-right text-foreground font-medium">{{ formatCurrency(item.amount) }}</td>
+                                    <td class="py-2 px-3 text-right text-success">-{{ formatCurrency(item.discount_amount) }}</td>
+                                    <td class="py-2 px-3 text-right text-foreground font-medium">{{ formatCurrency(item.net_amount) }}</td>
                                     <td v-if="!isVoucherPaid" class="py-2 px-3 text-right">
-                                        <div class="flex justify-end gap-1">
+                                        <div class="flex flex-wrap justify-end gap-1">
                                             <Button size="sm" variant="ghost" @click="startEditItem(item)">
                                                 <Icon icon="pencil" class="h-4 w-4" />
                                             </Button>
                                             <Button size="sm" variant="ghost" @click="removeItem(item)">
-                                                <Icon icon="trash-2" class="h-4 w-4 text-red-600" />
+                                                <Icon icon="trash-2" class="h-4 w-4 text-destructive" />
                                             </Button>
                                         </div>
                                     </td>
                                 </template>
                             </tr>
                             <tr v-if="props.voucher.items.length === 0">
-                                <td :colspan="isVoucherPaid ? 5 : 6" class="py-4 text-center text-gray-500">
+                                <td :colspan="isVoucherPaid ? 5 : 6" class="py-4 text-center text-muted-foreground">
                                     No fee items found
                                 </td>
                             </tr>
@@ -620,60 +620,60 @@ const removeItem = async (item: FeeVoucherItem) => {
             </div>
 
             <!-- Adjustments -->
-            <div v-if="props.voucher.adjustments && props.voucher.adjustments.length > 0" class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 md:p-6">
-                <h3 class="text-sm font-medium text-gray-900 dark:text-white mb-4">Adjustments</h3>
+            <div v-if="props.voucher.adjustments && props.voucher.adjustments.length > 0" class="bg-card rounded-lg border border-border p-4 md:p-6">
+                <h3 class="text-sm font-medium text-foreground mb-4">Adjustments</h3>
                 <div class="overflow-x-auto">
                     <table class="w-full text-sm">
                         <thead>
-                            <tr class="border-b border-gray-200 dark:border-gray-700">
-                                <th class="text-left py-2 px-3 text-gray-500 dark:text-gray-400">Type</th>
-                                <th class="text-left py-2 px-3 text-gray-500 dark:text-gray-400">Description</th>
-                                <th class="text-right py-2 px-3 text-gray-500 dark:text-gray-400">Amount</th>
-                                <th class="text-left py-2 px-3 text-gray-500 dark:text-gray-400">Date</th>
+                            <tr class="border-b border-border">
+                                <th class="text-left py-2 px-3 text-muted-foreground">Type</th>
+                                <th class="text-left py-2 px-3 text-muted-foreground">Description</th>
+                                <th class="text-right py-2 px-3 text-muted-foreground">Amount</th>
+                                <th class="text-left py-2 px-3 text-muted-foreground">Date</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <tr v-for="adj in props.voucher.adjustments" :key="adj.id" class="border-b border-gray-100 dark:border-gray-700">
+                            <tr v-for="adj in props.voucher.adjustments" :key="adj.id" class="border-b border-border">
                                 <td class="py-2 px-3">
-                                    <span :class="adj.type === 'debit' ? 'text-red-600' : 'text-green-600'">
+                                    <span :class="adj.type === 'debit' ? 'text-destructive' : 'text-success'">
                                         {{ adj.type }}
                                     </span>
                                 </td>
-                                <td class="py-2 px-3 text-gray-600 dark:text-gray-300">{{ adj.description }}</td>
-                                <td class="py-2 px-3 text-right" :class="adj.type === 'debit' ? 'text-red-600' : 'text-green-600'">
+                                <td class="py-2 px-3 text-muted-foreground">{{ adj.description }}</td>
+                                <td class="py-2 px-3 text-right" :class="adj.type === 'debit' ? 'text-destructive' : 'text-success'">
                                     {{ adj.type === 'debit' ? '+' : '-' }}{{ formatCurrency(adj.amount) }}
                                 </td>
-                                <td class="py-2 px-3 text-gray-600 dark:text-gray-300">{{ new Date(adj.created_at).toLocaleDateString() }}</td>
+                                <td class="py-2 px-3 text-muted-foreground">{{ new Date(adj.created_at).toLocaleDateString() }}</td>
                             </tr>
                         </tbody>
                     </table>
                 </div>
             </div>
 
-            <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 md:p-6">
-                <h3 class="mb-4 text-sm font-medium text-gray-900 dark:text-white">Class / Section Payment Status</h3>
+            <div class="bg-card rounded-lg border border-border p-4 md:p-6">
+                <h3 class="mb-4 text-sm font-medium text-foreground">Class / Section Payment Status</h3>
                 <div class="overflow-x-auto">
                     <table class="w-full text-sm">
                         <thead>
-                            <tr class="border-b border-gray-200 dark:border-gray-700">
-                                <th class="px-3 py-2 text-left text-gray-500 dark:text-gray-400">Student</th>
-                                <th class="px-3 py-2 text-left text-gray-500 dark:text-gray-400">Voucher</th>
-                                <th class="px-3 py-2 text-right text-gray-500 dark:text-gray-400">Net</th>
-                                <th class="px-3 py-2 text-right text-gray-500 dark:text-gray-400">Paid</th>
-                                <th class="px-3 py-2 text-right text-gray-500 dark:text-gray-400">Balance</th>
-                                <th class="px-3 py-2 text-left text-gray-500 dark:text-gray-400">Status</th>
+                            <tr class="border-b border-border">
+                                <th class="px-3 py-2 text-left text-muted-foreground">Student</th>
+                                <th class="px-3 py-2 text-left text-muted-foreground">Voucher</th>
+                                <th class="px-3 py-2 text-right text-muted-foreground">Net</th>
+                                <th class="px-3 py-2 text-right text-muted-foreground">Paid</th>
+                                <th class="px-3 py-2 text-right text-muted-foreground">Balance</th>
+                                <th class="px-3 py-2 text-left text-muted-foreground">Status</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <tr v-for="cohortVoucher in cohortVouchers" :key="cohortVoucher.id" class="border-b border-gray-100 dark:border-gray-700">
+                            <tr v-for="cohortVoucher in cohortVouchers" :key="cohortVoucher.id" class="border-b border-border">
                                 <td class="px-3 py-2">
-                                    <div class="font-medium text-gray-900 dark:text-white">{{ cohortVoucher.student_name }}</div>
-                                    <div class="text-xs text-gray-500 dark:text-gray-400">{{ cohortVoucher.registration_number }}</div>
+                                    <div class="font-medium text-foreground">{{ cohortVoucher.student_name }}</div>
+                                    <div class="text-xs text-muted-foreground">{{ cohortVoucher.registration_number }}</div>
                                 </td>
-                                <td class="px-3 py-2 text-gray-600 dark:text-gray-300">{{ cohortVoucher.voucher_no }}</td>
-                                <td class="px-3 py-2 text-right text-gray-600 dark:text-gray-300">{{ formatCurrency(cohortVoucher.net_amount) }}</td>
-                                <td class="px-3 py-2 text-right text-green-600 dark:text-green-400">{{ formatCurrency(cohortVoucher.paid_amount) }}</td>
-                                <td class="px-3 py-2 text-right font-medium" :class="cohortVoucher.balance_amount > 0 ? 'text-red-600 dark:text-red-400' : 'text-gray-900 dark:text-white'">
+                                <td class="px-3 py-2 text-muted-foreground">{{ cohortVoucher.voucher_no }}</td>
+                                <td class="px-3 py-2 text-right text-muted-foreground">{{ formatCurrency(cohortVoucher.net_amount) }}</td>
+                                <td class="px-3 py-2 text-right text-success">{{ formatCurrency(cohortVoucher.paid_amount) }}</td>
+                                <td class="px-3 py-2 text-right font-medium" :class="cohortVoucher.balance_amount > 0 ? 'text-destructive' : 'text-foreground'">
                                     {{ formatCurrency(cohortVoucher.balance_amount) }}
                                 </td>
                                 <td class="px-3 py-2">
@@ -690,9 +690,9 @@ const removeItem = async (item: FeeVoucherItem) => {
 
         <!-- Add Item Modal -->
         <div v-if="showAddItemModal" class="fixed inset-0 z-50 flex items-center justify-center bg-black/50">
-            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-lg w-full max-w-md p-6 m-4">
-                <div class="flex justify-between items-center mb-4">
-                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white">Add Fee Head</h3>
+            <div class="bg-card rounded-lg shadow-lg w-full max-w-md p-6 m-4">
+                <div class="flex flex-wrap gap-2 justify-between items-center mb-4">
+                    <h3 class="text-lg font-semibold text-foreground">Add Fee Head</h3>
                     <Button variant="ghost" size="sm" @click="closeAddItemModal">
                         <Icon icon="x" class="h-5 w-5" />
                     </Button>
@@ -701,11 +701,11 @@ const removeItem = async (item: FeeVoucherItem) => {
                 <form @submit.prevent="addItem" class="space-y-4">
                     <!-- Fee Head Selection -->
                     <div class="space-y-2">
-                        <Label for="fee_head_id">Fee Head <span class="text-red-500">*</span></Label>
+                        <Label for="fee_head_id">Fee Head <span class="text-destructive">*</span></Label>
                         <select
                             id="fee_head_id"
                             v-model="newItemForm.fee_head_id"
-                            class="h-11 w-full rounded-md border border-gray-300 bg-white px-3 py-2 text-sm dark:border-gray-600 dark:bg-gray-700 dark:text-white"
+                            class="h-11 w-full rounded-md border border-border bg-card px-3 py-2 text-sm"
                             :disabled="isLoadingFeeHeads"
                             required
                         >
@@ -718,7 +718,7 @@ const removeItem = async (item: FeeVoucherItem) => {
                                 {{ fh.name }} ({{ fh.code }})
                             </option>
                         </select>
-                        <p v-if="errors.fee_head_id" class="text-sm text-red-500">{{ errors.fee_head_id }}</p>
+                        <p v-if="errors.fee_head_id" class="text-sm text-destructive">{{ errors.fee_head_id }}</p>
                     </div>
 
                     <!-- Description -->
@@ -734,7 +734,7 @@ const removeItem = async (item: FeeVoucherItem) => {
 
                     <!-- Amount -->
                     <div class="space-y-2">
-                        <Label for="amount">Amount <span class="text-red-500">*</span></Label>
+                        <Label for="amount">Amount <span class="text-destructive">*</span></Label>
                         <Input
                             id="amount"
                             v-model.number="newItemForm.amount"
@@ -744,7 +744,7 @@ const removeItem = async (item: FeeVoucherItem) => {
                             placeholder="0.00"
                             required
                         />
-                        <p v-if="errors.amount" class="text-sm text-red-500">{{ errors.amount }}</p>
+                        <p v-if="errors.amount" class="text-sm text-destructive">{{ errors.amount }}</p>
                     </div>
 
                     <!-- Discount Amount -->
@@ -761,7 +761,7 @@ const removeItem = async (item: FeeVoucherItem) => {
                     </div>
 
                     <!-- Actions -->
-                    <div class="flex justify-end gap-3 pt-4">
+                    <div class="flex flex-wrap justify-end gap-3 pt-4">
                         <Button type="button" variant="outline" @click="closeAddItemModal">
                             Cancel
                         </Button>

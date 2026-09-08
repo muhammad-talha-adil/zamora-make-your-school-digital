@@ -4,133 +4,163 @@ import { usePage } from '@inertiajs/vue3';
 export type ResolvedAppearance = 'light' | 'dark';
 type Appearance = ResolvedAppearance | 'system';
 
-const cssVarMapping: Record<string, string> = {
-    '--background': 'content_bg',
-    '--foreground': 'content_text',
-    '--card': 'card_bg',
-    '--card-foreground': 'card_text',
-    '--popover': 'card_bg',
-    '--popover-foreground': 'card_text',
-    '--primary': 'sidebar_active_bg',
-    '--primary-foreground': 'sidebar_active_text',
-    '--secondary': 'button_secondary_bg',
-    '--secondary-foreground': 'button_secondary_text',
-    '--muted': 'content_bg',
-    '--muted-foreground': 'content_text',
-    '--accent': 'sidebar_bg',
-    '--accent-foreground': 'sidebar_text',
-    '--destructive': '#ef4444',
-    '--destructive-foreground': '#ffffff',
-    '--border': 'content_bg',
-    '--input': '#d1d5db',
-    '--ring': 'sidebar_active_bg',
-    '--chart-1': '#8884d8',
-    '--chart-2': '#82ca9d',
-    '--chart-3': '#ffc658',
-    '--chart-4': '#ff7c7c',
-    '--chart-5': '#8dd1e1',
-    '--sidebar-background': 'sidebar_bg',
-    '--sidebar-foreground': 'sidebar_text',
-    '--sidebar-primary': 'sidebar_active_bg',
-    '--sidebar-primary-foreground': 'sidebar_active_text',
-    '--sidebar-accent': 'header_bg',
-    '--sidebar-accent-foreground': 'header_text',
-    '--sidebar-border': 'sidebar_bg',
-    '--sidebar-ring': 'sidebar_active_bg',
-    '--sidebar': 'sidebar_bg',
-    '--radius': '0.5rem',
-};
+/** Palette slots stored per mode by the Theme Settings screen. */
+type PaletteColors = Partial<
+    Record<
+        | 'card_bg'
+        | 'card_text'
+        | 'content_bg'
+        | 'content_text'
+        | 'header_bg'
+        | 'header_text'
+        | 'sidebar_bg'
+        | 'sidebar_text'
+        | 'sidebar_active_bg'
+        | 'sidebar_active_text'
+        | 'primary'
+        | 'primary_text'
+        | 'success'
+        | 'success_text'
+        | 'danger'
+        | 'danger_text'
+        | 'warning'
+        | 'warning_text'
+        | 'info'
+        | 'info_text',
+        string
+    >
+>;
 
-function getDefaults(isDark: boolean): Record<string, string> {
-    if (isDark) {
-        return {
-            '--background': '#111827',
-            '--foreground': '#f9fafb',
-            '--card': '#1f2937',
-            '--card-foreground': '#f9fafb',
-            '--popover': '#1f2937',
-            '--popover-foreground': '#f9fafb',
-            '--primary': '#60a5fa',
-            '--primary-foreground': '#111827',
-            '--secondary': '#374151',
-            '--secondary-foreground': '#f9fafb',
-            '--muted': '#111827',
-            '--muted-foreground': '#9ca3af',
-            '--accent': '#374151',
-            '--accent-foreground': '#f9fafb',
-            '--destructive': '#ef4444',
-            '--destructive-foreground': '#ffffff',
-            '--border': '#374151',
-            '--input': '#374151',
-            '--ring': '#60a5fa',
-            '--chart-1': '#8884d8',
-            '--chart-2': '#82ca9d',
-            '--chart-3': '#ffc658',
-            '--chart-4': '#ff7c7c',
-            '--chart-5': '#8dd1e1',
-            '--sidebar-background': '#111827',
-            '--sidebar-foreground': '#f9fafb',
-            '--sidebar-primary': '#60a5fa',
-            '--sidebar-primary-foreground': '#111827',
-            '--sidebar-accent': '#374151',
-            '--sidebar-accent-foreground': '#f9fafb',
-            '--sidebar-border': '#374151',
-            '--sidebar-ring': '#60a5fa',
-            '--sidebar': '#111827',
-            '--radius': '0.5rem',
-        };
-    }
-    return {
-        '--background': '#ffffff',
-        '--foreground': '#111827',
-        '--card': '#ffffff',
-        '--card-foreground': '#111827',
-        '--popover': '#ffffff',
-        '--popover-foreground': '#111827',
-        '--primary': '#2563eb',
-        '--primary-foreground': '#ffffff',
-        '--secondary': '#e5e7eb',
-        '--secondary-foreground': '#111827',
-        '--muted': '#f9fafb',
-        '--muted-foreground': '#6b7280',
-        '--accent': '#f3f4f6',
-        '--accent-foreground': '#111827',
-        '--destructive': '#ef4444',
-        '--destructive-foreground': '#ffffff',
-        '--border': '#e5e7eb',
-        '--input': '#ffffff',
-        '--ring': '#2563eb',
-        '--chart-1': '#8884d8',
-        '--chart-2': '#82ca9d',
-        '--chart-3': '#ffc658',
-        '--chart-4': '#ff7c7c',
-        '--chart-5': '#8dd1e1',
-        '--sidebar-background': '#f9fafb',
-        '--sidebar-foreground': '#111827',
-        '--sidebar-primary': '#2563eb',
-        '--sidebar-primary-foreground': '#ffffff',
-        '--sidebar-accent': '#e5e7eb',
-        '--sidebar-accent-foreground': '#111827',
-        '--sidebar-border': '#e5e7eb',
-        '--sidebar-ring': '#2563eb',
-        '--sidebar': '#f9fafb',
-        '--radius': '0.5rem',
+type ThemeRecord = { colors_json?: PaletteColors } | null | undefined;
+
+/**
+ * Tokens this function is allowed to write, so a stale inline value can be
+ * cleared instead of lingering on `documentElement` across a mode switch.
+ */
+const MANAGED_TOKENS = [
+    '--primary',
+    '--primary-foreground',
+    '--destructive',
+    '--destructive-foreground',
+    '--success',
+    '--success-foreground',
+    '--warning',
+    '--warning-foreground',
+    '--info',
+    '--info-foreground',
+    '--background',
+    '--foreground',
+    '--card',
+    '--card-foreground',
+    '--popover',
+    '--popover-foreground',
+    '--muted',
+    '--muted-foreground',
+    '--secondary',
+    '--secondary-foreground',
+    '--accent',
+    '--accent-foreground',
+    '--border',
+    '--input',
+    '--ring',
+    '--sidebar-background',
+    '--sidebar-foreground',
+    '--sidebar-primary',
+    '--sidebar-primary-foreground',
+    '--sidebar-accent',
+    '--sidebar-accent-foreground',
+    '--sidebar-border',
+    '--header-bg',
+    '--header-text',
+    '--content-bg',
+    '--content-text',
+    '--card-bg',
+    '--card-text',
+] as const;
+
+const mix = (a: string | undefined, b: string | undefined, pct: number) =>
+    a && b ? `color-mix(in srgb, ${a} ${pct}%, ${b})` : undefined;
+
+/**
+ * Maps a saved palette onto the design tokens.
+ *
+ * Mirrors the derivation in resources/views/app.blade.php: only surface
+ * colours come from the palette, and the contrast tokens (border, muted,
+ * ring) are mixed from them. Mapping those to a palette slot directly — as an
+ * earlier version did, pointing `--border` at `content_bg` — collapses the
+ * hierarchy and makes every border invisible.
+ */
+function paletteTokens(colors: PaletteColors): Record<string, string> {
+    const surface = colors.card_bg;
+    const onSurface = colors.card_text;
+    const page = colors.content_bg;
+    const onPage = colors.content_text;
+
+    const tokens: Record<string, string | undefined> = {
+        '--primary': colors.primary,
+        '--primary-foreground': colors.primary_text,
+        '--destructive': colors.danger,
+        '--destructive-foreground': colors.danger_text,
+        '--success': colors.success,
+        '--success-foreground': colors.success_text,
+        '--warning': colors.warning,
+        '--warning-foreground': colors.warning_text,
+        '--info': colors.info,
+        '--info-foreground': colors.info_text,
+        '--background': page,
+        '--foreground': onPage,
+        '--card': surface,
+        '--card-foreground': onSurface,
+        '--popover': surface,
+        '--popover-foreground': onSurface,
+        '--muted': mix(onSurface, surface, 6),
+        '--muted-foreground': mix(onSurface, surface, 60),
+        '--secondary': mix(onSurface, surface, 6),
+        '--secondary-foreground': onSurface,
+        '--accent': mix(onSurface, surface, 8),
+        '--accent-foreground': onSurface,
+        '--border': mix(onSurface, surface, 14),
+        '--input': mix(onSurface, surface, 14),
+        '--ring': mix(onSurface, surface, 40),
+        '--sidebar-background': colors.sidebar_bg,
+        '--sidebar-foreground': colors.sidebar_text,
+        '--sidebar-primary': colors.sidebar_active_bg,
+        '--sidebar-primary-foreground': colors.sidebar_active_text,
+        '--sidebar-accent': colors.sidebar_active_bg,
+        '--sidebar-accent-foreground': colors.sidebar_active_text,
+        '--sidebar-border': mix(colors.sidebar_text, colors.sidebar_bg, 20),
+        '--header-bg': colors.header_bg,
+        '--header-text': colors.header_text,
+        '--content-bg': page,
+        '--content-text': onPage,
+        '--card-bg': surface,
+        '--card-text': onSurface,
     };
+
+    return Object.fromEntries(
+        Object.entries(tokens).filter(([, v]) => Boolean(v)),
+    ) as Record<string, string>;
 }
 
-function applyTheme(theme: any, isDark: boolean = false) {
-    const defaults = getDefaults(isDark);
-    Object.entries(cssVarMapping).forEach(([cssVar, slot]) => {
-        let value: string;
-        if (slot.startsWith('#')) {
-            value = slot;
-        } else if (theme && theme.colors_json && theme.colors_json[slot]) {
-            value = theme.colors_json[slot];
+/**
+ * Applies a saved palette as inline overrides on the root element.
+ *
+ * Slots the palette leaves blank are removed rather than defaulted, so the
+ * `:root` / `.dark` values in app.css stay in charge of them.
+ */
+function applyTheme(theme: ThemeRecord) {
+    const root = document.documentElement.style;
+    const tokens = paletteTokens(theme?.colors_json ?? {});
+
+    for (const name of MANAGED_TOKENS) {
+        const value = tokens[name];
+
+        if (value) {
+            root.setProperty(name, value);
         } else {
-            value = defaults[cssVar] || '#000000';
+            root.removeProperty(name);
         }
-        document.documentElement.style.setProperty(cssVar, value);
-    });
+    }
 }
 
 export function updateTheme(value: Appearance) {
@@ -139,24 +169,19 @@ export function updateTheme(value: Appearance) {
     }
 
     const page = usePage();
-    const themes = page.props.themes as Record<string, any>;
+    const themes = page.props.themes as
+        | Record<string, ThemeRecord>
+        | undefined;
 
-    if (value === 'system') {
-        const mediaQueryList = window.matchMedia(
-            '(prefers-color-scheme: dark)',
-        );
-        const systemTheme = mediaQueryList.matches ? 'dark' : 'light';
+    const mode =
+        value === 'system'
+            ? window.matchMedia('(prefers-color-scheme: dark)').matches
+                ? 'dark'
+                : 'light'
+            : value;
 
-        document.documentElement.classList.toggle(
-            'dark',
-            systemTheme === 'dark',
-        );
-        applyTheme(themes ? themes[systemTheme] : null, systemTheme === 'dark');
-    } else {
-        const isDark = value === 'dark';
-        document.documentElement.classList.toggle('dark', isDark);
-        applyTheme(themes ? themes[value] : null, isDark);
-    }
+    document.documentElement.classList.toggle('dark', mode === 'dark');
+    applyTheme(themes?.[mode] ?? null);
 }
 
 const setCookie = (name: string, value: string, days = 365) => {

@@ -50,12 +50,12 @@ const breadcrumbItems: BreadcrumbItem[] = [
 
 const getMethodColor = (method: string) => {
     const colors: Record<string, string> = {
-        cash: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
-        bank: 'bg-blue-100 text-blue-800 dark:bg-blue-900/30 dark:text-blue-400',
-        online: 'bg-purple-100 text-purple-800 dark:bg-purple-900/30 dark:text-purple-400',
-        jazzcash: 'bg-orange-100 text-orange-800 dark:bg-orange-900/30 dark:text-orange-400',
-        easypaisa: 'bg-cyan-100 text-cyan-800 dark:bg-cyan-900/30 dark:text-cyan-400',
-        cheque: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400',
+        cash: 'bg-success/10 text-success',
+        bank: 'bg-primary/10 text-primary',
+        online: 'bg-primary/10 text-primary',
+        jazzcash: 'bg-warning/10 text-warning',
+        easypaisa: 'bg-info/10 text-info',
+        cheque: 'bg-warning/10 text-warning',
     };
     return colors[method] || colors.cash;
 };
@@ -73,10 +73,10 @@ const formatMethod = (method: string) => {
             <!-- Header -->
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 md:gap-4">
                 <div>
-                    <h1 class="text-lg md:text-2xl font-bold text-gray-900 dark:text-white">
+                    <h1 class="text-lg md:text-2xl font-bold text-foreground">
                         Payment Receipt
                     </h1>
-                    <p class="mt-1 text-xs md:text-sm text-gray-600 dark:text-gray-400">
+                    <p class="mt-1 text-xs md:text-sm text-muted-foreground">
                         Receipt #: {{ payment.receipt_no }}
                     </p>
                 </div>
@@ -90,66 +90,66 @@ const formatMethod = (method: string) => {
                 <!-- Payment Details -->
                 <div class="lg:col-span-2 space-y-6">
                     <!-- Details Card -->
-                    <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+                    <div class="bg-card rounded-lg border border-border p-6">
                         <h2 class="text-lg font-semibold mb-4">Payment Details</h2>
                         
                         <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
                             <div>
-                                <p class="text-sm text-gray-500 dark:text-gray-400">Student</p>
+                                <p class="text-sm text-muted-foreground">Student</p>
                                 <p class="font-medium">{{ payment.student?.name || 'N/A' }}</p>
-                                <p class="text-sm text-gray-500">{{ payment.student?.registration_number || 'N/A' }}</p>
+                                <p class="text-sm text-muted-foreground">{{ payment.student?.registration_number || 'N/A' }}</p>
                             </div>
                             <div>
-                                <p class="text-sm text-gray-500 dark:text-gray-400">Campus</p>
+                                <p class="text-sm text-muted-foreground">Campus</p>
                                 <p class="font-medium">{{ payment.campus?.name || 'N/A' }}</p>
                             </div>
                             <div>
-                                <p class="text-sm text-gray-500 dark:text-gray-400">Payment Date</p>
+                                <p class="text-sm text-muted-foreground">Payment Date</p>
                                 <p class="font-medium">{{ formatDate(payment.payment_date) }}</p>
                             </div>
                             <div>
-                                <p class="text-sm text-gray-500 dark:text-gray-400">Payment Method</p>
+                                <p class="text-sm text-muted-foreground">Payment Method</p>
                                 <span :class="['inline-block px-2 py-1 text-xs font-medium rounded-full', getMethodColor(payment.payment_method)]">
                                     {{ formatMethod(payment.payment_method) }}
                                 </span>
                             </div>
                             <div v-if="payment.reference_no">
-                                <p class="text-sm text-gray-500 dark:text-gray-400">Reference No</p>
+                                <p class="text-sm text-muted-foreground">Reference No</p>
                                 <p class="font-medium">{{ payment.reference_no }}</p>
                             </div>
                             <div v-if="payment.bank_name">
-                                <p class="text-sm text-gray-500 dark:text-gray-400">Bank Name</p>
+                                <p class="text-sm text-muted-foreground">Bank Name</p>
                                 <p class="font-medium">{{ payment.bank_name }}</p>
                             </div>
                             <div>
-                                <p class="text-sm text-gray-500 dark:text-gray-400">Received By</p>
+                                <p class="text-sm text-muted-foreground">Received By</p>
                                 <p class="font-medium">{{ payment.received_by?.name || 'N/A' }}</p>
                             </div>
                         </div>
                     </div>
 
                     <!-- Allocations -->
-                    <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 overflow-hidden">
-                        <div class="px-6 py-4 border-b border-gray-200 dark:border-gray-700">
+                    <div class="bg-card rounded-lg border border-border overflow-hidden">
+                        <div class="px-6 py-4 border-b border-border">
                             <h2 class="text-lg font-semibold">Voucher Allocations</h2>
                         </div>
                         <div class="overflow-x-auto">
-                            <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                                <thead class="bg-gray-50 dark:bg-gray-800">
+                            <table class="min-w-full divide-y divide-border">
+                                <thead class="bg-muted">
                                     <tr>
-                                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase dark:text-gray-300">
+                                        <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">
                                             Voucher No
                                         </th>
-                                        <th class="px-4 py-3 text-left text-xs font-semibold text-gray-600 uppercase dark:text-gray-300">
+                                        <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">
                                             Month
                                         </th>
-                                        <th class="px-4 py-3 text-right text-xs font-semibold text-gray-600 uppercase dark:text-gray-300">
+                                        <th class="px-4 py-3 text-right text-xs font-semibold text-muted-foreground uppercase">
                                             Amount
                                         </th>
                                     </tr>
                                 </thead>
-                                <tbody class="divide-y divide-gray-200 dark:divide-gray-700">
-                                    <tr v-for="allocation in payment.allocations" :key="allocation.id" class="hover:bg-gray-50 dark:hover:bg-gray-800">
+                                <tbody class="divide-y divide-border">
+                                    <tr v-for="allocation in payment.allocations" :key="allocation.id" class="hover:bg-accent">
                                         <td class="px-4 py-3 font-medium">{{ allocation.voucher.voucher_no }}</td>
                                         <td class="px-4 py-3">{{ allocation.voucher.voucher_month?.name }} {{ allocation.voucher.voucher_year }}</td>
                                         <td class="px-4 py-3 text-right">{{ formatCurrency(allocation.allocated_amount) }}</td>
@@ -162,20 +162,20 @@ const formatMethod = (method: string) => {
 
                 <!-- Summary Sidebar -->
                 <div class="space-y-6">
-                    <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+                    <div class="bg-card rounded-lg border border-border p-6">
                         <h2 class="text-lg font-semibold mb-4">Payment Summary</h2>
                         <div class="space-y-3">
-                            <div class="flex justify-between">
-                                <span class="text-gray-600 dark:text-gray-400">Received Amount</span>
+                            <div class="flex flex-wrap gap-2 justify-between">
+                                <span class="text-muted-foreground">Received Amount</span>
                                 <span class="font-medium text-lg">{{ formatCurrency(payment.received_amount) }}</span>
                             </div>
-                            <div class="flex justify-between text-blue-600">
+                            <div class="flex flex-wrap gap-2 justify-between text-primary">
                                 <span>Allocated to Vouchers</span>
                                 <span>- {{ formatCurrency(payment.allocated_amount) }}</span>
                             </div>
-                            <div class="border-t border-gray-200 dark:border-gray-700 pt-3 flex justify-between">
+                            <div class="border-t border-border pt-3 flex flex-wrap gap-2 justify-between">
                                 <span class="font-semibold">Advance/Wallet Credit</span>
-                                <span :class="['font-semibold', payment.excess_amount > 0 ? 'text-green-600' : 'text-gray-600']">
+                                <span :class="['font-semibold', payment.excess_amount > 0 ? 'text-success' : 'text-muted-foreground']">
                                     {{ formatCurrency(payment.excess_amount) }}
                                 </span>
                             </div>

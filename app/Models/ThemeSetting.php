@@ -16,6 +16,19 @@ class ThemeSetting extends Model
         'colors_json' => 'array',
     ];
 
+    /**
+     * Palette colours keyed by slot (card_bg, sidebar_text, ...).
+     *
+     * Views read `$theme->colors`, which has no backing column; without this
+     * accessor every lookup resolved to null and the saved palette was ignored.
+     *
+     * @return array<string, string>
+     */
+    public function getColorsAttribute(): array
+    {
+        return $this->colors_json ?? [];
+    }
+
     public function selectedPalette(): BelongsTo
     {
         return $this->belongsTo(ThemePalette::class, 'selected_palette_id');

@@ -41,6 +41,16 @@
     --color-destructive: var(--destructive);
     --color-destructive-foreground: var(--destructive-foreground);
 
+    /* Status colours; sourced from the palette like every other token. */
+    --color-success: var(--success);
+    --color-success-foreground: var(--success-foreground);
+
+    --color-warning: var(--warning);
+    --color-warning-foreground: var(--warning-foreground);
+
+    --color-info: var(--info);
+    --color-info-foreground: var(--info-foreground);
+
     --color-border: var(--border);
     --color-input: var(--input);
     --color-ring: var(--ring);
@@ -62,6 +72,146 @@
 }
 
 /*
+  Design tokens.
+
+  Every `--color-*` entry in the `@theme inline` block above resolves to one of
+  these variables, so a token that is missing here silently disables the
+  utilities built on it (an undefined `--radius` turns every `rounded-lg` into a
+  square corner). Keep this block exhaustive.
+
+  `resources/views/app.blade.php` re-declares the subset that the Theme Settings
+  screen owns; the values below are the defaults it falls back to.
+*/
+:root {
+    --radius: 0.5rem;
+
+    --background: #f8fafc;
+    --foreground: #0b1220;
+
+    --card: #ffffff;
+    --card-foreground: #0b1220;
+
+    --popover: #ffffff;
+    --popover-foreground: #0b1220;
+
+    --primary: #0f172a;
+    --primary-foreground: #f8fafc;
+
+    --secondary: #f1f5f9;
+    --secondary-foreground: #0f172a;
+
+    --muted: #f1f5f9;
+    --muted-foreground: #64748b;
+
+    --accent: #f1f5f9;
+    --accent-foreground: #0f172a;
+
+    --destructive: #dc2626;
+    --destructive-foreground: #ffffff;
+
+    --success: #16a34a;
+    --success-foreground: #ffffff;
+
+    --warning: #d97706;
+    --warning-foreground: #ffffff;
+
+    --info: #0891b2;
+    --info-foreground: #ffffff;
+
+    --border: #e2e8f0;
+    --input: #e2e8f0;
+    --ring: #94a3b8;
+
+    --chart-1: #2563eb;
+    --chart-2: #0d9488;
+    --chart-3: #f59e0b;
+    --chart-4: #7c3aed;
+    --chart-5: #db2777;
+
+    --sidebar-background: #0f172a;
+    --sidebar-foreground: #e5e7eb;
+    --sidebar-primary: #1f2937;
+    --sidebar-primary-foreground: #ffffff;
+    --sidebar-accent: #1f2937;
+    --sidebar-accent-foreground: #ffffff;
+    --sidebar-border: #1e293b;
+    --sidebar-ring: #475569;
+
+    /*
+      Runtime aliases consumed by AppShell.vue's inline `:style` bindings. They
+      are kept in sync with the tokens above so a page renders correctly before
+      the client-side theme script runs.
+    */
+    --sidebar-bg: var(--sidebar-background);
+    --sidebar-text: var(--sidebar-foreground);
+    --sidebar-active-bg: var(--sidebar-primary);
+    --sidebar-active-text: var(--sidebar-primary-foreground);
+    --header-bg: #ffffff;
+    --header-text: #0f172a;
+    --content-bg: var(--background);
+    --content-text: var(--foreground);
+    --card-bg: var(--card);
+    --card-text: var(--card-foreground);
+}
+
+.dark {
+    --background: #070b12;
+    --foreground: #e5e7eb;
+
+    --card: #0f172a;
+    --card-foreground: #e5e7eb;
+
+    --popover: #0f172a;
+    --popover-foreground: #e5e7eb;
+
+    --primary: #e2e8f0;
+    --primary-foreground: #0f172a;
+
+    --secondary: #1e293b;
+    --secondary-foreground: #e5e7eb;
+
+    --muted: #1e293b;
+    --muted-foreground: #94a3b8;
+
+    --accent: #1e293b;
+    --accent-foreground: #e5e7eb;
+
+    --destructive: #ef4444;
+    --destructive-foreground: #ffffff;
+
+    --success: #22c55e;
+    --success-foreground: #0b1220;
+
+    --warning: #f59e0b;
+    --warning-foreground: #0b1220;
+
+    --info: #06b6d4;
+    --info-foreground: #0b1220;
+
+    --border: #1e293b;
+    --input: #1e293b;
+    --ring: #475569;
+
+    --chart-1: #60a5fa;
+    --chart-2: #2dd4bf;
+    --chart-3: #fbbf24;
+    --chart-4: #a78bfa;
+    --chart-5: #f472b6;
+
+    --sidebar-background: #0b1220;
+    --sidebar-foreground: #d1d5db;
+    --sidebar-primary: #111827;
+    --sidebar-primary-foreground: #ffffff;
+    --sidebar-accent: #111827;
+    --sidebar-accent-foreground: #ffffff;
+    --sidebar-border: #1e293b;
+    --sidebar-ring: #475569;
+
+    --header-bg: #0b1220;
+    --header-text: #ffffff;
+}
+
+/*
   The default border color has changed to `currentColor` in Tailwind CSS v4,
   so we've added these compatibility styles to make sure everything still
   looks the same as it did with Tailwind CSS v3.
@@ -75,7 +225,7 @@
     ::before,
     ::backdrop,
     ::file-selector-button {
-        border-color: var(--color-gray-200, currentColor);
+        border-color: var(--border, currentColor);
     }
 }
 
@@ -99,8 +249,37 @@
     html, body, #app {
         height: 100%;
     }
+    /*
+      Wide content (data tables, toolbars) must scroll inside its own container
+      rather than pushing the page sideways on a phone.
+    */
+    body {
+        overflow-x: hidden;
+    }
     button, a, [role="button"] {
         cursor: pointer;
+    }
+    /*
+      iOS zooms the viewport when a focused control's font-size is under 16px,
+      which leaves the layout scrolled sideways after the keyboard closes.
+    */
+    @media (max-width: 767px) {
+        input,
+        select,
+        textarea {
+            font-size: 16px;
+        }
+    }
+}
+
+@layer components {
+    /*
+      Standard wrapper for data tables: scrolls horizontally on small screens
+      while the surrounding card stays put. Pair with `min-w-*` on the table.
+    */
+    .table-scroll {
+        @apply w-full max-w-full overflow-x-auto;
+        -webkit-overflow-scrolling: touch;
     }
 }
 

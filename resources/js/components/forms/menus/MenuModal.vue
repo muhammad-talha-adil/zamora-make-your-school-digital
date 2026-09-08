@@ -206,7 +206,7 @@ watch(
                             value-type="id"
                         />
                         <InputError class="mt-2" :message="form.errors.parent_id" />
-                        <p class="text-xs text-gray-500">Each option shows its full parent path, so duplicate names like Dashboard are easier to distinguish.</p>
+                        <p class="text-xs text-muted-foreground">Each option shows its full parent path, so duplicate names like Dashboard are easier to distinguish.</p>
                     </div>
 
                     <div class="grid gap-2">
@@ -220,7 +220,7 @@ watch(
                             placeholder="0"
                         />
                         <InputError class="mt-2" :message="form.errors.order" />
-                        <p class="text-xs text-gray-500">Order is managed only within the selected parent menu. Moving item 4 to 1 will shift the current 1, 2, and 3 down automatically.</p>
+                        <p class="text-xs text-muted-foreground">Order is managed only within the selected parent menu. Moving item 4 to 1 will shift the current 1, 2, and 3 down automatically.</p>
                     </div>
 
                     <div class="grid gap-2">

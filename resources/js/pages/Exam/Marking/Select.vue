@@ -4,23 +4,23 @@
 
         <div class="space-y-6 p-4 md:p-6">
             <div>
-                <h1 class="text-lg md:text-2xl font-bold text-gray-900 dark:text-white">
+                <h1 class="text-lg md:text-2xl font-bold text-foreground">
                     Marking - Select Options
                 </h1>
-                <p class="mt-1 text-xs md:text-sm text-gray-600 dark:text-gray-400">
+                <p class="mt-1 text-xs md:text-sm text-muted-foreground">
                     Choose exam, campus, class and section to enter marks
                 </p>
             </div>
 
             <!-- Pre-selected exam notice -->
-            <div v-if="isExamPreSelected" class="p-3 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
-                <p class="text-sm text-blue-800 dark:text-blue-300">
+            <div v-if="isExamPreSelected" class="p-3 bg-primary/10 border border-primary/40 rounded-lg">
+                <p class="text-sm text-primary">
                     <Icon icon="info" class="inline h-4 w-4 mr-1" />
                     You are entering marks for a specific exam. The exam selection is locked.
                 </p>
             </div>
 
-            <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
+            <div class="bg-card rounded-lg border border-border p-6">
                 <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
                     <div class="space-y-2">
                         <Label for="exam">Exam</Label>
@@ -28,8 +28,8 @@
                             id="exam"
                             v-model="selected.examId"
                             :disabled="isExamPreSelected"
-                            class="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 text-sm"
-                            :class="{ 'bg-gray-100 dark:bg-gray-700': isExamPreSelected }"
+                            class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm"
+                            :class="{ 'bg-muted': isExamPreSelected }"
                         >
                             <option value="">Select Exam</option>
                             <option v-for="exam in exams" :key="exam.id" :value="exam.id">
@@ -43,7 +43,7 @@
                         <select
                             id="campus"
                             v-model="selected.campusId"
-                            class="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 text-sm"
+                            class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm"
                         >
                             <option value="">All Campuses</option>
                             <option v-for="campus in campuses" :key="campus.id" :value="campus.id">
@@ -57,7 +57,7 @@
                         <select
                             id="class"
                             v-model="selected.classId"
-                            class="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 text-sm"
+                            class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm"
                         >
                             <option value="">Select Class</option>
                             <option v-for="cls in classes" :key="cls.id" :value="cls.id">
@@ -72,7 +72,7 @@
                             id="section"
                             v-model="selected.sectionId"
                             :disabled="!selected.classId"
-                            class="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 text-sm"
+                            class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm"
                         >
                             <option value="ALL">All Sections</option>
                             <option v-for="section in filteredSections" :key="section.id" :value="section.id">

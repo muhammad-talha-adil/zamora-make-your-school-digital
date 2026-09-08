@@ -129,9 +129,9 @@ const inactivateSubject = (subject: any) => {
 
 <template>
     <div class="space-y-4">
-        <div class="flex justify-between items-center">
+        <div class="flex flex-wrap gap-2 justify-between items-center">
             <div class="flex gap-2">
-                <select v-model="statusFilter" class="rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 text-sm min-h-10 w-32">
+                <select v-model="statusFilter" class="rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm min-h-10 w-32">
                     <option v-for="option in statusOptions" :key="option.id" :value="option.id">
                         {{ option.name }}
                     </option>
@@ -141,54 +141,54 @@ const inactivateSubject = (subject: any) => {
                 <SubjectForm @saved="handleSaved" />
             </div>
         </div>
-        <div class="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-900">
+        <div class="overflow-hidden rounded-lg border border-border bg-card shadow-sm">
             <div class="overflow-x-auto">
-                <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                    <thead class="bg-gray-50 dark:bg-gray-800">
+                <table class="min-w-full divide-y divide-border">
+                    <thead class="bg-muted">
                         <tr>
-                            <th scope="col" class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">
+                            <th scope="col" class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">
                                 #
                             </th>
-                            <th scope="col" class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">
+                            <th scope="col" class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">
                                 Subject Name
                             </th>
-                            <th scope="col" class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">
+                            <th scope="col" class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">
                                 Code
                             </th>
-                            <th scope="col" class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">
+                            <th scope="col" class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">
                                 Description
                             </th>
-                            <th scope="col" class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">
+                            <th scope="col" class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">
                                 Status
                             </th>
-                            <th scope="col" class="px-6 py-4 text-right text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">
+                            <th scope="col" class="px-6 py-4 text-right text-xs font-semibold tracking-wider text-muted-foreground uppercase">
                                 Actions
                             </th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-900">
+                    <tbody class="divide-y divide-border bg-card">
                         <tr
                             v-for="(subject, index) in subjectsData"
                             :key="subject.id"
-                            class="transition-colors hover:bg-gray-50 dark:hover:bg-gray-800"
+                            class="transition-colors hover:bg-accent"
                         >
                             <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="text-sm text-gray-600 dark:text-gray-300">
+                                <div class="text-sm text-muted-foreground">
                                     {{ getRowNumber(index as number) }}
                                 </div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="text-sm font-medium text-gray-900 dark:text-white">
+                                <div class="text-sm font-medium text-foreground">
                                     {{ subject.name }}
                                 </div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="text-sm text-gray-600 dark:text-gray-300">
+                                <div class="text-sm text-muted-foreground">
                                     {{ subject.code || subject.short_name || EMPTY_VALUE }}
                                 </div>
                             </td>
                             <td class="px-6 py-4">
-                                <div class="max-w-xs truncate text-sm text-gray-600 dark:text-gray-300">
+                                <div class="max-w-xs truncate text-sm text-muted-foreground">
                                     {{ subject.description || EMPTY_VALUE }}
                                 </div>
                             </td>
@@ -197,8 +197,8 @@ const inactivateSubject = (subject: any) => {
                                     :class="[
                                         'inline-flex rounded-full px-2 py-1 text-xs font-semibold',
                                         subject.is_active
-                                            ? 'bg-green-100 text-green-800 dark:bg-green-900 dark:text-green-200'
-                                            : 'bg-red-100 text-red-800 dark:bg-red-900 dark:text-red-200',
+                                            ? 'bg-success/10 text-success'
+                                            : 'bg-destructive/10 text-destructive',
                                     ]"
                                 >
                                     {{ subject.is_active ? 'Active' : 'Inactive' }}
@@ -249,12 +249,12 @@ const inactivateSubject = (subject: any) => {
                 </table>
             </div>
         </div>
-        <div class="flex justify-between items-center">
+        <div class="flex flex-wrap gap-2 justify-between items-center">
             <div class="flex items-center gap-4">
-                <div class="text-sm text-gray-600">
+                <div class="text-sm text-muted-foreground">
                     Showing {{ pagination.from }} to {{ pagination.to }} of {{ pagination.total }} entries
                 </div>
-                <select v-model="perPage" class="rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 text-sm min-h-10 w-20">
+                <select v-model="perPage" class="rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm min-h-10 w-20">
                     <option v-for="option in perPageOptions" :key="option.id" :value="option.id">
                         {{ option.name }}
                     </option>

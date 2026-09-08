@@ -119,9 +119,9 @@ const getDaysCount = (start: string, end: string) => {
 
 <template>
     <div class="space-y-4">
-        <div class="flex justify-between items-center">
+        <div class="flex flex-wrap gap-2 justify-between items-center">
             <div class="flex gap-2">
-                <select v-model="statusFilter" class="w-32 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 text-sm">
+                <select v-model="statusFilter" class="w-32 rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm">
                     <option value="">All</option>
                     <option value="active">Active</option>
                     <option value="inactive">Inactive</option>
@@ -150,89 +150,89 @@ const getDaysCount = (start: string, end: string) => {
                 </Button>
             </div>
         </div>
-        <div class="overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-900">
+        <div class="overflow-hidden rounded-lg border border-border bg-card shadow-sm">
             <div class="overflow-x-auto">
-                <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                    <thead class="bg-gray-50 dark:bg-gray-800">
+                <table class="min-w-full divide-y divide-border">
+                    <thead class="bg-muted">
                         <tr>
                             <th
                                 scope="col"
-                                class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300"
+                                class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase"
                             >
                                 #
                             </th>
                             <th
                                 scope="col"
-                                class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300"
+                                class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase"
                             >
                                 Title
                             </th>
                             <th
                                 scope="col"
-                                class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300"
+                                class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase"
                             >
                                 Start Date
                             </th>
                             <th
                                 scope="col"
-                                class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300"
+                                class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase"
                             >
                                 End Date
                             </th>
                             <th
                                 scope="col"
-                                class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300"
+                                class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase"
                             >
                                 Days
                             </th>
                             <th
                                 scope="col"
-                                class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300"
+                                class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase"
                             >
                                 Type
                             </th>
                             <th
                                 scope="col"
-                                class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300"
+                                class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase"
                             >
                                 Campus
                             </th>
                             <th
                                 scope="col"
-                                class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300"
+                                class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase"
                             >
                                 Actions
                             </th>
                         </tr>
                     </thead>
-                    <tbody class="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-900">
+                    <tbody class="divide-y divide-border bg-card">
                         <tr
                             v-for="(holiday, index) in holidaysData"
                             :key="holiday.id"
-                            class="transition-colors hover:bg-gray-50 dark:hover:bg-gray-800"
+                            class="transition-colors hover:bg-accent"
                         >
                             <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="text-sm text-gray-600 dark:text-gray-300">
+                                <div class="text-sm text-muted-foreground">
                                     {{ (index as number) + 1 }}
                                 </div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="text-sm font-medium text-gray-900 dark:text-white">
+                                <div class="text-sm font-medium text-foreground">
                                     {{ holiday.title }}
                                 </div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="text-sm text-gray-600 dark:text-gray-300">
+                                <div class="text-sm text-muted-foreground">
                                     {{ formatDate(holiday.start_date) }}
                                 </div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="text-sm text-gray-600 dark:text-gray-300">
+                                <div class="text-sm text-muted-foreground">
                                     {{ formatDate(holiday.end_date) }}
                                 </div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="text-sm text-gray-600 dark:text-gray-300">
+                                <div class="text-sm text-muted-foreground">
                                     {{ getDaysCount(holiday.start_date, holiday.end_date) }} day(s)
                                 </div>
                             </td>
@@ -241,20 +241,20 @@ const getDaysCount = (start: string, end: string) => {
                                     :class="[
                                         'inline-flex rounded-full px-2 py-1 text-xs font-semibold',
                                         holiday.is_national
-                                            ? 'bg-purple-100 text-purple-800 dark:bg-purple-900 dark:text-purple-200'
-                                            : 'bg-blue-100 text-blue-800 dark:bg-blue-900 dark:text-blue-200',
+                                            ? 'bg-primary/10 text-primary'
+                                            : 'bg-primary/10 text-primary',
                                     ]"
                                 >
                                     {{ holiday.is_national ? 'National' : 'Campus' }}
                                 </span>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="text-sm text-gray-600 dark:text-gray-300">
+                                <div class="text-sm text-muted-foreground">
                                     {{ holiday.is_national ? 'All' : (holiday.campus?.name || '—') }}
                                 </div>
                             </td>
                             <td class="px-6 py-4 text-sm font-medium whitespace-nowrap">
-                                <div v-if="isHolidayPast(holiday)" class="flex items-center text-gray-500">
+                                <div v-if="isHolidayPast(holiday)" class="flex items-center text-muted-foreground">
                                     <Icon icon="lock" class="mr-1 h-4 w-4" />
                                     <span class="text-sm">Read Only</span>
                                 </div>
@@ -283,12 +283,12 @@ const getDaysCount = (start: string, end: string) => {
                 </table>
             </div>
         </div>
-        <div class="flex justify-between items-center">
+        <div class="flex flex-wrap gap-2 justify-between items-center">
             <div class="flex items-center gap-4">
-                <div class="text-sm text-gray-600">
+                <div class="text-sm text-muted-foreground">
                     Showing {{ pagination.from }} to {{ pagination.to }} of {{ pagination.total }} entries
                 </div>
-                <select v-model="perPage" class="w-20 rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-2 py-1 text-sm">
+                <select v-model="perPage" class="w-20 rounded-md border border-border bg-card text-foreground px-2 py-1 text-sm">
                     <option value="10">10</option>
                     <option value="25">25</option>
                     <option value="50">50</option>

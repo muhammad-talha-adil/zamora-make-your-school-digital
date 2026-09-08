@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import axios from 'axios';
 import { ref, computed, reactive, watch, nextTick } from 'vue';
-import { alert, formatCurrency } from '@/utils';
+import { alert, formatCurrency, themeToken } from '@/utils';
 import Swal from 'sweetalert2';
 
 // Components
@@ -249,8 +249,8 @@ watch(() => form.campus_id, (newCampusId, oldCampusId) => {
             showCancelButton: true,
             confirmButtonText: 'Yes, Change Campus',
             cancelButtonText: 'No, Keep Items',
-            confirmButtonColor: '#d33',
-            cancelButtonColor: '#3085d6',
+            confirmButtonColor: themeToken('--destructive', '#dc2626'),
+            cancelButtonColor: themeToken('--primary', '#2563eb'),
             backdrop: false,
         }).then((result) => {
             if (result.isConfirmed) {
@@ -492,8 +492,8 @@ watch(() => form.purchase_items.length, (len) => {
         <DialogContent class="sm:max-w-4xl max-h-[90vh] overflow-y-auto">
             <DialogHeader>
                 <DialogTitle class="flex items-center gap-2">
-                    <div class="p-2 bg-green-100 dark:bg-green-900/20 rounded-lg">
-                        <Icon icon="shopping-cart" class="h-5 w-5 text-green-600" />
+                    <div class="p-2 bg-success/10 rounded-lg">
+                        <Icon icon="shopping-cart" class="h-5 w-5 text-success" />
                     </div>
                     {{ isEditMode ? 'Edit Purchase Order' : 'Create Purchase Order' }}
                 </DialogTitle>
@@ -509,13 +509,13 @@ watch(() => form.purchase_items.length, (len) => {
                                 <div class="p-1 bg-muted rounded">
                                     <Icon icon="building" class="h-3.5 w-3.5 text-muted-foreground" />
                                 </div>
-                                Campus <span class="text-red-500">*</span>
+                                Campus <span class="text-destructive">*</span>
                             </Label>
                             <select
                                 id="campus_id"
                                 v-model="form.campus_id"
-                                class="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 text-sm h-11"
-                                :class="{ 'border-red-500': errors.campus_id }"
+                                class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm h-11"
+                                :class="{ 'border-destructive': errors.campus_id }"
                                 required
                             >
                                 <option value="">Select Campus</option>
@@ -530,7 +530,7 @@ watch(() => form.purchase_items.length, (len) => {
                                 <div class="p-1 bg-muted rounded">
                                     <Icon icon="truck" class="h-3.5 w-3.5 text-muted-foreground" />
                                 </div>
-                                Supplier <span class="text-red-500">*</span>
+                                Supplier <span class="text-destructive">*</span>
                             </Label>
                             <div class="flex gap-2">
                                 <div class="flex-1">
@@ -560,14 +560,14 @@ watch(() => form.purchase_items.length, (len) => {
                                 <div class="p-1 bg-muted rounded">
                                     <Icon icon="calendar" class="h-3.5 w-3.5 text-muted-foreground" />
                                 </div>
-                                Purchase Date <span class="text-red-500">*</span>
+                                Purchase Date <span class="text-destructive">*</span>
                             </Label>
                             <Input
                                 id="purchase_date"
                                 v-model="form.purchase_date"
                                 type="date"
                                 class="h-11"
-                                :class="{ 'border-red-500': errors.purchase_date }"
+                                :class="{ 'border-destructive': errors.purchase_date }"
                                 required
                             />
                             <InputError :message="errors.purchase_date" />
@@ -576,12 +576,12 @@ watch(() => form.purchase_items.length, (len) => {
 
                     <!-- Purchase Items -->
                     <div class="space-y-3">
-                        <div class="flex items-center justify-between">
+                        <div class="flex flex-wrap gap-2 items-center justify-between">
                             <Label class="flex items-center gap-2">
                                 <div class="p-1 bg-muted rounded">
                                     <Icon icon="list" class="h-3.5 w-3.5 text-muted-foreground" />
                                 </div>
-                                Purchase Items <span class="text-red-500">*</span>
+                                Purchase Items <span class="text-destructive">*</span>
                             </Label>
                             <Button type="button" variant="outline" size="sm" @click="addItem" class="h-8">
                                 <Icon icon="plus" class="mr-1 h-3 w-3" />
@@ -589,21 +589,21 @@ watch(() => form.purchase_items.length, (len) => {
                             </Button>
                         </div>
 
-                        <div v-if="form.purchase_items.length === 0" class="text-center py-8 text-gray-500 border rounded-lg">
-                            <Icon icon="shopping-cart" :size="48" class="mx-auto mb-2 text-gray-300" />
+                        <div v-if="form.purchase_items.length === 0" class="text-center py-8 text-muted-foreground border rounded-lg">
+                            <Icon icon="shopping-cart" :size="48" class="mx-auto mb-2 text-muted-foreground" />
                             <p>No items added yet. Click "Add Item" to start.</p>
                         </div>
 
                         <div v-else class="space-y-4">
-                            <div v-for="(item, index) in form.purchase_items" :key="index" class="flex items-start gap-4 p-4 bg-gray-50 dark:bg-gray-800 rounded-lg">
+                            <div v-for="(item, index) in form.purchase_items" :key="index" class="flex items-start gap-4 p-4 bg-muted rounded-lg">
                                 <div class="flex-1 grid grid-cols-1 md:grid-cols-4 gap-4">
                                     <div class="space-y-2">
-                                        <Label class="text-xs">Item <span class="text-red-500">*</span></Label>
+                                        <Label class="text-xs">Item <span class="text-destructive">*</span></Label>
                                         <div class="relative">
                                             <select
                                                 v-model="item.inventory_item_id"
-                                                class="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-white px-3 py-2 text-sm h-10"
-                                                :class="{ 'border-red-500': errors[`purchase_items.${index}.inventory_item_id`] }"
+                                                class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm h-10"
+                                                :class="{ 'border-destructive': errors[`purchase_items.${index}.inventory_item_id`] }"
                                                 required
                                             >
                                                 <option value="0">
@@ -626,7 +626,7 @@ watch(() => form.purchase_items.length, (len) => {
                                         <InputError :message="errors[`purchase_items.${index}.inventory_item_id`]" />
                                     </div>
                                     <div class="space-y-2">
-                                        <Label class="text-xs">Quantity <span class="text-red-500">*</span></Label>
+                                        <Label class="text-xs">Quantity <span class="text-destructive">*</span></Label>
                                         <Input
                                             v-model.number="item.quantity"
                                             type="number"
@@ -636,7 +636,7 @@ watch(() => form.purchase_items.length, (len) => {
                                         />
                                     </div>
                                     <div class="space-y-2">
-                                        <Label class="text-xs">Purchase Rate <span class="text-red-500">*</span></Label>
+                                        <Label class="text-xs">Purchase Rate <span class="text-destructive">*</span></Label>
                                         <Input
                                             v-model.number="item.purchase_rate"
                                             type="number"
@@ -662,13 +662,13 @@ watch(() => form.purchase_items.length, (len) => {
                                         <div class="text-sm font-bold">{{ formatCurrency(item.quantity * item.purchase_rate) }}</div>
                                     </div>
                                     <Button type="button" variant="ghost" size="sm" @click="removeItem(index)" class="h-8 w-8 p-0">
-                                        <Icon icon="trash" class="text-red-500" />
+                                        <Icon icon="trash" class="text-destructive" />
                                     </Button>
                                 </div>
                             </div>
                             
                             <!-- No items available message -->
-                            <div v-if="availableItems.length === 0 && !loadingItems" class="text-center py-4 text-amber-600 bg-amber-50 dark:bg-amber-900/20 rounded-lg">
+                            <div v-if="availableItems.length === 0 && !loadingItems" class="text-center py-4 text-warning bg-warning/10 rounded-lg">
                                 <Icon icon="alert-triangle" class="mr-2 h-4 w-4 inline" />
                                 No inventory items found. Please add items in Inventory Settings first.
                             </div>
@@ -676,16 +676,16 @@ watch(() => form.purchase_items.length, (len) => {
                     </div>
 
                     <!-- Total & Estimated Profit -->
-                    <div class="bg-gray-50 dark:bg-gray-800 rounded-lg p-4 space-y-2 flex justify-between">
-                        <div class="flex justify-end items-center gap-4">
+                    <div class="bg-muted rounded-lg p-4 space-y-2 flex flex-wrap gap-2 justify-between">
+                        <div class="flex flex-wrap justify-end items-center gap-4">
                             <span class="text-lg font-semibold">Total Amount:</span>
-                            <span class="text-2xl font-bold text-green-600">{{ formatCurrency(calculateTotal) }}</span>
+                            <span class="text-2xl font-bold text-success">{{ formatCurrency(calculateTotal) }}</span>
                         </div>
-                        <div class="flex justify-end items-center gap-4">
+                        <div class="flex flex-wrap justify-end items-center gap-4">
                             <span class="text-lg font-semibold">Estimated Profit:</span>
                             <span 
                                 class="text-2xl font-bold"
-                                :class="calculateEstimatedProfit >= 0 ? 'text-blue-600' : 'text-red-600'"
+                                :class="calculateEstimatedProfit >= 0 ? 'text-primary' : 'text-destructive'"
                             >
                                 {{ formatCurrency(calculateEstimatedProfit) }}
                             </span>
@@ -704,14 +704,14 @@ watch(() => form.purchase_items.length, (len) => {
                             id="note"
                             v-model="form.note"
                             rows="2"
-                            class="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 min-h-20"
+                            class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 min-h-20"
                             placeholder="Additional notes or remarks..."
                         ></textarea>
                     </div>
                 </div>
 
                 <!-- Actions -->
-                <div class="flex justify-end gap-3 pt-2">
+                <div class="flex flex-wrap justify-end gap-3 pt-2">
                     <DialogClose as-child>
                         <Button type="button" variant="outline" @click="resetForm" class="h-10">
                             <Icon icon="x" class="mr-2 h-4 w-4" />

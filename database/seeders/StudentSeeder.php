@@ -4,14 +4,12 @@ namespace Database\Seeders;
 
 use App\Models\Campus;
 use App\Models\Gender;
-use App\Models\Role;
 use App\Models\SchoolClass;
 use App\Models\Section;
 use App\Models\Session;
 use App\Models\Student;
 use App\Models\StudentStatus;
 use App\Models\User;
-use App\Models\UserRole;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\Hash;
 
@@ -27,7 +25,6 @@ class StudentSeeder extends Seeder
     public function run(): void
     {
         // Get required data
-        $studentRole = Role::where('slug', 'student')->first();
         $maleGender = Gender::where('name', 'Male')->first();
         $femaleGender = Gender::where('name', 'Female')->first();
         $activeStatus = StudentStatus::where('name', 'Active')->first();
@@ -73,7 +70,6 @@ class StudentSeeder extends Seeder
                         $maleGender,
                         $femaleGender,
                         $activeStatus,
-                        $studentRole,
                         $studentsPerSection,
                         $studentCounter
                     );
@@ -99,7 +95,6 @@ class StudentSeeder extends Seeder
         $maleGender,
         $femaleGender,
         $activeStatus,
-        $studentRole,
         int $count,
         int &$counter
     ): void {
@@ -157,12 +152,7 @@ class StudentSeeder extends Seeder
             $studentsToCreate[] = $studentData;
 
             // Assign student role
-            if ($studentRole) {
-                UserRole::firstOrCreate(
-                    ['user_id' => $user->id, 'role_id' => $studentRole->id, 'campus_id' => $campus->id],
-                    ['is_active' => true]
-                );
-            }
+            $user->syncRoles(['student']);
         }
 
         // Bulk create students

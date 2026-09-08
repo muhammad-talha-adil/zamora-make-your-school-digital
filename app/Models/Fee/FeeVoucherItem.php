@@ -2,8 +2,8 @@
 
 namespace App\Models\Fee;
 
-use App\Models\Finance\StudentAccountCharge;
 use App\Enums\Fee\VoucherItemSource;
+use App\Models\Finance\StudentAccountCharge;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 

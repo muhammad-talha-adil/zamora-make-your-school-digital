@@ -80,15 +80,15 @@ const navigateTo = (path: string) => {
             <!-- Header -->
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
                 <div>
-                    <h1 class="text-xl md:text-2xl font-bold text-gray-900 dark:text-white">
+                    <h1 class="text-xl md:text-2xl font-bold text-foreground">
                         Finance Dashboard
                     </h1>
-                    <p class="mt-1 text-sm text-gray-600 dark:text-gray-400">
+                    <p class="mt-1 text-sm text-muted-foreground">
                         Overview of your financial transactions
                     </p>
                 </div>
                 <div class="flex items-center gap-2">
-                    <select v-model="selectedCampus" @change="changeCampus" class="rounded-md border-gray-300 dark:border-gray-600 dark:bg-gray-700">
+                    <select v-model="selectedCampus" @change="changeCampus" class="rounded-md border-border">
                         <option :value="undefined">All Campuses</option>
                         <option v-for="campus in campuses" :key="campus.id" :value="campus.id">{{ campus.name }}</option>
                     </select>
@@ -97,37 +97,37 @@ const navigateTo = (path: string) => {
 
             <!-- Today's Summary -->
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-                    <p class="text-sm text-gray-600 dark:text-gray-400">Today's Income</p>
-                    <p class="text-2xl font-bold text-green-600">{{ formatMoney(todaySummary.income) }}</p>
+                <div class="bg-card rounded-lg border border-border p-6">
+                    <p class="text-sm text-muted-foreground">Today's Income</p>
+                    <p class="text-2xl font-bold text-success">{{ formatMoney(todaySummary.income) }}</p>
                 </div>
-                <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-                    <p class="text-sm text-gray-600 dark:text-gray-400">Today's Expense</p>
-                    <p class="text-2xl font-bold text-red-600">{{ formatMoney(todaySummary.expense) }}</p>
+                <div class="bg-card rounded-lg border border-border p-6">
+                    <p class="text-sm text-muted-foreground">Today's Expense</p>
+                    <p class="text-2xl font-bold text-destructive">{{ formatMoney(todaySummary.expense) }}</p>
                 </div>
-                <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-                    <p class="text-sm text-gray-600 dark:text-gray-400">Today's Balance</p>
-                    <p class="text-2xl font-bold" :class="todaySummary.balance >= 0 ? 'text-green-600' : 'text-red-600'">
+                <div class="bg-card rounded-lg border border-border p-6">
+                    <p class="text-sm text-muted-foreground">Today's Balance</p>
+                    <p class="text-2xl font-bold" :class="todaySummary.balance >= 0 ? 'text-success' : 'text-destructive'">
                         {{ formatMoney(todaySummary.balance) }}
                     </p>
                 </div>
             </div>
 
             <!-- Month Summary -->
-            <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6">
-                <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">This Month</h2>
+            <div class="bg-card rounded-lg border border-border p-6">
+                <h2 class="text-lg font-semibold text-foreground mb-4">This Month</h2>
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
-                        <p class="text-sm text-gray-600 dark:text-gray-400">Total Income</p>
-                        <p class="text-xl font-bold text-green-600">{{ formatMoney(monthSummary.income) }}</p>
+                        <p class="text-sm text-muted-foreground">Total Income</p>
+                        <p class="text-xl font-bold text-success">{{ formatMoney(monthSummary.income) }}</p>
                     </div>
                     <div>
-                        <p class="text-sm text-gray-600 dark:text-gray-400">Total Expense</p>
-                        <p class="text-xl font-bold text-red-600">{{ formatMoney(monthSummary.expense) }}</p>
+                        <p class="text-sm text-muted-foreground">Total Expense</p>
+                        <p class="text-xl font-bold text-destructive">{{ formatMoney(monthSummary.expense) }}</p>
                     </div>
                     <div>
-                        <p class="text-sm text-gray-600 dark:text-gray-400">Net Balance</p>
-                        <p class="text-xl font-bold" :class="monthSummary.balance >= 0 ? 'text-green-600' : 'text-red-600'">
+                        <p class="text-sm text-muted-foreground">Net Balance</p>
+                        <p class="text-xl font-bold" :class="monthSummary.balance >= 0 ? 'text-success' : 'text-destructive'">
                             {{ formatMoney(monthSummary.balance) }}
                         </p>
                     </div>
@@ -135,31 +135,31 @@ const navigateTo = (path: string) => {
             </div>
 
             <!-- Quick Actions -->
-            <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 md:p-6">
-                <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Student Receivables</h2>
+            <div class="bg-card rounded-lg border border-border p-4 md:p-6">
+                <h2 class="text-lg font-semibold text-foreground mb-4">Student Receivables</h2>
             <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                 <div>
-                    <p class="text-sm text-gray-600 dark:text-gray-400">Total Outstanding</p>
-                    <p class="text-xl font-bold text-amber-600">{{ formatMoney(studentReceivables.total_open) }}</p>
+                    <p class="text-sm text-muted-foreground">Total Outstanding</p>
+                    <p class="text-xl font-bold text-warning">{{ formatMoney(studentReceivables.total_open) }}</p>
                 </div>
                 <div>
-                        <p class="text-sm text-gray-600 dark:text-gray-400">Fee Dues</p>
-                        <p class="text-xl font-bold text-blue-600">{{ formatMoney(studentReceivables.fee_open) }}</p>
+                        <p class="text-sm text-muted-foreground">Fee Dues</p>
+                        <p class="text-xl font-bold text-primary">{{ formatMoney(studentReceivables.fee_open) }}</p>
                     </div>
                 <div>
-                    <p class="text-sm text-gray-600 dark:text-gray-400">Inventory Dues</p>
-                    <p class="text-xl font-bold text-orange-600">{{ formatMoney(studentReceivables.inventory_open) }}</p>
+                    <p class="text-sm text-muted-foreground">Inventory Dues</p>
+                    <p class="text-xl font-bold text-warning">{{ formatMoney(studentReceivables.inventory_open) }}</p>
                 </div>
                 <div>
-                    <p class="text-sm text-gray-600 dark:text-gray-400">Transport Dues</p>
-                    <p class="text-xl font-bold text-indigo-600">{{ formatMoney(studentReceivables.transport_open) }}</p>
+                    <p class="text-sm text-muted-foreground">Transport Dues</p>
+                    <p class="text-xl font-bold text-primary">{{ formatMoney(studentReceivables.transport_open) }}</p>
                 </div>
             </div>
             </div>
 
             <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 md:p-6">
-                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Quick Actions</h3>
+                <div class="bg-card rounded-lg border border-border p-4 md:p-6">
+                    <h3 class="text-lg font-semibold text-foreground mb-4">Quick Actions</h3>
                     <div class="flex flex-wrap gap-2">
                         <Button @click="navigateTo('/finance/receive-payment')" size="sm">Receive Payment</Button>
                         <Button @click="navigateTo('/finance/make-payment')" size="sm">Make Payment</Button>
@@ -167,24 +167,24 @@ const navigateTo = (path: string) => {
                         <Button variant="outline" @click="navigateTo('/finance/student-account-statement')" size="sm">Student Statement</Button>
                     </div>
                 </div>
-                <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 md:p-6">
-                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Reports</h3>
+                <div class="bg-card rounded-lg border border-border p-4 md:p-6">
+                    <h3 class="text-lg font-semibold text-foreground mb-4">Reports</h3>
                     <div class="flex flex-wrap gap-2">
                         <Button variant="outline" @click="navigateTo('/finance/reports/cash-book')" size="sm">Cash Book</Button>
                         <Button variant="outline" @click="navigateTo('/finance/reports/income')" size="sm">Income Statement</Button>
                         <Button variant="outline" @click="navigateTo('/finance/reports/expense')" size="sm">Expense Statement</Button>
                     </div>
                 </div>
-                <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 md:p-6">
-                    <h3 class="text-lg font-semibold text-gray-900 dark:text-white mb-4">Operations</h3>
-                    <div class="space-y-3 text-sm text-gray-600 dark:text-gray-300">
-                        <div class="flex items-center justify-between gap-4">
+                <div class="bg-card rounded-lg border border-border p-4 md:p-6">
+                    <h3 class="text-lg font-semibold text-foreground mb-4">Operations</h3>
+                    <div class="space-y-3 text-sm text-muted-foreground">
+                        <div class="flex flex-wrap items-center justify-between gap-4">
                             <span>Pending Salary Payable</span>
-                            <span class="font-semibold text-red-600">{{ formatMoney(operationsSummary.pending_salary_payable) }}</span>
+                            <span class="font-semibold text-destructive">{{ formatMoney(operationsSummary.pending_salary_payable) }}</span>
                         </div>
-                        <div class="flex items-center justify-between gap-4">
+                        <div class="flex flex-wrap items-center justify-between gap-4">
                             <span>Transport Expense This Month</span>
-                            <span class="font-semibold text-orange-600">{{ formatMoney(operationsSummary.transport_expense_month) }}</span>
+                            <span class="font-semibold text-warning">{{ formatMoney(operationsSummary.transport_expense_month) }}</span>
                         </div>
                         <div class="flex flex-wrap gap-2 pt-2">
                             <Button variant="outline" @click="navigateTo('/staff')" size="sm">Staff Module</Button>

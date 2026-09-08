@@ -159,9 +159,9 @@ watch(() => props.structures, (newStructures) => {
 
 const getStatusColor = (status: string) => {
     const colors: Record<string, string> = {
-        active: 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400',
-        inactive: 'bg-gray-100 text-gray-800 dark:bg-gray-900/30 dark:text-gray-400',
-        draft: 'bg-yellow-100 text-yellow-800 dark:bg-yellow-900/30 dark:text-yellow-400',
+        active: 'bg-success/10 text-success',
+        inactive: 'bg-muted text-foreground',
+        draft: 'bg-warning/10 text-warning',
     };
 
     return colors[status] || colors.inactive;
@@ -235,10 +235,10 @@ const deleteStructure = (structure: FeeStructure) => {
         <div class="space-y-6 p-4 md:p-6">
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 md:gap-4">
                 <div>
-                    <h1 class="text-lg md:text-2xl font-bold text-gray-900 dark:text-white">
+                    <h1 class="text-lg md:text-2xl font-bold text-foreground">
                         Fee Structures
                     </h1>
-                    <p class="mt-1 text-xs md:text-sm text-gray-600 dark:text-gray-400">
+                    <p class="mt-1 text-xs md:text-sm text-muted-foreground">
                         Manage fee structures for different classes and sessions
                     </p>
                 </div>
@@ -248,14 +248,14 @@ const deleteStructure = (structure: FeeStructure) => {
                 </Button>
             </div>
 
-            <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4">
+            <div class="bg-card rounded-lg border border-border p-4">
                 <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
                     <div class="space-y-2">
                         <Label for="filter-campus">Campus</Label>
                         <select
                             id="filter-campus"
                             v-model="filterCampus"
-                            class="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-sm text-gray-900 dark:text-white"
+                            class="w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground"
                         >
                             <option value="">All Campuses</option>
                             <option v-for="campus in props.campuses" :key="campus.id" :value="String(campus.id)">
@@ -268,7 +268,7 @@ const deleteStructure = (structure: FeeStructure) => {
                         <select
                             id="filter-session"
                             v-model="filterSession"
-                            class="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-sm text-gray-900 dark:text-white"
+                            class="w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground"
                         >
                             <option value="">All Sessions</option>
                             <option v-for="session in props.sessions" :key="session.id" :value="String(session.id)">
@@ -281,7 +281,7 @@ const deleteStructure = (structure: FeeStructure) => {
                         <select
                             id="filter-class"
                             v-model="filterClass"
-                            class="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-sm text-gray-900 dark:text-white"
+                            class="w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground"
                         >
                             <option value="">All Classes</option>
                             <option v-for="cls in props.classes" :key="cls.id" :value="String(cls.id)">
@@ -296,7 +296,7 @@ const deleteStructure = (structure: FeeStructure) => {
                             v-model="filterSection"
                             :disabled="!filterClass"
                             :class="[
-                                'w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-sm text-gray-900 dark:text-white',
+                                'w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground',
                                 !filterClass ? 'opacity-50 cursor-not-allowed' : '',
                             ]"
                         >
@@ -311,7 +311,7 @@ const deleteStructure = (structure: FeeStructure) => {
                         <select
                             id="filter-status"
                             v-model="filterStatus"
-                            class="w-full rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 px-3 py-2 text-sm text-gray-900 dark:text-white"
+                            class="w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground"
                         >
                             <option value="">All Status</option>
                             <option value="active">Active</option>
@@ -334,19 +334,19 @@ const deleteStructure = (structure: FeeStructure) => {
                 <div
                     v-for="(structure, index) in structuresData"
                     :key="structure.id"
-                    class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 space-y-3"
+                    class="bg-card rounded-lg border border-border p-4 space-y-3"
                 >
-                    <div class="flex justify-between items-start gap-3">
+                    <div class="flex flex-wrap justify-between items-start gap-3">
                         <div>
-                            <div class="text-xs text-gray-500 dark:text-gray-400">Sr# {{ ((pagination.from || 1) - 1) + index + 1 }}</div>
-                            <div class="font-medium text-gray-900 dark:text-white">{{ structure.title }}</div>
-                            <div class="text-xs text-gray-500 dark:text-gray-400">{{ structure.session?.name || '-' }}</div>
+                            <div class="text-xs text-muted-foreground">Sr# {{ ((pagination.from || 1) - 1) + index + 1 }}</div>
+                            <div class="font-medium text-foreground">{{ structure.title }}</div>
+                            <div class="text-xs text-muted-foreground">{{ structure.session?.name || '-' }}</div>
                         </div>
                         <span :class="['px-2 py-1 text-xs font-medium rounded-full', getStatusColor(structure.status)]">
                             {{ structure.status }}
                         </span>
                     </div>
-                    <div class="text-sm text-gray-600 dark:text-gray-400 space-y-1 pt-2 border-t border-gray-100 dark:border-gray-700">
+                    <div class="text-sm text-muted-foreground space-y-1 pt-2 border-t border-border">
                         <div>Campus: {{ structure.campus?.name || '-' }}</div>
                         <div>
                             Class:
@@ -376,65 +376,65 @@ const deleteStructure = (structure: FeeStructure) => {
                         </Button>
                     </div>
                 </div>
-                <div v-if="isLoading" class="text-center py-8 text-gray-500 dark:text-gray-400">
+                <div v-if="isLoading" class="text-center py-8 text-muted-foreground">
                     Loading fee structures...
                 </div>
-                <div v-else-if="structuresData.length === 0" class="text-center py-8 text-gray-500 dark:text-gray-400">
+                <div v-else-if="structuresData.length === 0" class="text-center py-8 text-muted-foreground">
                     No fee structures found.
                 </div>
             </div>
 
-            <div class="hidden lg:block overflow-hidden rounded-lg border border-gray-200 bg-white shadow-sm dark:border-gray-700 dark:bg-gray-900">
+            <div class="hidden lg:block overflow-hidden rounded-lg border border-border bg-card shadow-sm">
                 <div class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-gray-200 dark:divide-gray-700">
-                        <thead class="bg-gray-50 dark:bg-gray-800">
+                    <table class="min-w-full divide-y divide-border">
+                        <thead class="bg-muted">
                             <tr>
-                                <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">
+                                <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">
                                     Sr#
                                 </th>
-                                <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">
+                                <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">
                                     Title
                                 </th>
-                                <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">
+                                <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">
                                     Session
                                 </th>
-                                <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">
+                                <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">
                                     Campus
                                 </th>
-                                <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">
+                                <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">
                                     Class / Section
                                 </th>
-                                <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">
+                                <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">
                                     Status
                                 </th>
-                                <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">
+                                <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">
                                     Items
                                 </th>
-                                <th scope="col" class="px-4 py-3 text-right text-xs font-semibold tracking-wider text-gray-600 uppercase dark:text-gray-300">
+                                <th scope="col" class="px-4 py-3 text-right text-xs font-semibold tracking-wider text-muted-foreground uppercase">
                                     Actions
                                 </th>
                             </tr>
                         </thead>
-                        <tbody class="divide-y divide-gray-200 bg-white dark:divide-gray-700 dark:bg-gray-900">
+                        <tbody class="divide-y divide-border bg-card">
                             <tr
                                 v-for="(structure, index) in structuresData"
                                 :key="structure.id"
-                                class="transition-colors hover:bg-gray-50 dark:hover:bg-gray-800"
+                                class="transition-colors hover:bg-accent"
                             >
                                 <td class="px-4 py-3 whitespace-nowrap">
-                                    <div class="text-sm font-medium text-gray-900 dark:text-white">{{ ((pagination.from || 1) - 1) + index + 1 }}</div>
+                                    <div class="text-sm font-medium text-foreground">{{ ((pagination.from || 1) - 1) + index + 1 }}</div>
                                 </td>
                                 <td class="px-4 py-3 whitespace-nowrap">
-                                    <div class="text-sm font-medium text-gray-900 dark:text-white">{{ structure.title }}</div>
+                                    <div class="text-sm font-medium text-foreground">{{ structure.title }}</div>
                                 </td>
                                 <td class="px-4 py-3 whitespace-nowrap">
-                                    <div class="text-sm text-gray-600 dark:text-gray-300">{{ structure.session?.name || '-' }}</div>
+                                    <div class="text-sm text-muted-foreground">{{ structure.session?.name || '-' }}</div>
                                 </td>
                                 <td class="px-4 py-3 whitespace-nowrap">
-                                    <div class="text-sm text-gray-600 dark:text-gray-300">{{ structure.campus?.name || '-' }}</div>
+                                    <div class="text-sm text-muted-foreground">{{ structure.campus?.name || '-' }}</div>
                                 </td>
                                 <td class="px-4 py-3 whitespace-nowrap">
-                                    <div class="text-sm text-gray-600 dark:text-gray-300">
+                                    <div class="text-sm text-muted-foreground">
                                         {{ structure.class?.name || 'All Classes' }}
                                         <span v-if="structure.section"> / {{ structure.section.name }}</span>
                                         <span v-else-if="structure.class"> / All Sections</span>
@@ -446,10 +446,10 @@ const deleteStructure = (structure: FeeStructure) => {
                                     </span>
                                 </td>
                                 <td class="px-4 py-3 whitespace-nowrap">
-                                    <div class="text-sm text-gray-600 dark:text-gray-300">{{ structure.items_count }}</div>
+                                    <div class="text-sm text-muted-foreground">{{ structure.items_count }}</div>
                                 </td>
                                 <td class="px-4 py-3 text-sm font-medium whitespace-nowrap">
-                                    <div class="flex gap-2 justify-end">
+                                    <div class="flex flex-wrap gap-2 justify-end">
                                         <Button
                                             variant="outline"
                                             size="sm"
@@ -473,21 +473,21 @@ const deleteStructure = (structure: FeeStructure) => {
                         </tbody>
                     </table>
                 </div>
-                <div v-if="isLoading" class="text-center py-8 text-gray-500 dark:text-gray-400">
+                <div v-if="isLoading" class="text-center py-8 text-muted-foreground">
                     Loading fee structures...
                 </div>
-                <div v-else-if="structuresData.length === 0" class="text-center py-8 text-gray-500 dark:text-gray-400">
+                <div v-else-if="structuresData.length === 0" class="text-center py-8 text-muted-foreground">
                     No fee structures found.
                 </div>
             </div>
 
             <!-- Pagination -->
-            <div class="flex justify-between items-center pt-4">
+            <div class="flex flex-wrap gap-2 justify-between items-center pt-4">
                 <div class="flex items-center gap-4">
-                    <div class="text-sm text-gray-600 dark:text-gray-400">
+                    <div class="text-sm text-muted-foreground">
                         Showing {{ pagination.from }} to {{ pagination.to }} of {{ pagination.total }} entries
                     </div>
-                    <select v-model="perPage" class="rounded-md border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 text-gray-900 dark:text-white px-3 py-2 text-sm min-h-10 w-20">
+                    <select v-model="perPage" class="rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm min-h-10 w-20">
                         <option v-for="option in perPageOptions" :key="option.id" :value="option.id">
                             {{ option.name }}
                         </option>

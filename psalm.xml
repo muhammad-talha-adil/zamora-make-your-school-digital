@@ -1,0 +1,84 @@
+<?xml version="1.0"?>
+<psalm
+    errorLevel="4"
+    resolveFromConfigFile="true"
+    findUnusedBaselineEntry="false"
+    findUnusedCode="false"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xmlns="https://getpsalm.org/schema/config"
+    xsi:schemaLocation="https://getpsalm.org/schema/config vendor/vimeo/psalm/config.xsd"
+>
+    <!--
+        Scoped to the Student module while it is under review, matching
+        phpstan.neon. The rest of the app carries a large backlog from years at
+        PHPStan level 0; widen this one module at a time as each is cleaned up.
+    -->
+    <projectFiles>
+        <file name="app/Http/Controllers/StudentController.php" />
+        <directory name="app/Http/Requests/Student" />
+        <file name="app/Services/StudentService.php" />
+        <file name="app/Services/StudentUserService.php" />
+        <file name="app/Services/GuardianService.php" />
+        <file name="app/Repositories/StudentRepository.php" />
+        <file name="app/Policies/StudentPolicy.php" />
+        <file name="app/Models/Student.php" />
+        <file name="app/Models/StudentEnrollmentRecord.php" />
+        <file name="app/Models/StudentGuardian.php" />
+        <file name="app/Models/Guardian.php" />
+
+        <ignoreFiles>
+            <directory name="vendor" />
+        </ignoreFiles>
+    </projectFiles>
+
+    <plugins>
+        <pluginClass class="Psalm\LaravelPlugin\Plugin" />
+    </plugins>
+
+    <!--
+        Suppressed because they flag ordinary Laravel idioms rather than defects.
+        Everything not listed here is treated as a real finding and fixed.
+    -->
+    <issueHandlers>
+        <!-- `$this->field` on a FormRequest reads request input through __get. -->
+        <UndefinedThisPropertyFetch>
+            <errorLevel type="suppress">
+                <directory name="app/Http/Requests" />
+            </errorLevel>
+        </UndefinedThisPropertyFetch>
+        <UndefinedMagicPropertyFetch>
+            <errorLevel type="suppress">
+                <directory name="app/Http/Controllers" />
+                <directory name="app/Http/Requests" />
+            </errorLevel>
+        </UndefinedMagicPropertyFetch>
+
+        <!-- The framework's own base classes predate the Override attribute. -->
+        <MissingOverrideAttribute>
+            <errorLevel type="suppress">
+                <directory name="app" />
+            </errorLevel>
+        </MissingOverrideAttribute>
+
+        <!--
+            Accessors on models are how this codebase exposes derived values.
+            Reported by the Laravel plugin, so it is namespaced separately.
+        -->
+        <PluginIssue name="PublicModelAccessor" errorLevel="suppress" />
+
+        <!--
+            Eloquent relation generics are not annotated across this codebase,
+            so the plugin cannot always resolve a related model's type.
+        -->
+        <InvalidTemplateParam>
+            <errorLevel type="suppress">
+                <directory name="app" />
+            </errorLevel>
+        </InvalidTemplateParam>
+        <UndefinedClass>
+            <errorLevel type="suppress">
+                <directory name="app/Http/Requests" />
+            </errorLevel>
+        </UndefinedClass>
+    </issueHandlers>
+</psalm>
