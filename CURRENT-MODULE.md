@@ -69,11 +69,12 @@ Built, in use, and never read end to end:
 |---|---|
 | **Inventory** | 10 controllers, the largest unreviewed area |
 | **Transport** | Vehicles, routes, stops, student assignments |
-| **Settings** | 16 controllers — school, theme, sessions, lookups |
 
 Staff was reviewed and rebuilt across eight phases rather than by the
 read-end-to-end process every other row in this file goes through — its full
-record is in [docs/MODULE-LOG.md](docs/MODULE-LOG.md).
+record is in [docs/MODULE-LOG.md](docs/MODULE-LOG.md). Settings (16
+controllers) was reviewed and fixed the same way Fee/Finance was — full
+findings in [docs/MODULE-LOG.md](docs/MODULE-LOG.md) under "Module: Settings".
 
 ---
 

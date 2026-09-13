@@ -655,3 +655,70 @@ PHPStan baseline unchanged (0).
   security pass.
 - Inventory module has not been reviewed end-to-end; only the one broken
   route above was caught.
+
+# Module: Settings — closed 2026-09-13
+
+16 controllers under `app/Http/Controllers/Settings/` (plus `ExamSettingsController`,
+`FeeSettingsController` reviewed separately in their own modules). Read end to end
+across 3 parallel passes (school/org structure, academic/lookup, user/system).
+
+## Findings
+
+- **Menu management was unusable for anyone but `developer`** (critical) —
+  `MenuController` authorized against `settings.manage`, a permission never
+  seeded; the real one is `school.menu.manage`. Also fixed: a frontend
+  permission check that hid the "Add Menu" button for everyone, edit/delete
+  buttons that rendered regardless of permission, a hardcoded
+  developer-only lockout on menu *creation* only (inconsistent with edit/delete),
+  a missing cycle guard on `parent_id` reparenting (a crafted A→B→A chain could
+  hang `buildMenuLabel()`'s loop forever), orphaned children left behind when a
+  parent menu is deleted, and an `Undefined array key "parent_id"` crash on
+  create/update when the field is omitted (the normal case for a top-level menu).
+- **Campus, CampusType, SchoolClass, Section, Subject controllers had zero
+  authorization** (critical) — any signed-in account, including student/guardian,
+  could create/edit/delete the school's own structure. Added policies for each.
+- **Section-name uniqueness was checked globally, not per class** (high) —
+  "Section A" could only exist in one class school-wide, blocking completely
+  normal setup (every class needing an A/B/C section). Fixed to scope by `class_id`.
+- **`SchoolController`/`ClassSubjectController` gated on a nonexistent
+  `settings.manage` permission** (high) — locked out `owner`/`campus_admin`,
+  the roles the real seeded permissions (`school.profile.manage`,
+  `academics.class.manage`) were meant for. Fixed.
+- **`ExamTypeController`'s mutating actions all redirected to a route name that
+  doesn't exist** (critical) — every save 500'd with `RouteNotFoundException`
+  after doing its work. Fixed all 9 redirects.
+- **`ExamType` model's delete path assumed soft-delete semantics it never had**
+  (critical) — the only delete path the UI reaches crashed with
+  `BadMethodCallException`. Added `deleted_at` directly into the create
+  migration (not a new alter file, keeping the 1-table-1-migration rule intact)
+  and the `SoftDeletes` trait; guarded the FK-restrict case with a friendly message.
+- **`AttendanceSettingsController` gated on the same nonexistent
+  `settings.manage` permission** (critical) — 403'd every non-developer account,
+  including `campus_admin` holding the entire `attendance.*` wildcard. Fixed to
+  `attendance.settings`, the permission actually seeded for this screen.
+- **Academic sessions could end up with two active at once, or zero** (critical)
+  — `store()`/`update()` didn't deactivate other sessions the way `activate()`
+  did, and nothing blocked deactivating/deleting the sole active session. Every
+  module that resolves "the current session" (Exam, Fee, Staff, Student) depends
+  on this being unique. Fixed both gaps.
+- **`SessionController`/`ExamTypeController` had zero authorization** (high) —
+  fixed using the permissions already seeded for exactly this purpose.
+
+## Not fixed — needs a product decision
+
+- `CampusTypeController@create`/`@edit` are routed but empty no-op stubs (dead,
+  unreached by the actual UI, which uses a modal instead).
+- Several Inertia page routes (`campuses.*`, `school-classes.*`, `sections.*`,
+  `subjects.*`, `settings/Sessions/*`, `settings/ExamTypes/*`,
+  `settings/Menus/{Create,Edit,Show}`) render Vue pages that don't exist — all
+  dead routes never reached by the real UI, which does this CRUD entirely
+  through modals/tables backed by JSON endpoints. Logged for awareness; removing
+  the dead routes or building the pages is a call for the team, not a bug fix.
+- `MonthController` and `ThemeSettingsController::calculateContrast()` — minor,
+  non-security, left as noted in the full agent reports.
+
+## Tests
+
+`tests/Feature/Settings/**` (5 new test files) — 38 passed on their own; full
+regression sweep (Settings + Exam + Attendance + Fee + Finance + Student +
+Staff + Inventory) — 1080 passed, 0 failed, project-wide.
