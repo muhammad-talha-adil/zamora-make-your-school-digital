@@ -44,4 +44,27 @@ class TransportVehicle extends Model
     {
         return $this->hasMany(TransportVehicleExpense::class);
     }
+
+    /**
+     * Narrows a list to the vehicles this user may see.
+     *
+     * A vehicle with no campus is a school-wide asset and stays visible to
+     * anybody who may see transport at all.
+     */
+    public function scopeVisibleTo($query, ?User $user)
+    {
+        if (! $user || $user->isSuperAdmin()) {
+            return $query;
+        }
+
+        $campusId = $user->campusId();
+
+        if ($campusId === null) {
+            return $query;
+        }
+
+        return $query->where(function ($outer) use ($campusId) {
+            $outer->whereNull('campus_id')->orWhere('campus_id', $campusId);
+        });
+    }
 }

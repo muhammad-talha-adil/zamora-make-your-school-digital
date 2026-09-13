@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Inventory;
 
+use App\Http\Controllers\Concerns\ScopesCampusForUser;
 use App\Http\Controllers\Controller;
 use App\Models\Campus;
 use App\Models\InventoryItem;
@@ -14,20 +15,33 @@ use App\Models\StudentInventory;
 use App\Models\StudentInventoryReturn;
 use App\Models\Supplier;
 use Carbon\Carbon;
+use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
 class InventoryPageController extends Controller
 {
-    public function settings(): Response
+    use ScopesCampusForUser;
+
+    /**
+     * These dashboard pages never took a campus filter at all — every one of
+     * them loaded every campus's types, items, stock, purchases, returns and
+     * student assignments regardless of who was signed in. A campus-restricted
+     * user (anyone without a school-wide role) now only ever sees their own.
+     */
+    public function settings(Request $request): Response
     {
+        $campusId = $this->resolveCampusId($request);
+
         return Inertia::render('inventory/InventorySettings', [
             'inventoryTypes' => InventoryType::with(['campus:id,name'])
                 ->select('id', 'name', 'campus_id', 'is_active', 'created_at')
+                ->when($campusId, fn ($q) => $q->where('campus_id', $campusId))
                 ->withCount('inventoryItems')
                 ->orderBy('name')
                 ->paginate(20),
             'inventoryItems' => InventoryItem::with(['campus:id,name', 'inventoryType:id,name'])
+                ->when($campusId, fn ($q) => $q->where('campus_id', $campusId))
                 ->withCount('inventoryStock')
                 ->orderBy('name')
                 ->paginate(20),
@@ -35,15 +49,19 @@ class InventoryPageController extends Controller
         ]);
     }
 
-    public function itemsStock(): Response
+    public function itemsStock(Request $request): Response
     {
+        $campusId = $this->resolveCampusId($request);
+
         $allTypes = InventoryType::with(['campus:id,name'])
             ->select('id', 'name', 'campus_id', 'is_active')
+            ->when($campusId, fn ($q) => $q->where('campus_id', $campusId))
             ->orderBy('name')
             ->get();
 
         $allItems = InventoryItem::with(['campus:id,name', 'inventoryType:id,name', 'inventoryStock'])
             ->select('id', 'name', 'description', 'campus_id', 'inventory_type_id', 'is_active')
+            ->when($campusId, fn ($q) => $q->where('campus_id', $campusId))
             ->orderBy('name')
             ->get()
             ->map(function ($item) {
@@ -62,6 +80,7 @@ class InventoryPageController extends Controller
             ->values();
 
         $stocks = InventoryStock::with(['campus:id,name', 'inventoryItem:id,name', 'inventoryItem.inventoryType:id,name'])
+            ->when($campusId, fn ($q) => $q->where('campus_id', $campusId))
             ->orderBy('updated_at', 'desc')
             ->paginate(20);
 
@@ -85,10 +104,12 @@ class InventoryPageController extends Controller
         return Inertia::render('inventory/ItemsStock', [
             'inventoryTypes' => InventoryType::with(['campus:id,name'])
                 ->select('id', 'name', 'campus_id', 'is_active', 'created_at')
+                ->when($campusId, fn ($q) => $q->where('campus_id', $campusId))
                 ->withCount('inventoryItems')
                 ->orderBy('name')
                 ->paginate(20),
             'inventoryItems' => InventoryItem::with(['campus:id,name', 'inventoryType:id,name'])
+                ->when($campusId, fn ($q) => $q->where('campus_id', $campusId))
                 ->withCount('inventoryStock')
                 ->orderBy('name')
                 ->paginate(20),
@@ -99,16 +120,21 @@ class InventoryPageController extends Controller
         ]);
     }
 
-    public function purchasesManage(): Response
+    public function purchasesManage(Request $request): Response
     {
+        $campusId = $this->resolveCampusId($request);
+
         return Inertia::render('inventory/PurchasesManage', [
             'purchases' => Purchase::with(['campus:id,name', 'supplier:id,name'])
+                ->when($campusId, fn ($q) => $q->where('campus_id', $campusId))
                 ->orderBy('purchase_date', 'desc')
                 ->paginate(20),
             'suppliers' => Supplier::with(['campus:id,name'])
+                ->when($campusId, fn ($q) => $q->where('campus_id', $campusId))
                 ->orderBy('name')
                 ->paginate(20),
             'purchaseReturns' => PurchaseReturn::with(['campus:id,name', 'supplier:id,name'])
+                ->when($campusId, fn ($q) => $q->where('campus_id', $campusId))
                 ->orderBy('return_date', 'desc')
                 ->paginate(20),
             'campuses' => Campus::orderBy('name')->get(),
@@ -122,9 +148,12 @@ class InventoryPageController extends Controller
         ]);
     }
 
-    public function studentManage(): Response
+    public function studentManage(Request $request): Response
     {
+        $campusId = $this->resolveCampusId($request);
+
         $studentInventories = StudentInventory::with(['campus:id,name', 'student', 'items', 'items.inventoryItem:id,name'])
+            ->when($campusId, fn ($q) => $q->where('campus_id', $campusId))
             ->orderBy('assigned_date', 'desc')
             ->paginate(20);
 
@@ -165,6 +194,7 @@ class InventoryPageController extends Controller
         });
 
         $returns = StudentInventoryReturn::with(['campus:id,name', 'student', 'studentInventoryRecord', 'items'])
+            ->when($campusId, fn ($q) => $q->where('campus_id', $campusId))
             ->orderBy('return_date', 'desc')
             ->paginate(20);
 
@@ -203,10 +233,13 @@ class InventoryPageController extends Controller
             'studentInventories' => $studentInventories,
             'returns' => $returns,
             'campuses' => Campus::orderBy('name')->get(),
-            'students' => Student::with('user:id,name')->orderBy('registration_no')->get()->map(
-                fn ($s) => ['id' => $s->id, 'name' => $s->name, 'registration_number' => $s->registration_no]
-            ),
+            'students' => Student::with('user:id,name')
+                ->when($campusId, fn ($q) => $q->whereHas('enrollmentRecords', fn ($eq) => $eq->where('campus_id', $campusId)))
+                ->orderBy('registration_no')
+                ->get()
+                ->map(fn ($s) => ['id' => $s->id, 'name' => $s->name, 'registration_number' => $s->registration_no]),
             'inventoryItems' => InventoryItem::select('id', 'name', 'description')
+                ->when($campusId, fn ($q) => $q->where('campus_id', $campusId))
                 ->where('is_active', true)
                 ->orderBy('name')
                 ->get(),

@@ -35,4 +35,27 @@ class TransportStop extends Model
         return $this->belongsToMany(TransportRoute::class, 'transport_route_stops')
             ->withPivot('sort_order');
     }
+
+    /**
+     * Narrows a list to the stops this user may see.
+     *
+     * A stop with no campus is a school-wide stop and stays visible to
+     * anybody who may see transport at all.
+     */
+    public function scopeVisibleTo($query, ?User $user)
+    {
+        if (! $user || $user->isSuperAdmin()) {
+            return $query;
+        }
+
+        $campusId = $user->campusId();
+
+        if ($campusId === null) {
+            return $query;
+        }
+
+        return $query->where(function ($outer) use ($campusId) {
+            $outer->whereNull('campus_id')->orWhere('campus_id', $campusId);
+        });
+    }
 }

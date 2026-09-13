@@ -16,9 +16,13 @@ class UpdateExamPaperRequest extends FormRequest
     public function rules()
     {
         return [
-            'exam_group_id' => 'sometimes|required|exists:exam_groups,id',
+            'exam_id' => 'sometimes|required|exists:exams,id',
+            'scope_type' => 'sometimes|required|in:SCHOOL,CLASS,SECTION',
+            'campus_id' => 'nullable|exists:campuses,id',
+            'class_id' => 'nullable|exists:school_classes,id',
+            'section_id' => 'nullable|exists:sections,id',
             'subject_id' => 'sometimes|required|exists:subjects,id',
-            'exam_date' => 'sometimes|required|date',
+            'paper_date' => 'sometimes|required|date',
             'start_time' => 'sometimes|required',
             'end_time' => 'sometimes|required|after:start_time',
             'total_marks' => 'sometimes|required|numeric|min:1',

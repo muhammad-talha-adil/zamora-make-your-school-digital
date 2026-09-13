@@ -60,6 +60,7 @@ class DatabaseSeeder extends Seeder
             FeeHeadSeeder::class,
             DiscountTypeSeeder::class,
             FineRuleSeeder::class,
+            FeeSiblingDiscountRuleSeeder::class,
             FeeStructureSeeder::class,
 
             // === Theme & UI ===

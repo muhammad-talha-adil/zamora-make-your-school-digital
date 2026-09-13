@@ -63,6 +63,16 @@ class MenuSeeder extends Seeder
             'url' => '/students/promotion',
         ]);
 
+        Menu::create([
+            'title' => 'Admission Enquiries',
+            'icon' => 'help-circle',
+            'type' => 'main',
+            'order' => 4,
+            'parent_id' => 2, // Students parent ID
+            'is_active' => true,
+            'url' => '/students/enquiries',
+        ]);
+
         // ==================== EXAM MENU ====================
         $exam = Menu::create([
             'title' => 'Exams',

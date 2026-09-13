@@ -123,4 +123,17 @@ return [
         'store' => env('APP_MAINTENANCE_STORE', 'database'),
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | Artisan Command UI Kill Switch
+    |--------------------------------------------------------------------------
+    |
+    | The `/artisan` dashboard can run destructive Artisan commands. It is
+    | always restricted to the `developer` role, and in production it is
+    | additionally refused unless this is explicitly enabled.
+    |
+    */
+
+    'allow_artisan_ui' => env('ALLOW_ARTISAN_UI', false),
+
 ];

@@ -14,8 +14,13 @@ class StoreRegistrationRequest extends FormRequest
     public function rules()
     {
         return [
-            'exam_group_id' => 'required|exists:exam_groups,id',
+            'exam_id' => 'required|exists:exams,id',
             'student_id' => 'required|exists:students,id',
+            'campus_id' => 'nullable|exists:campuses,id',
+            'class_id' => 'nullable|exists:school_classes,id',
+            'section_id' => 'nullable|exists:sections,id',
+            'enrollment_id' => 'nullable|exists:student_enrollment_records,id',
+            'roll_no_snapshot' => 'nullable|string|max:50',
             'status' => 'nullable|string|in:registered,withdrawn,absent,passed,failed',
         ];
     }

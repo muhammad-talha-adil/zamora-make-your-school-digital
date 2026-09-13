@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Inventory;
 
+use App\Http\Controllers\Concerns\ScopesCampusForUser;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Inventory\StoreInventoryItemRequest;
 use App\Http\Requests\Inventory\UpdateInventoryItemRequest;
@@ -19,6 +20,8 @@ use Inertia\Response;
 
 class InventoryItemsController extends Controller
 {
+    use ScopesCampusForUser;
+
     /**
      * Display inventory items listing page.
      *
@@ -27,7 +30,7 @@ class InventoryItemsController extends Controller
      */
     public function index(Request $request): Response
     {
-        $campusId = $request->get('campus_id');
+        $campusId = $this->resolveCampusId($request);
         $status = $request->get('status');
         $perPage = $request->get('per_page', 25);
 
@@ -207,7 +210,7 @@ class InventoryItemsController extends Controller
     public function getAll(Request $request): JsonResponse
     {
         $query = trim($request->get('q', ''));
-        $campusId = $request->get('campus_id');
+        $campusId = $this->resolveCampusId($request);
         $typeId = $request->get('type_id');
         $status = $request->get('status', 'active'); // active or inactive
         $supplierId = $request->get('supplier_id'); // Filter by supplier (items purchased from this supplier)
@@ -273,7 +276,7 @@ class InventoryItemsController extends Controller
      */
     public function getPaginated(Request $request): JsonResponse
     {
-        $campusId = $request->get('campus_id');
+        $campusId = $this->resolveCampusId($request);
         $status = $request->get('status', 'active'); // active or inactive
         $search = $request->get('search', '');
 
@@ -313,7 +316,7 @@ class InventoryItemsController extends Controller
      */
     public function getDetails(Request $request, $id): JsonResponse
     {
-        $campusId = $request->get('campus_id');
+        $campusId = $this->resolveCampusId($request);
 
         // IMPROVEMENT: Scope to campus for multi-campus safety
         $item = InventoryItem::with(['campus', 'inventoryType', 'inventoryStock'])
@@ -361,7 +364,7 @@ class InventoryItemsController extends Controller
      */
     public function getLowStockItems(Request $request): JsonResponse
     {
-        $campusId = $request->get('campus_id');
+        $campusId = $this->resolveCampusId($request);
         $threshold = $request->get('threshold', 10);
 
         $items = InventoryItem::with(['campus', 'inventoryType'])
@@ -394,7 +397,7 @@ class InventoryItemsController extends Controller
      */
     public function getDashboardData(Request $request): JsonResponse
     {
-        $campusId = $request->get('campus_id');
+        $campusId = $this->resolveCampusId($request);
 
         // Get stats - global scope ensures only active, non-deleted items
         $typesCount = InventoryType::when($campusId, fn ($q) => $q->where('campus_id', $campusId))->count();

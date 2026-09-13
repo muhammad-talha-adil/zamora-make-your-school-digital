@@ -14,14 +14,18 @@ class BulkCreateExamPaperRequest extends FormRequest
     public function rules()
     {
         return [
-            'exam_group_id' => 'required|exists:exam_groups,id',
+            'exam_id' => 'required|exists:exams,id',
+            'scope_type' => 'required|in:SCHOOL,CLASS,SECTION',
+            'campus_id' => 'nullable|exists:campuses,id',
+            'class_id' => 'nullable|exists:school_classes,id',
+            'section_id' => 'nullable|exists:sections,id',
             'papers' => 'required|array',
             'papers.*.subject_id' => 'required|exists:subjects,id',
-            'papers.*.exam_date' => 'required|date',
+            'papers.*.paper_date' => 'required|date',
             'papers.*.start_time' => 'required',
             'papers.*.end_time' => 'required|after:start_time',
             'papers.*.total_marks' => 'required|numeric|min:1',
-            'papers.*.passing_marks' => 'required|numeric|min:0|lte:total_marks',
+            'papers.*.passing_marks' => 'required|numeric|min:0|lte:papers.*.total_marks',
         ];
     }
 }

@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Inventory;
 
+use App\Http\Controllers\Concerns\ScopesCampusForUser;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Inventory\StoreInventoryTypeRequest;
 use App\Http\Requests\Inventory\UpdateInventoryTypeRequest;
@@ -14,6 +15,8 @@ use Inertia\Response;
 
 class InventoryTypesController extends Controller
 {
+    use ScopesCampusForUser;
+
     /**
      * Display inventory types listing page.
      *
@@ -23,7 +26,7 @@ class InventoryTypesController extends Controller
      */
     public function index(Request $request): Response
     {
-        $campusId = $request->get('campus_id');
+        $campusId = $this->resolveCampusId($request);
         $status = $request->get('status');
         $perPage = $request->get('per_page', 25);
 
@@ -188,7 +191,7 @@ class InventoryTypesController extends Controller
     public function getAll(Request $request): JsonResponse
     {
         $query = trim($request->get('q', ''));
-        $campusId = $request->get('campus_id');
+        $campusId = $this->resolveCampusId($request);
         $status = $request->get('status', 'active'); // active or inactive
 
         $typesQuery = InventoryType::with(['campus:id,name'])
@@ -229,7 +232,7 @@ class InventoryTypesController extends Controller
      */
     public function getPaginated(Request $request): JsonResponse
     {
-        $campusId = $request->get('campus_id');
+        $campusId = $this->resolveCampusId($request);
         $status = $request->get('status', 'active'); // active or inactive
         $search = $request->get('search', '');
 
@@ -274,6 +277,9 @@ class InventoryTypesController extends Controller
             'exclude_id' => 'nullable|exists:inventory_types,id',
         ]);
 
+        // Raw request value on purpose: 'all' is a real, distinct choice here
+        // ("does this name conflict with an All-Campuses type"), not a
+        // multi-campus leak to close — resolveCampusId() would cast it to 0.
         // campus_id can be null (all campuses), numeric, or 'all'
         $campusId = $request->get('campus_id');
         $isAllCampus = ($campusId === null || $campusId === 'all');
@@ -323,7 +329,7 @@ class InventoryTypesController extends Controller
      */
     public function getWithItems(Request $request, $id): JsonResponse
     {
-        $campusId = $request->get('campus_id');
+        $campusId = $this->resolveCampusId($request);
 
         $type = InventoryType::with(['campus', 'inventoryItems' => function ($q) {
             $q->select(['id', 'name', 'inventory_type_id', 'campus_id'])

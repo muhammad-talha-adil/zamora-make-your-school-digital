@@ -54,4 +54,27 @@ class TransportStudentAssignment extends Model
     {
         return $this->belongsTo(TransportStop::class, 'transport_stop_id');
     }
+
+    /**
+     * Narrows a list to the assignments this user may see.
+     *
+     * An assignment with no campus stays visible to anybody who may see
+     * transport at all; everybody else sees only their own campus's.
+     */
+    public function scopeVisibleTo($query, ?User $user)
+    {
+        if (! $user || $user->isSuperAdmin()) {
+            return $query;
+        }
+
+        $campusId = $user->campusId();
+
+        if ($campusId === null) {
+            return $query;
+        }
+
+        return $query->where(function ($outer) use ($campusId) {
+            $outer->whereNull('campus_id')->orWhere('campus_id', $campusId);
+        });
+    }
 }

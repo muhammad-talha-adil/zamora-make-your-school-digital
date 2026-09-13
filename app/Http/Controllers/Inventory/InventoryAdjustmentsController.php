@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Inventory;
 
+use App\Http\Controllers\Concerns\ScopesCampusForUser;
 use App\Http\Controllers\Controller;
 use App\Models\Campus;
 use App\Models\InventoryAdjustment;
@@ -15,12 +16,14 @@ use Inertia\Response;
 
 class InventoryAdjustmentsController extends Controller
 {
+    use ScopesCampusForUser;
+
     /**
      * Display inventory adjustments listing.
      */
     public function index(Request $request): Response
     {
-        $campusId = $request->get('campus_id');
+        $campusId = $this->resolveCampusId($request);
         $itemId = $request->get('item_id');
 
         return inertia('inventory/Adjustments/Index', [
@@ -52,7 +55,7 @@ class InventoryAdjustmentsController extends Controller
      */
     public function getAll(Request $request): JsonResponse
     {
-        $campusId = $request->get('campus_id');
+        $campusId = $this->resolveCampusId($request);
 
         if (! $campusId) {
             $firstCampus = Campus::first();
@@ -117,7 +120,9 @@ class InventoryAdjustmentsController extends Controller
 
         try {
             DB::transaction(function () use ($request) {
-                // Get or create stock record
+                // Get or create stock record, locked for the duration of the
+                // adjustment so a concurrent purchase/assignment can't read a
+                // stale quantity.
                 $stock = InventoryStock::firstOrCreate(
                     [
                         'campus_id' => $request->campus_id,
@@ -129,6 +134,7 @@ class InventoryAdjustmentsController extends Controller
                         // available_quantity is a generated column, don't set it
                     ]
                 );
+                $stock = InventoryStock::whereKey($stock->id)->lockForUpdate()->first();
 
                 $previousQuantity = $stock->quantity ?? 0;
                 $quantity = (int) $request->quantity;
@@ -145,6 +151,13 @@ class InventoryAdjustmentsController extends Controller
                         $newQuantity = $quantity;
                         break;
                 }
+
+                // available_quantity (quantity - reserved_quantity) is a
+                // generated, unclamped column: a "set" or "subtract" that
+                // drops quantity below what is already reserved would make it
+                // negative. Bring reserved_quantity down with it, the same
+                // guard InventoryStock::removeQuantity() already applies.
+                $stock->reserved_quantity = min($stock->reserved_quantity ?? 0, $newQuantity);
 
                 // Update stock
                 $stock->quantity = $newQuantity;
@@ -233,7 +246,7 @@ class InventoryAdjustmentsController extends Controller
      */
     public function getSummary(Request $request): JsonResponse
     {
-        $campusId = $request->get('campus_id');
+        $campusId = $this->resolveCampusId($request);
 
         if (! $campusId) {
             return response()->json(['error' => 'campus_id is required'], 422);

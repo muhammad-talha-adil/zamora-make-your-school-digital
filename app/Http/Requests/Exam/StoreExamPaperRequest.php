@@ -16,9 +16,13 @@ class StoreExamPaperRequest extends FormRequest
     public function rules()
     {
         return [
-            'exam_group_id' => 'required|exists:exam_groups,id',
+            'exam_id' => 'required|exists:exams,id',
+            'scope_type' => 'required|in:SCHOOL,CLASS,SECTION',
+            'campus_id' => 'nullable|exists:campuses,id',
+            'class_id' => 'nullable|exists:school_classes,id',
+            'section_id' => 'nullable|exists:sections,id',
             'subject_id' => 'required|exists:subjects,id',
-            'exam_date' => 'required|date',
+            'paper_date' => 'required|date',
             'start_time' => 'required',
             'end_time' => 'required|after:start_time',
             'total_marks' => 'required|numeric|min:1',

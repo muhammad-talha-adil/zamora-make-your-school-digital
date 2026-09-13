@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Inventory;
 
+use App\Http\Controllers\Concerns\ScopesCampusForUser;
 use App\Http\Controllers\Controller;
 use App\Models\Campus;
 use App\Models\Supplier;
@@ -12,12 +13,14 @@ use Inertia\Response;
 
 class SuppliersController extends Controller
 {
+    use ScopesCampusForUser;
+
     /**
      * Display suppliers listing.
      */
     public function index(Request $request): Response
     {
-        $campusId = $request->get('campus_id');
+        $campusId = $this->resolveCampusId($request);
 
         return inertia('inventory/Suppliers/Index', [
             'suppliers' => Supplier::with(['campus:id,name'])
@@ -40,7 +43,7 @@ class SuppliersController extends Controller
      */
     public function getAll(Request $request): JsonResponse
     {
-        $campusId = $request->get('campus_id');
+        $campusId = $this->resolveCampusId($request);
         $perPage = $request->get('per_page', 25);
         $page = $request->get('page', 1);
 
@@ -185,7 +188,7 @@ class SuppliersController extends Controller
     public function update(Request $request, Supplier $supplier)
     {
         // Convert 'all' to null for "all campuses" functionality
-        $campusId = $request->get('campus_id');
+        $campusId = $this->resolveCampusId($request);
         if ($campusId === 'all' || $campusId === null || $campusId === '') {
             $campusId = null;
         }
@@ -367,6 +370,9 @@ class SuppliersController extends Controller
             'exclude_id' => 'nullable|exists:suppliers,id',
         ]);
 
+        // Raw request value on purpose: 'all' is a real, distinct choice here
+        // ("does this name conflict with an All-Campuses supplier"), not a
+        // multi-campus leak to close — resolveCampusId() would cast it to 0.
         $campusId = $request->get('campus_id');
         $name = $request->name;
         $excludeId = $request->exclude_id;

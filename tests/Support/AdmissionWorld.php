@@ -80,6 +80,7 @@ class AdmissionWorld
 
         $this->grantStudentAbilities();
         $this->grantFeeAbilities();
+        $this->grantInventoryAbilities();
     }
 
     /**
@@ -127,6 +128,32 @@ class AdmissionWorld
             'fee.discount.manage', 'fee.discount.approve', 'fee.fine.manage', 'fee.reports',
             'finance.view', 'finance.transaction.view', 'finance.transaction.manage',
             'finance.ledger.manage', 'finance.account.manage', 'finance.reports', 'finance.reports.owner',
+        ];
+
+        foreach ($abilities as $ability) {
+            Permission::firstOrCreate(['name' => $ability, 'guard_name' => 'web']);
+        }
+
+        $this->actor->givePermissionTo($abilities);
+
+        app(PermissionRegistrar::class)->forgetCachedPermissions();
+    }
+
+    /**
+     * The `inventory.*` abilities, given to the same shared actor.
+     *
+     * Every inventory route now sits behind `permission:` middleware — before
+     * this pass none of the ten seeded `inventory.*` permissions were checked
+     * anywhere, so any signed-in account could adjust stock, delete purchases
+     * or issue items to a student regardless of role.
+     */
+    private function grantInventoryAbilities(): void
+    {
+        $abilities = [
+            'inventory.view', 'inventory.item.manage', 'inventory.stock.manage',
+            'inventory.purchase.view', 'inventory.purchase.manage', 'inventory.purchase.delete',
+            'inventory.supplier.manage', 'inventory.return.manage',
+            'inventory.student.issue', 'inventory.reports',
         ];
 
         foreach ($abilities as $ability) {

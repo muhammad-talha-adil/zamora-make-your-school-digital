@@ -722,3 +722,199 @@ across 3 parallel passes (school/org structure, academic/lookup, user/system).
 `tests/Feature/Settings/**` (5 new test files) — 38 passed on their own; full
 regression sweep (Settings + Exam + Attendance + Fee + Finance + Student +
 Staff + Inventory) — 1080 passed, 0 failed, project-wide.
+
+# Module: Transport — closed 2026-09-14
+
+One controller (`TransportController`), five models (`TransportVehicle`,
+`TransportRoute`, `TransportStop`, `TransportStudentAssignment`,
+`TransportVehicleExpense`), one route file (`routes/transport.php`) and one
+Inertia page (`Transport/Index.vue`) covering vehicles, routes, stops, student
+assignments, vehicle expenses and monthly dues generation. Read end to end.
+
+## Findings
+
+- **Zero authorization on every transport route** (critical) — all eleven
+  routes sat on `auth` alone. The six `transport.*` permissions
+  (`transport.view`, `transport.view.own`, `transport.vehicle.manage`,
+  `transport.route.manage`, `transport.assignment.manage`,
+  `transport.expense.manage`) had been seeded since the beginning and not one
+  was checked anywhere, so any signed-in account — a student's own portal
+  login included, since students and staff share one `User` model and guard —
+  could create vehicles, reassign routes, read every campus's fleet and
+  student assignments, or run payroll-adjacent dues generation. Fixed: added
+  `permission:` middleware to every route (matching the Fee/Staff pattern),
+  plus a `TransportVehiclePolicy`, `TransportRoutePolicy`, `TransportStopPolicy`,
+  `TransportStudentAssignmentPolicy` and `TransportVehicleExpensePolicy`
+  (`app/Policies/`), each checked with `Gate::authorize()` in the controller
+  for the object-level campus check on top of the route-level permission gate.
+- **Every list on the Transport dashboard leaked across campuses** (critical)
+  — `TransportController::index()` loaded every vehicle, route, stop,
+  assignment and expense in the school, and the first 200 students
+  school-wide, with no campus filter at all; a campus admin at one campus
+  could see and edit another campus's fleet, routes, stops, assignments and
+  expenses. Fixed: added a `scopeVisibleTo(?User $user)` to each of the five
+  models (same shape as `StaffProfile::scopeVisibleTo()` — a record with no
+  campus is a school-wide asset and stays visible to everyone; a record with
+  a campus is visible only to that campus and to super admins), applied in
+  `index()` and in `generateDues()`.
+- **A transport assignment's stop was never checked against its route**
+  (high) — `storeAssignment`/`updateAssignment` validated `transport_stop_id`
+  only against `exists:transport_stops,id`, so a student could be pointed at
+  a stop that was never added to the route they were assigned to, silently
+  breaking the pickup/drop list the route screen shows. Fixed: added
+  `TransportController::assertAssignmentIntegrity()`, called from both
+  actions, which 422s with a `transport_stop_id` validation error when the
+  stop isn't one of the route's stops.
+- **A transport assignment's route was never checked against the student's
+  campus** (high) — same two actions validated `transport_route_id` only
+  against `exists:transport_routes,id`, so a student enrolled at one campus
+  could be assigned to a route belonging to a different campus. Fixed in the
+  same helper: 422s with a `transport_route_id` validation error when the
+  route has a campus and it doesn't match the student's enrolled campus (a
+  school-wide route with no campus is still allowed for any student).
+- **Vehicle double-booking** — checked, not a bug: `transport_routes` carries
+  no time-of-day field, so a vehicle serving two routes (a morning run and an
+  afternoon run) is the normal case, not a conflict. No schedule data exists
+  to determine actual overlap; flagged here rather than "fixed" since adding
+  time-of-day fields to routes is a product decision, not a bug fix.
+- **Backend-without-screen** — none found. Every controller action (vehicles,
+  routes, stops, assignments, expenses, generate-dues) has a corresponding
+  tab and form on `Transport/Index.vue`.
+- **Migration hygiene** — clean. All six transport tables
+  (`transport_vehicles`, `transport_routes`, `transport_stops`,
+  `transport_route_stops`, `transport_student_assignments`,
+  `transport_vehicle_expenses`) are created in the one
+  `2026_05_09_000001_create_staff_and_transport_module_tables.php` migration
+  with every column they have today; no later alter migration to merge.
+
+## Not fixed — needs a product decision
+
+- Whether routes should carry a schedule (time-of-day / shift) to make actual
+  vehicle double-booking checkable — today "double-booking" isn't a
+  well-defined state.
+
+## Tests
+
+`tests/Feature/Transport/Case_01_WhoMaySeeTransportTest.php` (new, with
+`tests/Support/TransportWorld.php`) — 16 passed, covering the permission
+fence, campus scoping (`TransportVehicle::visibleTo()`,
+`TransportStudentAssignment::visibleTo()`), and both assignment
+data-integrity checks. `php artisan test --compact --filter=Transport` — 16
+passed, 0 failed.
+
+# Module: Inventory — closed 2026-09-14
+
+10 controllers under `app/Http/Controllers/Inventory/` (Types, Items, Stocks,
+Suppliers, Adjustments, Purchases, PurchaseReturns, StudentInventories,
+InventoryReturns, and the consolidated `InventoryPageController`), their
+models, requests and `routes/inventory.php`. Had zero test coverage and had
+only ever had incidental fixes (a couple of broken Vue render paths, some
+missing Show pages and the reserve/release buttons). Read end to end.
+
+## Findings
+
+1. **Zero authorization on every inventory route** (critical) — all routes sat
+   on `auth`/`verified` alone. The ten `inventory.*` permissions
+   (`inventory.view`, `inventory.item.manage`, `inventory.stock.manage`,
+   `inventory.purchase.view`, `inventory.purchase.manage`,
+   `inventory.purchase.delete`, `inventory.supplier.manage`,
+   `inventory.return.manage`, `inventory.student.issue`, `inventory.reports`)
+   had been seeded since the beginning (`PermissionsSeeder`) and not one was
+   checked anywhere, so any signed-in, verified account — regardless of role —
+   could adjust stock, delete a purchase, create/delete suppliers, or issue
+   items to any student. Fixed: added `permission:` middleware to every route
+   in `routes/inventory.php` (same shape as Fee/Transport), and added
+   `AdmissionWorld::grantInventoryAbilities()` so the shared test actor holds
+   them the way it already holds `fee.*`/`staff.*`.
+2. **`campus_id` trusted blindly from the query string everywhere** (critical)
+   — all ten controllers (82 call sites) read `campus_id` off the request and
+   used it, or silently defaulted to the first campus if it was missing; a
+   campus-restricted user (anyone without a school-wide role) could pass any
+   other campus's id and list, reserve, or mutate its stock, purchases,
+   suppliers and student issuances. `InventoryPageController`'s four dashboard
+   pages (`settings`, `itemsStock`, `purchasesManage`, `studentManage`) didn't
+   even accept a campus filter — every campus's rows, always. Fixed: added
+   `App\Http\Controllers\Concerns\ScopesCampusForUser::resolveCampusId()` (a
+   campus-restricted user's own campus, read off their staff record, always
+   wins over whatever the request asked for; a school-wide user keeps
+   filtering by any campus, including none) and wired it into the primary
+   campus-resolution site of every controller plus all four dashboard
+   queries.
+3. **`InventoryStocksController::reserve()`/`release()` ignored the model's
+   own success/failure result** (high) — `InventoryStock::reserveStock()`
+   returns `false` when there isn't enough available stock, and the
+   controller never checked it, so over-reserving beyond what's on the shelf
+   silently did nothing to the row while the response still said
+   `{"success": true, "message": "Stock reserved successfully."}`. Fixed: the
+   boolean is checked and a `422` with `success: false` is returned when
+   nothing could be reserved/released; both actions now lock the stock row
+   (`lockForUpdate()`) for the duration of the mutation.
+4. **A purchase return could silently return more than was in stock** (high)
+   — `PurchaseReturnsController::store()`/`update()` did
+   `max(0, $stock->quantity - $quantity)`, so a return for more than the
+   current stock clamped to zero instead of failing, while the return record
+   still logged the full requested quantity and amount — the audit trail and
+   the shelf disagreed. Fixed: both methods now check current stock before
+   decrementing and abort the transaction with a clear message when the
+   return exceeds it; added `lockForUpdate()`.
+5. **A "set"/"subtract" stock adjustment could push `available_quantity`
+   negative** (medium) — `available_quantity` is a stored, unclamped
+   `quantity - reserved_quantity` generated column;
+   `InventoryAdjustmentsController::store()` could set `quantity` below
+   `reserved_quantity` with nothing to stop it. Fixed: `reserved_quantity` is
+   now clamped down with the new quantity, the same guard
+   `InventoryStock::removeQuantity()` already applied; added
+   `lockForUpdate()`.
+6. **No row locking on the purchase/purchase-return stock mutations** (medium)
+   — `PurchasesController::store()`/`update()` and
+   `PurchaseReturnsController::store()`/`update()` read a stock row, did
+   arithmetic in PHP, then saved, with no lock — two concurrent purchases for
+   the same item could lose one's update. `StudentInventoriesController::assign()`
+   already used `lockForUpdate()`; the others didn't. Fixed: `lockForUpdate()`
+   added on every stock read-then-mutate path in those methods.
+
+## Not fixed — needs a product decision
+
+- Single-record `show`/`edit`/`update`/`destroy` endpoints across all ten
+  controllers still scope to a *second*, independent `campus_id` read
+  (`->when($request->get('campus_id'), ...)`) rather than the resolved one —
+  for a school-wide user this is unchanged prior behaviour, but a
+  campus-restricted user who already knows another campus's record id and
+  simply omits `campus_id` from the request can still reach it by id via
+  route-model binding. Closing this fully needs per-model policies in the
+  shape of `StudentPolicy`/`ChecksSchoolReach` (a `viewAny`/`view`/`update`
+  ability plus a `visibleTo()` scope for every one of the eight
+  campus-scoped models here), which is a larger follow-up than this pass's
+  per-endpoint `resolveCampusId()` fix.
+- `2026_05_08_000003_add_financial_links_to_student_inventory_returns.php` is
+  a later alter migration on a table created in
+  `2026_03_01_000000_create_student_inventory_returns_tables.php` — reviewed
+  against the project's 1-table-1-migration rule, but not a violation of it:
+  the alter adds a foreign key to `student_account_adjustments`, a table that
+  doesn't exist until `2026_05_08_000001`, two months after the original
+  create. Folding it backward would break migration order on a fresh
+  install, so it's left as two files.
+- Concurrent `InventoryStock::firstOrCreate()` calls for a brand-new
+  item/campus pair (the very first purchase/return/adjustment ever made for
+  that pair) can still race between two requests; the unique constraint on
+  `(campus_id, inventory_item_id)` stops silent duplication (the loser gets a
+  DB error rather than a second row) but there's no retry. A much smaller
+  window than the findings above, and left as noted rather than fixed.
+- No Vue-level audit beyond what a prior pass already fixed (Returns/Show,
+  Purchases/Show, the Stocks reserve/release buttons).
+
+## Tests
+
+`tests/Feature/Inventory/` (7 new files, with `tests/Support/InventoryWorld.php`
+and `AdmissionWorld::grantInventoryAbilities()`) — 33 passed, covering: a
+purchase raising stock and rejecting an out-of-campus item (`Case_01`); a
+purchase return reversing stock and refusing to return more than is on hand
+(`Case_02`); assigning inventory to a student deducting available stock,
+refusing an over-assignment, and a return restoring it (`Case_03`); reserve/
+release enforcing the available-quantity limit (`Case_04`); a stock
+adjustment's add/subtract/set paths, including the `reserved_quantity` clamp
+(`Case_05`); the permission fence across seven distinct routes plus one
+allowed-through case (`Case_06`); and campus scoping — a restricted user
+never sees another campus's stock even when asked for it, a school-wide user
+still can (`Case_07`). `php artisan test --compact tests/Feature/Inventory` —
+33 passed, 0 failed.

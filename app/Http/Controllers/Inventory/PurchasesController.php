@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Inventory;
 
+use App\Http\Controllers\Concerns\ScopesCampusForUser;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Inventory\StorePurchaseRequest;
 use App\Models\Campus;
@@ -18,6 +19,8 @@ use Inertia\Response;
 
 class PurchasesController extends Controller
 {
+    use ScopesCampusForUser;
+
     /**
      * Display inventory purchases listing page.
      *
@@ -28,7 +31,7 @@ class PurchasesController extends Controller
      */
     public function index(Request $request): Response
     {
-        $campusId = $request->get('campus_id');
+        $campusId = $this->resolveCampusId($request);
 
         // Default to first campus if none selected
         if (! $campusId) {
@@ -67,7 +70,7 @@ class PurchasesController extends Controller
      */
     public function getAll(Request $request): JsonResponse
     {
-        $campusId = $request->get('campus_id');
+        $campusId = $this->resolveCampusId($request);
         $query = trim($request->get('q', ''));
         $perPage = $request->get('per_page', 25);
         $page = $request->get('page', 1);
@@ -333,6 +336,7 @@ class PurchasesController extends Controller
                 foreach ($purchase->purchaseItems as $oldItem) {
                     $stock = InventoryStock::where('campus_id', $purchase->campus_id)
                         ->where('inventory_item_id', $oldItem->inventory_item_id)
+                        ->lockForUpdate()
                         ->first();
 
                     if ($stock) {
@@ -425,7 +429,7 @@ class PurchasesController extends Controller
             'cancellation_reason' => 'required|string|max:500',
         ]);
 
-        $campusId = $request->get('campus_id');
+        $campusId = $this->resolveCampusId($request);
 
         // Default to first campus if no campus_id provided
         if (! $campusId) {
@@ -451,6 +455,7 @@ class PurchasesController extends Controller
                     foreach ($purchase->purchaseItems as $item) {
                         $stock = InventoryStock::where('campus_id', $purchase->campus_id)
                             ->where('inventory_item_id', $item->inventory_item_id)
+                            ->lockForUpdate()
                             ->first();
 
                         if ($stock) {
@@ -474,7 +479,7 @@ class PurchasesController extends Controller
      */
     public function getPurchase(Request $request, $id): JsonResponse
     {
-        $campusId = $request->get('campus_id');
+        $campusId = $this->resolveCampusId($request);
 
         // Default to first campus if no campus_id provided
         if (! $campusId) {
@@ -525,7 +530,7 @@ class PurchasesController extends Controller
      */
     public function getPurchaseAnalysis(Request $request, $id): JsonResponse
     {
-        $campusId = $request->get('campus_id');
+        $campusId = $this->resolveCampusId($request);
 
         // Default to first campus if no campus_id provided
         if (! $campusId) {

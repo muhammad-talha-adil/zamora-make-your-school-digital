@@ -5,10 +5,25 @@ namespace App\Http\Controllers;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\Log;
 use Inertia\Response;
 
 class CacheController extends Controller
 {
+    /**
+     * Record who ran what through this UI, for audit purposes.
+     *
+     * @param  list<string>  $commands
+     */
+    private function logCommandExecution(Request $request, array $commands): void
+    {
+        Log::info('Artisan UI cache command executed', [
+            'user_id' => $request->user()?->id,
+            'user_email' => $request->user()?->email,
+            'commands' => $commands,
+        ]);
+    }
+
     /**
      * Show the cache clear confirmation page.
      */
@@ -23,6 +38,8 @@ class CacheController extends Controller
     public function clear(Request $request): RedirectResponse
     {
         $results = [];
+
+        $this->logCommandExecution($request, ['optimize:clear', 'config:clear', 'cache:clear', 'route:clear', 'view:clear', 'event:clear', 'clear-compiled', 'auth:clear-resets']);
 
         // Backend cache clearing commands
         $commands = [
@@ -66,6 +83,8 @@ class CacheController extends Controller
     {
         $results = [];
 
+        $this->logCommandExecution($request, ['optimize:clear', 'config:clear', 'cache:clear', 'route:clear', 'view:clear', 'event:clear', 'clear-compiled', 'auth:clear-resets']);
+
         $commands = [
             'optimize:clear' => Artisan::call('optimize:clear'),
             'config:clear' => Artisan::call('config:clear'),
@@ -92,6 +111,8 @@ class CacheController extends Controller
     public function rebuild(Request $request): RedirectResponse
     {
         $results = [];
+
+        $this->logCommandExecution($request, ['config:cache', 'route:cache', 'view:cache', 'optimize']);
 
         $commands = [
             'config:cache' => Artisan::call('config:cache'),

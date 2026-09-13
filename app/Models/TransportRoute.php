@@ -47,4 +47,27 @@ class TransportRoute extends Model
     {
         return $this->hasMany(TransportStudentAssignment::class);
     }
+
+    /**
+     * Narrows a list to the routes this user may see.
+     *
+     * A route with no campus is a school-wide route and stays visible to
+     * anybody who may see transport at all.
+     */
+    public function scopeVisibleTo($query, ?User $user)
+    {
+        if (! $user || $user->isSuperAdmin()) {
+            return $query;
+        }
+
+        $campusId = $user->campusId();
+
+        if ($campusId === null) {
+            return $query;
+        }
+
+        return $query->where(function ($outer) use ($campusId) {
+            $outer->whereNull('campus_id')->orWhere('campus_id', $campusId);
+        });
+    }
 }

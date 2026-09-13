@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Inventory;
 
+use App\Http\Controllers\Concerns\ScopesCampusForUser;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Inventory\StoreReturnRequest;
 use App\Http\Requests\Inventory\StoreStudentInventoryRequest;
@@ -26,6 +27,8 @@ use Illuminate\Support\Facades\DB;
 
 class StudentInventoriesController extends Controller
 {
+    use ScopesCampusForUser;
+
     public function __construct(
         protected StudentBillingService $studentBillingService,
         protected UnifiedAccountingService $accountingService
@@ -42,7 +45,7 @@ class StudentInventoriesController extends Controller
      */
     public function index(Request $request)
     {
-        $campusId = $request->get('campus_id');
+        $campusId = $this->resolveCampusId($request);
         $studentId = $request->get('student_id');
 
         return inertia('inventory/StudentInventories/Index', [
@@ -86,7 +89,7 @@ class StudentInventoriesController extends Controller
      */
     public function getAll(Request $request): JsonResponse
     {
-        $campusId = $request->get('campus_id');
+        $campusId = $this->resolveCampusId($request);
         $studentId = $request->get('student_id');
 
         if (! $campusId) {
@@ -172,7 +175,7 @@ class StudentInventoriesController extends Controller
      */
     public function getStudents(Request $request): JsonResponse
     {
-        $campusId = $request->get('campus_id');
+        $campusId = $this->resolveCampusId($request);
         $search = $request->get('q', '');
 
         if (! $campusId) {
@@ -233,7 +236,7 @@ class StudentInventoriesController extends Controller
      */
     public function getInventoryItems(Request $request): JsonResponse
     {
-        $campusId = $request->get('campus_id');
+        $campusId = $this->resolveCampusId($request);
         $typeId = $request->get('type_id');
         $search = $request->get('q', '');
 
@@ -278,7 +281,7 @@ class StudentInventoriesController extends Controller
      */
     public function getInventoryTypes(Request $request): JsonResponse
     {
-        $campusId = $request->get('campus_id');
+        $campusId = $this->resolveCampusId($request);
 
         if (! $campusId) {
             return response()->json(['error' => 'campus_id is required'], 422);
@@ -299,7 +302,7 @@ class StudentInventoriesController extends Controller
      */
     public function getDashboardSummary(Request $request): JsonResponse
     {
-        $campusId = $request->get('campus_id');
+        $campusId = $this->resolveCampusId($request);
 
         if (! $campusId) {
             return response()->json([
@@ -824,7 +827,7 @@ class StudentInventoriesController extends Controller
      */
     public function getStudentsWithInventory(Request $request): JsonResponse
     {
-        $campusId = $request->get('campus_id');
+        $campusId = $this->resolveCampusId($request);
 
         if (! $campusId) {
             return response()->json(['error' => 'campus_id is required'], 422);

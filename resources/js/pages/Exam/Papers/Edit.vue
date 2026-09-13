@@ -16,20 +16,6 @@
                 <div class="bg-card rounded-lg border border-border p-6 space-y-4">
                     <div class="grid gap-4 md:grid-cols-2">
                         <div class="space-y-2">
-                            <Label for="exam_group_id">Group *</Label>
-                            <select
-                                id="exam_group_id"
-                                v-model="form.exam_group_id"
-                                class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm"
-                            >
-                                <option value="">Select Group</option>
-                                <option v-for="group in props.groups" :key="group.id" :value="group.id">
-                                    {{ group.exam_offering?.exam?.name }} - {{ group.class?.name }} {{ group.section?.name }}
-                                </option>
-                            </select>
-                        </div>
-
-                        <div class="space-y-2">
                             <Label for="subject_id">Subject *</Label>
                             <select
                                 id="subject_id"
@@ -104,7 +90,6 @@ const breadcrumbItems: BreadcrumbItem[] = [
 ];
 
 const form = useForm({
-    exam_group_id: props.paper.exam_group_id,
     subject_id: props.paper.subject_id,
     paper_date: props.paper.paper_date,
     start_time: props.paper.start_time,

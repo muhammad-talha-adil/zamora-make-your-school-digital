@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Inventory;
 
+use App\Http\Controllers\Concerns\ScopesCampusForUser;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Inventory\StoreInventoryReturnRequest;
 use App\Models\Campus;
@@ -16,6 +17,8 @@ use Inertia\Response;
 
 class InventoryReturnsController extends Controller
 {
+    use ScopesCampusForUser;
+
     /**
      * Display inventory returns listing.
      *
@@ -26,7 +29,7 @@ class InventoryReturnsController extends Controller
      */
     public function index(Request $request)
     {
-        $campusId = $request->get('campus_id');
+        $campusId = $this->resolveCampusId($request);
         $studentId = $request->get('student_id');
 
         return inertia('inventory/Returns/Index', [
@@ -65,7 +68,7 @@ class InventoryReturnsController extends Controller
      */
     public function getAll(Request $request): JsonResponse
     {
-        $campusId = $request->get('campus_id');
+        $campusId = $this->resolveCampusId($request);
         $studentId = $request->get('student_id');
 
         if (! $campusId) {
@@ -131,7 +134,7 @@ class InventoryReturnsController extends Controller
      */
     public function getDashboardSummary(Request $request): JsonResponse
     {
-        $campusId = $request->get('campus_id');
+        $campusId = $this->resolveCampusId($request);
 
         if (! $campusId) {
             return response()->json(['error' => 'campus_id is required'], 422);
@@ -322,7 +325,7 @@ class InventoryReturnsController extends Controller
      */
     public function getReturnAnalysis(Request $request, $id): JsonResponse
     {
-        $campusId = $request->get('campus_id');
+        $campusId = $this->resolveCampusId($request);
 
         $return = ReturnModel::with(['campus', 'studentInventory.student', 'studentInventory.inventoryItem'])
             ->when($campusId, fn ($q) => $q->where('campus_id', $campusId))

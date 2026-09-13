@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Inventory;
 
+use App\Http\Controllers\Concerns\ScopesCampusForUser;
 use App\Http\Controllers\Controller;
 use App\Models\Campus;
 use App\Models\InventoryItem;
@@ -19,12 +20,14 @@ use Inertia\Response;
 
 class PurchaseReturnsController extends Controller
 {
+    use ScopesCampusForUser;
+
     /**
      * Display purchase returns listing.
      */
     public function index(Request $request): Response
     {
-        $campusId = $request->get('campus_id');
+        $campusId = $this->resolveCampusId($request);
         $supplierId = $request->get('supplier_id');
 
         return inertia('inventory/PurchaseReturns/Index', [
@@ -54,7 +57,7 @@ class PurchaseReturnsController extends Controller
      */
     public function getAll(Request $request): JsonResponse
     {
-        $campusId = $request->get('campus_id');
+        $campusId = $this->resolveCampusId($request);
         $perPage = $request->get('per_page', 25);
         $page = $request->get('page', 1);
 
@@ -145,7 +148,7 @@ class PurchaseReturnsController extends Controller
      */
     public function getSuppliers(Request $request): JsonResponse
     {
-        $campusId = $request->get('campus_id');
+        $campusId = $this->resolveCampusId($request);
 
         $suppliers = Supplier::query()
             ->when($campusId, fn ($q) => $q->where('campus_id', $campusId)->orWhereNull('campus_id'))
@@ -162,7 +165,7 @@ class PurchaseReturnsController extends Controller
      */
     public function getPurchases(Request $request): JsonResponse
     {
-        $campusId = $request->get('campus_id');
+        $campusId = $this->resolveCampusId($request);
         $supplierId = $request->get('supplier_id');
 
         $purchases = Purchase::query()
@@ -337,8 +340,18 @@ class PurchaseReturnsController extends Controller
                             // available_quantity is a generated column, don't include it
                         ]
                     );
+                    $stock = InventoryStock::whereKey($stock->id)->lockForUpdate()->first();
 
-                    $stock->quantity = max(0, $stock->quantity - $quantity);
+                    // A return can only send back stock that is actually on
+                    // the shelf. Without this, `quantity - $quantity` below
+                    // clamped to 0 silently, so a return for more than was in
+                    // stock recorded the full requested amount while only
+                    // ever removing what was there.
+                    if ($stock->quantity < $quantity) {
+                        throw new \Exception('Cannot return '.$quantity.' of "'.$inventoryItem->name.'" — only '.$stock->quantity.' in stock.');
+                    }
+
+                    $stock->quantity -= $quantity;
                     $stock->save();
                 }
 
@@ -375,6 +388,7 @@ class PurchaseReturnsController extends Controller
                 foreach ($purchaseReturn->items as $oldItem) {
                     $stock = InventoryStock::where('campus_id', $purchaseReturn->campus_id)
                         ->where('inventory_item_id', $oldItem->inventory_item_id)
+                        ->lockForUpdate()
                         ->first();
 
                     if ($stock) {
@@ -441,8 +455,13 @@ class PurchaseReturnsController extends Controller
                             'reserved_quantity' => 0,
                         ]
                     );
+                    $stock = InventoryStock::whereKey($stock->id)->lockForUpdate()->first();
 
-                    $stock->quantity = max(0, $stock->quantity - $quantity);
+                    if ($stock->quantity < $quantity) {
+                        throw new \Exception('Cannot return '.$quantity.' of "'.$inventoryItem->name.'" — only '.$stock->quantity.' in stock.');
+                    }
+
+                    $stock->quantity -= $quantity;
                     $stock->save();
                 }
 
@@ -492,6 +511,7 @@ class PurchaseReturnsController extends Controller
                 foreach ($purchaseReturn->items as $item) {
                     $stock = InventoryStock::where('campus_id', $purchaseReturn->campus_id)
                         ->where('inventory_item_id', $item->inventory_item_id)
+                        ->lockForUpdate()
                         ->first();
 
                     if ($stock) {

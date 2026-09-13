@@ -15,7 +15,7 @@ use Illuminate\Support\Facades\Route;
 |
 */
 
-Route::prefix('artisan')->name('artisan.')->group(function () {
+Route::prefix('artisan')->name('artisan.')->middleware(['auth', 'artisan.ui'])->group(function () {
 
     // Dashboard - Show all available commands
     Route::get('/', [ArtisanCommandController::class, 'index'])->name('ui');

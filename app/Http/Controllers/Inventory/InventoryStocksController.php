@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Inventory;
 
+use App\Http\Controllers\Concerns\ScopesCampusForUser;
 use App\Http\Controllers\Controller;
 use App\Models\Campus;
 use App\Models\InventoryItem;
@@ -12,6 +13,8 @@ use Illuminate\Support\Facades\DB;
 
 class InventoryStocksController extends Controller
 {
+    use ScopesCampusForUser;
+
     /**
      * Display inventory stocks listing page.
      *
@@ -22,7 +25,7 @@ class InventoryStocksController extends Controller
      */
     public function index(Request $request)
     {
-        $campusId = $request->get('campus_id');
+        $campusId = $this->resolveCampusId($request);
         $itemId = $request->get('item_id');
         $perPage = $request->get('per_page', 25);
 
@@ -54,7 +57,7 @@ class InventoryStocksController extends Controller
      */
     public function getAll(Request $request): JsonResponse
     {
-        $campusId = $request->get('campus_id');
+        $campusId = $this->resolveCampusId($request);
         $itemId = $request->get('item_id');
         $lowStockOnly = $request->get('low_stock_only', false);
         $perPage = $request->get('per_page', 25);
@@ -99,7 +102,7 @@ class InventoryStocksController extends Controller
      */
     public function getLowStockItems(Request $request): JsonResponse
     {
-        $campusId = $request->get('campus_id');
+        $campusId = $this->resolveCampusId($request);
         $threshold = (int) $request->get('threshold', 10);
         $typeId = $request->get('inventory_type_id');
 
@@ -158,7 +161,7 @@ class InventoryStocksController extends Controller
      */
     public function checkAvailability(Request $request): JsonResponse
     {
-        $campusId = $request->get('campus_id');
+        $campusId = $this->resolveCampusId($request);
         $itemId = $request->get('item_id');
         $requiredQuantity = (int) $request->get('quantity', 0);
 
@@ -226,7 +229,7 @@ class InventoryStocksController extends Controller
             'notes' => 'nullable|string|max:500',
         ]);
 
-        $campusId = $request->get('campus_id');
+        $campusId = $this->resolveCampusId($request);
 
         /** @var InventoryStock $stock */
         $stock = InventoryStock::where('id', $id)
@@ -272,7 +275,7 @@ class InventoryStocksController extends Controller
             'quantity' => 'required|integer|min:1',
         ]);
 
-        $campusId = $request->get('campus_id');
+        $campusId = $this->resolveCampusId($request);
 
         // Default to first campus if no campus_id provided
         if (! $campusId) {
@@ -288,9 +291,20 @@ class InventoryStocksController extends Controller
             ->firstOrFail();
 
         try {
-            DB::transaction(function () use ($stock, $request) {
-                $stock->reserveStock($request->quantity);
+            $wasReserved = DB::transaction(function () use ($stock, $request) {
+                $locked = InventoryStock::whereKey($stock->id)->lockForUpdate()->first();
+
+                return $locked->reserveStock($request->quantity);
             });
+
+            $stock = $stock->fresh();
+
+            if (! $wasReserved) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Insufficient stock available to reserve. Available: '.$stock->available_quantity.', Requested: '.$request->quantity,
+                ], 422);
+            }
 
             return response()->json([
                 'success' => true,
@@ -320,7 +334,7 @@ class InventoryStocksController extends Controller
             'quantity' => 'required|integer|min:1',
         ]);
 
-        $campusId = $request->get('campus_id');
+        $campusId = $this->resolveCampusId($request);
 
         // Default to first campus if no campus_id provided
         if (! $campusId) {
@@ -336,9 +350,20 @@ class InventoryStocksController extends Controller
             ->firstOrFail();
 
         try {
-            DB::transaction(function () use ($stock, $request) {
-                $stock->releaseStock($request->quantity);
+            $wasReleased = DB::transaction(function () use ($stock, $request) {
+                $locked = InventoryStock::whereKey($stock->id)->lockForUpdate()->first();
+
+                return $locked->releaseStock($request->quantity);
             });
+
+            $stock = $stock->fresh();
+
+            if (! $wasReleased) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Nothing to release: reserved quantity is lower than the requested amount.',
+                ], 422);
+            }
 
             return response()->json([
                 'success' => true,
@@ -367,7 +392,7 @@ class InventoryStocksController extends Controller
             'low_stock_threshold' => 'required|integer|min:0',
         ]);
 
-        $campusId = $request->get('campus_id');
+        $campusId = $this->resolveCampusId($request);
 
         /** @var InventoryStock $stock */
         $stock = InventoryStock::where('id', $id)
@@ -394,7 +419,7 @@ class InventoryStocksController extends Controller
      */
     public function getDashboardSummary(Request $request): JsonResponse
     {
-        $campusId = $request->get('campus_id');
+        $campusId = $this->resolveCampusId($request);
 
         // Default to first campus if no campus_id provided
         if (! $campusId) {

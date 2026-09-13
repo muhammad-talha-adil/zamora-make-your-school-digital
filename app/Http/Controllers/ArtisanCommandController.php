@@ -6,10 +6,51 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Inertia\Response;
 
 class ArtisanCommandController extends Controller
 {
+    /**
+     * Commands the free-text `runCommand` endpoint may execute.
+     *
+     * Deliberately excludes anything destructive (`migrate:fresh`,
+     * `migrate:rollback`, `migrate:reset`, `db:wipe`, ...) — those are
+     * blocked outright rather than allowed through an arbitrary command
+     * string, since guessing intent on a data-dropping command is not
+     * an acceptable risk from a web UI.
+     *
+     * @var list<string>
+     */
+    private const ALLOWED_FREEFORM_COMMANDS = [
+        'optimize:clear',
+        'config:clear',
+        'cache:clear',
+        'route:clear',
+        'view:clear',
+        'event:clear',
+        'clear-compiled',
+        'queue:restart',
+        'queue:clear',
+        'route:list',
+        'migrate:status',
+    ];
+
+    /**
+     * Record who ran what through this UI, for audit purposes.
+     *
+     * @param  array<string, mixed>  $parameters
+     */
+    private function logCommandExecution(Request $request, string $command, array $parameters = []): void
+    {
+        Log::info('Artisan UI command executed', [
+            'user_id' => $request->user()?->id,
+            'user_email' => $request->user()?->email,
+            'command' => $command,
+            'parameters' => $parameters,
+        ]);
+    }
+
     /**
      * Display the artisan commands dashboard.
      */
@@ -81,6 +122,8 @@ class ArtisanCommandController extends Controller
      */
     public function clearCache(Request $request): RedirectResponse
     {
+        $this->logCommandExecution($request, 'clearCache');
+
         $results = [];
 
         $commands = [
@@ -107,6 +150,8 @@ class ArtisanCommandController extends Controller
      */
     public function rebuildCache(Request $request): RedirectResponse
     {
+        $this->logCommandExecution($request, 'rebuildCache');
+
         $results = [];
 
         $commands = [
@@ -130,6 +175,8 @@ class ArtisanCommandController extends Controller
      */
     public function migrate(Request $request): RedirectResponse
     {
+        $this->logCommandExecution($request, 'migrate');
+
         try {
             $output = Artisan::call('migrate');
 
@@ -154,6 +201,8 @@ class ArtisanCommandController extends Controller
                 ->with('error', 'Migration name is required!');
         }
 
+        $this->logCommandExecution($request, 'migrate:single', ['migration' => $migration]);
+
         try {
             $output = Artisan::call('migrate', ['--path' => 'database/migrations/'.$migration.'.php']);
 
@@ -171,6 +220,8 @@ class ArtisanCommandController extends Controller
      */
     public function migrateForce(Request $request): RedirectResponse
     {
+        $this->logCommandExecution($request, 'migrate:force');
+
         try {
             $output = Artisan::call('migrate', ['--force' => true]);
 
@@ -184,37 +235,34 @@ class ArtisanCommandController extends Controller
     }
 
     /**
-     * Drop all tables and re-run migrations.
+     * `migrate:fresh` drops every table. It is blocked outright from this
+     * UI, regardless of role — a developer debugging via a web dashboard
+     * accidentally wiping the database is a real, unrecoverable risk, and
+     * this command belongs on a terminal with an explicit human decision
+     * behind it, not a single click.
      */
     public function migrateFresh(Request $request): RedirectResponse
     {
-        try {
-            $output = Artisan::call('migrate:fresh');
+        Log::warning('Blocked attempt to run migrate:fresh via Artisan UI', [
+            'user_id' => $request->user()?->id,
+            'user_email' => $request->user()?->email,
+        ]);
 
-            return redirect()->route('artisan.ui')
-                ->with('success', 'Migrate:fresh completed successfully!')
-                ->with('output', Artisan::output());
-        } catch (\Exception $e) {
-            return redirect()->route('artisan.ui')
-                ->with('error', 'Migrate:fresh failed: '.$e->getMessage());
-        }
+        abort(403, 'migrate:fresh drops all data and cannot be run from this UI.');
     }
 
     /**
-     * Drop all tables, re-run migrations with seed.
+     * See {@see migrateFresh()} — `migrate:fresh --seed` is just as
+     * destructive and is blocked for the same reason.
      */
     public function migrateFreshSeed(Request $request): RedirectResponse
     {
-        try {
-            $output = Artisan::call('migrate:fresh', ['--seed' => true]);
+        Log::warning('Blocked attempt to run migrate:fresh --seed via Artisan UI', [
+            'user_id' => $request->user()?->id,
+            'user_email' => $request->user()?->email,
+        ]);
 
-            return redirect()->route('artisan.ui')
-                ->with('success', 'Migrate:fresh --seed completed successfully!')
-                ->with('output', Artisan::output());
-        } catch (\Exception $e) {
-            return redirect()->route('artisan.ui')
-                ->with('error', 'Migrate:fresh --seed failed: '.$e->getMessage());
-        }
+        abort(403, 'migrate:fresh drops all data and cannot be run from this UI.');
     }
 
     /**
@@ -223,6 +271,8 @@ class ArtisanCommandController extends Controller
     public function dbSeed(Request $request): RedirectResponse
     {
         $seeder = $request->get('seeder');
+
+        $this->logCommandExecution($request, 'db:seed', ['seeder' => $seeder]);
 
         try {
             if ($seeder) {
@@ -246,6 +296,8 @@ class ArtisanCommandController extends Controller
      */
     public function runSeeder(Request $request, string $seederName): RedirectResponse
     {
+        $this->logCommandExecution($request, 'seed.run', ['seeder' => $seederName]);
+
         try {
             // Try to find the seeder class
             $seederClass = $this->findSeederClass($seederName);
@@ -295,6 +347,8 @@ class ArtisanCommandController extends Controller
      */
     public function migrateRollback(Request $request): RedirectResponse
     {
+        $this->logCommandExecution($request, 'migrate:rollback');
+
         try {
             $output = Artisan::call('migrate:rollback');
 
@@ -312,6 +366,8 @@ class ArtisanCommandController extends Controller
      */
     public function migrateReset(Request $request): RedirectResponse
     {
+        $this->logCommandExecution($request, 'migrate:reset');
+
         try {
             $output = Artisan::call('migrate:reset');
 
@@ -329,6 +385,8 @@ class ArtisanCommandController extends Controller
      */
     public function migrateStatus(Request $request): RedirectResponse
     {
+        $this->logCommandExecution($request, 'migrate:status');
+
         try {
             $output = Artisan::call('migrate:status');
 
@@ -352,6 +410,8 @@ class ArtisanCommandController extends Controller
             return redirect()->route('artisan.ui')
                 ->with('error', 'Migration name is required!');
         }
+
+        $this->logCommandExecution($request, 'make:migration', ['name' => $name]);
 
         try {
             $output = Artisan::call('make:migration', ['name' => $name]);
@@ -377,6 +437,8 @@ class ArtisanCommandController extends Controller
                 ->with('error', 'Seeder name is required!');
         }
 
+        $this->logCommandExecution($request, 'make:seeder', ['name' => $name]);
+
         try {
             $output = Artisan::call('make:seeder', ['name' => $name]);
 
@@ -400,6 +462,8 @@ class ArtisanCommandController extends Controller
             return redirect()->route('artisan.ui')
                 ->with('error', 'Controller name is required!');
         }
+
+        $this->logCommandExecution($request, 'make:controller', ['name' => $name]);
 
         try {
             $output = Artisan::call('make:controller', ['name' => $name]);
@@ -425,6 +489,8 @@ class ArtisanCommandController extends Controller
                 ->with('error', 'Model name is required!');
         }
 
+        $this->logCommandExecution($request, 'make:model', ['name' => $name]);
+
         try {
             $output = Artisan::call('make:model', ['name' => $name]);
 
@@ -442,6 +508,8 @@ class ArtisanCommandController extends Controller
      */
     public function queueWork(Request $request): RedirectResponse
     {
+        $this->logCommandExecution($request, 'queue:work');
+
         try {
             $output = Artisan::call('queue:work');
 
@@ -459,6 +527,8 @@ class ArtisanCommandController extends Controller
      */
     public function queueClear(Request $request): RedirectResponse
     {
+        $this->logCommandExecution($request, 'queue:clear');
+
         try {
             $output = Artisan::call('queue:clear');
 
@@ -476,6 +546,8 @@ class ArtisanCommandController extends Controller
      */
     public function queueRestart(Request $request): RedirectResponse
     {
+        $this->logCommandExecution($request, 'queue:restart');
+
         try {
             $output = Artisan::call('queue:restart');
 
@@ -493,6 +565,8 @@ class ArtisanCommandController extends Controller
      */
     public function routeList(Request $request): RedirectResponse
     {
+        $this->logCommandExecution($request, 'route:list');
+
         try {
             $output = Artisan::call('route:list');
 
@@ -512,6 +586,8 @@ class ArtisanCommandController extends Controller
     {
         $tag = $request->get('tag', 'all');
 
+        $this->logCommandExecution($request, 'vendor:publish', ['tag' => $tag]);
+
         try {
             $output = Artisan::call('vendor:publish', ['--tag' => $tag]);
 
@@ -525,10 +601,26 @@ class ArtisanCommandController extends Controller
     }
 
     /**
-     * Run any custom artisan command.
+     * Run any custom artisan command, restricted to an explicit allowlist.
+     *
+     * Free-text command execution is inherently dangerous; rather than try
+     * to detect destructive commands, only the commands in
+     * {@see ALLOWED_FREEFORM_COMMANDS} may be run this way.
      */
     public function runCommand(Request $request, string $command): RedirectResponse
     {
+        if (! in_array($command, self::ALLOWED_FREEFORM_COMMANDS, true)) {
+            Log::warning('Blocked attempt to run disallowed command via Artisan UI', [
+                'user_id' => $request->user()?->id,
+                'user_email' => $request->user()?->email,
+                'command' => $command,
+            ]);
+
+            abort(403, "Command '{$command}' is not on the allowed command list.");
+        }
+
+        $this->logCommandExecution($request, $command);
+
         try {
             $output = Artisan::call($command);
 

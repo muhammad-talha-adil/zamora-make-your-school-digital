@@ -15,6 +15,8 @@ use App\Services\Finance\StudentBillingService;
 use App\Services\Finance\UnifiedAccountingService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 
 class TransportController extends Controller
@@ -24,15 +26,18 @@ class TransportController extends Controller
         protected UnifiedAccountingService $accountingService
     ) {}
 
-    public function index()
+    public function index(Request $request)
     {
-        $vehicles = TransportVehicle::with('campus')->latest()->get();
-        $routes = TransportRoute::with(['campus', 'vehicle', 'stops'])->latest()->get();
-        $stops = TransportStop::with('campus')->orderBy('name')->get();
+        $viewer = $request->user();
+
+        $vehicles = TransportVehicle::with('campus')->visibleTo($viewer)->latest()->get();
+        $routes = TransportRoute::with(['campus', 'vehicle', 'stops'])->visibleTo($viewer)->latest()->get();
+        $stops = TransportStop::with('campus')->visibleTo($viewer)->orderBy('name')->get();
         $assignments = TransportStudentAssignment::with(['student.user', 'route', 'stop', 'campus'])
+            ->visibleTo($viewer)
             ->latest()
             ->get();
-        $expenses = TransportVehicleExpense::with(['vehicle', 'campus'])->latest()->take(20)->get();
+        $expenses = TransportVehicleExpense::with(['vehicle', 'campus'])->visibleTo($viewer)->latest()->take(20)->get();
 
         return Inertia::render('Transport/Index', [
             'vehicles' => $vehicles,
@@ -42,6 +47,7 @@ class TransportController extends Controller
             'expenses' => $expenses,
             'campuses' => Campus::select('id', 'name')->orderBy('name')->get(),
             'students' => Student::with(['user', 'currentEnrollment.class', 'currentEnrollment.section'])
+                ->visibleTo($viewer)
                 ->orderByDesc('id')
                 ->take(200)
                 ->get()
@@ -72,6 +78,8 @@ class TransportController extends Controller
 
     public function storeVehicle(Request $request)
     {
+        Gate::authorize('create', TransportVehicle::class);
+
         $data = $request->validate([
             'campus_id' => 'nullable|exists:campuses,id',
             'vehicle_no' => 'required|string|max:100|unique:transport_vehicles,vehicle_no',
@@ -94,6 +102,8 @@ class TransportController extends Controller
 
     public function updateVehicle(Request $request, TransportVehicle $vehicle)
     {
+        Gate::authorize('update', $vehicle);
+
         $data = $request->validate([
             'campus_id' => 'nullable|exists:campuses,id',
             'vehicle_no' => 'required|string|max:100|unique:transport_vehicles,vehicle_no,'.$vehicle->id,
@@ -118,6 +128,8 @@ class TransportController extends Controller
 
     public function storeStop(Request $request)
     {
+        Gate::authorize('create', TransportStop::class);
+
         $data = $request->validate([
             'campus_id' => 'nullable|exists:campuses,id',
             'name' => 'required|string|max:150',
@@ -136,6 +148,8 @@ class TransportController extends Controller
 
     public function updateStop(Request $request, TransportStop $stop)
     {
+        Gate::authorize('update', $stop);
+
         $data = $request->validate([
             'campus_id' => 'nullable|exists:campuses,id',
             'name' => 'required|string|max:150',
@@ -155,6 +169,8 @@ class TransportController extends Controller
 
     public function storeRoute(Request $request)
     {
+        Gate::authorize('create', TransportRoute::class);
+
         $data = $request->validate([
             'campus_id' => 'nullable|exists:campuses,id',
             'transport_vehicle_id' => 'nullable|exists:transport_vehicles,id',
@@ -197,6 +213,8 @@ class TransportController extends Controller
 
     public function updateRoute(Request $request, TransportRoute $route)
     {
+        Gate::authorize('update', $route);
+
         $data = $request->validate([
             'campus_id' => 'nullable|exists:campuses,id',
             'transport_vehicle_id' => 'nullable|exists:transport_vehicles,id',
@@ -236,6 +254,8 @@ class TransportController extends Controller
 
     public function storeAssignment(Request $request)
     {
+        Gate::authorize('create', TransportStudentAssignment::class);
+
         $data = $request->validate([
             'student_id' => 'required|exists:students,id',
             'student_enrollment_record_id' => 'nullable|exists:student_enrollment_records,id',
@@ -254,6 +274,8 @@ class TransportController extends Controller
                 ->value('id');
         }
 
+        $this->assertAssignmentIntegrity($data);
+
         $assignment = TransportStudentAssignment::create($data + ['status' => 'active']);
 
         return response()->json([
@@ -265,6 +287,8 @@ class TransportController extends Controller
 
     public function updateAssignment(Request $request, TransportStudentAssignment $assignment)
     {
+        Gate::authorize('update', $assignment);
+
         $data = $request->validate([
             'student_id' => 'required|exists:students,id',
             'student_enrollment_record_id' => 'nullable|exists:student_enrollment_records,id',
@@ -284,6 +308,8 @@ class TransportController extends Controller
                 ->value('id');
         }
 
+        $this->assertAssignmentIntegrity($data);
+
         $assignment->update($data);
 
         return response()->json([
@@ -295,6 +321,8 @@ class TransportController extends Controller
 
     public function storeExpense(Request $request)
     {
+        Gate::authorize('create', TransportVehicleExpense::class);
+
         $data = $request->validate([
             'campus_id' => 'nullable|exists:campuses,id',
             'transport_vehicle_id' => 'nullable|exists:transport_vehicles,id',
@@ -318,6 +346,8 @@ class TransportController extends Controller
 
     public function updateExpense(Request $request, TransportVehicleExpense $expense)
     {
+        Gate::authorize('update', $expense);
+
         $data = $request->validate([
             'campus_id' => 'nullable|exists:campuses,id',
             'transport_vehicle_id' => 'nullable|exists:transport_vehicles,id',
@@ -341,6 +371,8 @@ class TransportController extends Controller
 
     public function generateDues(Request $request)
     {
+        Gate::authorize('generateDues', TransportStudentAssignment::class);
+
         $data = $request->validate([
             'campus_id' => 'nullable|exists:campuses,id',
             'month_id' => 'required|exists:months,id',
@@ -349,6 +381,7 @@ class TransportController extends Controller
         ]);
 
         $assignments = TransportStudentAssignment::with(['student', 'enrollmentRecord'])
+            ->visibleTo($request->user())
             ->where('status', 'active')
             ->where('generate_dues', true)
             ->when($data['campus_id'] ?? null, fn ($query, $campusId) => $query->where('campus_id', $campusId))
@@ -385,5 +418,37 @@ class TransportController extends Controller
             'generated_count' => $generated,
             'generated_amount' => $totalAmount,
         ]);
+    }
+
+    /**
+     * Guards the two ways a transport assignment can silently point somewhere
+     * it shouldn't: a stop that was never added to the chosen route, or a
+     * route that belongs to a different campus than the student it is being
+     * assigned to.
+     *
+     * @param  array{student_id: int, student_enrollment_record_id: int|null, transport_route_id: int, transport_stop_id: int|null}  $data
+     */
+    private function assertAssignmentIntegrity(array $data): void
+    {
+        $route = TransportRoute::findOrFail($data['transport_route_id']);
+
+        if (! empty($data['transport_stop_id'])
+            && ! $route->stops()->where('transport_stops.id', $data['transport_stop_id'])->exists()) {
+            throw ValidationException::withMessages([
+                'transport_stop_id' => 'The selected stop is not one of the stops on the selected route.',
+            ]);
+        }
+
+        $studentCampusId = $data['student_enrollment_record_id'] ?? null
+            ? StudentEnrollmentRecord::whereKey($data['student_enrollment_record_id'])->value('campus_id')
+            : StudentEnrollmentRecord::where('student_id', $data['student_id'])
+                ->whereNull('leave_date')
+                ->value('campus_id');
+
+        if ($studentCampusId !== null && $route->campus_id !== null && (int) $studentCampusId !== (int) $route->campus_id) {
+            throw ValidationException::withMessages([
+                'transport_route_id' => 'The selected route does not belong to the student\'s campus.',
+            ]);
+        }
     }
 }
