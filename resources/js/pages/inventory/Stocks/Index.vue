@@ -1,34 +1,46 @@
 <script setup lang="ts">
 import { Head } from '@inertiajs/vue3';
-import { ref, watch, computed } from 'vue';
+import { ref, watch, computed, reactive } from 'vue';
 import axios from 'axios';
-import { formatCurrency } from '@/utils';
+import { alert, formatCurrency } from '@/utils';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { Button } from '@/components/ui/button';
 import Icon from '@/components/Icon.vue';
 import { Badge } from '@/components/ui/badge';
 import { Card, CardContent } from '@/components/ui/card';
+import {
+    Dialog,
+    DialogContent,
+    DialogHeader,
+    DialogTitle,
+    DialogClose,
+} from '@/components/ui/dialog';
+import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import InputError from '@/components/InputError.vue';
 import type { BreadcrumbItem } from '@/types';
+
+interface InventoryStockRow {
+    id: number;
+    campus_id: number;
+    campus_name: string;
+    inventory_item_id: number;
+    item_name: string;
+    inventory_type_name: string;
+    quantity: number;
+    reserved_quantity: number;
+    available_quantity: number;
+    low_stock_threshold: number;
+    is_low_stock: boolean;
+    stock_status: string;
+    purchase_rate: number;
+    sale_rate: number;
+    updated_at: string;
+}
 
 interface Props {
     inventoryStocks: {
-        data: Array<{
-            id: number;
-            campus_id: number;
-            campus_name: string;
-            inventory_item_id: number;
-            item_name: string;
-            inventory_type_name: string;
-            quantity: number;
-            reserved_quantity: number;
-            available_quantity: number;
-            low_stock_threshold: number;
-            is_low_stock: boolean;
-            stock_status: string;
-            purchase_rate: number;
-            sale_rate: number;
-            updated_at: string;
-        }>;
+        data: InventoryStockRow[];
         links: Array<{
             url: string | null;
             label: string;
@@ -122,6 +134,59 @@ const getStockStatusBadge = (status: string) => {
         default:
             return { label: 'Healthy', variant: 'default' as const };
     }
+};
+
+// Reserve / Release dialog state
+const actionDialogOpen = ref(false);
+const actionMode = ref<'reserve' | 'release'>('reserve');
+const actionStock = ref<InventoryStockRow | null>(null);
+const actionForm = reactive({
+    quantity: 1,
+});
+const actionErrors = ref<Record<string, string>>({});
+const actionProcessing = ref(false);
+
+const openActionDialog = (stock: InventoryStockRow, mode: 'reserve' | 'release') => {
+    actionStock.value = stock;
+    actionMode.value = mode;
+    actionForm.quantity = 1;
+    actionErrors.value = {};
+    actionDialogOpen.value = true;
+};
+
+const closeActionDialog = () => {
+    actionDialogOpen.value = false;
+    actionStock.value = null;
+    actionForm.quantity = 1;
+    actionErrors.value = {};
+};
+
+const submitAction = () => {
+    if (!actionStock.value) return;
+
+    actionProcessing.value = true;
+    actionErrors.value = {};
+
+    axios.post(`/inventory/stocks/${actionMode.value}`, {
+        item_id: actionStock.value.inventory_item_id,
+        quantity: actionForm.quantity,
+        campus_id: actionStock.value.campus_id,
+    })
+        .then(() => {
+            alert.success(actionMode.value === 'reserve' ? 'Stock reserved successfully!' : 'Stock released successfully!');
+            closeActionDialog();
+            fetchStocks();
+        })
+        .catch((err) => {
+            if (err.response?.data?.errors) {
+                actionErrors.value = err.response.data.errors;
+            } else {
+                alert.error(err.response?.data?.message || `Failed to ${actionMode.value} stock. Please try again.`);
+            }
+        })
+        .finally(() => {
+            actionProcessing.value = false;
+        });
 };
 
 // Summary stats
@@ -263,6 +328,20 @@ const summaryStats = computed(() => {
                         </div>
                     </div>
                     <div class="text-xs text-muted-foreground">{{ stock.campus_name }}</div>
+                    <div class="flex gap-2 pt-2">
+                        <Button variant="outline" size="sm" @click="openActionDialog(stock, 'reserve')" class="flex-1">
+                            <Icon icon="lock" class="mr-1" />Reserve
+                        </Button>
+                        <Button
+                            variant="outline"
+                            size="sm"
+                            :disabled="(stock.reserved_quantity || 0) <= 0"
+                            @click="openActionDialog(stock, 'release')"
+                            class="flex-1"
+                        >
+                            <Icon icon="unlock" class="mr-1" />Release
+                        </Button>
+                    </div>
                 </div>
                 <div v-if="stocksData.length === 0" class="text-center py-8 text-muted-foreground">
                     No stock records found.
@@ -298,6 +377,9 @@ const summaryStats = computed(() => {
                                 </th>
                                 <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">
                                     Rates
+                                </th>
+                                <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">
+                                    Actions
                                 </th>
                             </tr>
                         </thead>
@@ -355,6 +437,22 @@ const summaryStats = computed(() => {
                                         <span class="text-muted-foreground">Sell:</span> {{ formatCurrency(stock.sale_rate) }}
                                     </div>
                                 </td>
+                                <td class="px-4 py-3 whitespace-nowrap">
+                                    <div class="flex flex-wrap gap-2">
+                                        <Button variant="outline" size="sm" @click="openActionDialog(stock, 'reserve')" class="min-h-8">
+                                            <Icon icon="lock" class="mr-1" />Reserve
+                                        </Button>
+                                        <Button
+                                            variant="outline"
+                                            size="sm"
+                                            :disabled="(stock.reserved_quantity || 0) <= 0"
+                                            @click="openActionDialog(stock, 'release')"
+                                            class="min-h-8"
+                                        >
+                                            <Icon icon="unlock" class="mr-1" />Release
+                                        </Button>
+                                    </div>
+                                </td>
                             </tr>
                         </tbody>
                     </table>
@@ -381,5 +479,68 @@ const summaryStats = computed(() => {
                 </div>
             </div>
         </div>
+
+        <!-- Reserve / Release Dialog -->
+        <Dialog v-model:open="actionDialogOpen">
+            <DialogContent class="sm:max-w-md">
+                <DialogHeader>
+                    <DialogTitle class="flex items-center gap-2">
+                        <div class="p-2 bg-primary/10 rounded-lg">
+                            <Icon :icon="actionMode === 'reserve' ? 'lock' : 'unlock'" class="h-5 w-5 text-primary" />
+                        </div>
+                        {{ actionMode === 'reserve' ? 'Reserve Stock' : 'Release Reserved Stock' }}
+                    </DialogTitle>
+                </DialogHeader>
+
+                <form @submit.prevent="submitAction" class="space-y-5">
+                    <div class="bg-card rounded-lg border border-border p-5 space-y-4">
+                        <div class="text-sm text-muted-foreground">
+                            <span class="font-medium text-foreground">{{ actionStock?.item_name }}</span>
+                            &middot; {{ actionStock?.campus_name }}
+                        </div>
+                        <div class="grid grid-cols-2 gap-4 text-sm">
+                            <div>
+                                <span class="text-muted-foreground">Available</span>
+                                <p class="font-medium text-foreground">{{ actionStock?.available_quantity }}</p>
+                            </div>
+                            <div>
+                                <span class="text-muted-foreground">Reserved</span>
+                                <p class="font-medium text-foreground">{{ actionStock?.reserved_quantity || 0 }}</p>
+                            </div>
+                        </div>
+
+                        <div class="space-y-2">
+                            <Label for="action-quantity">
+                                Quantity to {{ actionMode === 'reserve' ? 'reserve' : 'release' }} <span class="text-destructive">*</span>
+                            </Label>
+                            <Input
+                                id="action-quantity"
+                                v-model.number="actionForm.quantity"
+                                type="number"
+                                min="1"
+                                class="h-11"
+                                :class="{ 'border-destructive': actionErrors.quantity }"
+                                required
+                            />
+                            <InputError :message="actionErrors.quantity" />
+                        </div>
+                    </div>
+
+                    <div class="flex flex-wrap justify-end gap-3 pt-2">
+                        <DialogClose as-child>
+                            <Button type="button" variant="outline" @click="closeActionDialog" class="h-10">
+                                <Icon icon="x" class="mr-2 h-4 w-4" />
+                                Cancel
+                            </Button>
+                        </DialogClose>
+                        <Button type="submit" :disabled="actionProcessing" class="h-10">
+                            <Icon v-if="actionProcessing" icon="loader" class="mr-2 h-4 w-4 animate-spin" />
+                            <Icon v-else :icon="actionMode === 'reserve' ? 'lock' : 'unlock'" class="mr-2 h-4 w-4" />
+                            {{ actionMode === 'reserve' ? 'Reserve' : 'Release' }}
+                        </Button>
+                    </div>
+                </form>
+            </DialogContent>
+        </Dialog>
     </AppLayout>
 </template>

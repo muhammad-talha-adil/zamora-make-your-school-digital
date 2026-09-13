@@ -90,7 +90,7 @@ class UpdateStudentRequest extends FormRequest
 
     public function rules(): array
     {
-        $studentId = $this->route('student')?->id ?? null;
+        $studentId = $this->route('student')?->id;
 
         Log::info('UpdateStudentRequest validation started', [
             'user_id' => auth()->id(),
@@ -576,7 +576,7 @@ class UpdateStudentRequest extends FormRequest
         }
 
         if ($this->filled('fee_structure_id')) {
-            $feeStructure = FeeStructure::with('items')->find($this->fee_structure_id);
+            $feeStructure = FeeStructure::with('items')->find((int) $this->fee_structure_id);
 
             $structureStatus = $feeStructure?->status instanceof FeeStructureStatus
                 ? $feeStructure->status->value
@@ -589,7 +589,9 @@ class UpdateStudentRequest extends FormRequest
                 (int) $feeStructure->campus_id !== (int) $this->campus_id
             ) {
                 $validator->errors()->add('fee_structure_id', 'The selected fee structure does not belong to the chosen campus/session.');
-            } elseif ($feeStructure->class_id !== null && (int) $feeStructure->class_id !== (int) $this->class_id) {
+                // `fee_structures.class_id` is NOT NULL, so there is no null to
+                // guard against — a structure always belongs to a class.
+            } elseif ((int) $feeStructure->class_id !== (int) $this->class_id) {
                 $validator->errors()->add('fee_structure_id', 'The selected fee structure does not belong to the chosen class.');
             } elseif ($feeStructure->section_id !== null && (int) $feeStructure->section_id !== (int) $this->section_id) {
                 $validator->errors()->add('fee_structure_id', 'The selected fee structure does not belong to the chosen section.');

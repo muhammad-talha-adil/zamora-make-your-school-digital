@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Finance;
 
 use App\Http\Controllers\Controller;
 use App\Models\Campus;
+use App\Models\Fee\FeePayment;
 use App\Models\Fee\FeeVoucher;
 use App\Models\Ledger\LedgerCategory;
 use App\Models\Ledger\PaymentMethod;
@@ -11,16 +12,20 @@ use App\Models\SchoolClass;
 use App\Models\Section;
 use App\Models\Student;
 use App\Models\StudentEnrollmentRecord;
+use App\Services\Fee\FeePaymentService;
 use App\Services\FinanceService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 
 class ReceivePaymentController extends Controller
 {
     protected $financeService;
 
-    public function __construct(FinanceService $financeService)
-    {
+    public function __construct(
+        FinanceService $financeService,
+        protected FeePaymentService $feePaymentService
+    ) {
         $this->financeService = $financeService;
     }
 
@@ -241,9 +246,21 @@ class ReceivePaymentController extends Controller
 
     /**
      * Store a newly created payment.
+     *
+     * The "student" path used to bypass the Fee module entirely: it added the
+     * amount straight onto `fee_vouchers.paid_amount` and wrote only a legacy
+     * `Ledger` row — no `FeePayment`, no `FeePaymentAllocation`, no
+     * `StudentAccountCharge` sync, no accounting journal, and a query against
+     * a `code` column `ledger_categories` has never had, so it also could not
+     * actually run. A payment recorded that way was invisible to the Fee
+     * module's own payment list, produced no receipt, and could not be
+     * reversed. It now records through `FeePaymentService`, the same place
+     * `FeePaymentController::store()` does — one way this happens, not two.
      */
     public function store(Request $request)
     {
+        Gate::authorize('create', FeePayment::class);
+
         // Validation differs based on payment type
         if ($request->payment_type === 'other') {
             $validated = $request->validate([
@@ -257,7 +274,9 @@ class ReceivePaymentController extends Controller
                 'payer_name' => 'nullable|string|max:255',
             ]);
 
-            // For "Other" payments, create income transaction directly without voucher
+            // A genuinely manual entry — no module behind it — so the legacy
+            // `Ledger` is the right place for it, unlike a student's fee
+            // payment (see the docblock above).
             $this->financeService->createIncomeTransaction([
                 'amount' => $validated['amount'],
                 'payment_method' => $validated['payment_method'],
@@ -274,7 +293,6 @@ class ReceivePaymentController extends Controller
                 ->with('success', 'Payment received successfully!');
         }
 
-        // Student payment (existing logic)
         $validated = $request->validate([
             'payment_type' => 'required|in:student,other',
             'student_id' => 'required|exists:students,id',
@@ -285,31 +303,26 @@ class ReceivePaymentController extends Controller
             'description' => 'nullable|string',
         ]);
 
-        $voucher = FeeVoucher::findOrFail($validated['voucher_id']);
+        $voucher = FeeVoucher::where('student_id', $validated['student_id'])
+            ->whereIn('status', ['unpaid', 'partial', 'overdue'])
+            ->findOrFail($validated['voucher_id']);
 
-        // Update voucher (existing business logic)
-        $voucher->paid_amount += $validated['amount'];
-        $voucher->balance_amount = max(0, $voucher->net_amount - $voucher->paid_amount);
-        $voucher->status = $voucher->balance_amount <= 0 ? 'paid' : 'partial';
-        $voucher->save();
+        $charges = $this->feePaymentService->allocateAcrossVoucherItems($voucher, (float) $validated['amount']);
 
-        // Get default category for student payments (Tuition Fee)
-        $defaultCategory = LedgerCategory::where('code', 'TUITION_FEE')->first();
+        if (empty($charges)) {
+            return back()->withErrors(['amount' => 'This voucher has no outstanding balance to collect.']);
+        }
 
-        // Create ledger entry (NEW unified finance)
-        $this->financeService->createIncomeTransaction([
-            'amount' => $validated['amount'],
-            'payment_method' => $validated['payment_method'],
-            'category_id' => $defaultCategory?->id ?? 1,
+        $payment = $this->feePaymentService->record([
             'student_id' => $validated['student_id'],
-            'reference_type' => 'App\\Models\\Fee\\FeeVoucher',
-            'reference_id' => $validated['voucher_id'],
-            'transaction_date' => $validated['transaction_date'],
-            'description' => $validated['description'] ?? 'Fee payment for '.$voucher->voucher_no,
-            'campus_id' => $voucher->campus_id,
+            'payment_date' => $validated['transaction_date'],
+            'payment_method' => $validated['payment_method'],
+            'received_amount' => (float) $validated['amount'],
+            'remarks' => $validated['description'] ?? null,
+            'charges' => $charges,
         ]);
 
-        return redirect()->route('finance.transactions.index')
+        return redirect()->route('fee.payments.show', $payment->id)
             ->with('success', 'Payment received successfully!');
     }
 }

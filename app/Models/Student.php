@@ -40,6 +40,9 @@ class Student extends Model
         'admission_date' => 'date',
     ];
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
@@ -55,6 +58,9 @@ class Student extends Model
         return $this->belongsTo(StudentStatus::class);
     }
 
+    /**
+     * @return BelongsToMany<Guardian, $this>
+     */
     public function guardians(): BelongsToMany
     {
         return $this->belongsToMany(Guardian::class, 'student_guardians')
@@ -62,6 +68,9 @@ class Student extends Model
             ->withTimestamps();
     }
 
+    /**
+     * @return HasMany<StudentGuardian, $this>
+     */
     public function studentGuardians(): HasMany
     {
         return $this->hasMany(StudentGuardian::class);
@@ -72,7 +81,7 @@ class Student extends Model
      */
     public function getNameAttribute(): string
     {
-        return $this->user?->name ?? 'Student #'.$this->registration_no;
+        return $this->user->name ?? 'Student #'.$this->registration_no;
     }
 
     /**
@@ -84,29 +93,26 @@ class Student extends Model
     }
 
     /**
-     * Get student's current class name from active enrollment
+     * Get student's current class name from active enrollment.
+     *
+     * Read from `currentEnrollment` rather than by querying. This used to run
+     * its own query every time it was touched, so a list of fifty children
+     * reading `class` and `section` was a hundred queries — and being an
+     * accessor rather than a relation, no amount of eager loading helped.
+     *
+     * Eager-load `currentEnrollment.class` and it now costs nothing.
      */
     public function getClassAttribute(): ?string
     {
-        $enrollment = $this->enrollmentRecords()
-            ->active()
-            ->with('class')
-            ->first();
-
-        return $enrollment?->class?->name;
+        return $this->currentEnrollment?->class?->name;
     }
 
     /**
-     * Get student's current section name from active enrollment
+     * Get student's current section name from active enrollment.
      */
     public function getSectionAttribute(): ?string
     {
-        $enrollment = $this->enrollmentRecords()
-            ->active()
-            ->with('section')
-            ->first();
-
-        return $enrollment?->section?->name;
+        return $this->currentEnrollment?->section?->name;
     }
 
     /**
@@ -142,6 +148,8 @@ class Student extends Model
     /**
      * Get the student's enrollment records.
      * This relationship tracks all enrollment periods (admission and re-admission).
+     *
+     * @return HasMany<StudentEnrollmentRecord, $this>
      */
     public function enrollmentRecords(): HasMany
     {
@@ -150,15 +158,26 @@ class Student extends Model
 
     /**
      * Get the student's currently active enrollment.
+     *
+     * Ordered, because a `hasOne` with no order is a coin toss. The database
+     * allows only one open period per child — `enforce_single_open_enrollment`
+     * — but an unordered relation would still be undefined behaviour the day
+     * that constraint were ever relaxed.
+     *
+     * @return HasOne<StudentEnrollmentRecord, $this>
      */
     public function currentEnrollment(): HasOne
     {
         return $this->hasOne(StudentEnrollmentRecord::class)
-            ->whereNull('leave_date');
+            ->whereNull('leave_date')
+            ->orderByDesc('admission_date')
+            ->orderByDesc('id');
     }
 
     /**
      * Get the student's full enrollment history ordered by date (newest first).
+     *
+     * @return HasMany<StudentEnrollmentRecord, $this>
      */
     public function enrollmentHistory(): HasMany
     {
@@ -234,6 +253,9 @@ class Student extends Model
 
     /**
      * Get the student's discounts.
+
+     *
+     * @return HasMany<StudentDiscount, $this>
      */
     public function discounts(): HasMany
     {
@@ -264,5 +286,72 @@ class Student extends Model
         // `sum()` returns whatever the driver gives back -- an int, a float or
         // a numeric string depending on the column and engine.
         return (float) $credits - (float) $debits;
+    }
+
+    /**
+     * Narrows a list to the children this user may see.
+     *
+     * The policy guards one record; this filters a list. Without both, the list
+     * screen hands out exactly what the record screen refuses — the lesson from
+     * the exam module, written down in docs/WORKING-RULES.md.
+     *
+     * A child's campus and class live on their open enrolment period, not on
+     * the `students` row, so the filter goes through that.
+     */
+    public function scopeVisibleTo($query, ?User $user)
+    {
+        if (! $user || $user->isSuperAdmin()) {
+            return $query;
+        }
+
+        $campusId = $user->campusId();
+        $classRestricted = $user->isClassRestricted();
+
+        if ($campusId === null && ! $classRestricted) {
+            return $query;
+        }
+
+        $assignments = $classRestricted
+            ? $user->teachingAssignments()->active()->get(['class_id', 'section_id'])
+            : collect();
+
+        if ($classRestricted && $assignments->isEmpty()) {
+            // A teacher with no class yet sees nobody, rather than everybody.
+            return $query->whereRaw('1 = 0');
+        }
+
+        return $query->whereHas('enrollmentRecords', function ($enrollment) use ($campusId, $assignments) {
+            $enrollment->whereNull('leave_date');
+
+            if ($campusId !== null) {
+                $enrollment->where('campus_id', $campusId);
+            }
+
+            if ($assignments->isEmpty()) {
+                return;
+            }
+
+            $enrollment->where(function ($outer) use ($assignments) {
+                foreach ($assignments as $assignment) {
+                    $outer->orWhere(function ($q) use ($assignment) {
+                        $q->where('class_id', $assignment->class_id);
+
+                        // A whole-class assignment covers every section in it.
+                        if ($assignment->section_id !== null) {
+                            $q->where('section_id', $assignment->section_id);
+                        }
+                    });
+                }
+            });
+        });
+    }
+
+    /**
+     * The scope's own answer for one child, so a caller can ask without
+     * reaching for the policy.
+     */
+    public function isVisibleTo(?User $user): bool
+    {
+        return static::query()->whereKey($this->getKey())->visibleTo($user)->exists();
     }
 }

@@ -25,6 +25,14 @@ return new class extends Migration
                 ->nullOnDelete();
             $table->boolean('is_national')->default(false); // True = applies to all campuses
             $table->text('description')->nullable();
+
+            // Recurring holiday support
+            $table->enum('recurrence_type', ['none', 'yearly', 'monthly', 'weekly'])->default('none');
+            $table->date('recurrence_end_date')->nullable();
+
+            // Allow attendance on holiday
+            $table->boolean('is_attendance_allowed')->default(false);
+
             $table->timestamps();
 
             // Indexes

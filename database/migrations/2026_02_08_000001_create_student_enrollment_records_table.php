@@ -55,6 +55,29 @@ return new class extends Migration
                 ->constrained('student_statuses')
                 ->onDelete('restrict');
 
+            // Link to fee structure
+            $table->foreignId('fee_structure_id')
+                ->nullable()
+                ->constrained('fee_structures')
+                ->onDelete('set null');
+
+            // Fee mode: how the fee was determined
+            // 'structure' = use fee structure as-is
+            // 'discount' = use fee structure with discounts applied
+            // 'manual' = manual fee entry (override)
+            $table->enum('fee_mode', ['structure', 'discount', 'manual'])->nullable();
+
+            // Custom fee entries (JSON) - for manual override mode
+            // Format: [{"fee_head_id": 1, "amount": 800, "reason": "Custom rate for this student"}]
+            $table->json('custom_fee_entries')->nullable();
+
+            // Manual discount percentage (calculated from original vs custom amount)
+            // For Option C: when user enters custom amount, we calculate implied discount
+            $table->decimal('manual_discount_percentage', 5, 2)->nullable();
+
+            // Reason for manual adjustment
+            $table->text('manual_discount_reason')->nullable();
+
             // For chaining re-admissions to previous enrollments
             $table->foreignId('previous_enrollment_id')
                 ->nullable()

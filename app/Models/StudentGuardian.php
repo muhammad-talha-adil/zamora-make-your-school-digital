@@ -21,16 +21,25 @@ class StudentGuardian extends Model
         'is_primary' => 'boolean',
     ];
 
+    /**
+     * @return BelongsTo<Student, $this>
+     */
     public function student(): BelongsTo
     {
         return $this->belongsTo(Student::class);
     }
 
+    /**
+     * @return BelongsTo<Guardian, $this>
+     */
     public function guardian(): BelongsTo
     {
         return $this->belongsTo(Guardian::class);
     }
 
+    /**
+     * @return BelongsTo<Relation, $this>
+     */
     public function relation(): BelongsTo
     {
         return $this->belongsTo(Relation::class);

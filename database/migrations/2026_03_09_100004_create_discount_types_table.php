@@ -34,6 +34,7 @@ return new class extends Migration
             // Description and status
             $table->text('description')->nullable();
             $table->boolean('is_active')->default(true)->index();
+            $table->boolean('requires_approval')->default(false);
 
             $table->timestamps();
 

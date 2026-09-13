@@ -86,8 +86,12 @@ class FinanceService
      */
     public function getTotalIncome($fromDate, $toDate, $campusId = null): float
     {
+        // Two `whereDate` calls, not `whereBetween`: a date-cast column
+        // compared with a plain Y-m-d string range has silently failed to
+        // match on SQLite before.
         $query = Ledger::income()
-            ->whereBetween('transaction_date', [$fromDate, $toDate]);
+            ->whereDate('transaction_date', '>=', $fromDate)
+            ->whereDate('transaction_date', '<=', $toDate);
 
         if ($campusId) {
             $query->where('campus_id', $campusId);
@@ -102,7 +106,8 @@ class FinanceService
     public function getTotalExpense($fromDate, $toDate, $campusId = null): float
     {
         $query = Ledger::expense()
-            ->whereBetween('transaction_date', [$fromDate, $toDate]);
+            ->whereDate('transaction_date', '>=', $fromDate)
+            ->whereDate('transaction_date', '<=', $toDate);
 
         if ($campusId) {
             $query->where('campus_id', $campusId);

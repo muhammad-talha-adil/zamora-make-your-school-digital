@@ -131,4 +131,22 @@ class FeePayment extends Model
     {
         return $query->where('status', PaymentStatus::POSTED);
     }
+
+    /**
+     * What this viewer's campus reach allows them to see.
+     */
+    public function scopeVisibleTo($query, ?User $user)
+    {
+        if (! $user || $user->isSuperAdmin()) {
+            return $query;
+        }
+
+        $campusId = $user->campusId();
+
+        if ($campusId === null) {
+            return $query;
+        }
+
+        return $query->where('campus_id', $campusId);
+    }
 }

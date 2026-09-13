@@ -48,6 +48,20 @@ return new class extends Migration
             // `attendance_absence_alerts`.
             $table->boolean('absence_alert_enabled')->default(false);
 
+            // Closes a register by itself once the month has settled. Zero, the
+            // default, keeps a register editable until a person locks it.
+            $table->unsignedSmallInteger('lock_after_days')->default(0);
+
+            // Charging for repeated late arrival — where a school does that. Off
+            // by default and stays off until a campus turns it on.
+            $table->boolean('late_fine_enabled')->default(false);
+            // Late arrivals forgiven each month before any are charged.
+            $table->unsignedSmallInteger('late_fine_grace_count')->default(3);
+            // Charged for each late arrival past the grace count.
+            $table->decimal('late_fine_amount', 10, 2)->default(0);
+            // The most that may be charged in one month.
+            $table->decimal('late_fine_monthly_cap', 10, 2)->nullable();
+
             $table->text('notes')->nullable();
             $table->boolean('is_active')->default(true)->index();
 

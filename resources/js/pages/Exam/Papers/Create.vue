@@ -155,6 +155,7 @@
                                     <th class="px-3 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Time</th>
                                     <th class="px-3 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Total</th>
                                     <th class="px-3 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Pass</th>
+                                    <th class="px-3 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Counts as</th>
                                     <th class="px-3 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Status</th>
                                     <th class="px-3 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Scope</th>
                                     <th class="px-3 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Action</th>
@@ -223,6 +224,37 @@
                                             {{ paper.passing_marks }}
                                         </template>
                                     </td>
+                                    <!--
+                                        What the subject is to the children who
+                                        sit it. `is_exempt` was the nearest
+                                        thing available and it says something
+                                        else: exempt means the child was not
+                                        required to sit the paper, not that the
+                                        paper does not count.
+                                    -->
+                                    <td class="px-3 py-3 whitespace-nowrap text-sm">
+                                        <template v-if="editingPaperId === paper.id">
+                                            <select
+                                                v-model="editingPaper.subject_role"
+                                                class="h-7 rounded border border-input bg-background px-1 text-xs"
+                                            >
+                                                <option value="core">Compulsory</option>
+                                                <option value="elective">Elective</option>
+                                                <option value="additional">Additional</option>
+                                            </select>
+                                        </template>
+                                        <template v-else>
+                                            <span
+                                                class="text-xs px-2 py-1 rounded-full"
+                                                :class="paper.subject_role === 'additional'
+                                                    ? 'bg-muted text-muted-foreground'
+                                                    : 'bg-primary/10 text-primary'"
+                                            >
+                                                {{ roleLabel(paper.subject_role) }}
+                                            </span>
+                                        </template>
+                                    </td>
+
                                     <td class="px-3 py-3 whitespace-nowrap">
                                         <span :class="getStatusClass(paper.status)">
                                             {{ paper.status }}
@@ -851,7 +883,14 @@ const globalSettings = reactive({
     paper_date: '',
     total_marks: '',
     passing_marks: '',
+    // Most papers are compulsory; the school says otherwise for the few.
+    subject_role: 'core',
 });
+
+/** What a school calls each role on a screen. */
+const roleLabel = (role?: string): string =>
+    ({ core: 'Compulsory', elective: 'Elective', additional: 'Additional' })[role ?? 'core'] ??
+    'Compulsory';
 
 // Subject papers data
 interface SubjectPaper {
@@ -951,6 +990,7 @@ const saveEditedPaper = async (paperId: number) => {
             end_time: editingPaper.end_time,
             total_marks: editingPaper.total_marks,
             passing_marks: editingPaper.passing_marks,
+            subject_role: editingPaper.subject_role,
         });
         
         // Update the existing papers list
@@ -963,6 +1003,7 @@ const saveEditedPaper = async (paperId: number) => {
                 end_time: editingPaper.end_time,
                 total_marks: editingPaper.total_marks,
                 passing_marks: editingPaper.passing_marks,
+                subject_role: editingPaper.subject_role,
             };
         }
         

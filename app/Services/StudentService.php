@@ -6,9 +6,12 @@ use App\Models\School;
 use App\Models\Section;
 use App\Models\Student;
 use App\Repositories\StudentRepository;
+use App\Services\Student\StudentEnrollmentService;
+use App\Services\Student\StudentExportService;
+use App\Services\Student\StudentImportService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Log;
+use Illuminate\Support\Facades\DB;
 
 class StudentService
 {
@@ -16,7 +19,10 @@ class StudentService
      * Create a new service instance.
      */
     public function __construct(
-        protected StudentRepository $repository
+        protected StudentRepository $repository,
+        protected StudentEnrollmentService $enrollments,
+        protected StudentExportService $exports,
+        protected StudentImportService $imports
     ) {}
 
     /**
@@ -156,7 +162,7 @@ class StudentService
                 'name' => $student->user?->name,
                 'email' => $student->user?->email,
             ],
-            'dob' => $student->dob?->format('Y-m-d'),
+            'dob' => $student->dob->format('Y-m-d'),
             'gender_id' => $student->gender_id,
             'b_form' => $student->b_form,
             'description' => $student->description,
@@ -170,7 +176,7 @@ class StudentService
             $studentData['class_id'] = $currentEnrollment->class_id;
             $studentData['section_id'] = $currentEnrollment->section_id;
             $studentData['student_status_id'] = $currentEnrollment->student_status_id;
-            $studentData['admission_date'] = $currentEnrollment->admission_date?->format('Y-m-d');
+            $studentData['admission_date'] = $currentEnrollment->admission_date->format('Y-m-d');
             $studentData['current_enrollment'] = [
                 'monthly_fee' => $currentEnrollment->monthly_fee,
                 'annual_fee' => $currentEnrollment->annual_fee,
@@ -204,7 +210,7 @@ class StudentService
         $guardians = [];
         foreach ($student->studentGuardians as $studentGuardian) {
             $guardians[] = [
-                'id' => $studentGuardian->guardian?->id ?? 0,
+                'id' => $studentGuardian->guardian->id ?? 0,
                 'name' => $studentGuardian->guardian?->user?->name,
                 'phone' => $studentGuardian->guardian?->phone,
                 'email' => $studentGuardian->guardian?->user?->email,
@@ -341,19 +347,7 @@ class StudentService
      */
     public function create(array $data): Student
     {
-        Log::info('StudentService: Creating student', [
-            'user_id' => auth()->id(),
-            'admission_no' => $data['admission_no'],
-        ]);
-
-        $student = $this->repository->createWithRelationships($data);
-
-        Log::info('StudentService: Student created successfully', [
-            'student_id' => $student->id,
-            'student_code' => $student->student_code,
-        ]);
-
-        return $student;
+        return $this->repository->createWithRelationships($data);
     }
 
     /**
@@ -361,18 +355,7 @@ class StudentService
      */
     public function update(Student $student, array $data): Student
     {
-        Log::info('StudentService: Updating student', [
-            'user_id' => auth()->id(),
-            'student_id' => $student->id,
-        ]);
-
-        $student = $this->repository->updateWithRelationships($student, $data);
-
-        Log::info('StudentService: Student updated successfully', [
-            'student_id' => $student->id,
-        ]);
-
-        return $student;
+        return $this->repository->updateWithRelationships($student, $data);
     }
 
     /**
@@ -380,20 +363,7 @@ class StudentService
      */
     public function changeStatus(Student $student, array $data): Student
     {
-        Log::info('StudentService: Changing student status', [
-            'user_id' => auth()->id(),
-            'student_id' => $student->id,
-            'is_reactivation' => $data['is_reactivation'] ?? false,
-        ]);
-
-        $student = $this->repository->changeStatus($student, $data);
-
-        Log::info('StudentService: Student status changed successfully', [
-            'student_id' => $student->id,
-            'new_status_id' => $student->student_status_id,
-        ]);
-
-        return $student;
+        return $this->repository->changeStatus($student, $data);
     }
 
     /**
@@ -401,18 +371,7 @@ class StudentService
      */
     public function readmit(Student $student, array $data): Student
     {
-        Log::info('StudentService: Re-admitting student', [
-            'user_id' => auth()->id(),
-            'student_id' => $student->id,
-        ]);
-
-        $student = $this->repository->readmit($student, $data);
-
-        Log::info('StudentService: Student re-admitted successfully', [
-            'student_id' => $student->id,
-        ]);
-
-        return $student;
+        return $this->repository->readmit($student, $data);
     }
 
     /**
@@ -420,20 +379,26 @@ class StudentService
      */
     public function delete(Student $student): bool
     {
-        Log::info('StudentService: Deleting student', [
-            'user_id' => auth()->id(),
-            'student_id' => $student->id,
-        ]);
+        /*
+         * Deleting a child has to take them off the roll.
+         *
+         * It used to soft-delete the `students` row and leave the enrolment
+         * period open, so the child vanished from the student list and stayed
+         * on the class roll — still billed by the fee run, still expected in
+         * the register, still registered for the exam.
+         */
+        return DB::transaction(function () use ($student) {
+            if ($this->enrollments->openPeriodOf($student)) {
+                $this->enrollments->leave(
+                    $student,
+                    null,
+                    null,
+                    'Record deleted.'
+                );
+            }
 
-        $deleted = (bool) $student->delete();
-
-        if ($deleted) {
-            Log::info('StudentService: Student deleted successfully', [
-                'student_id' => $student->id,
-            ]);
-        }
-
-        return $deleted;
+            return (bool) $student->delete();
+        });
     }
 
     /**
@@ -441,20 +406,7 @@ class StudentService
      */
     public function restore(Student $student): bool
     {
-        Log::info('StudentService: Restoring student', [
-            'user_id' => auth()->id(),
-            'student_id' => $student->id,
-        ]);
-
-        $restored = (bool) $student->restore();
-
-        if ($restored) {
-            Log::info('StudentService: Student restored successfully', [
-                'student_id' => $student->id,
-            ]);
-        }
-
-        return $restored;
+        return (bool) $student->restore();
     }
 
     /**
@@ -462,35 +414,18 @@ class StudentService
      */
     public function forceDelete(Student $student): bool
     {
-        Log::info('StudentService: Force deleting student', [
-            'user_id' => auth()->id(),
-            'student_id' => $student->id,
-        ]);
-
-        $deleted = (bool) $student->forceDelete();
-
-        if ($deleted) {
-            Log::info('StudentService: Student force deleted', [
-                'student_id' => $student->id,
-            ]);
-        }
-
-        return $deleted;
+        return (bool) $student->forceDelete();
     }
 
     /**
      * Export students data.
      */
-    public function export(Request $request): JsonResponse
+    public function export(Request $request)
     {
-        Log::info('StudentService: Exporting students', [
-            'user_id' => auth()->id(),
-        ]);
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Export started. You will be notified when ready.',
-        ]);
+        return $this->exports->stream(
+            $request->user(),
+            $request->only(['campus_id', 'class_id', 'section_id'])
+        );
     }
 
     /**
@@ -498,13 +433,40 @@ class StudentService
      */
     public function import(Request $request): JsonResponse
     {
-        Log::info('StudentService: Importing students', [
-            'user_id' => auth()->id(),
+        $validated = $request->validate([
+            'file' => ['required', 'file', 'mimes:csv,txt', 'max:5120'],
+            'dry_run' => ['nullable', 'boolean'],
         ]);
 
+        $report = $request->boolean('dry_run')
+            ? $this->imports->dryRun($validated['file'])
+            : $this->imports->import($validated['file']);
+
         return response()->json([
-            'success' => true,
-            'message' => 'Import started. You will be notified when complete.',
-        ]);
+            'success' => $report['ok'],
+            'message' => $this->importMessage($report, $request->boolean('dry_run')),
+            'data' => $report,
+        ], $report['ok'] ? 200 : 422);
+    }
+
+    /**
+     * What to tell the person who uploaded the file.
+     *
+     * @param  array<string, mixed>  $report
+     */
+    private function importMessage(array $report, bool $dryRun): string
+    {
+        if (! $report['ok']) {
+            $count = count($report['problems']);
+
+            return $count.($count === 1 ? ' problem' : ' problems')
+                .' found. Nothing was imported.';
+        }
+
+        if ($dryRun) {
+            return ($report['would_import'] ?? 0).' children are ready to import.';
+        }
+
+        return $report['imported'].' children imported.';
     }
 }

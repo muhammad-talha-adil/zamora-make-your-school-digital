@@ -87,6 +87,7 @@ return new class extends Migration
             $table->decimal('net_amount', 12, 2)->default(0); // Final amount due
             $table->decimal('balance_amount', 12, 2)->default(0); // Remaining unpaid
             $table->decimal('advance_adjusted_amount', 12, 2)->default(0); // Advance used
+            $table->json('previous_voucher_ids')->nullable();
 
             // Metadata
             $table->text('notes')->nullable();

@@ -18,6 +18,7 @@ class SchoolClass extends Model
     protected $fillable = [
         'name',
         'code',
+        'level',
         'description',
         'is_active',
     ];
@@ -28,6 +29,7 @@ class SchoolClass extends Model
      * @var array<string, string>
      */
     protected $casts = [
+        'level' => 'integer',
         'is_active' => 'boolean',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',

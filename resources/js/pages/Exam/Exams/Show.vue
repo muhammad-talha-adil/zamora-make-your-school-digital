@@ -13,7 +13,46 @@
                         Exam Details and Configuration
                     </p>
                 </div>
-                <div class="flex gap-2">
+                <div class="flex flex-wrap gap-2">
+                    <!--
+                        Publishing, locking and reopening had routes and no
+                        button anywhere in the application: an exam could be
+                        marked and never given out.
+                    -->
+                    <Button
+                        v-if="state.status !== 'published'"
+                        :disabled="busy || state.is_locked"
+                        @click="publish(false)"
+                    >
+                        <Icon icon="check" class="mr-1" />
+                        Publish Results
+                    </Button>
+
+                    <Button
+                        v-else
+                        variant="outline"
+                        :disabled="busy || state.is_locked"
+                        @click="unpublish"
+                    >
+                        <Icon icon="undo" class="mr-1" />
+                        Unpublish
+                    </Button>
+
+                    <Button
+                        v-if="!state.is_locked"
+                        variant="outline"
+                        :disabled="busy"
+                        @click="lock"
+                    >
+                        <Icon icon="lock" class="mr-1" />
+                        Lock
+                    </Button>
+
+                    <Button v-else variant="outline" :disabled="busy" @click="unlock">
+                        <Icon icon="unlock" class="mr-1" />
+                        Reopen
+                    </Button>
+
                     <Button variant="outline" @click="router.visit(route('exam.edit-page', exam.id))">
                         <Icon icon="edit" class="mr-1" />
                         Edit
@@ -24,6 +63,32 @@
                     </Button>
                 </div>
             </div>
+
+            <!--
+                What stands between this exam and being published.
+
+                A school told only "not ready" presses the button again, so the
+                refusal comes back as the list of what is missing — and a
+                deliberate override exists for the school that means it anyway.
+            -->
+            <div
+                v-if="problems.length"
+                class="rounded-lg border border-warning/40 bg-warning/10 p-4"
+            >
+                <p class="text-sm font-semibold text-foreground">
+                    This exam is not ready to publish:
+                </p>
+                <ul class="mt-2 list-disc pl-5 text-sm text-muted-foreground">
+                    <li v-for="problem in problems" :key="problem">{{ problem }}</li>
+                </ul>
+                <Button class="mt-3" size="sm" variant="destructive" :disabled="busy" @click="publish(true)">
+                    Publish anyway
+                </Button>
+            </div>
+
+            <p v-if="message" class="rounded-lg border border-success/40 bg-success/10 p-3 text-sm">
+                {{ message }}
+            </p>
 
             <!-- Exam Info -->
             <div class="bg-card rounded-lg border border-border p-6">
@@ -93,6 +158,8 @@
 
 <script setup lang="ts">
 import { Head, router } from '@inertiajs/vue3';
+import { reactive, ref } from 'vue';
+import axios from 'axios';
 import { route } from 'ziggy-js';
 import AppLayout from '@/layouts/AppLayout.vue';
 import type { BreadcrumbItem } from '@/types';
@@ -103,6 +170,71 @@ import type { ExamShowProps } from '@/types/exam';
 const props = defineProps<ExamShowProps>();
 
 const exam = props.exam;
+
+/** What the buttons act on, so the page reflects a change without a reload. */
+const state = reactive({
+    status: exam.status as string,
+    is_locked: Boolean((exam as { is_locked?: boolean }).is_locked),
+});
+
+const problems = ref<string[]>([]);
+const message = ref('');
+const busy = ref(false);
+
+const run = async (call: () => Promise<{ data: { data?: Record<string, unknown> } }>) => {
+    busy.value = true;
+    message.value = '';
+
+    try {
+        const { data } = await call();
+        const fresh = data.data ?? {};
+
+        state.status = (fresh.status as string) ?? state.status;
+        state.is_locked = Boolean(fresh.is_locked);
+        problems.value = [];
+
+        return true;
+    } catch (e: unknown) {
+        if (axios.isAxiosError(e) && e.response?.status === 422) {
+            // The refusal carries the list. That is the whole point of it.
+            problems.value = e.response.data?.errors?.exam ?? [e.response.data?.message];
+
+            return false;
+        }
+
+        problems.value = ['That could not be done.'];
+
+        return false;
+    } finally {
+        busy.value = false;
+    }
+};
+
+const publish = async (force: boolean) => {
+    const ok = await run(() =>
+        axios.patch(route('exam.publish', exam.id), force ? { force: true } : {})
+    );
+
+    if (ok) message.value = 'Results published.';
+};
+
+const unpublish = async () => {
+    if (await run(() => axios.patch(route('exam.unpublish', exam.id)))) {
+        message.value = 'Taken back off the board.';
+    }
+};
+
+const lock = async () => {
+    if (await run(() => axios.patch(route('exam.lock', exam.id)))) {
+        message.value = 'Exam locked.';
+    }
+};
+
+const unlock = async () => {
+    if (await run(() => axios.patch(route('exam.unlock', exam.id)))) {
+        message.value = 'Exam reopened.';
+    }
+};
 
 const breadcrumbItems: BreadcrumbItem[] = [
     { title: 'Dashboard', href: '/dashboard' },

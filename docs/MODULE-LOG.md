@@ -488,3 +488,170 @@ kept that promise.
 
 **Left to the next module:** promotion to the next class (Student), and the Vue
 screens for grace, subject roles, the card and the datesheet.
+
+---
+
+# Module: Staff — **complete**
+
+Built and rebuilt across eight phases rather than found broken and fixed — the
+one module finished this way instead of the read-end-to-end process every
+other row in this log went through.
+
+**Worked on:** 2026-09-09 to 2026-09-13 · schema, models, services, policies,
+controllers, routes, seeders, every screen. **89 tests, PHPStan 0.**
+
+**What it was.** Not a stub: departments, designations, staff records, payroll
+generation and the Finance journal all existed and ran — one 354-line
+controller, four tables, five models, eleven routes, ten seeded permissions of
+which **not one was used**. `designation_id` on the profile was singular, so a
+person doing two jobs (the man who drives the van and does the gardening) had
+no way to be one employee. Staff attendance did not exist at all — `attendances`
+is the *student* register. `teacher_class_assignments` existed and drove the
+class width in Attendance, Exam and Student, and held **zero rows**, because
+nothing had ever written to it.
+
+## Phase 0 — the one decision
+
+One salary per person, not one per job. A second job pays through a salary-head
+allowance, never a second salary record.
+
+## Phase 1 — Foundation
+
+`staff_assignments` (one person, many jobs, generated-column-enforced single
+primary), `salary_heads` + `staff_salary_components` (named pay, effective-dated,
+a raise is a new row), `staff_qualifications`, `staff_documents`,
+`staff_attendances`, `staff_leave_types` + `staff_leaves`,
+`staff_employment_periods` (the same enrolment-period shape students use). CNIC,
+phone, dob and emergency contact added to `staff_profiles`. Old lump columns
+(`basic_salary`, `allowance_amount`, `deduction_amount`) kept as a fallback, not
+dropped.
+
+## Phase 2 — Who sees what
+
+`StaffProfilePolicy` on the shared `ChecksSchoolReach` trait — the same three
+widths as Attendance, Exam and Student. **Salary is its own width**:
+`staff.salary.manage` is separate from `staff.manage`, so a campus admin who may
+hire and edit still may not see what anybody is paid. `staff.view.own` is the
+staff portal.
+
+## Phase 3 + 4 — The person, their jobs, and the teacher
+
+`StaffAssignmentService` (give/end/make-primary a job), `StaffEmploymentService`
+(join/leave/rejoin), `TeacherAssignmentService` — the service that finally
+writes to `teacher_class_assignments`, closing the gap that had left Attendance,
+Exam and Student's class-width rule correct but starved of data.
+
+## Phase 5 — Staff attendance and leave
+
+`StaffAttendanceService` and `StaffLeaveService`. Reused rather than rebuilt:
+`LateArrivalResolver` and `WorkingDayCalculator`, the same services the student
+register already used correctly — a second copy of either would have drifted
+from the first. Leave carries `is_paid` on its type, which is what a payroll run
+reads. Two bugs caught before they shipped: a date-cast column compared with
+`whereBetween` against a plain string silently failed to match on SQLite (the
+same "bug 19" class already logged against Attendance); `updateOrCreate` against
+a date-cast column had the same problem, fixed with an explicit find-then-fill.
+
+## Phase 6 — Salary and payroll
+
+`StaffSalaryService`: named allowances and deductions, falling back to the
+legacy lump columns when a profile has no components at all, so nothing running
+broke while the shape changed underneath it. `StaffPayrollService` replaced the
+payroll logic that used to sit inline in `StaffController`, added an unpaid-leave
+deduction priced at the working-day rate, and called the existing
+`UnifiedAccountingService` journals **unmodified**. One real bug: `PayrollRunItem`
+soft-deletes, and the old `->delete()` before regenerating a run left rows behind
+that blocked the unique `(payroll_run_id, staff_profile_id)` index on the next
+attempt — fixed to `->forceDelete()`.
+
+## Phase 7 — The dashboard, and the old screen goes
+
+`Staff/Index.vue` — one page holding the staff list, payroll, departments and
+designations — is deleted. Its jobs moved to `Staff/Dashboard.vue`,
+`Staff/People/{Index,Show}.vue`, `Staff/Teaching/Index.vue` and
+`Staff/Payroll/Index.vue`; departments/designations became a dialog on the
+directory rather than a Settings screen, since no Settings module exists yet.
+**A second real bug, found while building the screens that would have exposed
+it:** `StaffProfileController::list()` and `::show()` never masked
+`basic_salary`/`allowance_amount`/`deduction_amount` for a viewer without
+`viewSalary` — only the old dashboard controller had ever done that masking, and
+until Phase 7 it was the only place staff were listed. Fixed in both methods.
+
+**Not built — no business rule given:** salary advances/loans against future
+pay, a printed payslip. Raise either with the user if a school asks.
+
+**Left to nobody in particular:** Settings doesn't exist yet, so departments and
+designations stayed a dialog rather than moving there — revisit if a Settings
+module is ever built.
+
+# Module: Fee & Finance — closed 2026-09-13
+
+## Findings
+
+- **FF1** (fixed) — several Fee/Finance endpoints validated inline instead of
+  through a Form Request; extracted 9 new Form Request classes.
+- **FF2** (fixed) — `FeePaymentController::store()` read `$validated['vouchers']`
+  where the request actually sent `charges`.
+- **FF11** (fixed) — an enum instance used as an array key threw a `TypeError`,
+  uncaught because the surrounding `catch` only caught `\Exception`.
+- **FF12** (fixed) — `by-student` routes bound `{student}` in the URL but the
+  controllers read `student_id` from the query string; the endpoint never
+  worked from its own declared shape. Fixed via route-model binding in both
+  `FeeVoucherController::getByStudent()` and `FeePaymentController::getByStudent()`.
+- **FF13** (fixed, critical) — `fee.view.own` was never checked by
+  `FeePaymentPolicy`/`FeeVoucherPolicy`; would have locked student/guardian
+  portal accounts out of their own fee records. Fixed with `isTheirOwn()` +
+  `viewByStudent()`, matching `ExamResultHeaderPolicy`'s existing pattern.
+- **FF7 — architecture decision (implemented)**: Fee payments used to write to
+  both the double-entry books (`UnifiedAccountingService`) and the legacy
+  `Ledger` table. `TransactionController::index()` already merges both into one
+  feed, revealing the codebase's real intent: `Ledger` for genuinely manual
+  finance-only entries, the double-entry books as the system of record for
+  anything a module (Fee, Purchases, ...) generates. Fee payments no longer
+  write a `Ledger` row at all; `FinanceController::index()`'s cash summary now
+  reads `UnifiedAccountingService::cashMovementTotals()` (debits/credits to
+  Chart-of-Account codes `1000`/`1010`) merged with the legacy ledger totals,
+  so the dashboard stays accurate for both sources.
+- **FIN1** (fixed, **critical**) — `ReceivePaymentController::store()`'s
+  student-payment path bypassed the Fee module entirely: no `FeePayment`, no
+  `FeePaymentAllocation`, no journal — just a bare `fee_vouchers.paid_amount`
+  mutation. A payment taken through this screen was invisible to the Fee
+  module's own payment list, produced no receipt, and could not be reversed.
+  Fixed by extracting the shared logic into `App\Services\Fee\FeePaymentService`
+  and having this controller call it, same as `FeePaymentController` does.
+- **FIN2** (fixed, **critical**) — the same handler queried
+  `LedgerCategory::where('code', 'TUITION_FEE')` against a column
+  `ledger_categories` has never had — guaranteed SQL error on every call, so
+  the path could never actually run. Removed with the `FeePaymentService` fix.
+- **FIN3** (fixed, **high**) — `MakePaymentController::store()` required
+  `purchase_id` unconditionally, so 8 of the 10 seeded expense categories
+  (Salary, Rent, Electricity, Internet, Transport, Maintenance, Other) had
+  nowhere to attach and could never actually be recorded despite being offered
+  in the category dropdown. Fixed by branching on whether `purchase_id` is
+  present, mirroring the "student" vs "other" branch `ReceivePaymentController`
+  already uses.
+
+## Other fixes made along the way
+
+- Orphaned Vue pages deleted (`Exam/Marking/MarkSheet.vue`,
+  `Fee/Vouchers/{Print,PrintBatch}.vue`) and two unreferenced favicon files and
+  a starter-kit leftover component (`PlaceholderPattern.vue`) removed.
+- **Inventory module** (found incidentally, out of this session's original
+  scope): `InventoryTypesController::index()` rendered
+  `inventory/InventoryTypes/Index`, a path with no Vue file behind it at all —
+  the real page lives at `inventory/Types/Index.vue`. Fixed the render call.
+  Not yet covered by a dedicated test; Inventory itself has not been reviewed.
+
+## Tests
+
+`tests/Feature/Fee/**`, `tests/Feature/Finance/**` — 196 passed, 365 assertions.
+PHPStan baseline unchanged (0).
+
+## Not done — flagged, not fixed (out of scope this session)
+
+- `ArtisanCommandController`/`CacheController` expose unrestricted artisan
+  command execution (including `migrate:fresh`) from a web UI with no
+  visible extra guard beyond normal route middleware — worth a dedicated
+  security pass.
+- Inventory module has not been reviewed end-to-end; only the one broken
+  route above was caught.

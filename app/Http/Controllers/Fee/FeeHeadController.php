@@ -26,7 +26,7 @@ class FeeHeadController extends Controller
      */
     public function index(Request $request): Response
     {
-        // Gate::authorize('viewAny', FeeHead::class);
+        Gate::authorize('viewAny', FeeHead::class);
 
         $data = $this->service->getIndexData($request);
 
@@ -38,7 +38,7 @@ class FeeHeadController extends Controller
      */
     public function create(): Response
     {
-        // Gate::authorize('create', FeeHead::class);
+        Gate::authorize('create', FeeHead::class);
 
         Log::info('FeeHeadController: Showing create form', [
             'user_id' => auth()->id(),
@@ -54,7 +54,7 @@ class FeeHeadController extends Controller
      */
     public function store(StoreFeeHeadRequest $request): RedirectResponse
     {
-        // Gate::authorize('create', FeeHead::class);
+        Gate::authorize('create', FeeHead::class);
 
         Log::info('FeeHeadController: Storing fee head', [
             'user_id' => auth()->id(),
@@ -83,7 +83,7 @@ class FeeHeadController extends Controller
      */
     public function edit(FeeHead $feeHead): Response
     {
-        // Gate::authorize('update', $feeHead);
+        Gate::authorize('update', $feeHead);
 
         Log::info('FeeHeadController: Showing edit form', [
             'user_id' => auth()->id(),
@@ -100,7 +100,7 @@ class FeeHeadController extends Controller
      */
     public function update(UpdateFeeHeadRequest $request, FeeHead $feeHead): RedirectResponse
     {
-        // Gate::authorize('update', $feeHead);
+        Gate::authorize('update', $feeHead);
 
         Log::info('FeeHeadController: Updating fee head', [
             'user_id' => auth()->id(),
@@ -130,7 +130,7 @@ class FeeHeadController extends Controller
      */
     public function toggleActive(Request $request, FeeHead $feeHead): RedirectResponse|JsonResponse
     {
-        // Gate::authorize('update', $feeHead);
+        Gate::authorize('update', $feeHead);
 
         Log::info('FeeHeadController: Toggling active status', [
             'user_id' => auth()->id(),
@@ -168,7 +168,7 @@ class FeeHeadController extends Controller
      */
     public function destroy(Request $request, FeeHead $feeHead): RedirectResponse|JsonResponse
     {
-        // Gate::authorize('delete', $feeHead);
+        Gate::authorize('delete', $feeHead);
 
         Log::info('FeeHeadController: Deleting fee head', [
             'user_id' => auth()->id(),
@@ -204,6 +204,8 @@ class FeeHeadController extends Controller
      */
     public function getAll(Request $request): JsonResponse
     {
+        Gate::authorize('viewAny', FeeHead::class);
+
         try {
             $data = $this->service->getIndexData($request);
 

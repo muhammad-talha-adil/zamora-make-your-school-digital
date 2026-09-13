@@ -376,6 +376,25 @@ class ExamMarkingController extends Controller
     }
 
     /**
+     * The grace marks screen.
+     *
+     * Its own page rather than a column on the grid, because it is its own act:
+     * the grid is a teacher entering what a child scored, and this is somebody
+     * deciding to lift a child who missed by two. They sit behind different
+     * abilities for the same reason.
+     */
+    public function gracePage(Request $request)
+    {
+        $this->authorize('viewAny', ExamResultHeader::class);
+
+        return Inertia::render('Exam/Marking/Grace', [
+            'exams' => Exam::orderByDesc('start_date')->get(['id', 'name']),
+            'classes' => SchoolClass::where('is_active', true)
+                ->orderBy('level')->orderBy('name')->get(['id', 'name']),
+        ]);
+    }
+
+    /**
      * Give (or take away) grace marks on one paper.
      *
      * Grace is deliberately not part of a mark entry. It is a decision somebody

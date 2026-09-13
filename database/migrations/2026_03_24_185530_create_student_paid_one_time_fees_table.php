@@ -13,7 +13,11 @@ return new class extends Migration
             $table->foreignId('student_id')->constrained('students')->onDelete('cascade');
             $table->foreignId('fee_head_id')->constrained('fee_heads')->onDelete('cascade');
             $table->decimal('amount_paid', 10, 2);
+            $table->decimal('refunded_amount', 12, 2)->default(0);
             $table->date('payment_date');
+            $table->date('refunded_at')->nullable();
+            $table->string('refund_reason', 255)->nullable();
+            $table->foreignId('refunded_by')->nullable()->constrained('users')->nullOnDelete();
             $table->foreignId('voucher_id')->nullable()->constrained('fee_vouchers')->onDelete('set null');
             $table->text('notes')->nullable();
             $table->timestamps();

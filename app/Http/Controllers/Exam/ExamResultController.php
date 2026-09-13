@@ -149,6 +149,16 @@ class ExamResultController extends Controller
                 'percentage' => $header->overall_percentage_cache,
                 'overallGradeItem' => $header->overallGradeItem ? ['grade_letter' => $header->overallGradeItem->grade_letter] : null,
                 'status' => $header->status,
+
+                // Whether the child passed, and where they came. Both are
+                // recorded on the header — the list should not be working
+                // either of them out for itself.
+                'result_status' => $header->result_status,
+                'failed_subject_count' => (int) $header->failed_subject_count,
+                'position_in_section' => $header->position_in_section,
+                'position_in_class' => $header->position_in_class,
+                'ranked_out_of' => $header->ranked_out_of,
+
                 'exam_id' => $header->exam_id,
             ];
         });

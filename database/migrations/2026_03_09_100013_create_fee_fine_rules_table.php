@@ -23,6 +23,8 @@ return new class extends Migration
         Schema::create('fee_fine_rules', function (Blueprint $table) {
             $table->id();
 
+            $table->string('name', 100);
+
             // Scope definition
             $table->foreignId('campus_id')
                 ->constrained('campuses')
@@ -49,11 +51,22 @@ return new class extends Migration
                 ->onDelete('restrict');
 
             // Fine calculation
-            $table->enum('fine_type', ['fixed_per_day', 'fixed_once', 'percent'])
-                ->index();
+            //
+            // Originally an enum of `fixed_per_day`, `fixed_once`, `percent`; widened
+            // to a plain string so a fourth kind of rule (`slab`) did not require an
+            // enum rewrite. `FineType` validates the value on the way in and out.
+            $table->string('fine_type', 30)->index();
 
             $table->decimal('fine_value', 12, 2); // Amount or percentage
             $table->unsignedSmallInteger('grace_days')->default(0); // Days before fine applies
+
+            // Slab-based fining: due date, grace days, then a fixed fine, then a
+            // per-day fine, capped so a forgotten voucher does not grow without
+            // limit. The existing single-value types keep working; `fine_value`
+            // is untouched.
+            $table->decimal('initial_amount', 12, 2)->default(0); // Charged once, when grace period runs out
+            $table->decimal('daily_amount', 12, 2)->default(0); // Charged for each further day late
+            $table->decimal('max_fine_amount', 12, 2)->nullable(); // The most this rule may ever charge. Null is no cap.
 
             // Effective date range
             $table->date('effective_from');

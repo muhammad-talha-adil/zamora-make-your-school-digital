@@ -32,26 +32,41 @@ class TeacherClassAssignment extends Model
         'periods_per_week' => 'integer',
     ];
 
+    /**
+     * @return BelongsTo<StaffProfile, $this>
+     */
     public function staffProfile(): BelongsTo
     {
         return $this->belongsTo(StaffProfile::class);
     }
 
+    /**
+     * @return BelongsTo<Session, $this>
+     */
     public function session(): BelongsTo
     {
         return $this->belongsTo(Session::class, 'session_id');
     }
 
+    /**
+     * @return BelongsTo<SchoolClass, $this>
+     */
     public function schoolClass(): BelongsTo
     {
         return $this->belongsTo(SchoolClass::class, 'class_id');
     }
 
+    /**
+     * @return BelongsTo<Section, $this>
+     */
     public function section(): BelongsTo
     {
         return $this->belongsTo(Section::class);
     }
 
+    /**
+     * @return BelongsTo<Subject, $this>
+     */
     public function subject(): BelongsTo
     {
         return $this->belongsTo(Subject::class);

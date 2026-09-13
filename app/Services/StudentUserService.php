@@ -4,12 +4,17 @@ namespace App\Services;
 
 use App\Models\Role;
 use App\Models\User;
+use App\Services\Concerns\GeneratesPasswords;
+use App\Services\Student\AdmissionCredentials;
 use Illuminate\Support\Str;
 
 class StudentUserService
 {
+    use GeneratesPasswords;
+
     public function __construct(
-        protected SchoolEmailService $schoolEmailService
+        protected SchoolEmailService $schoolEmailService,
+        protected AdmissionCredentials $credentials
     ) {}
 
     /**
@@ -46,6 +51,17 @@ class StudentUserService
         // Assign student role to the user
         $this->assignStudentRole($user);
 
+        /*
+         * The plaintext, kept for exactly as long as it takes the admission
+         * slip to print it.
+         *
+         * It used to be generated, hashed, and dropped on the floor — so every
+         * account this system created was one nobody could ever sign in to, and
+         * the school-generated email meant "forgot password" could not reach
+         * them either.
+         */
+        $this->credentials->record('student', $studentName, $username, $password);
+
         return $user;
     }
 
@@ -63,32 +79,6 @@ class StudentUserService
         }
 
         return 'STU-'.$studentCode;
-    }
-
-    /**
-     * Generate a secure random password for student accounts.
-     *
-     * @param  int  $length  Password length
-     * @return string Generated password
-     */
-    public function generateSecurePassword(int $length = 12): string
-    {
-        $characters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*';
-        $password = '';
-
-        // Ensure at least one of each required character type
-        $password .= chr(rand(97, 122)); // lowercase
-        $password .= chr(rand(65, 90));   // uppercase
-        $password .= chr(rand(48, 57));   // number
-        $password .= chr(rand(33, 47));    // special char
-
-        // Fill remaining characters
-        for ($i = 4; $i < $length; $i++) {
-            $password .= $characters[rand(0, strlen($characters) - 1)];
-        }
-
-        // Shuffle the password
-        return str_shuffle($password);
     }
 
     /**

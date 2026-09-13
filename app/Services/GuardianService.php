@@ -5,13 +5,18 @@ namespace App\Services;
 use App\Models\Guardian;
 use App\Models\Role;
 use App\Models\User;
+use App\Services\Concerns\GeneratesPasswords;
+use App\Services\Student\AdmissionCredentials;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Str;
 
 class GuardianService
 {
+    use GeneratesPasswords;
+
     public function __construct(
-        protected SchoolEmailService $schoolEmailService
+        protected SchoolEmailService $schoolEmailService,
+        protected AdmissionCredentials $credentials
     ) {}
 
     /**
@@ -51,6 +56,9 @@ class GuardianService
 
         // Assign guardian role to the user
         $this->assignGuardianRole($user);
+
+        // Handed to the family on the admission slip, and held nowhere else.
+        $this->credentials->record('guardian', $guardianName, $username, $password);
 
         return $user;
     }
@@ -135,32 +143,6 @@ class GuardianService
     }
 
     /**
-     * Generate a secure random password for guardian accounts.
-     *
-     * @param  int  $length  Password length
-     * @return string Generated password
-     */
-    public function generateSecurePassword(int $length = 12): string
-    {
-        $characters = 'abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789!@#$%^&*';
-        $password = '';
-
-        // Ensure at least one of each required character type
-        $password .= chr(rand(97, 122)); // lowercase
-        $password .= chr(rand(65, 90));   // uppercase
-        $password .= chr(rand(48, 57));   // number
-        $password .= chr(rand(33, 47));    // special char
-
-        // Fill remaining characters
-        for ($i = 4; $i < $length; $i++) {
-            $password .= $characters[rand(0, strlen($characters) - 1)];
-        }
-
-        // Shuffle the password
-        return str_shuffle($password);
-    }
-
-    /**
      * Generate a unique email address for the guardian.
      */
     protected function generateUniqueEmail(string $guardianName, ?string $providedEmail): string
@@ -213,7 +195,10 @@ class GuardianService
     /**
      * Get all guardian users (for reporting purposes).
      *
-     * @return Collection
+     * The guardian accounts, or an empty collection where the role does not
+     * exist yet. Typed to what both branches actually return.
+     *
+     * @return \Illuminate\Support\Collection<int, User>
      */
     public function getAllGuardianUsers()
     {

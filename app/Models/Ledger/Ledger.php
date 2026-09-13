@@ -116,7 +116,11 @@ class Ledger extends Model
      */
     public function scopeDateRange($query, $fromDate, $toDate)
     {
-        return $query->whereBetween('transaction_date', [$fromDate, $toDate]);
+        // Two `whereDate` calls, not `whereBetween`: a date-cast column
+        // compared with a plain Y-m-d string range has silently failed to
+        // match on SQLite before.
+        return $query->whereDate('transaction_date', '>=', $fromDate)
+            ->whereDate('transaction_date', '<=', $toDate);
     }
 
     /**

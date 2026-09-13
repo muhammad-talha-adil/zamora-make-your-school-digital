@@ -262,6 +262,25 @@
                                         <RowAction kind="view" :href="route('students.show', student.id)" />
                                         <RowAction kind="edit" :href="route('students.edit', student.id)" />
                                         <RowAction kind="print" @click="printStudent(student)" />
+                                        <!--
+                                            The card the child carries, and the
+                                            certificate they cannot be admitted
+                                            anywhere else without. Both print
+                                            from records that already existed;
+                                            nothing had ever printed them.
+                                        -->
+                                        <RowAction
+                                            kind="custom"
+                                            icon="IdCard"
+                                            label="ID card"
+                                            @click="printIdCard(student)"
+                                        />
+                                        <RowAction
+                                            kind="custom"
+                                            icon="FileCheck"
+                                            label="Leaving certificate"
+                                            @click="printLeavingCertificate(student)"
+                                        />
                                         <RowAction kind="delete" @click="openStatusModal(student)" />
                                     </RowActions>
                                 </td>
@@ -493,6 +512,21 @@ const getEnrollment = (student: any) => {
 // Print student admission form
 const printStudent = (student: { id: number; registration_no: string }) => {
     window.open(route('students.print', student.id), '_blank');
+};
+
+/** The child's ID card. The photograph has been stored since admission. */
+const printIdCard = (student: { id: number }) => {
+    window.open(`${route('students.id-cards')}?student_ids[]=${student.id}`, '_blank');
+};
+
+/**
+ * The School Leaving Certificate.
+ *
+ * Refused, plainly, for a child who has not been marked as having left — it
+ * reads the leaving record rather than inventing one.
+ */
+const printLeavingCertificate = (student: { id: number }) => {
+    window.open(route('students.leaving-certificate', student.id), '_blank');
 };
 
 // Get primary guardian or first guardian if no primary

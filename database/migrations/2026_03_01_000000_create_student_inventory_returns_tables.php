@@ -46,6 +46,7 @@ return new class extends Migration
             $table->decimal('total_amount', 12, 2)->default(0);
             $table->decimal('return_price', 12, 2)->nullable()->comment('Return price for refund');
             $table->foreignId('reason_id')->nullable()->constrained('reasons')->nullOnDelete();
+            $table->string('custom_reason', 500)->nullable();
             $table->text('item_snapshot')->nullable();
             $table->text('notes')->nullable();
             $table->timestamps();

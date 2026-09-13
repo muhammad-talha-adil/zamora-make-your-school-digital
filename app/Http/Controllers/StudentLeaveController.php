@@ -4,12 +4,17 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\Attendance\ApplyStudentLeaveRequest;
 use App\Models\Attendance;
+use App\Models\LeaveType;
 use App\Models\Student;
 use App\Models\StudentLeave;
+use App\Models\User;
 use App\Services\Attendance\StudentLeaveService;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Carbon;
+use Inertia\Inertia;
+use Inertia\Response as InertiaResponse;
 
 /**
  * Leave applications, from the family and from the office.
@@ -23,6 +28,39 @@ class StudentLeaveController extends Controller
     public function __construct(private StudentLeaveService $leaves) {}
 
     /**
+     * The leave-applications screen: pending decisions for the office, or a
+     * child's own history for a family.
+     */
+    public function page(Request $request): InertiaResponse
+    {
+        $user = $request->user();
+
+        $canViewPending = $user->hasPermission('attendance.view') || $user->isSuperAdmin();
+        $canDecide = $user->hasPermission('attendance.edit') || $user->isSuperAdmin();
+
+        $students = $canViewPending
+            ? Student::query()
+                ->whereHas('user')
+                ->with('user:id,name')
+                ->orderBy('registration_no')
+                ->limit(500)
+                ->get(['id', 'user_id', 'registration_no'])
+            : $this->ownStudents($user);
+
+        return Inertia::render('attendance/StudentLeaves/Index', [
+            'leaveTypes' => LeaveType::active()->orderBy('name')->get(['id', 'name']),
+            'students' => $students->map(fn (Student $student) => [
+                'id' => $student->id,
+                'name' => $student->user?->name ?? ('Student #'.$student->id),
+                'registration_no' => $student->registration_no,
+            ])->values(),
+            'canViewPending' => $canViewPending,
+            'canDecide' => $canDecide,
+            'defaultStudentId' => $canViewPending ? null : $students->first()?->id,
+        ]);
+    }
+
+    /**
      * A child's own leave history.
      */
     public function index(Request $request, Student $student): JsonResponse
@@ -31,7 +69,7 @@ class StudentLeaveController extends Controller
 
         return response()->json([
             'leaves' => $student->studentLeaves()
-                ->with(['leaveType', 'approver'])
+                ->with(['leaveType', 'approvedBy'])
                 ->orderByDesc('start_date')
                 ->get(),
         ]);
@@ -124,6 +162,24 @@ class StudentLeaveController extends Controller
     private function registerContextFor(StudentLeave $leave): Attendance
     {
         return $this->registerContextForStudent($leave->student);
+    }
+
+    /**
+     * The children this viewer may apply leave for: themselves, or their wards.
+     *
+     * @return Collection<int, Student>
+     */
+    private function ownStudents(User $user): Collection
+    {
+        if ($user->student) {
+            return new Collection([$user->student]);
+        }
+
+        if ($user->guardian) {
+            return $user->guardian->students()->with('user:id,name')->get();
+        }
+
+        return new Collection;
     }
 
     /**

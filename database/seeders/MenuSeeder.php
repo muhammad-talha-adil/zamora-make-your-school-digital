@@ -53,6 +53,16 @@ class MenuSeeder extends Seeder
             'url' => '/students',
         ]);
 
+        Menu::create([
+            'title' => 'Promotion',
+            'icon' => 'arrow-up-circle',
+            'type' => 'main',
+            'order' => 3,
+            'parent_id' => 2, // Students parent ID
+            'is_active' => true,
+            'url' => '/students/promotion',
+        ]);
+
         // ==================== EXAM MENU ====================
         $exam = Menu::create([
             'title' => 'Exams',
@@ -153,15 +163,15 @@ class MenuSeeder extends Seeder
         //     'url' => '/exams/results',
         // ]);
 
-        // Menu::create([
-        //     'title' => 'Revaluations',
-        //     'icon' => 'refresh',
-        //     'type' => 'main',
-        //     'order' => 7,
-        //     'parent_id' => $exam->id,
-        //     'is_active' => true,
-        //     'url' => '/exams/revaluations',
-        // ]);
+        Menu::create([
+            'title' => 'Revaluations',
+            'icon' => 'refresh',
+            'type' => 'main',
+            'order' => 7,
+            'parent_id' => $exam->id,
+            'is_active' => true,
+            'url' => '/exams/revaluations',
+        ]);
 
         Menu::create([
             'title' => 'Settings',
@@ -214,10 +224,20 @@ class MenuSeeder extends Seeder
         ]);
 
         Menu::create([
+            'title' => 'Student Leaves',
+            'icon' => 'calendar-off',
+            'type' => 'main',
+            'order' => 4,
+            'parent_id' => $attendance->id,
+            'is_active' => true,
+            'url' => '/student-leaves/page',
+        ]);
+
+        Menu::create([
             'title' => 'Settings',
             'icon' => 'settings',
             'type' => 'main',
-            'order' => 4,
+            'order' => 5,
             'parent_id' => $attendance->id,
             'is_active' => true,
             'url' => '/attendance/settings',

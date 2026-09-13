@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Guardian extends Model
@@ -26,6 +27,9 @@ class Guardian extends Model
         'address' => 'string',
     ];
 
+    /**
+     * @return BelongsTo<User, $this>
+     */
     public function user(): BelongsTo
     {
         return $this->belongsTo(User::class);
@@ -38,7 +42,10 @@ class Guardian extends Model
             ->withTimestamps();
     }
 
-    public function studentGuardians()
+    /**
+     * @return HasMany<StudentGuardian, $this>
+     */
+    public function studentGuardians(): HasMany
     {
         return $this->hasMany(StudentGuardian::class);
     }

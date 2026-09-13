@@ -32,6 +32,8 @@ class FeeWorld
 
     public function __construct()
     {
+        // Grants the shared actor every `fee.*`/`finance.*` ability —
+        // see `AdmissionWorld::grantFeeAbilities()`.
         $this->school = AdmissionWorld::make();
 
         $this->seedMonths();

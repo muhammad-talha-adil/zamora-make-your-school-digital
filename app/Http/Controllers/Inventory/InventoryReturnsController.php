@@ -257,8 +257,34 @@ class InventoryReturnsController extends Controller
             ->when($request->get('campus_id'), fn ($q) => $q->where('campus_id', $request->get('campus_id')))
             ->firstOrFail();
 
-        return inertia('inventory/ReturnShow', [
-            'return' => $return->load(['campus', 'studentInventory.student', 'studentInventory.inventoryItem']),
+        $return->load(['campus', 'studentInventory.student.user', 'studentInventory.inventoryItem']);
+
+        return inertia('inventory/Returns/Show', [
+            'return' => [
+                'id' => $return->id,
+                'campus' => $return->campus ? [
+                    'id' => $return->campus->id,
+                    'name' => $return->campus->name,
+                ] : null,
+                'student' => $return->studentInventory?->student ? [
+                    'id' => $return->studentInventory->student->id,
+                    'name' => $return->studentInventory->student->user?->name,
+                    'registration_no' => $return->studentInventory->student->registration_no,
+                ] : null,
+                'student_inventory_id' => $return->student_inventory_id,
+                'item_name' => $return->getItemName(),
+                'description' => $return->getDescription(),
+                'quantity' => $return->quantity,
+                'unit_price' => $return->getUnitPrice(),
+                'final_unit_price' => $return->getFinalUnitPrice(),
+                'discount' => $return->getDiscountSnapshot(),
+                'total_value' => $return->getTotalValue(),
+                'return_date' => $return->return_date,
+                'note' => $return->note,
+                'item_snapshot' => $return->item_snapshot,
+                'is_partial_return' => $return->isPartialReturn(),
+                'created_at' => $return->created_at,
+            ],
         ]);
     }
 

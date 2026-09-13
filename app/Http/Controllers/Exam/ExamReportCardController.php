@@ -6,11 +6,14 @@ use App\Http\Controllers\Controller;
 use App\Models\Exam\Exam;
 use App\Models\Exam\ExamResultHeader;
 use App\Models\School;
+use App\Models\SchoolClass;
+use App\Models\Session;
 use App\Services\Exam\AnnualResultService;
 use App\Services\Exam\DatesheetService;
 use App\Services\Exam\ExamPositionService;
 use App\Services\Exam\ReportCardService;
 use Illuminate\Http\Request;
+use Inertia\Inertia;
 
 /**
  * The things a school prints and hands over.
@@ -114,6 +117,24 @@ class ExamReportCardController extends Controller
         return response()->json([
             'message' => "Positions worked out for {$ranked} results",
             'data' => ['ranked' => $ranked],
+        ]);
+    }
+
+    /**
+     * The annual result screen.
+     *
+     * Its own page rather than a tab: every other exam screen answers a
+     * question about one exam, and this one answers a question about the
+     * session.
+     */
+    public function annualPage(Request $request)
+    {
+        $this->authorize('viewAny', ExamResultHeader::class);
+
+        return Inertia::render('Exam/Results/Annual', [
+            'sessions' => Session::where('is_active', true)->get(['id', 'name']),
+            'classes' => SchoolClass::where('is_active', true)
+                ->orderBy('level')->orderBy('name')->get(['id', 'name']),
         ]);
     }
 

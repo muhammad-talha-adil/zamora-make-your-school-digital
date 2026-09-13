@@ -237,6 +237,18 @@ look. All were live in production.
 | 28 | A derived status recalculated on every save (`ExamService::update`) | Editing a published exam's name silently unpublished it, and reopening one for marking was undone by the next save |
 | 29 | Trusting an id the client posted (`enrollment_id` on the marking grid) | The caller could name any enrollment they liked and walk straight past the roll check |
 | 30 | Absent and exempt treated as the same thing | A missed paper was taken out of *both* sides of the percentage: a child who sat one paper of eight was reported at 90% and graded A |
+| 31 | A binding in a service provider calling `new` with its dependencies typed out by hand | Adding one constructor argument made **every admission a 500**. The container reads constructors; a closure that only calls `new` is a liability with no benefit |
+| 32 | A cached list given a key built from the filters alone | Once the list was scoped per user, whoever loaded page one decided what everybody else saw — a cache that hands out exactly what the scope refuses |
+| 33 | `now()` written where a date should have been asked for | A child who left in June and was entered in September left in September. `leave_date` is what the fee run, the register and the exam roll all read |
+| 34 | A status resolved by falling back through names to a hard-coded row id (`?? 2`) | A school that renamed its statuses re-admitted children as **Left** |
+| 35 | A soft delete that left the related period open | The child vanished from the student list and stayed on the class roll — still billed, still expected in the register |
+| 36 | `pluck('id')` on a `hasManyThrough` | Ambiguous column: both joined tables have an `id`. Qualify it |
+| 37 | A `hasOne` with no ordering | Which row you get is whatever the database returns first. A unique index makes it safe, not defined |
+| 38 | A generated password hashed and the plaintext dropped | Every account the system created was one nobody could sign in to — the whole student portal |
+| 39 | `rand()` for a password | Not a CSPRNG; its state is recoverable from a modest run of output. These open a child's record |
+| 40 | A uniqueness rule that treats the same person arriving twice as a clash | A school could not admit a **second child of the same father**: the CNIC rule refused any CNIC on file, so siblings were the case the form turned away |
+| 41 | Two services depending on each other through the container | `StudentImportService` → `StudentService` → `StudentImportService`. Xdebug stopped it at 512 frames |
+| 42 | A stub that reports success | Export and import both answered "you will be notified" and did nothing. Import is how a school onboards |
 
 **Enum or open list — decide, and say which.** A fixed set the application
 reasons about (fee frequency, voucher status) is a backed enum and the column
@@ -268,6 +280,26 @@ button again. `readinessOf()` returns the list ("no papers on the timetable",
 "6 of 40 children have no marks at all"), and a deliberate `force` exists for
 the school that means it anyway. That is a decision somebody took, rather than
 one the software made quietly.
+
+**A sixth: an idempotency check belongs before the work, not inside it.**
+`promote()` resolved "the next class after this one" and *then* checked whether
+the child had already been promoted. Run the sheet twice — which is what a
+school does when the screen hangs — and the second run asked what comes after
+Class 6 for a child already in Class 6, and refused a run that had nothing left
+to do. Ask "is this already done?" first.
+
+**A seventh: check the claim before you write it down.** Finding T10 said
+neither student request had a single `unique:` rule. They had them — as
+`Rule::unique()`, which the grep for `unique:` never saw. Two of the fourteen
+findings in that review were wrong in the same way: read from a grep rather than
+from the file. A finding is a claim about the code, and the cost of an unchecked
+one is a fix that cannot fire, or worse, a real bug left in place beside it.
+
+**An eighth: a rule that cannot fail is worse than no rule.** Having found T10
+"wrong", the first instinct was to add the missing rule anyway. It could never
+fire — `prepareForValidation` pins the field — so all it would have done is tell
+the next reader the field is editable. It came back out, and the pinning got a
+test instead.
 
 **Two lessons that keep repeating.**
 

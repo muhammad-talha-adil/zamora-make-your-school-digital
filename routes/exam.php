@@ -96,6 +96,11 @@ Route::prefix('exams')->name('exam.')->middleware(['web', 'auth'])->group(functi
             ->name('positions.recompute')
             ->middleware('permission:exam.result.publish');
 
+        // The year, assembled from the terms. Its own page, because it is the
+        // one exam question that is about the session rather than one exam.
+        Route::get('/annual-result', 'annualPage')
+            ->name('results.annual-page')
+            ->middleware('permission:exam.result.view');
         // The year, assembled from the terms.
         Route::get('/students/{studentId}/annual-result', 'annual')
             ->name('results.annual')
@@ -113,6 +118,9 @@ Route::prefix('exams')->name('exam.')->middleware(['web', 'auth'])->group(functi
     // Grace marks — a decision, not a mark entry, so it sits behind the
     // verifying ability rather than the marking one.
     Route::controller(ExamMarkingController::class)->group(function () {
+        Route::get('/marking/grace', 'gracePage')
+            ->name('marking.grace-page')
+            ->middleware('permission:exam.marks.verify');
         Route::get('/marking/grace-candidates', 'graceCandidates')
             ->name('marking.grace-candidates')
             ->middleware('permission:exam.marks.verify');

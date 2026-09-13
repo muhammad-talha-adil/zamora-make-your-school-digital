@@ -18,6 +18,7 @@ use App\Models\StudentGuardian;
 use App\Models\StudentStatus;
 use App\Models\User;
 use App\Services\GuardianService;
+use App\Services\Student\StudentEnrollmentService;
 use App\Services\StudentUserService;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
@@ -58,7 +59,8 @@ class StudentRepository
      */
     public function __construct(
         protected StudentUserService $studentUserService,
-        protected GuardianService $guardianService
+        protected GuardianService $guardianService,
+        protected StudentEnrollmentService $enrollments
     ) {}
 
     /**
@@ -68,10 +70,12 @@ class StudentRepository
     {
         // Get current page from request if not provided
         $page = $page ?? request()->get('page', 1);
-        $cacheKey = self::CACHE_KEY_STUDENTS.':'.md5(json_encode($filters).$perPage.$page);
+        $viewer = auth()->user();
+        $cacheKey = self::CACHE_KEY_STUDENTS.':'
+            .md5(json_encode($filters).$perPage.$page.$this->reachKey($viewer));
 
-        return Cache::remember($cacheKey, self::CACHE_TTL, function () use ($filters, $perPage) {
-            $query = Student::with(self::WITH_RELATIONS);
+        return Cache::remember($cacheKey, self::CACHE_TTL, function () use ($filters, $perPage, $viewer) {
+            $query = Student::with(self::WITH_RELATIONS)->visibleTo($viewer);
 
             // Filter by enrollment's campus
             if (! empty($filters['campus_id'])) {
@@ -136,14 +140,46 @@ class StudentRepository
     }
 
     /**
+     * What this user's reach is, as a cache key fragment.
+     *
+     * Both cached lists are scoped to what the viewer may see, so a key built
+     * from the filters alone would serve the campus admin's page one to a
+     * teacher — a cache that hands out precisely what the scope refuses. Their
+     * campus and their class assignments are what decide the rows, so both go
+     * in the key.
+     */
+    private function reachKey(?User $viewer): string
+    {
+        if ($viewer === null) {
+            return 'guest';
+        }
+
+        if ($viewer->isSuperAdmin()) {
+            return 'all';
+        }
+
+        return implode(':', [
+            'scoped',
+            $viewer->campusId() ?? 'any',
+            $viewer->isClassRestricted()
+                // Qualified: `teachingAssignments` joins through staff_profiles,
+                // and both tables have an `id`.
+                ? $viewer->teachingAssignments()->active()
+                    ->pluck('teacher_class_assignments.id')->sort()->implode(',')
+                : 'any',
+        ]);
+    }
+
+    /**
      * Get students for dropdowns with minimal data.
      */
     public function getForDropdown(array $filters = []): Collection
     {
-        $cacheKey = self::CACHE_KEY_DROPDOWNS.':'.md5(json_encode($filters));
+        $viewer = auth()->user();
+        $cacheKey = self::CACHE_KEY_DROPDOWNS.':'.md5(json_encode($filters).$this->reachKey($viewer));
 
-        return Cache::remember($cacheKey, 1800, function () use ($filters) { // 30 minutes
-            $query = Student::with(['user:id,name', 'currentEnrollment']);
+        return Cache::remember($cacheKey, 1800, function () use ($filters, $viewer) { // 30 minutes
+            $query = Student::with(['user:id,name', 'currentEnrollment'])->visibleTo($viewer);
 
             if (! empty($filters['campus_id'])) {
                 $query->whereHas('currentEnrollment', function ($q) use ($filters) {
@@ -196,10 +232,7 @@ class StudentRepository
      */
     public function generateAdmissionNumber(): string
     {
-        $lastStudent = Student::orderBy('id', 'desc')->first();
-        $nextNumber = $lastStudent ? (int) substr($lastStudent->admission_no, 4) + 1 : 1;
-
-        return 'ADM-'.str_pad((string) $nextNumber, 5, '0', STR_PAD_LEFT);
+        return 'ADM-'.str_pad((string) $this->nextInSequence('admission_no', 'ADM-'), 5, '0', STR_PAD_LEFT);
     }
 
     /**
@@ -207,11 +240,7 @@ class StudentRepository
      */
     public function generateStudentCode(): string
     {
-        $maxStudentCode = Student::where('student_code', 'like', 'STU-%')
-            ->max('student_code');
-        $nextNumber = $maxStudentCode ? (int) str_replace('STU-', '', $maxStudentCode) + 1 : 1;
-
-        return 'STU-'.str_pad((string) $nextNumber, 6, '0', STR_PAD_LEFT);
+        return 'STU-'.str_pad((string) $this->nextInSequence('student_code', 'STU-'), 6, '0', STR_PAD_LEFT);
     }
 
     /**
@@ -219,9 +248,53 @@ class StudentRepository
      */
     public function generateRegistrationNumber(): string
     {
-        $maxId = Student::max('id') ?? 0;
+        $year = date('Y');
 
-        return 'REG-'.date('Y').'-'.str_pad((string) ($maxId + 1), 5, '0', STR_PAD_LEFT);
+        return 'REG-'.$year.'-'
+            .str_pad((string) $this->nextInSequence('registration_no', 'REG-'.$year.'-'), 5, '0', STR_PAD_LEFT);
+    }
+
+    /**
+     * The next number in a prefixed sequence.
+     *
+     * Three generators wrote this three ways and all three were wrong:
+     *
+     *  - **They raced.** Read-then-write with nothing holding the gap, so two
+     *    clerks admitting at the same moment got the same number, the unique
+     *    index threw on the second, and that admission was lost behind a 500.
+     *    `lockForUpdate()` holds the row until the transaction commits — the
+     *    same shape the fee module uses for voucher numbers.
+     *  - **One took a string maximum.** `max(student_code)` is only correct
+     *    while every code has identical padding, and quietly wrong the moment it
+     *    grows. Sorting by length first fixes that for any padding.
+     *  - **One read the newest row rather than the highest number**, and cut its
+     *    numeric part with a blind `substr($x, 4)`. A school that typed its own
+     *    admission number in another format restarted the sequence at 1.
+     *
+     * Deleted rows count. A soft-deleted child keeps their admission number —
+     * their enrolment periods, vouchers and results are all still there, and two
+     * children sharing a number across the school's history is worse than a gap
+     * in the sequence.
+     */
+    private function nextInSequence(string $column, string $prefix): int
+    {
+        $highest = Student::withTrashed()
+            ->where($column, 'like', $prefix.'%')
+            ->lockForUpdate()
+            // Longest first, then largest: correct whatever the padding is.
+            ->orderByRaw('LENGTH('.$column.') DESC')
+            ->orderByDesc($column)
+            ->value($column);
+
+        if (! $highest) {
+            return 1;
+        }
+
+        $tail = substr((string) $highest, strlen($prefix));
+
+        // Anything that is not a plain number is a code somebody typed by hand.
+        // It is left alone rather than parsed into nonsense.
+        return preg_match('/^\d+$/', $tail) ? ((int) $tail) + 1 : 1;
     }
 
     /**
@@ -554,7 +627,7 @@ class StudentRepository
     private function handleImageUpdate(Student $student, array $data): void
     {
         // Get student's name from user relationship
-        $studentName = $student->user?->name ?? $student->student_code;
+        $studentName = $student->user->name ?? $student->student_code;
 
         // Check if image should be removed
         if (! empty($data['remove_image'])) {
@@ -652,104 +725,30 @@ class StudentRepository
     /**
      * Change student status (leave or re-admission).
      */
+    /**
+     * Change a student's status: they have left, or they are coming back.
+     *
+     * Both halves live in `StudentEnrollmentService` now. There were three
+     * routines doing this work — `handleLeave()`, `handleReactivation()` and
+     * `readmit()` — and the last two were copies of one another that disagreed
+     * about the defaults, about what was required, and about the status to
+     * write. One of them fell back to **Left** when re-admitting.
+     *
+     * Neither closed the open period first, so a re-admission of a child nobody
+     * had marked as left ran into the unique index and died with a 500.
+     */
     public function changeStatus(Student $student, array $data): Student
     {
-        DB::transaction(function () use ($student, $data) {
-            if (! empty($data['is_reactivation'])) {
-                // Re-admission
-                $this->handleReactivation($student, $data);
-            } else {
-                // Leave
-                $this->handleLeave($student, $data);
-            }
-
-            Log::info('Student status changed', [
-                'student_id' => $student->id,
-                'is_reactivation' => $data['is_reactivation'] ?? false,
-                'user_id' => auth()->id(),
-            ]);
-
-            return $student;
-        });
-
-        // `fresh()` is null only if the row vanished mid-request; the caller is
-        // promised a Student, so fall back to the instance in hand.
-        return $student->fresh() ?? $student;
-    }
-
-    /**
-     * Handle student re-admission.
-     */
-    private function handleReactivation(Student $student, array $data): void
-    {
-        $lastEnrollment = StudentEnrollmentRecord::where('student_id', $student->id)
-            ->orderBy('id', 'desc')
-            ->first();
-
-        $sessionId = $data['session_id'] ?? $lastEnrollment?->session_id;
-        $classId = $data['class_id'] ?? $lastEnrollment?->class_id;
-        $sectionId = $data['section_id'] ?? $lastEnrollment?->section_id;
-        $campusId = $data['campus_id'] ?? $lastEnrollment?->campus_id;
-
-        if (! $sessionId || ! $classId || ! $sectionId) {
-            throw new \RuntimeException('Session, class, and section are required for re-admission');
+        if (! empty($data['is_reactivation'])) {
+            return $this->enrollments->readmit($student, $this->readmissionShape($data));
         }
 
-        StudentEnrollmentRecord::create([
-            'student_id' => $student->id,
-            'session_id' => $sessionId,
-            'class_id' => $classId,
-            'section_id' => $sectionId,
-            'campus_id' => $campusId,
-            'admission_date' => now()->toDateString(),
-            'leave_date' => null,
-            'student_status_id' => $data['status_id'] ?? StudentStatus::where('name', 'Active')->first()?->id,
-            'previous_enrollment_id' => $lastEnrollment?->id,
-        ]);
-
-        $student->update([
-            'student_status_id' => $data['status_id'] ?? StudentStatus::where('name', 'Active')->first()?->id,
-        ]);
-
-        // Activate user account
-        if ($student->user_id) {
-            User::where('id', $student->user_id)->update(['is_active' => true]);
-        }
-    }
-
-    /**
-     * Handle student leave.
-     */
-    private function handleLeave(Student $student, array $data): void
-    {
-        $currentEnrollment = StudentEnrollmentRecord::where('student_id', $student->id)
-            ->whereNull('leave_date')
-            ->first();
-
-        if ($currentEnrollment) {
-            $currentEnrollment->update([
-                'leave_date' => now()->toDateString(),
-                'student_status_id' => $data['status_id'],
-                'description' => $data['status_description'] ?? null,
-            ]);
-        } else {
-            StudentEnrollmentRecord::create([
-                'student_id' => $student->id,
-                'admission_date' => now()->toDateString(),
-                'leave_date' => now()->toDateString(),
-                'student_status_id' => $data['status_id'],
-                'description' => $data['status_description'] ?? null,
-            ]);
-        }
-
-        $student->update([
-            'student_status_id' => $data['status_id'],
-        ]);
-
-        // Deactivate user account
-        if ($student->user_id) {
-            User::where('id', $student->user_id)->update(['is_active' => false]);
-        }
+        return $this->enrollments->leave(
+            $student,
+            $data['leave_date'] ?? null,
+            $data['status_id'] ?? null,
+            $data['status_description'] ?? null
+        );
     }
 
     /**
@@ -757,47 +756,24 @@ class StudentRepository
      */
     public function readmit(Student $student, array $data): Student
     {
-        DB::transaction(function () use ($student, $data) {
-            $lastEnrollment = StudentEnrollmentRecord::where('student_id', $student->id)
-                ->orderBy('id', 'desc')
-                ->first();
+        return $this->enrollments->readmit($student, $this->readmissionShape($data));
+    }
 
-            $activeStatusId = StudentStatus::where('name', 'Active')->first()?->id
-                ?? StudentStatus::where('name', 'Left')->first()?->id
-                ?? 2;
+    /**
+     * The two screens post the status under different names.
+     *
+     * @param  array<string, mixed>  $data
+     * @return array<string, mixed>
+     */
+    private function readmissionShape(array $data): array
+    {
+        $shape = $data;
 
-            StudentEnrollmentRecord::create([
-                'student_id' => $student->id,
-                'session_id' => $data['session_id'],
-                'class_id' => $data['class_id'],
-                'section_id' => $data['section_id'],
-                'campus_id' => $data['campus_id'],
-                'admission_date' => $data['admission_date'] ?? now()->toDateString(),
-                'leave_date' => null,
-                'student_status_id' => $activeStatusId,
-                'previous_enrollment_id' => $lastEnrollment?->id,
-            ]);
+        if (isset($data['status_id']) && ! isset($shape['student_status_id'])) {
+            $shape['student_status_id'] = $data['status_id'];
+        }
 
-            $student->update([
-                'student_status_id' => $activeStatusId,
-            ]);
-
-            // Activate user account
-            if ($student->user_id) {
-                User::where('id', $student->user_id)->update(['is_active' => true]);
-            }
-
-            Log::info('Student re-admitted', [
-                'student_id' => $student->id,
-                'user_id' => auth()->id(),
-            ]);
-
-            return $student;
-        });
-
-        // `fresh()` is null only if the row vanished mid-request; the caller is
-        // promised a Student, so fall back to the instance in hand.
-        return $student->fresh() ?? $student;
+        return $shape;
     }
 
     /**
@@ -843,7 +819,7 @@ class StudentRepository
 
             if ($discountTypeId) {
                 $discountType = DiscountType::find($discountTypeId);
-                $requiresApproval = $discountType?->requires_approval ?? false;
+                $requiresApproval = $discountType->requires_approval ?? false;
             }
 
             StudentDiscount::create([

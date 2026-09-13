@@ -6,13 +6,17 @@ use App\Models\Campus;
 use App\Models\Month;
 use App\Models\PayrollRun;
 use App\Models\PayrollRunItem;
+use App\Models\Staff\StaffAttendance;
+use App\Models\Staff\StaffDocument;
+use App\Models\Staff\StaffLeave;
 use App\Models\StaffDepartment;
 use App\Models\StaffDesignation;
 use App\Models\StaffProfile;
 use App\Models\User;
-use App\Services\Finance\UnifiedAccountingService;
+use App\Services\Staff\StaffPayrollService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
 use Inertia\Inertia;
@@ -20,31 +24,106 @@ use Inertia\Inertia;
 class StaffController extends Controller
 {
     public function __construct(
-        protected UnifiedAccountingService $accountingService
+        protected StaffPayrollService $payroll
     ) {}
 
+    /**
+     * The overview a school opens to first.
+     *
+     * `Staff/Index.vue` used to be the staff list, the payroll runs, the
+     * departments and the designations all crammed onto one page — the last
+     * thing built, once every other job had somewhere better to live: the
+     * staff list moved to `Staff\StaffProfileController::index()`, payroll to
+     * `payrollPage()` below, and the department/designation lookups now sit in
+     * a panel on the staff list itself.
+     */
     public function index()
     {
-        $staff = StaffProfile::with(['user', 'campus', 'department', 'designation'])
-            ->latest()
-            ->get();
+        $viewer = request()->user();
+
+        Gate::authorize('viewAny', StaffProfile::class);
+
+        $staff = StaffProfile::query()->visibleTo($viewer);
+        $activeStaff = (clone $staff)->where('is_active', true);
+
+        $maySeeSalary = $viewer !== null
+            && ($viewer->isSuperAdmin() || $viewer->hasPermission('staff.salary.manage'));
+
+        $pendingPayroll = $maySeeSalary
+            ? (float) PayrollRun::where('status', '!=', 'paid')
+                ->when(
+                    $viewer && ! $viewer->isSuperAdmin() && $viewer->campusId(),
+                    fn ($query) => $query->where(function ($q) use ($viewer) {
+                        $q->whereNull('campus_id')->orWhere('campus_id', $viewer->campusId());
+                    })
+                )
+                ->sum('total_net')
+            : null;
+
+        $today = now()->toDateString();
+
+        return Inertia::render('Staff/Dashboard', [
+            // Selected columns only: the full model carries the salary fields,
+            // which do not belong on a dashboard nobody's viewSalary was checked
+            // for.
+            'recentJoiners' => StaffProfile::query()
+                ->select(['id', 'user_id', 'employee_no', 'hire_date', 'campus_id', 'designation_id'])
+                ->with(['user:id,name', 'campus:id,name', 'designation:id,name'])
+                ->visibleTo($viewer)
+                ->whereNotNull('hire_date')
+                ->orderByDesc('hire_date')
+                ->take(5)
+                ->get(),
+            'summary' => [
+                'active_staff' => (clone $activeStaff)->count(),
+                'monthly_salary' => $maySeeSalary
+                    ? (float) (clone $activeStaff)->get()->sum(fn (StaffProfile $profile) => $profile->net_salary)
+                    : null,
+                'pending_payroll' => $pendingPayroll,
+                'present_today' => StaffAttendance::whereDate('attendance_date', $today)
+                    ->whereHas('staffProfile', fn ($q) => $q->visibleTo($viewer))
+                    ->whereHas('status', fn ($q) => $q->where('code', '!=', 'A'))
+                    ->count(),
+                'on_leave_today' => StaffLeave::approved()
+                    ->overlapping($today, $today)
+                    ->whereHas('staffProfile', fn ($q) => $q->visibleTo($viewer))
+                    ->count(),
+                'pending_leave_requests' => StaffLeave::where('status', StaffLeave::STATUS_PENDING)
+                    ->whereHas('staffProfile', fn ($q) => $q->visibleTo($viewer))
+                    ->count(),
+                'documents_expiring_soon' => StaffDocument::expiringBy(now()->addDays(30)->toDateString())
+                    ->whereHas('staffProfile', fn ($q) => $q->visibleTo($viewer))
+                    ->count(),
+            ],
+        ]);
+    }
+
+    /**
+     * The payroll screen: generate a run, then release it.
+     */
+    public function payrollPage(Request $request)
+    {
+        $viewer = $request->user();
+
+        Gate::authorize('runPayroll', StaffProfile::class);
 
         $payrollRuns = PayrollRun::with(['campus', 'month', 'items.staffProfile.user'])
+            ->when(
+                $viewer && ! $viewer->isSuperAdmin() && $viewer->campusId(),
+                fn ($query) => $query->where(function ($q) use ($viewer) {
+                    $q->whereNull('campus_id')->orWhere('campus_id', $viewer->campusId());
+                })
+            )
             ->latest()
             ->take(12)
             ->get();
 
-        return Inertia::render('Staff/Index', [
-            'staffMembers' => $staff,
-            'departments' => StaffDepartment::orderBy('name')->get(),
-            'designations' => StaffDesignation::orderBy('name')->get(),
+        return Inertia::render('Staff/Payroll/Index', [
             'campuses' => Campus::select('id', 'name')->orderBy('name')->get(),
-            'months' => Month::select('id', 'name')->orderBy('id')->get(),
+            'months' => Month::select('id', 'name', 'month_number')->orderBy('month_number')->get(),
             'payrollRuns' => $payrollRuns,
-            'summary' => [
-                'active_staff' => $staff->where('is_active', true)->count(),
-                'monthly_salary' => (float) $staff->where('is_active', true)->sum(fn (StaffProfile $profile) => $profile->net_salary),
-                'pending_payroll' => (float) $payrollRuns->where('status', '!=', 'paid')->sum('total_net'),
+            'can' => [
+                'approve' => $viewer?->can('approvePayroll', StaffProfile::class) ?? false,
             ],
         ]);
     }
@@ -117,6 +196,8 @@ class StaffController extends Controller
 
     public function storeStaff(Request $request)
     {
+        Gate::authorize('create', StaffProfile::class);
+
         $data = $request->validate([
             'name' => 'required|string|max:150',
             'email' => 'nullable|email|max:150|unique:users,email',
@@ -174,6 +255,8 @@ class StaffController extends Controller
 
     public function updateStaff(Request $request, StaffProfile $staffProfile)
     {
+        Gate::authorize('update', $staffProfile);
+
         $data = $request->validate([
             'name' => 'required|string|max:150',
             'email' => 'nullable|email|max:150|unique:users,email,'.$staffProfile->user_id,
@@ -226,6 +309,8 @@ class StaffController extends Controller
 
     public function toggleStaff(StaffProfile $staffProfile)
     {
+        Gate::authorize('update', $staffProfile);
+
         $staffProfile->update(['is_active' => ! $staffProfile->is_active]);
         $staffProfile->user?->update(['is_active' => $staffProfile->is_active]);
 
@@ -238,6 +323,8 @@ class StaffController extends Controller
 
     public function generatePayroll(Request $request)
     {
+        Gate::authorize('runPayroll', StaffProfile::class);
+
         $data = $request->validate([
             'campus_id' => 'nullable|exists:campuses,id',
             'payroll_month_id' => 'required|exists:months,id',
@@ -245,103 +332,31 @@ class StaffController extends Controller
             'title' => 'nullable|string|max:150',
         ]);
 
-        $staffProfiles = StaffProfile::with('user')
-            ->where('is_active', true)
-            ->when($data['campus_id'] ?? null, fn ($query, $campusId) => $query->where('campus_id', $campusId))
-            ->get();
-
-        $run = DB::transaction(function () use ($data, $staffProfiles) {
-            $title = $data['title'] ?: 'Payroll '.$data['payroll_month_id'].'/'.$data['payroll_year'];
-
-            $run = PayrollRun::updateOrCreate(
-                [
-                    'campus_id' => $data['campus_id'] ?? null,
-                    'payroll_month_id' => $data['payroll_month_id'],
-                    'payroll_year' => $data['payroll_year'],
-                ],
-                [
-                    'title' => $title,
-                    'status' => 'processed',
-                    'processed_at' => now(),
-                    'created_by' => auth()->id(),
-                ]
-            );
-
-            $run->items()->delete();
-
-            $totals = [
-                'gross' => 0,
-                'deductions' => 0,
-                'net' => 0,
-            ];
-
-            foreach ($staffProfiles as $profile) {
-                $gross = $profile->gross_salary;
-                $deductions = (float) $profile->deduction_amount;
-                $net = $profile->net_salary;
-
-                $run->items()->create([
-                    'staff_profile_id' => $profile->id,
-                    'gross_salary' => $profile->basic_salary,
-                    'allowance_amount' => $profile->allowance_amount,
-                    'deduction_amount' => $deductions,
-                    'net_salary' => $net,
-                    'status' => 'pending',
-                    'payment_method' => $profile->payment_method,
-                ]);
-
-                $totals['gross'] += $gross;
-                $totals['deductions'] += $deductions;
-                $totals['net'] += $net;
-            }
-
-            $run->update([
-                'total_gross' => $totals['gross'],
-                'total_deductions' => $totals['deductions'],
-                'total_net' => $totals['net'],
-            ]);
-
-            return $run;
-        });
-
-        $this->accountingService->postPayrollAccrualJournal($run->fresh());
+        $run = $this->payroll->generateRun($data, auth()->id());
 
         return response()->json([
             'success' => true,
             'message' => 'Payroll generated successfully.',
-            'payrollRun' => $run->fresh(['campus', 'month', 'items.staffProfile.user']),
+            'payrollRun' => $run,
         ]);
     }
 
     public function payPayrollItem(Request $request, PayrollRunItem $payrollRunItem)
     {
+        // Releasing money is not the same act as working the figures out.
+        Gate::authorize('approvePayroll', StaffProfile::class);
+
         $data = $request->validate([
             'payment_method' => 'required|string|max:50',
             'reference_no' => 'nullable|string|max:150',
         ]);
 
-        $payrollRunItem->update([
-            'status' => 'paid',
-            'payment_method' => $data['payment_method'],
-            'reference_no' => $data['reference_no'] ?? null,
-            'paid_at' => now(),
-        ]);
-
-        $this->accountingService->postPayrollPaymentJournal($payrollRunItem->fresh(['payrollRun', 'staffProfile.user']));
-
-        $run = $payrollRunItem->payrollRun()->with('items')->first();
-
-        if ($run && $run->items->every(fn (PayrollRunItem $item) => $item->status === 'paid')) {
-            $run->update([
-                'status' => 'paid',
-                'paid_at' => now(),
-            ]);
-        }
+        $payrollItem = $this->payroll->pay($payrollRunItem, $data);
 
         return response()->json([
             'success' => true,
             'message' => 'Salary payment marked successfully.',
-            'payrollItem' => $payrollRunItem->fresh(['staffProfile.user']),
+            'payrollItem' => $payrollItem,
         ]);
     }
 

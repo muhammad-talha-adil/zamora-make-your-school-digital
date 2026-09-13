@@ -63,6 +63,10 @@ return new class extends Migration
             // Reason/justification
             $table->text('reason')->nullable();
 
+            // Flag to identify manual adjustments created during admission
+            // These should NOT appear in the regular discount options list
+            $table->boolean('is_manual_adjustment')->default(false);
+
             $table->timestamps();
             $table->softDeletes();
 

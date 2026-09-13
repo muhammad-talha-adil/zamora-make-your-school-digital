@@ -33,7 +33,12 @@ class InventoryTypesController extends Controller
             ->when($status === 'inactive', fn ($q) => $q->withoutGlobalScope('active')->where('is_active', false))
             ->orderBy('name');
 
-        return inertia('inventory/InventoryTypes/Index', [
+        // The Vue page actually lives at `inventory/Types/Index.vue` — this
+        // pointed at a path with no file behind it at all
+        // (`inventory/InventoryTypes/Index`), which would have thrown a Vite
+        // manifest error the first time this screen was opened outside dev
+        // mode's on-demand resolution.
+        return inertia('inventory/Types/Index', [
             'inventoryTypes' => $query->paginate($perPage),
             'campuses' => Campus::orderBy('name')->get(),
             'filters' => [

@@ -46,6 +46,9 @@ class StudentEnrollmentRecord extends Model
 
     /**
      * Get the student that this enrollment record belongs to.
+
+     *
+     * @return BelongsTo<Student, $this>
      */
     public function student(): BelongsTo
     {
@@ -54,6 +57,9 @@ class StudentEnrollmentRecord extends Model
 
     /**
      * Get the academic session for this enrollment.
+
+     *
+     * @return BelongsTo<Session, $this>
      */
     public function session(): BelongsTo
     {
@@ -62,6 +68,9 @@ class StudentEnrollmentRecord extends Model
 
     /**
      * Get the class for this enrollment.
+
+     *
+     * @return BelongsTo<SchoolClass, $this>
      */
     public function class(): BelongsTo
     {
@@ -70,6 +79,9 @@ class StudentEnrollmentRecord extends Model
 
     /**
      * Get the section for this enrollment.
+
+     *
+     * @return BelongsTo<Section, $this>
      */
     public function section(): BelongsTo
     {
@@ -78,6 +90,9 @@ class StudentEnrollmentRecord extends Model
 
     /**
      * Get the campus for this enrollment (nullable).
+
+     *
+     * @return BelongsTo<Campus, $this>
      */
     public function campus(): BelongsTo
     {
@@ -86,6 +101,9 @@ class StudentEnrollmentRecord extends Model
 
     /**
      * Get the status associated with this enrollment record.
+
+     *
+     * @return BelongsTo<StudentStatus, $this>
      */
     public function studentStatus(): BelongsTo
     {
@@ -226,6 +244,9 @@ class StudentEnrollmentRecord extends Model
 
     /**
      * Get discounts for this enrollment.
+
+     *
+     * @return HasMany<StudentDiscount, $this>
      */
     public function discounts(): HasMany
     {

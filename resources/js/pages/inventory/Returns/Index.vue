@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Head } from '@inertiajs/vue3';
+import { Head, router } from '@inertiajs/vue3';
 import { formatCurrency } from '@/utils';
 import { ref, watch } from 'vue';
 import axios from 'axios';
@@ -107,6 +107,10 @@ const calculateFinalPrice = (item: any) => {
     }
     return price.toFixed(2);
 };
+
+const viewReturn = (returnItem: any) => {
+    router.visit(`/inventory/returns/${returnItem.id}`);
+};
 </script>
 
 <template>
@@ -169,6 +173,7 @@ const calculateFinalPrice = (item: any) => {
                                 <th scope="col" class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">Unit Price</th>
                                 <th scope="col" class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">Total</th>
                                 <th scope="col" class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">Date</th>
+                                <th scope="col" class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">Actions</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-border bg-card">
@@ -194,6 +199,11 @@ const calculateFinalPrice = (item: any) => {
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
                                     {{ formatDate(returnItem.return_date) }}
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+                                    <Button variant="outline" size="sm" @click="viewReturn(returnItem)" class="min-h-9">
+                                        <Icon icon="eye" class="mr-1" />View
+                                    </Button>
                                 </td>
                             </tr>
                         </tbody>

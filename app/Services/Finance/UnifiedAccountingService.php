@@ -6,6 +6,7 @@ use App\Models\Fee\FeePayment;
 use App\Models\Fee\FeeVoucher;
 use App\Models\Finance\ChartOfAccount;
 use App\Models\Finance\JournalEntry;
+use App\Models\Finance\JournalEntryLine;
 use App\Models\Finance\StudentAccountCharge;
 use App\Models\PayrollRun;
 use App\Models\PayrollRunItem;
@@ -331,6 +332,57 @@ class UnifiedAccountingService
 
             return $entry;
         });
+    }
+
+    /**
+     * Removes the journal a payment posted, without posting a replacement.
+     *
+     * What a reversed payment needs: the double-entry books must forget it, the
+     * same way `replaceSourceJournal` already forgets a voucher's old journal
+     * before posting its new one.
+     */
+    public function voidPaymentJournal(FeePayment $payment): void
+    {
+        $this->deleteSourceJournal('fee', 'fee_payment', $payment->id);
+    }
+
+    /**
+     * Cash and bank movement for a period, read off the double-entry books
+     * rather than the legacy `Ledger`.
+     *
+     * A debit to a cash or bank account (`1000`/`1010`) always means money
+     * physically arrived — a fee payment, a transport charge collected,
+     * anything — regardless of which module posted the entry; a credit to the
+     * same accounts always means money physically left. This is what the
+     * Finance dashboard's "today"/"this month" figures are meant to answer,
+     * and reading it here is why `FeePaymentController` no longer also writes
+     * a `Ledger` row for the same payment: that was a second, drifting answer
+     * to the same question, one a failed write could silently leave short.
+     *
+     * `Ledger` still holds genuinely manual entries — a walk-in donation, an
+     * ad-hoc expense with no module behind it — so the dashboard adds this to
+     * `FinanceService`'s Ledger totals rather than replacing them.
+     *
+     * @return array{income: float, expense: float}
+     */
+    public function cashMovementTotals(string $fromDate, string $toDate, ?int $campusId = null): array
+    {
+        $query = JournalEntryLine::query()
+            ->whereHas('account', fn ($q) => $q->whereIn('code', ['1000', '1010']))
+            ->whereHas('journalEntry', function ($q) use ($fromDate, $toDate, $campusId) {
+                $q->whereDate('entry_date', '>=', $fromDate)
+                    ->whereDate('entry_date', '<=', $toDate)
+                    ->where('status', 'posted');
+
+                if ($campusId) {
+                    $q->where('campus_id', $campusId);
+                }
+            });
+
+        return [
+            'income' => (float) (clone $query)->sum('debit'),
+            'expense' => (float) (clone $query)->sum('credit'),
+        ];
     }
 
     protected function replaceSourceJournal(string $sourceModule, string $sourceType, int $sourceId, callable $callback): ?JournalEntry

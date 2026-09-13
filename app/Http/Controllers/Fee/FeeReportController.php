@@ -7,6 +7,7 @@ use App\Models\Fee\FeePayment;
 use App\Models\Fee\FeeVoucher;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 
 class FeeReportController extends Controller
@@ -16,6 +17,8 @@ class FeeReportController extends Controller
      */
     public function index()
     {
+        Gate::authorize('viewAny', FeePayment::class);
+
         return Inertia::render('Fee/Reports/Index');
     }
 
@@ -24,7 +27,9 @@ class FeeReportController extends Controller
      */
     public function collection(Request $request)
     {
-        $query = FeePayment::query();
+        Gate::authorize('viewAny', FeePayment::class);
+
+        $query = FeePayment::query()->visibleTo($request->user());
 
         // Apply filters
         if ($request->filled('date_from')) {
@@ -36,21 +41,24 @@ class FeeReportController extends Controller
         }
 
         if ($request->filled('campus_id')) {
-            $query->whereHas('student.enrollments', function ($q) use ($request) {
-                $q->where('campus_id', $request->campus_id);
-            });
+            $query->where('campus_id', $request->campus_id);
         }
 
         // Get collection summary
         $summary = [
             'total_received' => $query->sum('received_amount'),
             'total_allocated' => $query->sum('allocated_amount'),
-            'total_wallet' => $query->sum('wallet_amount'),
+            // Renamed from `wallet_amount` to `excess_amount` on the table
+            // itself — this had summed a column that no longer exists and
+            // thrown on every load of this report.
+            'total_wallet' => $query->sum('excess_amount'),
             'payment_count' => $query->count(),
         ];
 
         // Get payment method breakdown
-        $byMethod = FeePayment::select('payment_method', DB::raw('SUM(received_amount) as total'))
+        $byMethod = FeePayment::query()
+            ->visibleTo($request->user())
+            ->select('payment_method', DB::raw('SUM(received_amount) as total'))
             ->when($request->filled('date_from'), function ($q) use ($request) {
                 $q->whereDate('payment_date', '>=', $request->date_from);
             })
@@ -61,10 +69,12 @@ class FeeReportController extends Controller
             ->get();
 
         // Get daily collection
-        $dailyCollection = FeePayment::select(
-            DB::raw('DATE(payment_date) as date'),
-            DB::raw('SUM(received_amount) as total')
-        )
+        $dailyCollection = FeePayment::query()
+            ->visibleTo($request->user())
+            ->select(
+                DB::raw('DATE(payment_date) as date'),
+                DB::raw('SUM(received_amount) as total')
+            )
             ->when($request->filled('date_from'), function ($q) use ($request) {
                 $q->whereDate('payment_date', '>=', $request->date_from);
             })
@@ -88,7 +98,10 @@ class FeeReportController extends Controller
      */
     public function outstanding(Request $request)
     {
+        Gate::authorize('viewAny', FeeVoucher::class);
+
         $query = FeeVoucher::with(['student', 'voucherMonth'])
+            ->visibleTo($request->user())
             ->whereIn('status', ['unpaid', 'partial', 'overdue']);
 
         // Apply filters
@@ -108,22 +121,26 @@ class FeeReportController extends Controller
         ];
 
         // Get outstanding by class
-        $byClass = FeeVoucher::select(
-            'class_id',
-            DB::raw('SUM(balance_amount) as total'),
-            DB::raw('COUNT(*) as count')
-        )
+        $byClass = FeeVoucher::query()
+            ->visibleTo($request->user())
+            ->select(
+                'class_id',
+                DB::raw('SUM(balance_amount) as total'),
+                DB::raw('COUNT(*) as count')
+            )
             ->whereIn('status', ['unpaid', 'partial', 'overdue'])
             ->groupBy('class_id')
             ->with('class:id,name')
             ->get();
 
         // Get top defaulters
-        $topDefaulters = FeeVoucher::select(
-            'student_id',
-            DB::raw('SUM(balance_amount) as total_outstanding'),
-            DB::raw('COUNT(*) as voucher_count')
-        )
+        $topDefaulters = FeeVoucher::query()
+            ->visibleTo($request->user())
+            ->select(
+                'student_id',
+                DB::raw('SUM(balance_amount) as total_outstanding'),
+                DB::raw('COUNT(*) as voucher_count')
+            )
             ->whereIn('status', ['unpaid', 'partial', 'overdue'])
             ->groupBy('student_id')
             ->with('student:id,name,registration_number')
@@ -144,7 +161,10 @@ class FeeReportController extends Controller
      */
     public function defaulters(Request $request)
     {
+        Gate::authorize('viewAny', FeeVoucher::class);
+
         $query = FeeVoucher::with(['student', 'voucherMonth'])
+            ->visibleTo($request->user())
             ->where('status', 'overdue');
 
         // Apply filters
@@ -157,7 +177,12 @@ class FeeReportController extends Controller
         }
 
         if ($request->filled('min_days_overdue')) {
-            $query->whereRaw('DATEDIFF(NOW(), due_date) >= ?', [$request->min_days_overdue]);
+            // `DATEDIFF(NOW(), due_date)` is MySQL-only syntax — SQLite (this
+            // suite's test database) has no such function at all. "At least N
+            // days overdue" is the same question as "due on or before today
+            // minus N days", asked in a way every driver understands.
+            $cutoff = now()->subDays((int) $request->min_days_overdue)->toDateString();
+            $query->whereDate('due_date', '<=', $cutoff);
         }
 
         $defaulters = $query->orderBy('due_date')->paginate(50);
@@ -173,7 +198,9 @@ class FeeReportController extends Controller
      */
     public function paymentMethods(Request $request)
     {
-        $query = FeePayment::query();
+        Gate::authorize('viewAny', FeePayment::class);
+
+        $query = FeePayment::query()->visibleTo($request->user());
 
         // Apply filters
         if ($request->filled('date_from')) {

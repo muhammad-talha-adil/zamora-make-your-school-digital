@@ -64,11 +64,17 @@ class User extends Authenticatable
 
     // Relationships
 
+    /**
+     * @return HasOne<Student, $this>
+     */
     public function student(): HasOne
     {
         return $this->hasOne(Student::class);
     }
 
+    /**
+     * @return HasOne<Guardian, $this>
+     */
     public function guardian(): HasOne
     {
         return $this->hasOne(Guardian::class);
@@ -131,6 +137,9 @@ class User extends Authenticatable
 
     /**
      * The classes this user teaches, in the sessions they teach them.
+
+     *
+     * @return HasManyThrough<TeacherClassAssignment, StaffProfile, $this>
      */
     public function teachingAssignments(): HasManyThrough
     {

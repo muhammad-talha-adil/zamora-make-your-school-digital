@@ -2,23 +2,34 @@
 
 namespace App\Http\Controllers\Fee;
 
+use App\Enums\Fee\AdjustmentType;
 use App\Enums\Fee\FineType;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Fee\AddVoucherAdjustmentRequest;
+use App\Http\Requests\Fee\AddVoucherItemRequest;
+use App\Http\Requests\Fee\GenerateVouchersBulkRequest;
+use App\Http\Requests\Fee\GenerateVouchersRequest;
+use App\Http\Requests\Fee\GetApplicableFeeStructureRequest;
+use App\Http\Requests\Fee\UpdateFeeVoucherRequest;
+use App\Http\Requests\Fee\UpdateVoucherItemRequest;
 use App\Models\Campus;
 use App\Models\Fee\FeeFineRule;
 use App\Models\Fee\FeeHead;
 use App\Models\Fee\FeeStructure;
 use App\Models\Fee\FeeVoucher;
 use App\Models\Fee\FeeVoucherItem;
+use App\Models\Fee\FeeVoucherPrintLog;
 use App\Models\Month;
 use App\Models\School;
 use App\Models\SchoolClass;
 use App\Models\Section;
 use App\Models\Session;
+use App\Models\Student;
 use App\Services\Fee\VoucherGenerationService;
 use App\Services\Finance\StudentBillingService;
 use App\Services\Finance\UnifiedAccountingService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 
 class FeeVoucherController extends Controller
@@ -33,7 +44,9 @@ class FeeVoucherController extends Controller
      */
     public function getVouchersList(Request $request)
     {
-        $query = FeeVoucher::with(['student', 'voucherMonth', 'campus']);
+        Gate::authorize('viewAny', FeeVoucher::class);
+
+        $query = FeeVoucher::query()->visibleTo($request->user())->with(['student', 'voucherMonth', 'campus']);
 
         // Apply campus filter
         if ($request->filled('campus_id')) {
@@ -111,7 +124,9 @@ class FeeVoucherController extends Controller
      */
     public function index(Request $request)
     {
-        $query = FeeVoucher::with(['student', 'voucherMonth', 'campus']);
+        Gate::authorize('viewAny', FeeVoucher::class);
+
+        $query = FeeVoucher::query()->visibleTo($request->user())->with(['student', 'voucherMonth', 'campus']);
 
         // Apply campus filter (required for multi-campus security)
         if ($request->filled('campus_id')) {
@@ -192,10 +207,21 @@ class FeeVoucherController extends Controller
     }
 
     /**
+     * `fee.vouchers.create` — the route names it that; the screen is the same
+     * one `generate.form` renders, since a voucher is never hand-typed here.
+     */
+    public function create()
+    {
+        return $this->generateForm();
+    }
+
+    /**
      * Show the form for generating vouchers.
      */
     public function generateForm()
     {
+        Gate::authorize('generate', FeeVoucher::class);
+
         return Inertia::render('Fee/Vouchers/Generate', [
             'sessions' => Session::select('id', 'name', 'start_date', 'end_date')->orderBy('start_date', 'desc')->get(),
             'months' => Month::select('id', 'name', 'month_number')->orderBy('month_number')->get(),
@@ -210,14 +236,9 @@ class FeeVoucherController extends Controller
      * Get applicable fee structure for class/session/campus.
      * Returns the fee structure that would be used for voucher generation.
      */
-    public function getApplicableFeeStructure(Request $request)
+    public function getApplicableFeeStructure(GetApplicableFeeStructureRequest $request)
     {
-        $request->validate([
-            'session_id' => 'required|exists:academic_sessions,id',
-            'campus_id' => 'required|exists:campuses,id',
-            'class_id' => 'required|exists:school_classes,id',
-            'section_id' => 'nullable|exists:sections,id',
-        ]);
+        Gate::authorize('generate', FeeVoucher::class);
 
         $sessionId = $request->session_id;
         $campusId = $request->campus_id;
@@ -325,23 +346,11 @@ class FeeVoucherController extends Controller
     /**
      * Generate vouchers for single or multiple months.
      */
-    public function generate(Request $request)
+    public function generate(GenerateVouchersRequest $request)
     {
-        $validated = $request->validate([
-            'session_id' => 'required|exists:academic_sessions,id',
-            'campus_id' => 'required|exists:campuses,id',
-            'class_id' => 'required|exists:school_classes,id',
-            'section_id' => 'nullable|exists:sections,id',
-            'month_ids' => 'required|array|min:1',
-            'month_ids.*' => 'required|exists:months,id',
-            'year' => 'required|integer|min:2020|max:2100',
-            'include_previous_unpaid' => 'nullable|boolean',
-            'include_inventory_dues' => 'nullable|boolean',
-            'include_transport_dues' => 'nullable|boolean',
-            'custom_fee_heads' => 'nullable|array',
-            'custom_fee_heads.*.fee_head_id' => 'required|exists:fee_heads,id',
-            'custom_fee_heads.*.amount' => 'required|numeric|gt:0',
-        ]);
+        Gate::authorize('generate', FeeVoucher::class);
+
+        $validated = $request->validated();
 
         $voucherService = app(VoucherGenerationService::class);
 
@@ -397,10 +406,61 @@ class FeeVoucherController extends Controller
     }
 
     /**
+     * The same run as `generate()`, for every class in the campus at once —
+     * the whole school's monthly billing in one call, rather than one class at
+     * a time.
+     */
+    public function generateBulk(GenerateVouchersBulkRequest $request)
+    {
+        Gate::authorize('generate', FeeVoucher::class);
+
+        $validated = $request->validated();
+
+        $voucherService = app(VoucherGenerationService::class);
+        $months = Month::whereIn('id', $validated['month_ids'])->get();
+        $monthNumbers = $months->pluck('month_number')->sort()->values()->all();
+
+        $classIds = SchoolClass::where('is_active', true)->pluck('id');
+
+        $totalGenerated = 0;
+        $totalSkipped = 0;
+        $allErrors = [];
+
+        foreach ($classIds as $classId) {
+            $filters = array_filter([
+                'session_id' => $validated['session_id'],
+                'campus_id' => $validated['campus_id'],
+                'class_id' => $classId,
+                'include_previous_unpaid' => $validated['include_previous_unpaid'] ?? false,
+                'include_inventory_dues' => $validated['include_inventory_dues'] ?? false,
+                'include_transport_dues' => $validated['include_transport_dues'] ?? false,
+            ], fn ($value) => $value !== null);
+
+            foreach ($monthNumbers as $monthNumber) {
+                $result = $voucherService->generateMonthlyVouchers($monthNumber, $validated['year'], $filters);
+
+                $totalGenerated += $result['generated'];
+                $totalSkipped += $result['skipped'];
+
+                if (! empty($result['errors'])) {
+                    $allErrors = array_merge($allErrors, $result['errors']);
+                }
+            }
+        }
+
+        return redirect()->route('fee.vouchers.index')->with(
+            empty($allErrors) ? 'success' : 'warning',
+            "Generated {$totalGenerated} vouchers across {$classIds->count()} classes. {$totalSkipped} skipped."
+        );
+    }
+
+    /**
      * Display the specified voucher.
      */
     public function show(FeeVoucher $voucher)
     {
+        Gate::authorize('view', $voucher);
+
         $voucher->load([
             'student',
             'voucherMonth',
@@ -473,6 +533,8 @@ class FeeVoucherController extends Controller
      */
     public function challan(FeeVoucher $voucher)
     {
+        $this->authorizePrint($voucher);
+
         $voucher->load([
             'student',
             'voucherMonth',
@@ -561,6 +623,8 @@ class FeeVoucherController extends Controller
      */
     public function print(FeeVoucher $voucher)
     {
+        $this->authorizePrint($voucher);
+
         $voucher->load([
             'student',
             'voucherMonth',
@@ -592,14 +656,20 @@ class FeeVoucherController extends Controller
                 ->with('error', 'No vouchers selected for printing');
         }
 
-        $vouchers = FeeVoucher::with([
-            'student',
-            'voucherMonth',
-            'items.feeHead',
-            'campus',
-            'schoolClass',
-            'section',
-        ])->whereIn('id', $voucherIds)->get();
+        $vouchers = FeeVoucher::query()
+            ->when(auth()->check(), fn ($query) => $query->visibleTo($request->user()))
+            ->with([
+                'student',
+                'voucherMonth',
+                'items.feeHead',
+                'campus',
+                'schoolClass',
+                'section',
+            ])->whereIn('id', $voucherIds)->get();
+
+        foreach ($vouchers as $voucher) {
+            $this->authorizePrint($voucher);
+        }
 
         $school = School::where('is_active', true)->first();
 
@@ -610,10 +680,29 @@ class FeeVoucherController extends Controller
     }
 
     /**
+     * The two ways into a printable voucher: an authenticated user who may
+     * print it, or an anonymous request the `signed` route middleware has
+     * already verified — a link the app itself generated, meant to be shared
+     * (a parent opening a challan from WhatsApp has no portal login).
+     */
+    protected function authorizePrint(FeeVoucher $voucher): void
+    {
+        if (auth()->check()) {
+            Gate::authorize('print', $voucher);
+
+            return;
+        }
+
+        abort_unless(request()->hasValidSignature(), 403);
+    }
+
+    /**
      * Cancel a voucher.
      */
     public function cancel(FeeVoucher $voucher)
     {
+        Gate::authorize('delete', $voucher);
+
         if ($voucher->status === 'paid') {
             return back()->withErrors(['error' => 'Cannot cancel a paid voucher.']);
         }
@@ -628,15 +717,114 @@ class FeeVoucherController extends Controller
     }
 
     /**
-     * Get vouchers by student.
+     * Permanently removes a voucher that was never billed against.
      */
-    public function getByStudent(Request $request)
+    public function destroy(FeeVoucher $voucher)
     {
-        $request->validate([
-            'student_id' => 'required|exists:students,id',
+        Gate::authorize('delete', $voucher);
+
+        if ($voucher->status === 'paid' || (float) $voucher->paid_amount > 0) {
+            return back()->withErrors(['error' => 'Cannot delete a voucher with payments. Cancel or refund first.']);
+        }
+
+        $voucher->delete();
+
+        return redirect()->route('fee.vouchers.index')->with('success', 'Voucher deleted successfully.');
+    }
+
+    /**
+     * Publishes a voucher — the point it stops being a draft a family cannot
+     * yet see.
+     */
+    public function publish(FeeVoucher $voucher)
+    {
+        Gate::authorize('update', $voucher);
+
+        if ($voucher->published_at) {
+            return back()->withErrors(['error' => 'This voucher is already published.']);
+        }
+
+        $voucher->update(['published_at' => now()]);
+
+        return back()->with('success', 'Voucher published successfully.');
+    }
+
+    /**
+     * A voucher-level adjustment — arrears, an advance, a waiver, a fine
+     * reversed — recorded against the voucher as a whole rather than one item.
+     */
+    public function addAdjustment(AddVoucherAdjustmentRequest $request, FeeVoucher $voucher)
+    {
+        Gate::authorize('update', $voucher);
+
+        if ($voucher->status === 'paid') {
+            return back()->withErrors(['error' => 'Cannot adjust a paid voucher.']);
+        }
+
+        $validated = $request->validated();
+
+        $voucher->adjustments()->create([
+            'adjustment_type' => $validated['adjustment_type'],
+            'amount' => $validated['amount'],
+            'description' => $validated['description'] ?? null,
+            'related_voucher_id' => $validated['related_voucher_id'] ?? null,
+            'created_by' => auth()->id(),
         ]);
 
-        $vouchers = FeeVoucher::where('student_id', $request->student_id)
+        // Arrears and a manual charge add to what is owed; an advance, a
+        // waiver and a reversed fine take from it.
+        $increases = in_array($validated['adjustment_type'], [
+            AdjustmentType::ARREARS->value,
+            AdjustmentType::MANUAL_CHARGE->value,
+        ], true);
+
+        $delta = $increases ? (float) $validated['amount'] : -(float) $validated['amount'];
+
+        $voucher->update([
+            'net_amount' => (float) $voucher->net_amount + $delta,
+            'balance_amount' => max(0, (float) $voucher->balance_amount + $delta),
+        ]);
+
+        if ($request->expectsJson()) {
+            return response()->json(['message' => 'Adjustment recorded successfully.']);
+        }
+
+        return back()->with('success', 'Adjustment recorded successfully.');
+    }
+
+    /**
+     * Logs a print — an audit trail of who printed a challan and when, not a
+     * gate on printing it.
+     */
+    public function logPrint(Request $request, FeeVoucher $voucher)
+    {
+        $this->authorizePrint($voucher);
+
+        $log = FeeVoucherPrintLog::firstOrNew(['fee_voucher_id' => $voucher->id, 'printed_by' => auth()->id()]);
+        $log->printed_at = now();
+        $log->print_count = ($log->print_count ?? 0) + 1;
+        $log->save();
+
+        return response()->json(['message' => 'Print logged.']);
+    }
+
+    /**
+     * Get vouchers by student.
+     */
+    /**
+     * `{student}` is bound straight off the URL — the route always was
+     * `/vouchers/student/{student}`, but this used to read a `student_id`
+     * from the query string instead and ignore it, so the endpoint 422'd on
+     * every call unless the caller redundantly repeated the id as a query
+     * param too.
+     */
+    public function getByStudent(Request $request, Student $student)
+    {
+        Gate::authorize('viewByStudent', [FeeVoucher::class, $student->id]);
+
+        $vouchers = FeeVoucher::query()
+            ->visibleTo($request->user())
+            ->where('student_id', $student->id)
             ->with(['voucherMonth'])
             ->orderBy('voucher_year', 'desc')
             ->orderBy('voucher_month_id', 'desc')
@@ -650,7 +838,9 @@ class FeeVoucherController extends Controller
      */
     public function getUnpaid(Request $request)
     {
-        $query = FeeVoucher::unpaid()->with(['student', 'voucherMonth', 'items.feeHead', 'items.studentAccountCharge']);
+        Gate::authorize('viewAny', FeeVoucher::class);
+
+        $query = FeeVoucher::unpaid()->visibleTo($request->user())->with(['student', 'voucherMonth', 'items.feeHead', 'items.studentAccountCharge']);
 
         if ($request->filled('campus_id')) {
             $query->where('campus_id', $request->campus_id);
@@ -702,10 +892,19 @@ class FeeVoucherController extends Controller
      */
     public function getOverdue(Request $request)
     {
-        $query = FeeVoucher::where('status', 'overdue')
-            ->orWhere(function ($q) {
-                $q->where('due_date', '<', now()->toDateString())
-                    ->whereIn('status', ['unpaid', 'partial']);
+        Gate::authorize('viewAny', FeeVoucher::class);
+
+        // Grouped, not a bare `orWhere`: an ungrouped `OR` here let every
+        // campus's overdue vouchers through a `campus_id` filter, because `AND`
+        // binds tighter than `OR` in the SQL this built.
+        $query = FeeVoucher::query()
+            ->visibleTo($request->user())
+            ->where(function ($q) {
+                $q->where('status', 'overdue')
+                    ->orWhere(function ($inner) {
+                        $inner->where('due_date', '<', now()->toDateString())
+                            ->whereIn('status', ['unpaid', 'partial']);
+                    });
             })
             ->with(['student', 'voucherMonth', 'campus']);
 
@@ -721,6 +920,8 @@ class FeeVoucherController extends Controller
      */
     public function edit(FeeVoucher $voucher)
     {
+        Gate::authorize('update', $voucher);
+
         $voucher->load([
             'student',
             'voucherMonth',
@@ -792,7 +993,7 @@ class FeeVoucherController extends Controller
                 'adjustments' => $voucher->adjustments->map(function ($adjustment) {
                     return [
                         'id' => $adjustment->id,
-                        'type' => $adjustment->type instanceof \BackedEnum ? $adjustment->type->value : (string) $adjustment->type,
+                        'type' => $adjustment->adjustment_type instanceof \BackedEnum ? $adjustment->adjustment_type->value : (string) $adjustment->adjustment_type,
                         'amount' => (float) $adjustment->amount,
                         'description' => $adjustment->description,
                         'created_at' => $adjustment->created_at?->toDateTimeString(),
@@ -808,12 +1009,11 @@ class FeeVoucherController extends Controller
     /**
      * Update the specified voucher.
      */
-    public function update(Request $request, FeeVoucher $voucher)
+    public function update(UpdateFeeVoucherRequest $request, FeeVoucher $voucher)
     {
-        $validated = $request->validate([
-            'due_date' => 'nullable|date',
-            'notes' => 'nullable|string|max:1000',
-        ]);
+        Gate::authorize('update', $voucher);
+
+        $validated = $request->validated();
 
         $voucher->update($validated);
 
@@ -824,8 +1024,10 @@ class FeeVoucherController extends Controller
     /**
      * Add a new fee head item to the voucher.
      */
-    public function addItem(Request $request, FeeVoucher $voucher)
+    public function addItem(AddVoucherItemRequest $request, FeeVoucher $voucher)
     {
+        Gate::authorize('update', $voucher);
+
         // Prevent changes to paid vouchers
         if ($voucher->status === 'paid') {
             return $request->expectsJson()
@@ -833,12 +1035,7 @@ class FeeVoucherController extends Controller
                 : back()->withErrors(['error' => 'Cannot modify a paid voucher.']);
         }
 
-        $validated = $request->validate([
-            'fee_head_id' => 'required|exists:fee_heads,id',
-            'description' => 'nullable|string|max:255',
-            'amount' => 'required|numeric|min:0',
-            'discount_amount' => 'nullable|numeric|min:0',
-        ]);
+        $validated = $request->validated();
 
         // Check if this fee head already exists on the voucher
         $existingItem = $voucher->items()->where('fee_head_id', $validated['fee_head_id'])->first();
@@ -899,8 +1096,10 @@ class FeeVoucherController extends Controller
     /**
      * Update an existing voucher item.
      */
-    public function updateItem(Request $request, FeeVoucher $voucher, FeeVoucherItem $item)
+    public function updateItem(UpdateVoucherItemRequest $request, FeeVoucher $voucher, FeeVoucherItem $item)
     {
+        Gate::authorize('update', $voucher);
+
         // Prevent changes to paid vouchers
         if ($voucher->status === 'paid') {
             return $request->expectsJson()
@@ -915,11 +1114,7 @@ class FeeVoucherController extends Controller
                 : back()->withErrors(['error' => 'Item does not belong to this voucher.']);
         }
 
-        $validated = $request->validate([
-            'description' => 'nullable|string|max:255',
-            'amount' => 'required|numeric|min:0',
-            'discount_amount' => 'nullable|numeric|min:0',
-        ]);
+        $validated = $request->validated();
 
         $item->update([
             'description' => $validated['description'] ?? $item->description,
@@ -969,6 +1164,8 @@ class FeeVoucherController extends Controller
      */
     public function removeItem(FeeVoucher $voucher, FeeVoucherItem $item)
     {
+        Gate::authorize('update', $voucher);
+
         // Prevent changes to paid vouchers
         if ($voucher->status === 'paid') {
             return request()->expectsJson()

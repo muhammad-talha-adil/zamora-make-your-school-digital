@@ -73,6 +73,8 @@ class DatabaseSeeder extends Seeder
             // === Staff & Payroll ===
             StaffDepartmentSeeder::class,
             StaffDesignationSeeder::class,
+            StaffLeaveTypeSeeder::class,
+            SalaryHeadSeeder::class,
             StaffSeeder::class,
             PayrollSeeder::class,
 

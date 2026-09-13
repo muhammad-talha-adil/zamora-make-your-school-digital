@@ -111,7 +111,40 @@
                         {{ loading ? 'Searching...' : 'Search Results' }}
                     </Button>
 
-                    <Button 
+                    <!--
+                        The result card and the date sheet are print views the
+                        backend renders. The module could compute a result and
+                        not print one, which is the only artefact a family sees.
+                    -->
+                    <Button
+                        v-if="hasSearched && filters.exam_id && filters.class_id !== 'all'"
+                        variant="outline"
+                        @click="printResultCards"
+                    >
+                        <Printer class="h-4 w-4 mr-2" />
+                        Print Result Cards
+                    </Button>
+
+                    <Button
+                        v-if="filters.exam_id"
+                        variant="outline"
+                        @click="printDateSheet"
+                    >
+                        <CalendarDays class="h-4 w-4 mr-2" />
+                        Date Sheet
+                    </Button>
+
+                    <Button
+                        v-if="hasSearched && filters.exam_id"
+                        variant="outline"
+                        :disabled="recomputing"
+                        @click="showRecomputeDialog = true"
+                    >
+                        <RefreshCw class="h-4 w-4 mr-2" :class="{ 'animate-spin': recomputing }" />
+                        {{ recomputing ? 'Recomputing...' : 'Recompute Positions' }}
+                    </Button>
+
+                    <Button
                         v-if="hasSearched"
                         variant="secondary"
                         @click="resetFilters"
@@ -271,7 +304,16 @@
                                         Grade
                                     </th>
                                     <th class="px-4 py-3 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                                        Position
+                                    </th>
+                                    <th class="px-4 py-3 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                                        Result
+                                    </th>
+                                    <th class="px-4 py-3 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                                         Status
+                                    </th>
+                                    <th class="px-4 py-3 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                                        Card
                                     </th>
                                 </tr>
                             </thead>
@@ -332,6 +374,37 @@
                                             {{ result.overallGradeItem?.grade_letter || 'N/A' }}
                                         </span>
                                     </td>
+
+                                    <!-- "Position: 3rd of 42" is on every card
+                                         printed in this country. Blank rather
+                                         than invented where the results have
+                                         not been published yet. -->
+                                    <td class="px-4 py-3 whitespace-nowrap text-center">
+                                        <span v-if="result.position_in_section" class="text-sm font-medium">
+                                            {{ ordinal(result.position_in_section) }}
+                                            <span class="text-muted-foreground text-xs">of {{ result.ranked_out_of }}</span>
+                                        </span>
+                                        <span v-else class="text-muted-foreground text-sm">&mdash;</span>
+                                    </td>
+
+                                    <td class="px-4 py-3 whitespace-nowrap text-center">
+                                        <span
+                                            class="px-2 py-1 rounded text-xs font-medium"
+                                            :class="{
+                                                'bg-success/10 text-success': result.result_status === 'pass',
+                                                'bg-destructive/10 text-destructive': result.result_status === 'fail',
+                                                'bg-muted text-muted-foreground': result.result_status !== 'pass' && result.result_status !== 'fail',
+                                            }"
+                                        >
+                                            {{ passLabel(result) }}
+                                        </span>
+                                    </td>
+
+                                    <td class="px-4 py-3 whitespace-nowrap text-center">
+                                        <Button variant="ghost" size="sm" @click="printCard(result.id)">
+                                            <Printer class="h-4 w-4" />
+                                        </Button>
+                                    </td>
                                     <td class="px-4 py-3 whitespace-nowrap text-center">
                                         <span 
                                             class="px-2 py-1 rounded text-xs font-medium"
@@ -388,6 +461,26 @@
                     Choose an exam from the dropdown above and click "Search Results" to view the exam results.
                 </p>
             </div>
+
+            <!-- Recompute Positions Confirm Dialog -->
+            <Dialog v-model:open="showRecomputeDialog">
+                <DialogContent class="sm:max-w-[480px]">
+                    <DialogHeader>
+                        <DialogTitle>Recompute Positions</DialogTitle>
+                        <DialogDescription>
+                            Recalculate rank and position for
+                            <strong>{{ selectedExamName || 'this exam' }}</strong>{{ filters.class_id !== 'all' ? ' (selected class only)' : ' (all classes)' }}.
+                            This will not change marks, only the rankings.
+                        </DialogDescription>
+                    </DialogHeader>
+                    <DialogFooter>
+                        <Button variant="outline" @click="showRecomputeDialog = false">Cancel</Button>
+                        <Button :disabled="recomputing" @click="recomputePositions">
+                            {{ recomputing ? 'Recomputing...' : 'Recompute' }}
+                        </Button>
+                    </DialogFooter>
+                </DialogContent>
+            </Dialog>
         </div>
     </AppLayout>
 </template>
@@ -399,8 +492,12 @@ import axios from 'axios'
 import AppLayout from '@/layouts/AppLayout.vue'
 import type { BreadcrumbItem } from '@/types'
 import { Button } from '@/components/ui/button'
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
+import { Printer, CalendarDays, RefreshCw } from 'lucide-vue-next'
+import { route } from 'ziggy-js'
 import { Label } from '@/components/ui/label'
 import Icon from '@/components/Icon.vue'
+import { alert } from '@/utils'
 
 interface Exam {
     id: number;
@@ -483,6 +580,14 @@ const results = ref<Array<{
     percentage: number;
     overallGradeItem?: { grade_letter: string };
     status: string;
+
+    // Whether the child passed, and where they came. Both are recorded on the
+    // result header rather than worked out in the browser.
+    result_status?: string;
+    failed_subject_count?: number;
+    position_in_section?: number;
+    ranked_out_of?: number;
+
     exam_id?: number;
 }>>([]);
 
@@ -616,6 +721,26 @@ const searchResults = async (page: number = 1) => {
     }
 };
 
+// Recompute rank/position for the selected exam (and class, if filtered)
+const showRecomputeDialog = ref(false);
+const recomputing = ref(false);
+
+const recomputePositions = async () => {
+    recomputing.value = true;
+    try {
+        const response = await axios.post(route('exam.positions.recompute', filters.exam_id), {
+            class_id: filters.class_id !== 'all' ? filters.class_id : null,
+        });
+        alert.success(response.data.message || 'Positions recomputed.');
+        showRecomputeDialog.value = false;
+        await searchResults(pagination.value.current_page);
+    } catch (err: any) {
+        alert.error(err.response?.data?.message || 'Failed to recompute positions.');
+    } finally {
+        recomputing.value = false;
+    }
+};
+
 // Handle page change
 const handlePageChange = (page: number | null) => {
     if (page && page !== pagination.value.current_page) {
@@ -674,6 +799,58 @@ const getScoreColorClass = (percentage: number) => {
     if (percentage >= 60) return 'text-warning';
     return 'text-destructive';
 };
+
+
+/**
+ * "3rd", "42nd" — the form a result card prints.
+ */
+const ordinal = (n: number): string => {
+    const suffix = [11, 12, 13].includes(n % 100)
+        ? 'th'
+        : ({ 1: 'st', 2: 'nd', 3: 'rd' } as Record<number, string>)[n % 10] ?? 'th'
+
+    return `${n}${suffix}`
+}
+
+/**
+ * Pass, fail, or a result nobody has finished marking.
+ *
+ * A failure says how many subjects, because that is the first thing the office
+ * is asked.
+ */
+const passLabel = (result: { result_status?: string; failed_subject_count?: number }): string => {
+    if (result.result_status === 'fail' && result.failed_subject_count) {
+        return `Fail (${result.failed_subject_count})`
+    }
+
+    return result.result_status || 'pending'
+}
+
+/** One child's card, in a new tab so the list stays where it was. */
+const printCard = (resultHeaderId: number) => {
+    window.open(route('exam.results.card', resultHeaderId), '_blank')
+}
+
+/** A whole section's cards, one to a page. */
+const printResultCards = () => {
+    const params = new URLSearchParams({ class_id: String(filters.class_id) })
+
+    if (filters.section_id !== 'all') {
+        params.append('section_id', String(filters.section_id))
+    }
+
+    window.open(`${route('exam.results.section-cards', filters.exam_id)}?${params}`, '_blank')
+}
+
+/** The sheet pinned to the notice board. */
+const printDateSheet = () => {
+    const params = new URLSearchParams()
+
+    if (filters.class_id !== 'all') params.append('class_id', String(filters.class_id))
+    if (filters.section_id !== 'all') params.append('section_id', String(filters.section_id))
+
+    window.open(`${route('exam.datesheet', filters.exam_id)}?${params}`, '_blank')
+}
 
 const getGradeClass = (grade: string | undefined) => {
     if (!grade) return 'bg-muted text-foreground';

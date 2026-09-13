@@ -333,20 +333,38 @@ class StoreStudentRequest extends FormRequest
                 'string',
                 'max:15',
                 'regex:/^[0-9]{5}-[0-9]{7}-[0-9]$/',
-                // CNIC should be unique across guardians (unless linking existing guardian)
+                /*
+                 * A CNIC identifies a person, so the same CNIC arriving again
+                 * usually means **the same father** — his second child.
+                 *
+                 * This used to refuse any CNIC already on file unless the form
+                 * had separately looked the guardian up and posted a
+                 * `guardian_id`, so a clerk typing a father's details a second
+                 * time was told his CNIC "belongs to another guardian" and the
+                 * admission was stopped. Siblings are the ordinary case in a
+                 * school; they cannot be the case the form refuses.
+                 *
+                 * It is refused only when the CNIC sits against a **different
+                 * phone number** — which is the one thing that genuinely means
+                 * two different people, or a typo in one of them.
+                 */
                 function ($attribute, $value, $fail) {
-                    if (empty($value)) {
+                    if (empty($value) || ! empty($this->guardian_id)) {
                         return;
                     }
 
-                    // Skip uniqueness check if guardian_id is provided (linking existing guardian)
-                    if (! empty($this->guardian_id)) {
-                        return;
-                    }
+                    $phone = preg_replace('/[^0-9]/', '', (string) $this->father_phone);
 
-                    $exists = Guardian::where('cnic', $value)->exists();
-                    if ($exists) {
-                        $fail('This CNIC has already been registered for another guardian.');
+                    $clash = Guardian::where('cnic', $value)
+                        ->when(
+                            $phone !== '' && $phone !== null,
+                            fn ($query) => $query->where('phone', '!=', $phone)
+                        )
+                        ->exists();
+
+                    if ($clash) {
+                        $fail('This CNIC is already registered against a different phone number. '
+                            .'Check the CNIC and the phone number, or pick the existing guardian.');
                     }
                 },
             ],
@@ -391,15 +409,25 @@ class StoreStudentRequest extends FormRequest
                 'nullable',
                 'string',
                 'max:15',
-                // CNIC should be unique across guardians
+                // The same reading as the father's: a CNIC on a different
+                // phone number is a different person, and anything else is the
+                // same guardian arriving again.
                 function ($attribute, $value, $fail) {
                     if (empty($value)) {
                         return;
                     }
 
-                    $exists = Guardian::where('cnic', $value)->exists();
-                    if ($exists) {
-                        $fail('This CNIC has already been registered for another guardian.');
+                    $phone = preg_replace('/[^0-9]/', '', (string) $this->other_phone);
+
+                    $clash = Guardian::where('cnic', $value)
+                        ->when(
+                            $phone !== '' && $phone !== null,
+                            fn ($query) => $query->where('phone', '!=', $phone)
+                        )
+                        ->exists();
+
+                    if ($clash) {
+                        $fail('This CNIC is already registered against a different phone number.');
                     }
                 },
             ],
@@ -461,7 +489,7 @@ class StoreStudentRequest extends FormRequest
 
             $feeStructure = null;
             if (! empty($this->fee_structure_id)) {
-                $feeStructure = FeeStructure::with('items')->find($this->fee_structure_id);
+                $feeStructure = FeeStructure::with('items')->find((int) $this->fee_structure_id);
 
                 $structureStatus = $feeStructure?->status instanceof FeeStructureStatus
                     ? $feeStructure->status->value
@@ -474,7 +502,9 @@ class StoreStudentRequest extends FormRequest
                     (int) $feeStructure->campus_id !== (int) $this->campus_id
                 ) {
                     $validator->errors()->add('fee_structure_id', 'The selected fee structure does not belong to the chosen campus/session.');
-                } elseif ($feeStructure->class_id !== null && (int) $feeStructure->class_id !== (int) $this->class_id) {
+                    // `fee_structures.class_id` is NOT NULL, so there is no null to
+                    // guard against — a structure always belongs to a class.
+                } elseif ((int) $feeStructure->class_id !== (int) $this->class_id) {
                     $validator->errors()->add('fee_structure_id', 'The selected fee structure does not belong to the chosen class.');
                 } elseif ($feeStructure->section_id !== null && (int) $feeStructure->section_id !== (int) $this->section_id) {
                     $validator->errors()->add('fee_structure_id', 'The selected fee structure does not belong to the chosen section.');

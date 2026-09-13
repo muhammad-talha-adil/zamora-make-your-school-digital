@@ -25,11 +25,28 @@ return new class extends Migration
             $table->date('start_date');
             $table->date('end_date');
             $table->text('description')->nullable();
+
+            // Who asked. Null for the office's own entries, which is how every
+            // existing row was made.
+            $table->foreignId('applied_by')
+                ->nullable()
+                ->constrained('users')
+                ->nullOnDelete();
+            $table->timestamp('applied_at')->nullable();
+
             $table->enum('status', ['pending', 'approved', 'rejected'])->default('pending');
             $table->foreignId('approved_by')
                 ->nullable()
                 ->constrained('users')
                 ->nullOnDelete();
+
+            // The decision, and when it was taken.
+            $table->timestamp('decided_at')->nullable();
+            $table->text('decision_note')->nullable();
+
+            // A doctor's certificate for a sick leave, or a card for a wedding.
+            $table->string('attachment_path')->nullable();
+
             $table->timestamps();
             $table->softDeletes();
 

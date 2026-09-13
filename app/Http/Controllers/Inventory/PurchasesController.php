@@ -282,7 +282,7 @@ class PurchasesController extends Controller
             ->firstOrFail();
 
         return inertia('inventory/Purchases/Show', [
-            'purchase' => $purchase->load(['campus', 'purchaseItems.inventoryItem']),
+            'purchase' => $purchase->load(['campus', 'supplier', 'purchaseItems.inventoryItem']),
         ]);
     }
 

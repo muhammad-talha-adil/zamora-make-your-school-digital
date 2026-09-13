@@ -49,37 +49,72 @@ class MakePaymentController extends Controller
         ]);
     }
 
+    /**
+     * `purchase_id` used to be required unconditionally, so eight of the ten
+     * seeded expense categories (Salary, Rent, Electricity, Internet,
+     * Transport, Maintenance, Other — everything except the three
+     * supplier-payment ones) had no purchase to attach to and could never
+     * actually be used through this screen, despite being offered in the
+     * category dropdown. A purchase payment and a general expense are now two
+     * branches, the same shape `ReceivePaymentController` already uses for
+     * "student" vs "other".
+     */
     public function store(Request $request)
     {
+        if ($request->filled('purchase_id')) {
+            $validated = $request->validate([
+                'purchase_id' => 'required|exists:inventory_purchases,id',
+                'amount' => 'required|numeric|min:1',
+                'payment_method' => 'required',
+                'category_id' => 'required|exists:ledger_categories,id',
+                'transaction_date' => 'required|date',
+                'description' => 'nullable|string',
+            ]);
+
+            $purchase = Purchase::findOrFail($validated['purchase_id']);
+
+            $purchase->paid_amount += $validated['amount'];
+            $purchase->payment_status = $purchase->paid_amount >= $purchase->total_amount
+                ? 'paid'
+                : 'partial';
+            $purchase->save();
+
+            $this->financeService->createExpenseTransaction([
+                'amount' => $validated['amount'],
+                'payment_method' => $validated['payment_method'],
+                'category_id' => $validated['category_id'],
+                'supplier_id' => $purchase->supplier_id,
+                'reference_type' => 'App\\Models\\Purchase',
+                'reference_id' => $validated['purchase_id'],
+                'transaction_date' => $validated['transaction_date'],
+                'description' => $validated['description'] ?? 'Payment for '.$purchase->purchase_id,
+                'campus_id' => $purchase->campus_id,
+            ]);
+
+            return redirect()->route('finance.transactions.index')
+                ->with('success', 'Payment made successfully!');
+        }
+
         $validated = $request->validate([
-            'purchase_id' => 'required|exists:inventory_purchases,id',
+            'campus_id' => 'required|exists:campuses,id',
             'amount' => 'required|numeric|min:1',
             'payment_method' => 'required',
             'category_id' => 'required|exists:ledger_categories,id',
             'transaction_date' => 'required|date',
             'description' => 'nullable|string',
+            'payee_name' => 'nullable|string|max:255',
         ]);
 
-        $purchase = Purchase::findOrFail($validated['purchase_id']);
-
-        // Update purchase (existing business logic)
-        $purchase->paid_amount += $validated['amount'];
-        $purchase->payment_status = $purchase->paid_amount >= $purchase->total_amount
-            ? 'paid'
-            : 'partial';
-        $purchase->save();
-
-        // Create ledger entry (NEW unified finance)
         $this->financeService->createExpenseTransaction([
             'amount' => $validated['amount'],
             'payment_method' => $validated['payment_method'],
             'category_id' => $validated['category_id'],
-            'supplier_id' => $purchase->supplier_id,
-            'reference_type' => 'App\\Models\\Purchase',
-            'reference_id' => $validated['purchase_id'],
+            'supplier_id' => null,
+            'reference_type' => 'App\\Models\\Ledger\\ManualPayment',
+            'reference_id' => null,
             'transaction_date' => $validated['transaction_date'],
-            'description' => $validated['description'] ?? 'Payment for '.$purchase->purchase_id,
-            'campus_id' => $purchase->campus_id,
+            'description' => $validated['description'] ?? 'Manual expense paid: '.($validated['payee_name'] ?? 'Other'),
+            'campus_id' => $validated['campus_id'],
         ]);
 
         return redirect()->route('finance.transactions.index')

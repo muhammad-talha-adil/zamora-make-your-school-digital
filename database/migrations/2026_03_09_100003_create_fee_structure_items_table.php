@@ -38,6 +38,13 @@ return new class extends Migration
             $table->decimal('amount', 12, 2); // Amount in PKR
             $table->enum('frequency', ['monthly', 'yearly', 'once'])->default('monthly');
 
+            // Lets a yearly charge be collected in instalments (e.g. August and
+            // January) instead of dropping the whole amount into one month.
+            $table->unsignedTinyInteger('instalment_count')->default(1);
+            // The months the instalments fall in, as month ids. Empty means the
+            // session's own first month.
+            $table->json('instalment_month_ids')->nullable();
+
             // Billing rules
             $table->boolean('applicable_on_admission')->default(false); // Charge on admission?
             $table->foreignId('billing_month_id')

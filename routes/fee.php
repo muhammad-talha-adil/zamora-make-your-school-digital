@@ -19,6 +19,12 @@ use Illuminate\Support\Facades\Route;
 |
 | Complete fee management system routes
 |
+| Every route below now carries a `permission:` check. Until this pass none
+| of them did — the ten `fee.*` permissions had been seeded from the start and
+| not one was checked, so any signed-in account (a student's own portal login
+| included, since students and staff share one `User` model and one guard)
+| could record a payment, delete a fee structure, or read anybody's voucher.
+|
 */
 
 $middleware = ['web', 'auth'];
@@ -27,20 +33,28 @@ Route::prefix('fee')->name('fee.')->middleware($middleware)->group(function () {
 
     // ==================== FEE HEADS ====================
     Route::prefix('heads')->name('heads.')->group(function () {
-        Route::get('/', [FeeHeadController::class, 'index'])->name('index');
-        Route::get('/create', [FeeHeadController::class, 'create'])->name('create');
-        Route::post('/', [FeeHeadController::class, 'store'])->name('store');
-        Route::get('/{feeHead}/edit', [FeeHeadController::class, 'edit'])->name('edit');
-        Route::put('/{feeHead}', [FeeHeadController::class, 'update'])->name('update');
-        Route::post('/{feeHead}/toggle-active', [FeeHeadController::class, 'toggleActive'])->name('toggle-active');
-        Route::delete('/{feeHead}', [FeeHeadController::class, 'destroy'])->name('destroy');
+        Route::get('/', [FeeHeadController::class, 'index'])->name('index')
+            ->middleware('permission:fee.view|fee.head.manage');
+        Route::get('/create', [FeeHeadController::class, 'create'])->name('create')
+            ->middleware('permission:fee.head.manage');
+        Route::post('/', [FeeHeadController::class, 'store'])->name('store')
+            ->middleware('permission:fee.head.manage');
+        Route::get('/{feeHead}/edit', [FeeHeadController::class, 'edit'])->name('edit')
+            ->middleware('permission:fee.head.manage');
+        Route::put('/{feeHead}', [FeeHeadController::class, 'update'])->name('update')
+            ->middleware('permission:fee.head.manage');
+        Route::post('/{feeHead}/toggle-active', [FeeHeadController::class, 'toggleActive'])->name('toggle-active')
+            ->middleware('permission:fee.head.manage');
+        Route::delete('/{feeHead}', [FeeHeadController::class, 'destroy'])->name('destroy')
+            ->middleware('permission:fee.head.manage');
 
         // API endpoints
-        Route::get('/all', [FeeHeadController::class, 'getAll'])->name('all');
+        Route::get('/all', [FeeHeadController::class, 'getAll'])->name('all')
+            ->middleware('permission:fee.view|fee.head.manage');
     });
 
     // ==================== DISCOUNT TYPES ====================
-    Route::prefix('discount-types')->name('discount-types.')->group(function () {
+    Route::prefix('discount-types')->name('discount-types.')->middleware('permission:fee.discount.manage')->group(function () {
         Route::get('/', [DiscountTypeController::class, 'index'])->name('index');
         Route::get('/create', [DiscountTypeController::class, 'create'])->name('create');
         Route::post('/', [DiscountTypeController::class, 'store'])->name('store');
@@ -55,103 +69,166 @@ Route::prefix('fee')->name('fee.')->middleware($middleware)->group(function () {
 
     // ==================== FEE STRUCTURES ====================
     Route::prefix('structures')->name('structures.')->group(function () {
-        Route::get('/', [FeeStructureController::class, 'index'])->name('index');
-        Route::get('/create', [FeeStructureController::class, 'create'])->name('create');
-        Route::post('/', [FeeStructureController::class, 'store'])->name('store');
-        Route::get('/{feeStructure}', [FeeStructureController::class, 'show'])->name('show');
-        Route::get('/{feeStructure}/debug', [FeeStructureController::class, 'debug'])->name('debug');
-        Route::get('/{feeStructure}/edit', [FeeStructureController::class, 'edit'])->name('edit');
-        Route::put('/{feeStructure}', [FeeStructureController::class, 'update'])->name('update');
-        Route::delete('/{feeStructure}', [FeeStructureController::class, 'destroy'])->name('destroy');
+        Route::get('/', [FeeStructureController::class, 'index'])->name('index')
+            ->middleware('permission:fee.view|fee.structure.manage');
+        Route::get('/create', [FeeStructureController::class, 'create'])->name('create')
+            ->middleware('permission:fee.structure.manage');
+        Route::post('/', [FeeStructureController::class, 'store'])->name('store')
+            ->middleware('permission:fee.structure.manage');
+        Route::get('/{feeStructure}', [FeeStructureController::class, 'show'])->name('show')
+            ->middleware('permission:fee.view|fee.structure.manage');
+        Route::get('/{feeStructure}/debug', [FeeStructureController::class, 'debug'])->name('debug')
+            ->middleware('permission:fee.structure.manage');
+        Route::get('/{feeStructure}/edit', [FeeStructureController::class, 'edit'])->name('edit')
+            ->middleware('permission:fee.structure.manage');
+        Route::put('/{feeStructure}', [FeeStructureController::class, 'update'])->name('update')
+            ->middleware('permission:fee.structure.manage');
+        Route::delete('/{feeStructure}', [FeeStructureController::class, 'destroy'])->name('destroy')
+            ->middleware('permission:fee.structure.manage');
 
         // Status management
-        Route::patch('/{feeStructure}/activate', [FeeStructureController::class, 'activate'])->name('activate');
-        Route::patch('/{feeStructure}/deactivate', [FeeStructureController::class, 'deactivate'])->name('deactivate');
-        Route::patch('/{feeStructure}/set-default', [FeeStructureController::class, 'setDefault'])->name('set-default');
+        Route::patch('/{feeStructure}/activate', [FeeStructureController::class, 'activate'])->name('activate')
+            ->middleware('permission:fee.structure.manage');
+        Route::patch('/{feeStructure}/deactivate', [FeeStructureController::class, 'deactivate'])->name('deactivate')
+            ->middleware('permission:fee.structure.manage');
+        Route::patch('/{feeStructure}/set-default', [FeeStructureController::class, 'setDefault'])->name('set-default')
+            ->middleware('permission:fee.structure.manage');
 
         // API endpoints
-        Route::get('/by-scope/get', [FeeStructureController::class, 'getByScope'])->name('by-scope');
-        Route::get('/search-titles', [FeeStructureController::class, 'searchTitles'])->name('search-titles');
+        Route::get('/by-scope/get', [FeeStructureController::class, 'getByScope'])->name('by-scope')
+            ->middleware('permission:fee.view|fee.structure.manage');
+        Route::get('/search-titles', [FeeStructureController::class, 'searchTitles'])->name('search-titles')
+            ->middleware('permission:fee.view|fee.structure.manage');
 
         // Fee Structure Items (add/edit/remove fee items from structure)
-        Route::post('/{feeStructure}/items', [FeeStructureItemController::class, 'store'])->name('items.store');
-        Route::put('/{feeStructure}/items/{item}', [FeeStructureItemController::class, 'update'])->name('items.update');
-        Route::delete('/{feeStructure}/items/{item}', [FeeStructureItemController::class, 'destroy'])->name('items.destroy');
-        Route::get('/{feeStructure}/items/available-fee-heads', [FeeStructureItemController::class, 'getAvailableFeeHeads'])->name('items.available-fee-heads');
+        Route::post('/{feeStructure}/items', [FeeStructureItemController::class, 'store'])->name('items.store')
+            ->middleware('permission:fee.structure.manage');
+        Route::put('/{feeStructure}/items/{item}', [FeeStructureItemController::class, 'update'])->name('items.update')
+            ->middleware('permission:fee.structure.manage');
+        Route::delete('/{feeStructure}/items/{item}', [FeeStructureItemController::class, 'destroy'])->name('items.destroy')
+            ->middleware('permission:fee.structure.manage');
+        Route::get('/{feeStructure}/items/available-fee-heads', [FeeStructureItemController::class, 'getAvailableFeeHeads'])->name('items.available-fee-heads')
+            ->middleware('permission:fee.view|fee.structure.manage');
     });
 
     // ==================== FEE VOUCHERS ====================
     Route::prefix('vouchers')->name('vouchers.')->group(function () {
         // API endpoint for fetching vouchers (returns JSON)
-        Route::get('/list', [FeeVoucherController::class, 'getVouchersList'])->name('list');
+        Route::get('/list', [FeeVoucherController::class, 'getVouchersList'])->name('list')
+            ->middleware('permission:fee.view|fee.voucher.view');
 
-        Route::get('/', [FeeVoucherController::class, 'index'])->name('index');
-        Route::get('/create', [FeeVoucherController::class, 'create'])->name('create');
+        Route::get('/', [FeeVoucherController::class, 'index'])->name('index')
+            ->middleware('permission:fee.view|fee.voucher.view');
+        Route::get('/create', [FeeVoucherController::class, 'create'])->name('create')
+            ->middleware('permission:fee.voucher.generate');
 
         // Generation - must be defined before {voucher} route
-        Route::get('/generate', [FeeVoucherController::class, 'generateForm'])->name('generate.form');
-        Route::post('/generate', [FeeVoucherController::class, 'generate'])->name('generate.post');
-        Route::post('/generate-bulk', [FeeVoucherController::class, 'generateBulk'])->name('generate-bulk');
+        Route::get('/generate', [FeeVoucherController::class, 'generateForm'])->name('generate.form')
+            ->middleware('permission:fee.voucher.generate');
+        Route::post('/generate', [FeeVoucherController::class, 'generate'])->name('generate.post')
+            ->middleware('permission:fee.voucher.generate');
+        Route::post('/generate-bulk', [FeeVoucherController::class, 'generateBulk'])->name('generate-bulk')
+            ->middleware('permission:fee.voucher.generate');
 
-        // {voucher} route must be after specific routes
-        Route::get('/{voucher}', [FeeVoucherController::class, 'show'])->name('show');
-        Route::get('/{voucher}/edit', [FeeVoucherController::class, 'edit'])->name('edit');
-        Route::put('/{voucher}', [FeeVoucherController::class, 'update'])->name('update');
-        Route::delete('/{voucher}', [FeeVoucherController::class, 'destroy'])->name('destroy');
+        // {voucher} route must be after specific routes — `fee.view.own` lets
+        // a child or their family (the `student`/`guardian` role) read their
+        // own voucher; `FeeVoucherPolicy::view()` still checks it really is
+        // theirs.
+        Route::get('/{voucher}', [FeeVoucherController::class, 'show'])->name('show')
+            ->middleware('permission:fee.view|fee.voucher.view|fee.view.own');
+        Route::get('/{voucher}/edit', [FeeVoucherController::class, 'edit'])->name('edit')
+            ->middleware('permission:fee.voucher.edit');
+        Route::put('/{voucher}', [FeeVoucherController::class, 'update'])->name('update')
+            ->middleware('permission:fee.voucher.edit');
+        Route::delete('/{voucher}', [FeeVoucherController::class, 'destroy'])->name('destroy')
+            ->middleware('permission:fee.voucher.delete');
 
         // Voucher Item Management (add/edit/remove fee heads)
-        Route::post('/{voucher}/items', [FeeVoucherController::class, 'addItem'])->name('add-item');
-        Route::put('/{voucher}/items/{item}', [FeeVoucherController::class, 'updateItem'])->name('update-item');
-        Route::delete('/{voucher}/items/{item}', [FeeVoucherController::class, 'removeItem'])->name('remove-item');
+        Route::post('/{voucher}/items', [FeeVoucherController::class, 'addItem'])->name('add-item')
+            ->middleware('permission:fee.voucher.edit');
+        Route::put('/{voucher}/items/{item}', [FeeVoucherController::class, 'updateItem'])->name('update-item')
+            ->middleware('permission:fee.voucher.edit');
+        Route::delete('/{voucher}/items/{item}', [FeeVoucherController::class, 'removeItem'])->name('remove-item')
+            ->middleware('permission:fee.voucher.edit');
 
         // Status management
-        Route::patch('/{voucher}/publish', [FeeVoucherController::class, 'publish'])->name('publish');
-        Route::patch('/{voucher}/cancel', [FeeVoucherController::class, 'cancel'])->name('cancel');
+        Route::patch('/{voucher}/publish', [FeeVoucherController::class, 'publish'])->name('publish')
+            ->middleware('permission:fee.voucher.edit');
+        Route::patch('/{voucher}/cancel', [FeeVoucherController::class, 'cancel'])->name('cancel')
+            ->middleware('permission:fee.voucher.delete');
 
         // Adjustments
-        Route::post('/{voucher}/adjustments', [FeeVoucherController::class, 'addAdjustment'])->name('add-adjustment');
+        Route::post('/{voucher}/adjustments', [FeeVoucherController::class, 'addAdjustment'])->name('add-adjustment')
+            ->middleware('permission:fee.voucher.edit');
 
         // Print - must be defined before {voucher} route
-        Route::get('/{voucher}/print', [FeeVoucherController::class, 'print'])->name('print');
-        Route::get('/{voucher}/challan', [FeeVoucherController::class, 'challan'])->name('challan');
-        Route::get('/print-batch', [FeeVoucherController::class, 'printBatch'])->name('print-batch');
-        Route::post('/{voucher}/log-print', [FeeVoucherController::class, 'logPrint'])->name('log-print');
+        Route::get('/{voucher}/print', [FeeVoucherController::class, 'print'])->name('print')
+            ->middleware('permission:fee.voucher.print|fee.voucher.view|fee.view.own');
+        Route::get('/{voucher}/challan', [FeeVoucherController::class, 'challan'])->name('challan')
+            ->middleware('permission:fee.voucher.print|fee.voucher.view|fee.view.own');
+        Route::get('/print-batch', [FeeVoucherController::class, 'printBatch'])->name('print-batch')
+            ->middleware('permission:fee.voucher.print|fee.voucher.view');
+        Route::post('/{voucher}/log-print', [FeeVoucherController::class, 'logPrint'])->name('log-print')
+            ->middleware('permission:fee.voucher.print|fee.voucher.view|fee.view.own');
 
-        // API endpoints
-        Route::get('/student/{student}', [FeeVoucherController::class, 'getByStudent'])->name('by-student');
-        Route::get('/unpaid/list', [FeeVoucherController::class, 'getUnpaid'])->name('unpaid');
-        Route::get('/overdue/list', [FeeVoucherController::class, 'getOverdue'])->name('overdue');
+        // API endpoints — `fee.view.own` for a child/family reading their own
+        // voucher history; `FeeVoucherPolicy::viewByStudent()` checks it
+        // really is their own id.
+        Route::get('/student/{student}', [FeeVoucherController::class, 'getByStudent'])->name('by-student')
+            ->middleware('permission:fee.view|fee.voucher.view|fee.view.own');
+        Route::get('/unpaid/list', [FeeVoucherController::class, 'getUnpaid'])->name('unpaid')
+            ->middleware('permission:fee.view|fee.voucher.view');
+        Route::get('/overdue/list', [FeeVoucherController::class, 'getOverdue'])->name('overdue')
+            ->middleware('permission:fee.view|fee.voucher.view');
     });
 
-    // Public print routes (no auth required - for opening in new windows)
-    Route::prefix('print-voucher')->name('print-voucher.')->withoutMiddleware('auth')->group(function () {
+    // Signed print links — no login required, but the link has to be one the
+    // app itself generated (and, being signed, one it can make expire). Before
+    // this was a bare public route: anyone who could guess or increment a
+    // voucher id could read a child's name, class and fee breakdown with no
+    // account at all.
+    Route::prefix('print-voucher')->name('print-voucher.')->withoutMiddleware('auth')->middleware('signed')->group(function () {
         Route::get('/batch', [FeeVoucherController::class, 'printBatch'])->name('batch');
         Route::get('/{voucher}', [FeeVoucherController::class, 'print'])->name('single');
     });
 
     // ==================== FEE PAYMENTS ====================
     Route::prefix('payments')->name('payments.')->group(function () {
-        Route::get('/', [FeePaymentController::class, 'index'])->name('index');
-        Route::get('/create', [FeePaymentController::class, 'create'])->name('create');
-        Route::get('/search-students', [FeePaymentController::class, 'searchStudents'])->name('search-students');
-        Route::post('/', [FeePaymentController::class, 'store'])->name('store');
-        Route::get('/{payment}', [FeePaymentController::class, 'show'])->name('show');
-        Route::delete('/{payment}', [FeePaymentController::class, 'destroy'])->name('destroy');
+        Route::get('/', [FeePaymentController::class, 'index'])->name('index')
+            ->middleware('permission:fee.view|fee.payment.collect');
+        Route::get('/create', [FeePaymentController::class, 'create'])->name('create')
+            ->middleware('permission:fee.payment.collect');
+        Route::get('/search-students', [FeePaymentController::class, 'searchStudents'])->name('search-students')
+            ->middleware('permission:fee.payment.collect');
+        Route::post('/', [FeePaymentController::class, 'store'])->name('store')
+            ->middleware('permission:fee.payment.collect');
+        // `fee.view.own` lets a child or their family read their own receipt;
+        // `FeePaymentPolicy::view()`/`viewByStudent()` still check it really
+        // is theirs.
+        Route::get('/{payment}', [FeePaymentController::class, 'show'])->name('show')
+            ->middleware('permission:fee.view|fee.payment.collect|fee.view.own');
+        Route::delete('/{payment}', [FeePaymentController::class, 'destroy'])->name('destroy')
+            ->middleware('permission:fee.payment.refund');
 
         // Receipt
-        Route::get('/{payment}/receipt', [FeePaymentController::class, 'receipt'])->name('receipt');
-        Route::get('/{payment}/print-receipt', [FeePaymentController::class, 'printReceipt'])->name('print-receipt');
+        Route::get('/{payment}/receipt', [FeePaymentController::class, 'receipt'])->name('receipt')
+            ->middleware('permission:fee.view|fee.payment.collect|fee.view.own');
+        Route::get('/{payment}/print-receipt', [FeePaymentController::class, 'printReceipt'])->name('print-receipt')
+            ->middleware('permission:fee.view|fee.payment.collect|fee.view.own');
 
         // Reversal
-        Route::post('/{payment}/reverse', [FeePaymentController::class, 'reverse'])->name('reverse');
+        Route::post('/{payment}/reverse', [FeePaymentController::class, 'reverse'])->name('reverse')
+            ->middleware('permission:fee.payment.refund');
 
         // API endpoints
-        Route::get('/student/{student}', [FeePaymentController::class, 'getByStudent'])->name('by-student');
-        Route::get('/voucher/{voucher}', [FeePaymentController::class, 'getByVoucher'])->name('by-voucher');
+        Route::get('/student/{student}', [FeePaymentController::class, 'getByStudent'])->name('by-student')
+            ->middleware('permission:fee.view|fee.payment.collect|fee.view.own');
+        Route::get('/voucher/{voucher}', [FeePaymentController::class, 'getByVoucher'])->name('by-voucher')
+            ->middleware('permission:fee.view|fee.payment.collect');
     });
 
     // ==================== REPORTS ====================
-    Route::prefix('reports')->name('reports.')->group(function () {
+    Route::prefix('reports')->name('reports.')->middleware('permission:fee.reports')->group(function () {
         Route::get('/', [FeeReportController::class, 'index'])->name('index');
         Route::get('/collection', [FeeReportController::class, 'collection'])->name('collection');
         Route::get('/outstanding', [FeeReportController::class, 'outstanding'])->name('outstanding');
@@ -161,24 +238,34 @@ Route::prefix('fee')->name('fee.')->middleware($middleware)->group(function () {
 
     // ==================== SETTINGS ====================
     Route::prefix('settings')->name('settings.')->group(function () {
-        Route::get('/', [FeeSettingsController::class, 'index'])->name('index');
+        Route::get('/', [FeeSettingsController::class, 'index'])->name('index')
+            ->middleware('permission:fee.head.manage|fee.discount.manage|fee.fine.manage|fee.structure.manage');
 
         // Fee Heads
-        Route::get('/fee-heads', [FeeHeadController::class, 'index'])->name('fee-heads');
+        Route::get('/fee-heads', [FeeHeadController::class, 'index'])->name('fee-heads')
+            ->middleware('permission:fee.view|fee.head.manage');
 
         // Discount Types
-        Route::get('/discount-types', [DiscountTypeController::class, 'index'])->name('discount-types');
+        Route::get('/discount-types', [DiscountTypeController::class, 'index'])->name('discount-types')
+            ->middleware('permission:fee.discount.manage');
 
         // Fine Rules
-        Route::get('/fine-rules', [FineRuleController::class, 'index'])->name('fine-rules');
-        Route::post('/fine-rules', [FineRuleController::class, 'store'])->name('fine-rules.store');
-        Route::put('/fine-rules/{fineRule}', [FineRuleController::class, 'update'])->name('fine-rules.update');
-        Route::delete('/fine-rules/{fineRule}', [FineRuleController::class, 'destroy'])->name('fine-rules.destroy');
-        Route::patch('/fine-rules/{fineRule}/toggle-status', [FineRuleController::class, 'toggleStatus'])->name('fine-rules.toggle-status');
+        Route::get('/fine-rules', [FineRuleController::class, 'index'])->name('fine-rules')
+            ->middleware('permission:fee.fine.manage');
+        Route::post('/fine-rules', [FineRuleController::class, 'store'])->name('fine-rules.store')
+            ->middleware('permission:fee.fine.manage');
+        Route::put('/fine-rules/{fineRule}', [FineRuleController::class, 'update'])->name('fine-rules.update')
+            ->middleware('permission:fee.fine.manage');
+        Route::delete('/fine-rules/{fineRule}', [FineRuleController::class, 'destroy'])->name('fine-rules.destroy')
+            ->middleware('permission:fee.fine.manage');
+        Route::patch('/fine-rules/{fineRule}/toggle-status', [FineRuleController::class, 'toggleStatus'])->name('fine-rules.toggle-status')
+            ->middleware('permission:fee.fine.manage');
     });
 
     // ==================== DASHBOARD ====================
-    Route::get('/dashboard', [FeeDashboardController::class, 'index'])->name('dashboard');
-    Route::get('/dashboard/stats', [FeeDashboardController::class, 'stats'])->name('dashboard.stats');
+    Route::get('/dashboard', [FeeDashboardController::class, 'index'])->name('dashboard')
+        ->middleware('permission:fee.view');
+    Route::get('/dashboard/stats', [FeeDashboardController::class, 'stats'])->name('dashboard.stats')
+        ->middleware('permission:fee.view');
 
 });

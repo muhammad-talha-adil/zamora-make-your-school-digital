@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Head } from '@inertiajs/vue3';
+import { Head, router } from '@inertiajs/vue3';
 import { alert, formatCurrency } from '@/utils';
 import { ref, watch, computed } from 'vue';
 import axios from 'axios';
@@ -110,7 +110,7 @@ watch(() => props.purchases, (newPurchases) => {
 }, { deep: true });
 
 const viewPurchase = (purchase: any) => {
-    window.location.href = `/inventory/purchases/${purchase.id}`;
+    router.visit(`/inventory/purchases/${purchase.id}/details`);
 };
 
 const cancelPurchase = (purchase: any) => {

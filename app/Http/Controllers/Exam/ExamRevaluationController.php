@@ -30,12 +30,15 @@ class ExamRevaluationController extends Controller
     /**
      * Display revaluations page.
      */
-    public function indexPage()
+    public function indexPage(Request $request)
     {
         return Inertia::render('Exam/Revaluations/Index', [
             'exams' => Exam::all(),
             'campuses' => Campus::all(),
             'classes' => SchoolClass::all(),
+            'can' => [
+                'manage' => $request->user()?->can('exam.revaluation.manage') ?? false,
+            ],
         ]);
     }
 

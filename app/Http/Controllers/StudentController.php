@@ -4,8 +4,13 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\Student\StoreStudentRequest;
 use App\Http\Requests\Student\UpdateStudentRequest;
+use App\Models\School;
 use App\Models\Student;
 use App\Repositories\StudentRepository;
+use App\Services\Student\AdmissionCredentials;
+use App\Services\Student\IdCardService;
+use App\Services\Student\LeavingCertificateService;
+use App\Services\Student\SiblingService;
 use App\Services\StudentService;
 use Illuminate\Auth\Access\AuthorizationException;
 use Illuminate\Http\JsonResponse;
@@ -95,7 +100,7 @@ class StudentController extends Controller
      *
      * @throws AuthorizationException
      */
-    public function store(StoreStudentRequest $request): RedirectResponse
+    public function store(StoreStudentRequest $request, AdmissionCredentials $credentials): RedirectResponse
     {
         Gate::authorize('create', Student::class);
 
@@ -108,8 +113,15 @@ class StudentController extends Controller
             $validated = $request->validated();
             $this->service->create($validated);
 
+            /*
+             * The logins created for this admission, shown once and held
+             * nowhere. The password used to be generated, hashed and dropped,
+             * so every account this system made was one nobody could sign in
+             * to — including the student portal's.
+             */
             return redirect()->route('students.index')
-                ->with('success', 'Student admitted successfully with guardian details.');
+                ->with('success', 'Student admitted successfully with guardian details.')
+                ->with('new_logins', $credentials->take());
             // Throwable, not Exception: a bad enum value raises a ValueError,
             // which slipped past the narrower catch and returned a bare 500
             // instead of the message below.
@@ -340,10 +352,81 @@ class StudentController extends Controller
     }
 
     /**
+     * Student ID cards (print).
+     *
+     * A section at a time, eight to a page, because that is how a school runs
+     * them off and then cuts them. The photograph has been stored since
+     * admission and nothing has ever printed it.
+     */
+    public function idCards(Request $request, IdCardService $cards)
+    {
+        Gate::authorize('viewAny', Student::class);
+
+        $validated = $request->validate([
+            'student_ids' => ['nullable', 'array'],
+            'student_ids.*' => ['integer', 'exists:students,id'],
+            'class_id' => ['nullable', 'integer', 'exists:school_classes,id'],
+            'section_id' => ['nullable', 'integer', 'exists:sections,id'],
+        ]);
+
+        if (! empty($validated['student_ids'])) {
+            $students = Student::whereIn('id', $validated['student_ids'])
+                ->visibleTo($request->user())
+                ->get();
+        } elseif (! empty($validated['class_id'])) {
+            $students = $cards->studentsIn(
+                $request->user(),
+                (int) $validated['class_id'],
+                $validated['section_id'] ?? null
+            );
+        } else {
+            $students = collect();
+        }
+
+        return response()->view('student.id-card', [
+            'cards' => $cards->forStudents($students),
+            'school' => School::where('is_active', true)->first(),
+        ]);
+    }
+
+    /**
+     * The other children of this child's family (API).
+     *
+     * Guardians are deduplicated by phone at admission, so the family has
+     * always been in the data and merely unexposed. The fee module's family
+     * concession is what wants it.
+     */
+    public function siblings(Student $student, SiblingService $siblings): JsonResponse
+    {
+        Gate::authorize('view', $student);
+
+        return response()->json(['data' => $siblings->familyOf($student)]);
+    }
+
+    /**
+     * The School Leaving Certificate (print).
+     *
+     * A child cannot be admitted to another school without one, so this is a
+     * legal document rather than a convenience. It reads the leaving record
+     * that `StudentEnrollmentService::leave()` writes, and refuses plainly
+     * where a child has not been marked as having left.
+     */
+    public function leavingCertificate(Student $student, LeavingCertificateService $certificates)
+    {
+        Gate::authorize('view', $student);
+
+        return response()->view('student.leaving-certificate', [
+            'tc' => $certificates->forStudent($student),
+        ]);
+    }
+
+    /**
      * Get sections by class for dropdown.
      */
     public function getSectionsByClass(Request $request): JsonResponse
     {
+        Gate::authorize('viewAny', Student::class);
+
         $validated = $request->validate([
             'class_id' => 'required|integer|exists:school_classes,id',
         ]);
@@ -357,16 +440,23 @@ class StudentController extends Controller
      */
     public function getGuardianByPhone(Request $request): JsonResponse
     {
+        // This looks a guardian up by phone number and returns their
+        // details. It had no check at all, so any signed-in account could
+        // walk the number space and read families out of the system.
+        Gate::authorize('create', Student::class);
+
         return $this->service->getGuardianByPhone($request);
     }
 
     /**
-     * Export students data.
+     * Export the roll as a CSV.
      *
+     * It used to answer "Export started. You will be notified when ready." and
+     * export nothing. What comes out is scoped to what this person may see.
      *
      * @throws AuthorizationException
      */
-    public function export(Request $request): JsonResponse
+    public function export(Request $request)
     {
         Gate::authorize('export', Student::class);
 

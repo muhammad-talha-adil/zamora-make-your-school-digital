@@ -67,6 +67,7 @@ Route::prefix('attendance')->name('attendance.')->middleware(['auth', 'verified'
 */
 Route::prefix('student-leaves')->name('student-leaves.')->middleware($middleware)->group(function () {
     Route::get('/pending', [StudentLeaveController::class, 'pending'])->name('pending');
+    Route::get('/page', [StudentLeaveController::class, 'page'])->name('page');
     Route::get('/{student}', [StudentLeaveController::class, 'index'])->name('index');
     Route::post('/{student}', [StudentLeaveController::class, 'store'])
         ->name('store')->middleware('throttle:20,1');

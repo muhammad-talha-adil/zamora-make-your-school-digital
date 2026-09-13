@@ -17,6 +17,10 @@ return new class extends Migration
             $table->string('slogan')->nullable();
             $table->text('address')->nullable();
             $table->string('phone')->nullable();
+            $table->string('bank_name')->nullable();
+            $table->string('bank_account_title')->nullable();
+            $table->string('bank_account_no', 64)->nullable();
+            $table->string('bank_branch')->nullable();
             $table->string('logo_path')->nullable();
             $table->boolean('is_active')->default(true);
             $table->timestamps();

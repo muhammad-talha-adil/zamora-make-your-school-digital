@@ -9,7 +9,7 @@ use App\Repositories\StudentRepository;
 use App\Services\AttendanceService;
 use App\Services\Exam\GradeResolver;
 use App\Services\GuardianService;
-use App\Services\SchoolEmailService;
+use App\Services\Student\AdmissionCredentials;
 use App\Services\StudentService;
 use App\Services\StudentUserService;
 use Illuminate\Support\Facades\Gate;
@@ -26,48 +26,38 @@ class AppServiceProvider extends ServiceProvider
     public function register(): void
     {
         /*
+         * These are singletons and nothing more.
+         *
+         * Each used to be a closure calling `new` with its dependencies typed
+         * out by hand, which is not what the container is for and cost nothing
+         * until the day one of them gained a dependency — at which point every
+         * admission returned a 500, because the closure was still passing two
+         * arguments to a constructor that now takes three.
+         *
+         * The container reads the constructor. Let it.
+         */
+        /*
+         * The plaintext logins made during one admission, carried from the
+         * moment they are generated to the moment the slip prints them.
+         * Request-scoped, so they never outlive the page that shows them.
+         */
+        $this->app->scoped(AdmissionCredentials::class);
+
+        $this->app->singleton(AttendanceService::class);
+        $this->app->singleton(StudentUserService::class);
+        $this->app->singleton(GuardianService::class);
+        $this->app->singleton(StudentRepository::class);
+        $this->app->singleton(StudentService::class);
+
+        /*
          * One grading scale per request.
          *
          * The resolver holds what it has resolved and the bands it has read.
          * Two instances mean two cold caches — and, worse, two answers to
-         * "which scale applies", which is exactly the drift this class exists
+         * "which scale applies", which is exactly the drift that class exists
          * to stop.
          */
         $this->app->singleton(GradeResolver::class);
-
-        // Register AttendanceService as a singleton
-        $this->app->singleton(AttendanceService::class, function ($app) {
-            return new AttendanceService;
-        });
-
-        // Register StudentUserService
-        $this->app->singleton(StudentUserService::class, function ($app) {
-            return new StudentUserService(
-                $app->make(SchoolEmailService::class)
-            );
-        });
-
-        // Register GuardianService
-        $this->app->singleton(GuardianService::class, function ($app) {
-            return new GuardianService(
-                $app->make(SchoolEmailService::class)
-            );
-        });
-
-        // Register StudentRepository
-        $this->app->singleton(StudentRepository::class, function ($app) {
-            return new StudentRepository(
-                $app->make(StudentUserService::class),
-                $app->make(GuardianService::class)
-            );
-        });
-
-        // Register StudentService
-        $this->app->singleton(StudentService::class, function ($app) {
-            return new StudentService(
-                $app->make(StudentRepository::class)
-            );
-        });
     }
 
     /**

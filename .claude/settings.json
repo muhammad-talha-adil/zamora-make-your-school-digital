@@ -1,0 +1,29 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(php -l *)",
+      "Bash(php artisan test *)",
+      "Bash(php artisan migrate *)",
+      "Bash(php artisan migrate:rollback *)",
+      "Bash(php artisan route:list *)",
+      "Bash(php artisan tinker --execute=*)",
+      "Bash(vendor/bin/pint *)",
+      "Bash(vendor/bin/phpstan *)",
+      "Bash(vendor/bin/psalm *)",
+      "Bash(npx vue-tsc *)",
+      "Bash(npm run build)",
+      "Bash(git status *)",
+      "Bash(git diff *)",
+      "Bash(git log *)",
+      "Bash(git add *)",
+      "Bash(git branch *)",
+      "Bash(grep *)",
+      "Bash(rg *)",
+      "Bash(find . *)",
+      "Bash(ls *)",
+      "Bash(wc -l *)",
+      "Bash(cat *)",
+      "Bash(sed -n *)"
+    ]
+  }
+}

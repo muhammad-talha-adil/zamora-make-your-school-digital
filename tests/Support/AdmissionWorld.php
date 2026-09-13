@@ -11,6 +11,7 @@ use App\Models\Fee\FeeStructureItem;
 use App\Models\Gender;
 use App\Models\Guardian;
 use App\Models\Month;
+use App\Models\Permission;
 use App\Models\Relation;
 use App\Models\Role;
 use App\Models\SchoolClass;
@@ -20,6 +21,7 @@ use App\Models\StudentStatus;
 use App\Models\User;
 use Database\Seeders\PermissionsSeeder;
 use Database\Seeders\RolesSeeder;
+use Spatie\Permission\PermissionRegistrar;
 
 /**
  * Reference data the admission form needs, plus a valid payload to post.
@@ -75,6 +77,65 @@ class AdmissionWorld
         $this->seedLookups();
         $this->seedFeeHeads();
         $this->actor = $this->developer();
+
+        $this->grantStudentAbilities();
+        $this->grantFeeAbilities();
+    }
+
+    /**
+     * The student abilities, given to the shared actor.
+     *
+     * The routes are behind `permission:` middleware, which reads the
+     * permission tables rather than `Gate::before` — so the developer shortcut
+     * that satisfies every policy does not get past the middleware. Seeding all
+     * 106 permissions costs several seconds a test; these cost nothing, and the
+     * authorisation cases seed the real thing with `withFullRoles()`.
+     */
+    private function grantStudentAbilities(): void
+    {
+        $abilities = [
+            'students.view', 'students.view.own',
+            'students.create', 'students.edit', 'students.edit.own',
+            'students.delete', 'students.restore', 'students.force.delete',
+            'students.status.change', 'students.readmit', 'students.promote',
+            'students.export', 'students.import',
+        ];
+
+        foreach ($abilities as $ability) {
+            Permission::firstOrCreate(['name' => $ability, 'guard_name' => 'web']);
+        }
+
+        $this->actor->givePermissionTo($abilities);
+
+        app(PermissionRegistrar::class)->forgetCachedPermissions();
+    }
+
+    /**
+     * The `fee.*`/`finance.*` abilities, given to the same shared actor.
+     *
+     * Every fee and finance route now sits behind `permission:` middleware —
+     * before this, none of the ten seeded `fee.*` permissions or six `finance.*`
+     * ones were checked anywhere, so any signed-in account could record a
+     * payment or delete a fee structure.
+     */
+    private function grantFeeAbilities(): void
+    {
+        $abilities = [
+            'fee.view', 'fee.view.own', 'fee.head.manage', 'fee.structure.manage',
+            'fee.voucher.view', 'fee.voucher.generate', 'fee.voucher.edit', 'fee.voucher.delete', 'fee.voucher.print',
+            'fee.payment.collect', 'fee.payment.refund',
+            'fee.discount.manage', 'fee.discount.approve', 'fee.fine.manage', 'fee.reports',
+            'finance.view', 'finance.transaction.view', 'finance.transaction.manage',
+            'finance.ledger.manage', 'finance.account.manage', 'finance.reports', 'finance.reports.owner',
+        ];
+
+        foreach ($abilities as $ability) {
+            Permission::firstOrCreate(['name' => $ability, 'guard_name' => 'web']);
+        }
+
+        $this->actor->givePermissionTo($abilities);
+
+        app(PermissionRegistrar::class)->forgetCachedPermissions();
     }
 
     public static function make(): self

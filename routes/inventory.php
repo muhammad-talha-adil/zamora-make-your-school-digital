@@ -106,6 +106,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('/all', [PurchasesController::class, 'getAll'])->name('all');
         Route::get('/create', [InventoryPageController::class, 'purchaseCreate'])->name('create');
         Route::get('/{purchase}/edit', [InventoryPageController::class, 'purchaseEdit'])->name('edit');
+        Route::get('/{purchase}/details', [PurchasesController::class, 'show'])->name('details');
         Route::get('/{purchase}', [PurchasesController::class, 'getPurchase'])->name('show');
         Route::post('/', [PurchasesController::class, 'store'])->name('store');
         Route::put('/{purchase}', [PurchasesController::class, 'update'])->name('update');

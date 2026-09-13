@@ -4,6 +4,7 @@ namespace App\Services\Exam;
 
 use App\Models\Exam\Exam;
 use App\Models\Exam\ExamResultHeader;
+use App\Models\Student;
 use Illuminate\Support\Collection;
 
 /**
@@ -146,10 +147,22 @@ class AnnualResultService
             ->distinct()
             ->pluck('student_id');
 
+        // The names, read once. A sheet of forty asking per child would be
+        // forty queries for something one `whereIn` answers.
+        $students = Student::with('user:id,name')
+            ->whereIn('id', $studentIds)
+            ->get(['id', 'admission_no', 'user_id'])
+            ->keyBy('id');
+
         $results = [];
 
         foreach ($studentIds as $studentId) {
-            $results[(int) $studentId] = $this->forStudent((int) $studentId, $sessionId, $campusId);
+            $student = $students->get($studentId);
+
+            $results[(int) $studentId] = $this->forStudent((int) $studentId, $sessionId, $campusId) + [
+                'name' => $student?->user?->name,
+                'admission_no' => $student?->admission_no,
+            ];
         }
 
         return $results;

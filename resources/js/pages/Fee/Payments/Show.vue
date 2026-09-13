@@ -1,9 +1,11 @@
 <script setup lang="ts">
 import { Head, router } from '@inertiajs/vue3';
+import { reactive, ref } from 'vue';
 import { route } from 'ziggy-js';
 import AppLayout from '@/layouts/AppLayout.vue';
 import type { BreadcrumbItem } from '@/types';
 import { Button } from '@/components/ui/button';
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import Icon from '@/components/Icon.vue';
 import { formatCurrency } from '@/utils/currency';
 import { formatDate } from '@/utils/date';
@@ -63,6 +65,37 @@ const getMethodColor = (method: string) => {
 const formatMethod = (method: string) => {
     return method.charAt(0).toUpperCase() + method.slice(1);
 };
+
+const getStatusColor = (status: string) => {
+    const colors: Record<string, string> = {
+        posted: 'bg-success/10 text-success',
+        pending: 'bg-warning/10 text-warning',
+        reversed: 'bg-destructive/10 text-destructive',
+    };
+    return colors[status] || 'bg-muted text-muted-foreground';
+};
+
+const formatStatus = (status: string) => {
+    return status.charAt(0).toUpperCase() + status.slice(1);
+};
+
+const showReverseDialog = ref(false);
+const reversing = ref(false);
+const reverseForm = reactive({ reason: '' });
+
+const submitReverse = () => {
+    reversing.value = true;
+    router.post(route('fee.payments.reverse', props.payment.id), reverseForm, {
+        preserveScroll: true,
+        onSuccess: () => {
+            showReverseDialog.value = false;
+            reverseForm.reason = '';
+        },
+        onFinish: () => {
+            reversing.value = false;
+        },
+    });
+};
 </script>
 
 <template>
@@ -73,18 +106,59 @@ const formatMethod = (method: string) => {
             <!-- Header -->
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 md:gap-4">
                 <div>
-                    <h1 class="text-lg md:text-2xl font-bold text-foreground">
-                        Payment Receipt
-                    </h1>
+                    <div class="flex flex-wrap items-center gap-2">
+                        <h1 class="text-lg md:text-2xl font-bold text-foreground">
+                            Payment Receipt
+                        </h1>
+                        <span :class="['inline-block px-2 py-1 text-xs font-medium rounded-full', getStatusColor(payment.status)]">
+                            {{ formatStatus(payment.status) }}
+                        </span>
+                    </div>
                     <p class="mt-1 text-xs md:text-sm text-muted-foreground">
                         Receipt #: {{ payment.receipt_no }}
                     </p>
                 </div>
-                <Button variant="outline" @click="router.visit(route('fee.payments.print-receipt', payment.id))">
-                    <Icon icon="printer" class="mr-2 h-4 w-4" />
-                    Print Receipt
-                </Button>
+                <div class="flex flex-wrap gap-2">
+                    <Button variant="outline" @click="router.visit(route('fee.payments.print-receipt', payment.id))">
+                        <Icon icon="printer" class="mr-2 h-4 w-4" />
+                        Print Receipt
+                    </Button>
+                    <Button v-if="payment.status !== 'reversed'" variant="destructive" @click="showReverseDialog = true">
+                        <Icon icon="undo" class="mr-2 h-4 w-4" />
+                        Reverse Payment
+                    </Button>
+                </div>
             </div>
+
+            <Dialog v-model:open="showReverseDialog">
+                <DialogContent class="sm:max-w-[480px]">
+                    <form @submit.prevent="submitReverse" class="space-y-4">
+                        <DialogHeader>
+                            <DialogTitle>Reverse Payment</DialogTitle>
+                            <DialogDescription>
+                                This will undo the allocations for receipt #{{ payment.receipt_no }} and cannot be undone. Please give a reason.
+                            </DialogDescription>
+                        </DialogHeader>
+
+                        <div class="grid gap-2">
+                            <label class="text-sm font-medium text-muted-foreground" for="reverse-reason">Reason</label>
+                            <textarea
+                                id="reverse-reason"
+                                v-model="reverseForm.reason"
+                                class="min-h-20 w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground"
+                                placeholder="Reason for reversal (optional)"
+                            />
+                        </div>
+
+                        <DialogFooter>
+                            <Button type="button" variant="outline" @click="showReverseDialog = false">Cancel</Button>
+                            <Button type="submit" variant="destructive" :disabled="reversing">
+                                {{ reversing ? 'Reversing...' : 'Reverse Payment' }}
+                            </Button>
+                        </DialogFooter>
+                    </form>
+                </DialogContent>
+            </Dialog>
 
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <!-- Payment Details -->

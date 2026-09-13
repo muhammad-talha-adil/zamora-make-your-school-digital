@@ -21,6 +21,7 @@ use App\Models\LeaveType;
 use App\Models\StudentGuardian;
 use App\Models\StudentLeave;
 use App\Models\User;
+use Inertia\Testing\AssertableInertia;
 use Tests\Support\AttendanceWorld;
 
 beforeEach(function () {
@@ -256,4 +257,43 @@ it('lists what the school still has to decide', function () {
         ->getJson(route('student-leaves.pending'))
         ->assertSuccessful()
         ->assertJsonCount(1, 'leaves');
+});
+
+it('shows a child s own leave history, including who decided it', function () {
+    $guardian = guardianOf($this->world, $this->student->id);
+    $this->actingAs($guardian)
+        ->postJson(route('student-leaves.store', $this->student), leavePayload($this->world));
+
+    $leave = StudentLeave::firstOrFail();
+
+    $this->actingAs($this->teacher)
+        ->postJson(route('student-leaves.approve', $leave), ['note' => 'Granted']);
+
+    $response = $this->actingAs($guardian)
+        ->getJson(route('student-leaves.index', $this->student))
+        ->assertSuccessful()
+        ->assertJsonCount(1, 'leaves');
+
+    expect($response->json('leaves.0.approved_by.id'))->toBe($this->teacher->id);
+});
+
+it('renders the leave-applications screen for staff who may decide on pending requests', function () {
+    $this->actingAs($this->teacher)
+        ->get(route('student-leaves.page'))
+        ->assertInertia(fn (AssertableInertia $page) => $page
+            ->component('attendance/StudentLeaves/Index')
+            ->where('canViewPending', true)
+        );
+});
+
+it('renders the leave-applications screen for a guardian scoped to their own child', function () {
+    $guardian = guardianOf($this->world, $this->student->id);
+
+    $this->actingAs($guardian)
+        ->get(route('student-leaves.page'))
+        ->assertInertia(fn (AssertableInertia $page) => $page
+            ->component('attendance/StudentLeaves/Index')
+            ->where('canViewPending', false)
+            ->where('defaultStudentId', $this->student->id)
+        );
 });
