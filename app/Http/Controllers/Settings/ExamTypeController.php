@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Settings;
 
 use App\Http\Controllers\Controller;
 use App\Models\Exam\ExamType;
+use Illuminate\Database\QueryException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Inertia\Inertia;
@@ -16,6 +17,8 @@ class ExamTypeController extends Controller
      */
     public function index(): Response
     {
+        $this->authorize('exam.settings');
+
         $examTypes = ExamType::orderBy('id', 'desc')
             ->paginate(10);
 
@@ -29,6 +32,8 @@ class ExamTypeController extends Controller
      */
     public function apiIndex(): JsonResponse
     {
+        $this->authorize('exam.settings');
+
         $query = ExamType::query();
 
         if (request()->has('status')) {
@@ -51,6 +56,8 @@ class ExamTypeController extends Controller
      */
     public function create(): Response
     {
+        $this->authorize('exam.settings');
+
         return Inertia::render('settings/ExamTypes/Create');
     }
 
@@ -59,6 +66,8 @@ class ExamTypeController extends Controller
      */
     public function store(): RedirectResponse
     {
+        $this->authorize('exam.settings');
+
         request()->validate([
             'name' => 'required|string|max:255',
             'short_name' => 'nullable|string|max:50',
@@ -71,7 +80,7 @@ class ExamTypeController extends Controller
             'is_active' => request('is_active', true),
         ]);
 
-        return redirect()->route('settings.exam-types.index')->with('success', 'Exam type created successfully.');
+        return redirect()->route('exam-types.index')->with('success', 'Exam type created successfully.');
     }
 
     /**
@@ -79,6 +88,8 @@ class ExamTypeController extends Controller
      */
     public function edit(ExamType $examType): Response
     {
+        $this->authorize('exam.settings');
+
         return Inertia::render('settings/ExamTypes/Edit', [
             'examType' => $examType,
         ]);
@@ -89,6 +100,8 @@ class ExamTypeController extends Controller
      */
     public function update(ExamType $examType): RedirectResponse
     {
+        $this->authorize('exam.settings');
+
         request()->validate([
             'name' => 'required|string|max:255',
             'short_name' => 'nullable|string|max:50',
@@ -101,7 +114,7 @@ class ExamTypeController extends Controller
             'is_active' => request('is_active', true),
         ]);
 
-        return redirect()->route('settings.exam-types.index')->with('success', 'Exam type updated successfully.');
+        return redirect()->route('exam-types.index')->with('success', 'Exam type updated successfully.');
     }
 
     /**
@@ -109,9 +122,16 @@ class ExamTypeController extends Controller
      */
     public function destroy(ExamType $examType): RedirectResponse
     {
-        $examType->delete();
+        $this->authorize('exam.settings');
 
-        return redirect()->route('settings.exam-types.index')->with('success', 'Exam type deleted successfully.');
+        try {
+            $examType->delete();
+        } catch (QueryException $exception) {
+            return redirect()->route('exam-types.index')
+                ->with('error', 'This exam type cannot be deleted because it is already in use by an exam.');
+        }
+
+        return redirect()->route('exam-types.index')->with('success', 'Exam type deleted successfully.');
     }
 
     /**
@@ -119,9 +139,11 @@ class ExamTypeController extends Controller
      */
     public function inactivate(ExamType $examType): RedirectResponse
     {
+        $this->authorize('exam.settings');
+
         $examType->update(['is_active' => false]);
 
-        return redirect()->route('settings.exam-types.index')->with('success', 'Exam type inactivated successfully.');
+        return redirect()->route('exam-types.index')->with('success', 'Exam type inactivated successfully.');
     }
 
     /**
@@ -129,9 +151,11 @@ class ExamTypeController extends Controller
      */
     public function activate(ExamType $examType): RedirectResponse
     {
+        $this->authorize('exam.settings');
+
         $examType->update(['is_active' => true]);
 
-        return redirect()->route('settings.exam-types.index')->with('success', 'Exam type activated successfully.');
+        return redirect()->route('exam-types.index')->with('success', 'Exam type activated successfully.');
     }
 
     /**
@@ -139,10 +163,12 @@ class ExamTypeController extends Controller
      */
     public function restore(int $id): RedirectResponse
     {
+        $this->authorize('exam.settings');
+
         $examType = ExamType::onlyTrashed()->findOrFail($id);
         $examType->restore();
 
-        return redirect()->route('settings.exam-types.index')->with('success', 'Exam type restored successfully.');
+        return redirect()->route('exam-types.index')->with('success', 'Exam type restored successfully.');
     }
 
     /**
@@ -150,9 +176,17 @@ class ExamTypeController extends Controller
      */
     public function forceDelete(int $id): RedirectResponse
     {
-        $examType = ExamType::onlyTrashed()->findOrFail($id);
-        $examType->forceDelete();
+        $this->authorize('exam.settings');
 
-        return redirect()->route('settings.exam-types.index')->with('success', 'Exam type permanently deleted.');
+        $examType = ExamType::onlyTrashed()->findOrFail($id);
+
+        try {
+            $examType->forceDelete();
+        } catch (QueryException $exception) {
+            return redirect()->route('exam-types.index')
+                ->with('error', 'This exam type cannot be permanently deleted because it is already in use by an exam.');
+        }
+
+        return redirect()->route('exam-types.index')->with('success', 'Exam type permanently deleted.');
     }
 }

@@ -18,7 +18,7 @@ class AttendanceSettingsController extends Controller
      */
     public function show(Request $request): Response
     {
-        $this->authorize('settings.manage');
+        $this->authorize('attendance.settings');
 
         $leaveTypes = LeaveType::orderBy('id', 'desc')->paginate(10);
 
@@ -49,7 +49,7 @@ class AttendanceSettingsController extends Controller
      */
     public function indexLeaveTypes(Request $request)
     {
-        $this->authorize('settings.manage');
+        $this->authorize('attendance.settings');
 
         $perPage = $request->per_page ?? 10;
         $page = $request->page ?? 1;
@@ -72,7 +72,7 @@ class AttendanceSettingsController extends Controller
      */
     public function indexHolidays(Request $request)
     {
-        $this->authorize('settings.manage');
+        $this->authorize('attendance.settings');
 
         $perPage = $request->per_page ?? 10;
         $page = $request->page ?? 1;
@@ -99,7 +99,7 @@ class AttendanceSettingsController extends Controller
      */
     public function indexPastHolidays(Request $request)
     {
-        $this->authorize('settings.manage');
+        $this->authorize('attendance.settings');
 
         $perPage = $request->per_page ?? 10;
         $page = $request->page ?? 1;
@@ -118,7 +118,7 @@ class AttendanceSettingsController extends Controller
      */
     public function storeLeaveType(Request $request): RedirectResponse
     {
-        $this->authorize('settings.manage');
+        $this->authorize('attendance.settings');
 
         $validated = $request->validate([
             'name' => 'required|string|max:255|unique:leave_types,name',
@@ -136,7 +136,7 @@ class AttendanceSettingsController extends Controller
      */
     public function updateLeaveType(Request $request, LeaveType $leaveType): RedirectResponse
     {
-        $this->authorize('settings.manage');
+        $this->authorize('attendance.settings');
 
         $validated = $request->validate([
             'name' => 'required|string|max:255|unique:leave_types,name,'.$leaveType->id,
@@ -154,7 +154,7 @@ class AttendanceSettingsController extends Controller
      */
     public function destroyLeaveType(LeaveType $leaveType): RedirectResponse
     {
-        $this->authorize('settings.manage');
+        $this->authorize('attendance.settings');
 
         $leaveType->delete();
 
@@ -166,7 +166,7 @@ class AttendanceSettingsController extends Controller
      */
     public function storeHoliday(Request $request): RedirectResponse
     {
-        $this->authorize('settings.manage');
+        $this->authorize('attendance.settings');
 
         $validated = $request->validate([
             'title' => 'required|string|max:255',
@@ -195,7 +195,7 @@ class AttendanceSettingsController extends Controller
      */
     public function updateHoliday(Request $request, Holiday $holiday): RedirectResponse
     {
-        $this->authorize('settings.manage');
+        $this->authorize('attendance.settings');
 
         $validated = $request->validate([
             'title' => 'required|string|max:255',
@@ -224,7 +224,7 @@ class AttendanceSettingsController extends Controller
      */
     public function destroyHoliday(Holiday $holiday): RedirectResponse
     {
-        $this->authorize('settings.manage');
+        $this->authorize('attendance.settings');
 
         $holiday->delete();
 

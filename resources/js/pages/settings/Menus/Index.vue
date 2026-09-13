@@ -47,12 +47,12 @@ const props = defineProps<Props>();
 
 const page = usePage();
 
-// Check if user has settings.manage permission
+// Check if user has the school.menu.manage permission (via any of their roles)
 const hasManageMenusPermission = computed(() => {
     const roles = (page.props.auth?.user?.roles as any[]) || [];
-    return roles.some((role: any) => 
-        role.permissions?.some((perm: any) => 
-            perm.key === 'settings.manage'
+    return roles.some((role: any) =>
+        role.permissions?.some((perm: any) =>
+            perm.name === 'school.menu.manage'
         )
     );
 });

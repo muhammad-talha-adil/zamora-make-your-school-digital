@@ -4,9 +4,12 @@ namespace App\Models\Exam;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class ExamType extends Model
 {
+    use SoftDeletes;
+
     protected $fillable = [
         'name',
         'short_name',
@@ -15,6 +18,7 @@ class ExamType extends Model
 
     protected $casts = [
         'is_active' => 'boolean',
+        'deleted_at' => 'datetime',
     ];
 
     /**

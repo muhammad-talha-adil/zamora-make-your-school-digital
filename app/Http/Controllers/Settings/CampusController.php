@@ -8,6 +8,7 @@ use App\Http\Requests\Settings\UpdateCampusRequest;
 use App\Models\Campus;
 use App\Models\CampusType;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -18,6 +19,8 @@ class CampusController extends Controller
      */
     public function apiIndex(): JsonResponse
     {
+        Gate::authorize('viewAny', Campus::class);
+
         $query = Campus::with('campusType');
 
         $status = request()->get('status');
@@ -48,6 +51,8 @@ class CampusController extends Controller
      */
     public function index(): Response
     {
+        Gate::authorize('viewAny', Campus::class);
+
         $campuses = Campus::with('campusType')
             ->orderBy('id', 'desc')
             ->paginate(10);
@@ -65,6 +70,8 @@ class CampusController extends Controller
      */
     public function create(): Response
     {
+        Gate::authorize('create', Campus::class);
+
         $campusTypes = CampusType::orderBy('name', 'asc')->get(['id', 'name']);
 
         return Inertia::render('settings/Campuses/Create', [
@@ -77,6 +84,8 @@ class CampusController extends Controller
      */
     public function store(StoreCampusRequest $request)
     {
+        Gate::authorize('create', Campus::class);
+
         $validated = $request->validated();
 
         Campus::create($validated);
@@ -94,6 +103,8 @@ class CampusController extends Controller
      */
     public function edit(Campus $campus): Response
     {
+        Gate::authorize('update', $campus);
+
         $campusTypes = CampusType::orderBy('name', 'asc')->get(['id', 'name']);
 
         return Inertia::render('settings/Campuses/Edit', [
@@ -107,6 +118,8 @@ class CampusController extends Controller
      */
     public function update(UpdateCampusRequest $request, Campus $campus)
     {
+        Gate::authorize('update', $campus);
+
         $validated = $request->validated();
 
         $campus->update($validated);
@@ -124,6 +137,8 @@ class CampusController extends Controller
      */
     public function destroy(Campus $campus)
     {
+        Gate::authorize('delete', $campus);
+
         $campus->delete();
 
         return response()->json(['success' => true]);
@@ -134,6 +149,8 @@ class CampusController extends Controller
      */
     public function inactivate(Campus $campus)
     {
+        Gate::authorize('update', $campus);
+
         $campus->update(['is_active' => false]);
 
         if (request()->expectsJson()) {
@@ -148,6 +165,8 @@ class CampusController extends Controller
      */
     public function activate(Campus $campus)
     {
+        Gate::authorize('update', $campus);
+
         $campus->update(['is_active' => true]);
 
         if (request()->expectsJson()) {
@@ -162,6 +181,8 @@ class CampusController extends Controller
      */
     public function restore(int $id)
     {
+        Gate::authorize('create', Campus::class);
+
         $campus = Campus::onlyTrashed()->findOrFail($id);
         $campus->restore();
 
@@ -178,6 +199,9 @@ class CampusController extends Controller
     public function forceDelete(int $id)
     {
         $campus = Campus::onlyTrashed()->findOrFail($id);
+
+        Gate::authorize('delete', $campus);
+
         $campus->forceDelete();
 
         if (request()->expectsJson()) {

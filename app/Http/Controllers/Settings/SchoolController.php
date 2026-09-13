@@ -19,7 +19,7 @@ class SchoolController extends Controller
 {
     public function show(Request $request): Response
     {
-        $this->authorize('settings.manage');
+        $this->authorize('school.profile.manage');
 
         $school = School::first(); // Assuming single school
 
@@ -58,7 +58,7 @@ class SchoolController extends Controller
 
     public function update(Request $request): RedirectResponse
     {
-        $this->authorize('settings.manage');
+        $this->authorize('school.profile.manage');
 
         $validated = $request->validate([
             'name' => 'required|string|max:255',

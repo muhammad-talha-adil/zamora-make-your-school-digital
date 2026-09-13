@@ -135,7 +135,7 @@ const updatePerPage = (value: number) => {
                                 </Badge>
                             </td>
                             <td class="px-6 py-4 text-sm font-medium whitespace-nowrap">
-                                <div class="flex flex-wrap justify-end gap-2" v-if="!showInactive">
+                                <div class="flex flex-wrap justify-end gap-2" v-if="!showInactive && hasManageMenusPermission">
                                     <Button variant="outline" size="sm" :class="tableActionButtonClass.edit" title="Edit Menu" @click="emit('edit', menu)">
                                         <Icon icon="edit" class="mr-1" />Edit
                                     </Button>
@@ -159,7 +159,7 @@ const updatePerPage = (value: number) => {
                                         <Icon icon="trash-2" class="mr-1" />Delete
                                     </Button>
                                 </div>
-                                <div class="flex flex-wrap justify-end gap-2" v-else>
+                                <div class="flex flex-wrap justify-end gap-2" v-else-if="showInactive && hasManageMenusPermission">
                                     <Button
                                         variant="outline"
                                         size="sm"
@@ -177,6 +177,7 @@ const updatePerPage = (value: number) => {
                                         <Icon icon="x" class="mr-1" />Delete
                                     </Button>
                                 </div>
+                                <span v-else class="text-xs text-muted-foreground">&mdash;</span>
                             </td>
                         </tr>
                     </tbody>

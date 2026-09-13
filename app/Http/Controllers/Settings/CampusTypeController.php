@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Settings\StoreCampusTypeRequest;
 use App\Http\Requests\Settings\UpdateCampusTypeRequest;
 use App\Models\CampusType;
+use Illuminate\Support\Facades\Gate;
 use Inertia\Response;
 
 class CampusTypeController extends Controller
@@ -15,6 +16,8 @@ class CampusTypeController extends Controller
      */
     public function index(): Response
     {
+        Gate::authorize('viewAny', CampusType::class);
+
         return inertia('Settings/School', [
             'campusTypes' => CampusType::withCount('campuses')->get(),
         ]);
@@ -33,6 +36,8 @@ class CampusTypeController extends Controller
      */
     public function store(StoreCampusTypeRequest $request)
     {
+        Gate::authorize('create', CampusType::class);
+
         $campusType = CampusType::create($request->validated());
 
         return back()->with([
@@ -62,6 +67,8 @@ class CampusTypeController extends Controller
      */
     public function update(UpdateCampusTypeRequest $request, CampusType $campusType)
     {
+        Gate::authorize('update', $campusType);
+
         $campusType->update($request->validated());
 
         return back()->with([
@@ -75,6 +82,8 @@ class CampusTypeController extends Controller
      */
     public function destroy(CampusType $campusType)
     {
+        Gate::authorize('delete', $campusType);
+
         $campusType->delete();
 
         return back()->with('success', 'Campus type deleted successfully.');
@@ -86,6 +95,8 @@ class CampusTypeController extends Controller
      */
     public function getAll()
     {
+        Gate::authorize('viewAny', CampusType::class);
+
         $query = CampusType::withCount('campuses');
 
         // Handle trashed filter: 1 = only trashed, 0 or null = only non-trashed
@@ -120,6 +131,8 @@ class CampusTypeController extends Controller
      */
     public function restore(int $id)
     {
+        Gate::authorize('create', CampusType::class);
+
         $campusType = CampusType::onlyTrashed()->findOrFail($id);
         $campusType->restore();
 
@@ -136,6 +149,9 @@ class CampusTypeController extends Controller
     public function forceDelete(int $id)
     {
         $campusType = CampusType::onlyTrashed()->findOrFail($id);
+
+        Gate::authorize('delete', $campusType);
+
         $campusType->forceDelete();
 
         if (request()->expectsJson()) {

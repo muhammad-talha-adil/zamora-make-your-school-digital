@@ -7,6 +7,7 @@ use App\Http\Requests\Settings\StoreSectionRequest;
 use App\Http\Requests\Settings\UpdateSectionRequest;
 use App\Models\SchoolClass;
 use App\Models\Section;
+use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -17,6 +18,8 @@ class SectionController extends Controller
      */
     public function index(): Response
     {
+        Gate::authorize('viewAny', Section::class);
+
         $sections = Section::with('schoolClass')
             ->orderBy('id', 'desc')
             ->paginate(10);
@@ -31,6 +34,8 @@ class SectionController extends Controller
      */
     public function apiIndex()
     {
+        Gate::authorize('viewAny', Section::class);
+
         $query = Section::with('schoolClass');
 
         // Handle status filter
@@ -66,6 +71,8 @@ class SectionController extends Controller
      */
     public function create(): Response
     {
+        Gate::authorize('create', Section::class);
+
         $schoolClasses = SchoolClass::orderBy('name', 'asc')->get(['id', 'name']);
 
         return Inertia::render('settings/Sections/Create', [
@@ -78,6 +85,8 @@ class SectionController extends Controller
      */
     public function store(StoreSectionRequest $request)
     {
+        Gate::authorize('create', Section::class);
+
         $validated = $request->validated();
 
         Section::create($validated);
@@ -97,6 +106,8 @@ class SectionController extends Controller
      */
     public function update(UpdateSectionRequest $request, Section $section)
     {
+        Gate::authorize('update', $section);
+
         $validated = $request->validated();
 
         $section->update($validated);
@@ -116,6 +127,8 @@ class SectionController extends Controller
      */
     public function destroy(Section $section)
     {
+        Gate::authorize('delete', $section);
+
         $section->delete();
 
         if (request()->expectsJson()) {
@@ -130,6 +143,8 @@ class SectionController extends Controller
      */
     public function inactivate(Section $section)
     {
+        Gate::authorize('update', $section);
+
         $section->update(['is_active' => false]);
 
         if (request()->expectsJson()) {
@@ -144,6 +159,8 @@ class SectionController extends Controller
      */
     public function activate(Section $section)
     {
+        Gate::authorize('update', $section);
+
         $section->update(['is_active' => true]);
 
         if (request()->expectsJson()) {
@@ -158,6 +175,8 @@ class SectionController extends Controller
      */
     public function restore(int $id)
     {
+        Gate::authorize('create', Section::class);
+
         $section = Section::onlyTrashed()->findOrFail($id);
         $section->restore();
 
@@ -174,6 +193,9 @@ class SectionController extends Controller
     public function forceDelete(int $id)
     {
         $section = Section::onlyTrashed()->findOrFail($id);
+
+        Gate::authorize('delete', $section);
+
         $section->forceDelete();
 
         if (request()->expectsJson()) {
@@ -188,6 +210,8 @@ class SectionController extends Controller
      */
     public function edit(Section $section): Response
     {
+        Gate::authorize('update', $section);
+
         $schoolClasses = SchoolClass::orderBy('name', 'asc')->get(['id', 'name']);
 
         return Inertia::render('settings/Sections/Edit', [

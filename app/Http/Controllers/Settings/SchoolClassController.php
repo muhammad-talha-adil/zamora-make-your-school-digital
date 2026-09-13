@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Settings\StoreSchoolClassRequest;
 use App\Http\Requests\Settings\UpdateSchoolClassRequest;
 use App\Models\SchoolClass;
+use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -16,6 +17,8 @@ class SchoolClassController extends Controller
      */
     public function index(): Response
     {
+        Gate::authorize('viewAny', SchoolClass::class);
+
         $schoolClasses = SchoolClass::orderBy('id', 'desc')
             ->paginate(10);
 
@@ -29,6 +32,8 @@ class SchoolClassController extends Controller
      */
     public function apiIndex()
     {
+        Gate::authorize('viewAny', SchoolClass::class);
+
         $query = SchoolClass::query();
 
         // Handle status filter
@@ -58,6 +63,8 @@ class SchoolClassController extends Controller
      */
     public function create(): Response
     {
+        Gate::authorize('create', SchoolClass::class);
+
         return Inertia::render('settings/SchoolClasses/Create');
     }
 
@@ -66,6 +73,8 @@ class SchoolClassController extends Controller
      */
     public function store(StoreSchoolClassRequest $request)
     {
+        Gate::authorize('create', SchoolClass::class);
+
         $validated = $request->validated();
         $validated['is_active'] = true; // New classes are always active
 
@@ -83,6 +92,8 @@ class SchoolClassController extends Controller
      */
     public function edit(SchoolClass $schoolClass): Response
     {
+        Gate::authorize('update', $schoolClass);
+
         return Inertia::render('settings/SchoolClasses/Edit', [
             'schoolClass' => $schoolClass,
         ]);
@@ -93,6 +104,8 @@ class SchoolClassController extends Controller
      */
     public function update(UpdateSchoolClassRequest $request, SchoolClass $schoolClass)
     {
+        Gate::authorize('update', $schoolClass);
+
         $validated = $request->validated();
         // is_active should not be changed through form; preserve existing value
         // (if somehow sent, ignore it)
@@ -112,6 +125,8 @@ class SchoolClassController extends Controller
      */
     public function destroy(SchoolClass $schoolClass)
     {
+        Gate::authorize('delete', $schoolClass);
+
         $schoolClass->delete();
 
         if (request()->expectsJson()) {
@@ -126,6 +141,8 @@ class SchoolClassController extends Controller
      */
     public function inactivate(SchoolClass $schoolClass)
     {
+        Gate::authorize('update', $schoolClass);
+
         $schoolClass->update(['is_active' => false]);
 
         if (request()->expectsJson()) {
@@ -140,6 +157,8 @@ class SchoolClassController extends Controller
      */
     public function activate(SchoolClass $schoolClass)
     {
+        Gate::authorize('update', $schoolClass);
+
         $schoolClass->update(['is_active' => true]);
 
         if (request()->expectsJson()) {
@@ -154,6 +173,8 @@ class SchoolClassController extends Controller
      */
     public function restore(int $id)
     {
+        Gate::authorize('create', SchoolClass::class);
+
         $schoolClass = SchoolClass::onlyTrashed()->findOrFail($id);
         $schoolClass->restore();
 
@@ -170,6 +191,9 @@ class SchoolClassController extends Controller
     public function forceDelete(int $id)
     {
         $schoolClass = SchoolClass::onlyTrashed()->findOrFail($id);
+
+        Gate::authorize('delete', $schoolClass);
+
         $schoolClass->forceDelete();
 
         if (request()->expectsJson()) {

@@ -84,7 +84,7 @@ class MenuController extends Controller
 
     public function create(Request $request): Response
     {
-        $this->authorize('settings.manage');
+        $this->authorize('school.menu.manage');
 
         $parentMenus = $this->getParentMenuOptions();
 
@@ -95,19 +95,14 @@ class MenuController extends Controller
 
     public function store(StoreMenuRequest $request): RedirectResponse
     {
-        $this->authorize('settings.manage');
-
-        // Ensure only users with 'developer' role can create menus
-        if (! $request->user()->roles()->where('name', 'developer')->exists()) {
-            abort(403, 'Only developers can create menus.');
-        }
+        $this->authorize('school.menu.manage');
 
         $validated = $request->validated();
 
         $validated['is_active'] = $validated['is_active'] ?? 1;
         $validated['icon'] = $validated['icon'] ?? 'layout';
         $validated['url'] = $validated['url'] ?? Str::slug($validated['title']);
-        $validated['parent_id'] = $validated['parent_id'] ?: null;
+        $validated['parent_id'] = $validated['parent_id'] ?? null;
         $validated['order'] = $this->normalizeRequestedOrder(
             parentId: $validated['parent_id'],
             type: $validated['type'],
@@ -127,7 +122,7 @@ class MenuController extends Controller
 
     public function show($id): Response
     {
-        $this->authorize('settings.manage');
+        $this->authorize('school.menu.manage');
 
         $menu = Menu::with(['parent', 'children'])->findOrFail($id);
 
@@ -138,7 +133,7 @@ class MenuController extends Controller
 
     public function edit($id): Response
     {
-        $this->authorize('settings.manage');
+        $this->authorize('school.menu.manage');
 
         $menu = Menu::findOrFail($id);
         $parentMenus = $this->getParentMenuOptions()
@@ -153,12 +148,12 @@ class MenuController extends Controller
 
     public function update(UpdateMenuRequest $request, $id): RedirectResponse
     {
-        $this->authorize('settings.manage');
+        $this->authorize('school.menu.manage');
 
         $menu = Menu::findOrFail($id);
 
         $validated = $request->validated();
-        $validated['parent_id'] = $validated['parent_id'] ?: null;
+        $validated['parent_id'] = $validated['parent_id'] ?? null;
         $this->applySiblingOrderUpdate($menu, $validated);
 
         $menu->update($validated);
@@ -171,7 +166,7 @@ class MenuController extends Controller
      */
     public function restore(int $id): RedirectResponse
     {
-        $this->authorize('settings.manage');
+        $this->authorize('school.menu.manage');
 
         $menu = Menu::onlyTrashed()->findOrFail($id);
         $menu->restore();
@@ -187,7 +182,7 @@ class MenuController extends Controller
      */
     public function forceDelete(int $id): RedirectResponse
     {
-        $this->authorize('settings.manage');
+        $this->authorize('school.menu.manage');
 
         $menu = Menu::onlyTrashed()->findOrFail($id);
         $menu->forceDelete();
@@ -200,9 +195,14 @@ class MenuController extends Controller
      */
     public function destroy($id): RedirectResponse
     {
-        $this->authorize('settings.manage');
+        $this->authorize('school.menu.manage');
 
         $menu = Menu::findOrFail($id);
+
+        if ($menu->children()->exists()) {
+            return back()->with('warning', 'Cannot delete a menu that has sub-menus. Delete or reassign its children first.');
+        }
+
         $this->closeSiblingOrderGap($menu->parent_id, $menu->type, $menu->order, $menu->id);
         $menu->delete();
 
@@ -214,7 +214,7 @@ class MenuController extends Controller
      */
     public function inactivate($id): RedirectResponse
     {
-        $this->authorize('settings.manage');
+        $this->authorize('school.menu.manage');
 
         $menu = Menu::findOrFail($id);
         $menu->update(['is_active' => false]);
@@ -224,7 +224,7 @@ class MenuController extends Controller
 
     public function activate($id): RedirectResponse
     {
-        $this->authorize('settings.manage');
+        $this->authorize('school.menu.manage');
 
         $menu = Menu::findOrFail($id);
         $menu->update(['is_active' => true]);

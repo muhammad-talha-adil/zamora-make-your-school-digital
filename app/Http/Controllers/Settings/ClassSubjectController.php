@@ -18,7 +18,7 @@ class ClassSubjectController extends Controller
      */
     public function index(Request $request): JsonResponse
     {
-        $this->authorize('settings.manage');
+        $this->authorize('academics.class.manage');
 
         $campusId = $request->get('campus_id');
         $classId = $request->get('class_id');
@@ -69,6 +69,8 @@ class ClassSubjectController extends Controller
      */
     public function getSections(Request $request): JsonResponse
     {
+        $this->authorize('academics.class.manage');
+
         $classId = $request->get('class_id');
 
         $sections = Section::where('class_id', $classId)
@@ -83,6 +85,8 @@ class ClassSubjectController extends Controller
      */
     public function getAssignedSubjects(Request $request): JsonResponse
     {
+        $this->authorize('academics.class.manage');
+
         $classId = $request->get('class_id');
         $sectionId = $request->get('section_id');
         $isAllSections = $request->get('is_all_sections', false);
@@ -121,7 +125,7 @@ class ClassSubjectController extends Controller
      */
     public function store(Request $request): JsonResponse
     {
-        $this->authorize('settings.manage');
+        $this->authorize('academics.class.manage');
 
         $validated = $request->validate([
             'class_id' => 'required|exists:school_classes,id',

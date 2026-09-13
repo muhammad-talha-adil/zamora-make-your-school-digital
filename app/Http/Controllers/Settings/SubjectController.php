@@ -8,6 +8,7 @@ use App\Http\Requests\Settings\UpdateSubjectRequest;
 use App\Models\Subject;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -18,6 +19,8 @@ class SubjectController extends Controller
      */
     public function index(): Response
     {
+        Gate::authorize('viewAny', Subject::class);
+
         $subjects = Subject::orderBy('id', 'desc')
             ->paginate(10);
 
@@ -31,6 +34,8 @@ class SubjectController extends Controller
      */
     public function apiIndex(): JsonResponse
     {
+        Gate::authorize('viewAny', Subject::class);
+
         $query = Subject::query();
 
         if (request()->has('status')) {
@@ -53,6 +58,8 @@ class SubjectController extends Controller
      */
     public function create(): Response
     {
+        Gate::authorize('create', Subject::class);
+
         return Inertia::render('settings/Subjects/Create');
     }
 
@@ -61,6 +68,8 @@ class SubjectController extends Controller
      */
     public function store(StoreSubjectRequest $request): RedirectResponse|JsonResponse
     {
+        Gate::authorize('create', Subject::class);
+
         $validated = $request->validated();
 
         Subject::create($validated);
@@ -80,6 +89,8 @@ class SubjectController extends Controller
      */
     public function edit(Subject $subject): Response
     {
+        Gate::authorize('update', $subject);
+
         return Inertia::render('settings/Subjects/Edit', [
             'subject' => $subject,
         ]);
@@ -90,6 +101,8 @@ class SubjectController extends Controller
      */
     public function update(UpdateSubjectRequest $request, Subject $subject): RedirectResponse|JsonResponse
     {
+        Gate::authorize('update', $subject);
+
         $validated = $request->validated();
 
         $subject->update($validated);
@@ -109,6 +122,8 @@ class SubjectController extends Controller
      */
     public function destroy(Subject $subject): RedirectResponse|JsonResponse
     {
+        Gate::authorize('delete', $subject);
+
         $subject->delete();
 
         if (request()->expectsJson()) {
@@ -123,6 +138,8 @@ class SubjectController extends Controller
      */
     public function inactivate(Subject $subject): RedirectResponse|JsonResponse
     {
+        Gate::authorize('update', $subject);
+
         $subject->update(['is_active' => false]);
 
         if (request()->expectsJson()) {
@@ -137,6 +154,8 @@ class SubjectController extends Controller
      */
     public function activate(Subject $subject): RedirectResponse|JsonResponse
     {
+        Gate::authorize('update', $subject);
+
         $subject->update(['is_active' => true]);
 
         if (request()->expectsJson()) {
@@ -151,6 +170,8 @@ class SubjectController extends Controller
      */
     public function restore(int $id): RedirectResponse|JsonResponse
     {
+        Gate::authorize('create', Subject::class);
+
         $subject = Subject::onlyTrashed()->findOrFail($id);
         $subject->restore();
 
@@ -167,6 +188,9 @@ class SubjectController extends Controller
     public function forceDelete(int $id): RedirectResponse|JsonResponse
     {
         $subject = Subject::onlyTrashed()->findOrFail($id);
+
+        Gate::authorize('delete', $subject);
+
         $subject->forceDelete();
 
         if (request()->expectsJson()) {
