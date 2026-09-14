@@ -17,8 +17,8 @@ interface Assignment {
     id: number;
     is_class_teacher: boolean;
     periods_per_week?: number | null;
-    staffProfile?: { id: number; user?: { name: string } | null } | null;
-    schoolClass?: Lookup | null;
+    staff_profile?: { id: number; user?: { name: string } | null } | null;
+    school_class?: Lookup | null;
     section?: Lookup | null;
     subject?: Lookup | null;
 }
@@ -145,15 +145,15 @@ const lookupWhoCanTeach = async () => {
                         <tr v-for="assignment in assignments" :key="assignment.id" class="hover:bg-accent">
                             <td class="px-4 py-3">
                                 <Link
-                                    v-if="assignment.staffProfile"
-                                    :href="route('staff.people.show', assignment.staffProfile.id)"
+                                    v-if="assignment.staff_profile"
+                                    :href="route('staff.people.show', assignment.staff_profile.id)"
                                     class="font-medium text-foreground hover:underline"
                                 >
-                                    {{ assignment.staffProfile.user?.name || '-' }}
+                                    {{ assignment.staff_profile.user?.name || '-' }}
                                 </Link>
                                 <span v-if="assignment.is_class_teacher" class="ml-2 rounded-full bg-primary/10 px-2 py-0.5 text-xs text-primary">Class Teacher</span>
                             </td>
-                            <td class="px-4 py-3 text-sm text-muted-foreground">{{ assignment.schoolClass?.name || '-' }} <span v-if="assignment.section">- {{ assignment.section.name }}</span></td>
+                            <td class="px-4 py-3 text-sm text-muted-foreground">{{ assignment.school_class?.name || '-' }} <span v-if="assignment.section">- {{ assignment.section.name }}</span></td>
                             <td class="px-4 py-3 text-sm text-muted-foreground">{{ assignment.subject?.name || 'All subjects' }}</td>
                             <td class="px-4 py-3 text-sm text-muted-foreground">{{ assignment.periods_per_week || '-' }}</td>
                         </tr>

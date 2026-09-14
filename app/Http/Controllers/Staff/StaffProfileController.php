@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Staff;
 
+use App\Http\Controllers\Concerns\ResolvesOwnStaffProfile;
 use App\Http\Controllers\Controller;
 use App\Models\Campus;
 use App\Models\Gender;
@@ -34,11 +35,25 @@ use Inertia\Inertia;
  */
 class StaffProfileController extends Controller
 {
+    use ResolvesOwnStaffProfile;
+
     public function __construct(
         private StaffAssignmentService $jobs,
         private StaffEmploymentService $employment,
         private TeacherAssignmentService $teaching
     ) {}
+
+    /**
+     * Resolves the caller's own staff record and sends them to it — the
+     * one convenience a teacher, driver or clerk needs so they never have
+     * to already know their own numeric `staffProfile` id.
+     */
+    public function me(Request $request)
+    {
+        $staffProfile = $this->resolveOwnStaffProfile($request->user());
+
+        return redirect()->route('staff.people.show', $staffProfile);
+    }
 
     /**
      * Everybody who works here.

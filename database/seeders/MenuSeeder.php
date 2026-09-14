@@ -394,10 +394,20 @@ class MenuSeeder extends Seeder
         ]);
 
         Menu::create([
+            'title' => 'My Profile',
+            'icon' => 'user',
+            'type' => 'main',
+            'order' => 2,
+            'parent_id' => $staff->id,
+            'is_active' => true,
+            'url' => '/staff/me',
+        ]);
+
+        Menu::create([
             'title' => 'Staff Directory',
             'icon' => 'users',
             'type' => 'main',
-            'order' => 2,
+            'order' => 3,
             'parent_id' => $staff->id,
             'is_active' => true,
             'url' => '/staff/people',
@@ -407,7 +417,7 @@ class MenuSeeder extends Seeder
             'title' => 'Teaching Assignments',
             'icon' => 'book',
             'type' => 'main',
-            'order' => 3,
+            'order' => 4,
             'parent_id' => $staff->id,
             'is_active' => true,
             'url' => '/staff/teaching',
@@ -417,7 +427,7 @@ class MenuSeeder extends Seeder
             'title' => 'Payroll',
             'icon' => 'banknote',
             'type' => 'main',
-            'order' => 4,
+            'order' => 5,
             'parent_id' => $staff->id,
             'is_active' => true,
             'url' => '/staff/payroll',
@@ -427,7 +437,7 @@ class MenuSeeder extends Seeder
             'title' => 'Mark Attendance',
             'icon' => 'check-circle',
             'type' => 'main',
-            'order' => 5,
+            'order' => 6,
             'parent_id' => $staff->id,
             'is_active' => true,
             'url' => '/staff/attendance',
@@ -437,7 +447,7 @@ class MenuSeeder extends Seeder
             'title' => 'Settings',
             'icon' => 'settings',
             'type' => 'main',
-            'order' => 6,
+            'order' => 7,
             'parent_id' => $staff->id,
             'is_active' => true,
             'url' => '/staff/settings',

@@ -96,6 +96,12 @@ Route::prefix('staff')->name('staff.')->middleware($middleware)->group(function 
     // ================================================================
 
     Route::controller(StaffProfileController::class)->group(function () {
+        // A teacher, driver or clerk otherwise has no way to reach their own
+        // record without already knowing its numeric id. An admin does not
+        // need this — they already have full navigation to any profile.
+        Route::get('/me', 'me')->name('me')
+            ->middleware('permission:staff.view.own');
+
         Route::get('/people', 'index')->name('people.index')
             ->middleware('permission:staff.view');
         Route::get('/people/list', 'list')->name('people.list')
@@ -140,14 +146,17 @@ Route::prefix('staff')->name('staff.')->middleware($middleware)->group(function 
     // ================================================================
 
     Route::controller(TeacherAssignmentController::class)->group(function () {
+        // `staff.view.own` lets a teacher reach their own assigned classes and
+        // subjects here too — the controller scopes the list down to just
+        // their own assignments when that is the only ability they hold.
         Route::get('/teaching', 'page')->name('teaching.page')
-            ->middleware('permission:staff.view');
+            ->middleware('permission:staff.view|staff.view.own');
         Route::get('/teaching/list', 'index')->name('teaching.index')
-            ->middleware('permission:staff.view');
+            ->middleware('permission:staff.view|staff.view.own');
         Route::get('/teaching/sections', 'sections')->name('teaching.sections')
-            ->middleware('permission:staff.view');
+            ->middleware('permission:staff.view|staff.view.own');
         Route::get('/teaching/who-can-teach', 'whoCanTeach')->name('teaching.who-can-teach')
-            ->middleware('permission:staff.view');
+            ->middleware('permission:staff.view|staff.view.own');
 
         Route::post('/people/{staffProfile}/classes', 'store')->name('teaching.assign')
             ->middleware('permission:staff.manage');

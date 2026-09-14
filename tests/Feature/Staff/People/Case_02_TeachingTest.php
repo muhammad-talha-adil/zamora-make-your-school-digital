@@ -206,3 +206,52 @@ it('does not let a viewer assign a class', function () {
         ->postJson(route('staff.teaching.assign', $this->teacher->id), classPayload($this->world))
         ->assertForbidden();
 });
+
+/* ---------------------------------------------------- staff.view.own width */
+
+it('lets a plain teacher reach the teaching screen for their own assignments', function () {
+    $this->teaching->assignClass($this->teacher, classPayload($this->world, ['is_class_teacher' => true]));
+
+    $this->world->person('Another Teacher', ['staff.view.own']);
+    $other = $this->world->person('Yet Another Teacher');
+    $this->teaching->assignClass($other, classPayload($this->world, [
+        'section_id' => null,
+        'is_class_teacher' => false,
+    ]));
+
+    $viewer = $this->teacher->user;
+    $viewer->givePermissionTo('staff.view.own');
+    app(PermissionRegistrar::class)->forgetCachedPermissions();
+
+    $this->actingAs($viewer)->get(route('staff.teaching.page'))->assertOk();
+
+    $response = $this->actingAs($viewer)->getJson(route('staff.teaching.index', [
+        'session_id' => $this->world->school->session->id,
+    ]));
+
+    $response->assertSuccessful()->assertJsonCount(1, 'data');
+    expect($response->json('data.0.staff_profile.id'))->toBe($this->teacher->id);
+});
+
+it('still shows an admin every teacher s assignments, not just their own', function () {
+    $this->teaching->assignClass($this->teacher, classPayload($this->world));
+
+    $other = $this->world->person('Another Teacher');
+    $this->teaching->assignClass($other, classPayload($this->world, [
+        'section_id' => null,
+    ]));
+
+    $admin = $this->world->person('Campus Admin', ['staff.view', 'staff.manage']);
+
+    $response = $this->actingAs($admin->user)->getJson(route('staff.teaching.index', [
+        'session_id' => $this->world->school->session->id,
+    ]));
+
+    $response->assertSuccessful()->assertJsonCount(2, 'data');
+});
+
+it('does not let a plain teacher reach the teaching screen with no ability at all', function () {
+    $outsider = $this->world->person('No Ability At All');
+
+    $this->actingAs($outsider->user)->get(route('staff.teaching.page'))->assertForbidden();
+});

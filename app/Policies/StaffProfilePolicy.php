@@ -35,6 +35,19 @@ class StaffProfilePolicy
         return $this->may($user, 'staff.view');
     }
 
+    /**
+     * The teaching-assignments screen.
+     *
+     * Wider than {@see viewAny()}: a teacher who only holds `staff.view.own`
+     * may still open it to see their own classes and subjects — the
+     * controller scopes the list down to just their own assignments in that
+     * case, rather than everybody's.
+     */
+    public function viewTeaching(User $user): bool
+    {
+        return $this->may($user, 'staff.view', 'staff.view.own');
+    }
+
     public function view(User $user, StaffProfile $staff): bool
     {
         // Their own record. This is the staff portal.

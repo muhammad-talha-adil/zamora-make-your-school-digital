@@ -33,7 +33,7 @@ class TeacherAssignmentController extends Controller
      */
     public function page(Request $request)
     {
-        Gate::authorize('viewAny', StaffProfile::class);
+        Gate::authorize('viewTeaching', StaffProfile::class);
 
         return Inertia::render('Staff/Teaching/Index', [
             'sessions' => Session::where('is_active', true)->get(['id', 'name']),
@@ -49,7 +49,7 @@ class TeacherAssignmentController extends Controller
      */
     public function index(Request $request)
     {
-        Gate::authorize('viewAny', StaffProfile::class);
+        Gate::authorize('viewTeaching', StaffProfile::class);
 
         $validated = $request->validate([
             'session_id' => ['required', 'integer', 'exists:academic_sessions,id'],
@@ -57,13 +57,22 @@ class TeacherAssignmentController extends Controller
             'section_id' => ['nullable', 'integer', 'exists:sections,id'],
         ]);
 
+        $viewer = $request->user();
+
+        // A caller holding only `staff.view.own` (no `staff.view`) sees just
+        // their own assignments here, never anybody else's.
+        $onlyOwn = $viewer !== null && ! $viewer->isSuperAdmin() && ! $viewer->hasPermission('staff.view');
+
         $assignments = TeacherClassAssignment::query()
             ->with(['staffProfile.user:id,name', 'schoolClass:id,name', 'section:id,name', 'subject:id,name'])
             ->where('teacher_class_assignments.session_id', $validated['session_id'])
             ->when($validated['class_id'] ?? null, fn ($q, $id) => $q->where('class_id', $id))
             ->when($validated['section_id'] ?? null, fn ($q, $id) => $q->where('section_id', $id))
-            // Only teachers this person may see.
-            ->whereHas('staffProfile', fn ($q) => $q->visibleTo($request->user()))
+            ->when(
+                $onlyOwn,
+                fn ($q) => $q->whereHas('staffProfile', fn ($q2) => $q2->where('user_id', $viewer->id)),
+                fn ($q) => $q->whereHas('staffProfile', fn ($q2) => $q2->visibleTo($viewer))
+            )
             ->active()
             ->orderBy('class_id')
             ->orderByDesc('is_class_teacher')
@@ -147,7 +156,7 @@ class TeacherAssignmentController extends Controller
      */
     public function whoCanTeach(Request $request)
     {
-        Gate::authorize('viewAny', StaffProfile::class);
+        Gate::authorize('viewTeaching', StaffProfile::class);
 
         $validated = $request->validate([
             'subject_id' => ['required', 'integer', 'exists:subjects,id'],
@@ -166,7 +175,7 @@ class TeacherAssignmentController extends Controller
      */
     public function sections(Request $request)
     {
-        Gate::authorize('viewAny', StaffProfile::class);
+        Gate::authorize('viewTeaching', StaffProfile::class);
 
         $validated = $request->validate([
             'class_id' => ['required', 'integer', 'exists:school_classes,id'],
