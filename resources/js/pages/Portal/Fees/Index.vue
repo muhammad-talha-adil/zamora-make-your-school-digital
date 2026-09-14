@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, Link, router } from '@inertiajs/vue3';
-import PortalLayout from '@/layouts/PortalLayout.vue';
+import AppLayout from '@/layouts/AppLayout.vue';
 import Icon from '@/components/Icon.vue';
 import { formatCurrency, formatDate } from '@/utils/format';
 
@@ -62,7 +62,7 @@ const monthLabel = (voucher: Voucher): string => {
 </script>
 
 <template>
-    <PortalLayout>
+    <AppLayout>
         <Head title="My Fee Vouchers" />
 
         <div class="space-y-4 md:space-y-6">
@@ -193,5 +193,5 @@ const monthLabel = (voucher: Voucher): string => {
                 </template>
             </div>
         </div>
-    </PortalLayout>
+    </AppLayout>
 </template>

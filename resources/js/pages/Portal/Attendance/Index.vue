@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, Link, router } from '@inertiajs/vue3';
-import PortalLayout from '@/layouts/PortalLayout.vue';
+import AppLayout from '@/layouts/AppLayout.vue';
 import Icon from '@/components/Icon.vue';
 import { formatDate } from '@/utils/format';
 
@@ -51,7 +51,7 @@ const statusClass = (code: string | undefined): string => {
 </script>
 
 <template>
-    <PortalLayout>
+    <AppLayout>
         <Head title="My Attendance" />
 
         <div class="space-y-4 md:space-y-6">
@@ -158,5 +158,5 @@ const statusClass = (code: string | undefined): string => {
                 </template>
             </div>
         </div>
-    </PortalLayout>
+    </AppLayout>
 </template>

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, Link, router } from '@inertiajs/vue3';
-import PortalLayout from '@/layouts/PortalLayout.vue';
+import AppLayout from '@/layouts/AppLayout.vue';
 import Icon from '@/components/Icon.vue';
 
 interface ChildOption {
@@ -52,7 +52,7 @@ const classLabel = (result: ExamResult): string => {
 </script>
 
 <template>
-    <PortalLayout>
+    <AppLayout>
         <Head title="My Exam Results" />
 
         <div class="space-y-4 md:space-y-6">
@@ -162,5 +162,5 @@ const classLabel = (result: ExamResult): string => {
                 </template>
             </div>
         </div>
-    </PortalLayout>
+    </AppLayout>
 </template>

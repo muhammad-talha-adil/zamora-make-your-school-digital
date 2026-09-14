@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Head, Link, router } from '@inertiajs/vue3';
 import { computed } from 'vue';
-import PortalLayout from '@/layouts/PortalLayout.vue';
+import AppLayout from '@/layouts/AppLayout.vue';
 import Icon from '@/components/Icon.vue';
 import { formatCurrency, formatDate } from '@/utils/format';
 
@@ -60,7 +60,7 @@ const attendanceBadgeClass = computed(() => {
 </script>
 
 <template>
-    <PortalLayout>
+    <AppLayout>
         <Head title="My Portal" />
 
         <div class="space-y-4 md:space-y-6">
@@ -183,5 +183,5 @@ const attendanceBadgeClass = computed(() => {
                 </div>
             </div>
         </div>
-    </PortalLayout>
+    </AppLayout>
 </template>
