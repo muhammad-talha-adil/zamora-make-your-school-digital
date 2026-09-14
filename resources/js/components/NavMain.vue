@@ -54,54 +54,67 @@ const closeSubmenu = () => {
                         as-child
                         :is-active="urlIsActive(item.href)"
                         :tooltip="item.title"
-                        class="bg-transparent hover:bg-accent rounded-md transition-colors"
+                        class="group bg-transparent hover:bg-accent rounded-md transition-colors duration-150"
                     >
-                        <Link :href="item.href" class="flex items-center gap-3">
-                            <Icon :icon="item.icon" :size="24" />
-                            <span>{{ item.title }}</span>
+                        <Link :href="item.href" class="flex min-w-0 items-center gap-3">
+                            <Icon
+                                :icon="item.icon"
+                                :size="24"
+                                class="shrink-0 transition-transform duration-200 ease-out group-hover:scale-110"
+                            />
+                            <span class="truncate whitespace-nowrap">{{ item.title }}</span>
                         </Link>
                     </SidebarMenuButton>
                 </SidebarMenuItem>
-                
+
                 <!-- Menu item with children (accordion) -->
                 <SidebarMenuItem v-else class="relative">
                     <button
                         type="button"
                         :class="[
-                            'w-full flex items-center gap-3 px-2 py-2 rounded-md text-sm font-medium transition-colors',
+                            'group flex w-full min-w-0 items-center gap-3 rounded-md px-2 py-2 text-sm font-medium transition-colors duration-150',
                             isSubmenuOpen(item.id || item.title) || urlIsActive(item.href)
                                 ? 'bg-muted text-foreground'
                                 : 'text-muted-foreground hover:bg-accent',
                         ]"
                         @click="toggleSubmenu($event, item.id || item.title)"
                     >
-                        <Icon :icon="item.icon" :size="24" />
-                        <span class="flex-1 text-left">{{ item.title }}</span>
+                        <Icon
+                            :icon="item.icon"
+                            :size="24"
+                            class="shrink-0 transition-transform duration-200 ease-out group-hover:scale-110"
+                        />
+                        <span class="min-w-0 flex-1 truncate whitespace-nowrap text-left">{{ item.title }}</span>
                         <Icon
                             :icon="isSubmenuOpen(item.id || item.title) ? 'chevron-down' : 'chevron-right'"
                             :size="16"
-                            class="transition-transform duration-200"
+                            class="shrink-0 transition-transform duration-200"
                         />
                     </button>
-                    
+
                     <!-- Submenu -->
-                    <div 
+                    <div
                         v-show="isSubmenuOpen(item.id || item.title)"
-                        class="mt-1 ml-4 space-y-1"
+                        class="mt-1 ml-4 space-y-1 border-l border-sidebar-border pl-2"
                     >
                         <template v-for="child in item.children" :key="child.id || child.title">
-                            <Link 
-                                :href="child.href" 
+                            <Link
+                                :href="child.href"
+                                :title="child.title"
                                 :class="[
-                                    'flex items-center gap-2 px-2 py-1.5 rounded-md text-sm transition-colors',
+                                    'group flex min-w-0 items-center gap-2 rounded-md px-2 py-1.5 text-sm transition-all duration-150',
                                     urlIsActive(child.href)
                                         ? 'bg-muted text-foreground'
-                                        : 'text-muted-foreground hover:bg-accent',
+                                        : 'text-muted-foreground hover:bg-accent hover:translate-x-0.5',
                                 ]"
                                 @click="closeSubmenu"
                             >
-                                <Icon :icon="child.icon" :size="16" />
-                                <span>{{ child.title }}</span>
+                                <Icon
+                                    :icon="child.icon"
+                                    :size="16"
+                                    class="shrink-0 transition-transform duration-200 ease-out group-hover:scale-110"
+                                />
+                                <span class="min-w-0 flex-1 truncate whitespace-nowrap">{{ child.title }}</span>
                             </Link>
                         </template>
                     </div>
