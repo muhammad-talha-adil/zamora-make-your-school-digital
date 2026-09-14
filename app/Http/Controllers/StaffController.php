@@ -8,6 +8,7 @@ use App\Models\PayrollRun;
 use App\Models\PayrollRunItem;
 use App\Models\Staff\StaffAttendance;
 use App\Models\Staff\StaffDocument;
+use App\Models\Staff\StaffDocumentType;
 use App\Models\Staff\StaffLeave;
 use App\Models\StaffDepartment;
 use App\Models\StaffDesignation;
@@ -101,6 +102,21 @@ class StaffController extends Controller
     /**
      * The payroll screen: generate a run, then release it.
      */
+    /**
+     * The full lookup panel — departments, designations and document types —
+     * moved out of the staff list's dialog into a screen of its own.
+     */
+    public function settingsPage()
+    {
+        Gate::authorize('manageStructure', StaffProfile::class);
+
+        return Inertia::render('Staff/Settings/Index', [
+            'departments' => StaffDepartment::orderBy('name')->get(),
+            'designations' => StaffDesignation::orderBy('name')->get(),
+            'documentTypes' => StaffDocumentType::orderBy('name')->get(),
+        ]);
+    }
+
     public function payrollPage(Request $request)
     {
         $viewer = $request->user();

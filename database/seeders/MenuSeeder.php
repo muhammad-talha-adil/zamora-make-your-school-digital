@@ -393,6 +393,56 @@ class MenuSeeder extends Seeder
             'url' => '/staff',
         ]);
 
+        Menu::create([
+            'title' => 'Staff Directory',
+            'icon' => 'users',
+            'type' => 'main',
+            'order' => 2,
+            'parent_id' => $staff->id,
+            'is_active' => true,
+            'url' => '/staff/people',
+        ]);
+
+        Menu::create([
+            'title' => 'Teaching Assignments',
+            'icon' => 'book',
+            'type' => 'main',
+            'order' => 3,
+            'parent_id' => $staff->id,
+            'is_active' => true,
+            'url' => '/staff/teaching',
+        ]);
+
+        Menu::create([
+            'title' => 'Payroll',
+            'icon' => 'banknote',
+            'type' => 'main',
+            'order' => 4,
+            'parent_id' => $staff->id,
+            'is_active' => true,
+            'url' => '/staff/payroll',
+        ]);
+
+        Menu::create([
+            'title' => 'Mark Attendance',
+            'icon' => 'check-circle',
+            'type' => 'main',
+            'order' => 5,
+            'parent_id' => $staff->id,
+            'is_active' => true,
+            'url' => '/staff/attendance',
+        ]);
+
+        Menu::create([
+            'title' => 'Settings',
+            'icon' => 'settings',
+            'type' => 'main',
+            'order' => 6,
+            'parent_id' => $staff->id,
+            'is_active' => true,
+            'url' => '/staff/settings',
+        ]);
+
         // ==================== TRANSPORT MENU ====================
         $transport = Menu::create([
             'title' => 'Transport',

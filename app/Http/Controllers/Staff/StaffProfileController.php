@@ -9,6 +9,7 @@ use App\Models\SchoolClass;
 use App\Models\Session;
 use App\Models\Staff\StaffAssignment;
 use App\Models\Staff\StaffDocument;
+use App\Models\Staff\StaffDocumentType;
 use App\Models\Staff\StaffQualification;
 use App\Models\StaffDepartment;
 use App\Models\StaffDesignation;
@@ -139,6 +140,7 @@ class StaffProfileController extends Controller
             // For the forms on the tabs.
             'departments' => StaffDepartment::orderBy('name')->get(['id', 'name']),
             'designations' => StaffDesignation::orderBy('name')->get(['id', 'name']),
+            'documentTypes' => StaffDocumentType::where('is_active', true)->orderBy('name')->get(['id', 'name']),
             'campuses' => Campus::orderBy('name')->get(['id', 'name']),
             'genders' => Gender::orderBy('id')->get(['id', 'name']),
             'subjectOptions' => Subject::where('is_active', true)->orderBy('name')->get(['id', 'name']),

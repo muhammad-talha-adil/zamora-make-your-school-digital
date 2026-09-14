@@ -106,6 +106,7 @@ interface Props {
     serviceMonths: number;
     departments: Lookup[];
     designations: Lookup[];
+    documentTypes: Lookup[];
     campuses: Lookup[];
     genders: Lookup[];
     subjectOptions: Lookup[];
@@ -826,7 +827,10 @@ const activeJobsCount = computed(() => props.jobs.length);
                 <div v-if="props.can.edit" class="rounded-2xl border border-border bg-card p-5 shadow-sm">
                     <h2 class="mb-4 text-lg font-semibold text-foreground">File a Document</h2>
                     <div class="space-y-3">
-                        <Input v-model="documentForm.kind" placeholder="Kind (e.g. contract, cnic, police-verification)" />
+                        <select v-model="documentForm.kind" :class="selectClass">
+                            <option value="">Select kind</option>
+                            <option v-for="type in props.documentTypes" :key="type.id" :value="type.name">{{ type.name }}</option>
+                        </select>
                         <Input v-model="documentForm.title" placeholder="Title" />
                         <Input v-model="documentForm.reference_no" placeholder="Reference no (optional)" />
                         <Input v-model="documentForm.issued_on" type="date" placeholder="Issued on" />

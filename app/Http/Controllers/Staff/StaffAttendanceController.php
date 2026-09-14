@@ -8,6 +8,8 @@ use App\Models\StaffProfile;
 use App\Services\Staff\StaffAttendanceService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
+use Inertia\Inertia;
+use Inertia\Response;
 
 /**
  * A member of staff's own attendance register.
@@ -20,6 +22,33 @@ class StaffAttendanceController extends Controller
     public function __construct(
         private StaffAttendanceService $attendance
     ) {}
+
+    /**
+     * The whole-campus register screen: every active member of staff for one
+     * day, so a bulk mark does not require opening each person in turn.
+     */
+    public function page(Request $request): Response
+    {
+        Gate::authorize('markAttendance', StaffProfile::class);
+
+        $date = $request->query('date', now()->toDateString());
+
+        $staff = StaffProfile::query()
+            ->visibleTo($request->user())
+            ->where('is_active', true)
+            ->with(['user:id,name', 'campus:id,name', 'designation:id,name'])
+            ->withCount([
+                'attendances as marked_today' => fn ($q) => $q->whereDate('attendance_date', $date),
+            ])
+            ->orderBy('employee_no')
+            ->get(['id', 'user_id', 'employee_no', 'campus_id', 'designation_id']);
+
+        return Inertia::render('Staff/Attendance/Index', [
+            'staff' => $staff,
+            'date' => $date,
+            'statuses' => AttendanceStatus::orderBy('name')->get(['id', 'name', 'code']),
+        ]);
+    }
 
     /**
      * One person's day, or a stretch of them.

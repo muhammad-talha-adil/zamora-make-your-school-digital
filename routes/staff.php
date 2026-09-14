@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Staff\StaffAttendanceController;
+use App\Http\Controllers\Staff\StaffDocumentTypeController;
 use App\Http\Controllers\Staff\StaffLeaveController;
 use App\Http\Controllers\Staff\StaffProfileController;
 use App\Http\Controllers\Staff\StaffSalaryController;
@@ -50,6 +51,22 @@ Route::prefix('staff')->name('staff.')->middleware($middleware)->group(function 
     Route::put('/designations/{designation}', [StaffController::class, 'updateDesignation'])
         ->name('designations.update')
         ->middleware('permission:staff.department.manage');
+
+    // The full lookup panel — departments, designations and document types.
+    Route::get('/settings', [StaffController::class, 'settingsPage'])
+        ->name('settings.page')
+        ->middleware('permission:staff.department.manage');
+
+    Route::controller(StaffDocumentTypeController::class)->prefix('document-types')->name('document-types.')->group(function () {
+        Route::get('/', 'index')->name('index')
+            ->middleware('permission:staff.view|staff.department.manage');
+        Route::post('/', 'store')->name('store')
+            ->middleware('permission:staff.department.manage');
+        Route::put('/{documentType}', 'update')->name('update')
+            ->middleware('permission:staff.department.manage');
+        Route::delete('/{documentType}', 'destroy')->name('destroy')
+            ->middleware('permission:staff.department.manage');
+    });
 
     // ------------------------------------------------------- staff records
     Route::post('/members', [StaffController::class, 'storeStaff'])
@@ -151,6 +168,8 @@ Route::prefix('staff')->name('staff.')->middleware($middleware)->group(function 
     // ================================================================
 
     Route::controller(StaffAttendanceController::class)->prefix('attendance')->name('attendance.')->group(function () {
+        Route::get('/', 'page')->name('page')
+            ->middleware('permission:staff.attendance.mark');
         Route::get('/statuses', 'statuses')->name('statuses')
             ->middleware('permission:staff.attendance.view|staff.attendance.mark');
         Route::get('/people/{staffProfile}', 'index')->name('index')

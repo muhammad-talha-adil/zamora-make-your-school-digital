@@ -253,6 +253,9 @@ const submitDesignation = async () => {
                     <p class="mt-1 text-sm text-muted-foreground">Every record, jobs, campus and department.</p>
                 </div>
                 <div class="flex flex-wrap gap-2">
+                    <Link :href="route('staff.settings.page')" class="inline-flex">
+                        <Button variant="outline"><Icon icon="settings" class="h-4 w-4" />Staff Settings</Button>
+                    </Link>
                     <Dialog v-model:open="showLookups">
                         <DialogTrigger as-child>
                             <Button variant="outline"><Icon icon="settings" class="h-4 w-4" />Departments &amp; Designations</Button>
