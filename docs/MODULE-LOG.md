@@ -1008,3 +1008,35 @@ anywhere) — independent, larger build, do it after Phase 2 if raised again.
 
 Phase 2 — Staff/Teacher portal, reusing this phase's shell/menu/redirect
 mechanism. See `CURRENT-MODULE.md`.
+
+# Staff module — sidebar fix and remaining gaps closed, 2026-09-14
+
+Caught by the project owner, not by any review pass: the admin Staff sidebar
+had exactly one item, "Dashboard" — Staff Directory, Teaching Assignments, and
+Payroll were all fully built (across the module's earlier 8-phase rebuild) but
+never linked in `database/seeders/MenuSeeder.php`. Linked all three
+(`/staff/people`, `/staff/teaching`, `/staff/payroll`); "Add Staff" was
+already a dialog on the Directory page, nothing new needed there.
+
+Two further gaps, confirmed with the project owner before building:
+
+- **Bulk "Mark Staff Attendance" page** (`staff.attendance.page`,
+  `/staff/attendance`) — staff attendance could previously only be marked one
+  person at a time from inside their own profile tab; the bulk backend
+  endpoint (`staff.attendance.bulk`) existed but nothing called it. New page
+  follows the same date-picker + per-row-status pattern as the student
+  Attendance module's `Create.vue`, with bulk present/absent/leave buttons.
+- **Staff Settings page** (`staff.settings.page`, `/staff/settings`) for
+  Departments, Designations, and a new `staff_document_types` lookup table —
+  `staff_documents.kind` was a free-text column with a fixed set of values
+  documented only in a code comment (cnic/degree/contract/police_verification/
+  medical/other). Added a real manageable list without touching the storage
+  column, so existing document rows can't be orphaned. The old
+  Departments/Designations dialog on the Directory page was left in place
+  (not removed) and now also links to the new Settings page.
+
+Both gated on the existing `staff.department.manage` permission — no new
+permission invented.
+
+Tests: 117 passed (`--filter="Staff|Menu"`), `vendor/bin/pint --dirty` clean,
+`npm run build` clean.
