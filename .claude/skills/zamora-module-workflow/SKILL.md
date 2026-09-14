@@ -47,3 +47,12 @@ Whenever a package is added this way, record it (name, version/constraint, and a
 ## Don't idle-wait on a background test run
 
 When a test suite (or any long command) is kicked off with `run_in_background`, do not sit idle waiting for its notification. Keep working: write the next batch of findings, draft the next fix, update docs, start reading the next controller — whatever is next in the queue that doesn't depend on that result. Only block on it when the very next action genuinely needs it (e.g. deciding whether to keep or revert a change). The notification arrives on its own; going idle to wait for it wastes the turn.
+
+## Test logins, one per role
+
+Every Spatie role must have at least one seeded, working login — `docs/TEST-LOGINS.md` is the
+single place tracking them all (email + the fixed `123456` password every seeded account uses),
+plus a plain-language, module-by-module description of what that role can actually do — no
+permission names, no route names, no URLs, just what they can see/do in each module. When a new
+role is added, or a role's permissions change meaningfully, update that file in the same pass —
+don't let it drift out of sync with `RolesSeeder.php`.
