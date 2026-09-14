@@ -148,7 +148,7 @@ class HandleInertiaRequests extends Middleware
      */
     protected function restrictToPortalMenus(Collection $menus): Collection
     {
-        $allowedUrls = ['/settings/profile', '/settings/appearance'];
+        $allowedUrls = ['/settings/profile', '/settings/appearance', '/student-leaves/page'];
 
         $isAllowed = fn (Menu $menu): bool => $menu->url
             && (Str::startsWith($menu->url, '/portal') || in_array($menu->url, $allowedUrls, true));

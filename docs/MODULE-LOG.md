@@ -918,3 +918,93 @@ allowed-through case (`Case_06`); and campus scoping — a restricted user
 never sees another campus's stock even when asked for it, a school-wide user
 still can (`Case_07`). `php artisan test --compact tests/Feature/Inventory` —
 33 passed, 0 failed.
+
+# Module: Student Portal — Phase 1 closed 2026-09-14
+
+New construction, not a review pass. Before this, no dedicated student/guardian
+portal existed at all — every account landed on the same admin `Dashboard.vue`
+with the same full admin sidebar, with only scattered `*.view.own` permission
+checks bolted onto admin screens. Full investigation:
+`docs/STUDENT-PORTAL-READINESS.md`.
+
+Built in 3 coordinated agent passes (backend / shell+menu+redirect / UI
+polish), each given an exact file-ownership contract up front so they never
+touched the same file, run two in parallel then one sequential once both
+finished.
+
+## What shipped
+
+- **Two policy gaps fixed**: `FeeVoucherPolicy::viewAny()` /
+  `FeePaymentPolicy::viewAny()` now accept `fee.view.own`,
+  `ExamResultHeaderPolicy::viewAny()` now accepts `exam.result.view.own` — a
+  student/guardian can finally browse their own fee vouchers and exam results
+  as a list, not just open one if handed a direct link.
+- **`app/Http/Controllers/Concerns/ResolvesOwnStudent.php`** — the shared "my
+  own record" resolver, generalizing the pattern already proven in
+  `StudentLeaveController`. Accepts an optional `?student_id=` so a guardian
+  with more than one child can switch between them.
+- **New `/portal` routes and controllers**: `portal.index` (landing
+  dashboard), `portal.fees.index`/`.show`, `portal.exams.index`/`.show`,
+  `portal.attendance.index` (a genuinely new feature — `attendance.view.own`
+  was seeded but nothing consumed it before this).
+- **`ExamResultController::studentResult()`** implemented for real (was a
+  JSON stub).
+- **Role-based post-login redirect**: `student`/`guardian` → `/portal`
+  (custom `LoginResponse`), and a middleware redirects them away from
+  `/dashboard` if they land there by URL instead of showing anything
+  admin-facing.
+- **Menu curation**: a pure student/guardian viewer now sees only the new
+  "My Portal" group plus Profile/Appearance — implemented as a denylist pass
+  in `HandleInertiaRequests` rather than retrofitting `Menu.role` onto every
+  existing admin row, to avoid missing one and accidentally leaking an admin
+  page.
+- **`resources/js/layouts/PortalLayout.vue`** — a slim, family-facing shell
+  distinct from the admin `AppLayout`, with all 4 portal pages rebuilt on top
+  of it: fee/exam/attendance stat cards on the landing page, status-badged
+  lists, a child switcher for guardians, and the mobile-card/desktop-table
+  responsive split already established in `attendance/StudentLeaves/Index.vue`.
+
+## Bugs found and fixed along the way
+
+- **Guardian ownership gap** — `isTheirOwn()` in `FeeVoucherPolicy`,
+  `FeePaymentPolicy`, and `ExamResultHeaderPolicy` only recognized a direct
+  student login, not a linked guardian. Without this fix, a guardian could
+  pass the new `viewAny()` check but still 403 on every individual record —
+  extended all three to recognize both.
+- **Three dead prop lookups** in the placeholder pages —
+  `result.overall_grade_item`, `result.exam.exam_type`,
+  `record.attendance_status` were always `undefined` because Eloquent
+  serializes relations by their camelCase method name
+  (`overallGradeItem`/`examType`/`attendanceStatus`), not snake_case. Fixed
+  during the UI polish pass.
+- **`ExamResultHeader` model lists `is_locked` in `$fillable`/`$casts` but the
+  table has no such column** — a pre-existing latent bug, unrelated to this
+  feature, harmless today since nothing writes to it; a test fixture had
+  been passing it in, which is what surfaced it. Left the model alone (out of
+  scope) and fixed the fixture.
+- **"Leave Applications" missing from the new portal menu** — caught during
+  final review, not by any agent: the plan called for moving
+  `/student-leaves/page` into the "My Portal" group, but it shipped without
+  it, and the URL-prefix menu filter would have hidden it entirely for a
+  pure student/guardian viewer since it doesn't start with `/portal`. Added
+  the menu entry and extended the filter's small allowlist.
+
+## Tests
+
+`tests/Feature/Portal/*` (6 files) + `tests/Support/PortalWorld.php` (26
+tests) + updated `tests/Feature/PortalAccessTest.php` (menu/redirect, folded
+into the 30-test Portal+Menu combined run below). Full verification without
+re-running the whole project suite: `--filter="Portal|Menu"` → 30 passed;
+`--filter="Portal|Menu|Fee|Exam"` → 479 passed. `npm run build` clean,
+`vendor/bin/pint --dirty` clean throughout.
+
+## Not done — deferred, not blocking
+
+The class timetable feature (`academics.timetable.view` is a seeded
+placeholder permission with no model, controller, route, or Vue page
+anywhere) — independent, larger build, do it after Phase 2 if raised again.
+
+## Next
+
+Phase 2 — Staff/Teacher portal, reusing this phase's shell/menu/redirect
+mechanism. See `CURRENT-MODULE.md`.

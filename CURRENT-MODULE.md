@@ -110,29 +110,39 @@ directly instead of rebuilding it. Not fully sequential (no cross-benefit) and
 not built in parallel (two agents would likely invent two incompatible shared
 layers) — the middle path.
 
-## Phase 1 — Student/Guardian portal
+## Phase 1 — Student/Guardian portal — **done, 2026-09-14**
 
-1. **Fix the two broken `viewAny()` policy gaps** that block any list-based
-   self-service today: `FeeVoucherPolicy::viewAny()` /
+All six items below shipped. Built by three agents run in a coordinated
+split (backend / shell+menu / UI polish, each given an exact file-ownership
+contract to avoid touching the same files) rather than sequentially or in an
+uncoordinated parallel — see `docs/MODULE-LOG.md`'s "Module: Student Portal
+Phase 1" entry for the full findings, files touched, and bugs caught along
+the way (a guardian-ownership gap in three policies, three dead camelCase
+prop lookups in the placeholder pages, and a `PortalWorld` test fixture
+writing a column `exam_result_headers` doesn't have). 479 tests passing
+(Fee + Exam + Portal + Menu filters), `npm run build` clean.
+
+1. ~~**Fix the two broken `viewAny()` policy gaps**~~ that block any
+   list-based self-service today: `FeeVoucherPolicy::viewAny()` /
    `FeePaymentPolicy::viewAny()` (`app/Policies/Fee/`) don't accept
    `fee.view.own`, and `ExamResultHeaderPolicy::viewAny()`
    (`app/Policies/Exam/`) doesn't accept `exam.result.view.own` — each needs
    to accept the `.view.own` permission, scoped to the caller's own student.
    Smallest change, unblocks the rest without any new UI.
-2. **Build the shared "my own record" resolver** — a small trait/service
+2. ~~**Build the shared "my own record" resolver**~~ — a small trait/service
    generalizing `StudentLeaveController::ownStudents()`/`assertMayActFor()`
    (`app/Http/Controllers/StudentLeaveController.php:172-220`), which already
    resolves `$user->student`/`$user->guardian->students()` with no route
    parameter. This becomes the template Phase 2 copies for
    `$user->staffProfile`.
-3. **New `/portal` routes** built on that resolver: fee vouchers (list +
+3. ~~**New `/portal` routes**~~ built on that resolver: fee vouchers (list +
    show, reusing `FeeVoucherController`'s existing show/print/challan views),
    exam results (list + the existing result-card view from
    `ExamReportCardController::card()`), and a genuinely new attendance-history
    endpoint (`attendance.view.own` is seeded but nothing consumes it today).
-4. **Implement `ExamResultController::studentResult()`** — currently a stub
+4. ~~**Implement `ExamResultController::studentResult()`**~~ — currently a stub
    (`app/Http/Controllers/Exam/ExamResultController.php:240-243`).
-5. **Build the shared portal layout/shell + role-based menu filtering** —
+5. ~~**Build the shared portal layout/shell + role-based menu filtering**~~ —
    populate `Menu.role` (column already exists, currently unused everywhere
    except a stray developer-only comment) for `student`/`guardian` so the
    admin sidebar's Finance/Inventory/Staff/Settings items disappear, and add a
@@ -141,9 +151,11 @@ layers) — the middle path.
    `/portal`. Build this generically — Phase 2 reuses the same menu-filtering
    and redirect mechanism for `teacher`/`staff` roles, just pointed at
    `/staff/self` instead.
-6. **Move "Student Leaves" into the new portal nav** — it already works for
-   self-service, it's just currently reached through the shared admin sidebar
-   every role sees.
+6. **Not done yet — small follow-up.** Move "Student Leaves" into the new
+   "My Portal" nav group (`database/seeders/MenuSeeder.php`) — it already
+   works for self-service via `/student-leaves/page`, it just isn't listed
+   alongside Fees/Exam Results/Attendance in the new portal menu the way the
+   plan called for. A one-line `Menu::create()` addition, not a code change.
 7. **Deferred, not blocking**: the class timetable feature
    (`academics.timetable.view` is a seeded placeholder with no model,
    controller, route, or Vue page anywhere — this is an independent, larger

@@ -574,6 +574,16 @@ class MenuSeeder extends Seeder
             'url' => '/portal/attendance',
         ]);
 
+        Menu::create([
+            'title' => 'Leave Applications',
+            'icon' => 'calendar-off',
+            'type' => 'main',
+            'order' => 5,
+            'parent_id' => $portal->id,
+            'is_active' => true,
+            'url' => '/student-leaves/page',
+        ]);
+
         // Footer navigation items
         $settings = Menu::create([
             'title' => 'Settings',
