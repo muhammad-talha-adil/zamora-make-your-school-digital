@@ -15,10 +15,10 @@ screen exists for this role's own work at all yet.
 | School Owner (Complete) | `owner@school.com` | Everything except developer-only system tooling. |
 | Super Admin (Complete) | `admin@school.com` | School-wide, below the owner. |
 | Campus Admin (Complete) | `admin2@school.com` or `principal@school.com` | The second has a real staff profile attached. |
-| Head Teacher (Partial) | `headteacher@school.com` | Bare account, no staff profile — login only. Their day-to-day screens (Attendance, Exam) are done; their own self-service area (Staff Portal, Phase 2) isn't built yet. |
-| Teacher (Partial) | `teacher1@school.com` | Real staff profile, teaches Mathematics/Science. Same gap as Head Teacher — day-to-day screens done, self-service Staff Portal (Phase 2) not built. |
+| Head Teacher (Complete) | `headteacher@school.com` | Bare account, no staff profile — login only. `/staff/me` will 403 for this account until a real StaffProfile is linked to it. |
+| Teacher (Complete) | `teacher1@school.com` | Real staff profile, teaches Mathematics/Science. `/staff/me` takes them to their own profile; `/staff/teaching` shows only their own assigned classes. |
 | Accountant (Complete) | `accounts@school.com` | Real staff profile. |
-| Driver (Partial) | `driver1@school.com` | Real staff profile. Can log in and see their own basic record; no dedicated "my route today" screen exists yet. |
+| Driver (Partial) | `driver1@school.com` | Real staff profile, `/staff/me` works for their own profile/attendance/leave/salary now — still no dedicated Transport "my route today" screen. |
 | Receptionist (Complete) | `reception@school.com` | Real staff profile. |
 | Clerk (Complete) | `clerk@school.com` | Bare account, no staff profile — login only. |
 | Maid (Complete) | `maid@school.com` | Bare account, no staff profile — login only. Role is intentionally minimal, nothing further to build. |
@@ -57,12 +57,12 @@ fees, inventory, transport, staff (hire/manage/mark attendance, not see salaries
 finance viewing and reports, user accounts for their campus. Cannot delete students, exams, fee
 vouchers, or inventory purchases — those stay above this level.
 
-### Head Teacher (Partial)
+### Head Teacher (Complete)
 Everything a Teacher can do (below), plus: verify/countersign marks a teacher entered, manage exam
 registrations, lock an attendance register for the day, view the whole student list (not just
 their own classes), and manage the class timetable.
 
-### Teacher (Partial)
+### Teacher (Complete)
 Their assigned classes and subjects only: view their students, mark and edit attendance, run
 attendance reports, view/manage exam papers for their subjects, enter marks, view results, view
 the timetable, apply for their own leave and see their own basic staff record.

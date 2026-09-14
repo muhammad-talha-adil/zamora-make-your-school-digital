@@ -1040,3 +1040,42 @@ permission invented.
 
 Tests: 117 passed (`--filter="Staff|Menu"`), `vendor/bin/pint --dirty` clean,
 `npm run build` clean.
+
+# Module: Staff Portal — Phase 2 closed 2026-09-14
+
+Much smaller than Phase 1 because the obvious shortcut held: `Staff/People/Show.vue`
+already has working Personal/Attendance/Leave/Salary tabs, already gated correctly on
+`staff.view.own` — nobody needed a new page, just a way to reach their own without
+already knowing their numeric `staffProfile` id.
+
+## What shipped
+
+- **`GET /staff/me`** — resolves the caller's own `StaffProfile` (new
+  `ResolvesOwnStaffProfile` trait, mirroring `ResolvesOwnStudent`; a developer with no
+  linked profile previews any real one instead of hitting a 403) and redirects to
+  `staff.people.show` — the existing, fully-built profile page.
+- **`TeacherAssignmentController` fix** — the one genuine backend gap in the Phase 2
+  plan: `/staff/teaching*` was `staff.view`-only, so a plain teacher (holding only
+  `staff.view.own`) could not see their own assigned classes/subjects through this
+  screen at all. New `StaffProfilePolicy::viewTeaching()` plus query-level scoping to
+  the caller's own assignments when they lack `staff.view`.
+- **"My Profile" menu entry** added to the Staff group.
+
+## Bug found and fixed along the way
+
+- `resources/js/pages/Staff/Teaching/Index.vue` read `assignment.staffProfile`/
+  `.schoolClass` (camelCase), but `TeacherClassAssignment`'s default
+  `$snakeAttributes` serializes eager-loaded relations as `staff_profile`/
+  `school_class` — the Teacher column has rendered blank for every row, admin view
+  included, since this screen was first built. Fixed both keys.
+
+## Tests
+
+116 Staff tests passing (`--filter=Staff`), `npm run build` clean.
+
+## Not built — deferred, per the original plan
+
+A staff-specific dashboard (leave balance, today's schedule, latest payslip — the
+existing profile page already surfaces this well enough for now), a formatted/
+downloadable salary-slip PDF, and the class timetable feature (still just a seeded
+placeholder permission with no model anywhere).

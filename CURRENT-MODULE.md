@@ -161,27 +161,28 @@ writing a column `exam_result_headers` doesn't have). 479 tests passing
    controller, route, or Vue page anywhere — this is an independent, larger
    build, do it after the portal ships).
 
-## Phase 2 — Staff/Teacher portal (fast follow, reuses Phase 1's shell)
+## Phase 2 — Staff/Teacher portal — **done, 2026-09-14**
 
-1. **`/staff/me/*` convenience routes** wrapping the existing
-   `staff.view.own`-gated controllers (`StaffProfileController::show`,
-   `StaffAttendanceController::index/summary`, `StaffSalaryController::index`,
-   `StaffLeaveController::index/balance/apply/cancel`) — these already work
-   correctly today, a teacher just has to already know and type their own
-   numeric `staffProfile` ID. Highest-value, lowest-risk step since almost
-   everything else already works server-side.
-2. **Fix `TeacherAssignmentController`** (`/staff/teaching*` routes,
-   `routes/staff.php` "Phase 4") to accept `staff.view.own` (or add a
-   caller-scoped variant) — the one genuine backend gap: a plain teacher
-   cannot see their own assigned classes/subjects through this controller
-   today at all.
-3. **Wire the staff self-service nav** using the exact `Menu.role`
-   mechanism built in Phase 1, pointed at the new `/staff/me/*` routes.
-4. **A lightweight staff dashboard** — leave balance, today's schedule,
-   latest payslip — reusing Phase 1's portal-layout pattern.
-5. **Deferred, not blocking**: a formatted/downloadable salary-slip
-   view/PDF on top of `StaffSalaryController::index`'s existing data, and the
-   same class-timetable feature deferred in Phase 1.
+Turned out much smaller than Phase 1: `Staff/People/Show.vue` already had working
+Personal/Attendance/Leave/Salary tabs, already gated correctly on `staff.view.own` —
+no new pages were needed, just a way to reach them. Full record:
+`docs/MODULE-LOG.md` under "Module: Staff Portal — Phase 2".
+
+1. ~~**`/staff/me/*` convenience route**~~ — one route, `GET /staff/me`, resolving the
+   caller's own `StaffProfile` and redirecting straight to the existing
+   `staff.people.show` page (no separate routes needed for attendance/salary/leave —
+   they're tabs on that same page). Building a whole new set of `/staff/me/*` pages
+   as originally planned would have duplicated what already worked.
+2. ~~**Fix `TeacherAssignmentController`**~~ — the one genuine backend gap: fixed via
+   a new `StaffProfilePolicy::viewTeaching()` and scoping the query to the caller's
+   own assignments when they only hold `staff.view.own`.
+3. ~~**Wire the staff self-service nav**~~ — a plain "My Profile" menu entry under
+   Staff, no `Menu.role` restriction needed (unlike Phase 1's student/guardian menu,
+   this is meaningful for anyone who can already see the Staff group at all).
+4. **Not built — deferred, still not blocking anything.** A dedicated staff
+   dashboard, a formatted salary-slip PDF, and the class timetable feature
+   (`academics.timetable.view` is still just a seeded placeholder permission with
+   no model anywhere).
 
 ## How this gets worked
 
