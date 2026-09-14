@@ -32,6 +32,11 @@ function makePortalTestUser(string $role): User
  */
 function seedSamplePortalMenus(): void
 {
+    // The test database can carry the real seeded menu rows (this repo does
+    // not `migrate:fresh` between runs), so start from a clean slate exactly
+    // like `MenuSeeder::run()` does.
+    Menu::query()->forceDelete();
+
     $students = Menu::create(['title' => 'Students', 'icon' => 'users', 'type' => 'main', 'order' => 1, 'is_active' => true]);
     Menu::create(['title' => 'Student List', 'icon' => 'list', 'type' => 'main', 'order' => 1, 'parent_id' => $students->id, 'is_active' => true, 'url' => '/students']);
 
