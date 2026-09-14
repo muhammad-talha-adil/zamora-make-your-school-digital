@@ -85,6 +85,11 @@ class DatabaseSeeder extends Seeder
 
             // === Other Seeders ===
             ReasonSeeder::class,
+
+            // Repoints the fixed test-login emails onto real, fully-seeded
+            // records — must run last, after every module above has
+            // finished generating its own real data for students/guardians.
+            TestLoginFixturesSeeder::class,
         ]);
     }
 }

@@ -17,6 +17,8 @@ class StaffDesignationSeeder extends Seeder
             ['name' => 'Driver', 'description' => 'Assigned school vehicle driver'],
             ['name' => 'Receptionist', 'description' => 'Front desk and visitor coordination'],
             ['name' => 'Clerk', 'description' => 'Office and records support'],
+            ['name' => 'Head Teacher', 'description' => 'Senior teacher who also verifies marks and manages the timetable'],
+            ['name' => 'Support Staff', 'description' => 'General facility and cleaning support'],
         ];
 
         foreach ($designations as $designation) {

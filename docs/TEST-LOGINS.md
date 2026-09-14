@@ -15,19 +15,19 @@ screen exists for this role's own work at all yet.
 | School Owner (Complete) | `owner@school.com` | Everything except developer-only system tooling. |
 | Super Admin (Complete) | `admin@school.com` | School-wide, below the owner. |
 | Campus Admin (Complete) | `admin2@school.com` or `principal@school.com` | The second has a real staff profile attached. |
-| Head Teacher (Complete) | `headteacher@school.com` | Bare account, no staff profile — login only. `/staff/me` will 403 for this account until a real StaffProfile is linked to it. |
+| Head Teacher (Complete) | `headteacher@school.com` | Real staff profile (Farhan Sheikh, Academics/Head Teacher). `/staff/me` takes them to it; `/staff/teaching` shows their own assigned classes. |
 | Teacher (Complete) | `teacher1@school.com` | Real staff profile, teaches Mathematics/Science. `/staff/me` takes them to their own profile; `/staff/teaching` shows only their own assigned classes. |
 | Accountant (Complete) | `accounts@school.com` | Real staff profile. |
 | Driver (Partial) | `driver1@school.com` | Real staff profile, `/staff/me` works for their own profile/attendance/leave/salary now — still no dedicated Transport "my route today" screen. |
 | Receptionist (Complete) | `reception@school.com` | Real staff profile. |
-| Clerk (Complete) | `clerk@school.com` | Bare account, no staff profile — login only. |
-| Maid (Complete) | `maid@school.com` | Bare account, no staff profile — login only. Role is intentionally minimal, nothing further to build. |
-| Student (Complete) — real data | `majid.hussain1@student.com` | Has a real student record, fees, results to look at. |
-| Student (Complete) — blank test | `student.test@school.com` | No linked student record — portal will say so. |
-| Guardian (Complete) — blank test | `guardian.test@school.com` | No linked child — portal will say so. |
+| Clerk (Complete) | `clerk@school.com` | Real staff profile (Bilal Aslam, Administration/Clerk). |
+| Maid (Complete) | `maid@school.com` | Real staff profile (Shabana Bibi, Support/Support Staff). Role is intentionally minimal, nothing further to build. |
+| Student (Complete) | `majid.hussain1@student.com` | Has a real student record, fees, results to look at. |
+| Student (Complete) — fixed test | `student.test@school.com` | Repointed onto a real, fully-seeded student — real fees/results/attendance to look at, memorable email. |
+| Guardian (Complete) — fixed test | `guardian.test@school.com` | Repointed onto a real guardian with real linked children. |
 
-For a real guardian login with a real child attached, open any student in Student List →
-Guardians tab and use that guardian's email (also password `123456`).
+For any other real guardian login, open any student in Student List → Guardians tab and use
+that guardian's email (also password `123456`).
 
 ---
 
