@@ -24,6 +24,7 @@ use App\Services\Finance\UnifiedAccountingService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 
 class StudentInventoriesController extends Controller
 {
@@ -368,9 +369,7 @@ class StudentInventoriesController extends Controller
      */
     public function createReturn(Request $request, StudentInventory $studentInventory)
     {
-        $studentInventory = StudentInventory::where('id', $studentInventory->id)
-            ->when($request->get('campus_id'), fn ($q) => $q->where('campus_id', $request->get('campus_id')))
-            ->firstOrFail();
+        Gate::authorize('view', $studentInventory);
 
         $studentInventory->load([
             'campus:id,name',
@@ -760,10 +759,7 @@ class StudentInventoriesController extends Controller
      */
     public function return(StoreReturnRequest $request, StudentInventory $studentInventory)
     {
-        /** @var StudentInventory $studentInventory */
-        $studentInventory = StudentInventory::where('id', $studentInventory->id)
-            ->when($request->get('campus_id'), fn ($q) => $q->where('campus_id', $request->get('campus_id')))
-            ->firstOrFail();
+        Gate::authorize('update', $studentInventory);
 
         $validated = $request->validated();
         $returnQuantity = (int) $validated['quantity'];
@@ -874,10 +870,7 @@ class StudentInventoriesController extends Controller
      */
     public function checkReturnAvailability(Request $request, StudentInventory $studentInventory): JsonResponse
     {
-        /** @var StudentInventory $studentInventory */
-        $studentInventory = StudentInventory::where('id', $studentInventory->id)
-            ->when($request->get('campus_id'), fn ($q) => $q->where('campus_id', $request->get('campus_id')))
-            ->firstOrFail();
+        Gate::authorize('view', $studentInventory);
 
         $quantity = (int) $request->get('quantity', 0);
         $maxReturnable = $studentInventory->remainingQuantity();
@@ -901,10 +894,7 @@ class StudentInventoriesController extends Controller
      */
     public function show(Request $request, StudentInventory $studentInventory)
     {
-        /** @var StudentInventory $studentInventory */
-        $studentInventory = StudentInventory::where('id', $studentInventory->id)
-            ->when($request->get('campus_id'), fn ($q) => $q->where('campus_id', $request->get('campus_id')))
-            ->firstOrFail();
+        Gate::authorize('view', $studentInventory);
 
         $studentInventory->load([
             'campus:id,name',
@@ -967,9 +957,7 @@ class StudentInventoriesController extends Controller
      */
     public function showReturn(Request $request, StudentInventoryReturn $studentInventoryReturn)
     {
-        $studentInventoryReturn = StudentInventoryReturn::where('id', $studentInventoryReturn->id)
-            ->when($request->get('campus_id'), fn ($q) => $q->where('campus_id', $request->get('campus_id')))
-            ->firstOrFail();
+        Gate::authorize('view', $studentInventoryReturn);
 
         $studentInventoryReturn->load([
             'campus:id,name',
@@ -1030,10 +1018,7 @@ class StudentInventoriesController extends Controller
      */
     public function destroy(Request $request, StudentInventory $studentInventory)
     {
-        /** @var StudentInventory $studentInventory */
-        $studentInventory = StudentInventory::where('id', $studentInventory->id)
-            ->when($request->get('campus_id'), fn ($q) => $q->where('campus_id', $request->get('campus_id')))
-            ->firstOrFail();
+        Gate::authorize('delete', $studentInventory);
 
         $studentInventory->delete();
 
@@ -1045,9 +1030,9 @@ class StudentInventoriesController extends Controller
      */
     public function restore(Request $request, $id)
     {
-        $studentInventory = StudentInventory::withTrashed()
-            ->when($request->get('campus_id'), fn ($q) => $q->where('campus_id', $request->get('campus_id')))
-            ->findOrFail($id);
+        $studentInventory = StudentInventory::withTrashed()->findOrFail($id);
+
+        Gate::authorize('restore', $studentInventory);
 
         $studentInventory->restore();
 

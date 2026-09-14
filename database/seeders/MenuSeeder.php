@@ -175,7 +175,7 @@ class MenuSeeder extends Seeder
 
         Menu::create([
             'title' => 'Revaluations',
-            'icon' => 'refresh',
+            'icon' => 'refresh-cw',
             'type' => 'main',
             'order' => 7,
             'parent_id' => $exam->id,
@@ -521,6 +521,59 @@ class MenuSeeder extends Seeder
             'url' => '/finance/reports/expense',
         ]);
 
+        // ==================== PORTAL MENU (student/guardian self-service) ====================
+        // Every other main-menu item above is hidden from a pure
+        // student/guardian viewer by HandleInertiaRequests::restrictToPortalMenus() -
+        // this group (plus the footer Profile/Appearance items) is the only
+        // thing such an account ever sees in the sidebar.
+        $portal = Menu::create([
+            'title' => 'My Portal',
+            'icon' => 'home',
+            'type' => 'main',
+            'order' => 10,
+            'is_active' => true,
+        ]);
+
+        Menu::create([
+            'title' => 'Dashboard',
+            'icon' => 'layout-dashboard',
+            'type' => 'main',
+            'order' => 1,
+            'parent_id' => $portal->id,
+            'is_active' => true,
+            'url' => '/portal',
+        ]);
+
+        Menu::create([
+            'title' => 'Fees',
+            'icon' => 'wallet',
+            'type' => 'main',
+            'order' => 2,
+            'parent_id' => $portal->id,
+            'is_active' => true,
+            'url' => '/portal/fees',
+        ]);
+
+        Menu::create([
+            'title' => 'Exam Results',
+            'icon' => 'clipboard-list',
+            'type' => 'main',
+            'order' => 3,
+            'parent_id' => $portal->id,
+            'is_active' => true,
+            'url' => '/portal/exams',
+        ]);
+
+        Menu::create([
+            'title' => 'Attendance',
+            'icon' => 'calendar-check',
+            'type' => 'main',
+            'order' => 4,
+            'parent_id' => $portal->id,
+            'is_active' => true,
+            'url' => '/portal/attendance',
+        ]);
+
         // Footer navigation items
         $settings = Menu::create([
             'title' => 'Settings',
@@ -568,6 +621,20 @@ class MenuSeeder extends Seeder
             'parent_id' => $settings->id,
             'is_active' => true,
             'url' => '/settings/menu-settings',
+        ]);
+
+        // Owner/developer-only: a school-wide audit trail is sensitive, so it
+        // is kept out of a campus admin's reach the same way Subscription is
+        // kept developer-only.
+        Menu::create([
+            'title' => 'Activity Log',
+            'icon' => 'history',
+            'type' => 'footer',
+            'role' => 'owner,developer',
+            'order' => 5,
+            'parent_id' => $settings->id,
+            'is_active' => true,
+            'url' => '/settings/activity-log',
         ]);
     }
 }

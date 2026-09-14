@@ -15,6 +15,8 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Spatie\Activitylog\Models\Concerns\LogsActivity;
+use Spatie\Activitylog\Support\LogOptions;
 
 /**
  * A person who works at the school.
@@ -29,7 +31,20 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  */
 class StaffProfile extends Model
 {
-    use SoftDeletes;
+    use LogsActivity, SoftDeletes;
+
+    /**
+     * Employment status and pay only — the changes a school owner would
+     * want a history of, not every touch of the personal file.
+     */
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logOnly(['is_active', 'campus_id', 'department_id', 'designation_id', 'employment_type', 'confirmation_date', 'basic_salary', 'allowance_amount', 'deduction_amount'])
+            ->logOnlyDirty()
+            ->dontLogEmptyChanges()
+            ->setDescriptionForEvent(fn (string $eventName): string => "staff profile {$eventName}");
+    }
 
     protected $fillable = [
         'user_id',

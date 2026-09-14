@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Settings\ActivityLogController;
 use App\Http\Controllers\Settings\CampusController;
 use App\Http\Controllers\Settings\CampusTypeController;
 use App\Http\Controllers\Settings\ClassSubjectController;
@@ -13,6 +14,7 @@ use App\Http\Controllers\Settings\SchoolController;
 use App\Http\Controllers\Settings\SectionController;
 use App\Http\Controllers\Settings\SessionController;
 use App\Http\Controllers\Settings\SubjectController;
+use App\Http\Controllers\Settings\SubscriptionController;
 use App\Http\Controllers\Settings\ThemeSettingsController;
 use App\Http\Controllers\Settings\TwoFactorAuthenticationController;
 use Illuminate\Support\Facades\Route;
@@ -40,6 +42,13 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('settings/appearance', [ThemeSettingsController::class, 'index'])->name('appearance.index');
     Route::post('settings/appearance/light', [ThemeSettingsController::class, 'updateLight'])->name('appearance.updateLight');
     Route::post('settings/appearance/dark', [ThemeSettingsController::class, 'updateDark'])->name('appearance.updateDark');
+
+    // Subscription Management Routes (developer-only, see SubscriptionController)
+    Route::get('settings/subscription', [SubscriptionController::class, 'index'])->name('subscription.index');
+    Route::patch('settings/subscription', [SubscriptionController::class, 'update'])->name('subscription.update');
+
+    // Activity Log Routes (owner/developer-only, see ActivityLogController)
+    Route::get('settings/activity-log', [ActivityLogController::class, 'index'])->name('activity-log.index');
 
     // School Profile Routes
     Route::get('settings/school-profile', [SchoolController::class, 'show'])->name('school-profile.show');

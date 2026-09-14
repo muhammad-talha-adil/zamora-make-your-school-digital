@@ -28,9 +28,14 @@ class ExamResultHeaderPolicy
     use ChecksExamReach;
     use HandlesAuthorization;
 
+    /**
+     * `exam.result.view.own` only opens the door to the list endpoint — it
+     * does not widen what the list returns. The portal scopes the query to
+     * the caller's own student itself.
+     */
     public function viewAny(User $user): bool
     {
-        return $this->may($user, 'exam.result.view', 'exam.marks.enter');
+        return $this->may($user, 'exam.result.view', 'exam.marks.enter', 'exam.result.view.own');
     }
 
     public function view(User $user, ExamResultHeader $header): bool
@@ -141,8 +146,12 @@ class ExamResultHeaderPolicy
      */
     private function isTheirOwn(User $user, ExamResultHeader $header): bool
     {
-        return $user->student !== null
-            && (int) $user->student->id === (int) $header->student_id;
+        if ($user->student !== null && (int) $user->student->id === (int) $header->student_id) {
+            return true;
+        }
+
+        return $user->guardian !== null
+            && $user->guardian->students()->whereKey($header->student_id)->exists();
     }
 
     /**

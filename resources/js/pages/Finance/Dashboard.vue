@@ -4,6 +4,7 @@ import { ref, computed } from 'vue';
 import { router } from '@inertiajs/vue3';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { Button } from '@/components/ui/button';
+import LineChart from '@/components/charts/LineChart.vue';
 import type { BreadcrumbItem } from '@/types';
 
 interface Props {
@@ -29,6 +30,7 @@ interface Props {
     };
     campuses?: Array<{ id: number; name: string }>;
     selected_campus?: number;
+    weekly_trend?: Array<{ date: string; income: number; expense: number }>;
 }
 
 const props = defineProps<Props>();
@@ -39,6 +41,19 @@ const monthSummary = computed(() => props.month_summary || { income: 0, expense:
 const studentReceivables = computed(() => props.student_receivables || { total_open: 0, fee_open: 0, inventory_open: 0, transport_open: 0 });
 const operationsSummary = computed(() => props.operations_summary || { pending_salary_payable: 0, transport_expense_month: 0 });
 const campuses = computed(() => props.campuses || []);
+const weeklyTrend = computed(() => props.weekly_trend || []);
+const incomeTrendPoints = computed(() =>
+    weeklyTrend.value.map((point) => ({
+        label: new Date(point.date).toLocaleDateString('en-US', { weekday: 'short' }),
+        value: point.income,
+    })),
+);
+const expenseTrendPoints = computed(() =>
+    weeklyTrend.value.map((point) => ({
+        label: new Date(point.date).toLocaleDateString('en-US', { weekday: 'short' }),
+        value: point.expense,
+    })),
+);
 
 // Form state
 const selectedCampus = ref(props.selected_campus);
@@ -131,6 +146,28 @@ const navigateTo = (path: string) => {
                             {{ formatMoney(monthSummary.balance) }}
                         </p>
                     </div>
+                </div>
+            </div>
+
+            <!-- Weekly Income vs Expense -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                <div class="bg-card rounded-lg border border-border p-4 md:p-6">
+                    <h3 class="text-lg font-semibold text-foreground mb-4">Income (Last 7 Days)</h3>
+                    <LineChart
+                        v-if="incomeTrendPoints.length > 0"
+                        :points="incomeTrendPoints"
+                        :format-value="(value) => formatMoney(value)"
+                        color-var="--success"
+                    />
+                </div>
+                <div class="bg-card rounded-lg border border-border p-4 md:p-6">
+                    <h3 class="text-lg font-semibold text-foreground mb-4">Expense (Last 7 Days)</h3>
+                    <LineChart
+                        v-if="expenseTrendPoints.length > 0"
+                        :points="expenseTrendPoints"
+                        :format-value="(value) => formatMoney(value)"
+                        color-var="--destructive"
+                    />
                 </div>
             </div>
 

@@ -2,8 +2,10 @@
 
 use App\Http\Middleware\CheckPermission;
 use App\Http\Middleware\EnsureArtisanUiAccess;
+use App\Http\Middleware\EnsureSubscriptionActive;
 use App\Http\Middleware\HandleAppearance;
 use App\Http\Middleware\HandleInertiaRequests;
+use App\Http\Middleware\RedirectPortalUsersFromDashboard;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -25,6 +27,7 @@ return Application::configure(basePath: dirname(__DIR__))
             HandleAppearance::class,
             HandleInertiaRequests::class,
             AddLinkHeadersForPreloadedAssets::class,
+            EnsureSubscriptionActive::class,
         ]);
 
         $middleware->alias([
@@ -35,6 +38,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'role' => RoleMiddleware::class,
             'role_or_permission' => RoleOrPermissionMiddleware::class,
             'artisan.ui' => EnsureArtisanUiAccess::class,
+            'redirect.portal-users' => RedirectPortalUsersFromDashboard::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

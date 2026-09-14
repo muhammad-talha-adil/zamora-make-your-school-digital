@@ -11,10 +11,26 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Spatie\Activitylog\Models\Concerns\LogsActivity;
+use Spatie\Activitylog\Support\LogOptions;
 
 class ExamResultHeader extends Model
 {
-    use SoftDeletes;
+    use LogsActivity, SoftDeletes;
+
+    /**
+     * The workflow status and the lock flag — publish/lock/reopen and
+     * revaluation-driven re-marks are the events worth an audit trail here,
+     * not every recalculation of the cached totals.
+     */
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logOnly(['status', 'is_locked', 'result_status'])
+            ->logOnlyDirty()
+            ->dontLogEmptyChanges()
+            ->setDescriptionForEvent(fn (string $eventName): string => "exam result {$eventName}");
+    }
 
     /*
      * The workflow a result moves through, in order. It only ever moves

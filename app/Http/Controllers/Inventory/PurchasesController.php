@@ -15,6 +15,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Inertia\Response;
 
 class PurchasesController extends Controller
@@ -279,10 +280,7 @@ class PurchasesController extends Controller
      */
     public function show(Request $request, Purchase $purchase): Response
     {
-        /** @var Purchase $purchase */
-        $purchase = Purchase::where('id', $purchase->id)
-            ->when($request->get('campus_id'), fn ($q) => $q->where('campus_id', $request->get('campus_id')))
-            ->firstOrFail();
+        Gate::authorize('view', $purchase);
 
         return inertia('inventory/Purchases/Show', [
             'purchase' => $purchase->load(['campus', 'supplier', 'purchaseItems.inventoryItem']),
@@ -296,10 +294,7 @@ class PurchasesController extends Controller
      */
     public function edit(Request $request, Purchase $purchase): RedirectResponse
     {
-        /** @var Purchase $purchase */
-        $purchase = Purchase::where('id', $purchase->id)
-            ->when($request->get('campus_id'), fn ($q) => $q->where('campus_id', $request->get('campus_id')))
-            ->firstOrFail();
+        Gate::authorize('update', $purchase);
 
         return redirect()->to("/inventory?modal=inventory-purchases-form&action=edit&id={$purchase->id}");
     }
@@ -314,10 +309,7 @@ class PurchasesController extends Controller
      */
     public function update(Request $request, Purchase $purchase)
     {
-        /** @var Purchase $purchase */
-        $purchase = Purchase::where('id', $purchase->id)
-            ->when($request->get('campus_id'), fn ($q) => $q->where('campus_id', $request->get('campus_id')))
-            ->firstOrFail();
+        Gate::authorize('update', $purchase);
 
         $request->validate([
             'supplier_id' => 'required|exists:suppliers,id',
@@ -405,10 +397,7 @@ class PurchasesController extends Controller
      */
     public function destroy(Request $request, Purchase $purchase)
     {
-        /** @var Purchase $purchase */
-        $purchase = Purchase::where('id', $purchase->id)
-            ->when($request->get('campus_id'), fn ($q) => $q->where('campus_id', $request->get('campus_id')))
-            ->firstOrFail();
+        Gate::authorize('delete', $purchase);
 
         if ($purchase->purchaseItems()->exists()) {
             return back()->with('warning', 'Cannot delete purchase with associated items. Consider cancelling or contacting administrator.');

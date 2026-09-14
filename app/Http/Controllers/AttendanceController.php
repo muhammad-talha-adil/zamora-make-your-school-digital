@@ -185,6 +185,8 @@ class AttendanceController extends Controller
         $campuses = Campus::orderBy('name')->get(['id', 'name']);
         $sessions = Session::where('is_active', true)->orderBy('name')->get(['id', 'name']);
 
+        $weeklyTrend = $this->getWeeklyAttendanceTrend($request->user(), $currentCampusId, $currentSessionId);
+
         return Inertia::render('attendance/Dashboard', [
             'todayStats' => $todayStats,
             'yesterdayStats' => $yesterdayStats,
@@ -198,7 +200,45 @@ class AttendanceController extends Controller
             'selectedCampusId' => $currentCampusId,
             'selectedSessionId' => $currentSessionId,
             'today' => $today,
+            'weeklyTrend' => $weeklyTrend,
         ]);
+    }
+
+    /**
+     * Attendance percentage for each of the last 7 days, for the dashboard's
+     * trend chart. Reuses `calculateDashboardStats`, the same routine the
+     * today/yesterday cards are built from, so the chart cannot disagree with
+     * them about what "present" means.
+     *
+     * @return array<int, array{date: string, attendance_percentage: float}>
+     */
+    private function getWeeklyAttendanceTrend(?User $user, ?int $campusId, ?int $sessionId): array
+    {
+        $trend = [];
+
+        for ($day = now()->subDays(6)->startOfDay(); $day->lte(now()->endOfDay()); $day->addDay()) {
+            $date = $day->toDateString();
+
+            $query = Attendance::with('attendanceStudents.attendanceStatus')
+                ->visibleTo($user)
+                ->whereDate('attendance_date', $date);
+
+            if ($campusId) {
+                $query->where('campus_id', $campusId);
+            }
+            if ($sessionId) {
+                $query->where('session_id', $sessionId);
+            }
+
+            $stats = $this->calculateDashboardStats($query->get());
+
+            $trend[] = [
+                'date' => $date,
+                'attendance_percentage' => $stats['attendance_percentage'],
+            ];
+        }
+
+        return $trend;
     }
 
     /**

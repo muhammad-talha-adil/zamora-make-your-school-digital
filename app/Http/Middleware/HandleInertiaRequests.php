@@ -4,8 +4,12 @@ namespace App\Http\Middleware;
 
 use App\Models\Menu;
 use App\Models\School;
+use App\Models\Subscription;
 use App\Models\ThemeSetting;
+use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
+use Illuminate\Support\Str;
 use Inertia\Middleware;
 
 class HandleInertiaRequests extends Middleware
@@ -46,8 +50,19 @@ class HandleInertiaRequests extends Middleware
         });
 
         $school = School::first();
+        $user = $request->user();
 
-        $allMenus = Menu::active()->orderBy('type')->orderBy('order')->get();
+        // A null `role` means visible to everyone; otherwise the menu entry
+        // only renders for one of a comma-separated list of roles - e.g. the
+        // developer-only Subscription page, or the owner/developer-only
+        // Activity Log page.
+        $allMenus = Menu::active()->orderBy('type')->orderBy('order')->get()
+            ->filter(fn (Menu $menu) => $menu->role === null || $user?->hasAnyRole(explode(',', $menu->role)))
+            ->values();
+
+        if ($this->isPortalOnlyViewer($user)) {
+            $allMenus = $this->restrictToPortalMenus($allMenus);
+        }
         $menuData = [
             'main' => $this->buildMenuTree($allMenus->where('type', 'main')->whereNull('parent_id'), $allMenus),
             'footer' => $this->buildMenuTree($allMenus->where('type', 'footer')->whereNull('parent_id'), $allMenus),
@@ -72,7 +87,84 @@ class HandleInertiaRequests extends Middleware
             'themes' => $themes,
             'theme_mode' => $mode,
             'menus' => $menuData,
+            'subscriptionWarning' => $this->buildSubscriptionWarning($user),
         ];
+    }
+
+    /**
+     * Shown only to owner/campus_admin/super_admin, within 10 days of
+     * whichever expiry currently governs access - never to students,
+     * guardians, or staff.
+     *
+     * @return array{daysRemaining: int, status: string}|null
+     */
+    protected function buildSubscriptionWarning(?User $user): ?array
+    {
+        if (! $user || ! $user->hasAnyRole(['owner', 'campus_admin', 'super_admin'])) {
+            return null;
+        }
+
+        $subscription = Subscription::current();
+        $days = $subscription->daysUntilExpiry();
+
+        if ($days === null || $days > 10) {
+            return null;
+        }
+
+        return [
+            'daysRemaining' => $days,
+            'status' => $subscription->status,
+        ];
+    }
+
+    /**
+     * True only when every role the viewer holds is `student` and/or
+     * `guardian` - never for a role combination that also carries an admin
+     * role, so nobody's menu is narrowed by accident.
+     */
+    protected function isPortalOnlyViewer(?User $user): bool
+    {
+        if (! $user || ! $user->hasAnyRole(['student', 'guardian'])) {
+            return false;
+        }
+
+        return $user->roles->pluck('name')->diff(['student', 'guardian'])->isEmpty();
+    }
+
+    /**
+     * The existing admin sidebar was built assuming every menu row is
+     * visible to whichever roles the `role` column allows, with no concept
+     * of a denylist. Rather than retrofitting a `role` value onto every one
+     * of the ~15+ existing admin menu rows (tedious, and one missed row
+     * quietly leaks an admin page to a family account), a pure
+     * student/guardian viewer instead gets a second, narrower pass here:
+     * keep only menu items whose own `url` points into the portal or the
+     * two footer settings pages every user needs (password/theme), plus
+     * whichever parent container rows those items live under so the menu
+     * tree does not orphan them.
+     *
+     * @param  Collection<int, Menu>  $menus
+     * @return Collection<int, Menu>
+     */
+    protected function restrictToPortalMenus(Collection $menus): Collection
+    {
+        $allowedUrls = ['/settings/profile', '/settings/appearance'];
+
+        $isAllowed = fn (Menu $menu): bool => $menu->url
+            && (Str::startsWith($menu->url, '/portal') || in_array($menu->url, $allowedUrls, true));
+
+        $visible = $menus->filter($isAllowed);
+
+        // One climb is enough for this app's two-level (parent/child) menu
+        // tree, but loop until nothing new is added so a deeper nesting
+        // never silently orphans a visible child under an excluded parent.
+        do {
+            $parentIds = $visible->pluck('parent_id')->filter()->unique();
+            $newParents = $menus->whereIn('id', $parentIds)->reject(fn (Menu $menu) => $visible->contains('id', $menu->id));
+            $visible = $visible->merge($newParents);
+        } while ($newParents->isNotEmpty());
+
+        return $visible->values();
     }
 
     protected function getMode(Request $request): string

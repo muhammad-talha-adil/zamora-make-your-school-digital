@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { Head } from '@inertiajs/vue3';
-import { ref, onMounted } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import axios from 'axios';
 import AppLayout from '@/layouts/AppLayout.vue';
+import LineChart from '@/components/charts/LineChart.vue';
 import type { BreadcrumbItem } from '@/types';
 import { formatCurrency } from '@/utils/format';
 
@@ -36,11 +37,17 @@ interface OverdueVoucher {
     days_overdue: number;
 }
 
+interface CollectionTrendPoint {
+    date: string;
+    amount: number;
+}
+
 // Props
 const props = defineProps<{
     stats?: Stats;
     recentPayments?: RecentPayment[];
     overdueVouchers?: OverdueVoucher[];
+    collectionTrend?: CollectionTrendPoint[];
 }>();
 
 // State
@@ -57,6 +64,14 @@ const stats = ref<Stats>(props.stats || {
 });
 const recentPayments = ref<RecentPayment[]>(props.recentPayments || []);
 const overdueVouchers = ref<OverdueVoucher[]>(props.overdueVouchers || []);
+const collectionTrend = ref<CollectionTrendPoint[]>(props.collectionTrend || []);
+
+const collectionTrendPoints = computed(() =>
+    collectionTrend.value.map((point) => ({
+        label: new Date(point.date).toLocaleDateString('en-US', { weekday: 'short' }),
+        value: point.amount,
+    })),
+);
 
 // Breadcrumbs
 const breadcrumbItems: BreadcrumbItem[] = [
@@ -72,6 +87,7 @@ const fetchDashboardData = async () => {
         stats.value = response.data.stats;
         recentPayments.value = response.data.recentPayments;
         overdueVouchers.value = response.data.overdueVouchers;
+        collectionTrend.value = response.data.collectionTrend;
     } catch (error) {
         console.error('Error fetching dashboard data:', error);
     } finally {
@@ -172,6 +188,18 @@ onMounted(() => {
                         </div>
                     </div>
                 </div>
+            </div>
+
+            <!-- Collection Trend -->
+            <div class="bg-card rounded-lg border border-border p-4">
+                <h3 class="text-lg font-semibold text-foreground mb-4">Collection Trend (Last 7 Days)</h3>
+                <LineChart
+                    v-if="collectionTrendPoints.length > 0"
+                    :points="collectionTrendPoints"
+                    :format-value="(value) => formatCurrency(value)"
+                    color-var="--success"
+                />
+                <p v-else class="text-sm text-muted-foreground">No collections recorded in the last 7 days.</p>
             </div>
 
             <!-- Recent Payments & Overdue Vouchers -->

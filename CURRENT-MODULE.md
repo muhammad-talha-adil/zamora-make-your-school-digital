@@ -88,8 +88,92 @@ way Fee/Finance was — full findings in
 
 ---
 
-# Current module
+# Current module: Student + Staff Portal
 
-None in progress. Inventory — the last unreviewed area — closed
-2026-09-14; full findings are in [docs/MODULE-LOG.md](docs/MODULE-LOG.md)
-under "Module: Inventory".
+Every backend module has now been reviewed at least once (Fee, Finance,
+Attendance, Exam, Student, Staff, Settings, Transport, Inventory — all closed,
+full records in [docs/MODULE-LOG.md](docs/MODULE-LOG.md)). This is new
+construction, not a review pass: today there is **no dedicated portal at
+all** — a student, guardian, or teacher logs in and lands on the same admin
+`Dashboard.vue` with the same full admin sidebar as an owner, with only a
+handful of scattered `*.view.own` permission checks bolted onto admin screens.
+Full investigation, with exact file/line references for every claim below, is
+in [docs/STUDENT-PORTAL-READINESS.md](docs/STUDENT-PORTAL-READINESS.md) and
+[docs/STAFF-PORTAL-READINESS.md](docs/STAFF-PORTAL-READINESS.md).
+
+**Approach:** build the Student/Guardian portal first — it has more existing
+backend to reuse (fee vouchers, exam results, leave application) and is the
+higher-value piece — but build its shared infrastructure (portal layout,
+role-based menu filtering, "my own record" resolver pattern, post-login
+redirect) generically enough that the Staff portal in Phase 2 reuses it
+directly instead of rebuilding it. Not fully sequential (no cross-benefit) and
+not built in parallel (two agents would likely invent two incompatible shared
+layers) — the middle path.
+
+## Phase 1 — Student/Guardian portal
+
+1. **Fix the two broken `viewAny()` policy gaps** that block any list-based
+   self-service today: `FeeVoucherPolicy::viewAny()` /
+   `FeePaymentPolicy::viewAny()` (`app/Policies/Fee/`) don't accept
+   `fee.view.own`, and `ExamResultHeaderPolicy::viewAny()`
+   (`app/Policies/Exam/`) doesn't accept `exam.result.view.own` — each needs
+   to accept the `.view.own` permission, scoped to the caller's own student.
+   Smallest change, unblocks the rest without any new UI.
+2. **Build the shared "my own record" resolver** — a small trait/service
+   generalizing `StudentLeaveController::ownStudents()`/`assertMayActFor()`
+   (`app/Http/Controllers/StudentLeaveController.php:172-220`), which already
+   resolves `$user->student`/`$user->guardian->students()` with no route
+   parameter. This becomes the template Phase 2 copies for
+   `$user->staffProfile`.
+3. **New `/portal` routes** built on that resolver: fee vouchers (list +
+   show, reusing `FeeVoucherController`'s existing show/print/challan views),
+   exam results (list + the existing result-card view from
+   `ExamReportCardController::card()`), and a genuinely new attendance-history
+   endpoint (`attendance.view.own` is seeded but nothing consumes it today).
+4. **Implement `ExamResultController::studentResult()`** — currently a stub
+   (`app/Http/Controllers/Exam/ExamResultController.php:240-243`).
+5. **Build the shared portal layout/shell + role-based menu filtering** —
+   populate `Menu.role` (column already exists, currently unused everywhere
+   except a stray developer-only comment) for `student`/`guardian` so the
+   admin sidebar's Finance/Inventory/Staff/Settings items disappear, and add a
+   role-based post-login redirect (`config/fortify.php`'s `home` is currently
+   one global constant for every role) sending `student`/`guardian` to
+   `/portal`. Build this generically — Phase 2 reuses the same menu-filtering
+   and redirect mechanism for `teacher`/`staff` roles, just pointed at
+   `/staff/self` instead.
+6. **Move "Student Leaves" into the new portal nav** — it already works for
+   self-service, it's just currently reached through the shared admin sidebar
+   every role sees.
+7. **Deferred, not blocking**: the class timetable feature
+   (`academics.timetable.view` is a seeded placeholder with no model,
+   controller, route, or Vue page anywhere — this is an independent, larger
+   build, do it after the portal ships).
+
+## Phase 2 — Staff/Teacher portal (fast follow, reuses Phase 1's shell)
+
+1. **`/staff/me/*` convenience routes** wrapping the existing
+   `staff.view.own`-gated controllers (`StaffProfileController::show`,
+   `StaffAttendanceController::index/summary`, `StaffSalaryController::index`,
+   `StaffLeaveController::index/balance/apply/cancel`) — these already work
+   correctly today, a teacher just has to already know and type their own
+   numeric `staffProfile` ID. Highest-value, lowest-risk step since almost
+   everything else already works server-side.
+2. **Fix `TeacherAssignmentController`** (`/staff/teaching*` routes,
+   `routes/staff.php` "Phase 4") to accept `staff.view.own` (or add a
+   caller-scoped variant) — the one genuine backend gap: a plain teacher
+   cannot see their own assigned classes/subjects through this controller
+   today at all.
+3. **Wire the staff self-service nav** using the exact `Menu.role`
+   mechanism built in Phase 1, pointed at the new `/staff/me/*` routes.
+4. **A lightweight staff dashboard** — leave balance, today's schedule,
+   latest payslip — reusing Phase 1's portal-layout pattern.
+5. **Deferred, not blocking**: a formatted/downloadable salary-slip
+   view/PDF on top of `StaffSalaryController::index`'s existing data, and the
+   same class-timetable feature deferred in Phase 1.
+
+## How this gets worked
+
+Same process as every module review: numbered findings above get fixed one
+at a time (or a batch at once, per instruction), tested, and the finished
+record moves to [docs/MODULE-LOG.md](docs/MODULE-LOG.md) as "Module: Student
+Portal" / "Module: Staff Portal" once each phase closes.

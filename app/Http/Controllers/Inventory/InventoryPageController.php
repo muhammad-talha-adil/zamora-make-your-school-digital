@@ -16,6 +16,7 @@ use App\Models\StudentInventoryReturn;
 use App\Models\Supplier;
 use Carbon\Carbon;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -256,6 +257,8 @@ class InventoryPageController extends Controller
 
     public function purchaseEdit(Purchase $purchase): Response
     {
+        Gate::authorize('update', $purchase);
+
         $purchase->load(['campus:id,name', 'supplier:id,name', 'purchaseItems.inventoryItem:id,name']);
 
         $items = $purchase->purchaseItems->map(function ($item) {
@@ -299,6 +302,8 @@ class InventoryPageController extends Controller
 
     public function purchaseReturnEdit(PurchaseReturn $purchaseReturn): Response
     {
+        Gate::authorize('update', $purchaseReturn);
+
         $purchaseReturn->load([
             'campus:id,name',
             'supplier:id,name',

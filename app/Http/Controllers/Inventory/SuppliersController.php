@@ -9,6 +9,7 @@ use App\Models\Supplier;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Inertia\Response;
 
 class SuppliersController extends Controller
@@ -175,9 +176,7 @@ class SuppliersController extends Controller
      */
     public function edit(Request $request, Supplier $supplier): RedirectResponse
     {
-        $supplier = Supplier::where('id', $supplier->id)
-            ->when($request->get('campus_id'), fn ($q) => $q->where('campus_id', $request->get('campus_id')))
-            ->firstOrFail();
+        Gate::authorize('update', $supplier);
 
         return redirect()->to("/inventory?modal=inventory-supplier-form&action=edit&id={$supplier->id}");
     }
@@ -187,16 +186,7 @@ class SuppliersController extends Controller
      */
     public function update(Request $request, Supplier $supplier)
     {
-        // Convert 'all' to null for "all campuses" functionality
-        $campusId = $this->resolveCampusId($request);
-        if ($campusId === 'all' || $campusId === null || $campusId === '') {
-            $campusId = null;
-        }
-
-        /** @var Supplier $supplier */
-        $supplier = Supplier::where('id', $supplier->id)
-            ->when($campusId, fn ($q) => $q->where('campus_id', $campusId))
-            ->firstOrFail();
+        Gate::authorize('update', $supplier);
 
         $request->validate([
             'name' => 'required|string|max:255',
@@ -294,10 +284,7 @@ class SuppliersController extends Controller
      */
     public function destroy(Request $request, Supplier $supplier)
     {
-        /** @var Supplier $supplier */
-        $supplier = Supplier::where('id', $supplier->id)
-            ->when($request->get('campus_id'), fn ($q) => $q->where('campus_id', $request->get('campus_id')))
-            ->firstOrFail();
+        Gate::authorize('delete', $supplier);
 
         if ($supplier->purchases()->exists()) {
             return back()->with('warning', 'Cannot delete supplier with associated purchases. Consider inactivating instead.');
@@ -313,10 +300,7 @@ class SuppliersController extends Controller
      */
     public function inactivate(Request $request, Supplier $supplier)
     {
-        /** @var Supplier $supplier */
-        $supplier = Supplier::where('id', $supplier->id)
-            ->when($request->get('campus_id'), fn ($q) => $q->where('campus_id', $request->get('campus_id')))
-            ->firstOrFail();
+        Gate::authorize('update', $supplier);
 
         $supplier->update(['is_active' => false]);
 
@@ -328,10 +312,7 @@ class SuppliersController extends Controller
      */
     public function activate(Request $request, Supplier $supplier)
     {
-        /** @var Supplier $supplier */
-        $supplier = Supplier::where('id', $supplier->id)
-            ->when($request->get('campus_id'), fn ($q) => $q->where('campus_id', $request->get('campus_id')))
-            ->firstOrFail();
+        Gate::authorize('update', $supplier);
 
         $supplier->update(['is_active' => true]);
 
@@ -343,10 +324,7 @@ class SuppliersController extends Controller
      */
     public function show(Request $request, Supplier $supplier): Response
     {
-        /** @var Supplier $supplier */
-        $supplier = Supplier::where('id', $supplier->id)
-            ->when($request->get('campus_id'), fn ($q) => $q->where('campus_id', $request->get('campus_id')))
-            ->firstOrFail();
+        Gate::authorize('view', $supplier);
 
         return inertia('inventory/Suppliers/Show', [
             'supplier' => $supplier->load([

@@ -38,6 +38,12 @@ New module code goes in its own subfolder once the module has more than ~2 files
 
 Use the `Write` tool for any multi-line/PHP file content — bash heredocs have broken repeatedly in this environment and left junk files in the repo root.
 
+## Prefer a well-established package over a custom build
+
+When a feature needs something a mature, well-maintained package already solves cleanly (e.g. `spatie/laravel-activitylog` for audit trails instead of hand-rolling an `activity_logs` table + manual logging calls everywhere), use the package — it costs less time and less ongoing maintenance than a custom build, as long as it doesn't make the app bulky (a small, focused package with few transitive dependencies is fine; a heavy framework-within-a-framework is not — use judgement, and if a custom build is genuinely lighter for what's actually needed, build it instead). This still needs the user's approval before adding a new dependency (per CLAUDE.md), same as any other dependency change — this rule is about which option to *recommend*, not a license to add packages unprompted.
+
+Whenever a package is added this way, record it (name, version/constraint, and a one-line reason) in `docs/DEPENDENCIES.md` at the repo root — create the file on the first entry if it doesn't exist yet. This is the single place to check what's installed and why, so a future session doesn't have to re-derive it from `composer.json`/`package.json` diffs.
+
 ## Don't idle-wait on a background test run
 
 When a test suite (or any long command) is kicked off with `run_in_background`, do not sit idle waiting for its notification. Keep working: write the next batch of findings, draft the next fix, update docs, start reading the next controller — whatever is next in the queue that doesn't depend on that result. Only block on it when the very next action genuinely needs it (e.g. deciding whether to keep or revert a change). The notification arrives on its own; going idle to wait for it wastes the turn.

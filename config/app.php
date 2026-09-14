@@ -136,4 +136,16 @@ return [
 
     'allow_artisan_ui' => env('ALLOW_ARTISAN_UI', false),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Support Contact
+    |--------------------------------------------------------------------------
+    |
+    | Shown on the subscription-locked page so a blocked school knows who to
+    | contact to restore access.
+    |
+    */
+
+    'support_contact' => env('SUPPORT_CONTACT', 'your provider'),
+
 ];

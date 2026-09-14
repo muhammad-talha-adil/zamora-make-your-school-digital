@@ -9,10 +9,26 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Spatie\Activitylog\Models\Concerns\LogsActivity;
+use Spatie\Activitylog\Support\LogOptions;
 
 class JournalEntry extends Model
 {
-    use SoftDeletes;
+    use LogsActivity, SoftDeletes;
+
+    /**
+     * A financial posting's status and approval/reversal trail — the fields
+     * an accountant would need to answer "who posted/approved/reversed this
+     * and when", not every touch of a draft.
+     */
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logOnly(['status', 'approved_by', 'reversed_by', 'reversal_of', 'description'])
+            ->logOnlyDirty()
+            ->dontLogEmptyChanges()
+            ->setDescriptionForEvent(fn (string $eventName): string => "journal entry {$eventName}");
+    }
 
     protected $fillable = [
         'entry_no',

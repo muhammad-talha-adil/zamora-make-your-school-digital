@@ -10,13 +10,89 @@ use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Laravel\Fortify\TwoFactorAuthenticatable;
+use Spatie\Activitylog\Models\Concerns\LogsActivity;
+use Spatie\Activitylog\Support\LogOptions;
 use Spatie\Permission\Exceptions\PermissionDoesNotExist;
 use Spatie\Permission\Traits\HasRoles;
 
 class User extends Authenticatable
 {
     /** @use HasFactory<UserFactory> */
-    use HasFactory, HasRoles, Notifiable, TwoFactorAuthenticatable;
+    use HasFactory, HasRoles, LogsActivity, Notifiable, TwoFactorAuthenticatable {
+        HasRoles::assignRole as private baseAssignRole;
+        HasRoles::removeRole as private baseRemoveRole;
+        HasRoles::syncRoles as private baseSyncRoles;
+    }
+
+    /**
+     * Only account-level attributes worth an audit trail, and only when they
+     * actually change. Role changes are not a dirty attribute on this model —
+     * they live on the `model_has_roles` pivot — so {@see assignRole()},
+     * {@see removeRole()} and {@see syncRoles()} below log them explicitly.
+     */
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logOnly(['name', 'email', 'username', 'is_active'])
+            ->logOnlyDirty()
+            ->dontLogEmptyChanges()
+            ->setDescriptionForEvent(fn (string $eventName): string => "user account {$eventName}");
+    }
+
+    public function assignRole(...$roles): static
+    {
+        $before = $this->getRoleNames()->all();
+
+        $this->baseAssignRole(...$roles);
+
+        $this->logRoleChange($before);
+
+        return $this;
+    }
+
+    public function removeRole(...$role): static
+    {
+        $before = $this->getRoleNames()->all();
+
+        $this->baseRemoveRole(...$role);
+
+        $this->logRoleChange($before);
+
+        return $this;
+    }
+
+    public function syncRoles(...$roles): static
+    {
+        $before = $this->getRoleNames()->all();
+
+        $this->baseSyncRoles(...$roles);
+
+        $this->logRoleChange($before);
+
+        return $this;
+    }
+
+    /**
+     * Records a role change as its own activity entry, since role assignment
+     * happens through Spatie Permission's pivot table rather than a column on
+     * this model that {@see LogsActivity} could pick up on its own.
+     *
+     * @param  array<int, string>  $before
+     */
+    private function logRoleChange(array $before): void
+    {
+        $after = $this->getRoleNames()->all();
+
+        if ($before === $after) {
+            return;
+        }
+
+        activity()
+            ->performedOn($this)
+            ->causedBy(auth()->user())
+            ->withProperties(['before' => $before, 'after' => $after])
+            ->log('user roles changed');
+    }
 
     /**
      * The attributes that are mass assignable.

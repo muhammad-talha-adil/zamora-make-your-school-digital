@@ -5,6 +5,8 @@ namespace App\Models\Staff;
 use App\Models\StaffProfile;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Spatie\Activitylog\Models\Concerns\LogsActivity;
+use Spatie\Activitylog\Support\LogOptions;
 
 /**
  * A spell of employment: joining, leaving, and coming back.
@@ -19,6 +21,21 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
  */
 class StaffEmploymentPeriod extends Model
 {
+    use LogsActivity;
+
+    /**
+     * A person leaving or rejoining is the whole point of this model, so
+     * every field on it is worth an audit trail.
+     */
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logFillable()
+            ->logOnlyDirty()
+            ->dontLogEmptyChanges()
+            ->setDescriptionForEvent(fn (string $eventName): string => "staff employment period {$eventName}");
+    }
+
     public const REASON_RESIGNED = 'resigned';
 
     public const REASON_TERMINATED = 'terminated';

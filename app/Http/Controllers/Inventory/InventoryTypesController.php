@@ -11,6 +11,7 @@ use App\Models\InventoryType;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Gate;
 use Inertia\Response;
 
 class InventoryTypesController extends Controller
@@ -87,12 +88,9 @@ class InventoryTypesController extends Controller
      */
     public function edit(Request $request, InventoryType $inventoryType): RedirectResponse
     {
-        /** @var InventoryType $inventoryType */
-        $type = InventoryType::where('id', $inventoryType->id)
-            ->when($request->get('campus_id'), fn ($q) => $q->where('campus_id', $request->get('campus_id')))
-            ->firstOrFail();
+        Gate::authorize('update', $inventoryType);
 
-        return redirect()->to("/inventory/types/{$type->id}/edit?campus_id={$type->campus_id}");
+        return redirect()->to("/inventory/types/{$inventoryType->id}/edit?campus_id={$inventoryType->campus_id}");
     }
 
     /**
@@ -102,10 +100,7 @@ class InventoryTypesController extends Controller
      */
     public function update(UpdateInventoryTypeRequest $request, InventoryType $inventoryType)
     {
-        /** @var InventoryType $inventoryType */
-        $inventoryType = InventoryType::where('id', $inventoryType->id)
-            ->when($request->get('campus_id'), fn ($q) => $q->where('campus_id', $request->get('campus_id')))
-            ->firstOrFail();
+        Gate::authorize('update', $inventoryType);
 
         try {
             $data = $request->validated();
@@ -132,10 +127,7 @@ class InventoryTypesController extends Controller
      */
     public function destroy(Request $request, InventoryType $inventoryType)
     {
-        /** @var InventoryType $inventoryType */
-        $inventoryType = InventoryType::where('id', $inventoryType->id)
-            ->when($request->get('campus_id'), fn ($q) => $q->where('campus_id', $request->get('campus_id')))
-            ->firstOrFail();
+        Gate::authorize('delete', $inventoryType);
 
         // Perform soft delete
         $inventoryType->delete();
@@ -150,10 +142,7 @@ class InventoryTypesController extends Controller
      */
     public function inactivate(Request $request, InventoryType $inventoryType)
     {
-        /** @var InventoryType $inventoryType */
-        $inventoryType = InventoryType::where('id', $inventoryType->id)
-            ->when($request->get('campus_id'), fn ($q) => $q->where('campus_id', $request->get('campus_id')))
-            ->firstOrFail();
+        Gate::authorize('update', $inventoryType);
 
         $inventoryType->update(['is_active' => false]);
 
@@ -167,10 +156,7 @@ class InventoryTypesController extends Controller
      */
     public function activate(Request $request, InventoryType $inventoryType)
     {
-        /** @var InventoryType $inventoryType */
-        $inventoryType = InventoryType::where('id', $inventoryType->id)
-            ->when($request->get('campus_id'), fn ($q) => $q->where('campus_id', $request->get('campus_id')))
-            ->firstOrFail();
+        Gate::authorize('update', $inventoryType);
 
         $inventoryType->update(['is_active' => true]);
 

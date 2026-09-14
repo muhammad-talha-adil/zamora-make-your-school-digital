@@ -15,6 +15,8 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Spatie\Activitylog\Models\Concerns\LogsActivity;
+use Spatie\Activitylog\Support\LogOptions;
 
 /**
  * Fee Voucher Model
@@ -23,7 +25,19 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  */
 class FeeVoucher extends Model
 {
-    use SoftDeletes;
+    use LogsActivity, SoftDeletes;
+
+    /**
+     * Status and money movement on the voucher, not every touch.
+     */
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logOnly(['status', 'paid_amount', 'balance_amount', 'net_amount', 'discount_amount', 'fine_amount', 'published_at'])
+            ->logOnlyDirty()
+            ->dontLogEmptyChanges()
+            ->setDescriptionForEvent(fn (string $eventName): string => "fee voucher {$eventName}");
+    }
 
     protected $table = 'fee_vouchers';
 

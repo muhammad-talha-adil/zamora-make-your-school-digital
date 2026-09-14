@@ -116,6 +116,17 @@
                 </div>
             </div>
 
+            <!-- Weekly Attendance Trend -->
+            <div class="bg-card rounded-lg border border-border p-4">
+                <h3 class="text-lg font-semibold text-foreground mb-4">Attendance Rate (Last 7 Days)</h3>
+                <LineChart
+                    v-if="weeklyTrendPoints.length > 0"
+                    :points="weeklyTrendPoints"
+                    :format-value="(value) => `${value}%`"
+                    color-var="--primary"
+                />
+            </div>
+
             <!-- Second Row -->
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
                 <!-- Classes Progress -->
@@ -244,11 +255,12 @@
 
 <script setup lang="ts">
 import { Head, router } from '@inertiajs/vue3';
-import { reactive } from 'vue';
+import { reactive, computed } from 'vue';
 import { route } from 'ziggy-js';
 import AppLayout from '@/layouts/AppLayout.vue';
 import Icon from '@/components/Icon.vue';
 import { Button } from '@/components/ui/button';
+import LineChart from '@/components/charts/LineChart.vue';
 import type { BreadcrumbItem } from '@/types';
 
 interface Props {
@@ -304,9 +316,17 @@ interface Props {
     selectedCampusId: number | null;
     selectedSessionId: number | null;
     today: string;
+    weeklyTrend: Array<{ date: string; attendance_percentage: number }>;
 }
 
 const props = defineProps<Props>();
+
+const weeklyTrendPoints = computed(() =>
+    (props.weeklyTrend || []).map((point) => ({
+        label: new Date(point.date).toLocaleDateString('en-US', { weekday: 'short' }),
+        value: point.attendance_percentage,
+    })),
+);
 
 const breadcrumbItems: BreadcrumbItem[] = [
     { title: 'Dashboard', href: '/dashboard' },

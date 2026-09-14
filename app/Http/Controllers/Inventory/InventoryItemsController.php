@@ -16,6 +16,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Inertia\Response;
 
 class InventoryItemsController extends Controller
@@ -104,13 +105,9 @@ class InventoryItemsController extends Controller
      */
     public function edit(Request $request, InventoryItem $inventoryItem): RedirectResponse
     {
-        // Scope to campus for multi-campus safety
-        /** @var InventoryItem $inventoryItem */
-        $item = InventoryItem::where('id', $inventoryItem->id)
-            ->when($request->get('campus_id'), fn ($q) => $q->where('campus_id', $request->get('campus_id')))
-            ->firstOrFail();
+        Gate::authorize('update', $inventoryItem);
 
-        return redirect()->to("/inventory?modal=inventory-items-form&action=edit&id={$item->id}");
+        return redirect()->to("/inventory?modal=inventory-items-form&action=edit&id={$inventoryItem->id}");
     }
 
     /**
@@ -120,11 +117,7 @@ class InventoryItemsController extends Controller
      */
     public function update(UpdateInventoryItemRequest $request, InventoryItem $inventoryItem)
     {
-        // IMPROVEMENT: Scope to campus for multi-campus safety
-        /** @var InventoryItem $inventoryItem */
-        $inventoryItem = InventoryItem::where('id', $inventoryItem->id)
-            ->when($request->get('campus_id'), fn ($q) => $q->where('campus_id', $request->get('campus_id')))
-            ->firstOrFail();
+        Gate::authorize('update', $inventoryItem);
 
         // IMPROVEMENT: Use DB transaction for atomic operation
         try {
@@ -147,11 +140,7 @@ class InventoryItemsController extends Controller
      */
     public function destroy(Request $request, InventoryItem $inventoryItem)
     {
-        // IMPROVEMENT: Scope to campus for multi-campus safety
-        /** @var InventoryItem $inventoryItem */
-        $inventoryItem = InventoryItem::where('id', $inventoryItem->id)
-            ->when($request->get('campus_id'), fn ($q) => $q->where('campus_id', $request->get('campus_id')))
-            ->firstOrFail();
+        Gate::authorize('delete', $inventoryItem);
 
         // Perform soft delete
         $inventoryItem->delete();
@@ -166,11 +155,7 @@ class InventoryItemsController extends Controller
      */
     public function inactivate(Request $request, InventoryItem $inventoryItem)
     {
-        // IMPROVEMENT: Scope to campus for multi-campus safety
-        /** @var InventoryItem $inventoryItem */
-        $inventoryItem = InventoryItem::where('id', $inventoryItem->id)
-            ->when($request->get('campus_id'), fn ($q) => $q->where('campus_id', $request->get('campus_id')))
-            ->firstOrFail();
+        Gate::authorize('update', $inventoryItem);
 
         $inventoryItem->update(['is_active' => false]);
 
@@ -184,11 +169,7 @@ class InventoryItemsController extends Controller
      */
     public function activate(Request $request, InventoryItem $inventoryItem)
     {
-        // IMPROVEMENT: Scope to campus for multi-campus safety
-        /** @var InventoryItem $inventoryItem */
-        $inventoryItem = InventoryItem::where('id', $inventoryItem->id)
-            ->when($request->get('campus_id'), fn ($q) => $q->where('campus_id', $request->get('campus_id')))
-            ->firstOrFail();
+        Gate::authorize('update', $inventoryItem);
 
         $inventoryItem->update(['is_active' => true]);
 

@@ -8,11 +8,15 @@ use App\Models\Exam\Exam;
 use App\Models\Exam\ExamResultHeader;
 use App\Models\SchoolClass;
 use App\Models\Section;
+use App\Services\Exam\ReportCardService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 
 class ExamResultController extends Controller
 {
+    public function __construct(private ReportCardService $cards) {}
+
     /**
      * Display results page.
      */
@@ -237,9 +241,26 @@ class ExamResultController extends Controller
         return $links;
     }
 
-    public function studentResult($studentId, $examId)
+    /**
+     * One student's result for one exam.
+     *
+     * Was a stub returning placeholder JSON. The result header carries the
+     * real ownership check — `ExamResultHeaderPolicy::view()` — so this
+     * behaves for a student/guardian reading their own child's result the
+     * same way it does for staff reading anyone's, within their reach.
+     */
+    public function studentResult(int|string $studentId, int|string $examId): JsonResponse
     {
-        return response()->json(['message' => 'Student result', 'studentId' => $studentId, 'examId' => $examId]);
+        $header = ExamResultHeader::where('student_id', $studentId)
+            ->where('exam_id', $examId)
+            ->firstOrFail();
+
+        $this->authorize('view', $header);
+
+        return response()->json([
+            'success' => true,
+            'data' => $this->cards->forResult($header),
+        ]);
     }
 
     public function groupResultSheet($groupId)

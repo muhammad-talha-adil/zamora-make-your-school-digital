@@ -23,9 +23,15 @@ class FeeVoucherPolicy
     use ChecksSchoolReach;
     use HandlesAuthorization;
 
+    /**
+     * `fee.view.own` only opens the door to the list endpoint — it does not
+     * widen what the list returns. The portal scopes the query to the
+     * caller's own student itself; without this the student/guardian
+     * `/portal/fees` list 403s before it ever gets that far.
+     */
     public function viewAny(User $user): bool
     {
-        return $this->may($user, 'fee.view', 'fee.voucher.view');
+        return $this->may($user, 'fee.view', 'fee.voucher.view', 'fee.view.own');
     }
 
     public function view(User $user, FeeVoucher $voucher): bool
@@ -77,9 +83,18 @@ class FeeVoucherPolicy
             && $this->reaches($user, $voucher->campus_id);
     }
 
+    /**
+     * A family's own voucher: the child themselves, or a guardian linked to
+     * that child. There is no separate guardian portal — a guardian signs in
+     * to the same account type as the child — so both are checked here.
+     */
     private function isTheirOwn(User $user, FeeVoucher $voucher): bool
     {
-        return $user->student !== null
-            && (int) $user->student->id === (int) $voucher->student_id;
+        if ($user->student !== null && (int) $user->student->id === (int) $voucher->student_id) {
+            return true;
+        }
+
+        return $user->guardian !== null
+            && $user->guardian->students()->whereKey($voucher->student_id)->exists();
     }
 }

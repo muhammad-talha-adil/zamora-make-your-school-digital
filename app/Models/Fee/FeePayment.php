@@ -12,6 +12,8 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Spatie\Activitylog\Models\Concerns\LogsActivity;
+use Spatie\Activitylog\Support\LogOptions;
 
 /**
  * Fee Payment Model
@@ -20,7 +22,21 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  */
 class FeePayment extends Model
 {
-    use SoftDeletes;
+    use LogsActivity, SoftDeletes;
+
+    /**
+     * Money in and out of a receipt, not every touch — a receiver
+     * changing a note is not worth an audit row, a status flip or an
+     * amount correction is.
+     */
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logOnly(['status', 'received_amount', 'allocated_amount', 'remaining_unallocated_amount', 'payment_method'])
+            ->logOnlyDirty()
+            ->dontLogEmptyChanges()
+            ->setDescriptionForEvent(fn (string $eventName): string => "fee payment {$eventName}");
+    }
 
     protected $table = 'new_fee_payments';
 

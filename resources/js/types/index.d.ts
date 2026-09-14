@@ -43,6 +43,10 @@ export type AppPageProps<
         main: MenuItem[];
         footer: MenuItem[];
     };
+    subscriptionWarning: {
+        daysRemaining: number;
+        status: string;
+    } | null;
     [key: string]: unknown;
 }
 

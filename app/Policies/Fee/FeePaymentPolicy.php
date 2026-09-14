@@ -28,9 +28,14 @@ class FeePaymentPolicy
     use ChecksSchoolReach;
     use HandlesAuthorization;
 
+    /**
+     * `fee.view.own` only opens the door to the list endpoint — it does not
+     * widen what the list returns. The portal scopes the query to the
+     * caller's own student itself.
+     */
     public function viewAny(User $user): bool
     {
-        return $this->may($user, 'fee.view', 'fee.payment.collect');
+        return $this->may($user, 'fee.view', 'fee.payment.collect', 'fee.view.own');
     }
 
     public function view(User $user, FeePayment $payment): bool
@@ -70,9 +75,17 @@ class FeePaymentPolicy
             && $this->reaches($user, $payment->campus_id);
     }
 
+    /**
+     * A family's own receipt: the child themselves, or a guardian linked to
+     * that child.
+     */
     private function isTheirOwn(User $user, FeePayment $payment): bool
     {
-        return $user->student !== null
-            && (int) $user->student->id === (int) $payment->student_id;
+        if ($user->student !== null && (int) $user->student->id === (int) $payment->student_id) {
+            return true;
+        }
+
+        return $user->guardian !== null
+            && $user->guardian->students()->whereKey($payment->student_id)->exists();
     }
 }

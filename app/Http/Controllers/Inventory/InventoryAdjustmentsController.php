@@ -12,6 +12,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Inertia\Response;
 
 class InventoryAdjustmentsController extends Controller
@@ -190,10 +191,7 @@ class InventoryAdjustmentsController extends Controller
      */
     public function show(Request $request, InventoryAdjustment $adjustment): Response
     {
-        /** @var InventoryAdjustment $adjustment */
-        $adjustment = InventoryAdjustment::where('id', $adjustment->id)
-            ->when($request->get('campus_id'), fn ($q) => $q->where('campus_id', $request->get('campus_id')))
-            ->firstOrFail();
+        Gate::authorize('view', $adjustment);
 
         return inertia('inventory/Adjustments/Show', [
             'adjustment' => $adjustment->load(['campus', 'inventoryItem', 'user']),
@@ -205,9 +203,7 @@ class InventoryAdjustmentsController extends Controller
      */
     public function destroy(Request $request, InventoryAdjustment $adjustment)
     {
-        $adjustment = InventoryAdjustment::where('id', $adjustment->id)
-            ->when($request->get('campus_id'), fn ($q) => $q->where('campus_id', $request->get('campus_id')))
-            ->firstOrFail();
+        Gate::authorize('delete', $adjustment);
 
         try {
             DB::transaction(function () use ($adjustment) {

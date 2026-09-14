@@ -13,6 +13,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Inertia\Response;
 
 class InventoryReturnsController extends Controller
@@ -255,10 +256,7 @@ class InventoryReturnsController extends Controller
      */
     public function show(Request $request, ReturnModel $return): Response
     {
-        /** @var ReturnModel $return */
-        $return = ReturnModel::where('id', $return->id)
-            ->when($request->get('campus_id'), fn ($q) => $q->where('campus_id', $request->get('campus_id')))
-            ->firstOrFail();
+        Gate::authorize('view', $return);
 
         $return->load(['campus', 'studentInventory.student.user', 'studentInventory.inventoryItem']);
 
@@ -296,10 +294,7 @@ class InventoryReturnsController extends Controller
      */
     public function destroy(Request $request, ReturnModel $return)
     {
-        /** @var ReturnModel $return */
-        $return = ReturnModel::where('id', $return->id)
-            ->when($request->get('campus_id'), fn ($q) => $q->where('campus_id', $request->get('campus_id')))
-            ->firstOrFail();
+        Gate::authorize('delete', $return);
 
         $return->delete();
 
@@ -311,9 +306,9 @@ class InventoryReturnsController extends Controller
      */
     public function restore(Request $request, $id)
     {
-        $return = ReturnModel::withTrashed()
-            ->when($request->get('campus_id'), fn ($q) => $q->where('campus_id', $request->get('campus_id')))
-            ->findOrFail($id);
+        $return = ReturnModel::withTrashed()->findOrFail($id);
+
+        Gate::authorize('restore', $return);
 
         $return->restore();
 

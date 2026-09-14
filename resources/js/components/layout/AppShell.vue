@@ -223,6 +223,25 @@
 
       <!-- Main Content -->
       <main class="flex-1 min-w-0 p-4 sm:p-6 overflow-y-auto overflow-x-hidden" :style="{ backgroundColor: 'var(--content-bg)', color: 'var(--content-text)' }">
+        <div
+          v-if="subscriptionWarning && !subscriptionWarningDismissed"
+          class="mb-4 flex items-start gap-3 rounded-lg border border-warning/40 bg-warning/10 p-4"
+        >
+          <Icon icon="alert-triangle" class="h-5 w-5 mt-0.5 shrink-0 text-warning" />
+          <div class="flex-1 text-sm">
+            <p class="font-medium text-warning">{{ subscriptionWarningMessage }}</p>
+            <p class="text-muted-foreground">Contact your provider to renew before access is locked.</p>
+          </div>
+          <button
+            type="button"
+            aria-label="Dismiss"
+            class="shrink-0 rounded-md p-1 text-muted-foreground hover:opacity-75"
+            @click="dismissSubscriptionWarning"
+          >
+            <X class="w-4 h-4" />
+          </button>
+        </div>
+
         <slot />
       </main>
 
@@ -312,6 +331,42 @@ const toggleTheme = () => {
 }
 
 const schoolName = computed(() => pageProps.value.name || 'School Management System')
+
+/*
+  10-day-before-expiry warning, per the owner's explicit number. The server
+  already restricts who ever sees this prop (owner/campus_admin/super_admin),
+  so here it is purely "is there one, and has this session dismissed it".
+*/
+const subscriptionWarning = computed(() => pageProps.value.subscriptionWarning || null)
+const subscriptionWarningDismissed = ref(false)
+
+const subscriptionWarningMessage = computed(() => {
+  const days = subscriptionWarning.value?.daysRemaining ?? 0
+
+  if (days <= 0) {
+    return 'Your subscription expires today.'
+  }
+
+  return `Your subscription expires in ${days} day${days === 1 ? '' : 's'}.`
+})
+
+const dismissSubscriptionWarning = () => {
+  subscriptionWarningDismissed.value = true
+  try {
+    sessionStorage.setItem('subscription-warning-dismissed', '1')
+  } catch {
+    // Session storage can be unavailable (private browsing); dismissal then
+    // only lasts for this component's lifetime, which is an acceptable fallback.
+  }
+}
+
+onMounted(() => {
+  try {
+    subscriptionWarningDismissed.value = sessionStorage.getItem('subscription-warning-dismissed') === '1'
+  } catch {
+    subscriptionWarningDismissed.value = false
+  }
+})
 
 /*
   Palette variables are owned by useAppearance(), which derives every token

@@ -16,6 +16,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Inertia\Response;
 
 class PurchaseReturnsController extends Controller
@@ -209,10 +210,9 @@ class PurchaseReturnsController extends Controller
      */
     public function getPurchaseItems(Request $request, Purchase $purchase): JsonResponse
     {
-        $purchase = Purchase::where('id', $purchase->id)
-            ->when($request->get('campus_id'), fn ($q) => $q->where('campus_id', $request->get('campus_id')))
-            ->with(['purchaseItems.inventoryItem:id,name', 'supplier:id,name'])
-            ->firstOrFail();
+        Gate::authorize('view', $purchase);
+
+        $purchase->load(['purchaseItems.inventoryItem:id,name', 'supplier:id,name']);
 
         $items = $purchase->purchaseItems->map(function ($item) use ($purchase) {
             // Get current stock for this item at this campus
@@ -371,9 +371,7 @@ class PurchaseReturnsController extends Controller
      */
     public function update(Request $request, PurchaseReturn $purchaseReturn)
     {
-        $purchaseReturn = PurchaseReturn::where('id', $purchaseReturn->id)
-            ->when($request->get('campus_id'), fn ($q) => $q->where('campus_id', $request->get('campus_id')))
-            ->firstOrFail();
+        Gate::authorize('update', $purchaseReturn);
 
         $request->validate([
             'supplier_id' => 'nullable|exists:suppliers,id',
@@ -486,10 +484,7 @@ class PurchaseReturnsController extends Controller
      */
     public function show(Request $request, PurchaseReturn $purchaseReturn): Response
     {
-        /** @var PurchaseReturn $purchaseReturn */
-        $purchaseReturn = PurchaseReturn::where('id', $purchaseReturn->id)
-            ->when($request->get('campus_id'), fn ($q) => $q->where('campus_id', $request->get('campus_id')))
-            ->firstOrFail();
+        Gate::authorize('view', $purchaseReturn);
 
         return inertia('inventory/PurchaseReturns/Show', [
             'return' => $purchaseReturn->load(['campus', 'supplier', 'user', 'items.inventoryItem']),
@@ -501,9 +496,7 @@ class PurchaseReturnsController extends Controller
      */
     public function destroy(Request $request, PurchaseReturn $purchaseReturn)
     {
-        $purchaseReturn = PurchaseReturn::where('id', $purchaseReturn->id)
-            ->when($request->get('campus_id'), fn ($q) => $q->where('campus_id', $request->get('campus_id')))
-            ->firstOrFail();
+        Gate::authorize('delete', $purchaseReturn);
 
         try {
             DB::transaction(function () use ($purchaseReturn) {

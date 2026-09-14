@@ -101,8 +101,39 @@ class FinanceController extends Controller
             ],
             'campuses' => Campus::select('id', 'name')->where('is_active', true)->orderBy('name')->get(),
             'selected_campus' => $campusId,
+            'weekly_trend' => $this->getWeeklyTrend($campusId),
         ];
 
         return Inertia::render('Finance/Dashboard', $data);
+    }
+
+    /**
+     * Daily income/expense totals for the last 7 days, for the dashboard's
+     * trend chart. Combines the same two sources as the headline figures
+     * above (the `Ledger` journal plus the cash-movement journal entries), one
+     * day at a time, so the chart and the "today"/"this month" cards can never
+     * disagree about what counts as income or expense.
+     *
+     * @return array<int, array{date: string, income: float, expense: float}>
+     */
+    private function getWeeklyTrend(?int $campusId): array
+    {
+        $trend = [];
+
+        for ($day = now()->subDays(6)->startOfDay(); $day->lte(now()->endOfDay()); $day->addDay()) {
+            $date = $day->toDateString();
+
+            $cash = $this->accountingService->cashMovementTotals($date, $date, $campusId);
+            $ledgerIncome = $this->financeService->getTotalIncome($date, $date, $campusId);
+            $ledgerExpense = $this->financeService->getTotalExpense($date, $date, $campusId);
+
+            $trend[] = [
+                'date' => $date,
+                'income' => $ledgerIncome + $cash['income'],
+                'expense' => $ledgerExpense + $cash['expense'],
+            ];
+        }
+
+        return $trend;
     }
 }

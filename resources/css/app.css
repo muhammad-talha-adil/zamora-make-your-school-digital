@@ -83,6 +83,16 @@
   screen owns; the values below are the defaults it falls back to.
 */
 :root {
+    /*
+      Tells the browser which palette to use for native form controls (the
+      open <select> listbox, its <option> rows, date pickers, scrollbars).
+      Without this, native controls always render with the OS/light popup
+      chrome regardless of the `.dark` class below, which is why a `<select>`
+      dropdown could show correctly dark-styled text on a stray white row
+      with the system's default blue highlight even in dark mode.
+    */
+    color-scheme: light;
+
     --radius: 0.5rem;
 
     --background: #f8fafc;
@@ -155,6 +165,8 @@
 }
 
 .dark {
+    color-scheme: dark;
+
     --background: #070b12;
     --foreground: #e5e7eb;
 

@@ -17,6 +17,7 @@ class Menu extends Model
         'parent_id',
         'order',
         'type',
+        'role',
     ];
 
     protected $casts = [
