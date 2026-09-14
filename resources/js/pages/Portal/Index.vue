@@ -1,6 +1,9 @@
 <script setup lang="ts">
 import { Head, Link, router } from '@inertiajs/vue3';
-import AppLayout from '@/layouts/AppLayout.vue';
+import { computed } from 'vue';
+import PortalLayout from '@/layouts/PortalLayout.vue';
+import Icon from '@/components/Icon.vue';
+import { formatCurrency, formatDate } from '@/utils/format';
 
 interface ChildOption {
     id: number;
@@ -37,69 +40,148 @@ interface Props {
 }
 
 const props = defineProps<Props>();
+
+const resultBadgeClass = computed(() => {
+    return {
+        pass: 'bg-success/10 text-success',
+        fail: 'bg-destructive/10 text-destructive',
+    }[props.latestResult?.result_status ?? ''] ?? 'bg-muted text-muted-foreground';
+});
+
+const attendanceBadgeClass = computed(() => {
+    return {
+        P: 'bg-success/10 text-success',
+        A: 'bg-destructive/10 text-destructive',
+        L: 'bg-primary/10 text-primary',
+        LT: 'bg-warning/10 text-warning',
+        HD: 'bg-muted text-muted-foreground',
+    }[props.todayAttendance?.code ?? ''] ?? 'bg-muted text-muted-foreground';
+});
 </script>
 
 <template>
-    <AppLayout>
-        <Head title="Portal" />
+    <PortalLayout>
+        <Head title="My Portal" />
 
-        <div class="p-6 space-y-6">
-            <div class="flex items-center justify-between gap-4">
-                <h1 class="text-xl font-semibold">Welcome, {{ props.student.name ?? 'Student' }}</h1>
+        <div class="space-y-4 md:space-y-6">
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                <div>
+                    <h1 class="text-lg md:text-2xl font-bold text-foreground">
+                        Welcome, {{ props.student.name ?? 'Student' }}
+                    </h1>
+                    <p class="mt-1 text-xs md:text-sm text-muted-foreground">
+                        Here's a quick look at fees, results and attendance.
+                    </p>
+                </div>
 
-                <select
-                    v-if="props.students.length > 1"
-                    :value="props.student.id"
-                    class="rounded border border-gray-300 px-2 py-1 text-sm dark:border-gray-700 dark:bg-gray-800"
-                    @change="
-                        (event) => router.visit(route('portal.index', { student_id: (event.target as HTMLSelectElement).value }))
-                    "
-                >
-                    <option v-for="child in props.students" :key="child.id" :value="child.id">
-                        {{ child.name }}
-                    </option>
-                </select>
+                <label v-if="props.students.length > 1" class="w-full sm:w-auto">
+                    <span class="sr-only">Choose child</span>
+                    <select
+                        :value="props.student.id"
+                        class="w-full sm:w-auto rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground"
+                        @change="
+                            (event) => router.visit(route('portal.index', { student_id: (event.target as HTMLSelectElement).value }))
+                        "
+                    >
+                        <option v-for="child in props.students" :key="child.id" :value="child.id">
+                            {{ child.name }}
+                        </option>
+                    </select>
+                </label>
             </div>
 
-            <div class="grid gap-4 sm:grid-cols-3">
-                <div class="rounded border border-gray-200 p-4 dark:border-gray-700">
-                    <h2 class="text-sm font-medium text-gray-500 dark:text-gray-400">Fee balance</h2>
-                    <p v-if="props.outstandingVoucher" class="mt-2 text-lg font-semibold">
-                        Rs. {{ props.outstandingVoucher.balance_amount.toLocaleString() }}
-                        <span class="block text-sm font-normal text-gray-500">Due {{ props.outstandingVoucher.due_date }}</span>
+            <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <!-- Fee balance -->
+                <div class="bg-card rounded-lg border border-border p-4 flex flex-col">
+                    <div class="flex items-start justify-between gap-2">
+                        <div>
+                            <p class="text-sm text-muted-foreground">Fee balance</p>
+                            <p class="text-2xl font-bold text-foreground mt-1">
+                                {{ props.outstandingVoucher ? formatCurrency(props.outstandingVoucher.balance_amount) : formatCurrency(0) }}
+                            </p>
+                        </div>
+                        <div class="p-3 rounded-lg" :class="props.outstandingVoucher ? 'bg-warning/10' : 'bg-success/10'">
+                            <Icon icon="wallet" :class="props.outstandingVoucher ? 'text-warning' : 'text-success'" :size="20" />
+                        </div>
+                    </div>
+
+                    <p v-if="props.outstandingVoucher" class="mt-2 text-xs text-muted-foreground">
+                        Due {{ formatDate(props.outstandingVoucher.due_date ?? '') }}
                     </p>
-                    <p v-else class="mt-2 text-sm text-gray-500">No outstanding balance</p>
-                    <Link :href="route('portal.fees.index')" class="mt-3 inline-block text-sm text-blue-600 hover:underline">
-                        View fee vouchers
+                    <p v-else class="mt-2 text-xs text-muted-foreground">No outstanding balance</p>
+
+                    <Link
+                        :href="props.outstandingVoucher ? route('portal.fees.show', props.outstandingVoucher.id) : route('portal.fees.index')"
+                        class="mt-auto pt-3 inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline"
+                    >
+                        {{ props.outstandingVoucher ? 'View Voucher' : 'View Fee Vouchers' }}
+                        <Icon icon="arrow-right" :size="14" />
                     </Link>
                 </div>
 
-                <div class="rounded border border-gray-200 p-4 dark:border-gray-700">
-                    <h2 class="text-sm font-medium text-gray-500 dark:text-gray-400">Latest exam result</h2>
-                    <p v-if="props.latestResult" class="mt-2 text-lg font-semibold">
+                <!-- Latest exam result -->
+                <div class="bg-card rounded-lg border border-border p-4 flex flex-col">
+                    <div class="flex items-start justify-between gap-2">
+                        <div>
+                            <p class="text-sm text-muted-foreground">Latest exam result</p>
+                            <p class="text-2xl font-bold text-foreground mt-1">
+                                {{ props.latestResult?.grade ?? (props.latestResult?.percentage != null ? `${props.latestResult.percentage}%` : '—') }}
+                            </p>
+                        </div>
+                        <div class="p-3 rounded-lg bg-primary/10">
+                            <Icon icon="clipboard-list" class="text-primary" :size="20" />
+                        </div>
+                    </div>
+
+                    <p v-if="props.latestResult" class="mt-2 text-xs text-muted-foreground truncate" :title="props.latestResult.exam ?? ''">
                         {{ props.latestResult.exam }}
-                        <span class="block text-sm font-normal text-gray-500">
-                            {{ props.latestResult.grade ?? props.latestResult.percentage }} ·
+                        <span v-if="props.latestResult.result_status" class="ml-1 px-1.5 py-0.5 rounded-full text-[11px] font-medium" :class="resultBadgeClass">
                             {{ props.latestResult.result_status }}
                         </span>
                     </p>
-                    <p v-else class="mt-2 text-sm text-gray-500">No published result yet</p>
-                    <Link :href="route('portal.exams.index')" class="mt-3 inline-block text-sm text-blue-600 hover:underline">
-                        View exam results
+                    <p v-else class="mt-2 text-xs text-muted-foreground">No published result yet</p>
+
+                    <a
+                        v-if="props.latestResult"
+                        :href="route('portal.exams.show', props.latestResult.id)"
+                        target="_blank"
+                        rel="noopener"
+                        class="mt-auto pt-3 inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline"
+                    >
+                        View Full Result
+                        <Icon icon="arrow-right" :size="14" />
+                    </a>
+                    <Link v-else :href="route('portal.exams.index')" class="mt-auto pt-3 inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline">
+                        View Exam Results
+                        <Icon icon="arrow-right" :size="14" />
                     </Link>
                 </div>
 
-                <div class="rounded border border-gray-200 p-4 dark:border-gray-700">
-                    <h2 class="text-sm font-medium text-gray-500 dark:text-gray-400">Today's attendance</h2>
-                    <p v-if="props.todayAttendance" class="mt-2 text-lg font-semibold">
-                        {{ props.todayAttendance.status }}
-                    </p>
-                    <p v-else class="mt-2 text-sm text-gray-500">Not marked yet</p>
-                    <Link :href="route('portal.attendance.index')" class="mt-3 inline-block text-sm text-blue-600 hover:underline">
-                        View attendance history
+                <!-- Today's attendance -->
+                <div class="bg-card rounded-lg border border-border p-4 flex flex-col">
+                    <div class="flex items-start justify-between gap-2">
+                        <div>
+                            <p class="text-sm text-muted-foreground">Today's attendance</p>
+                            <p class="text-2xl font-bold text-foreground mt-1">
+                                <span v-if="props.todayAttendance" class="px-2 py-0.5 rounded-full text-base" :class="attendanceBadgeClass">
+                                    {{ props.todayAttendance.status }}
+                                </span>
+                                <span v-else>—</span>
+                            </p>
+                        </div>
+                        <div class="p-3 rounded-lg bg-accent">
+                            <Icon icon="calendar-check" class="text-foreground" :size="20" />
+                        </div>
+                    </div>
+
+                    <p v-if="!props.todayAttendance" class="mt-2 text-xs text-muted-foreground">Not marked yet</p>
+
+                    <Link :href="route('portal.attendance.index')" class="mt-auto pt-3 inline-flex items-center gap-1 text-sm font-medium text-primary hover:underline">
+                        View Attendance History
+                        <Icon icon="arrow-right" :size="14" />
                     </Link>
                 </div>
             </div>
         </div>
-    </AppLayout>
+    </PortalLayout>
 </template>
