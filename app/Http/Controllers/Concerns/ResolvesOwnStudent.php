@@ -49,6 +49,18 @@ trait ResolvesOwnStudent
     {
         $students = $this->ownStudents($user);
 
+        // The developer role has no student/guardian record of its own — it
+        // previews these screens the way a support ticket would need to,
+        // against any real student by id, defaulting to the first one so the
+        // bare /portal routes still render without a query string.
+        if ($students->isEmpty() && $user->isDeveloper()) {
+            $student = $requestedStudentId
+                ? Student::findOrFail($requestedStudentId)
+                : Student::query()->orderBy('id')->firstOrFail();
+
+            return $student;
+        }
+
         if ($students->isEmpty()) {
             abort(403, 'No student record is linked to this account.');
         }

@@ -582,6 +582,7 @@ class MenuSeeder extends Seeder
             'type' => 'main',
             'order' => 10,
             'is_active' => true,
+            'role' => 'student,guardian',
         ]);
 
         Menu::create([
@@ -592,6 +593,7 @@ class MenuSeeder extends Seeder
             'parent_id' => $portal->id,
             'is_active' => true,
             'url' => '/portal',
+            'role' => 'student,guardian',
         ]);
 
         Menu::create([
@@ -602,6 +604,7 @@ class MenuSeeder extends Seeder
             'parent_id' => $portal->id,
             'is_active' => true,
             'url' => '/portal/fees',
+            'role' => 'student,guardian',
         ]);
 
         Menu::create([
@@ -612,6 +615,7 @@ class MenuSeeder extends Seeder
             'parent_id' => $portal->id,
             'is_active' => true,
             'url' => '/portal/exams',
+            'role' => 'student,guardian',
         ]);
 
         Menu::create([
@@ -622,6 +626,7 @@ class MenuSeeder extends Seeder
             'parent_id' => $portal->id,
             'is_active' => true,
             'url' => '/portal/attendance',
+            'role' => 'student,guardian',
         ]);
 
         Menu::create([
@@ -632,6 +637,7 @@ class MenuSeeder extends Seeder
             'parent_id' => $portal->id,
             'is_active' => true,
             'url' => '/student-leaves/page',
+            'role' => 'student,guardian',
         ]);
 
         // Footer navigation items
