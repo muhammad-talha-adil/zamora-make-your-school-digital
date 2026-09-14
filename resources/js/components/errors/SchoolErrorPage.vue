@@ -6,6 +6,7 @@ import { Button } from '@/components/ui/button';
 
 interface Props {
     status: number;
+    message?: string | null;
 }
 
 const props = defineProps<Props>();
@@ -280,7 +281,7 @@ const windowsClass = computed(() => {
                     </h1>
 
                     <p class="mt-4 text-lg leading-8 text-muted-foreground">
-                        {{ pageContent.description }}
+                        {{ props.message || pageContent.description }}
                     </p>
 
                     <div class="mt-6 rounded-3xl border border-border/80 bg-muted/90 p-5">

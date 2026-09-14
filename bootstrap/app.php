@@ -63,8 +63,16 @@ return Application::configure(basePath: dirname(__DIR__))
                 return $response;
             }
 
+            // Only for the client-facing statuses (never 500/503) — those
+            // messages are always a developer-authored, user-safe sentence
+            // (e.g. "No student record is linked to this account."), unlike
+            // a server error's message, which can carry internal detail.
+            $safeToShowMessage = in_array($status, [401, 403, 404, 419, 429], true);
+            $message = $safeToShowMessage ? $exception->getMessage() : '';
+
             return Inertia::render($pages[$status], [
                 'status' => $status,
+                'message' => $message !== '' ? $message : null,
             ])->toResponse($request)->setStatusCode($status);
         });
     })->create();
