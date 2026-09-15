@@ -52,8 +52,7 @@ const testLogins: Record<string, string> = {
     'Receptionist': 'reception@school.com',
     'Clerk': 'clerk@school.com',
     'Maid': 'maid@school.com',
-    'Student (real data)': 'majid.hussain1@student.com',
-    'Student (fixed test)': 'student.test@school.com',
+    'Student (real data, fixed)': 'student.test@school.com',
     'Guardian (fixed test)': 'guardian.test@school.com',
 };
 const fillTestLogin = (e: Event) => {

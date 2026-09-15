@@ -22,8 +22,7 @@ screen exists for this role's own work at all yet.
 | Receptionist (Complete) | `reception@school.com` | Real staff profile. |
 | Clerk (Complete) | `clerk@school.com` | Real staff profile (Bilal Aslam, Administration/Clerk). |
 | Maid (Complete) | `maid@school.com` | Real staff profile (Shabana Bibi, Support/Support Staff). Role is intentionally minimal, nothing further to build. |
-| Student (Complete) | `majid.hussain1@student.com` | Has a real student record, fees, results to look at. |
-| Student (Complete) — fixed test | `student.test@school.com` | Repointed onto a real, fully-seeded student — real fees/results/attendance to look at, memorable email. |
+| Student (Complete) — fixed test | `student.test@school.com` | Repointed onto a real, fully-seeded student — real fees/results/attendance to look at, memorable email. This is the one to use; a specific random student's own generated email isn't stable across reseeds (Faker names aren't fixed), so none is listed here. |
 | Guardian (Complete) — fixed test | `guardian.test@school.com` | Repointed onto a real guardian with real linked children. |
 
 For any other real guardian login, open any student in Student List → Guardians tab and use
