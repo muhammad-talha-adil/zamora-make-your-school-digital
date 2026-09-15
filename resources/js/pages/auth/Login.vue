@@ -30,6 +30,38 @@ const showPassword = ref(false);
 // Route helpers
 const register = () => route('register');
 const request = () => route('password.request');
+
+// ---------------------------------------------------------------------
+// TEMPORARY DEV HELPER — remove this whole block (and the dropdown in the
+// template below) once every role/screen has been checked. Fills the
+// email/password fields from docs/TEST-LOGINS.md so testing a role doesn't
+// mean retyping its login every time.
+// ---------------------------------------------------------------------
+const email = ref('');
+const password = ref('');
+const testLogins: Record<string, string> = {
+    'Developer': 'developer@web.com',
+    'School Owner': 'owner@school.com',
+    'Super Admin': 'admin@school.com',
+    'Campus Admin (Administrator)': 'admin2@school.com',
+    'Campus Admin (Principal, real profile)': 'principal@school.com',
+    'Head Teacher': 'headteacher@school.com',
+    'Teacher': 'teacher1@school.com',
+    'Accountant': 'accounts@school.com',
+    'Driver': 'driver1@school.com',
+    'Receptionist': 'reception@school.com',
+    'Clerk': 'clerk@school.com',
+    'Maid': 'maid@school.com',
+    'Student (real data)': 'majid.hussain1@student.com',
+    'Student (fixed test)': 'student.test@school.com',
+    'Guardian (fixed test)': 'guardian.test@school.com',
+};
+const fillTestLogin = (e: Event) => {
+    const chosen = (e.target as HTMLSelectElement).value;
+    if (!chosen) return;
+    email.value = chosen;
+    password.value = '123456';
+};
 </script>
 
 <template>
@@ -66,11 +98,29 @@ const request = () => route('password.request');
                 </AlertDescription>
             </Alert>
 
+            <!-- TEMPORARY DEV HELPER — remove this whole block once testing is done -->
+            <div class="space-y-2 rounded-md border border-dashed border-warning/50 bg-warning/5 p-3">
+                <Label for="dev-test-login" class="text-xs font-medium text-warning">
+                    Dev: fill a test login (temporary)
+                </Label>
+                <select
+                    id="dev-test-login"
+                    class="w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground"
+                    @change="fillTestLogin"
+                >
+                    <option value="">Select a role…</option>
+                    <option v-for="(loginEmail, roleLabel) in testLogins" :key="roleLabel" :value="loginEmail">
+                        {{ roleLabel }}
+                    </option>
+                </select>
+            </div>
+
             <div class="space-y-4">
                 <div class="space-y-2">
                     <Label for="email" class="text-sm font-medium">Email address</Label>
                     <Input
                         id="email"
+                        v-model="email"
                         type="email"
                         name="email"
                         required
@@ -99,6 +149,7 @@ const request = () => route('password.request');
                     <div class="relative">
                         <Input
                             id="password"
+                            v-model="password"
                             :type="showPassword ? 'text' : 'password'"
                             name="password"
                             required
