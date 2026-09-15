@@ -21,10 +21,12 @@ class School extends Model
         'bank_branch',
         'logo_path',
         'is_active',
+        'website_enabled',
     ];
 
     protected $casts = [
         'is_active' => 'boolean',
+        'website_enabled' => 'boolean',
     ];
 
     public function campuses(): HasMany

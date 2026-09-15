@@ -22,6 +22,7 @@ interface Props {
         phone?: string;
         logo_path?: string;
         is_active: boolean;
+        website_enabled?: boolean;
     };
 }
 
@@ -40,6 +41,7 @@ const form = ref({
     phone: props.school?.phone || '',
     logo: null as File | null,
     is_active: props.school?.is_active ?? true,
+    website_enabled: props.school?.website_enabled ?? true,
 });
 
 const errors = ref({});
@@ -180,6 +182,20 @@ const submit = () => {
                         <Icon icon="check-circle" class="mr-1 h-4 w-4" />
                         School is Active
                     </Label>
+                </div>
+
+                <div class="space-y-2">
+                    <div class="flex items-center space-x-2">
+                        <Checkbox id="website_enabled" v-model:checked="form.website_enabled" />
+                        <Label for="website_enabled" class="flex items-center">
+                            <Icon icon="globe" class="mr-1 h-4 w-4" />
+                            Public Website Active
+                        </Label>
+                    </div>
+                    <p class="text-sm text-muted-foreground">
+                        When off, visitors to your school's web address are sent straight to the login page instead of seeing the public site.
+                    </p>
+                    <InputError :message="(errors as any).website_enabled" />
                 </div>
             </CardContent>
         </Card>

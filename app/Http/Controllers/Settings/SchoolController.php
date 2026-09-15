@@ -67,6 +67,7 @@ class SchoolController extends Controller
             'phone' => 'nullable|string|max:20',
             'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'is_active' => 'boolean',
+            'website_enabled' => 'boolean',
         ]);
 
         $school = School::first();

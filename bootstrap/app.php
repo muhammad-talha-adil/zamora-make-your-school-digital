@@ -2,6 +2,7 @@
 
 use App\Http\Middleware\CheckPermission;
 use App\Http\Middleware\EnsureArtisanUiAccess;
+use App\Http\Middleware\EnsurePublicWebsiteEnabled;
 use App\Http\Middleware\EnsureSubscriptionActive;
 use App\Http\Middleware\HandleAppearance;
 use App\Http\Middleware\HandleInertiaRequests;
@@ -38,6 +39,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'role' => RoleMiddleware::class,
             'role_or_permission' => RoleOrPermissionMiddleware::class,
             'artisan.ui' => EnsureArtisanUiAccess::class,
+            'public.website' => EnsurePublicWebsiteEnabled::class,
             'redirect.portal-users' => RedirectPortalUsersFromDashboard::class,
         ]);
     })

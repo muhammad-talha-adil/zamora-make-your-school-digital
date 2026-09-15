@@ -24,12 +24,15 @@ class MenuSeeder extends Seeder
             'is_active' => true,
         ]);
 
-        Menu::create([
+        $students = Menu::create([
             'title' => 'Students',
             'icon' => 'users',
             'type' => 'main',
             'order' => 2,
             'is_active' => true,
+            // Union of every child's viewers below - keeps driver/maid/etc.
+            // from seeing an empty "Students" heading with no visible child.
+            'role' => 'developer,owner,super_admin,campus_admin,teacher,head_teacher,accountant,clerk,receptionist',
         ]);
 
         // Student child menus
@@ -38,9 +41,11 @@ class MenuSeeder extends Seeder
             'icon' => 'user-plus',
             'type' => 'main',
             'order' => 1,
-            'parent_id' => 2, // Students parent ID
+            'parent_id' => $students->id,
             'is_active' => true,
             'url' => '/students/create',
+            // students.create: campus_admin (students.*) and clerk only.
+            'role' => 'developer,owner,super_admin,campus_admin,clerk',
         ]);
 
         Menu::create([
@@ -48,9 +53,12 @@ class MenuSeeder extends Seeder
             'icon' => 'list',
             'type' => 'main',
             'order' => 2,
-            'parent_id' => 2, // Students parent ID
+            'parent_id' => $students->id,
             'is_active' => true,
             'url' => '/students',
+            // students.view: campus_admin, teacher, head_teacher, accountant,
+            // clerk, receptionist - not driver/maid.
+            'role' => 'developer,owner,super_admin,campus_admin,teacher,head_teacher,accountant,clerk,receptionist',
         ]);
 
         Menu::create([
@@ -58,9 +66,11 @@ class MenuSeeder extends Seeder
             'icon' => 'arrow-up-circle',
             'type' => 'main',
             'order' => 3,
-            'parent_id' => 2, // Students parent ID
+            'parent_id' => $students->id,
             'is_active' => true,
             'url' => '/students/promotion',
+            // students.promote|students.view - same viewers as Student List.
+            'role' => 'developer,owner,super_admin,campus_admin,teacher,head_teacher,accountant,clerk,receptionist',
         ]);
 
         Menu::create([
@@ -68,9 +78,11 @@ class MenuSeeder extends Seeder
             'icon' => 'help-circle',
             'type' => 'main',
             'order' => 4,
-            'parent_id' => 2, // Students parent ID
+            'parent_id' => $students->id,
             'is_active' => true,
             'url' => '/students/enquiries',
+            // students.view - same viewers as Student List.
+            'role' => 'developer,owner,super_admin,campus_admin,teacher,head_teacher,accountant,clerk,receptionist',
         ]);
 
         // ==================== EXAM MENU ====================
@@ -260,6 +272,8 @@ class MenuSeeder extends Seeder
             'type' => 'main',
             'order' => 5,
             'is_active' => true,
+            // Union of every child's viewers below.
+            'role' => 'developer,owner,super_admin,campus_admin,accountant,clerk,receptionist',
         ]);
 
         // Fee child menus - PRIMARY (Main Tasks - shown in sidebar)
@@ -271,6 +285,8 @@ class MenuSeeder extends Seeder
             'parent_id' => $fee->id,
             'is_active' => true,
             'url' => '/fee/dashboard',
+            // fee.view: campus_admin, accountant, clerk, receptionist.
+            'role' => 'developer,owner,super_admin,campus_admin,accountant,clerk,receptionist',
         ]);
 
         Menu::create([
@@ -281,6 +297,8 @@ class MenuSeeder extends Seeder
             'parent_id' => $fee->id,
             'is_active' => true,
             'url' => '/fee/structures',
+            // fee.view|fee.structure.manage: fee.view alone is enough.
+            'role' => 'developer,owner,super_admin,campus_admin,accountant,clerk,receptionist',
         ]);
 
         Menu::create([
@@ -291,6 +309,8 @@ class MenuSeeder extends Seeder
             'parent_id' => $fee->id,
             'is_active' => true,
             'url' => '/fee/vouchers',
+            // fee.view|fee.voucher.view: clerk/receptionist hold voucher.view.
+            'role' => 'developer,owner,super_admin,campus_admin,accountant,clerk,receptionist',
         ]);
 
         Menu::create([
@@ -301,6 +321,8 @@ class MenuSeeder extends Seeder
             'parent_id' => $fee->id,
             'is_active' => true,
             'url' => '/fee/payments',
+            // fee.view|fee.payment.collect: fee.view alone is enough.
+            'role' => 'developer,owner,super_admin,campus_admin,accountant,clerk,receptionist',
         ]);
 
         Menu::create([
@@ -311,6 +333,9 @@ class MenuSeeder extends Seeder
             'parent_id' => $fee->id,
             'is_active' => true,
             'url' => '/fee/reports',
+            // fee.reports: campus_admin and accountant only - clerk/receptionist
+            // never hold fee.reports, just view/voucher.view/voucher.print.
+            'role' => 'developer,owner,super_admin,campus_admin,accountant',
         ]);
 
         // Settings (leads to /fee/settings which contains Fee Heads, Discount Types, Fine Rules)
@@ -322,6 +347,9 @@ class MenuSeeder extends Seeder
             'parent_id' => $fee->id,
             'is_active' => true,
             'url' => '/fee/settings',
+            // fee.head.manage|fee.discount.manage|fee.fine.manage|fee.structure.manage:
+            // campus_admin and accountant only.
+            'role' => 'developer,owner,super_admin,campus_admin,accountant',
         ]);
 
         // ==================== INVENTORY MENU ====================
@@ -331,6 +359,8 @@ class MenuSeeder extends Seeder
             'type' => 'main',
             'order' => 6,
             'is_active' => true,
+            // inventory.view: campus_admin, accountant, clerk.
+            'role' => 'developer,owner,super_admin,campus_admin,accountant,clerk',
         ]);
 
         // Inventory child menus - Consolidated to 4 submenus
@@ -342,6 +372,7 @@ class MenuSeeder extends Seeder
             'parent_id' => $inventory->id,
             'is_active' => true,
             'url' => '/inventory',
+            'role' => 'developer,owner,super_admin,campus_admin,accountant,clerk',
         ]);
 
         Menu::create([
@@ -352,6 +383,7 @@ class MenuSeeder extends Seeder
             'parent_id' => $inventory->id,
             'is_active' => true,
             'url' => '/inventory/items-stock',
+            'role' => 'developer,owner,super_admin,campus_admin,accountant,clerk',
         ]);
 
         Menu::create([
@@ -362,6 +394,7 @@ class MenuSeeder extends Seeder
             'parent_id' => $inventory->id,
             'is_active' => true,
             'url' => '/inventory/purchases-manage',
+            'role' => 'developer,owner,super_admin,campus_admin,accountant,clerk',
         ]);
 
         Menu::create([
@@ -372,6 +405,7 @@ class MenuSeeder extends Seeder
             'parent_id' => $inventory->id,
             'is_active' => true,
             'url' => '/inventory/student-manage',
+            'role' => 'developer,owner,super_admin,campus_admin,accountant,clerk',
         ]);
 
         // ==================== STAFF MENU ====================
@@ -391,6 +425,8 @@ class MenuSeeder extends Seeder
             'parent_id' => $staff->id,
             'is_active' => true,
             'url' => '/staff',
+            // staff.view: campus_admin only among non-admin roles.
+            'role' => 'developer,owner,super_admin,campus_admin',
         ]);
 
         Menu::create([
@@ -411,6 +447,8 @@ class MenuSeeder extends Seeder
             'parent_id' => $staff->id,
             'is_active' => true,
             'url' => '/staff/people',
+            // staff.view: campus_admin only among non-admin roles.
+            'role' => 'developer,owner,super_admin,campus_admin',
         ]);
 
         Menu::create([
@@ -421,6 +459,11 @@ class MenuSeeder extends Seeder
             'parent_id' => $staff->id,
             'is_active' => true,
             'url' => '/staff/teaching',
+            // Full assignment management is staff.manage-level; the page
+            // itself is reachable with staff.view.own (every staff role has
+            // it) but shows only that person's own load, so it stays with
+            // the roles that actually manage assignments.
+            'role' => 'developer,owner,super_admin,campus_admin',
         ]);
 
         Menu::create([
@@ -431,6 +474,8 @@ class MenuSeeder extends Seeder
             'parent_id' => $staff->id,
             'is_active' => true,
             'url' => '/staff/payroll',
+            // staff.payroll.run: campus_admin and accountant.
+            'role' => 'developer,owner,super_admin,campus_admin,accountant',
         ]);
 
         Menu::create([
@@ -441,6 +486,10 @@ class MenuSeeder extends Seeder
             'parent_id' => $staff->id,
             'is_active' => true,
             'url' => '/staff/attendance',
+            // staff.attendance.mark: campus_admin only among non-admin roles
+            // (this is staff attendance, distinct from student attendance.mark
+            // which teacher holds).
+            'role' => 'developer,owner,super_admin,campus_admin',
         ]);
 
         Menu::create([
@@ -451,6 +500,8 @@ class MenuSeeder extends Seeder
             'parent_id' => $staff->id,
             'is_active' => true,
             'url' => '/staff/settings',
+            // staff.department.manage: campus_admin only among non-admin roles.
+            'role' => 'developer,owner,super_admin,campus_admin',
         ]);
 
         // ==================== TRANSPORT MENU ====================
@@ -460,6 +511,8 @@ class MenuSeeder extends Seeder
             'type' => 'main',
             'order' => 8,
             'is_active' => true,
+            // transport.view.own (driver) or transport.view (receptionist).
+            'role' => 'developer,owner,super_admin,campus_admin,driver,receptionist',
         ]);
 
         Menu::create([
@@ -470,6 +523,7 @@ class MenuSeeder extends Seeder
             'parent_id' => $transport->id,
             'is_active' => true,
             'url' => '/transport',
+            'role' => 'developer,owner,super_admin,campus_admin,driver,receptionist',
         ]);
 
         // ==================== FINANCE MENU ====================
@@ -479,6 +533,8 @@ class MenuSeeder extends Seeder
             'type' => 'main',
             'order' => 9,
             'is_active' => true,
+            // finance.*: campus_admin (partial) and accountant only.
+            'role' => 'developer,owner,super_admin,campus_admin,accountant',
         ]);
 
         // Finance child menus
@@ -490,6 +546,7 @@ class MenuSeeder extends Seeder
             'parent_id' => $finance->id,
             'is_active' => true,
             'url' => '/finance',
+            'role' => 'developer,owner,super_admin,campus_admin,accountant',
         ]);
 
         Menu::create([
@@ -500,6 +557,7 @@ class MenuSeeder extends Seeder
             'parent_id' => $finance->id,
             'is_active' => true,
             'url' => '/finance/transactions',
+            'role' => 'developer,owner,super_admin,campus_admin,accountant',
         ]);
 
         Menu::create([
@@ -510,6 +568,7 @@ class MenuSeeder extends Seeder
             'parent_id' => $finance->id,
             'is_active' => true,
             'url' => '/finance/receive-payment',
+            'role' => 'developer,owner,super_admin,campus_admin,accountant',
         ]);
 
         Menu::create([
@@ -520,6 +579,7 @@ class MenuSeeder extends Seeder
             'parent_id' => $finance->id,
             'is_active' => true,
             'url' => '/finance/make-payment',
+            'role' => 'developer,owner,super_admin,campus_admin,accountant',
         ]);
 
         Menu::create([
@@ -530,6 +590,7 @@ class MenuSeeder extends Seeder
             'parent_id' => $finance->id,
             'is_active' => true,
             'url' => '/finance/categories',
+            'role' => 'developer,owner,super_admin,campus_admin,accountant',
         ]);
 
         Menu::create([
@@ -540,6 +601,7 @@ class MenuSeeder extends Seeder
             'parent_id' => $finance->id,
             'is_active' => true,
             'url' => '/finance/payment-methods',
+            'role' => 'developer,owner,super_admin,campus_admin,accountant',
         ]);
 
         $financeReports = Menu::create([
@@ -549,6 +611,7 @@ class MenuSeeder extends Seeder
             'order' => 7,
             'parent_id' => $finance->id,
             'is_active' => true,
+            'role' => 'developer,owner,super_admin,campus_admin,accountant',
         ]);
 
         Menu::create([
@@ -559,6 +622,7 @@ class MenuSeeder extends Seeder
             'parent_id' => $financeReports->id,
             'is_active' => true,
             'url' => '/finance/reports/cash-book',
+            'role' => 'developer,owner,super_admin,campus_admin,accountant',
         ]);
 
         Menu::create([
@@ -569,6 +633,7 @@ class MenuSeeder extends Seeder
             'parent_id' => $financeReports->id,
             'is_active' => true,
             'url' => '/finance/reports/income',
+            'role' => 'developer,owner,super_admin,campus_admin,accountant',
         ]);
 
         Menu::create([
@@ -579,6 +644,7 @@ class MenuSeeder extends Seeder
             'parent_id' => $financeReports->id,
             'is_active' => true,
             'url' => '/finance/reports/expense',
+            'role' => 'developer,owner,super_admin,campus_admin,accountant',
         ]);
 
         // ==================== PORTAL MENU (student/guardian self-service) ====================

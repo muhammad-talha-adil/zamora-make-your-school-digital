@@ -5,11 +5,13 @@ use App\Http\Controllers\Settings\SubscriptionController;
 use Illuminate\Support\Facades\Route;
 
 // Public Routes
-Route::get('/', [PageController::class, 'home'])->name('home');
+Route::middleware('public.website')->group(function (): void {
+    Route::get('/', [PageController::class, 'home'])->name('home');
 
-Route::get('/about', [PageController::class, 'about'])->name('about');
+    Route::get('/about', [PageController::class, 'about'])->name('about');
 
-Route::get('/contact', [PageController::class, 'contact'])->name('contact');
+    Route::get('/contact', [PageController::class, 'contact'])->name('contact');
+});
 
 // Subscription lock screen - reachable by anyone the EnsureSubscriptionActive
 // middleware redirects here, developer included; it shows no data.
