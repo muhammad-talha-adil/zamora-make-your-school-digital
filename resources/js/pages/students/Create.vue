@@ -736,6 +736,11 @@ interface Props {
     relations: Array<{ id: number; name: string }>;
     studentStatuses: Array<{ id: number; name: string }>;
     admissionNo: string;
+    /**
+     * Carried through from the admission enquiry screen's "Admit" action, via
+     * the query string. Empty for an ordinary admission.
+     */
+    prefill?: Record<string, string | number | undefined>;
 }
 
 const props = defineProps<Props>();
@@ -818,6 +823,32 @@ const generatedEmailPreview = computed(() => {
 
 const errors = ref<Record<string, string>>({});
 
+/**
+ * The enquiry this admission is closing out, if it was opened from the
+ * Admission Enquiries screen's "Admit" action rather than the plain "New
+ * Admission" button. Sent along on submit so the backend can mark that
+ * enquiry admitted once this admission succeeds.
+ */
+const enquiryId = ref<number | null>(null);
+
+const applyPrefill = () => {
+    const prefill = props.prefill;
+    if (!prefill || Object.keys(prefill).length === 0) {
+        return;
+    }
+
+    if (prefill.enquiry_id) enquiryId.value = Number(prefill.enquiry_id);
+    if (prefill.name) form.value.name = String(prefill.name);
+    if (prefill.dob) form.value.dob = String(prefill.dob);
+    if (prefill.gender_id) form.value.gender_id = Number(prefill.gender_id);
+    if (prefill.campus_id) form.value.campus_id = Number(prefill.campus_id);
+    if (prefill.class_id) form.value.class_id = Number(prefill.class_id);
+    if (prefill.session_id) form.value.session_id = Number(prefill.session_id);
+    if (prefill.father_name) form.value.father_name = String(prefill.father_name);
+    if (prefill.father_phone) form.value.father_phone = String(prefill.father_phone);
+    if (prefill.father_address) form.value.father_address = String(prefill.father_address);
+};
+
 // Fee Structure Selector Ref
 const feeStructureSelector = ref<InstanceType<typeof FeeStructureSelector> | null>(null);
 
@@ -870,6 +901,7 @@ setupErrorClearWatchers();
 // Initialize form on mount
 onMounted(() => {
     initializeForm();
+    applyPrefill();
 });
 
 // Combined handler for father phone input
@@ -1087,6 +1119,11 @@ const submitForm = () => {
     // Send guardian_id if sibling match was found and linked
     if (linkedGuardianId.value) {
         formData.set('guardian_id', String(linkedGuardianId.value));
+    }
+
+    // Closes the loop with the enquiry this admission came from, if any.
+    if (enquiryId.value) {
+        formData.set('enquiry_id', String(enquiryId.value));
     }
 
     // ==================== FEE STRUCTURE DATA ====================

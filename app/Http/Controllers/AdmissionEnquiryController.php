@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\AdmissionEnquiry;
 use App\Models\Campus;
+use App\Models\Gender;
 use App\Models\SchoolClass;
 use App\Models\Session;
 use App\Models\Student;
@@ -27,10 +28,11 @@ class AdmissionEnquiryController extends Controller
     {
         Gate::authorize('viewAny', Student::class);
 
-        return Inertia::render('Students/Enquiries/Index', [
+        return Inertia::render('students/Enquiries/Index', [
             'campuses' => Campus::all(),
             'classes' => SchoolClass::where('is_active', true)->orderBy('level')->orderBy('name')->get(),
             'sessions' => Session::where('is_active', true)->get(),
+            'genders' => Gender::all(),
             'filters' => $request->only(['status', 'due']),
         ]);
     }

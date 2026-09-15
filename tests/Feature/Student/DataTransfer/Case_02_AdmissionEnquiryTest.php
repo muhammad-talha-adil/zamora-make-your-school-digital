@@ -179,6 +179,30 @@ it('shows a campus admin their own campus and the unplaced walk-ins', function (
         ->and($names)->not->toContain('Other Campus');
 });
 
+it('marks the enquiry admitted when the admission carries its id', function () {
+    $this->postJson(route('students.enquiries.store'), enquiry($this->world));
+    $enquiry = AdmissionEnquiry::firstOrFail();
+
+    $this->post(route('students.store'), $this->world->payload(['enquiry_id' => $enquiry->id]))
+        ->assertSessionHasNoErrors();
+
+    $student = Student::firstOrFail();
+
+    expect($enquiry->fresh()->status)->toBe(AdmissionEnquiry::STATUS_ADMITTED)
+        ->and($enquiry->fresh()->student_id)->toBe($student->id)
+        ->and($enquiry->fresh()->converted_at)->not->toBeNull();
+});
+
+it('leaves every enquiry untouched when an ordinary admission carries no enquiry id', function () {
+    $this->postJson(route('students.enquiries.store'), enquiry($this->world));
+    $enquiry = AdmissionEnquiry::firstOrFail();
+
+    $this->post(route('students.store'), $this->world->payload())->assertSessionHasNoErrors();
+
+    expect($enquiry->fresh()->status)->toBe(AdmissionEnquiry::STATUS_OPEN)
+        ->and($enquiry->fresh()->student_id)->toBeNull();
+});
+
 it('does not let a driver read the enquiry book', function () {
     $this->world->withFullRoles();
     $driver = $this->world->userWithRole('driver', 'driver.enq@school.test');

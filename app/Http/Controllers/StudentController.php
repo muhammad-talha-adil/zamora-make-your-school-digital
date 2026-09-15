@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Http\Requests\Student\StoreStudentRequest;
 use App\Http\Requests\Student\UpdateStudentRequest;
+use App\Models\AdmissionEnquiry;
 use App\Models\School;
 use App\Models\Student;
 use App\Repositories\StudentRepository;
@@ -81,7 +82,7 @@ class StudentController extends Controller
      *
      * @throws AuthorizationException
      */
-    public function create(): InertiaResponse
+    public function create(Request $request): InertiaResponse
     {
         Gate::authorize('create', Student::class);
 
@@ -90,6 +91,16 @@ class StudentController extends Controller
         ]);
 
         $data = $this->service->getCreateData();
+
+        /*
+         * Carried through from the admission enquiry screen's "Admit" action
+         * as query parameters, so the counter conversation is not typed
+         * twice. Empty when this is an ordinary admission.
+         */
+        $data['prefill'] = $request->only([
+            'enquiry_id', 'name', 'dob', 'gender_id', 'campus_id',
+            'class_id', 'session_id', 'father_name', 'father_phone', 'father_address',
+        ]);
 
         return Inertia::render('students/Create', $data);
     }
@@ -111,7 +122,21 @@ class StudentController extends Controller
 
         try {
             $validated = $request->validated();
-            $this->service->create($validated);
+            $student = $this->service->create($validated);
+
+            /*
+             * Closes the loop with the admission enquiry this walk-in came
+             * from, if any. Only reached once the admission above has
+             * actually succeeded, so an admission that fails halfway never
+             * leaves an enquiry claiming a student that was never created.
+             */
+            if ($request->filled('enquiry_id')) {
+                AdmissionEnquiry::where('id', $request->integer('enquiry_id'))->update([
+                    'student_id' => $student->id,
+                    'status' => AdmissionEnquiry::STATUS_ADMITTED,
+                    'converted_at' => now(),
+                ]);
+            }
 
             /*
              * The logins created for this admission, shown once and held

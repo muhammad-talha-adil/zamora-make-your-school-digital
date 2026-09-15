@@ -300,6 +300,17 @@ class StoreStudentRequest extends FormRequest
                 Rule::exists('guardians', 'id'),
             ],
 
+            /*
+             * Carried through from the admission enquiry screen's "Admit"
+             * action. When present, this admission marks that enquiry
+             * admitted once it succeeds.
+             */
+            'enquiry_id' => [
+                'nullable',
+                'integer',
+                Rule::exists('admission_enquiries', 'id'),
+            ],
+
             // Father Guardian - Required if no guardian_id
             'father_name' => [
                 'required_without:guardian_id',
