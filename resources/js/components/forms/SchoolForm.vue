@@ -8,7 +8,7 @@ import InputError from '@/components/InputError.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Checkbox } from '@/components/ui/checkbox';
+import { Switch } from '@/components/ui/switch';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import Icon from '@/components/Icon.vue';
 
@@ -176,21 +176,21 @@ const submit = () => {
                     </div>
                 </div>
 
-                <div class="flex items-center space-x-2">
-                    <Checkbox id="is_active" v-model:checked="form.is_active" />
+                <div class="flex items-center justify-between gap-4 rounded-lg border border-border p-3">
                     <Label for="is_active" class="flex items-center">
                         <Icon icon="check-circle" class="mr-1 h-4 w-4" />
                         School is Active
                     </Label>
+                    <Switch id="is_active" v-model:checked="form.is_active" />
                 </div>
 
                 <div class="space-y-2">
-                    <div class="flex items-center space-x-2">
-                        <Checkbox id="website_enabled" v-model:checked="form.website_enabled" />
+                    <div class="flex items-center justify-between gap-4 rounded-lg border border-border p-3">
                         <Label for="website_enabled" class="flex items-center">
                             <Icon icon="globe" class="mr-1 h-4 w-4" />
                             Public Website Active
                         </Label>
+                        <Switch id="website_enabled" v-model:checked="form.website_enabled" />
                     </div>
                     <p class="text-sm text-muted-foreground">
                         When off, visitors to your school's web address are sent straight to the login page instead of seeing the public site.
