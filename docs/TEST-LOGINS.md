@@ -1,8 +1,20 @@
 # Test Logins — one per role
 
-Every account below uses password **`123456`**. Seeded by `UsersSeeder`/`StaffSeeder`/
-`StudentSeeder`/`GuardianSeeder` — re-run `php artisan db:seed` (or `migrate:fresh --seed`)
-to get them back if the database is reset.
+**As of 2026-09-16, `DatabaseSeeder` only creates two of the accounts below —
+`developer@web.com` and `owner@school.com` — for a real launch with zero demo
+data.** Every other row here (Head Teacher, Teacher, Accountant, Driver,
+Clerk, Receptionist, Maid, the fixed student/guardian test logins) only
+exists if you run the OLDER demo seeders that used to be wired into
+`DatabaseSeeder` (`StaffSeeder`, `StudentSeeder`, `GuardianSeeder`,
+`TestLoginFixturesSeeder`, etc. — still present as files, just no longer
+called automatically). To get a full demo dataset back for local testing,
+either call those seeder classes individually (`php artisan db:seed
+--class=StaffSeeder`, in dependency order — check the old call order in git
+history for `database/seeders/DatabaseSeeder.php` if needed) or temporarily
+re-add them to the `$this->call([...])` list, seed, then revert — do not
+leave them wired in for a real production database.
+
+Every account below uses password **`123456`**.
 
 Status tag next to each role: **(Complete)** — every screen this role needs already exists and
 is reviewed/fixed. **(Partial)** — the modules they work in are done, but a piece specific to
