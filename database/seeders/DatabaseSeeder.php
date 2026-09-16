@@ -7,7 +7,19 @@ use Illuminate\Database\Seeder;
 class DatabaseSeeder extends Seeder
 {
     /**
-     * Seed the application's database.
+     * Seed the application's database for a fresh, empty launch.
+     *
+     * Only two kinds of thing are seeded here: pure system config (themes,
+     * the sidebar menu, permissions/roles as *definitions*, the one School
+     * settings row) and fixed reference lookups that have no management
+     * screen anywhere in the app — a school could never add a new one
+     * themselves even if they wanted to (Month, Gender, Relation, Student
+     * Status, Attendance Status, Leave Types, Grade System, Reasons, Salary
+     * Heads). Everything a real school enters for itself — campuses,
+     * sessions, classes, sections, subjects, students, guardians, staff,
+     * fee structures, holidays, inventory, transport, exam types, campus
+     * types, staff departments/designations/document types — starts at
+     * zero, because it has its own screen to add it through.
      *
      * Order matters due to foreign key dependencies!
      */
@@ -16,80 +28,36 @@ class DatabaseSeeder extends Seeder
         $this->call([
             // === Core Setup ===
             SchoolSeeder::class,
-            CampusTypeSeeder::class,
-            CampusSeeder::class,
-            SessionSeeder::class,
             MonthSeeder::class,
 
-            // === Reference Data (must be before students/guardians) ===
+            // === Reference Data ===
             GenderSeeder::class,
             RelationSeeder::class,
             StudentStatusSeeder::class,
 
-            // === Academic Structure ===
-            SchoolClassSeeder::class,
-            SectionSeeder::class,
-
-            // === Subjects & Curriculum ===
-            SubjectSeeder::class,
-            ClassSubjectSeeder::class,
-
-            // === User & Permissions (must be before student/guardian creation) ===
+            // === User & Permissions (role definitions, not accounts) ===
             PermissionsSeeder::class,
             RolesSeeder::class,
             UsersSeeder::class,
 
-            // === Students & Guardians ===
-            StudentSeeder::class,
-            GuardianSeeder::class,
-            StudentGuardianSeeder::class,
-
-            // === Holidays ===
-            HolidaysSeeder::class,
-
-            // === Attendance ===
+            // === Attendance reference lookups ===
             AttendanceStatusesSeeder::class,
             LeaveTypesSeeder::class,
-            AttendanceSeeder::class,
 
-            // === Exam Management ===
-            ExamTypeSeeder::class,
+            // === Exam reference lookups ===
             GradeSystemSeeder::class,
 
-            // === Fee Management ===
-            FeeHeadSeeder::class,
-            DiscountTypeSeeder::class,
-            FineRuleSeeder::class,
-            FeeSiblingDiscountRuleSeeder::class,
-            FeeStructureSeeder::class,
+            // === Staff reference lookups ===
+            StaffLeaveTypeSeeder::class,
+            SalaryHeadSeeder::class,
 
             // === Theme & UI ===
             ThemePalettesSeeder::class,
             ThemeSettingsSeeder::class,
             MenuSeeder::class,
 
-            // === Inventory (InventorySeeder handles the order) ===
-            InventorySeeder::class,
-
-            // === Staff & Payroll ===
-            StaffDepartmentSeeder::class,
-            StaffDesignationSeeder::class,
-            StaffDocumentTypeSeeder::class,
-            StaffLeaveTypeSeeder::class,
-            SalaryHeadSeeder::class,
-            StaffSeeder::class,
-            PayrollSeeder::class,
-
-            // === Transport ===
-            TransportSeeder::class,
-
-            // === Other Seeders ===
+            // === Other reference lookups ===
             ReasonSeeder::class,
-
-            // Repoints the fixed test-login emails onto real, fully-seeded
-            // records — must run last, after every module above has
-            // finished generating its own real data for students/guardians.
-            TestLoginFixturesSeeder::class,
         ]);
     }
 }
