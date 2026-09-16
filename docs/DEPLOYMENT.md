@@ -27,22 +27,31 @@ your-subdomain-root/
 
 ## 2. Edit `public_html/index.php`
 
-The two paths that point at `../vendor/autoload.php` and `../bootstrap/app.php`
-need one more `../` added, since `public_html` is now a **sibling** of `backend`,
-not its child:
+**Three** paths in a stock Laravel `index.php` point at `../something` relative
+to `public/` — all three need `backend/` inserted, since `public_html` is now a
+**sibling** of `backend`, not its child (easy to miss the maintenance-mode one,
+since it's not the two usually mentioned):
 
 ```diff
+  // Determine if the application is in maintenance mode...
+- if (file_exists($maintenance = __DIR__.'/../storage/framework/maintenance.php')) {
++ if (file_exists($maintenance = __DIR__.'/../backend/storage/framework/maintenance.php')) {
+      require $maintenance;
+  }
+
+  // Register the Composer autoloader...
 - require __DIR__.'/../vendor/autoload.php';
 + require __DIR__.'/../backend/vendor/autoload.php';
 
+  // Bootstrap Laravel and handle the request...
+  /** @var Application $app */
 - $app = require_once __DIR__.'/../bootstrap/app.php';
 + $app = require_once __DIR__.'/../backend/bootstrap/app.php';
 ```
 
-If `backend/bootstrap/app.php` or a maintenance-mode check reference other
-`__DIR__.'/../...'` paths relative to `public/`, apply the same fix (search
-`public_html/index.php` for every `__DIR__` reference after copying it over —
-there are exactly two in a stock Laravel `index.php`, see above).
+Search `public_html/index.php` for every `__DIR__` reference after copying it
+over, in case a future Laravel version adds more — there are exactly three in
+the version this app ships with, all three shown above.
 
 ## 3. `.env` — everything below is a real blocker today
 
