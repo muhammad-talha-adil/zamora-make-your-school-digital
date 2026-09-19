@@ -54,15 +54,16 @@ it('records a payment against a voucher item without crashing', function () {
         ->and($payment->status->value)->toBe('posted');
 });
 
-it('keeps the excess as a wallet advance when overpaid', function () {
+it('rejects an overpayment instead of crediting the excess (issue #121)', function () {
+    // Overpayment used to silently become a wallet advance credit; it is now
+    // disallowed outright, so the office cannot submit more than what is due.
     $item = $this->items->first();
     $overpay = (float) $item->net_amount + 500;
 
     $this->post(route('fee.payments.store'), paymentPayload($item, $overpay, (float) $item->net_amount))
-        ->assertRedirect();
+        ->assertSessionHasErrors('received_amount');
 
-    $payment = FeePayment::firstOrFail();
-    expect((float) $payment->excess_amount)->toBe(500.0);
+    expect(FeePayment::count())->toBe(0);
 });
 
 it('reverses a posted payment and undoes its allocation', function () {

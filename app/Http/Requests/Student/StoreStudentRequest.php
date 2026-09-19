@@ -523,24 +523,19 @@ class StoreStudentRequest extends FormRequest
             }
 
             if ($feeStructure && $this->fee_mode === 'manual') {
+                /*
+                 * Manual entry is per-fee-head: the office can type a custom
+                 * amount for just one fee head and leave the rest on the
+                 * structure's default amount (VoucherGenerationService::
+                 * getAgreedAmounts only overrides fee heads present in
+                 * custom_fee_entries). Requiring every mandatory fee head to
+                 * be present here made manual entry effectively all-or-
+                 * nothing, which was issue #70.
+                 */
                 $customEntries = collect($this->custom_fee_entries ?? []);
-                $selectedFeeHeadIds = $customEntries->pluck('fee_head_id')->map(fn ($id) => (int) $id)->all();
 
                 if ($customEntries->isEmpty()) {
                     $validator->errors()->add('custom_fee_entries', 'At least one custom fee entry is required for manual mode.');
-                }
-
-                $requiredFeeHeadIds = $feeStructure->items
-                    ->where('is_optional', false)
-                    ->pluck('fee_head_id')
-                    ->map(fn ($id) => (int) $id)
-                    ->all();
-
-                foreach ($requiredFeeHeadIds as $feeHeadId) {
-                    if (! in_array($feeHeadId, $selectedFeeHeadIds, true)) {
-                        $validator->errors()->add('custom_fee_entries', 'All mandatory fee heads must be included in manual mode.');
-                        break;
-                    }
                 }
             }
 

@@ -598,24 +598,16 @@ class UpdateStudentRequest extends FormRequest
             }
 
             if ($feeStructure && $this->fee_mode === 'manual') {
+                /*
+                 * Manual entry is per-fee-head — see StoreStudentRequest for
+                 * the full rationale (issue #70). Only "at least one entry"
+                 * is required; other fee heads simply keep the structure's
+                 * default amount.
+                 */
                 $customEntries = collect($this->custom_fee_entries ?? []);
-                $selectedFeeHeadIds = $customEntries->pluck('fee_head_id')->map(fn ($id) => (int) $id)->all();
 
                 if ($customEntries->isEmpty()) {
                     $validator->errors()->add('custom_fee_entries', 'At least one custom fee entry is required for manual mode.');
-                }
-
-                $requiredFeeHeadIds = $feeStructure->items
-                    ->where('is_optional', false)
-                    ->pluck('fee_head_id')
-                    ->map(fn ($id) => (int) $id)
-                    ->all();
-
-                foreach ($requiredFeeHeadIds as $feeHeadId) {
-                    if (! in_array($feeHeadId, $selectedFeeHeadIds, true)) {
-                        $validator->errors()->add('custom_fee_entries', 'All mandatory fee heads must be included in manual mode.');
-                        break;
-                    }
                 }
             }
 

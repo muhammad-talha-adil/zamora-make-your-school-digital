@@ -173,6 +173,24 @@ export function useFeeStructure() {
         manualFeeAmounts.value[feeHeadId] = amount;
     }
 
+    /**
+     * Debounce helper so per-keystroke work (recalculating discounts/totals
+     * for every fee head) doesn't run synchronously while the user is still
+     * typing an amount. No external dependency is used since lodash isn't
+     * installed in this project.
+     */
+    function debounce<T extends (...args: never[]) => void>(fn: T, waitMs: number): T {
+        let timeoutId: ReturnType<typeof setTimeout> | undefined;
+        return ((...args: never[]) => {
+            if (timeoutId) {
+                clearTimeout(timeoutId);
+            }
+            timeoutId = setTimeout(() => fn(...args), waitMs);
+        }) as T;
+    }
+
+    const setManualFeeAmountDebounced = debounce(setManualFeeAmount, 250);
+
     // API functions
     async function fetchFeeStructure() {
         if (!formClassId.value || !formSessionId.value || !formCampusId.value) {
@@ -292,17 +310,15 @@ export function useFeeStructure() {
                 return 'Please add at least one custom fee entry for manual mode.';
             }
 
-            const mandatoryFeeHeadIds = feeStructure.value.items
-                .filter((item) => !item.is_optional)
-                .map((item) => item.fee_head_id);
-
-            const hasAllMandatoryFeeHeads = mandatoryFeeHeadIds.every((feeHeadId) =>
-                manualSelectedFeeHeads.value.includes(feeHeadId),
-            );
-
-            if (!hasAllMandatoryFeeHeads) {
-                return 'Please include all mandatory fee heads in manual mode.';
-            }
+            /*
+             * Manual entry is per-fee-head: the office can type a custom
+             * amount for just one head and leave the rest on the structure's
+             * default amount (see VoucherGenerationService::getAgreedAmounts,
+             * which only overrides fee heads present in custom_fee_entries).
+             * Previously this required every mandatory fee head to be
+             * selected for manual entry before any single one could be
+             * saved, which made manual entry effectively all-or-nothing.
+             */
         }
 
         return null;
@@ -395,6 +411,7 @@ export function useFeeStructure() {
         fetchFeeStructure,
         fetchDiscountTypes,
         setManualFeeAmount,
+        setManualFeeAmountDebounced,
         calculateDiscountPercentage,
         resetSelections,
         createFeeStructure,

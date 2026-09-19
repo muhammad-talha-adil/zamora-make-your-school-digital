@@ -3,9 +3,13 @@
 /**
  * Case 11 — manual fee mode, where the office types each fee head's amount.
  *
- * Manual mode exists so a child can be admitted on negotiated amounts, but the
- * heads the structure marks mandatory must still all appear, otherwise a
- * compulsory charge is quietly dropped from the child's billing.
+ * Manual mode exists so a child can be admitted on negotiated amounts. It is
+ * per-fee-head: the office can price just one head and leave the rest, since
+ * VoucherGenerationService::getAgreedAmounts only overrides fee heads present
+ * in custom_fee_entries — every other head simply bills at the structure's
+ * default amount. Requiring every mandatory head to be priced here (issue
+ * #70) made manual entry effectively all-or-nothing and is no longer enforced;
+ * only "at least one entry" is required.
  */
 
 use App\Models\Student;
@@ -56,17 +60,21 @@ it('rejects manual mode with no entries at all', function () {
     expect(Student::count())->toBe(0);
 });
 
-it('rejects manual mode when a mandatory head is left out', function () {
-    // Only the monthly head is priced; the annual head is mandatory too.
+it('allows manual mode to price only one fee head, leaving another mandatory head on the structure default', function () {
+    // Only the monthly head is priced; the annual head stays on the structure's default amount.
     $this->post(route('students.store'), $this->world->payload([
         'fee_structure_id' => $this->structure->id,
         'fee_mode' => 'manual',
         'custom_fee_entries' => [
             ['fee_head_id' => $this->world->monthlyHead->id, 'amount' => 4000],
         ],
-    ]))->assertSessionHasErrors('custom_fee_entries');
+    ]))->assertSessionHasNoErrors();
 
-    expect(Student::count())->toBe(0);
+    $entries = collect(StudentEnrollmentRecord::firstOrFail()->custom_fee_entries);
+
+    expect(Student::count())->toBe(1)
+        ->and($entries)->toHaveCount(1)
+        ->and($entries->firstWhere('fee_head_id', $this->world->monthlyHead->id)['amount'])->toEqual(4000);
 });
 
 it('allows an optional head to be priced alongside the mandatory ones', function () {

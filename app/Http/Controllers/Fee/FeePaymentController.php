@@ -192,10 +192,20 @@ class FeePaymentController extends Controller
         Gate::authorize('view', $payment);
 
         $payment->load([
-            'student',
+            'student.user:id,name',
+            'campus',
             'allocations.voucher.voucherMonth',
             'receivedBy',
         ]);
+
+        /*
+         * `name` and `registration_number` on Student are accessors, not
+         * columns, and are not in the model's $appends — so they were
+         * silently missing from this JSON payload even with the relation
+         * loaded. Show.vue reads `payment.student.name` and
+         * `.registration_number` directly (issues #117, #118).
+         */
+        $payment->student?->append(['name', 'registration_number']);
 
         return Inertia::render('Fee/Payments/Show', [
             'payment' => $payment,
@@ -210,9 +220,12 @@ class FeePaymentController extends Controller
         Gate::authorize('view', $payment);
 
         $payment->load([
-            'student',
+            'student.user:id,name',
+            'campus',
             'allocations.voucher.voucherMonth',
         ]);
+
+        $payment->student?->append(['name', 'registration_number']);
 
         return Inertia::render('Fee/Payments/Receipt', [
             'payment' => $payment,

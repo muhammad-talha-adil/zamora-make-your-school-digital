@@ -132,7 +132,13 @@ const handleCancel = () => {
                     </p>
                 </div>
                 <div class="flex gap-2 w-full sm:w-auto">
-                    <Button variant="outline" size="sm" class="flex-1 sm:flex-none" @click="router.visit(route('fee.vouchers.print', voucher.id))">
+                    <Button
+                        v-if="voucher.status !== 'paid'"
+                        variant="outline"
+                        size="sm"
+                        class="flex-1 sm:flex-none"
+                        @click="router.visit(route('fee.vouchers.print', voucher.id))"
+                    >
                         <Icon icon="printer" class="mr-2 h-4 w-4" />
                         <span class="hidden sm:inline">Print</span>
                     </Button>
@@ -364,7 +370,13 @@ const handleCancel = () => {
                     <div class="bg-card rounded-lg border border-border p-4 md:p-6">
                         <h2 class="text-lg font-semibold mb-4">Quick Actions</h2>
                         <div class="space-y-2">
-                            <Button variant="outline" class="w-full justify-start" size="sm" @click="router.visit(route('fee.vouchers.print', voucher.id))">
+                            <Button
+                                v-if="voucher.status !== 'paid'"
+                                variant="outline"
+                                class="w-full justify-start"
+                                size="sm"
+                                @click="router.visit(route('fee.vouchers.print', voucher.id))"
+                            >
                                 <Icon icon="printer" class="mr-2 h-4 w-4" />
                                 Print Voucher
                             </Button>

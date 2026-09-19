@@ -246,8 +246,8 @@
                                         <div class="flex-1">
                                             <Input
                                                 :id="'custom_amount_' + item.fee_head_id"
-                                                :value="manualFeeAmounts[item.fee_head_id] || ''"
-                                                @input="(e: any) => setManualFeeAmount(item.fee_head_id, parseFloat(e.target.value) || 0)"
+                                                :value="localManualAmounts[item.fee_head_id] ?? (manualFeeAmounts[item.fee_head_id] || '')"
+                                                @input="(e: any) => onManualAmountInput(item.fee_head_id, e.target.value)"
                                                 type="number"
                                                 min="0"
                                                 step="0.01"
@@ -300,7 +300,7 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, watch } from 'vue';
+import { onMounted, reactive, watch } from 'vue';
 import Icon from '@/components/Icon.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -349,12 +349,23 @@ const {
     fetchFeeStructure,
     fetchDiscountTypes,
     setManualFeeAmount,
+    setManualFeeAmountDebounced,
     calculateDiscountPercentage,
     createFeeStructure,
     loadEnrollmentData,
     validateActiveMode,
     getSubmissionPayload,
 } = useFeeStructure();
+
+// Instant per-keystroke display, decoupled from the (debounced) reactive
+// state that drives the discount/total recalculation, so typing never lags
+// even though the recalculation itself is deferred (issue #67).
+const localManualAmounts = reactive<Record<number, string>>({});
+
+function onManualAmountInput(feeHeadId: number, rawValue: string) {
+    localManualAmounts[feeHeadId] = rawValue;
+    setManualFeeAmountDebounced(feeHeadId, parseFloat(rawValue) || 0);
+}
 
 // Initialize on mount
 onMounted(async () => {

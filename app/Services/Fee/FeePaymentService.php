@@ -113,6 +113,20 @@ class FeePaymentService
             ]);
         }
 
+        /*
+         * Overpayment used to fall through to a wallet "advance" credit for
+         * whatever was left over. Issue #121: for now this is disallowed
+         * outright — the office should not be able to submit more than the
+         * outstanding due being paid against. If an advance-deposit feature
+         * is wanted later, it needs its own explicit flow rather than being
+         * an accidental side effect of typing a bigger number here.
+         */
+        if ((float) $data['received_amount'] > $totalAllocated) {
+            throw ValidationException::withMessages([
+                'received_amount' => 'Received amount cannot exceed the total due amount being paid ('.number_format($totalAllocated, 2).').',
+            ]);
+        }
+
         return DB::transaction(function () use ($data, $totalAllocated) {
             $student = Student::with('currentEnrollment')->findOrFail($data['student_id']);
             $enrollment = $student->currentEnrollment;

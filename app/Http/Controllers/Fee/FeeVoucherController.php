@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Fee;
 
 use App\Enums\Fee\AdjustmentType;
 use App\Enums\Fee\FineType;
+use App\Enums\Fee\VoucherStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Fee\AddVoucherAdjustmentRequest;
 use App\Http\Requests\Fee\AddVoucherItemRequest;
@@ -625,6 +626,15 @@ class FeeVoucherController extends Controller
     {
         $this->authorizePrint($voucher);
 
+        /*
+         * Issue #119: once a voucher is fully paid it can no longer be
+         * printed — the owner's wording ("na again print ho sake") treats
+         * this the same as "can't be paid again", not merely "can't be
+         * printed as if still unpaid". A settled voucher's receipt is what
+         * `FeePaymentController::receipt()` is for.
+         */
+        abort_if($voucher->status === VoucherStatus::PAID, 403, 'This voucher has already been paid in full and cannot be printed again.');
+
         $voucher->load([
             'student',
             'voucherMonth',
@@ -703,7 +713,7 @@ class FeeVoucherController extends Controller
     {
         Gate::authorize('delete', $voucher);
 
-        if ($voucher->status === 'paid') {
+        if ($voucher->status === VoucherStatus::PAID) {
             return back()->withErrors(['error' => 'Cannot cancel a paid voucher.']);
         }
 
