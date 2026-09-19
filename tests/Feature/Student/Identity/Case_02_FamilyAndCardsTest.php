@@ -17,6 +17,8 @@ use App\Models\Student;
 use App\Models\StudentStatus;
 use App\Services\Student\SiblingService;
 use App\Services\Student\StudentEnrollmentService;
+use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Storage;
 use Tests\Support\AdmissionWorld;
 
 beforeEach(function () {
@@ -143,4 +145,35 @@ it('does not print cards for a section that is not this teacher s', function () 
     $this->actingAs($outsider)
         ->get(route('students.id-cards', ['class_id' => $this->world->class->id]))
         ->assertForbidden();
+});
+
+/**
+ * The photograph — #72/#74. Every consumer (this ID card, the edit form, the
+ * profile page, the admission-form print) now reads the same `image_url`
+ * accessor on the model instead of each one reconstructing a `/storage/...`
+ * path by hand, which is what had them each broken in a different way.
+ */
+it('shows the uploaded photo on the ID card', function () {
+    Storage::fake('public');
+
+    $this->post(route('students.store'), $this->world->payload([
+        'admission_no' => 'ADM-PHOTO',
+        'student_email' => 'photo@student.test',
+        'image' => UploadedFile::fake()->image('child.jpg'),
+    ]))->assertSessionHasNoErrors();
+
+    $student = Student::where('admission_no', 'ADM-PHOTO')->firstOrFail();
+
+    expect($student->image)->not->toBeNull()
+        ->and($student->image_url)->toContain('/storage/')
+        ->and($student->image_url)->toContain($student->image);
+
+    $this->get(route('students.id-cards', ['student_ids' => [$student->id]]))
+        ->assertSuccessful()
+        ->assertSee($student->image_url, false);
+});
+
+it('has no image_url for a child with no photo on file', function () {
+    expect($this->elder->image)->toBeNull()
+        ->and($this->elder->image_url)->toBeNull();
 });

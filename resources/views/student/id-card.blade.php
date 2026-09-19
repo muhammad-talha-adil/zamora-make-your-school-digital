@@ -104,8 +104,8 @@
         </div>
 
         <div class="body">
-            @if ($student->image)
-                <img class="photo" src="{{ asset('storage/'.$student->image) }}" alt="">
+            @if ($student->image_url)
+                <img class="photo" src="{{ $student->image_url }}" alt="">
             @else
                 <div class="photo photo-empty">No<br>photo</div>
             @endif

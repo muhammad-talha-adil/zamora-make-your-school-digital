@@ -325,9 +325,9 @@
                                         <Icon icon="x" class="h-3 w-3" />
                                     </Button>
                                 </div>
-                                <div v-else-if="studentData?.image && !removeCurrentImage" class="shrink-0 relative group">
+                                <div v-else-if="studentData?.image_url && !removeCurrentImage" class="shrink-0 relative group">
                                     <img
-                                        :src="studentData.image"
+                                        :src="studentData.image_url"
                                         alt="Current Photo"
                                         class="h-20 w-20 rounded-lg object-cover border border-border"
                                     />
@@ -594,6 +594,7 @@ interface Props {
         admission_date: string;
         description: string;
         image?: string | null;
+        image_url?: string | null;
         user?: { name: string; email?: string };
         guardians?: Array<{
             id: number;

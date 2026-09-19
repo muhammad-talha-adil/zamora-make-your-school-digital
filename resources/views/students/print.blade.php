@@ -167,8 +167,8 @@
         @endphp
 
         <div class="photo-box">
-            @if($student->image)
-                <img src="{{ Storage::url($student->image) }}" alt="Photo" style="width:100%; height:100%; object-fit:cover;">
+            @if($student->image_url)
+                <img src="{{ $student->image_url }}" alt="Photo" style="width:100%; height:100%; object-fit:cover;">
             @else
                 Paste Photo Here
             @endif

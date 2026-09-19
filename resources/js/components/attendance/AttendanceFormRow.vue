@@ -36,8 +36,7 @@
         <!-- Status Selector -->
         <td class="px-2 md:px-4 py-3 whitespace-nowrap">
             <select
-                :value="modelValue.attendance_status_id"
-                @change="onStatusChange"
+                v-model="statusId"
                 :disabled="disabled"
                 class="w-full min-w-[100px] rounded-md border border-border bg-card text-foreground px-2 md:px-3 py-1.5 md:py-2 text-xs md:text-sm"
                 :class="{ 'opacity-50 cursor-not-allowed': disabled }"
@@ -77,8 +76,7 @@
         <td class="px-2 md:px-4 py-3 whitespace-nowrap hidden lg:table-cell">
             <div v-if="isLeaveStatus" class="text-sm">
                 <select
-                    :value="modelValue.leave_type_id"
-                    @change="onLeaveTypeChange"
+                    v-model="leaveTypeId"
                     :disabled="disabled"
                     class="w-full rounded-md border border-border bg-card text-foreground px-2 md:px-3 py-1.5 md:py-2 text-xs md:text-sm"
                     :class="{ 'opacity-50 cursor-not-allowed': disabled }"
@@ -142,15 +140,22 @@ const leaveReason = computed(() => {
     return approvedLeave?.reason || 'Approved Leave';
 });
 
-const onStatusChange = (event: Event) => {
-    const target = event.target as HTMLSelectElement;
-    emit('update:modelValue', { ...props.modelValue, attendance_status_id: Number(target.value) || 0 });
-};
+/**
+ * `v-model` on the `<select>` elements below, rather than a manual
+ * `:value`/`@change` pair — the manual binding left the box showing its
+ * placeholder even once a status had been chosen, because plain attribute
+ * patching does not re-run the browser's option-matching the way Vue's own
+ * `v-model` runtime for `<select>` does.
+ */
+const statusId = computed<number | ''>({
+    get: () => props.modelValue.attendance_status_id || '',
+    set: (value) => emit('update:modelValue', { ...props.modelValue, attendance_status_id: Number(value) || 0 }),
+});
 
-const onLeaveTypeChange = (event: Event) => {
-    const target = event.target as HTMLSelectElement;
-    emit('update:modelValue', { ...props.modelValue, leave_type_id: target.value ? Number(target.value) : undefined });
-};
+const leaveTypeId = computed<number | ''>({
+    get: () => props.modelValue.leave_type_id ?? '',
+    set: (value) => emit('update:modelValue', { ...props.modelValue, leave_type_id: value ? Number(value) : undefined }),
+});
 
 const onCheckInChange = (event: Event) => {
     const target = event.target as HTMLInputElement;

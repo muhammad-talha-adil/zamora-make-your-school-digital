@@ -165,6 +165,16 @@ it('runs a whole section from the screen', function () {
     expect(StudentEnrollmentRecord::where('session_id', $this->nextSession->id)->count())->toBe(2);
 });
 
+it('renders the sidebar s Promotion page instead of a case-mismatched 500', function () {
+    // #73 — the controller rendered 'Students/Promotion/Index' (capital S)
+    // while the file on disk is 'students/Promotion/Index.vue' (lowercase).
+    // Case-insensitive filesystems hid this; a case-sensitive one (Linux,
+    // where this actually deploys) 500s on it.
+    $this->get(route('students.promotion.page'))
+        ->assertOk()
+        ->assertInertia(fn ($page) => $page->component('students/Promotion/Index'));
+});
+
 it('shows the office each child s year beside their name', function () {
     $this->getJson(route('students.promotion.preview', [
         'session_id' => $this->world->session->id,

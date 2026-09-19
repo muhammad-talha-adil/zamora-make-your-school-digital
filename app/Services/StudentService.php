@@ -167,6 +167,7 @@ class StudentService
             'b_form' => $student->b_form,
             'description' => $student->description,
             'image' => $student->image,
+            'image_url' => $student->image_url,
         ];
 
         // Add enrollment data directly to student object for Edit.vue

@@ -31,9 +31,9 @@
                     <div class="bg-card rounded-lg border border-border p-6 text-center">
                         <!-- Student Photo -->
                         <div class="mb-4">
-                            <div v-if="student?.image" class="h-32 w-32 mx-auto rounded-full overflow-hidden border-4 border-border">
+                            <div v-if="student?.image_url" class="h-32 w-32 mx-auto rounded-full overflow-hidden border-4 border-border">
                                 <img
-                                    :src="student.image"
+                                    :src="student.image_url"
                                     alt="Student Photo"
                                     class="h-full w-full object-cover"
                                 />
@@ -292,6 +292,7 @@ interface Props {
         admission_date: string;
         description: string;
         image: string | null;
+        image_url?: string | null;
         user?: {
             name: string;
         };

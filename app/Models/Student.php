@@ -16,6 +16,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Storage;
 use Spatie\Activitylog\Models\Concerns\LogsActivity;
 use Spatie\Activitylog\Support\LogOptions;
 
@@ -50,10 +51,34 @@ class Student extends Model
         'image',
     ];
 
+    /**
+     * `image_url` is not in the database — it is appended so every consumer
+     * (Vue pages and Blade print views alike) gets one resolved public URL
+     * instead of each reconstructing it from the raw `image` disk path.
+     *
+     * @var array<int, string>
+     */
+    protected $appends = [
+        'image_url',
+    ];
+
     protected $casts = [
         'dob' => 'date',
         'admission_date' => 'date',
     ];
+
+    /**
+     * The photograph's public URL, resolved from the `public` disk path
+     * stored in `image`. Null when no photo has been uploaded.
+     */
+    public function getImageUrlAttribute(): ?string
+    {
+        if (! $this->image) {
+            return null;
+        }
+
+        return Storage::disk('public')->url($this->image);
+    }
 
     /**
      * @return BelongsTo<User, $this>

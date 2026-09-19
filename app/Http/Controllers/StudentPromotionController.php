@@ -37,7 +37,7 @@ class StudentPromotionController extends Controller
     {
         $this->authorize('viewAny', Student::class);
 
-        return Inertia::render('Students/Promotion/Index', [
+        return Inertia::render('students/Promotion/Index', [
             'sessions' => Session::where('is_active', true)->get(),
             'classes' => SchoolClass::where('is_active', true)->orderBy('level')->orderBy('name')->get(),
             'filters' => $request->only(['session_id', 'class_id', 'section_id']),
