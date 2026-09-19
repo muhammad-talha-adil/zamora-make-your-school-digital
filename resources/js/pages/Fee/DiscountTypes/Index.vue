@@ -123,9 +123,14 @@ const deleteDiscountType = (discountType: DiscountType) => {
                             <div class="font-medium text-foreground">{{ discountType.name }}</div>
                             <div class="text-xs text-muted-foreground">Code: {{ discountType.code }}</div>
                         </div>
-                        <span :class="['px-2 py-1 text-xs font-medium rounded-full', discountType.is_active ? 'bg-success/10 text-success' : 'bg-muted text-foreground']">
+                        <button
+                            type="button"
+                            :class="['px-2 py-1 text-xs font-medium rounded-full cursor-pointer transition-opacity hover:opacity-80', discountType.is_active ? 'bg-success/10 text-success' : 'bg-muted text-foreground']"
+                            :title="discountType.is_active ? 'Click to deactivate' : 'Click to activate'"
+                            @click="toggleActiveStatus(discountType)"
+                        >
                             {{ discountType.is_active ? 'Active' : 'Inactive' }}
-                        </span>
+                        </button>
                     </div>
                     <div class="text-sm text-muted-foreground space-y-1 pt-2 border-t border-border">
                         <div>Default: {{ formatValue(discountType.value_type, discountType.default_value) }}</div>
@@ -134,15 +139,6 @@ const deleteDiscountType = (discountType: DiscountType) => {
                     <div class="flex gap-2 pt-2">
                         <Button variant="outline" size="sm" @click="router.visit(route('fee.discount-types.edit', discountType.id))">
                             <Icon icon="edit" class="mr-1" />Edit
-                        </Button>
-                        <Button
-                            :variant="discountType.is_active ? 'default' : 'outline'"
-                            :class="discountType.is_active ? 'bg-success hover:bg-success/90' : 'text-success border-success hover:bg-success/20'"
-                            size="sm"
-                            @click="toggleActiveStatus(discountType)"
-                        >
-                            <Icon :icon="discountType.is_active ? 'toggle-left' : 'toggle-right'" class="mr-1" />
-                            {{ discountType.is_active ? 'Deactivate' : 'Activate' }}
                         </Button>
                     </div>
                 </div>
@@ -202,23 +198,19 @@ const deleteDiscountType = (discountType: DiscountType) => {
                                     </span>
                                 </td>
                                 <td class="px-4 py-3">
-                                    <span :class="['px-2 py-1 text-xs font-medium rounded-full', discountType.is_active ? 'bg-success/10 text-success' : 'bg-muted text-foreground']">
+                                    <button
+                                        type="button"
+                                        :class="['px-2 py-1 text-xs font-medium rounded-full cursor-pointer transition-opacity hover:opacity-80', discountType.is_active ? 'bg-success/10 text-success' : 'bg-muted text-foreground']"
+                                        :title="discountType.is_active ? 'Click to deactivate' : 'Click to activate'"
+                                        @click="toggleActiveStatus(discountType)"
+                                    >
                                         {{ discountType.is_active ? 'Active' : 'Inactive' }}
-                                    </span>
+                                    </button>
                                 </td>
                                 <td class="px-4 py-3 text-sm font-medium whitespace-nowrap">
                                     <div class="flex flex-wrap gap-2 justify-end">
                                         <Button variant="outline" size="sm" @click="router.visit(route('fee.discount-types.edit', discountType.id))">
                                             <Icon icon="edit" class="mr-1 h-3 w-3" />Edit
-                                        </Button>
-                                        <Button
-                                            :variant="discountType.is_active ? 'default' : 'outline'"
-                                            :class="discountType.is_active ? 'bg-success hover:bg-success/90' : 'text-success border-success hover:bg-success/20'"
-                                            size="sm"
-                                            @click="toggleActiveStatus(discountType)"
-                                        >
-                                            <Icon :icon="discountType.is_active ? 'toggle-left' : 'toggle-right'" class="mr-1 h-3 w-3" />
-                                            {{ discountType.is_active ? 'Deactivate' : 'Activate' }}
                                         </Button>
                                         <Button variant="destructive" size="sm" @click="deleteDiscountType(discountType)">
                                             <Icon icon="trash-2" class="mr-1 h-3 w-3" />Delete

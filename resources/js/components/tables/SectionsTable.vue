@@ -1,14 +1,12 @@
 <script setup lang="ts">
 import SectionForm from '@/components/forms/SectionForm.vue';
-import Icon from '@/components/Icon.vue';
+import RowAction from '@/components/tables/RowAction.vue';
+import RowActions from '@/components/tables/RowActions.vue';
 import TablePagination from '@/components/tables/TablePagination.vue';
-import { Button } from '@/components/ui/button';
 import { alert } from '@/utils';
-import { tableActionButtonClass } from '@/utils/table-actions';
 import axios from 'axios';
 import { ref, watch } from 'vue';
 
-const stateButtonClass = 'min-h-8 border-warning/40 text-warning hover:bg-warning/20 hover:text-warning';
 interface Props {
     sections: any;
     schoolClasses?: { id: number; name: string }[];
@@ -203,57 +201,31 @@ const handleSaved = () => {
                                 </div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
-                                <span
+                                <button
+                                    type="button"
                                     :class="[
-                                        'inline-flex rounded-full px-2 py-1 text-xs font-semibold',
+                                        'inline-flex cursor-pointer rounded-full px-2 py-1 text-xs font-semibold transition-opacity hover:opacity-80',
                                         section.is_active
                                             ? 'bg-success/10 text-success'
                                             : 'bg-destructive/10 text-destructive',
                                     ]"
+                                    :title="section.is_active ? 'Click to deactivate' : 'Click to activate'"
+                                    @click="section.is_active ? inactivateSection(section) : activateSection(section)"
                                 >
                                     {{ section.is_active ? 'Active' : 'Inactive' }}
-                                </span>
+                                </button>
                             </td>
                             <td class="px-6 py-4 text-sm font-medium whitespace-nowrap">
-                                <div class="flex flex-wrap justify-end gap-2">
+                                <RowActions>
                                     <SectionForm
                                         :section="section"
                                         :school-classes="schoolClasses"
                                         trigger="Edit"
-                                        variant="outline"
-                                        size="sm"
                                         class="contents"
                                         @saved="handleSaved"
-                                    >
-                                        <Icon icon="edit" class="mr-1" />Edit
-                                    </SectionForm>
-                                    <Button
-                                        v-if="section.is_active"
-                                        variant="outline"
-                                        size="sm"
-                                        :class="stateButtonClass"
-                                        @click="inactivateSection(section)"
-                                    >
-                                        <Icon icon="pause" class="mr-1" />Inactive
-                                    </Button>
-                                    <Button
-                                        v-else
-                                        variant="outline"
-                                        size="sm"
-                                        :class="section.is_active ? tableActionButtonClass.deactivate : tableActionButtonClass.activate"
-                                        @click="activateSection(section)"
-                                    >
-                                        <Icon icon="check" class="mr-1" />Activate
-                                    </Button>
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        :class="tableActionButtonClass.delete"
-                                        @click="deleteSection(section)"
-                                    >
-                                        <Icon icon="trash" class="mr-1" />Delete
-                                    </Button>
-                                </div>
+                                    />
+                                    <RowAction kind="delete" @click="deleteSection(section)" />
+                                </RowActions>
                             </td>
                         </tr>
                     </tbody>

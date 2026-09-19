@@ -18,6 +18,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import Icon from '@/components/Icon.vue';
+import RowAction from '@/components/tables/RowAction.vue';
 
 // Props
 interface Props {
@@ -129,9 +130,9 @@ const resetForm = () => {
 <template>
     <Dialog v-model:open="open">
         <DialogTrigger as-child>
-            <Button :variant="props.variant" :size="props.size">
-                <Icon v-if="props.examType" icon="edit" class="mr-1" />
-                <Icon v-else icon="plus" class="mr-1" />
+            <RowAction v-if="props.examType" kind="edit" />
+            <Button v-else :variant="props.variant" :size="props.size">
+                <Icon icon="plus" class="mr-1" />
                 {{ trigger }}
             </Button>
         </DialogTrigger>

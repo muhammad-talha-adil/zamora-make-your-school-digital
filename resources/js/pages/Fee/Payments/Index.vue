@@ -9,6 +9,7 @@ import TablePagination from '@/components/tables/TablePagination.vue';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import Icon from '@/components/Icon.vue';
+import SearchableSelect from '@/components/ui/searchable-select/SearchableSelect.vue';
 import { formatCurrency } from '@/utils/currency';
 import { formatDate } from '@/utils/date';
 import { tableActionButtonClass } from '@/utils/table-actions';
@@ -141,6 +142,19 @@ const getStatusColor = (status: string) => {
     return colors[status] || colors.pending;
 };
 
+const campusOptions = computed(() =>
+    props.campuses.map((campus) => ({ value: String(campus.id), label: campus.name }))
+);
+
+const paymentMethodOptions = [
+    { value: 'cash', label: 'Cash' },
+    { value: 'bank', label: 'Bank Transfer' },
+    { value: 'online', label: 'Online Payment' },
+    { value: 'jazzcash', label: 'JazzCash' },
+    { value: 'easypaisa', label: 'EasyPaisa' },
+    { value: 'cheque', label: 'Cheque' },
+];
+
 const getPageFromUrl = (url: string | null) => {
     if (!url) {
         return 1;
@@ -175,16 +189,12 @@ const getPageFromUrl = (url: string | null) => {
                 <div class="grid grid-cols-1 gap-4 md:grid-cols-5">
                     <div class="space-y-2">
                         <Label for="filter-campus">Campus</Label>
-                        <select
-                            id="filter-campus"
+                        <SearchableSelect
                             v-model="filters.campus_id"
-                            class="w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground"
-                        >
-                            <option value="">All Campuses</option>
-                            <option v-for="campus in props.campuses" :key="campus.id" :value="String(campus.id)">
-                                {{ campus.name }}
-                            </option>
-                        </select>
+                            :options="campusOptions"
+                            placeholder="All Campuses"
+                            clearable
+                        />
                     </div>
                     <div class="space-y-2">
                         <Label for="filter-date-from">From Date</Label>
@@ -204,19 +214,12 @@ const getPageFromUrl = (url: string | null) => {
                     </div>
                     <div class="space-y-2">
                         <Label for="filter-method">Payment Method</Label>
-                        <select
-                            id="filter-method"
+                        <SearchableSelect
                             v-model="filters.payment_method"
-                            class="w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground"
-                        >
-                            <option value="">All Methods</option>
-                            <option value="cash">Cash</option>
-                            <option value="bank">Bank Transfer</option>
-                            <option value="online">Online Payment</option>
-                            <option value="jazzcash">JazzCash</option>
-                            <option value="easypaisa">EasyPaisa</option>
-                            <option value="cheque">Cheque</option>
-                        </select>
+                            :options="paymentMethodOptions"
+                            placeholder="All Methods"
+                            clearable
+                        />
                     </div>
                     <div class="space-y-2 md:col-span-5">
                         <Label for="search-payment">Search</Label>

@@ -131,7 +131,12 @@ const updatePerPage = (value: number) => {
                                 </div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
-                                <Badge :variant="menu.is_active ? 'default' : 'destructive'">
+                                <Badge
+                                    :variant="menu.is_active ? 'default' : 'destructive'"
+                                    :class="hasManageMenusPermission && !showInactive ? 'cursor-pointer transition-opacity hover:opacity-80' : ''"
+                                    :title="hasManageMenusPermission && !showInactive ? (menu.is_active ? 'Click to inactivate' : 'Click to activate') : undefined"
+                                    @click="hasManageMenusPermission && !showInactive && emit('toggleActive', menu)"
+                                >
                                     {{ menu.is_active ? 'Active' : 'Inactive' }}
                                 </Badge>
                             </td>
@@ -139,16 +144,6 @@ const updatePerPage = (value: number) => {
                                 <div class="flex flex-wrap justify-end gap-2" v-if="!showInactive && hasManageMenusPermission">
                                     <Button variant="outline" size="sm" :class="tableActionButtonClass.edit" title="Edit Menu" @click="emit('edit', menu)">
                                         <Icon icon="edit" class="mr-1" />Edit
-                                    </Button>
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        :class="menu.is_active ? tableActionButtonClass.deactivate : tableActionButtonClass.activate"
-                                        :title="menu.is_active ? 'Inactivate Menu' : 'Activate Menu'"
-                                        @click="emit('toggleActive', menu)"
-                                    >
-                                        <Icon :icon="menu.is_active ? 'eye-off' : 'eye'" class="mr-1" />
-                                        {{ menu.is_active ? 'Inactivate' : 'Activate' }}
                                     </Button>
                                     <Button
                                         variant="outline"

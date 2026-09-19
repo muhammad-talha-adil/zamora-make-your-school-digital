@@ -17,6 +17,7 @@ import {
     CardFooter,
 } from '@/components/ui/card';
 import Icon from '@/components/Icon.vue';
+import RowAction from '@/components/tables/RowAction.vue';
 
 // Props
 interface Props {
@@ -164,11 +165,8 @@ const submit = () => {
 <template>
     <div>
         <!-- Trigger Button -->
-        <Button
-            :variant="(variant || 'default') as any"
-            :size="(size || 'default') as any"
-            @click="openModal"
-        >
+        <RowAction v-if="props.holiday" kind="edit" @click="openModal" />
+        <Button v-else :variant="(variant || 'default') as any" :size="(size || 'default') as any" @click="openModal">
             <Icon icon="plus" class="mr-1" />
             <slot>{{ trigger }}</slot>
         </Button>

@@ -652,7 +652,7 @@ const generateVouchers = () => {
                         <Label for="custom_fee_head_id">Fee Head</Label>
                         <select
                             id="custom_fee_head_id"
-                            v-model="selectedFeeHeadId"
+                            v-model.number="selectedFeeHeadId"
                             class="mt-1 block w-full rounded-md border border-border bg-card text-foreground px-3 py-2"
                         >
                             <option value="">Select Fee Head</option>

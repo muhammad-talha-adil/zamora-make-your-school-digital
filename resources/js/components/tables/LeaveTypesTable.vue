@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import TablePagination from '@/components/tables/TablePagination.vue';
 import LeaveTypeForm from '@/components/forms/LeaveTypeForm.vue';
+import RowAction from '@/components/tables/RowAction.vue';
+import RowActions from '@/components/tables/RowActions.vue';
 import { Button } from '@/components/ui/button';
 import Icon from '@/components/Icon.vue';
 import { alert } from '@/utils';
@@ -183,24 +185,10 @@ const deleteLeaveType = (leaveType: any) => {
                                 </span>
                             </td>
                             <td class="px-6 py-4 text-sm font-medium whitespace-nowrap">
-                                <div class="flex space-x-2">
-                                    <LeaveTypeForm
-                                        :leave-type="leaveType"
-                                        trigger="Edit"
-                                        variant="outline"
-                                        size="sm"
-                                        @saved="handleSaved"
-                                    >
-                                        <Icon icon="edit" class="mr-1" />Edit
-                                    </LeaveTypeForm>
-                                    <Button
-                                        variant="destructive"
-                                        size="sm"
-                                        @click="deleteLeaveType(leaveType)"
-                                    >
-                                        <Icon icon="trash" class="mr-1" />Delete
-                                    </Button>
-                                </div>
+                                <RowActions>
+                                    <LeaveTypeForm :leave-type="leaveType" trigger="Edit" @saved="handleSaved" />
+                                    <RowAction kind="delete" @click="deleteLeaveType(leaveType)" />
+                                </RowActions>
                             </td>
                         </tr>
                     </tbody>

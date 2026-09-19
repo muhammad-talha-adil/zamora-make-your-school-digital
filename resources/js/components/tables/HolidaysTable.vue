@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import TablePagination from '@/components/tables/TablePagination.vue';
 import HolidayForm from '@/components/forms/HolidayForm.vue';
+import RowAction from '@/components/tables/RowAction.vue';
+import RowActions from '@/components/tables/RowActions.vue';
 import { Button } from '@/components/ui/button';
 import Icon from '@/components/Icon.vue';
 import { alert } from '@/utils';
@@ -259,25 +261,10 @@ const getDaysCount = (start: string, end: string) => {
                                     <Icon icon="lock" class="mr-1 h-4 w-4" />
                                     <span class="text-sm">Read Only</span>
                                 </div>
-                                <div v-else class="flex space-x-2">
-                                    <HolidayForm
-                                        :holiday="holiday"
-                                        :campuses="campuses"
-                                        trigger="Edit"
-                                        variant="outline"
-                                        size="sm"
-                                        @saved="handleSaved"
-                                    >
-                                        <Icon icon="edit" class="mr-1" />Edit
-                                    </HolidayForm>
-                                    <Button
-                                        variant="destructive"
-                                        size="sm"
-                                        @click="deleteHoliday(holiday)"
-                                    >
-                                        <Icon icon="trash" class="mr-1" />Delete
-                                    </Button>
-                                </div>
+                                <RowActions v-else>
+                                    <HolidayForm :holiday="holiday" :campuses="campuses" trigger="Edit" @saved="handleSaved" />
+                                    <RowAction kind="delete" @click="deleteHoliday(holiday)" />
+                                </RowActions>
                             </td>
                         </tr>
                     </tbody>

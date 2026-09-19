@@ -17,6 +17,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import ComboboxInput from '@/components/ui/combobox/ComboboxInput.vue';
 import Icon from '@/components/Icon.vue';
+import RowAction from '@/components/tables/RowAction.vue';
 import CampusTypeModal from './CampusTypeModal.vue';
 
 // Props
@@ -197,13 +198,9 @@ const handleCampusTypeSaved = (campusType: { id: number; name: string } | undefi
 <template>
     <Dialog v-model:open="campusDialogOpen">
         <DialogTrigger as-child>
-            <Button
-                :variant="props.variant"
-                :size="props.size"
-                :class="props.campus ? 'min-h-8 border-info/40 text-info hover:bg-info/20 hover:text-info' : ''"
-            >
-                <Icon v-if="props.campus" icon="edit" class="mr-1" />
-                <Icon v-else icon="map-pin" class="mr-1" />
+            <RowAction v-if="props.campus" kind="edit" />
+            <Button v-else :variant="props.variant" :size="props.size">
+                <Icon icon="map-pin" class="mr-1" />
                 {{ trigger }}
             </Button>
         </DialogTrigger>

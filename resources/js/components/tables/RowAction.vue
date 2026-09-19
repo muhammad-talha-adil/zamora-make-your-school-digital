@@ -21,6 +21,9 @@ type ActionKind =
     | 'restore'
     | 'download'
     | 'approve'
+    | 'activate'
+    | 'deactivate'
+    | 'generate'
     | 'custom';
 
 interface Props {
@@ -55,6 +58,9 @@ const PRESETS: Record<Exclude<ActionKind, 'custom'>, { icon: string; label: stri
     print: { icon: 'printer', label: 'Print', tone: 'text-muted-foreground hover:text-foreground hover:bg-accent' },
     download: { icon: 'download', label: 'Download', tone: 'text-muted-foreground hover:text-foreground hover:bg-accent' },
     approve: { icon: 'check', label: 'Approve', tone: 'text-muted-foreground hover:text-success hover:bg-success/10' },
+    activate: { icon: 'check', label: 'Activate', tone: 'text-muted-foreground hover:text-success hover:bg-success/10' },
+    deactivate: { icon: 'pause', label: 'Deactivate', tone: 'text-muted-foreground hover:text-warning hover:bg-warning/10' },
+    generate: { icon: 'file-plus', label: 'Generate', tone: 'text-muted-foreground hover:text-primary hover:bg-primary/10' },
     restore: { icon: 'rotate-ccw', label: 'Restore', tone: 'text-muted-foreground hover:text-success hover:bg-success/10' },
     delete: { icon: 'trash-2', label: 'Delete', tone: 'text-muted-foreground hover:text-destructive hover:bg-destructive/10' },
 };

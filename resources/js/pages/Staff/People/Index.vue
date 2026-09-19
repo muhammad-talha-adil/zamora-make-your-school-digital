@@ -498,19 +498,21 @@ const submitDesignation = async () => {
                                 <td class="px-4 py-3 text-sm text-muted-foreground">{{ member.campus?.name || '-' }}</td>
                                 <td class="px-4 py-3 text-sm text-muted-foreground">{{ member.jobs_count }}</td>
                                 <td class="px-4 py-3">
-                                    <span :class="member.is_active ? 'bg-success/10 text-success' : 'bg-muted text-muted-foreground'" class="inline-flex rounded-full px-2.5 py-1 text-xs font-medium">
+                                    <button
+                                        type="button"
+                                        :class="member.is_active ? 'bg-success/10 text-success' : 'bg-muted text-muted-foreground'"
+                                        class="inline-flex cursor-pointer rounded-full px-2.5 py-1 text-xs font-medium transition-opacity hover:opacity-80"
+                                        :title="member.is_active ? 'Click to deactivate' : 'Click to activate'"
+                                        @click="toggleStaff(member)"
+                                    >
                                         {{ member.is_active ? 'Active' : 'Inactive' }}
-                                    </span>
+                                    </button>
                                 </td>
                                 <td class="px-4 py-3">
                                     <div class="flex flex-wrap justify-end gap-2">
                                         <Button variant="outline" size="sm" :class="tableActionButtonClass.view" @click="router.visit(route('staff.people.show', member.id))">
                                             <Icon icon="eye" class="h-3.5 w-3.5" />
                                             View
-                                        </Button>
-                                        <Button variant="outline" size="sm" :class="member.is_active ? tableActionButtonClass.deactivate : tableActionButtonClass.activate" @click="toggleStaff(member)">
-                                            <Icon :icon="member.is_active ? 'eye-off' : 'eye'" class="h-3.5 w-3.5" />
-                                            {{ member.is_active ? 'Deactivate' : 'Activate' }}
                                         </Button>
                                     </div>
                                 </td>

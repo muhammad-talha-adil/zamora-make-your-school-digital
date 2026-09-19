@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import TablePagination from '@/components/tables/TablePagination.vue';
 import ExamTypeForm from '@/components/forms/ExamTypeForm.vue';
+import RowAction from '@/components/tables/RowAction.vue';
+import RowActions from '@/components/tables/RowActions.vue';
 import { Button } from '@/components/ui/button';
 import Icon from '@/components/Icon.vue';
 import { alert } from '@/utils';
@@ -198,52 +200,27 @@ const forceDeleteExamType = (examType: any) => {
                                 </div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
-                                <span
+                                <button
+                                    type="button"
                                     :class="[
-                                        'inline-flex rounded-full px-2 py-1 text-xs font-semibold',
+                                        'inline-flex cursor-pointer rounded-full px-2 py-1 text-xs font-semibold transition-opacity hover:opacity-80',
                                         examType.is_active
                                             ? 'bg-success/10 text-success'
                                             : 'bg-destructive/10 text-destructive',
                                     ]"
+                                    :title="examType.is_active ? 'Click to deactivate' : 'Click to activate'"
+                                    @click="examType.is_active ? inactivateExamType(examType) : activateExamType(examType)"
                                 >
                                     {{ examType.is_active ? 'Active' : 'Inactive' }}
-                                </span>
+                                </button>
                             </td>
                             <td class="px-6 py-4 text-sm font-medium whitespace-nowrap">
-                                <div class="flex space-x-2" v-if="!showInactive">
-                                    <ExamTypeForm
-                                        :exam-type="examType"
-                                        trigger="Edit"
-                                        variant="outline"
-                                        size="sm"
-                                        @saved="fetchExamTypes"
-                                    >
-                                        <Icon icon="edit" class="mr-1" />Edit
-                                    </ExamTypeForm>
-                                    <Button
-                                        variant="destructive"
-                                        size="sm"
-                                        @click="inactivateExamType(examType)"
-                                    >
-                                        <Icon icon="trash" class="mr-1" />Delete
-                                    </Button>
-                                </div>
-                                <div class="flex space-x-2" v-else>
-                                    <Button
-                                        variant="default"
-                                        size="sm"
-                                        @click="activateExamType(examType)"
-                                    >
-                                        <Icon icon="check" class="mr-1" />Activate
-                                    </Button>
-                                    <Button
-                                        variant="destructive"
-                                        size="sm"
-                                        @click="forceDeleteExamType(examType)"
-                                    >
-                                        <Icon icon="x" class="mr-1" />Delete
-                                    </Button>
-                                </div>
+                                <RowActions v-if="!showInactive">
+                                    <ExamTypeForm :exam-type="examType" trigger="Edit" @saved="fetchExamTypes" />
+                                </RowActions>
+                                <RowActions v-else>
+                                    <RowAction kind="delete" @click="forceDeleteExamType(examType)" />
+                                </RowActions>
                             </td>
                         </tr>
                     </tbody>

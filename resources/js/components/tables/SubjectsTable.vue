@@ -1,10 +1,9 @@
 <script setup lang="ts">
 import SubjectForm from '@/components/forms/SubjectForm.vue';
-import Icon from '@/components/Icon.vue';
+import RowAction from '@/components/tables/RowAction.vue';
+import RowActions from '@/components/tables/RowActions.vue';
 import TablePagination from '@/components/tables/TablePagination.vue';
-import { Button } from '@/components/ui/button';
 import { alert } from '@/utils';
-import { tableActionButtonClass } from '@/utils/table-actions';
 import axios from 'axios';
 import { ref, watch } from 'vue';
 import { route } from 'ziggy-js';
@@ -194,56 +193,30 @@ const inactivateSubject = (subject: any) => {
                                 </div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
-                                <span
+                                <button
+                                    type="button"
                                     :class="[
-                                        'inline-flex rounded-full px-2 py-1 text-xs font-semibold',
+                                        'inline-flex cursor-pointer rounded-full px-2 py-1 text-xs font-semibold transition-opacity hover:opacity-80',
                                         subject.is_active
                                             ? 'bg-success/10 text-success'
                                             : 'bg-destructive/10 text-destructive',
                                     ]"
+                                    :title="subject.is_active ? 'Click to deactivate' : 'Click to activate'"
+                                    @click="subject.is_active ? inactivateSubject(subject) : activateSubject(subject)"
                                 >
                                     {{ subject.is_active ? 'Active' : 'Inactive' }}
-                                </span>
+                                </button>
                             </td>
                             <td class="px-6 py-4 text-sm font-medium whitespace-nowrap">
-                                <div class="flex flex-wrap justify-end gap-2">
+                                <RowActions>
                                     <SubjectForm
                                         :subject="subject"
                                         trigger="Edit"
-                                        variant="outline"
-                                        size="sm"
                                         class="contents"
                                         @saved="handleSaved"
-                                    >
-                                        <Icon icon="edit" class="mr-1" />Edit
-                                    </SubjectForm>
-                                    <Button
-                                        v-if="subject.is_active"
-                                        variant="outline"
-                                        size="sm"
-                                        :class="tableActionButtonClass.deactivate"
-                                        @click="inactivateSubject(subject)"
-                                    >
-                                        <Icon icon="pause" class="mr-1" />Inactive
-                                    </Button>
-                                    <Button
-                                        v-else
-                                        variant="outline"
-                                        size="sm"
-                                        :class="tableActionButtonClass.activate"
-                                        @click="activateSubject(subject)"
-                                    >
-                                        <Icon icon="check" class="mr-1" />Active
-                                    </Button>
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        :class="tableActionButtonClass.delete"
-                                        @click="deleteSubject(subject)"
-                                    >
-                                        <Icon icon="trash" class="mr-1" />Delete
-                                    </Button>
-                                </div>
+                                    />
+                                    <RowAction kind="delete" @click="deleteSubject(subject)" />
+                                </RowActions>
                             </td>
                         </tr>
                     </tbody>

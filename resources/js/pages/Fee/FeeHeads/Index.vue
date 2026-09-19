@@ -276,11 +276,18 @@ const getFrequencyLabel = (frequency: string) => {
                     <div class="text-sm text-muted-foreground space-y-1 pt-2 border-t border-border">
                         <div>Frequency: {{ getFrequencyLabel(feeHead.default_frequency) }}</div>
                         <div>Order: {{ feeHead.sort_order }}</div>
+                        <div>
+                            <button
+                                type="button"
+                                :class="['px-2 py-1 text-xs font-medium rounded-full cursor-pointer transition-opacity hover:opacity-80', feeHead.is_active ? 'bg-success/10 text-success' : 'bg-muted text-foreground']"
+                                :title="feeHead.is_active ? 'Click to deactivate' : 'Click to activate'"
+                                @click="toggleActive(feeHead)"
+                            >
+                                {{ feeHead.is_active ? 'Active' : 'Inactive' }}
+                            </button>
+                        </div>
                     </div>
                     <div class="flex gap-2 pt-2">
-                        <Button @click="toggleActive(feeHead)" :variant="feeHead.is_active ? 'outline' : 'default'" size="sm" class="flex-1">
-                            {{ feeHead.is_active ? 'Deactivate' : 'Activate' }}
-                        </Button>
                         <Button variant="outline" size="sm" @click="router.visit(route('fee.heads.edit', feeHead.id))">
                             <Icon icon="edit" class="mr-1" />Edit
                         </Button>
@@ -350,15 +357,17 @@ const getFrequencyLabel = (frequency: string) => {
                                     <div class="text-sm text-muted-foreground">{{ getFrequencyLabel(feeHead.default_frequency) }}</div>
                                 </td>
                                 <td class="px-4 py-3">
-                                    <span :class="['px-2 py-1 text-xs font-medium rounded-full', feeHead.is_active ? 'bg-success/10 text-success' : 'bg-muted text-foreground']">
+                                    <button
+                                        type="button"
+                                        :class="['px-2 py-1 text-xs font-medium rounded-full cursor-pointer transition-opacity hover:opacity-80', feeHead.is_active ? 'bg-success/10 text-success' : 'bg-muted text-foreground']"
+                                        :title="feeHead.is_active ? 'Click to deactivate' : 'Click to activate'"
+                                        @click="toggleActive(feeHead)"
+                                    >
                                         {{ feeHead.is_active ? 'Active' : 'Inactive' }}
-                                    </span>
+                                    </button>
                                 </td>
                                 <td class="px-4 py-3 text-sm font-medium whitespace-nowrap">
                                     <div class="flex flex-wrap gap-2 justify-end">
-                                        <Button @click="toggleActive(feeHead)" :variant="feeHead.is_active ? 'outline' : 'default'" size="sm" class="min-w-[80px]">
-                                            {{ feeHead.is_active ? 'Deactivate' : 'Activate' }}
-                                        </Button>
                                         <Button variant="outline" size="sm" @click="router.visit(route('fee.heads.edit', feeHead.id))">
                                             <Icon icon="edit" class="mr-1 h-3 w-3" />Edit
                                         </Button>

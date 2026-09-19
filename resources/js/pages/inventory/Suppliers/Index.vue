@@ -66,16 +66,19 @@
                                 <div class="text-xs text-muted-foreground">{{ supplier.campus?.name }}</div>
                             </div>
                         </div>
-                        <span
+                        <button
+                            type="button"
                             :class="[
-                                'px-2 py-1 text-xs font-medium rounded-full shrink-0',
+                                'px-2 py-1 text-xs font-medium rounded-full shrink-0 cursor-pointer transition-opacity hover:opacity-80',
                                 supplier.is_active
                                     ? 'bg-success/10 text-success'
                                     : 'bg-destructive/10 text-destructive'
                             ]"
+                            :title="supplier.is_active ? 'Click to inactivate' : 'Click to activate'"
+                            @click="supplier.is_active ? inactivateSupplier(supplier.id) : activateSupplier(supplier.id)"
                         >
                             {{ supplier.is_active ? 'Active' : 'Inactive' }}
-                        </span>
+                        </button>
                     </div>
                     <div v-if="supplier.contact_person || supplier.phone || supplier.email" class="text-sm text-muted-foreground space-y-1 pt-2 border-t border-border">
                         <div v-if="supplier.contact_person" class="flex items-center gap-2">
@@ -97,24 +100,6 @@
                         </Button>
                         <Button variant="outline" size="sm" @click="router.visit(route('inventory.suppliers.edit', supplier.id))" class="flex-1">
                             <Icon icon="edit" class="mr-1" />Edit
-                        </Button>
-                        <Button 
-                            v-if="supplier.is_active"
-                            variant="outline" 
-                            size="sm" 
-                            @click="inactivateSupplier(supplier.id)"
-                            class="flex-1 text-warning hover:text-warning"
-                        >
-                            <Icon icon="eye-off" class="mr-1" />Inactivate
-                        </Button>
-                        <Button 
-                            v-else
-                            variant="outline" 
-                            size="sm" 
-                            @click="activateSupplier(supplier.id)"
-                            class="flex-1 text-success hover:text-success"
-                        >
-                            <Icon icon="check-circle" class="mr-1" />Activate
                         </Button>
                     </div>
                 </div>
@@ -178,16 +163,19 @@
                                     <div class="text-sm text-muted-foreground truncate max-w-[200px]">{{ supplier.email || '-' }}</div>
                                 </td>
                                 <td class="px-4 py-3 whitespace-nowrap">
-                                    <span
+                                    <button
+                                        type="button"
                                         :class="[
-                                            'px-2 py-1 text-xs font-medium rounded-full',
+                                            'px-2 py-1 text-xs font-medium rounded-full cursor-pointer transition-opacity hover:opacity-80',
                                             supplier.is_active
                                                 ? 'bg-success/10 text-success'
                                                 : 'bg-destructive/10 text-destructive'
                                         ]"
+                                        :title="supplier.is_active ? 'Click to inactivate' : 'Click to activate'"
+                                        @click="supplier.is_active ? inactivateSupplier(supplier.id) : activateSupplier(supplier.id)"
                                     >
                                         {{ supplier.is_active ? 'Active' : 'Inactive' }}
-                                    </span>
+                                    </button>
                                 </td>
                                 <td class="px-4 py-3 text-sm font-medium whitespace-nowrap">
                                     <div class="flex flex-wrap gap-2 justify-end">
@@ -196,24 +184,6 @@
                                         </Button>
                                         <Button variant="outline" size="sm" @click="router.visit(route('inventory.suppliers.edit', supplier.id))" class="min-h-8">
                                             <Icon icon="edit" class="mr-1 h-3 w-3" />Edit
-                                        </Button>
-                                        <Button 
-                                            v-if="supplier.is_active"
-                                            variant="outline" 
-                                            size="sm" 
-                                            @click="inactivateSupplier(supplier.id)"
-                                            class="min-h-8 text-warning hover:text-warning"
-                                        >
-                                            <Icon icon="eye-off" class="mr-1 h-3 w-3" />Inactivate
-                                        </Button>
-                                        <Button 
-                                            v-else
-                                            variant="outline" 
-                                            size="sm" 
-                                            @click="activateSupplier(supplier.id)"
-                                            class="min-h-8 text-success hover:text-success"
-                                        >
-                                            <Icon icon="check-circle" class="mr-1 h-3 w-3" />Activate
                                         </Button>
                                     </div>
                                 </td>

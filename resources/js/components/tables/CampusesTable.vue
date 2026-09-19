@@ -1,10 +1,9 @@
 <script setup lang="ts">
 import TablePagination from '@/components/tables/TablePagination.vue';
 import CampusForm from '@/components/forms/CampusForm.vue';
-import { Button } from '@/components/ui/button';
-import Icon from '@/components/Icon.vue';
+import RowAction from '@/components/tables/RowAction.vue';
+import RowActions from '@/components/tables/RowActions.vue';
 import { alert } from '@/utils';
-import { tableActionButtonClass } from '@/utils/table-actions';
 import axios from 'axios';
 import { ref, watch } from 'vue';
 import { route } from 'ziggy-js';
@@ -238,57 +237,31 @@ const inactivateCampus = (campus: any) => {
                                 </div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
-                                <span
+                                <button
+                                    type="button"
                                     :class="[
-                                        'inline-flex rounded-full px-2 py-1 text-xs font-semibold',
+                                        'inline-flex cursor-pointer rounded-full px-2 py-1 text-xs font-semibold transition-opacity hover:opacity-80',
                                         campus.is_active
                                             ? 'bg-success/10 text-success'
                                             : 'bg-destructive/10 text-destructive',
                                     ]"
+                                    :title="campus.is_active ? 'Click to deactivate' : 'Click to activate'"
+                                    @click="campus.is_active ? inactivateCampus(campus) : activateCampus(campus)"
                                 >
                                     {{ campus.is_active ? 'Active' : 'Inactive' }}
-                                </span>
+                                </button>
                             </td>
                             <td class="px-6 py-4 text-sm font-medium whitespace-nowrap">
-                                <div class="flex flex-wrap justify-end gap-2">
+                                <RowActions>
                                     <CampusForm
                                         :campus="campus"
                                         :campus-types="campusTypesLoaded"
                                         trigger="Edit"
-                                        variant="outline"
-                                        size="sm"
                                         class="contents"
                                         @saved="handleSaved"
-                                    >
-                                        <Icon icon="edit" class="mr-1" />Edit
-                                    </CampusForm>
-                                    <Button
-                                        v-if="campus.is_active"
-                                        variant="outline"
-                                        size="sm"
-                                        :class="tableActionButtonClass.deactivate"
-                                        @click="inactivateCampus(campus)"
-                                    >
-                                        <Icon icon="pause" class="mr-1" />Inactive
-                                    </Button>
-                                    <Button
-                                        v-else
-                                        variant="outline"
-                                        size="sm"
-                                        :class="tableActionButtonClass.activate"
-                                        @click="activateCampus(campus)"
-                                    >
-                                        <Icon icon="check" class="mr-1" />Active
-                                    </Button>
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        :class="tableActionButtonClass.delete"
-                                        @click="deleteCampus(campus)"
-                                    >
-                                        <Icon icon="trash" class="mr-1" />Delete
-                                    </Button>
-                                </div>
+                                    />
+                                    <RowAction kind="delete" @click="deleteCampus(campus)" />
+                                </RowActions>
                             </td>
                         </tr>
                     </tbody>

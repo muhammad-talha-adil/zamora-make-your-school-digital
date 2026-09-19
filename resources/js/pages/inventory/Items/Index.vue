@@ -316,7 +316,12 @@ const getStockStatus = (quantity: number) => {
                                     </div>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
-                                    <Badge :variant="item.is_active ? 'default' : 'destructive'">
+                                    <Badge
+                                        :variant="item.is_active ? 'default' : 'destructive'"
+                                        class="cursor-pointer transition-opacity hover:opacity-80"
+                                        :title="item.is_active ? 'Click to inactivate' : 'Click to activate'"
+                                        @click="toggleActive(item)"
+                                    >
                                         {{ item.is_active ? 'Active' : 'Inactive' }}
                                     </Badge>
                                 </td>
@@ -324,16 +329,6 @@ const getStockStatus = (quantity: number) => {
                                     <div class="flex flex-wrap gap-2" v-if="!showDeleted">
                                         <Button variant="outline" size="sm" title="Edit" @click="openEditPage(item)" class="min-h-11 min-w-11">
                                             <Icon icon="edit" class="mr-1" />Edit
-                                        </Button>
-                                        <Button
-                                            :variant="item.is_active ? 'destructive' : 'default'"
-                                            size="sm"
-                                            :title="item.is_active ? 'Inactivate' : 'Activate'"
-                                            @click="toggleActive(item)"
-                                            class="min-h-11"
-                                        >
-                                            <Icon :icon="item.is_active ? 'eye-off' : 'eye'" class="mr-1" />
-                                            {{ item.is_active ? 'Inactivate' : 'Activate' }}
                                         </Button>
                                     </div>
                                     <div class="flex flex-wrap gap-2" v-else>

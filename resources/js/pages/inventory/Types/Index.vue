@@ -264,13 +264,18 @@ const handleSaved = () => {
                                     </Badge>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
-                                    <Badge :variant="type.is_active ? 'default' : 'destructive'">
+                                    <Badge
+                                        :variant="type.is_active ? 'default' : 'destructive'"
+                                        class="cursor-pointer transition-opacity hover:opacity-80"
+                                        :title="type.is_active ? 'Click to inactivate' : 'Click to activate'"
+                                        @click="toggleActive(type)"
+                                    >
                                         {{ type.is_active ? 'Active' : 'Inactive' }}
                                     </Badge>
                                 </td>
                                 <td class="px-6 py-4 text-sm font-medium whitespace-nowrap">
                                     <div class="flex flex-wrap gap-2" v-if="!showInactive">
-                                        <InventoryTypeForm 
+                                        <InventoryTypeForm
                                             :inventory-type="type"
                                             :campuses="props.campuses"
                                             trigger=""
@@ -278,16 +283,6 @@ const handleSaved = () => {
                                             size="sm"
                                             @saved="handleSaved"
                                         />
-                                        <Button
-                                            :variant="type.is_active ? 'destructive' : 'default'"
-                                            size="sm"
-                                            :title="type.is_active ? 'Inactivate' : 'Activate'"
-                                            @click="toggleActive(type)"
-                                            class="min-h-11"
-                                        >
-                                            <Icon :icon="type.is_active ? 'eye-off' : 'eye'" class="mr-1" />
-                                            {{ type.is_active ? 'Inactivate' : 'Activate' }}
-                                        </Button>
                                     </div>
                                     <div class="flex flex-wrap gap-2" v-else>
                                         <Button variant="default" size="sm" @click="restoreType(type)" class="min-h-11">
