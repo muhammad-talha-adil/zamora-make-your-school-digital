@@ -68,3 +68,23 @@ push), but a local commit is cheap, reversible, and is the safety net against
 losing work to a crash, a context reset, or an interrupted session. When
 several small things get done in the same stretch, commit each logical unit
 separately rather than batching unrelated changes into one commit.
+
+## Token-efficient, minimal-touch execution
+
+This applies to Claude itself and to every agent it spawns. Default to the
+smallest, cheapest path that correctly finishes the task:
+
+- Touch only the files a fix genuinely requires. Don't open, re-read, or edit
+  files "while you're in there" unless the task needs it — an unrelated
+  cleanup is a separate task, not a bonus.
+- Don't re-read a file you already have the contents of in this conversation,
+  and don't re-run a search you've already run with the same query.
+- Prefer one well-scoped agent over several overlapping ones for a batch of
+  related fixes; only split into parallel agents when the pieces genuinely
+  don't share files (check for that first — an agent whose own sub-agents
+  end up touching the same controllers wastes more than it saves).
+- Keep agent prompts and reports tight — enough context to work correctly,
+  not a full re-explanation of the whole project.
+- Skip exploratory reads that don't change what gets written (e.g. don't
+  read five sibling files "for convention" when one is enough to confirm the
+  pattern).
