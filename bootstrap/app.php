@@ -3,10 +3,13 @@
 use App\Http\Middleware\CheckPermission;
 use App\Http\Middleware\EnsureArtisanUiAccess;
 use App\Http\Middleware\EnsurePublicWebsiteEnabled;
+use App\Http\Middleware\EnsureRole;
+use App\Http\Middleware\EnsureSchoolActive;
 use App\Http\Middleware\EnsureSubscriptionActive;
 use App\Http\Middleware\HandleAppearance;
 use App\Http\Middleware\HandleInertiaRequests;
 use App\Http\Middleware\RedirectPortalUsersFromDashboard;
+use App\Http\Middleware\RequiresPasswordConfirmation;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
@@ -29,6 +32,7 @@ return Application::configure(basePath: dirname(__DIR__))
             HandleInertiaRequests::class,
             AddLinkHeadersForPreloadedAssets::class,
             EnsureSubscriptionActive::class,
+            EnsureSchoolActive::class,
         ]);
 
         $middleware->alias([
@@ -37,10 +41,12 @@ return Application::configure(basePath: dirname(__DIR__))
             // Spatie's bare exception.
             'permission' => CheckPermission::class,
             'role' => RoleMiddleware::class,
+            'role.only' => EnsureRole::class,
             'role_or_permission' => RoleOrPermissionMiddleware::class,
             'artisan.ui' => EnsureArtisanUiAccess::class,
             'public.website' => EnsurePublicWebsiteEnabled::class,
             'redirect.portal-users' => RedirectPortalUsersFromDashboard::class,
+            'password.confirm.server' => RequiresPasswordConfirmation::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {

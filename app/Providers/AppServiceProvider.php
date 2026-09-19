@@ -2,6 +2,7 @@
 
 namespace App\Providers;
 
+use App\Models\School;
 use App\Models\Student;
 use App\Models\ThemeSetting;
 use App\Models\User;
@@ -12,10 +13,14 @@ use App\Services\GuardianService;
 use App\Services\Student\AdmissionCredentials;
 use App\Services\StudentService;
 use App\Services\StudentUserService;
+use Illuminate\Auth\Events\Login;
+use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Route;
 use Illuminate\Support\Facades\Schema;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 
 class AppServiceProvider extends ServiceProvider
@@ -100,6 +105,29 @@ class AppServiceProvider extends ServiceProvider
         // query per permission on every request.
         Gate::before(function (User $user) {
             return $user->hasRole('developer') ? true : null;
+        });
+
+        // "School is Active" toggle (`/settings/school-profile`): once off,
+        // nobody but developer/owner may sign in. An already-logged-in
+        // non-developer/owner user is caught on their next request by
+        // `EnsureSchoolActive` instead — this only guards the login attempt
+        // itself, which happens before that middleware ever sees a user.
+        Event::listen(Login::class, function (Login $event): void {
+            if ($event->user instanceof User && $event->user->hasAnyRole(['developer', 'owner'])) {
+                return;
+            }
+
+            $school = School::first();
+
+            if (! $school || $school->is_active) {
+                return;
+            }
+
+            Auth::guard($event->guard)->logout();
+
+            throw ValidationException::withMessages([
+                'email' => 'This school has been deactivated. Please contact your school owner or administrator.',
+            ]);
         });
     }
 }

@@ -10,6 +10,11 @@ import { computed } from 'vue';
 const page = usePage<AppPageProps>();
 const schoolName = computed(() => page.props.name);
 const logoPath = computed(() => page.props.school?.logo_path || '/sample-logo.png');
+// When the "Public Website Active" toggle is off, the public marketing pages
+// (Home/About/Contact/etc.) redirect anonymous visitors straight to login —
+// so the nav links pointing at them are hidden here too, rather than left
+// dangling to pages the visitor will just bounce off of.
+const publicWebsiteEnabled = computed(() => page.props.school?.website_enabled ?? true);
 
 const { resolvedAppearance, updateAppearance } = useAppearance();
 
@@ -31,7 +36,7 @@ const toggleTheme = () => {
                 </div>
 
                 <!-- Desktop Nav -->
-                <nav class="hidden space-x-8 md:flex">
+                <nav v-if="publicWebsiteEnabled" class="hidden space-x-8 md:flex">
                     <Link
                         href="/"
                         class="text-card-foreground transition-colors hover:text-primary"

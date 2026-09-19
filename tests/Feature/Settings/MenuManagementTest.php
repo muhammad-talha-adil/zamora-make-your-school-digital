@@ -2,19 +2,26 @@
 
 use App\Models\Menu;
 use App\Models\Permission;
+use App\Models\Role;
 use App\Models\User;
 use Spatie\Permission\PermissionRegistrar;
 
 /**
- * `school.menu.manage` is the permission the `menus.*` routes are gated on
- * (see routes/settings.php). Every mutating MenuController action must
- * accept holders of that permission and reject everyone else.
+ * `school.menu.manage` is the permission the `menus.*` write actions are
+ * gated on, and the whole `menus.*` route group is additionally
+ * developer-only (see routes/settings.php) — menu/sidebar structure is
+ * system-level configuration, kept out of even the owner's reach.
  */
 function userWithMenuPermission(bool $withPermission = true): User
 {
     Permission::firstOrCreate(['name' => 'school.menu.manage', 'guard_name' => 'web']);
+    Role::firstOrCreate(
+        ['name' => 'developer', 'guard_name' => 'web'],
+        ['label' => 'Developer', 'scope_level' => Role::SCOPE_SYSTEM, 'is_active' => true]
+    );
 
     $user = User::factory()->create();
+    $user->assignRole('developer');
 
     if ($withPermission) {
         $user->givePermissionTo('school.menu.manage');
@@ -38,9 +45,21 @@ test('a user with school.menu.manage can create a menu', function () {
     expect(Menu::where('title', 'Reports')->exists())->toBeTrue();
 });
 
-test('a user without school.menu.manage cannot create, update or delete a menu', function () {
-    $user = userWithMenuPermission(withPermission: false);
+test('a non-developer cannot reach menu-settings at all, even holding school.menu.manage', function () {
+    Permission::firstOrCreate(['name' => 'school.menu.manage', 'guard_name' => 'web']);
+    Role::firstOrCreate(
+        ['name' => 'owner', 'guard_name' => 'web'],
+        ['label' => 'School Owner', 'scope_level' => Role::SCOPE_SCHOOL, 'is_active' => true]
+    );
+
+    $user = User::factory()->create();
+    $user->assignRole('owner');
+    $user->givePermissionTo('school.menu.manage');
+    app(PermissionRegistrar::class)->forgetCachedPermissions();
+
     $menu = Menu::create(['title' => 'Reports', 'type' => 'main', 'path' => '/reports']);
+
+    $this->actingAs($user)->get(route('menus.index'))->assertForbidden();
 
     $this->actingAs($user)
         ->post(route('menus.store'), ['title' => 'New', 'type' => 'main'])

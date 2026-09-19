@@ -75,9 +75,12 @@ Route::prefix('staff')->name('staff.')->middleware($middleware)->group(function 
     Route::put('/members/{staffProfile}', [StaffController::class, 'updateStaff'])
         ->name('members.update')
         ->middleware('permission:staff.manage');
+    // Activate/deactivate is a status-changing, sensitive action — the acting
+    // user's own password is re-verified server-side (see
+    // RequiresPasswordConfirmation) before it takes effect.
     Route::patch('/members/{staffProfile}/toggle', [StaffController::class, 'toggleStaff'])
         ->name('members.toggle')
-        ->middleware('permission:staff.manage');
+        ->middleware(['permission:staff.manage', 'password.confirm.server']);
 
     // ------------------------------------------------------------- payroll
     // Generating and releasing are two abilities: the person who works the

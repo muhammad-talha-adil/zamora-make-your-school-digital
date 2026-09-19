@@ -45,8 +45,10 @@ Route::prefix('fee')->name('fee.')->middleware($middleware)->group(function () {
             ->middleware('permission:fee.head.manage');
         Route::post('/{feeHead}/toggle-active', [FeeHeadController::class, 'toggleActive'])->name('toggle-active')
             ->middleware('permission:fee.head.manage');
+        // Delete is a destructive, sensitive action — the acting user's own
+        // password is re-verified server-side before it runs.
         Route::delete('/{feeHead}', [FeeHeadController::class, 'destroy'])->name('destroy')
-            ->middleware('permission:fee.head.manage');
+            ->middleware(['permission:fee.head.manage', 'password.confirm.server']);
 
         // API endpoints
         Route::get('/all', [FeeHeadController::class, 'getAll'])->name('all')
@@ -60,7 +62,10 @@ Route::prefix('fee')->name('fee.')->middleware($middleware)->group(function () {
         Route::post('/', [DiscountTypeController::class, 'store'])->name('store');
         Route::get('/{discountType}/edit', [DiscountTypeController::class, 'edit'])->name('edit');
         Route::put('/{discountType}', [DiscountTypeController::class, 'update'])->name('update');
-        Route::delete('/{discountType}', [DiscountTypeController::class, 'destroy'])->name('destroy');
+        // Delete is a destructive, sensitive action — the acting user's own
+        // password is re-verified server-side before it runs.
+        Route::delete('/{discountType}', [DiscountTypeController::class, 'destroy'])->name('destroy')
+            ->middleware('password.confirm.server');
         Route::post('/{discountType}/toggle-active', [DiscountTypeController::class, 'toggleActive'])->name('toggle-active');
 
         // API endpoints
@@ -140,8 +145,10 @@ Route::prefix('fee')->name('fee.')->middleware($middleware)->group(function () {
             ->middleware('permission:fee.voucher.edit');
         Route::put('/{voucher}', [FeeVoucherController::class, 'update'])->name('update')
             ->middleware('permission:fee.voucher.edit');
+        // Delete is a destructive, sensitive action — the acting user's own
+        // password is re-verified server-side before it runs.
         Route::delete('/{voucher}', [FeeVoucherController::class, 'destroy'])->name('destroy')
-            ->middleware('permission:fee.voucher.delete');
+            ->middleware(['permission:fee.voucher.delete', 'password.confirm.server']);
 
         // Voucher Item Management (add/edit/remove fee heads)
         Route::post('/{voucher}/items', [FeeVoucherController::class, 'addItem'])->name('add-item')
@@ -182,12 +189,16 @@ Route::prefix('fee')->name('fee.')->middleware($middleware)->group(function () {
             ->middleware('permission:fee.view|fee.voucher.view');
     });
 
-    // Signed print links — no login required, but the link has to be one the
-    // app itself generated (and, being signed, one it can make expire). Before
-    // this was a bare public route: anyone who could guess or increment a
-    // voucher id could read a child's name, class and fee breakdown with no
-    // account at all.
-    Route::prefix('print-voucher')->name('print-voucher.')->withoutMiddleware('auth')->middleware('signed')->group(function () {
+    // Print links reachable two ways: an anonymous visitor with a signed link
+    // the app itself generated (a parent opening a challan from WhatsApp has
+    // no portal login), or a signed-in staff member who simply has
+    // permission — an owner clicking through from the app should never be
+    // turned away just because the URL in their address bar has no
+    // signature. `signed` is therefore not a blanket route middleware here;
+    // `FeeVoucherController::authorizePrint()` already does both checks
+    // itself (`Gate::authorize('print', ...)` when logged in, otherwise
+    // `hasValidSignature()`), so this route only needs to skip `auth`.
+    Route::prefix('print-voucher')->name('print-voucher.')->withoutMiddleware('auth')->group(function () {
         Route::get('/batch', [FeeVoucherController::class, 'printBatch'])->name('batch');
         Route::get('/{voucher}', [FeeVoucherController::class, 'print'])->name('single');
     });

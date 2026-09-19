@@ -7,6 +7,8 @@
  * reachable without logging in, but only with a link the app itself made.
  */
 
+use App\Models\Role;
+use App\Models\User;
 use Illuminate\Support\Facades\URL;
 use Tests\Support\FeeWorld;
 
@@ -43,4 +45,31 @@ it('refuses a link signed for a different voucher', function () {
     $tampered = str_replace((string) $this->voucher->id, (string) $otherVoucher->id, $signed);
 
     $this->get($tampered)->assertForbidden();
+});
+
+it('lets a logged-in owner open the plain (unsigned) print-voucher URL directly', function () {
+    // Issue #112: the `print-voucher.*` group used to run the `signed`
+    // middleware for every request, so even an authenticated owner clicking
+    // (or typing) the bare URL was rejected before the controller ever ran
+    // its own `auth()->check()` branch. The route now only strips `auth`,
+    // leaving `FeeVoucherController::authorizePrint()` to decide: a signed-in
+    // user goes through the policy, an anonymous one still needs a valid
+    // signature.
+    $this->actingAs($this->world->school->actor);
+
+    $this->get(route('fee.print-voucher.single', $this->voucher->id))->assertOk();
+});
+
+it('lets an owner (with no campus of their own) open the print-voucher URL for any campus', function () {
+    $role = Role::firstOrCreate(
+        ['name' => 'owner', 'guard_name' => 'web'],
+        ['label' => 'School Owner', 'scope_level' => Role::SCOPE_SCHOOL, 'is_active' => true]
+    );
+
+    $owner = User::factory()->create();
+    $owner->assignRole($role);
+
+    $this->actingAs($owner);
+
+    $this->get(route('fee.print-voucher.single', $this->voucher->id))->assertOk();
 });

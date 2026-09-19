@@ -75,7 +75,10 @@ it('logs a print', function () {
 });
 
 it('deletes a voucher that was never paid', function () {
-    $this->delete(route('fee.vouchers.destroy', $this->voucher->id))->assertRedirect();
+    // Delete is now password-gated (RequiresPasswordConfirmation) — see
+    // tests/Feature/Staff/Access/Case_02_PasswordConfirmationTest.php for
+    // the dedicated coverage of that middleware's own behaviour.
+    $this->delete(route('fee.vouchers.destroy', $this->voucher->id), ['password' => 'password'])->assertRedirect();
 
     expect(FeeVoucher::find($this->voucher->id))->toBeNull();
 });
@@ -83,7 +86,7 @@ it('deletes a voucher that was never paid', function () {
 it('refuses to delete a voucher with payments', function () {
     $this->voucher->update(['paid_amount' => 500]);
 
-    $this->delete(route('fee.vouchers.destroy', $this->voucher->id))->assertSessionHasErrors();
+    $this->delete(route('fee.vouchers.destroy', $this->voucher->id), ['password' => 'password'])->assertSessionHasErrors();
     expect(FeeVoucher::find($this->voucher->id))->not->toBeNull();
 });
 

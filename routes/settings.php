@@ -47,8 +47,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('settings/subscription', [SubscriptionController::class, 'index'])->name('subscription.index');
     Route::patch('settings/subscription', [SubscriptionController::class, 'update'])->name('subscription.update');
 
-    // Activity Log Routes (owner/developer-only, see ActivityLogController)
-    Route::get('settings/activity-log', [ActivityLogController::class, 'index'])->name('activity-log.index');
+    // Activity Log Routes (owner/developer-only — enforced here and again in
+    // ActivityLogController::authorizeUser() as defense-in-depth)
+    Route::get('settings/activity-log', [ActivityLogController::class, 'index'])->name('activity-log.index')
+        ->middleware('role.only:owner|developer');
 
     // School Profile Routes
     Route::get('settings/school-profile', [SchoolController::class, 'show'])->name('school-profile.show');
@@ -58,18 +60,21 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('settings/two-factor', [TwoFactorAuthenticationController::class, 'show'])
         ->name('two-factor.show');
 
-    // Menu Settings Routes
-    Route::get('settings/menu-settings', [MenuController::class, 'index'])->name('menus.index');
-    Route::get('settings/menus/all', [MenuController::class, 'apiIndex'])->name('menus.all');
-    Route::get('settings/menus/create', [MenuController::class, 'create'])->name('menus.create')->middleware('permission:school.menu.manage');
-    Route::post('settings/menus', [MenuController::class, 'store'])->name('menus.store')->middleware('permission:school.menu.manage');
-    Route::get('settings/menus/{menu}/edit', [MenuController::class, 'edit'])->name('menus.edit')->middleware('permission:school.menu.manage');
-    Route::patch('settings/menus/{menu}', [MenuController::class, 'update'])->name('menus.update')->middleware('permission:school.menu.manage');
-    Route::delete('settings/menus/{menu}', [MenuController::class, 'destroy'])->name('menus.destroy');
-    Route::patch('settings/menus/{menu}/inactivate', [MenuController::class, 'inactivate'])->name('menus.inactivate');
-    Route::patch('settings/menus/{menu}/activate', [MenuController::class, 'activate'])->name('menus.activate');
-    Route::patch('settings/menus/{id}/restore', [MenuController::class, 'restore'])->name('menus.restore');
-    Route::delete('settings/menus/{id}/force-delete', [MenuController::class, 'forceDelete'])->name('menus.force-delete');
+    // Menu Settings Routes — developer-only (not even owner), since sidebar
+    // structure is system-level configuration rather than a school setting.
+    Route::middleware('role.only:developer')->group(function (): void {
+        Route::get('settings/menu-settings', [MenuController::class, 'index'])->name('menus.index');
+        Route::get('settings/menus/all', [MenuController::class, 'apiIndex'])->name('menus.all');
+        Route::get('settings/menus/create', [MenuController::class, 'create'])->name('menus.create')->middleware('permission:school.menu.manage');
+        Route::post('settings/menus', [MenuController::class, 'store'])->name('menus.store')->middleware('permission:school.menu.manage');
+        Route::get('settings/menus/{menu}/edit', [MenuController::class, 'edit'])->name('menus.edit')->middleware('permission:school.menu.manage');
+        Route::patch('settings/menus/{menu}', [MenuController::class, 'update'])->name('menus.update')->middleware('permission:school.menu.manage');
+        Route::delete('settings/menus/{menu}', [MenuController::class, 'destroy'])->name('menus.destroy');
+        Route::patch('settings/menus/{menu}/inactivate', [MenuController::class, 'inactivate'])->name('menus.inactivate');
+        Route::patch('settings/menus/{menu}/activate', [MenuController::class, 'activate'])->name('menus.activate');
+        Route::patch('settings/menus/{id}/restore', [MenuController::class, 'restore'])->name('menus.restore');
+        Route::delete('settings/menus/{id}/force-delete', [MenuController::class, 'forceDelete'])->name('menus.force-delete');
+    });
 
     // Campus Types Routes
     Route::get('settings/campus-types', [CampusTypeController::class, 'getAll'])->name('campus-types.getAll');

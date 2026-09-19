@@ -755,10 +755,13 @@ class MenuSeeder extends Seeder
             'url' => '/settings/school-profile',
         ]);
 
+        // Developer-only: sidebar/menu structure is system-level configuration,
+        // kept out of even the owner's reach (see routes/settings.php).
         Menu::create([
             'title' => 'Menu Settings',
             'icon' => 'cog',
             'type' => 'footer',
+            'role' => 'developer',
             'order' => 4,
             'parent_id' => $settings->id,
             'is_active' => true,

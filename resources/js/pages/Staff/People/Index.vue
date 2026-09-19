@@ -194,7 +194,10 @@ const submitStaff = async () => {
 };
 
 const toggleStaff = async (member: StaffRow) => {
-    const result = await alert.confirm(
+    // Activate/deactivate is a sensitive action: the confirm dialog also
+    // collects the acting user's password, which `RequiresPasswordConfirmation`
+    // re-verifies server-side before the toggle is applied.
+    const result = await alert.confirmWithPassword(
         `Do you want to ${member.is_active ? 'deactivate' : 'activate'} ${member.user?.name ?? 'this staff member'}?`,
         'Update Staff Status',
         member.is_active ? 'Deactivate' : 'Activate',
@@ -205,11 +208,11 @@ const toggleStaff = async (member: StaffRow) => {
     }
 
     try {
-        await axios.patch(route('staff.members.toggle', member.id));
+        await axios.patch(route('staff.members.toggle', member.id), { password: result.password });
         alert.success('Staff status updated successfully.');
         loadStaff(staff.value.current_page);
     } catch (error: any) {
-        alert.error(error?.response?.data?.message || 'Failed to update staff status.');
+        alert.error(error?.response?.data?.errors?.password?.[0] || error?.response?.data?.message || 'Failed to update staff status.');
     }
 };
 
