@@ -190,12 +190,12 @@ Dedupe karke ek-ek line item, lekin har jagah ke original numbers cite kiye hain
 | ✅ Number input spinner arrows (up/down) hata do project-wide | [#68](ISSUES-RAW.md#issue-68) |
 | 🔴 Campus → Class → Section → Session cascading select flow + auto-select for branch-scoped users + remembered active session everywhere — investigated, confirmed as a genuinely large effort (~22 pages each with independent cascade logic, no shared composable exists yet); needs its own dedicated multi-session tracked task, not folded into a quick P2 pass. See recommendation: build `useCascadingAcademicSelect.ts` composable first, roll out to attendance/Create, Exam/Papers/Create, students/Create, Fee/Vouchers/Generate as a pilot, then the remaining ~18 pages | [#47, #64, #82, #99, #100](ISSUES-RAW.md#issue-64) |
 | ✅ Modal me duplicate Close(×) / Cancel controls — behavior consistent/clear ho (kept header X where a primary action exists, kept footer Close where it's the only control) | [#54, #55](ISSUES-RAW.md#issue-54) |
-| Dark-mode background/contrast missing on specific dropdowns (grade system dropdown, revaluation dropdowns) | [#89, #97](ISSUES-RAW.md#issue-89) |
-| Dark/Light mode should persist correctly per current mode when opening `/settings/appearance` | [#13](ISSUES-RAW.md#issue-13) |
-| Fee Settings tabs pattern should match School Profile tabs pattern (consistent settings-page shell) | [#44](ISSUES-RAW.md#issue-44) |
-| Sidebar open/close state persist across page refresh | [#124](ISSUES-RAW.md#issue-124) |
+| ✅ Dark-mode background/contrast missing on specific dropdowns (grade system dropdown, revaluation dropdowns) | [#89, #97](ISSUES-RAW.md#issue-89) |
+| ✅ Dark/Light mode should persist correctly per current mode when opening `/settings/appearance` | [#13](ISSUES-RAW.md#issue-13) |
+| ✅ Fee Settings tabs pattern should match School Profile tabs pattern (consistent settings-page shell) | [#44](ISSUES-RAW.md#issue-44) |
+| ✅ Sidebar open/close state persist across page refresh | [#124](ISSUES-RAW.md#issue-124) |
 
-**P2 progress note:** #5, #6, #7, #8, #12, #19, #54, #55, #68, #111 fully fixed; #9-11 and #39/#41 partially fixed (commits `3b9768f`, `0428697`, `910f88c`, `88c0492`). Remaining: finish #9-11 on the ~11 flagged files, swap remaining ~107 `<select>` usages onto `SearchableSelect.vue` for #39/#41, audit #75 (filter button), plus #81, #47/#64/#82/#99/#100, #89/#97, #13, #44, #124 not yet started.
+**P2 progress note:** #5, #6, #7, #8, #12, #13, #19, #44, #54, #55, #68, #89, #97, #111, #124 fully fixed; #9-11 and #39/#41/#81 partially fixed (commits `3b9768f`, `0428697`, `910f88c`, `88c0492`, `f980998`, `b360502`). Remaining: finish #9-11 on the ~11 flagged files, swap remaining ~107 `<select>` usages onto `SearchableSelect.vue` for #39/#41, audit #75 (filter button), wire `useFormValidity` into the ~34 page-level Create forms for #81. #47/#64/#82/#99/#100 (cascading selects) deliberately deferred as its own large tracked task — see line item above.
 
 ### P3 — Real Feature Gaps / Bigger Redesigns
 
