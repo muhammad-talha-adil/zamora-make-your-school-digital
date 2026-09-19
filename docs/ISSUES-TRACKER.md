@@ -181,10 +181,10 @@ Dedupe karke ek-ek line item, lekin har jagah ke original numbers cite kiye hain
 | ✅ Pagination sirf tab dikhe jab records selected per-page se zyada hon; sahi page-count calculate ho | [#5, #56, #58, #61, #62](ISSUES-RAW.md#issue-5) |
 | ✅ Page number bottom-right + pagination controls bottom-left, har table par | [#6](ISSUES-RAW.md#issue-6) |
 | ✅ Filters card ke upar ek consistent background/style, har table ke upar (jaisa Attendance Class Report) | [#7](ISSUES-RAW.md#issue-7) |
-| ✅ Status column + toggle switch + confirm modal, har jagah jahan active/inactive concept hai | [#8](ISSUES-RAW.md#issue-8) |
-| Consistent button color/icon system project-wide (delete=red hamesha, etc.), icon-only action columns with hover-to-reveal text | [#9, #10, #11](ISSUES-RAW.md#issue-9) |
+| ✅ Status column + toggle switch + confirm modal, har jagah jahan active/inactive concept hai (badge khud clickable hai, separate button nahi) | [#8](ISSUES-RAW.md#issue-8) |
+| 🟡 Consistent button color/icon system project-wide (delete=red hamesha, etc.), icon-only action columns with hover-to-reveal text — `RowAction`/`RowActions` shared component ban gaya + 17 files migrate ho gayi, ~11 files (MenuTable, Exam/Revaluations, Fee/Payments, Fee/Structures, Fee/Vouchers, Finance/Categories, Finance/PaymentMethods, Staff/Payroll, Staff/People, Transport, inventory/ItemsStock) abhi baaki | [#9, #10, #11](ISSUES-RAW.md#issue-9) |
 | ✅ `#` serial column hamesha table ka pehla column ho | [#12](ISSUES-RAW.md#issue-12) |
-| Select2-style searchable dropdowns everywhere + filter-button-required pattern (select karne ke baad Filter button dabana padta hai) | [#39, #41, #75, #111](ISSUES-RAW.md#issue-39) |
+| 🟡 Select2-style searchable dropdowns everywhere + filter-button-required pattern — naya `SearchableSelect.vue` component ban gaya, sirf 2/109 `<select>` swap hue (Fee/Payments/Index.vue), baaki follow-up chahiye; ✅ #111 (Add Custom Fee Head dropdown bug) fixed; #75 filter-button audit abhi baaki | [#39, #41, #75, #111](ISSUES-RAW.md#issue-39) |
 | ✅ CNIC (13) / Phone (11) maxlength enforce everywhere | [#19](ISSUES-RAW.md#issue-19) |
 | Required fields poore bhare bina Submit/Create button disabled rahe | [#81](ISSUES-RAW.md#issue-81) |
 | ✅ Number input spinner arrows (up/down) hata do project-wide | [#68](ISSUES-RAW.md#issue-68) |
@@ -195,7 +195,7 @@ Dedupe karke ek-ek line item, lekin har jagah ke original numbers cite kiye hain
 | Fee Settings tabs pattern should match School Profile tabs pattern (consistent settings-page shell) | [#44](ISSUES-RAW.md#issue-44) |
 | Sidebar open/close state persist across page refresh | [#124](ISSUES-RAW.md#issue-124) |
 
-**P2 progress note:** #5, #6, #7, #8, #12, #19, #54, #55, #68 fixed (commits `3b9768f`, `0428697`, `910f88c`). Remaining P2 line items (#9-11, #39/#41/#75/#111, #81, #47/#64/#82/#99/#100, #89/#97, #13, #44, #124) not yet started.
+**P2 progress note:** #5, #6, #7, #8, #12, #19, #54, #55, #68, #111 fully fixed; #9-11 and #39/#41 partially fixed (commits `3b9768f`, `0428697`, `910f88c`, `88c0492`). Remaining: finish #9-11 on the ~11 flagged files, swap remaining ~107 `<select>` usages onto `SearchableSelect.vue` for #39/#41, audit #75 (filter button), plus #81, #47/#64/#82/#99/#100, #89/#97, #13, #44, #124 not yet started.
 
 ### P3 — Real Feature Gaps / Bigger Redesigns
 
