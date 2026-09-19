@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { router } from '@inertiajs/vue3'
+import { alert } from '@/utils'
 
 interface GradeScale {
   id: number
@@ -37,12 +38,16 @@ const editScale = (id: number) => {
   router.get(route('exam.settings.grade-scales.edit-page', { id }))
 }
 
-const setActive = (id: number) => {
-  loading.value = true
-  router.patch(route('exam.grade-scales.set-active', { id }), {}, {
-    preserveScroll: true,
-    onFinish: () => {
-      loading.value = false
+const setActive = (scale: GradeScale) => {
+  alert.confirm(`Are you sure you want to set "${scale.name}" as the active grade scale?`, 'Set Active Grade Scale').then((result) => {
+    if (result.isConfirmed) {
+      loading.value = true
+      router.patch(route('exam.grade-scales.set-active', { id: scale.id }), {}, {
+        preserveScroll: true,
+        onFinish: () => {
+          loading.value = false
+        }
+      })
     }
   })
 }
@@ -111,7 +116,7 @@ const deleteScale = () => {
           <div class="flex gap-2">
             <button
               v-if="!scale.is_active"
-              @click="setActive(scale.id)"
+              @click="setActive(scale)"
               class="text-primary hover:text-primary text-sm"
               :disabled="loading"
             >

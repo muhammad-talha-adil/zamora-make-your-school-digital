@@ -12,7 +12,7 @@
             </div>
 
             <!-- Filters -->
-            <div class="bg-card rounded-lg shadow p-4 mb-6">
+            <FilterCard class="mb-6">
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                     <div>
                         <label class="block text-sm font-medium mb-1">Exam</label>
@@ -44,7 +44,7 @@
                         </Button>
                     </div>
                 </div>
-            </div>
+            </FilterCard>
 
             <!-- Revaluations Table -->
             <div v-if="loading" class="text-center py-8">
@@ -313,6 +313,7 @@ import { route } from 'ziggy-js'
 import AppLayout from '@/layouts/AppLayout.vue'
 import Icon from '@/components/Icon.vue'
 import InputError from '@/components/InputError.vue'
+import FilterCard from '@/components/FilterCard.vue'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
 import {

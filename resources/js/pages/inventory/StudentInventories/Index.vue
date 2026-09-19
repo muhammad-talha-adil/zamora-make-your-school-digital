@@ -4,6 +4,7 @@ import { alert, formatCurrency } from '@/utils';
 import { ref, watch } from 'vue';
 import axios from 'axios';
 import AppLayout from '@/layouts/AppLayout.vue';
+import FilterCard from '@/components/FilterCard.vue';
 import TablePagination from '@/components/tables/TablePagination.vue';
 import { Button } from '@/components/ui/button';
 import Icon from '@/components/Icon.vue';
@@ -181,7 +182,7 @@ const formatDate = (date: string) => {
             </div>
 
             <!-- Filters -->
-            <div class="flex flex-wrap gap-3">
+            <FilterCard class="flex flex-wrap gap-3">
                 <select v-model="campusFilter" class="w-full sm:w-48 rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm min-h-11">
                     <option value="">All Campuses</option>
                     <option v-for="campus in props.campuses" :key="campus.id" :value="campus.id">
@@ -194,7 +195,7 @@ const formatDate = (date: string) => {
                     <option value="partial_return">Partial Return</option>
                     <option value="returned">Returned</option>
                 </select>
-            </div>
+            </FilterCard>
 
             <!-- Table -->
             <div class="overflow-hidden rounded-lg border border-border bg-card shadow-sm">

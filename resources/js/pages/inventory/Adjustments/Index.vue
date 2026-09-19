@@ -18,7 +18,7 @@
             </div>
 
             <!-- Filters -->
-            <div class="bg-card rounded-lg shadow-sm p-4">
+            <FilterCard>
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
                     <div>
                         <label class="block text-sm font-medium text-muted-foreground mb-1">Campus</label>
@@ -78,7 +78,7 @@
                         />
                     </div>
                 </div>
-            </div>
+            </FilterCard>
 
             <!-- Adjustments Table -->
             <div class="table-scroll bg-card rounded-lg shadow-sm">
@@ -182,6 +182,7 @@ import { Head, router, Link } from '@inertiajs/vue3';
 import TablePagination from '@/components/tables/TablePagination.vue';
 import { reactive } from 'vue';
 import AppLayout from '@/layouts/AppLayout.vue';
+import FilterCard from '@/components/FilterCard.vue';
 import type { BreadcrumbItem } from '@/types';
 
 interface Props {

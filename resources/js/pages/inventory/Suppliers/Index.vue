@@ -238,6 +238,7 @@ import type { BreadcrumbItem } from '@/types';
 import SupplierForm from '@/components/forms/inventory/SupplierForm.vue';
 import { Button } from '@/components/ui/button';
 import Icon from '@/components/Icon.vue';
+import { alert } from '@/utils';
 
 interface Props {
     suppliers: {
@@ -307,18 +308,22 @@ const debouncedSearch = debounce(() => {
 }, 300);
 
 const inactivateSupplier = (id: number) => {
-    if (confirm('Are you sure you want to inactivate this supplier?')) {
-        router.patch(route('inventory.suppliers.inactivate', id), {}, {
-            onSuccess: () => router.reload(),
-        });
-    }
+    alert.confirm('Are you sure you want to inactivate this supplier?', 'Inactivate Supplier').then((result) => {
+        if (result.isConfirmed) {
+            router.patch(route('inventory.suppliers.inactivate', id), {}, {
+                onSuccess: () => router.reload(),
+            });
+        }
+    });
 };
 
 const activateSupplier = (id: number) => {
-    if (confirm('Are you sure you want to activate this supplier?')) {
-        router.patch(route('inventory.suppliers.activate', id), {}, {
-            onSuccess: () => router.reload(),
-        });
-    }
+    alert.confirm('Are you sure you want to activate this supplier?', 'Activate Supplier').then((result) => {
+        if (result.isConfirmed) {
+            router.patch(route('inventory.suppliers.activate', id), {}, {
+                onSuccess: () => router.reload(),
+            });
+        }
+    });
 };
 </script>

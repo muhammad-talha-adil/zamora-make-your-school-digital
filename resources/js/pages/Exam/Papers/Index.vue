@@ -16,7 +16,7 @@
             </div>
 
             <!-- Filters -->
-            <div class="flex flex-col sm:flex-row gap-2 md:gap-3 flex-wrap">
+            <FilterCard class="flex flex-col sm:flex-row gap-2 md:gap-3 flex-wrap">
                 <div class="w-full sm:w-56 md:w-64">
                     <Label for="filter-exam" class="sr-only">Filter by Exam</Label>
                     <select
@@ -45,7 +45,7 @@
                         </option>
                     </select>
                 </div>
-            </div>
+            </FilterCard>
 
             <!-- Papers Table -->
             <div class="overflow-hidden rounded-lg border border-border bg-card shadow-sm">
@@ -158,6 +158,7 @@ import type { BreadcrumbItem } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import Icon from '@/components/Icon.vue';
+import FilterCard from '@/components/FilterCard.vue';
 
 interface Exam {
     id: number;

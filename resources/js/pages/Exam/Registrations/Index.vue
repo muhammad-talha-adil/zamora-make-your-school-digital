@@ -16,7 +16,7 @@
             </div>
 
             <!-- Filters -->
-            <div class="flex flex-col sm:flex-row gap-2 md:gap-3 flex-wrap">
+            <FilterCard>
                 <div class="w-full sm:w-56 md:w-64">
                     <Label for="filter-group" class="sr-only">Filter by Group</Label>
                     <select
@@ -31,7 +31,7 @@
                         </option>
                     </select>
                 </div>
-            </div>
+            </FilterCard>
 
             <!-- Group Info -->
             <div v-if="props.group" class="bg-primary/10 border border-primary/40 rounded-lg p-4">
@@ -134,6 +134,7 @@ import type { BreadcrumbItem } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import Icon from '@/components/Icon.vue';
+import FilterCard from '@/components/FilterCard.vue';
 import type { RegistrationIndexProps } from '@/types/exam';
 
 const props = defineProps<RegistrationIndexProps>();
