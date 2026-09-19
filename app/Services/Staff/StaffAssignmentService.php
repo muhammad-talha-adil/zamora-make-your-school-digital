@@ -3,6 +3,7 @@
 namespace App\Services\Staff;
 
 use App\Models\Staff\StaffAssignment;
+use App\Models\StaffDesignation;
 use App\Models\StaffProfile;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Facades\DB;
@@ -242,5 +243,14 @@ class StaffAssignmentService
             'designation_id' => $assignment->designation_id,
             'department_id' => $assignment->department_id ?? $staff->department_id,
         ]);
+
+        // Becoming primary is a deliberate job change, so the mapped role is
+        // granted (additively — `assignRole`, never a destructive
+        // `syncRoles`) every time it happens, unlike a plain profile resave.
+        $role = StaffDesignation::find($assignment->designation_id)?->role;
+
+        if ($role && $staff->user) {
+            $staff->user->assignRole($role);
+        }
     }
 }

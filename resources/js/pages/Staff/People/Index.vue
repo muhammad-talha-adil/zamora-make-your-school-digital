@@ -16,7 +16,14 @@ interface Lookup {
     id: number;
     name: string;
     description?: string | null;
+    role?: string | null;
     is_active: boolean;
+}
+
+interface RoleOption {
+    id: number;
+    name: string;
+    label?: string | null;
 }
 
 interface Campus {
@@ -55,6 +62,7 @@ interface Props {
     departments: Lookup[];
     designations: Lookup[];
     campuses: Campus[];
+    roles: RoleOption[];
     filters: {
         search?: string;
         campus_id?: string;
@@ -108,7 +116,7 @@ const staffForm = reactive({
 });
 
 const departmentForm = reactive({ id: null as number | null, name: '', description: '', is_active: true });
-const designationForm = reactive({ id: null as number | null, name: '', description: '', is_active: true });
+const designationForm = reactive({ id: null as number | null, name: '', description: '', role: '' as string | null, is_active: true });
 
 const formatMoney = (amount: number | string | null | undefined) => {
     if (amount === null || amount === undefined) {
@@ -225,15 +233,17 @@ const submitDepartment = async () => {
 
 const submitDesignation = async () => {
     try {
+        const payload = { ...designationForm, role: designationForm.role || null };
         if (designationForm.id) {
-            await axios.put(route('staff.designations.update', designationForm.id), designationForm);
+            await axios.put(route('staff.designations.update', designationForm.id), payload);
         } else {
-            await axios.post(route('staff.designations.store'), designationForm);
+            await axios.post(route('staff.designations.store'), payload);
         }
         alert.success('Designation saved.');
         designationForm.id = null;
         designationForm.name = '';
         designationForm.description = '';
+        designationForm.role = '';
         designationForm.is_active = true;
         router.reload({ only: ['designations'] });
     } catch (error: any) {
@@ -287,15 +297,19 @@ const submitDesignation = async () => {
                                     <div class="mb-3 space-y-2">
                                         <Input v-model="designationForm.name" placeholder="Designation name" />
                                         <textarea v-model="designationForm.description" :class="textareaClass" placeholder="Description" />
+                                        <select v-model="designationForm.role" :class="selectClass">
+                                            <option :value="''">System Role — none —</option>
+                                            <option v-for="r in props.roles" :key="r.id" :value="r.name">{{ r.label || r.name }}</option>
+                                        </select>
                                         <div class="flex gap-2">
                                             <Button size="sm" @click="submitDesignation">{{ designationForm.id ? 'Update' : 'Add' }}</Button>
-                                            <Button v-if="designationForm.id" size="sm" variant="outline" @click="designationForm.id = null; designationForm.name = ''; designationForm.description = ''">Cancel</Button>
+                                            <Button v-if="designationForm.id" size="sm" variant="outline" @click="designationForm.id = null; designationForm.name = ''; designationForm.description = ''; designationForm.role = ''">Cancel</Button>
                                         </div>
                                     </div>
                                     <ul class="max-h-48 space-y-1 overflow-y-auto text-sm">
                                         <li v-for="d in props.designations" :key="d.id" class="flex items-center justify-between rounded border border-border px-2 py-1.5">
-                                            <span>{{ d.name }}</span>
-                                            <button type="button" class="text-xs text-primary hover:underline" @click="designationForm.id = d.id; designationForm.name = d.name; designationForm.description = d.description ?? ''; designationForm.is_active = d.is_active">Edit</button>
+                                            <span>{{ d.name }}<span v-if="d.role" class="ml-1 text-xs text-muted-foreground">→ {{ d.role }}</span></span>
+                                            <button type="button" class="text-xs text-primary hover:underline" @click="designationForm.id = d.id; designationForm.name = d.name; designationForm.description = d.description ?? ''; designationForm.role = d.role ?? ''; designationForm.is_active = d.is_active">Edit</button>
                                         </li>
                                     </ul>
                                 </div>

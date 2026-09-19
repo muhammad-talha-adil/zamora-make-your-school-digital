@@ -14,13 +14,21 @@ interface Lookup {
     id: number;
     name: string;
     description?: string | null;
+    role?: string | null;
     is_active: boolean;
+}
+
+interface RoleOption {
+    id: number;
+    name: string;
+    label?: string | null;
 }
 
 interface Props {
     departments: Lookup[];
     designations: Lookup[];
     documentTypes: Lookup[];
+    roles: RoleOption[];
 }
 
 const props = defineProps<Props>();
@@ -44,7 +52,7 @@ const tabs: { key: TabKey; label: string }[] = [
 ];
 
 const departmentForm = reactive({ id: null as number | null, name: '', description: '', is_active: true });
-const designationForm = reactive({ id: null as number | null, name: '', description: '', is_active: true });
+const designationForm = reactive({ id: null as number | null, name: '', description: '', role: '' as string | null, is_active: true });
 const documentTypeForm = reactive({ id: null as number | null, name: '', is_active: true });
 
 const resetDepartmentForm = () => {
@@ -58,6 +66,7 @@ const resetDesignationForm = () => {
     designationForm.id = null;
     designationForm.name = '';
     designationForm.description = '';
+    designationForm.role = '';
     designationForm.is_active = true;
 };
 
@@ -78,6 +87,7 @@ const editDesignation = (designation: Lookup) => {
     designationForm.id = designation.id;
     designationForm.name = designation.name;
     designationForm.description = designation.description ?? '';
+    designationForm.role = designation.role ?? '';
     designationForm.is_active = designation.is_active;
 };
 
@@ -104,10 +114,11 @@ const submitDepartment = async () => {
 
 const submitDesignation = async () => {
     try {
+        const payload = { ...designationForm, role: designationForm.role || null };
         if (designationForm.id) {
-            await axios.put(route('staff.designations.update', designationForm.id), designationForm);
+            await axios.put(route('staff.designations.update', designationForm.id), payload);
         } else {
-            await axios.post(route('staff.designations.store'), designationForm);
+            await axios.post(route('staff.designations.store'), payload);
         }
         alert.success('Designation saved.');
         resetDesignationForm();
@@ -208,6 +219,10 @@ const deactivateDocumentType = async (type: Lookup) => {
                     <div class="space-y-2">
                         <Input v-model="designationForm.name" placeholder="Designation name" />
                         <textarea v-model="designationForm.description" :class="textareaClass" placeholder="Description" />
+                        <select v-model="designationForm.role" :class="selectClass">
+                            <option :value="''">System Role — none —</option>
+                            <option v-for="r in props.roles" :key="r.id" :value="r.name">{{ r.label || r.name }}</option>
+                        </select>
                         <div class="flex gap-2">
                             <Button size="sm" @click="submitDesignation">{{ designationForm.id ? 'Update' : 'Add' }}</Button>
                             <Button v-if="designationForm.id" size="sm" variant="outline" @click="resetDesignationForm">Cancel</Button>
@@ -218,6 +233,7 @@ const deactivateDocumentType = async (type: Lookup) => {
                             <div>
                                 <span class="text-foreground">{{ d.name }}</span>
                                 <span v-if="!d.is_active" class="ml-2 text-xs text-muted-foreground">(inactive)</span>
+                                <span v-if="d.role" class="ml-2 text-xs text-muted-foreground">→ {{ d.role }}</span>
                             </div>
                             <button type="button" class="text-xs text-primary hover:underline" @click="editDesignation(d)">Edit</button>
                         </li>

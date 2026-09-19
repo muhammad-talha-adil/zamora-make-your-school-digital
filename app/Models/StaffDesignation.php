@@ -10,6 +10,7 @@ class StaffDesignation extends Model
     protected $fillable = [
         'name',
         'description',
+        'role',
         'is_active',
     ];
 

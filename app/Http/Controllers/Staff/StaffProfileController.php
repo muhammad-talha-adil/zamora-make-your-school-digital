@@ -6,6 +6,7 @@ use App\Http\Controllers\Concerns\ResolvesOwnStaffProfile;
 use App\Http\Controllers\Controller;
 use App\Models\Campus;
 use App\Models\Gender;
+use App\Models\Role;
 use App\Models\SchoolClass;
 use App\Models\Session;
 use App\Models\Staff\StaffAssignment;
@@ -64,8 +65,9 @@ class StaffProfileController extends Controller
 
         return Inertia::render('Staff/People/Index', [
             'departments' => StaffDepartment::orderBy('name')->get(['id', 'name']),
-            'designations' => StaffDesignation::orderBy('name')->get(['id', 'name']),
+            'designations' => StaffDesignation::orderBy('name')->get(['id', 'name', 'description', 'role', 'is_active']),
             'campuses' => Campus::orderBy('name')->get(['id', 'name']),
+            'roles' => Role::orderBy('name')->get(['id', 'name', 'label']),
             'filters' => $request->only(['search', 'campus_id', 'department_id', 'designation_id', 'status']),
         ]);
     }

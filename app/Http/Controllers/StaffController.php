@@ -6,6 +6,7 @@ use App\Models\Campus;
 use App\Models\Month;
 use App\Models\PayrollRun;
 use App\Models\PayrollRunItem;
+use App\Models\Role;
 use App\Models\Staff\StaffAttendance;
 use App\Models\Staff\StaffDocument;
 use App\Models\Staff\StaffDocumentType;
@@ -114,6 +115,7 @@ class StaffController extends Controller
             'departments' => StaffDepartment::orderBy('name')->get(),
             'designations' => StaffDesignation::orderBy('name')->get(),
             'documentTypes' => StaffDocumentType::orderBy('name')->get(),
+            'roles' => Role::orderBy('name')->get(['id', 'name', 'label']),
         ]);
     }
 
@@ -182,6 +184,7 @@ class StaffController extends Controller
         $data = $request->validate([
             'name' => 'required|string|max:100|unique:staff_designations,name',
             'description' => 'nullable|string|max:255',
+            'role' => 'nullable|string|exists:roles,name',
         ]);
 
         $designation = StaffDesignation::create($data + ['is_active' => true]);
@@ -198,6 +201,7 @@ class StaffController extends Controller
         $data = $request->validate([
             'name' => 'required|string|max:100|unique:staff_designations,name,'.$designation->id,
             'description' => 'nullable|string|max:255',
+            'role' => 'nullable|string|exists:roles,name',
             'is_active' => 'boolean',
         ]);
 
@@ -244,7 +248,7 @@ class StaffController extends Controller
                 'is_active' => $data['is_active'] ?? true,
             ]);
 
-            return StaffProfile::create([
+            $profile = StaffProfile::create([
                 'user_id' => $user->id,
                 'employee_no' => $employeeNo,
                 'campus_id' => $data['campus_id'] ?? null,
@@ -260,6 +264,10 @@ class StaffController extends Controller
                 'account_no' => $data['account_no'] ?? null,
                 'is_active' => $data['is_active'] ?? true,
             ]);
+
+            $this->assignDesignationRole($user, $data['designation_id'] ?? null);
+
+            return $profile;
         });
 
         return response()->json([
@@ -292,6 +300,8 @@ class StaffController extends Controller
         ]);
 
         DB::transaction(function () use ($staffProfile, $data) {
+            $previousDesignationId = $staffProfile->designation_id;
+
             $staffProfile->user->update([
                 'name' => $data['name'],
                 'email' => $data['email'] ?: $staffProfile->user->email,
@@ -314,6 +324,14 @@ class StaffController extends Controller
                 'account_no' => $data['account_no'] ?? null,
                 'is_active' => $data['is_active'] ?? true,
             ]);
+
+            // Only touch roles when the designation actually changed in this
+            // request — an admin may have granted extra roles by hand, and
+            // resaving unrelated fields (salary, bank details, ...) must not
+            // silently re-run the designation's role grant every time.
+            if (($data['designation_id'] ?? null) !== $previousDesignationId) {
+                $this->assignDesignationRole($staffProfile->user, $data['designation_id'] ?? null);
+            }
         });
 
         return response()->json([
@@ -374,6 +392,27 @@ class StaffController extends Controller
             'message' => 'Salary payment marked successfully.',
             'payrollItem' => $payrollItem,
         ]);
+    }
+
+    /**
+     * Grants the Spatie role mapped to a designation, if any.
+     *
+     * Additive (`assignRole`), never destructive: a fresh hire has no roles
+     * to preserve, and a designation change should not strip a role an admin
+     * granted by hand for reasons the designation mapping does not know
+     * about.
+     */
+    protected function assignDesignationRole(User $user, ?int $designationId): void
+    {
+        if (! $designationId) {
+            return;
+        }
+
+        $role = StaffDesignation::find($designationId)?->role;
+
+        if ($role) {
+            $user->assignRole($role);
+        }
     }
 
     protected function generateEmployeeNo(): string
