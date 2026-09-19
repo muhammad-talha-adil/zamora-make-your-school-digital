@@ -18,7 +18,7 @@
                         <label class="block text-sm font-medium mb-1">Exam</label>
                         <select
                             v-model="filters.exam_id"
-                            class="w-full border rounded px-3 py-2"
+                            class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                         >
                             <option value="">Select Exam</option>
                             <option v-for="exam in exams" :key="exam.id" :value="exam.id">
@@ -30,7 +30,7 @@
                         <label class="block text-sm font-medium mb-1">Status</label>
                         <select
                             v-model="filters.status"
-                            class="w-full border rounded px-3 py-2"
+                            class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                         >
                             <option value="">All Statuses</option>
                             <option v-for="option in statusOptions" :key="option" :value="option">
@@ -160,7 +160,7 @@
                     <form @submit.prevent="submitRequest">
                         <div class="mb-4">
                             <label class="block text-sm font-medium mb-1">Exam</label>
-                            <select v-model="form.exam_id" class="w-full border rounded px-3 py-2" required>
+                            <select v-model="form.exam_id" class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2" required>
                                 <option value="">Select Exam</option>
                                 <option v-for="exam in exams" :key="exam.id" :value="exam.id">
                                     {{ exam.name }}
@@ -169,7 +169,7 @@
                         </div>
                         <div class="mb-4">
                             <label class="block text-sm font-medium mb-1">Student</label>
-                            <select v-model="form.student_id" class="w-full border rounded px-3 py-2" required>
+                            <select v-model="form.student_id" class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2" required>
                                 <option value="">Select Student</option>
                                 <option v-for="student in students" :key="student.id" :value="student.id">
                                     {{ student.name }}

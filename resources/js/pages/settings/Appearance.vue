@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import { Head, useForm } from '@inertiajs/vue3';
-import { ref } from 'vue';
+import { onMounted, ref } from 'vue';
 
 import { type BreadcrumbItem } from '@/types';
+import { useAppearance } from '@/composables/useAppearance';
 
 import AppLayout from '@/layouts/AppLayout.vue';
 import SettingsLayout from '@/layouts/settings/Layout.vue';
@@ -16,7 +17,16 @@ interface Props {
 
 const props = defineProps<Props>();
 
-const activeTab = ref('light');
+const { resolvedAppearance } = useAppearance();
+
+const activeTab = ref(resolvedAppearance.value);
+
+// useAppearance() reads the saved preference in its own onMounted hook, which
+// runs before this one (registered afterwards on the same instance), so
+// resolvedAppearance is up to date by the time this fires.
+onMounted(() => {
+    activeTab.value = resolvedAppearance.value;
+});
 
 const breadcrumbItems: BreadcrumbItem[] = [
     {

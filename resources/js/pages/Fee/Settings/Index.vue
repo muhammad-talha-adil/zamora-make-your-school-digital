@@ -1,10 +1,32 @@
 <script setup lang="ts">
-import { Head, router } from '@inertiajs/vue3';
+import { Head } from '@inertiajs/vue3';
+import { ref, computed } from 'vue';
+
 import AppLayout from '@/layouts/AppLayout.vue';
 import type { BreadcrumbItem } from '@/types';
-import { Button } from '@/components/ui/button';
-import Icon from '@/components/Icon.vue';
-import { route } from 'ziggy-js';
+import FeeHeadsPanel from './FeeHeadsPanel.vue';
+import DiscountTypesPanel from './DiscountTypesPanel.vue';
+import FineRulesPanel from './FineRulesPanel.vue';
+
+interface Props {
+    feeHeadsData: {
+        feeHeads: unknown;
+        filters?: Record<string, unknown>;
+        categories: Array<{ value: string; label: string }>;
+    } | null;
+    discountTypes: unknown[] | null;
+    fineRulesData: {
+        fineRules: unknown[];
+        campuses: unknown[];
+        sessions: unknown[];
+        classes: unknown[];
+        sections: unknown[];
+        feeHeads: unknown[];
+        filters?: Record<string, unknown>;
+    } | null;
+}
+
+const props = defineProps<Props>();
 
 const breadcrumbItems: BreadcrumbItem[] = [
     { title: 'Dashboard', href: '/dashboard' },
@@ -12,32 +34,13 @@ const breadcrumbItems: BreadcrumbItem[] = [
     { title: 'Settings', href: '/fee/settings' },
 ];
 
-const settings = [
-    {
-        title: 'Fee Heads',
-        description: 'Manage fee heads and categories',
-        icon: 'list',
-        color: 'text-primary',
-        bgColor: 'bg-primary/10',
-        route: 'fee.settings.fee-heads',
-    },
-    {
-        title: 'Discount Types',
-        description: 'Manage discount types and default values',
-        icon: 'percent',
-        color: 'text-success',
-        bgColor: 'bg-success/10',
-        route: 'fee.settings.discount-types',
-    },
-    {
-        title: 'Fine Rules',
-        description: 'Configure late payment fine rules',
-        icon: 'alert-circle',
-        color: 'text-destructive',
-        bgColor: 'bg-destructive/10',
-        route: 'fee.settings.fine-rules',
-    },
-];
+const tabs = computed(() => [
+    { id: 'fee-heads', label: 'Fee Heads', visible: props.feeHeadsData !== null },
+    { id: 'discount-types', label: 'Discount Types', visible: props.discountTypes !== null },
+    { id: 'fine-rules', label: 'Fine Rules', visible: props.fineRulesData !== null },
+].filter((tab) => tab.visible));
+
+const activeTab = ref(tabs.value[0]?.id ?? 'fee-heads');
 </script>
 
 <template>
@@ -55,32 +58,55 @@ const settings = [
                 </p>
             </div>
 
-            <!-- Settings Grid -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                <div
-                    v-for="setting in settings"
-                    :key="setting.route"
-                    class="bg-card rounded-lg border border-border p-6 hover:shadow-lg transition-shadow cursor-pointer"
-                    @click="router.visit(route(setting.route))"
-                >
-                    <div class="flex items-start gap-4">
-                        <div :class="['p-3 rounded-lg', setting.bgColor]">
-                            <Icon :icon="setting.icon" :class="['h-6 w-6', setting.color]" />
-                        </div>
-                        <div class="flex-1">
-                            <h3 class="text-lg font-semibold text-foreground">
-                                {{ setting.title }}
-                            </h3>
-                            <p class="mt-1 text-sm text-muted-foreground">
-                                {{ setting.description }}
-                            </p>
-                            <Button variant="link" class="mt-3 p-0 h-auto">
-                                Manage
-                                <Icon icon="arrow-right" class="ml-1 h-4 w-4" />
-                            </Button>
-                        </div>
-                    </div>
-                </div>
+            <!-- Tabs -->
+            <div class="border-b border-border overflow-x-auto overflow-hidden">
+                <nav class="-mb-px flex space-x-4 md:space-x-8 min-w-0">
+                    <button
+                        v-for="tab in tabs"
+                        :key="tab.id"
+                        @click="activeTab = tab.id"
+                        :class="[
+                            activeTab === tab.id
+                                ? 'border-primary text-primary'
+                                : 'border-transparent text-muted-foreground hover:border-border hover:text-foreground',
+                            'border-b-2 px-1 py-2 text-sm font-medium whitespace-nowrap',
+                        ]"
+                    >
+                        {{ tab.label }}
+                    </button>
+                </nav>
+            </div>
+
+            <!-- Tabs are kept mounted (v-show) rather than unmounted (v-if) so
+                 switching tabs never discards a tab's filters or in-progress
+                 form state, matching the fix applied to School Profile's tabs
+                 for #24/#56-58/#60/#62. -->
+
+            <!-- Fee Heads Tab -->
+            <div v-if="feeHeadsData" v-show="activeTab === 'fee-heads'">
+                <FeeHeadsPanel
+                    :fee-heads="feeHeadsData.feeHeads"
+                    :filters="feeHeadsData.filters"
+                    :categories="feeHeadsData.categories"
+                />
+            </div>
+
+            <!-- Discount Types Tab -->
+            <div v-if="discountTypes" v-show="activeTab === 'discount-types'">
+                <DiscountTypesPanel :discount-types="discountTypes" />
+            </div>
+
+            <!-- Fine Rules Tab -->
+            <div v-if="fineRulesData" v-show="activeTab === 'fine-rules'">
+                <FineRulesPanel
+                    :fine-rules="fineRulesData.fineRules"
+                    :campuses="fineRulesData.campuses"
+                    :sessions="fineRulesData.sessions"
+                    :classes="fineRulesData.classes"
+                    :sections="fineRulesData.sections"
+                    :fee-heads="fineRulesData.feeHeads"
+                    :filters="fineRulesData.filters"
+                />
             </div>
         </div>
     </AppLayout>

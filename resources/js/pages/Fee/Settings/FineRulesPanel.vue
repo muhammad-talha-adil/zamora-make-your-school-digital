@@ -1,0 +1,743 @@
+<script setup lang="ts">
+import { ref, computed, watch } from 'vue';
+import { route } from 'ziggy-js';
+import axios from 'axios';
+import { Button } from '@/components/ui/button';
+import { Label } from '@/components/ui/label';
+import { Input } from '@/components/ui/input';
+import { alert } from '@/utils';
+
+interface FineRule {
+    id: number;
+    name: string;
+    campus_id: number;
+    session_id: number;
+    class_id: number | null;
+    section_id: number | null;
+    fee_head_id: number | null;
+    grace_days: number;
+    fine_type: string;
+    fine_value: number;
+    effective_from: string;
+    effective_to: string | null;
+    is_active: boolean;
+    campus?: { id: number; name: string };
+    session?: { id: number; name: string };
+    schoolClass?: { id: number; name: string };
+    section?: { id: number; name: string };
+    feeHead?: { id: number; name: string };
+}
+
+interface Props {
+    fineRules: FineRule[];
+    campuses: { id: number; name: string }[];
+    sessions: { id: number; name: string }[];
+    classes: { id: number; name: string }[];
+    sections: { id: number; name: string; class_id: number }[];
+    feeHeads: { id: number; name: string }[];
+    filters?: {
+        campus_id?: number;
+        session_id?: number;
+        class_id?: number;
+        is_active?: boolean;
+        search?: string;
+    };
+}
+
+const props = defineProps<Props>();
+
+const showCreateModal = ref(false);
+const editingRule = ref<FineRule | null>(null);
+const isSubmitting = ref(false);
+const fineRulesData = ref<FineRule[]>(props.fineRules || []);
+const isLoading = ref(false);
+
+const formErrors = ref<Record<string, string>>({});
+
+const normalizeErrors = (errors: Record<string, string | string[]>) => {
+    return Object.fromEntries(
+        Object.entries(errors).map(([key, value]) => [
+            key,
+            Array.isArray(value) ? String(value[0] ?? 'Validation failed.') : String(value),
+        ]),
+    );
+};
+
+const filterCampus = ref<string>(props.filters?.campus_id ? String(props.filters.campus_id) : '');
+const filterSession = ref<string>(props.filters?.session_id ? String(props.filters.session_id) : '');
+const filterClass = ref<string>(props.filters?.class_id ? String(props.filters.class_id) : '');
+const filterActive = ref<string>(
+    props.filters?.is_active === true ? 'true' : props.filters?.is_active === false ? 'false' : '',
+);
+const searchQuery = ref(props.filters?.search || '');
+
+const form = ref({
+    name: '',
+    campus_id: '',
+    session_id: '',
+    class_id: '',
+    section_id: '',
+    fee_head_id: '',
+    grace_days: 0,
+    fine_type: 'fixed_per_day',
+    fine_value: 0,
+    effective_from: '',
+    effective_to: '',
+    is_active: true,
+});
+
+const filteredSections = computed(() => {
+    if (!form.value.class_id) return [];
+    return props.sections.filter((s) => s.class_id === Number(form.value.class_id));
+});
+
+const showPercentage = computed(() => {
+    return form.value.fine_type === 'percent';
+});
+
+const validateForm = (): boolean => {
+    formErrors.value = {};
+    let isValid = true;
+
+    if (!form.value.name.trim()) {
+        formErrors.value.name = 'Rule name is required';
+        isValid = false;
+    } else if (form.value.name.length > 100) {
+        formErrors.value.name = 'Rule name must not exceed 100 characters';
+        isValid = false;
+    }
+
+    if (!form.value.campus_id) {
+        formErrors.value.campus_id = 'Campus is required';
+        isValid = false;
+    }
+
+    if (!form.value.session_id) {
+        formErrors.value.session_id = 'Session is required';
+        isValid = false;
+    }
+
+    if (form.value.class_id && form.value.section_id) {
+        const section = props.sections.find((s) => s.id === Number(form.value.section_id));
+        if (section && section.class_id !== Number(form.value.class_id)) {
+            formErrors.value.section_id = 'Section does not belong to the selected class';
+            isValid = false;
+        }
+    }
+
+    if (form.value.grace_days < 0) {
+        formErrors.value.grace_days = 'Grace days cannot be negative';
+        isValid = false;
+    }
+
+    if (form.value.fine_value <= 0) {
+        formErrors.value.fine_value = 'Fine value must be greater than 0';
+        isValid = false;
+    } else if (showPercentage.value && form.value.fine_value > 100) {
+        formErrors.value.fine_value = 'Percentage cannot exceed 100%';
+        isValid = false;
+    }
+
+    if (!form.value.effective_from) {
+        formErrors.value.effective_from = 'Effective from date is required';
+        isValid = false;
+    }
+
+    if (form.value.effective_to) {
+        const fromDate = new Date(form.value.effective_from);
+        const toDate = new Date(form.value.effective_to);
+        if (toDate < fromDate) {
+            formErrors.value.effective_to = 'End date must be after start date';
+            isValid = false;
+        }
+    }
+
+    return isValid;
+};
+
+let searchDebounceTimer: ReturnType<typeof setTimeout> | null = null;
+
+const fetchFineRules = () => {
+    const params: Record<string, string> = {};
+
+    if (filterCampus.value) params.campus_id = filterCampus.value;
+    if (filterSession.value) params.session_id = filterSession.value;
+    if (filterClass.value) params.class_id = filterClass.value;
+    if (filterActive.value !== '') params.is_active = filterActive.value;
+    if (searchQuery.value.trim()) params.search = searchQuery.value.trim();
+
+    isLoading.value = true;
+
+    axios.get(route('fee.settings.fine-rules'), {
+        params,
+        headers: {
+            Accept: 'application/json',
+            'X-Requested-With': 'XMLHttpRequest',
+        },
+    }).then((response) => {
+        fineRulesData.value = response.data.fineRules || [];
+    }).finally(() => {
+        isLoading.value = false;
+    });
+};
+
+watch([filterCampus, filterSession, filterClass, filterActive], fetchFineRules);
+
+watch(searchQuery, () => {
+    if (searchDebounceTimer) {
+        clearTimeout(searchDebounceTimer);
+    }
+
+    searchDebounceTimer = window.setTimeout(() => {
+        fetchFineRules();
+    }, 300);
+});
+
+const resetForm = () => {
+    form.value = {
+        name: '',
+        campus_id: props.campuses[0]?.id?.toString() || '',
+        session_id: props.sessions[0]?.id?.toString() || '',
+        class_id: '',
+        section_id: '',
+        fee_head_id: '',
+        grace_days: 0,
+        fine_type: 'fixed_per_day',
+        fine_value: 0,
+        effective_from: new Date().toISOString().split('T')[0],
+        effective_to: '',
+        is_active: true,
+    };
+    formErrors.value = {};
+};
+
+const openCreateModal = () => {
+    resetForm();
+    editingRule.value = null;
+    showCreateModal.value = true;
+};
+
+const openEditModal = (rule: FineRule) => {
+    form.value = {
+        name: rule.name,
+        campus_id: rule.campus_id?.toString() || '',
+        session_id: rule.session_id?.toString() || '',
+        class_id: rule.class_id?.toString() || '',
+        section_id: rule.section_id?.toString() || '',
+        fee_head_id: rule.fee_head_id?.toString() || '',
+        grace_days: rule.grace_days,
+        fine_type: rule.fine_type,
+        fine_value: rule.fine_value,
+        effective_from: rule.effective_from,
+        effective_to: rule.effective_to || '',
+        is_active: rule.is_active,
+    };
+    formErrors.value = {};
+    editingRule.value = rule;
+    showCreateModal.value = true;
+};
+
+const closeModal = () => {
+    showCreateModal.value = false;
+    editingRule.value = null;
+    resetForm();
+};
+
+watch(() => form.value.class_id, () => {
+    form.value.section_id = '';
+});
+
+const submitForm = () => {
+    if (!validateForm()) {
+        return;
+    }
+
+    isSubmitting.value = true;
+
+    const data = {
+        name: form.value.name,
+        campus_id: form.value.campus_id ? Number(form.value.campus_id) : null,
+        session_id: form.value.session_id ? Number(form.value.session_id) : null,
+        class_id: form.value.class_id ? Number(form.value.class_id) : null,
+        section_id: form.value.section_id ? Number(form.value.section_id) : null,
+        fee_head_id: form.value.fee_head_id ? Number(form.value.fee_head_id) : null,
+        grace_days: Number(form.value.grace_days),
+        fine_type: form.value.fine_type,
+        fine_value: Number(form.value.fine_value),
+        effective_from: form.value.effective_from,
+        effective_to: form.value.effective_to || null,
+        is_active: form.value.is_active,
+    };
+
+    if (editingRule.value) {
+        axios.put(route('fee.settings.fine-rules.update', editingRule.value.id), data, {
+            headers: {
+                Accept: 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+            },
+        }).then(() => {
+            closeModal();
+            fetchFineRules();
+        }).catch((error) => {
+            formErrors.value = normalizeErrors(error.response?.data?.errors || {});
+        }).finally(() => {
+            isSubmitting.value = false;
+        });
+    } else {
+        axios.post(route('fee.settings.fine-rules.store'), data, {
+            headers: {
+                Accept: 'application/json',
+                'X-Requested-With': 'XMLHttpRequest',
+            },
+        }).then(() => {
+            closeModal();
+            fetchFineRules();
+        }).catch((error) => {
+            formErrors.value = normalizeErrors(error.response?.data?.errors || {});
+        }).finally(() => {
+            isSubmitting.value = false;
+        });
+    }
+};
+
+const deleteRule = (rule: FineRule) => {
+    alert
+        .confirm(
+            `Are you sure you want to delete "${rule.name}"?`,
+            'Delete Fine Rule',
+            'Yes, delete it!',
+        )
+        .then((result) => {
+            if (result.isConfirmed) {
+                axios.delete(route('fee.settings.fine-rules.destroy', rule.id), {
+                    headers: {
+                        Accept: 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                    },
+                }).then(() => {
+                    alert.success('Fine rule deleted successfully!');
+                    fetchFineRules();
+                }).catch(() => {
+                    alert.error('Failed to delete fine rule. Please try again.');
+                });
+            }
+        });
+};
+
+const toggleStatus = (rule: FineRule) => {
+    const actionText = rule.is_active ? 'deactivate' : 'activate';
+    const confirmButtonText = rule.is_active ? 'Yes, deactivate it!' : 'Yes, activate it!';
+
+    alert
+        .confirm(
+            `Are you sure you want to ${actionText} "${rule.name}"?`,
+            actionText.charAt(0).toUpperCase() + actionText.slice(1) + ' Fine Rule',
+            confirmButtonText,
+        )
+        .then((result) => {
+            if (result.isConfirmed) {
+                axios.patch(route('fee.settings.fine-rules.toggle-status', rule.id), {}, {
+                    headers: {
+                        Accept: 'application/json',
+                        'X-Requested-With': 'XMLHttpRequest',
+                    },
+                }).then((response) => {
+                    const updatedRule = response.data.fineRule;
+
+                    fineRulesData.value = fineRulesData.value.map((item) =>
+                        item.id === updatedRule.id
+                            ? {
+                                ...item,
+                                is_active: updatedRule.is_active,
+                            }
+                            : item,
+                    );
+
+                    alert.success(`Fine rule ${actionText}d successfully!`);
+                }).catch(() => {
+                    alert.error('Failed to update status. Please try again.');
+                });
+            }
+        });
+};
+
+const getFineTypeLabel = (type: string): string => {
+    const labels: Record<string, string> = {
+        fixed_per_day: 'Fixed Per Day',
+        fixed_once: 'Fixed (One Time)',
+        percent: 'Percentage',
+    };
+    return labels[type] || type;
+};
+
+const formatDate = (date: string): string => {
+    if (!date) return '-';
+    return new Date(date).toLocaleDateString('en-PK');
+};
+
+const fineTypeOptions = [
+    { value: 'fixed_per_day', label: 'Fixed Amount Per Day' },
+    { value: 'fixed_once', label: 'Fixed Amount (One Time)' },
+    { value: 'percent', label: 'Percentage of Amount' },
+];
+</script>
+
+<template>
+    <div class="space-y-6">
+        <!-- Header -->
+        <div class="flex flex-wrap gap-2 justify-between items-center">
+            <div>
+                <h2 class="text-lg font-semibold text-foreground">Fine Rules</h2>
+                <p class="mt-1 text-sm text-muted-foreground">
+                    Configure late fee payment fines
+                </p>
+            </div>
+            <Button @click="openCreateModal">
+                Add Fine Rule
+            </Button>
+        </div>
+
+        <!-- Filters -->
+        <div class="bg-card rounded-lg border border-border p-4">
+            <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
+                <div class="space-y-2">
+                    <Label for="fine-rule-filter-campus">Campus</Label>
+                    <select
+                        id="fine-rule-filter-campus"
+                        v-model="filterCampus"
+                        class="w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground"
+                    >
+                        <option value="">All Campuses</option>
+                        <option v-for="campus in props.campuses" :key="campus.id" :value="campus.id.toString()">
+                            {{ campus.name }}
+                        </option>
+                    </select>
+                </div>
+                <div class="space-y-2">
+                    <Label for="fine-rule-filter-session">Session</Label>
+                    <select
+                        id="fine-rule-filter-session"
+                        v-model="filterSession"
+                        class="w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground"
+                    >
+                        <option value="">All Sessions</option>
+                        <option v-for="session in props.sessions" :key="session.id" :value="session.id.toString()">
+                            {{ session.name }}
+                        </option>
+                    </select>
+                </div>
+                <div class="space-y-2">
+                    <Label for="fine-rule-filter-class">Class</Label>
+                    <select
+                        id="fine-rule-filter-class"
+                        v-model="filterClass"
+                        class="w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground"
+                    >
+                        <option value="">All Classes</option>
+                        <option v-for="cls in props.classes" :key="cls.id" :value="cls.id.toString()">
+                            {{ cls.name }}
+                        </option>
+                    </select>
+                </div>
+                <div class="space-y-2">
+                    <Label for="fine-rule-filter-status">Status</Label>
+                    <select
+                        id="fine-rule-filter-status"
+                        v-model="filterActive"
+                        class="w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground"
+                    >
+                        <option value="">All Status</option>
+                        <option value="true">Active</option>
+                        <option value="false">Inactive</option>
+                    </select>
+                </div>
+                <div class="space-y-2">
+                    <Label for="fine-rule-search">Search</Label>
+                    <Input
+                        id="fine-rule-search"
+                        v-model="searchQuery"
+                        placeholder="Search rules..."
+                    />
+                </div>
+            </div>
+        </div>
+
+        <!-- Fine Rules Table -->
+        <div class="bg-card rounded-lg border border-border overflow-hidden">
+            <div class="overflow-x-auto">
+                <table class="w-full text-sm">
+                    <thead class="bg-muted">
+                        <tr>
+                            <th class="text-left py-3 px-4 text-muted-foreground">Sr#</th>
+                            <th class="text-left py-3 px-4 text-muted-foreground">Name</th>
+                            <th class="text-left py-3 px-4 text-muted-foreground">Scope</th>
+                            <th class="text-left py-3 px-4 text-muted-foreground">Grace Days</th>
+                            <th class="text-left py-3 px-4 text-muted-foreground">Fine Type</th>
+                            <th class="text-right py-3 px-4 text-muted-foreground">Value</th>
+                            <th class="text-left py-3 px-4 text-muted-foreground">Effective From</th>
+                            <th class="text-left py-3 px-4 text-muted-foreground">Fee Head</th>
+                            <th class="text-center py-3 px-4 text-muted-foreground">Status</th>
+                            <th class="text-center py-3 px-4 text-muted-foreground">Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr v-for="(rule, index) in fineRulesData" :key="rule.id" class="border-t border-border">
+                            <td class="py-3 px-4 text-muted-foreground">{{ index + 1 }}</td>
+                            <td class="py-3 px-4 text-foreground font-medium">{{ rule.name }}</td>
+                            <td class="py-3 px-4 text-muted-foreground">
+                                <div class="text-xs">
+                                    <div>{{ rule.campus?.name || 'All' }}</div>
+                                    <div v-if="rule.schoolClass" class="text-muted-foreground">{{ rule.schoolClass.name }}</div>
+                                </div>
+                            </td>
+                            <td class="py-3 px-4 text-muted-foreground">{{ rule.grace_days }} days</td>
+                            <td class="py-3 px-4 text-muted-foreground">{{ getFineTypeLabel(rule.fine_type) }}</td>
+                            <td class="py-3 px-4 text-right text-foreground">
+                                {{ rule.fine_value }}<span v-if="rule.fine_type === 'percent'">%</span>
+                            </td>
+                            <td class="py-3 px-4 text-muted-foreground">
+                                {{ formatDate(rule.effective_from) }}
+                                <span v-if="rule.effective_to" class="text-xs text-muted-foreground"> - {{ formatDate(rule.effective_to) }}</span>
+                            </td>
+                            <td class="py-3 px-4 text-muted-foreground">
+                                {{ rule.feeHead?.name || 'All Fees' }}
+                            </td>
+                            <td class="py-3 px-4 text-center">
+                                <button
+                                    @click="toggleStatus(rule)"
+                                    :class="['inline-flex items-center px-2 py-1 rounded-full text-xs font-medium cursor-pointer hover:opacity-80', rule.is_active ? 'bg-success/10 text-success' : 'bg-muted text-foreground']"
+                                >
+                                    {{ rule.is_active ? 'Active' : 'Inactive' }}
+                                </button>
+                            </td>
+                            <td class="py-3 px-4 text-center">
+                                <div class="flex justify-center gap-2">
+                                    <Button
+                                        :variant="rule.is_active ? 'outline' : 'default'"
+                                        size="sm"
+                                        @click="toggleStatus(rule)"
+                                    >
+                                        {{ rule.is_active ? 'Inactive' : 'Active' }}
+                                    </Button>
+                                    <Button variant="outline" size="sm" @click="openEditModal(rule)">
+                                        Edit
+                                    </Button>
+                                    <Button variant="destructive" size="sm" @click="deleteRule(rule)">
+                                        Delete
+                                    </Button>
+                                </div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+                <div v-if="isLoading" class="text-center text-muted-foreground py-8">
+                    Loading fine rules...
+                </div>
+                <div v-else-if="fineRulesData.length === 0" class="text-center text-muted-foreground py-8">
+                    No fine rules configured yet. Click "Add Fine Rule" to create one.
+                </div>
+            </div>
+        </div>
+
+        <!-- Create/Edit Modal -->
+        <div v-if="showCreateModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
+            <div class="bg-card rounded-lg p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto">
+                <h2 class="text-lg font-semibold text-foreground mb-4">
+                    {{ editingRule ? 'Edit Fine Rule' : 'Add Fine Rule' }}
+                </h2>
+                <form @submit.prevent="submitForm" class="space-y-4">
+                    <!-- Rule Name -->
+                    <div class="space-y-2">
+                        <Label for="name">Rule Name *</Label>
+                        <Input
+                            id="name"
+                            v-model="form.name"
+                            required
+                            placeholder="e.g. Late Fee Fine for Monthly Tuition"
+                            :class="formErrors.name ? 'border-destructive' : ''"
+                        />
+                        <p v-if="formErrors.name" class="text-xs text-destructive">{{ formErrors.name }}</p>
+                    </div>
+
+                    <!-- Campus & Session -->
+                    <div class="grid gap-4 md:grid-cols-2">
+                        <div class="space-y-2">
+                            <Label for="campus_id">Campus *</Label>
+                            <select
+                                id="campus_id"
+                                v-model="form.campus_id"
+                                required
+                                :class="['w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground', formErrors.campus_id ? 'border-destructive' : '']"
+                            >
+                                <option value="">Select Campus</option>
+                                <option v-for="campus in props.campuses" :key="campus.id" :value="campus.id.toString()">
+                                    {{ campus.name }}
+                                </option>
+                            </select>
+                            <p v-if="formErrors.campus_id" class="text-xs text-destructive">{{ formErrors.campus_id }}</p>
+                        </div>
+                        <div class="space-y-2">
+                            <Label for="session_id">Session *</Label>
+                            <select
+                                id="session_id"
+                                v-model="form.session_id"
+                                required
+                                :class="['w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground', formErrors.session_id ? 'border-destructive' : '']"
+                            >
+                                <option value="">Select Session</option>
+                                <option v-for="session in props.sessions" :key="session.id" :value="session.id.toString()">
+                                    {{ session.name }}
+                                </option>
+                            </select>
+                            <p v-if="formErrors.session_id" class="text-xs text-destructive">{{ formErrors.session_id }}</p>
+                        </div>
+                    </div>
+
+                    <!-- Class & Section (Optional) -->
+                    <div class="grid gap-4 md:grid-cols-2">
+                        <div class="space-y-2">
+                            <Label for="class_id">Class (Optional)</Label>
+                            <select
+                                id="class_id"
+                                v-model="form.class_id"
+                                class="w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground"
+                            >
+                                <option value="">All Classes</option>
+                                <option v-for="cls in props.classes" :key="cls.id" :value="cls.id.toString()">
+                                    {{ cls.name }}
+                                </option>
+                            </select>
+                        </div>
+                        <div class="space-y-2">
+                            <Label for="section_id">Section (Optional)</Label>
+                            <select
+                                id="section_id"
+                                v-model="form.section_id"
+                                :disabled="!form.class_id"
+                                :class="['w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground', formErrors.section_id ? 'border-destructive' : '']"
+                            >
+                                <option value="">All Sections</option>
+                                <option v-for="section in filteredSections" :key="section.id" :value="section.id.toString()">
+                                    {{ section.name }}
+                                </option>
+                            </select>
+                            <p v-if="formErrors.section_id" class="text-xs text-destructive">{{ formErrors.section_id }}</p>
+                        </div>
+                    </div>
+
+                    <!-- Fee Head (Optional) -->
+                    <div class="space-y-2">
+                        <Label for="fee_head_id">Apply to Fee Head (Optional)</Label>
+                        <select
+                            id="fee_head_id"
+                            v-model="form.fee_head_id"
+                            class="w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground"
+                        >
+                            <option value="">All Fee Heads</option>
+                            <option v-for="fh in props.feeHeads" :key="fh.id" :value="fh.id.toString()">
+                                {{ fh.name }}
+                            </option>
+                        </select>
+                        <p class="text-xs text-muted-foreground">Leave empty to apply to all fee types</p>
+                    </div>
+
+                    <!-- Grace Days & Fine Type -->
+                    <div class="grid gap-4 md:grid-cols-2">
+                        <div class="space-y-2">
+                            <Label for="grace_days">Grace Days *</Label>
+                            <Input
+                                id="grace_days"
+                                v-model="form.grace_days"
+                                type="number"
+                                min="0"
+                                required
+                                :class="formErrors.grace_days ? 'border-destructive' : ''"
+                            />
+                            <p class="text-xs text-muted-foreground">Days before fine applies</p>
+                            <p v-if="formErrors.grace_days" class="text-xs text-destructive">{{ formErrors.grace_days }}</p>
+                        </div>
+                        <div class="space-y-2">
+                            <Label for="fine_type">Fine Type *</Label>
+                            <select
+                                id="fine_type"
+                                v-model="form.fine_type"
+                                required
+                                class="w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground"
+                            >
+                                <option v-for="opt in fineTypeOptions" :key="opt.value" :value="opt.value">
+                                    {{ opt.label }}
+                                </option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Fine Value -->
+                    <div class="space-y-2">
+                        <Label for="fine_value">
+                            Fine Value {{ showPercentage ? '(%)' : '' }} *
+                        </Label>
+                        <Input
+                            id="fine_value"
+                            v-model="form.fine_value"
+                            type="number"
+                            step="0.01"
+                            min="0"
+                            :max="showPercentage ? 100 : undefined"
+                            required
+                            :class="formErrors.fine_value ? 'border-destructive' : ''"
+                        />
+                        <p class="text-xs text-muted-foreground">
+                            <span v-if="showPercentage">Enter percentage (0-100)</span>
+                            <span v-else>Enter fixed amount in PKR</span>
+                        </p>
+                        <p v-if="formErrors.fine_value" class="text-xs text-destructive">{{ formErrors.fine_value }}</p>
+                    </div>
+
+                    <!-- Effective Dates -->
+                    <div class="grid gap-4 md:grid-cols-2">
+                        <div class="space-y-2">
+                            <Label for="effective_from">Effective From *</Label>
+                            <Input
+                                id="effective_from"
+                                v-model="form.effective_from"
+                                type="date"
+                                required
+                                :class="formErrors.effective_from ? 'border-destructive' : ''"
+                            />
+                            <p v-if="formErrors.effective_from" class="text-xs text-destructive">{{ formErrors.effective_from }}</p>
+                        </div>
+                        <div class="space-y-2">
+                            <Label for="effective_to">Effective To (Optional)</Label>
+                            <Input
+                                id="effective_to"
+                                v-model="form.effective_to"
+                                type="date"
+                                :class="formErrors.effective_to ? 'border-destructive' : ''"
+                            />
+                            <p v-if="formErrors.effective_to" class="text-xs text-destructive">{{ formErrors.effective_to }}</p>
+                        </div>
+                    </div>
+
+                    <!-- Active Status -->
+                    <div class="flex items-center gap-2">
+                        <input
+                            type="checkbox"
+                            id="is_active"
+                            v-model="form.is_active"
+                            class="rounded border-border"
+                        />
+                        <Label for="is_active" class="text-sm font-normal">Active</Label>
+                    </div>
+
+                    <!-- Form Actions -->
+                    <div class="flex flex-wrap justify-end gap-3 pt-4">
+                        <Button type="button" variant="outline" @click="closeModal">Cancel</Button>
+                        <Button type="submit" :disabled="isSubmitting">
+                            {{ isSubmitting ? 'Saving...' : (editingRule ? 'Update' : 'Create') }}
+                        </Button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+</template>

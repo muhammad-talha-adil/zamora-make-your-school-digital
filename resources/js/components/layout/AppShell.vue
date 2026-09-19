@@ -262,10 +262,28 @@ import AppLogoIcon from '../AppLogoIcon.vue'
 import Icon from '../Icon.vue'
 import type { MenuItem } from '../../types'
 
+const SIDEBAR_COLLAPSED_KEY = 'sidebar-collapsed'
+
+const getStoredSidebarCollapsed = (): boolean => {
+  if (typeof window === 'undefined') {
+    return false
+  }
+
+  return localStorage.getItem(SIDEBAR_COLLAPSED_KEY) === 'true'
+}
+
 const isOpen = ref(false)
-const collapsed = ref(false)
+const collapsed = ref(getStoredSidebarCollapsed())
 const tempExpand = ref(false)
 const activeMenuKey = ref<string | null>(null)
+
+watch(collapsed, (value) => {
+  if (typeof window === 'undefined') {
+    return
+  }
+
+  localStorage.setItem(SIDEBAR_COLLAPSED_KEY, String(value))
+})
 
 const toggleMenu = (key: string) => {
   activeMenuKey.value = activeMenuKey.value === key ? null : key

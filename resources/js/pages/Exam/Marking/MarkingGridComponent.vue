@@ -65,7 +65,7 @@
                         <select
                             v-model="gradeSystemId"
                             @change="onGradeSystemChange"
-                            class="ml-1 border-border rounded-md text-sm shadow-sm focus:ring-primary focus:border-primary"
+                            class="ml-1 flex h-9 rounded-md border border-input bg-background px-2 text-sm text-foreground shadow-sm focus:border-primary focus:ring-primary"
                         >
                             <option :value="null">Select Grade System</option>
                             <option v-for="gs in gradeSystems" :key="gs.id" :value="gs.id">
