@@ -131,42 +131,46 @@ Every page under `resources/js/pages/` that renders a data table or paginated li
 
 ### P0 — Security / Access-Control Bugs
 
+**Status: ✅ ALL FIXED** (commit `2fcfd0f`)
+
 | Issue(s) | Summary |
 |---|---|
-| [#2](ISSUES-RAW.md#issue-2) | Jab "School is Active" off ho, sirf developer + owner hi login kar sakein — baaki sab ko block karo. |
-| [#15](ISSUES-RAW.md#issue-15) | `/settings/menu-settings` sirf developer ko show ho. |
-| [#16](ISSUES-RAW.md#issue-16) | `/settings/activity-log` sirf owner + developer ko show ho. |
-| [#3](ISSUES-RAW.md#issue-3) | Public website off hone par login navbar me pages ke buttons bhi hide hon. |
-| [#52, #53](ISSUES-RAW.md#issue-52) | Sensitive actions (Activate/Deactivate/Delete/status-change) par har baar confirmation aaye + owner/admin password server-side verify ho, sirf JS se nahi. |
-| [#112](ISSUES-RAW.md#issue-112) | Owner ko khud `/fee/print-voucher/1` access nahi mil raha — permission/policy bug. |
+| ✅ [#2](ISSUES-RAW.md#issue-2) | Jab "School is Active" off ho, sirf developer + owner hi login kar sakein — baaki sab ko block karo. |
+| ✅ [#15](ISSUES-RAW.md#issue-15) | `/settings/menu-settings` sirf developer ko show ho. |
+| ✅ [#16](ISSUES-RAW.md#issue-16) | `/settings/activity-log` sirf owner + developer ko show ho. |
+| ✅ [#3](ISSUES-RAW.md#issue-3) | Public website off hone par login navbar me pages ke buttons bhi hide hon. |
+| ✅ [#52, #53](ISSUES-RAW.md#issue-52) | Sensitive actions (Activate/Deactivate/Delete/status-change) par har baar confirmation aaye + owner/admin password server-side verify ho, sirf JS se nahi. |
+| ✅ [#112](ISSUES-RAW.md#issue-112) | Owner ko khud `/fee/print-voucher/1` access nahi mil raha — permission/policy bug. |
 
 ### P1 — Broken Functionality (errors / silent failures)
 
+**Status: ✅ ALL FIXED** (commits `2b419a1`, `9427f25`, `2e67a22`, `08ecb7c`)
+
 | Issue(s) | Summary |
 |---|---|
-| [#56](ISSUES-RAW.md#issue-56) | Class add karne ke baad Classes table kabhi kabhi refresh nahi hoti / show hi nahi hoti. |
-| [#57](ISSUES-RAW.md#issue-57) | Naye classes Section dropdown me available nahi hote. |
-| [#58](ISSUES-RAW.md#issue-58) | Sections toggle karne par data ghayab ho jata hai, action buttons responsive nahi. |
-| [#60](ISSUES-RAW.md#issue-60) | Session Activate/Deactivate aur Delete action error dete hain, kaam nahi karte. |
-| [#62](ISSUES-RAW.md#issue-62) | Subjects toggle karne par records ghayab ho jate hain. |
-| [#24](ISSUES-RAW.md#issue-24) | Class add karne ke baad Sections tab ke Class dropdown me naya class dikhne ke liye page refresh chahiye hota hai. |
-| [#67](ISSUES-RAW.md#issue-67) | Admission form me fee structure manual entry input bohot slow type hota hai. |
-| [#70](ISSUES-RAW.md#issue-70) | Manual entry sirf 1 fee head ke liye select karne par system sab heads me manual entry maangta hai — validation bug. |
-| [#77, #78](ISSUES-RAW.md#issue-77) | Add Exam Type ke baad modal auto close nahi hota, table refresh nahi hoti — manual page refresh karna padta hai. |
-| [#87](ISSUES-RAW.md#issue-87) | "Existing papers found for this combination" jab dikh raha hota hai jab wo actually informational message hai, error jaisa treat ho raha hai. |
-| [#88](ISSUES-RAW.md#issue-88) | Exams status dropdown har case me sahi se functional hai ya nahi — confirm/fix. |
-| [#90](ISSUES-RAW.md#issue-90) | Max-marks exceed karne par validation error UI tod deta hai (input field upar chala jata hai), marking grid table responsive nahi. |
-| [#92](ISSUES-RAW.md#issue-92) | Exam status save karne ke baad manual page refresh chahiye hota hai. |
-| [#93](ISSUES-RAW.md#issue-93) | Koi filter select kiye baghair bhi "Top 5 Toppers" show ho raha hai — galat baseline se calculate ho raha hai. |
-| [#95](ISSUES-RAW.md#issue-95) | Result me kisi student ka Fail-status calculation samajh nahi aa raha — logic verify karo. |
-| [#102](ISSUES-RAW.md#issue-102) | Attendance create page par status dropdown selected text show nahi karta, placeholder hi rehta hai. |
-| [#111](ISSUES-RAW.md#issue-111) | "Add Custom Fee Head" modal ka dropdown sahi render nahi ho raha. |
-| [#121](ISSUES-RAW.md#issue-121) | Overpayment (voucher se zyada amount) automatically credit me chala jata hai — abhi ke liye ye disallow hi karna hai (voucher amount se zyada submit hi na ho sake). |
-| [#72, #74](ISSUES-RAW.md#issue-72) | Student edit page aur ID cards page par images load nahi ho rahi. |
-| [#73](ISSUES-RAW.md#issue-73) | Sidebar me Student menu ke andar Promotion button kaam nahi kar raha. |
-| [#34](ISSUES-RAW.md#issue-34) | Leaving Certificate feature bilkul kaam nahi kar raha. |
-| [#117, #118](ISSUES-RAW.md#issue-117) | Fee Payment show page par details (student name etc.) poori nahi aa rahi. |
-| [#119](ISSUES-RAW.md#issue-119) | Paid voucher dobara pay ya dobara print na ho sake — currently possible lagta hai. |
+| ✅ [#56](ISSUES-RAW.md#issue-56) | Class add karne ke baad Classes table kabhi kabhi refresh nahi hoti / show hi nahi hoti. |
+| ✅ [#57](ISSUES-RAW.md#issue-57) | Naye classes Section dropdown me available nahi hote. |
+| ✅ [#58](ISSUES-RAW.md#issue-58) | Sections toggle karne par data ghayab ho jata hai, action buttons responsive nahi. |
+| ✅ [#60](ISSUES-RAW.md#issue-60) | Session Activate/Deactivate aur Delete action error dete hain, kaam nahi karte. |
+| ✅ [#62](ISSUES-RAW.md#issue-62) | Subjects toggle karne par records ghayab ho jate hain. |
+| ✅ [#24](ISSUES-RAW.md#issue-24) | Class add karne ke baad Sections tab ke Class dropdown me naya class dikhne ke liye page refresh chahiye hota hai. |
+| ✅ [#67](ISSUES-RAW.md#issue-67) | Admission form me fee structure manual entry input bohot slow type hota hai. |
+| ✅ [#70](ISSUES-RAW.md#issue-70) | Manual entry sirf 1 fee head ke liye select karne par system sab heads me manual entry maangta hai — validation bug. |
+| ✅ [#77, #78](ISSUES-RAW.md#issue-77) | Add Exam Type ke baad modal auto close nahi hota, table refresh nahi hoti — manual page refresh karna padta hai. |
+| ✅ [#87](ISSUES-RAW.md#issue-87) | "Existing papers found for this combination" jab dikh raha hota hai jab wo actually informational message hai, error jaisa treat ho raha hai. |
+| ✅ [#88](ISSUES-RAW.md#issue-88) | Exams status dropdown har case me sahi se functional hai ya nahi — confirm/fix. |
+| ✅ [#90](ISSUES-RAW.md#issue-90) | Max-marks exceed karne par validation error UI tod deta hai (input field upar chala jata hai), marking grid table responsive nahi. |
+| ✅ [#92](ISSUES-RAW.md#issue-92) | Exam status save karne ke baad manual page refresh chahiye hota hai. |
+| ✅ [#93](ISSUES-RAW.md#issue-93) | Koi filter select kiye baghair bhi "Top 5 Toppers" show ho raha hai — galat baseline se calculate ho raha hai. |
+| ✅ [#95](ISSUES-RAW.md#issue-95) | Result me kisi student ka Fail-status calculation samajh nahi aa raha — logic verify karo. |
+| ✅ [#102](ISSUES-RAW.md#issue-102) | Attendance create page par status dropdown selected text show nahi karta, placeholder hi rehta hai. |
+| ✅ [#111](ISSUES-RAW.md#issue-111) | "Add Custom Fee Head" modal ka dropdown sahi render nahi ho raha. |
+| ✅ [#121](ISSUES-RAW.md#issue-121) | Overpayment (voucher se zyada amount) automatically credit me chala jata hai — abhi ke liye ye disallow hi karna hai (voucher amount se zyada submit hi na ho sake). |
+| ✅ [#72, #74](ISSUES-RAW.md#issue-72) | Student edit page aur ID cards page par images load nahi ho rahi. |
+| ✅ [#73](ISSUES-RAW.md#issue-73) | Sidebar me Student menu ke andar Promotion button kaam nahi kar raha. |
+| ✅ [#34](ISSUES-RAW.md#issue-34) | Leaving Certificate feature bilkul kaam nahi kar raha. |
+| ✅ [#117, #118](ISSUES-RAW.md#issue-117) | Fee Payment show page par details (student name etc.) poori nahi aa rahi. |
+| ✅ [#119](ISSUES-RAW.md#issue-119) | Paid voucher dobara pay ya dobara print na ho sake — currently possible lagta hai. |
 
 ### P2 — Project-Wide UI/UX Consistency Patterns
 
@@ -174,22 +178,24 @@ Dedupe karke ek-ek line item, lekin har jagah ke original numbers cite kiye hain
 
 | Pattern | Issue(s) |
 |---|---|
-| Pagination sirf tab dikhe jab records selected per-page se zyada hon; sahi page-count calculate ho | [#5, #56, #58, #61, #62](ISSUES-RAW.md#issue-5) |
-| Page number bottom-right + pagination controls bottom-left, har table par | [#6](ISSUES-RAW.md#issue-6) |
-| Filters card ke upar ek consistent background/style, har table ke upar (jaisa Attendance Class Report) | [#7](ISSUES-RAW.md#issue-7) |
-| Status column + toggle switch + confirm modal, har jagah jahan active/inactive concept hai | [#8](ISSUES-RAW.md#issue-8) |
+| ✅ Pagination sirf tab dikhe jab records selected per-page se zyada hon; sahi page-count calculate ho | [#5, #56, #58, #61, #62](ISSUES-RAW.md#issue-5) |
+| ✅ Page number bottom-right + pagination controls bottom-left, har table par | [#6](ISSUES-RAW.md#issue-6) |
+| ✅ Filters card ke upar ek consistent background/style, har table ke upar (jaisa Attendance Class Report) | [#7](ISSUES-RAW.md#issue-7) |
+| ✅ Status column + toggle switch + confirm modal, har jagah jahan active/inactive concept hai | [#8](ISSUES-RAW.md#issue-8) |
 | Consistent button color/icon system project-wide (delete=red hamesha, etc.), icon-only action columns with hover-to-reveal text | [#9, #10, #11](ISSUES-RAW.md#issue-9) |
-| `#` serial column hamesha table ka pehla column ho | [#12](ISSUES-RAW.md#issue-12) |
+| ✅ `#` serial column hamesha table ka pehla column ho | [#12](ISSUES-RAW.md#issue-12) |
 | Select2-style searchable dropdowns everywhere + filter-button-required pattern (select karne ke baad Filter button dabana padta hai) | [#39, #41, #75, #111](ISSUES-RAW.md#issue-39) |
-| CNIC (13) / Phone (11) maxlength enforce everywhere | [#19](ISSUES-RAW.md#issue-19) |
+| ✅ CNIC (13) / Phone (11) maxlength enforce everywhere | [#19](ISSUES-RAW.md#issue-19) |
 | Required fields poore bhare bina Submit/Create button disabled rahe | [#81](ISSUES-RAW.md#issue-81) |
-| Number input spinner arrows (up/down) hata do project-wide | [#68](ISSUES-RAW.md#issue-68) |
+| ✅ Number input spinner arrows (up/down) hata do project-wide | [#68](ISSUES-RAW.md#issue-68) |
 | Campus → Class → Section → Session cascading select flow + auto-select for branch-scoped users + remembered active session everywhere | [#47, #64, #82, #99, #100](ISSUES-RAW.md#issue-64) |
-| Modal me duplicate Close(×) / Cancel controls — behavior consistent/clear ho | [#54, #55](ISSUES-RAW.md#issue-54) |
+| ✅ Modal me duplicate Close(×) / Cancel controls — behavior consistent/clear ho | [#54, #55](ISSUES-RAW.md#issue-54) |
 | Dark-mode background/contrast missing on specific dropdowns (grade system dropdown, revaluation dropdowns) | [#89, #97](ISSUES-RAW.md#issue-89) |
 | Dark/Light mode should persist correctly per current mode when opening `/settings/appearance` | [#13](ISSUES-RAW.md#issue-13) |
 | Fee Settings tabs pattern should match School Profile tabs pattern (consistent settings-page shell) | [#44](ISSUES-RAW.md#issue-44) |
 | Sidebar open/close state persist across page refresh | [#124](ISSUES-RAW.md#issue-124) |
+
+**P2 progress note:** #5, #6, #7, #8, #19, #68 fixed (commits `3b9768f`, `0428697`). #12 and #54/#55 fix is in progress (background agent, not yet committed as of this note). Remaining P2 line items (#9-11, #39/#41/#75/#111, #81, #47/#64/#82/#99/#100, #89/#97, #13, #44, #124) not yet started.
 
 ### P3 — Real Feature Gaps / Bigger Redesigns
 
