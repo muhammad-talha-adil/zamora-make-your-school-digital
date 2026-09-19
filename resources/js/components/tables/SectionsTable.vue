@@ -81,8 +81,8 @@ const inactivateSection = (section: any) => {
                 }).then(() => {
                     alert.success('Section deactivated successfully!');
                     fetchSections(pagination.value?.current_page || 1);
-                }).catch(() => {
-                    alert.error('Failed to deactivate section. Please try again.');
+                }).catch((error) => {
+                    alert.error(error.response?.data?.message || 'Failed to deactivate section. Please try again.');
                 });
             }
         });
@@ -94,8 +94,8 @@ const activateSection = (section: any) => {
     }).then(() => {
         alert.success('Section activated successfully!');
         fetchSections(pagination.value?.current_page || 1);
-    }).catch(() => {
-        alert.error('Failed to activate section. Please try again.');
+    }).catch((error) => {
+        alert.error(error.response?.data?.message || 'Failed to activate section. Please try again.');
     });
 };
 
@@ -110,8 +110,8 @@ const deleteSection = (section: any) => {
             }).then(() => {
                 alert.success('Section deleted successfully!');
                 fetchSections(pagination.value?.current_page || 1);
-            }).catch(() => {
-                alert.error('Failed to delete section. Please try again.');
+            }).catch((error) => {
+                alert.error(error.response?.data?.message || 'Failed to delete section. Please try again.');
             });
         }
     });

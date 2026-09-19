@@ -15,6 +15,8 @@ interface Props {
 
 const props = defineProps<Props>();
 
+const emit = defineEmits<{ saved: [] }>();
+
 const statusFilter = ref('');
 const perPage = ref(10);
 const classesData = ref(props.classes?.data || []);
@@ -61,6 +63,7 @@ watch(() => props.classes, (newClasses) => {
 
 const handleSaved = () => {
     fetchClasses(pagination.value?.current_page || 1);
+    emit('saved');
 };
 
 const deleteClass = (schoolClass: any) => {
@@ -75,8 +78,9 @@ const deleteClass = (schoolClass: any) => {
                 }).then(() => {
                     alert.success('Class deleted successfully!');
                     fetchClasses();
-                }).catch(() => {
-                    alert.error('Failed to delete class. Please try again.');
+                    emit('saved');
+                }).catch((error) => {
+                    alert.error(error.response?.data?.message || 'Failed to delete class. Please try again.');
                 });
             }
         });
@@ -91,8 +95,8 @@ const activateClass = (schoolClass: any) => {
         if (idx !== -1) {
             classesData.value.splice(idx, 1, { ...classesData.value[idx], is_active: true });
         }
-    }).catch(() => {
-        alert.error('Failed to activate class. Please try again.');
+    }).catch((error) => {
+        alert.error(error.response?.data?.message || 'Failed to activate class. Please try again.');
     });
 };
 
@@ -113,8 +117,8 @@ const inactivateClass = (schoolClass: any) => {
                     if (idx !== -1) {
                         classesData.value.splice(idx, 1, { ...classesData.value[idx], is_active: false });
                     }
-                }).catch(() => {
-                    alert.error('Failed to deactivate class. Please try again.');
+                }).catch((error) => {
+                    alert.error(error.response?.data?.message || 'Failed to deactivate class. Please try again.');
                 });
             }
         });

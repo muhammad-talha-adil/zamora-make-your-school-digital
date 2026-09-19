@@ -109,8 +109,8 @@ const deleteSession = (session: any) => {
             }).then(() => {
                 alert.success('Session deleted successfully!');
                 fetchSessions(pagination.value?.current_page || 1);
-            }).catch(() => {
-                alert.error('Failed to delete session. Please try again.');
+            }).catch((error) => {
+                alert.error(error.response?.data?.message || 'Failed to delete session. Please try again.');
             });
         }
     });
@@ -122,8 +122,8 @@ const activateSession = (session: any) => {
     }).then(() => {
         alert.success('Session activated successfully!');
         fetchSessions(pagination.value?.current_page || 1);
-    }).catch(() => {
-        alert.error('Failed to activate session. Please try again.');
+    }).catch((error) => {
+        alert.error(error.response?.data?.message || 'Failed to activate session. Please try again.');
     });
 };
 
@@ -139,8 +139,8 @@ const inactivateSession = (session: any) => {
             }).then(() => {
                 alert.success('Session deactivated successfully!');
                 fetchSessions(pagination.value?.current_page || 1);
-            }).catch(() => {
-                alert.error('Failed to deactivate session. Please try again.');
+            }).catch((error) => {
+                alert.error(error.response?.data?.message || 'Failed to deactivate session. Please try again.');
             });
         }
     });

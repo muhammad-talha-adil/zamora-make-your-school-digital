@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Head } from '@inertiajs/vue3';
+import { Head, router } from '@inertiajs/vue3';
 import { ref } from 'vue';
 
 import SchoolForm from '@/components/forms/SchoolForm.vue';
@@ -34,6 +34,16 @@ const breadcrumbItems: BreadcrumbItem[] = [
 ];
 
 const activeTab = ref('school-info');
+
+// The Classes tab creates/edits/deletes classes via its own axios calls, not
+// an Inertia visit, so the `classes` and `allClasses` props this page was
+// rendered with never picked up the change on their own — leaving the
+// Sections tab's "Select Class" dropdown (fed by `allClasses`) stale until a
+// full page reload. Refresh both shared props in place whenever the Classes
+// tab reports a change, so every tab reading class data sees it immediately.
+const refreshClasses = () => {
+    router.reload({ only: ['classes', 'allClasses'] });
+};
 </script>
 
 <template>
@@ -150,22 +160,22 @@ const activeTab = ref('school-info');
                 </div>
 
                 <!-- Classes Tab -->
-                <div v-if="activeTab === 'classes'">
-                    <SchoolClassesTable :classes="classes" />
+                <div v-show="activeTab === 'classes'">
+                    <SchoolClassesTable :classes="classes" @saved="refreshClasses" />
                 </div>
 
                 <!-- Sections Tab -->
-                <div v-if="activeTab === 'sections'">
+                <div v-show="activeTab === 'sections'">
                     <SectionsTable :sections="sections" :school-classes="allClasses" />
                 </div>
 
                 <!-- Sessions Tab -->
-                <div v-if="activeTab === 'sessions'">
+                <div v-show="activeTab === 'sessions'">
                     <AcademicSessionsTable :sessions="sessions" />
                 </div>
 
                 <!-- Subjects Tab -->
-                <div v-if="activeTab === 'subjects'">
+                <div v-show="activeTab === 'subjects'">
                     <SubjectsTable :subjects="subjects" />
                 </div>
 

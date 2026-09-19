@@ -92,6 +92,32 @@ test('a user without academics.class.manage cannot create, update or delete a cl
         ->assertForbidden();
 });
 
+test('a newly created class appears in the school-profile page classes and allClasses props without a full reload', function () {
+    // SchoolProfile.vue's Sections tab reads its "Select Class" dropdown from
+    // the `allClasses` prop, while the Classes tab reads `classes`. Both are
+    // rendered once by SchoolController@show and refreshed via an Inertia
+    // partial reload (`router.reload({ only: ['classes', 'allClasses'] })`)
+    // after a class is created — this proves that partial reload actually
+    // returns the new class in the same response cycle, no full page visit
+    // needed.
+    $user = userWithPermission('school.profile.manage');
+    Permission::firstOrCreate(['name' => 'academics.class.manage', 'guard_name' => 'web']);
+    $user->givePermissionTo('academics.class.manage');
+    app(PermissionRegistrar::class)->forgetCachedPermissions();
+    School::create(['name' => 'Original School']);
+
+    $this->actingAs($user)
+        ->postJson(route('school-classes.store'), ['name' => 'Class 9', 'code' => 'C9'])
+        ->assertSuccessful();
+
+    $this->actingAs($user)
+        ->get(route('school-profile.show'))
+        ->assertInertia(fn ($page) => $page
+            ->where('classes.data', fn ($data) => collect($data)->pluck('name')->contains('Class 9'))
+            ->where('allClasses', fn ($data) => collect($data)->pluck('name')->contains('Class 9'))
+        );
+});
+
 test('a user without academics.class.manage cannot create, update or delete a section', function () {
     $user = userWithPermission('academics.class.manage', withPermission: false);
     $class = SchoolClass::create(['name' => 'Class 1', 'code' => 'C1', 'is_active' => true]);

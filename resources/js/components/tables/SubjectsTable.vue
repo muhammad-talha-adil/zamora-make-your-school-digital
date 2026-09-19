@@ -89,8 +89,8 @@ const deleteSubject = (subject: any) => {
             }).then(() => {
                 alert.success('Subject deleted successfully!');
                 fetchSubjects(pagination.value?.current_page || 1);
-            }).catch(() => {
-                alert.error('Failed to delete subject. Please try again.');
+            }).catch((error) => {
+                alert.error(error.response?.data?.message || 'Failed to delete subject. Please try again.');
             });
         }
     });
@@ -102,8 +102,8 @@ const activateSubject = (subject: any) => {
     }).then(() => {
         alert.success('Subject activated successfully!');
         fetchSubjects(pagination.value?.current_page || 1);
-    }).catch(() => {
-        alert.error('Failed to activate subject. Please try again.');
+    }).catch((error) => {
+        alert.error(error.response?.data?.message || 'Failed to activate subject. Please try again.');
     });
 };
 
@@ -119,8 +119,8 @@ const inactivateSubject = (subject: any) => {
             }).then(() => {
                 alert.success('Subject deactivated successfully!');
                 fetchSubjects(pagination.value?.current_page || 1);
-            }).catch(() => {
-                alert.error('Failed to deactivate subject. Please try again.');
+            }).catch((error) => {
+                alert.error(error.response?.data?.message || 'Failed to deactivate subject. Please try again.');
             });
         }
     });
