@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { computed, watch } from 'vue';
 import { useForm } from '@inertiajs/vue3';
+import { useFormValidity } from '@/composables/useFormValidity';
 import InputError from '@/components/InputError.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -98,6 +99,8 @@ const syncForm = () => {
     form.reset();
     form.clearErrors();
 };
+
+const { isValid } = useFormValidity(form, ['title']);
 
 watch(
     () => [props.open, props.mode, props.menu?.id],
@@ -244,7 +247,7 @@ watch(
                 </div>
 
                 <DialogFooter>
-                    <Button type="submit" :disabled="form.processing">
+                    <Button type="submit" :disabled="form.processing || !isValid">
                         {{ buttonText }}
                     </Button>
                 </DialogFooter>

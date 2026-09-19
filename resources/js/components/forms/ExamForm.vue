@@ -3,6 +3,7 @@ import { router } from '@inertiajs/vue3';
 import { ref, watch } from 'vue';
 import { route } from 'ziggy-js';
 import { alert } from '@/utils';
+import { useFormValidity } from '@/composables/useFormValidity';
 
 // Components
 import InputError from '@/components/InputError.vue';
@@ -68,6 +69,7 @@ const form = ref({
 
 const errors = ref<Record<string, string>>({});
 const processing = ref(false);
+const { isValid } = useFormValidity(form, ['name', 'exam_type_id', 'session_id', 'start_date', 'end_date']);
 
 // Dialog
 const open = ref(false);
@@ -244,7 +246,7 @@ const resetForm = () => {
                 </div>
 
                 <DialogFooter>
-                    <Button type="submit" :disabled="processing">
+                    <Button type="submit" :disabled="processing || !isValid">
                         {{ processing ? 'Saving...' : (exam ? 'Update Exam' : 'Create Exam') }}
                     </Button>
                 </DialogFooter>

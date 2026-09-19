@@ -2,6 +2,7 @@
 import axios from 'axios';
 import { alert } from '@/utils';
 import { ref, watch, computed } from 'vue';
+import { useFormValidity } from '@/composables/useFormValidity';
 
 // Components
 import InputError from '@/components/InputError.vue';
@@ -76,6 +77,7 @@ const form = ref<{
 
 const errors = ref<Record<string, string>>({});
 const processing = ref(false);
+const { isValid } = useFormValidity(form, ['campus_id', 'inventory_type_id', 'name']);
 
 // Computed
 const isEditing = computed(() => {
@@ -317,7 +319,7 @@ const submitForm = () => {
 
                 <!-- Actions -->
                 <div class="flex flex-wrap justify-end gap-3 pt-2">
-                    <Button type="submit" :disabled="processing" class="h-10">
+                    <Button type="submit" :disabled="processing || !isValid" class="h-10">
                         <Icon v-if="processing" icon="loader" class="mr-2 h-4 w-4 animate-spin" />
                         <Icon v-else :icon="isEditing ? 'check' : 'plus'" class="mr-2 h-4 w-4" />
                         {{ isEditing ? 'Update Item' : 'Create Item' }}

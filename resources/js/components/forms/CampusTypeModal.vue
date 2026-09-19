@@ -3,6 +3,7 @@ import { router } from '@inertiajs/vue3';
 import axios from 'axios';
 import { ref, watch, computed } from 'vue';
 import { alert } from '@/utils';
+import { useFormValidity } from '@/composables/useFormValidity';
 
 // Components
 import InputError from '@/components/InputError.vue';
@@ -47,6 +48,7 @@ const campusTypes = ref<Array<{ id: number; name: string; campuses_count?: numbe
 const allCampusTypes = ref<Array<{ id: number; name: string; campuses_count?: number }>>([]);
 const loading = ref(false);
 const editingId = ref<number | null>(null);
+const { isValid } = useFormValidity(form, ['name']);
 
 // Pagination
 const currentPage = ref(1);
@@ -236,7 +238,7 @@ const deleteCampusType = (campusType: { id: number; name: string }) => {
                                     <Icon icon="x" class="h-4 w-4 mr-1" />
                                     Cancel
                                 </Button>
-                                <Button type="submit" :disabled="processing">
+                                <Button type="submit" :disabled="processing || !isValid">
                                     <Icon v-if="processing" icon="loader" class="mr-2 h-4 w-4 animate-spin" />
                                     <Icon v-else :icon="editingId ? 'check' : 'plus'" class="mr-2 h-4 w-4" />
                                     {{ editingId ? 'Update' : 'Add' }}

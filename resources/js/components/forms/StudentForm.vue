@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { router } from '@inertiajs/vue3';
 import { ref } from 'vue';
+import { useFormValidity } from '@/composables/useFormValidity';
 import { alert } from '@/utils';
 
 // Components
@@ -120,6 +121,7 @@ const form = ref({
 
 const errors = ref({});
 const processing = ref(false);
+const { isValid } = useFormValidity(form, ['name', 'admission_no']);
 
 // Dialog
 const open = ref(false);
@@ -467,7 +469,7 @@ const resetForm = () => {
                 </div>
 
                 <DialogFooter>
-                    <Button type="submit" :disabled="processing">
+                    <Button type="submit" :disabled="processing || !isValid">
                         {{ student ? 'Update' : 'Create' }}
                     </Button>
                 </DialogFooter>

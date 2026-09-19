@@ -2,6 +2,7 @@
 import { router } from '@inertiajs/vue3';
 import { ref, watch } from 'vue';
 import { alert } from '@/utils';
+import { useFormValidity } from '@/composables/useFormValidity';
 
 // Components
 import InputError from '@/components/InputError.vue';
@@ -32,6 +33,7 @@ const form = ref({
 
 const errors = ref({});
 const processing = ref(false);
+const { isValid } = useFormValidity(form, ['name']);
 
 // Watch for prop changes to update form
 watch(() => props.campusType, (newCampusType) => {
@@ -126,7 +128,7 @@ const cancel = () => {
             >
                 Cancel
             </Button>
-            <Button type="submit" :disabled="processing">
+            <Button type="submit" :disabled="processing || !isValid">
                 {{ campusType ? 'Update' : 'Create' }}
             </Button>
         </div>

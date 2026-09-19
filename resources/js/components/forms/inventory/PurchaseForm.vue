@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import axios from 'axios';
 import { ref, computed, reactive, watch, nextTick } from 'vue';
+import { useFormValidity } from '@/composables/useFormValidity';
 import { alert, formatCurrency, themeToken } from '@/utils';
 import Swal from 'sweetalert2';
 
@@ -106,6 +107,7 @@ const form = reactive({
 const errors = ref<Record<string, string>>({});
 const processing = ref(false);
 const loadingItems = ref(false);
+const { isValid } = useFormValidity(form, ['campus_id', 'supplier_id', 'purchase_date', 'purchase_items']);
 
 // Generate unique idempotency key for this form session
 const idempotencyKey = ref<string | null>(null);
@@ -711,7 +713,7 @@ watch(() => form.purchase_items.length, (len) => {
 
                 <!-- Actions -->
                 <div class="flex flex-wrap justify-end gap-3 pt-2">
-                    <Button type="submit" :disabled="processing || loadingItems" class="h-10">
+                    <Button type="submit" :disabled="processing || loadingItems || !isValid" class="h-10">
                         <Icon v-if="processing" icon="loader" class="mr-2 h-4 w-4 animate-spin" />
                         <Icon v-else icon="check" class="mr-2 h-4 w-4" />
                         {{ isEditMode ? 'Update Purchase' : 'Create Purchase' }}

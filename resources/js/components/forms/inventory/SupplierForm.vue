@@ -2,6 +2,7 @@
 import { alert } from '@/utils';
 import axios from 'axios';
 import { computed, ref, watch } from 'vue';
+import { useFormValidity } from '@/composables/useFormValidity';
 
 // Components
 import Icon from '@/components/Icon.vue';
@@ -70,6 +71,7 @@ const form = ref({
 });
 
 const errors = ref<Record<string, string>>({});
+const { isValid } = useFormValidity(form, ['name', 'campus_id']);
 const processing = ref(false);
 const nameChecking = ref(false);
 const nameExists = ref(false);
@@ -530,7 +532,7 @@ const resetForm = () => {
 
                 <!-- Actions -->
                 <div class="flex flex-wrap justify-end gap-3 pt-2">
-                    <Button type="submit" :disabled="processing" class="h-10">
+                    <Button type="submit" :disabled="processing || !isValid" class="h-10">
                         <Icon
                             v-if="processing"
                             icon="loader"

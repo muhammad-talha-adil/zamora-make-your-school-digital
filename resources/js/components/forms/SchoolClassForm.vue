@@ -2,6 +2,7 @@
 import axios from 'axios';
 import { ref, watch } from 'vue';
 import { alert } from '@/utils';
+import { useFormValidity } from '@/composables/useFormValidity';
 
 // Components
 import InputError from '@/components/InputError.vue';
@@ -54,6 +55,7 @@ const form = ref(getInitialForm());
 
 const errors = ref<Record<string, string>>({});
 const processing = ref(false);
+const { isValid } = useFormValidity(form, ['name', 'code']);
 
 // Dialog
 const open = ref(false);
@@ -203,7 +205,7 @@ const resetForm = () => {
                 </div>
 
                 <DialogFooter>
-                    <Button type="submit" :disabled="processing">
+                    <Button type="submit" :disabled="processing || !isValid">
                         {{ processing ? 'Saving...' : (schoolClass ? 'Update' : 'Create') }}
                     </Button>
                 </DialogFooter>

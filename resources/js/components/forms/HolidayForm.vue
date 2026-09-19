@@ -2,6 +2,7 @@
 import { router } from '@inertiajs/vue3';
 import { ref, computed, watch } from 'vue';
 import { alert } from '@/utils';
+import { useFormValidity } from '@/composables/useFormValidity';
 
 // Components
 import InputError from '@/components/InputError.vue';
@@ -69,6 +70,8 @@ const form = ref({
     recurrence_end_date: props.holiday?.recurrence_end_date || '',
     is_attendance_allowed: props.holiday?.is_attendance_allowed ?? false,
 });
+
+const { isValid } = useFormValidity(form, ['title', 'start_date', 'end_date']);
 
 // Options for recurrence
 const recurrenceOptions = [
@@ -324,7 +327,7 @@ const submit = () => {
                     </Button>
                     <Button
                         type="submit"
-                        :disabled="processing"
+                        :disabled="processing || !isValid"
                         @click="submit"
                     >
                         <Icon

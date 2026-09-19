@@ -2,6 +2,7 @@
 import { router } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import { alert } from '@/utils';
+import { useFormValidity } from '@/composables/useFormValidity';
 
 // Components
 import InputError from '@/components/InputError.vue';
@@ -53,6 +54,7 @@ const form = ref({
 
 const errors = ref<Record<string, string>>({});
 const processing = ref(false);
+const { isValid } = useFormValidity(form, ['name']);
 
 // Dialog
 const open = ref(false);
@@ -183,7 +185,7 @@ const resetForm = () => {
                 </div>
 
                 <DialogFooter>
-                    <Button type="submit" :disabled="processing">
+                    <Button type="submit" :disabled="processing || !isValid">
                         {{ processing ? 'Saving...' : (examType ? 'Update' : 'Create') }}
                     </Button>
                 </DialogFooter>

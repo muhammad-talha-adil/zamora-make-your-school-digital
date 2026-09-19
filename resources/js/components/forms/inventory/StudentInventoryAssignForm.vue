@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { router } from '@inertiajs/vue3';
 import { ref, computed } from 'vue';
+import { useFormValidity } from '@/composables/useFormValidity';
 import { alert, formatCurrency } from '@/utils';
 
 // Components
@@ -73,6 +74,7 @@ const form = ref({
 
 const errors = ref<Record<string, string>>({});
 const processing = ref(false);
+const { isValid } = useFormValidity(form, ['campus_id', 'student_id', 'inventory_item_id', 'assigned_date']);
 
 // Modal state
 const dialogOpen = ref(false);
@@ -378,7 +380,7 @@ const submitForm = () => {
 
                 <!-- Actions -->
                 <div class="flex flex-wrap justify-end gap-3 pt-2">
-                    <Button type="submit" :disabled="processing" class="h-10">
+                    <Button type="submit" :disabled="processing || !isValid" class="h-10">
                         <Icon v-if="processing" icon="loader" class="mr-2 h-4 w-4 animate-spin" />
                         <Icon v-else icon="check" class="mr-2 h-4 w-4" />
                         Assign to Student

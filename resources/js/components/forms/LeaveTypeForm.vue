@@ -2,6 +2,7 @@
 import { router } from '@inertiajs/vue3';
 import { ref, computed } from 'vue';
 import { alert } from '@/utils';
+import { useFormValidity } from '@/composables/useFormValidity';
 
 // Components
 import InputError from '@/components/InputError.vue';
@@ -55,6 +56,7 @@ const form = ref({
 });
 
 const isEditing = computed(() => !!props.leaveType?.id);
+const { isValid } = useFormValidity(form, ['name']);
 
 const openModal = () => {
     if (props.leaveType) {
@@ -184,7 +186,7 @@ const submit = () => {
                     </Button>
                     <Button
                         type="submit"
-                        :disabled="processing"
+                        :disabled="processing || !isValid"
                         @click="submit"
                     >
                         <Icon

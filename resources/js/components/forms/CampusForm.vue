@@ -2,6 +2,7 @@
 import { router } from '@inertiajs/vue3';
 import { ref, watch } from 'vue';
 import { alert } from '@/utils';
+import { useFormValidity } from '@/composables/useFormValidity';
 
 // Components
 import InputError from '@/components/InputError.vue';
@@ -62,6 +63,7 @@ const form = ref({
 
 const errors = ref<Record<string, string>>({});
 const processing = ref(false);
+const { isValid } = useFormValidity(form, ['name', 'campus_type_id']);
 
 // Modal states
 const campusDialogOpen = ref(false);
@@ -295,7 +297,7 @@ const handleCampusTypeSaved = (campusType: { id: number; name: string } | undefi
 
                 <!-- Actions -->
                 <div class="flex flex-wrap justify-end gap-3 pt-2">
-                    <Button type="submit" :disabled="processing" class="h-10">
+                    <Button type="submit" :disabled="processing || !isValid" class="h-10">
                         <Icon v-if="processing" icon="loader" class="mr-2 h-4 w-4 animate-spin" />
                         <Icon v-else :icon="campus ? 'check' : 'plus'" class="mr-2 h-4 w-4" />
                         {{ campus ? 'Update Campus' : 'Create Campus' }}
