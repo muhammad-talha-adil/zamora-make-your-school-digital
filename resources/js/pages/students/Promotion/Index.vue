@@ -447,6 +447,7 @@ const runRevert = () => {
                         <table class="w-full text-sm text-left">
                             <thead class="bg-muted">
                                 <tr>
+                                    <th class="px-3 py-2 w-10">#</th>
                                     <th class="px-3 py-2 w-10"></th>
                                     <th class="px-3 py-2">Student</th>
                                     <th class="px-3 py-2">Admission No.</th>
@@ -456,7 +457,8 @@ const runRevert = () => {
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-border">
-                                <tr v-for="student in students" :key="student.student_id" class="hover:bg-accent">
+                                <tr v-for="(student, studentIndex) in students" :key="student.student_id" class="hover:bg-accent">
+                                    <td class="px-3 py-2 text-muted-foreground">{{ studentIndex + 1 }}</td>
                                     <td class="px-3 py-2">
                                         <input
                                             type="checkbox"

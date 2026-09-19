@@ -20,7 +20,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
-import { Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import RowAction from '@/components/tables/RowAction.vue';
 import RowActions from '@/components/tables/RowActions.vue';
 import { alert } from '@/utils/alert';
@@ -457,6 +457,7 @@ const admitEnquiry = async (enquiry: EnquiryRow) => {
                             <table class="min-w-full divide-y divide-border">
                                 <thead class="bg-muted">
                                     <tr>
+                                        <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">#</th>
                                         <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">Child</th>
                                         <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">Phone</th>
                                         <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">Campus / Class</th>
@@ -467,7 +468,10 @@ const admitEnquiry = async (enquiry: EnquiryRow) => {
                                     </tr>
                                 </thead>
                                 <tbody class="divide-y divide-border bg-card">
-                                    <tr v-for="enquiry in enquiries" :key="enquiry.id" class="transition-colors hover:bg-accent">
+                                    <tr v-for="(enquiry, enquiryIndex) in enquiries" :key="enquiry.id" class="transition-colors hover:bg-accent">
+                                        <td class="px-4 py-3 whitespace-nowrap text-sm text-muted-foreground">
+                                            {{ ((pagination.from || 1) - 1) + enquiryIndex + 1 }}
+                                        </td>
                                         <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-foreground">
                                             {{ enquiry.student_name }}
                                         </td>
@@ -530,7 +534,7 @@ const admitEnquiry = async (enquiry: EnquiryRow) => {
 
                         <div class="space-y-2">
                             <Label for="phone">Phone <span class="text-destructive">*</span></Label>
-                            <Input id="phone" v-model="enquiryForm.phone" type="text" placeholder="03001234567" required />
+                            <Input id="phone" v-model="enquiryForm.phone" type="text" placeholder="03001234567" maxlength="11" required />
                             <InputError :message="formErrors.phone" />
                         </div>
 
@@ -632,9 +636,6 @@ const admitEnquiry = async (enquiry: EnquiryRow) => {
                     </div>
 
                     <div class="flex flex-wrap justify-end gap-2 pt-2">
-                        <DialogClose as-child>
-                            <Button type="button" variant="outline">Cancel</Button>
-                        </DialogClose>
                         <Button type="submit" :disabled="formProcessing">
                             <Icon v-if="formProcessing" icon="loader" class="mr-2 h-4 w-4 animate-spin" />
                             {{ isEditing ? 'Save Changes' : 'Record Enquiry' }}

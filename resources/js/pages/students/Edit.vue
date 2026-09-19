@@ -162,6 +162,7 @@
                                 v-model="form.b_form"
                                 type="text"
                                 placeholder="Enter B-Form number"
+                                maxlength="13"
                                 :class="{ 'border-destructive': errors.b_form }"
                             />
                             <InputError :message="errors.b_form" />

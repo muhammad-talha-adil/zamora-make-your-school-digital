@@ -8,9 +8,6 @@
                 </DialogDescription>
             </DialogHeader>
             <DialogFooter class="sm:justify-end">
-                <Button variant="outline" @click="$emit('update:open', false)">
-                    Cancel
-                </Button>
                 <Button :variant="confirmVariant" @click="handleConfirm">
                     {{ confirmText }}
                 </Button>

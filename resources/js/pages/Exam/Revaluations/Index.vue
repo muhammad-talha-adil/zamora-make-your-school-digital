@@ -55,6 +55,7 @@
                 <table class="min-w-full divide-y divide-border">
                     <thead class="bg-muted">
                         <tr>
+                            <th class="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase">#</th>
                             <th class="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase">ID</th>
                             <th class="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Student</th>
                             <th class="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Exam</th>
@@ -65,7 +66,8 @@
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-border">
-                        <tr v-for="item in revaluations" :key="item.id" class="hover:bg-accent">
+                        <tr v-for="(item, itemIndex) in revaluations" :key="item.id" class="hover:bg-accent">
+                            <td class="px-4 py-4 whitespace-nowrap text-sm text-muted-foreground">{{ itemIndex + 1 }}</td>
                             <td class="px-4 py-4 whitespace-nowrap text-sm">#{{ item.id }}</td>
                             <td class="px-4 py-4 whitespace-nowrap">{{ studentName(item) }}</td>
                             <td class="px-4 py-4 whitespace-nowrap">{{ examName(item) }}</td>
@@ -229,7 +231,6 @@
                         </div>
 
                         <DialogFooter class="sm:justify-end gap-2">
-                            <Button type="button" variant="outline" @click="closeApproveModal">Cancel</Button>
                             <Button type="submit" :disabled="submitting">
                                 <Icon v-if="submitting" icon="loader" class="mr-2 h-4 w-4 animate-spin" />
                                 Approve
@@ -263,7 +264,6 @@
                         </div>
 
                         <DialogFooter class="sm:justify-end gap-2">
-                            <Button type="button" variant="outline" @click="closeRejectModal">Cancel</Button>
                             <Button type="submit" variant="destructive" :disabled="submitting">
                                 <Icon v-if="submitting" icon="loader" class="mr-2 h-4 w-4 animate-spin" />
                                 Reject
@@ -275,7 +275,7 @@
 
             <!-- History Modal -->
             <Dialog :open="showHistoryModal" @update:open="(open) => !open && closeHistoryModal()">
-                <DialogContent class="sm:max-w-lg">
+                <DialogContent class="sm:max-w-lg" :show-close-button="false">
                     <DialogHeader>
                         <DialogTitle>History for Recheck #{{ historyTarget?.id }}</DialogTitle>
                         <DialogDescription>Everything that has happened to this request, oldest first.</DialogDescription>

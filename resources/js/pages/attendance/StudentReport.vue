@@ -63,6 +63,7 @@
                     <table class="min-w-full divide-y divide-border">
                         <thead class="bg-muted">
                             <tr>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">#</th>
                                 <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Date</th>
                                 <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Day</th>
                                 <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Status</th>
@@ -70,7 +71,8 @@
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-border bg-card">
-                            <tr v-for="day in calendarDays" :key="day.date" class="transition-colors hover:bg-accent">
+                            <tr v-for="(day, dayIndex) in calendarDays" :key="day.date" class="transition-colors hover:bg-accent">
+                                <td class="px-4 py-3 whitespace-nowrap text-sm text-muted-foreground">{{ dayIndex + 1 }}</td>
                                 <td class="px-4 py-3 whitespace-nowrap text-sm text-foreground">{{ formatDate(day.date) }}</td>
                                 <td class="px-4 py-3 whitespace-nowrap text-sm text-muted-foreground">{{ day.dayName }}</td>
                                 <td class="px-4 py-3 whitespace-nowrap">

@@ -268,6 +268,7 @@ fetchStudentInventories();
                     <table class="min-w-full divide-y divide-border">
                         <thead class="bg-muted">
                             <tr>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">#</th>
                                 <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Return ID</th>
                                 <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Student</th>
                                 <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Reg #</th>
@@ -280,7 +281,8 @@ fetchStudentInventories();
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-border bg-card">
-                            <tr v-for="returnItem in returnsData" :key="returnItem.id" class="hover:bg-accent">
+                            <tr v-for="(returnItem, returnIndex) in returnsData" :key="returnItem.id" class="hover:bg-accent">
+                                <td class="px-4 py-4 whitespace-nowrap text-sm text-muted-foreground">{{ returnIndex + 1 }}</td>
                                 <td class="px-4 py-4 whitespace-nowrap text-sm font-medium text-foreground">{{ returnItem.return_id || 'N/A' }}</td>
                                 <td class="px-4 py-4 whitespace-nowrap text-sm font-medium text-foreground">
                                     {{ returnItem.student_name || returnItem.student?.name || 'N/A' }}

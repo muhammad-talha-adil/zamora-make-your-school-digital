@@ -202,6 +202,7 @@ const markPayrollPaid = async (item: PayrollItem) => {
                         <table class="min-w-full divide-y divide-border">
                             <thead class="bg-muted">
                                 <tr>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">#</th>
                                     <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Staff</th>
                                     <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Gross</th>
                                     <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Deduction</th>
@@ -211,7 +212,8 @@ const markPayrollPaid = async (item: PayrollItem) => {
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-border bg-card">
-                                <tr v-for="item in run.items" :key="item.id" class="hover:bg-accent">
+                                <tr v-for="(item, itemIndex) in run.items" :key="item.id" class="hover:bg-accent">
+                                    <td class="px-4 py-3 text-sm text-muted-foreground">{{ itemIndex + 1 }}</td>
                                     <td class="px-4 py-3">
                                         <div class="font-medium text-foreground">{{ item.staff_profile?.user?.name || '-' }}</div>
                                         <div class="text-xs text-muted-foreground">{{ item.staff_profile?.employee_no || '-' }}</div>

@@ -48,9 +48,6 @@
                 </div>
 
                 <DialogFooter class="sm:justify-end gap-2">
-                    <Button type="button" variant="outline" @click="closeModal">
-                        Cancel
-                    </Button>
                     <Button type="submit" :disabled="processing">
                         <Icon v-if="processing" icon="loader" class="mr-2 h-4 w-4 animate-spin" />
                         Confirm Status Change

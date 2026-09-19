@@ -367,6 +367,7 @@ const getStatusClasses = (status: string) => {
                     <table class="min-w-full divide-y divide-border">
                         <thead class="bg-muted">
                             <tr>
+                                <th class="px-6 py-4 text-left text-xs font-semibold uppercase text-muted-foreground">#</th>
                                 <th class="px-6 py-4 text-left text-xs font-semibold uppercase text-muted-foreground">Module</th>
                                 <th class="px-6 py-4 text-left text-xs font-semibold uppercase text-muted-foreground">Charge</th>
                                 <th class="px-6 py-4 text-left text-xs font-semibold uppercase text-muted-foreground">Period / Voucher</th>
@@ -378,7 +379,8 @@ const getStatusClasses = (status: string) => {
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-border">
-                            <tr v-for="charge in charges" :key="charge.id">
+                            <tr v-for="(charge, chargeIndex) in charges" :key="charge.id">
+                                <td class="px-6 py-4 text-sm text-muted-foreground">{{ chargeIndex + 1 }}</td>
                                 <td class="px-6 py-4">
                                     <span :class="['inline-flex rounded-full px-2.5 py-1 text-xs font-medium capitalize', getModuleClasses(charge.module)]">
                                         {{ charge.module }}
@@ -406,7 +408,7 @@ const getStatusClasses = (status: string) => {
                                 </td>
                             </tr>
                             <tr v-if="charges.length === 0">
-                                <td colspan="8" class="px-6 py-10 text-center text-sm text-muted-foreground">
+                                <td colspan="9" class="px-6 py-10 text-center text-sm text-muted-foreground">
                                     No charges found for this student yet.
                                 </td>
                             </tr>
@@ -508,6 +510,7 @@ const getStatusClasses = (status: string) => {
                     <table class="min-w-full divide-y divide-border">
                         <thead class="bg-muted">
                             <tr>
+                                <th class="px-6 py-4 text-left text-xs font-semibold uppercase text-muted-foreground">#</th>
                                 <th class="px-6 py-4 text-left text-xs font-semibold uppercase text-muted-foreground">Date</th>
                                 <th class="px-6 py-4 text-left text-xs font-semibold uppercase text-muted-foreground">Entry</th>
                                 <th class="px-6 py-4 text-left text-xs font-semibold uppercase text-muted-foreground">Reference</th>
@@ -518,6 +521,7 @@ const getStatusClasses = (status: string) => {
                         </thead>
                         <tbody class="divide-y divide-border">
                             <tr v-for="(entry, index) in timeline" :key="`${entry.entry_type}-${entry.reference}-${index}`">
+                                <td class="px-6 py-4 text-sm text-muted-foreground">{{ index + 1 }}</td>
                                 <td class="px-6 py-4 text-sm text-muted-foreground">{{ formatDate(entry.date) }}</td>
                                 <td class="px-6 py-4">
                                     <div class="font-medium text-foreground">{{ entry.title }}</div>
@@ -535,7 +539,7 @@ const getStatusClasses = (status: string) => {
                                 </td>
                             </tr>
                             <tr v-if="timeline.length === 0">
-                                <td colspan="6" class="px-6 py-10 text-center text-sm text-muted-foreground">
+                                <td colspan="7" class="px-6 py-10 text-center text-sm text-muted-foreground">
                                     No statement activity found for this student.
                                 </td>
                             </tr>

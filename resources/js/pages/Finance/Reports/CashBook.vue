@@ -120,6 +120,7 @@ const loadReport = () => {
                     <table class="min-w-full divide-y divide-border">
                         <thead class="bg-muted">
                             <tr>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase">#</th>
                                 <th class="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Ledger #</th>
                                 <th class="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Type</th>
                                 <th class="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Category</th>
@@ -128,7 +129,8 @@ const loadReport = () => {
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-border">
-                            <tr v-for="txn in transactions" :key="txn.id" class="hover:bg-accent">
+                            <tr v-for="(txn, txnIndex) in transactions" :key="txn.id" class="hover:bg-accent">
+                                <td class="px-4 py-3 text-sm text-muted-foreground">{{ txnIndex + 1 }}</td>
                                 <td class="px-4 py-3 text-sm">{{ txn.ledger_number }}</td>
                                 <td class="px-4 py-3 text-sm">
                                     <span :class="txn.transaction_type === 'INCOME' ? 'bg-success/10 text-success' : 'bg-destructive/10 text-destructive'" class="px-2 py-1 text-xs rounded-full">
@@ -142,7 +144,7 @@ const loadReport = () => {
                                 </td>
                             </tr>
                             <tr v-if="transactions.length === 0">
-                                <td colspan="5" class="px-4 py-8 text-center text-muted-foreground">No transactions for this date</td>
+                                <td colspan="6" class="px-4 py-8 text-center text-muted-foreground">No transactions for this date</td>
                             </tr>
                         </tbody>
                     </table>

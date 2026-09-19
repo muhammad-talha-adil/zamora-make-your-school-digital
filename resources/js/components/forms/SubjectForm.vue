@@ -8,7 +8,6 @@ import InputError from '@/components/InputError.vue';
 import { Button, type ButtonVariants } from '@/components/ui/button';
 import {
     Dialog,
-    DialogClose,
     DialogContent,
     DialogDescription,
     DialogFooter,
@@ -212,15 +211,6 @@ const resetForm = () => {
                 </div>
 
                 <DialogFooter>
-                    <DialogClose as-child>
-                        <Button
-                            type="button"
-                            variant="secondary"
-                            @click="resetForm"
-                        >
-                            Cancel
-                        </Button>
-                    </DialogClose>
                     <Button type="submit" :disabled="processing">
                         {{ processing ? 'Saving...' : (subject ? 'Update' : 'Create') }}
                     </Button>

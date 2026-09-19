@@ -130,6 +130,9 @@
                         <thead class="bg-muted">
                             <tr>
                                 <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">
+                                    #
+                                </th>
+                                <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">
                                     Supplier
                                 </th>
                                 <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">
@@ -150,7 +153,10 @@
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-border bg-card">
-                            <tr v-for="supplier in props.suppliers.data" :key="supplier.id" class="transition-colors hover:bg-accent">
+                            <tr v-for="(supplier, supplierIndex) in props.suppliers.data" :key="supplier.id" class="transition-colors hover:bg-accent">
+                                <td class="px-4 py-3 whitespace-nowrap text-sm text-muted-foreground">
+                                    {{ ((props.suppliers.from || 1) - 1) + supplierIndex + 1 }}
+                                </td>
                                 <td class="px-4 py-3 whitespace-nowrap">
                                     <div class="flex items-center">
                                         <div class="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">

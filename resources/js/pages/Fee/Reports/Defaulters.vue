@@ -176,6 +176,7 @@ const changePage = (page: number) => {
                     <table class="w-full text-sm">
                         <thead class="bg-muted">
                             <tr>
+                                <th class="text-left py-3 px-4 text-muted-foreground">#</th>
                                 <th class="text-left py-3 px-4 text-muted-foreground">Student</th>
                                 <th class="text-left py-3 px-4 text-muted-foreground">Voucher No</th>
                                 <th class="text-left py-3 px-4 text-muted-foreground">Month</th>
@@ -186,7 +187,10 @@ const changePage = (page: number) => {
                             </tr>
                         </thead>
                         <tbody>
-                            <tr v-for="defaulter in props.defaulters.data" :key="defaulter.id" class="border-t border-border">
+                            <tr v-for="(defaulter, defaulterIndex) in props.defaulters.data" :key="defaulter.id" class="border-t border-border">
+                                <td class="py-3 px-4 text-muted-foreground">
+                                    {{ (props.defaulters.current_page - 1) * props.defaulters.per_page + defaulterIndex + 1 }}
+                                </td>
                                 <td class="py-3 px-4">
                                     <div class="text-foreground font-medium">
                                         {{ defaulter.student?.name || 'N/A' }}

@@ -401,6 +401,7 @@ const handleCancel = () => {
                     <table class="min-w-full divide-y divide-border">
                         <thead class="bg-muted">
                             <tr>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">#</th>
                                 <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Student</th>
                                 <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Voucher</th>
                                 <th class="px-4 py-3 text-right text-xs font-semibold text-muted-foreground uppercase">Net</th>
@@ -410,7 +411,8 @@ const handleCancel = () => {
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-border bg-card">
-                            <tr v-for="cohortVoucher in cohortVouchers" :key="cohortVoucher.id" class="hover:bg-accent">
+                            <tr v-for="(cohortVoucher, cohortIndex) in cohortVouchers" :key="cohortVoucher.id" class="hover:bg-accent">
+                                <td class="px-4 py-3 text-sm text-muted-foreground">{{ cohortIndex + 1 }}</td>
                                 <td class="px-4 py-3">
                                     <div class="text-sm font-medium text-foreground">{{ cohortVoucher.student_name }}</div>
                                     <div class="text-xs text-muted-foreground">{{ cohortVoucher.registration_number }}</div>

@@ -12,7 +12,6 @@ import {
     DialogHeader,
     DialogTitle,
     DialogTrigger,
-    DialogClose,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -307,12 +306,6 @@ const resetForm = () => {
 
                 <!-- Actions -->
                 <div class="flex flex-wrap justify-end gap-3 pt-2">
-                    <DialogClose as-child>
-                        <Button type="button" variant="outline" @click="resetForm" class="h-10">
-                            <Icon icon="x" class="mr-2 h-4 w-4" />
-                            Cancel
-                        </Button>
-                    </DialogClose>
                     <Button type="submit" :disabled="processing || !!nameExistsError" class="h-10">
                         <Icon v-if="processing" icon="loader" class="mr-2 h-4 w-4 animate-spin" />
                         <Icon v-else :icon="inventoryType ? 'check' : 'plus'" class="mr-2 h-4 w-4" />

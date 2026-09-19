@@ -134,7 +134,7 @@ const submit = () => {
                         <Icon icon="phone" class="mr-1 h-4 w-4" />
                         Phone
                     </Label>
-                    <Input id="phone" v-model="form.phone" :class="{ 'border-destructive': (errors as any).phone }" />
+                    <Input id="phone" v-model="form.phone" maxlength="11" :class="{ 'border-destructive': (errors as any).phone }" />
                     <InputError :message="(errors as any).phone" />
                 </div>
             </CardContent>

@@ -9,7 +9,6 @@ import InputError from '@/components/InputError.vue';
 import { Button, type ButtonVariants } from '@/components/ui/button';
 import {
     Dialog,
-    DialogClose,
     DialogContent,
     DialogHeader,
     DialogTitle,
@@ -457,6 +456,7 @@ const resetForm = () => {
                                     id="phone"
                                     v-model="form.phone"
                                     placeholder="Enter phone number"
+                                    maxlength="11"
                                     class="h-11 pl-10"
                                 />
                                 <Icon
@@ -530,17 +530,6 @@ const resetForm = () => {
 
                 <!-- Actions -->
                 <div class="flex flex-wrap justify-end gap-3 pt-2">
-                    <DialogClose as-child>
-                        <Button
-                            type="button"
-                            variant="outline"
-                            @click="resetForm"
-                            class="h-10"
-                        >
-                            <Icon icon="x" class="mr-2 h-4 w-4" />
-                            Cancel
-                        </Button>
-                    </DialogClose>
                     <Button type="submit" :disabled="processing" class="h-10">
                         <Icon
                             v-if="processing"

@@ -467,7 +467,6 @@
                         </DialogDescription>
                     </DialogHeader>
                     <DialogFooter>
-                        <Button variant="outline" @click="showRecomputeDialog = false">Cancel</Button>
                         <Button :disabled="recomputing" @click="recomputePositions">
                             {{ recomputing ? 'Recomputing...' : 'Recompute' }}
                         </Button>

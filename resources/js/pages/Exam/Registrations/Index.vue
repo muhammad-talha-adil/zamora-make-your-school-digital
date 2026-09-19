@@ -61,6 +61,9 @@
                         <thead class="bg-muted">
                             <tr>
                                 <th class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">
+                                    #
+                                </th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">
                                     Roll No
                                 </th>
                                 <th class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">
@@ -78,7 +81,10 @@
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-border bg-card">
-                            <tr v-for="registration in props.registrations" :key="registration.id" class="transition-colors hover:bg-accent">
+                            <tr v-for="(registration, registrationIndex) in props.registrations" :key="registration.id" class="transition-colors hover:bg-accent">
+                                <td class="px-4 py-3 whitespace-nowrap">
+                                    <div class="text-sm text-muted-foreground">{{ registrationIndex + 1 }}</div>
+                                </td>
                                 <td class="px-4 py-3 whitespace-nowrap">
                                     <div class="text-sm text-foreground">{{ registration.roll_no_snapshot || '-' }}</div>
                                 </td>

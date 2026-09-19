@@ -790,6 +790,7 @@ const generateDues = async () => {
                         <table class="min-w-full divide-y divide-border">
                             <thead class="bg-muted">
                                 <tr>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">#</th>
                                     <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Vehicle</th>
                                     <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Campus</th>
                                     <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Staff</th>
@@ -798,7 +799,8 @@ const generateDues = async () => {
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-border bg-card">
-                                <tr v-for="vehicle in filteredVehicles" :key="vehicle.id">
+                                <tr v-for="(vehicle, vehicleIndex) in filteredVehicles" :key="vehicle.id">
+                                    <td class="px-4 py-3 text-sm text-muted-foreground">{{ vehicleIndex + 1 }}</td>
                                     <td class="px-4 py-3">
                                         <div class="font-medium text-foreground">{{ vehicle.vehicle_no }}</div>
                                         <div class="text-xs text-muted-foreground">{{ vehicle.vehicle_type }} | Capacity: {{ vehicle.capacity }}</div>
@@ -823,7 +825,7 @@ const generateDues = async () => {
                                     </td>
                                 </tr>
                                 <tr v-if="filteredVehicles.length === 0">
-                                    <td colspan="5" class="px-4 py-10 text-center text-sm text-muted-foreground">No vehicles found.</td>
+                                    <td colspan="6" class="px-4 py-10 text-center text-sm text-muted-foreground">No vehicles found.</td>
                                 </tr>
                             </tbody>
                         </table>
@@ -885,6 +887,7 @@ const generateDues = async () => {
                         <table class="min-w-full divide-y divide-border">
                             <thead class="bg-muted">
                                 <tr>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">#</th>
                                     <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Route</th>
                                     <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Campus / Vehicle</th>
                                     <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Stops</th>
@@ -893,7 +896,8 @@ const generateDues = async () => {
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-border bg-card">
-                                <tr v-for="routeRow in filteredRoutes" :key="routeRow.id">
+                                <tr v-for="(routeRow, routeIndex) in filteredRoutes" :key="routeRow.id">
+                                    <td class="px-4 py-3 text-sm text-muted-foreground">{{ routeIndex + 1 }}</td>
                                     <td class="px-4 py-3">
                                         <div class="font-medium text-foreground">{{ routeRow.name }}</div>
                                         <div class="text-xs text-muted-foreground">{{ routeRow.notes || '-' }}</div>
@@ -960,6 +964,7 @@ const generateDues = async () => {
                         <table class="min-w-full divide-y divide-border">
                             <thead class="bg-muted">
                                 <tr>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">#</th>
                                     <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Stop</th>
                                     <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Campus</th>
                                     <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Timings</th>
@@ -967,7 +972,8 @@ const generateDues = async () => {
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-border bg-card">
-                                <tr v-for="stop in filteredStops" :key="stop.id">
+                                <tr v-for="(stop, stopIndex) in filteredStops" :key="stop.id">
+                                    <td class="px-4 py-3 text-sm text-muted-foreground">{{ stopIndex + 1 }}</td>
                                     <td class="px-4 py-3 font-medium text-foreground">{{ stop.name }}</td>
                                     <td class="px-4 py-3 text-sm text-muted-foreground">{{ stop.campus?.name || '-' }}</td>
                                     <td class="px-4 py-3 text-sm text-muted-foreground">
@@ -1064,6 +1070,7 @@ const generateDues = async () => {
                         <table class="min-w-full divide-y divide-border">
                             <thead class="bg-muted">
                                 <tr>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">#</th>
                                     <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Student</th>
                                     <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Route / Stop</th>
                                     <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Fee</th>
@@ -1073,7 +1080,8 @@ const generateDues = async () => {
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-border bg-card">
-                                <tr v-for="assignment in filteredAssignments" :key="assignment.id">
+                                <tr v-for="(assignment, assignmentIndex) in filteredAssignments" :key="assignment.id">
+                                    <td class="px-4 py-3 text-sm text-muted-foreground">{{ assignmentIndex + 1 }}</td>
                                     <td class="px-4 py-3">
                                         <div class="font-medium text-foreground">{{ assignment.student?.user?.name || assignment.student?.name || '-' }}</div>
                                         <div class="text-xs text-muted-foreground">{{ assignment.student?.registration_no || '-' }}</div>
@@ -1173,6 +1181,7 @@ const generateDues = async () => {
                         <table class="min-w-full divide-y divide-border">
                             <thead class="bg-muted">
                                 <tr>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">#</th>
                                     <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Date</th>
                                     <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Type / Vehicle</th>
                                     <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Campus</th>
@@ -1181,7 +1190,8 @@ const generateDues = async () => {
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-border bg-card">
-                                <tr v-for="expense in filteredExpenses" :key="expense.id">
+                                <tr v-for="(expense, expenseIndex) in filteredExpenses" :key="expense.id">
+                                    <td class="px-4 py-3 text-sm text-muted-foreground">{{ expenseIndex + 1 }}</td>
                                     <td class="px-4 py-3 text-sm text-muted-foreground">{{ formatDate(expense.expense_date) }}</td>
                                     <td class="px-4 py-3">
                                         <div class="font-medium capitalize text-foreground">{{ expense.expense_type }}</div>

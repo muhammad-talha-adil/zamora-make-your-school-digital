@@ -56,6 +56,7 @@ interface Paginated<T> {
     current_page: number;
     last_page: number;
     total: number;
+    per_page?: number;
 }
 
 interface Props {
@@ -468,6 +469,7 @@ const submitDesignation = async () => {
                     <table class="min-w-full divide-y divide-border">
                         <thead class="bg-muted">
                             <tr>
+                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">#</th>
                                 <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Employee</th>
                                 <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Department / Designation</th>
                                 <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Campus</th>
@@ -477,7 +479,10 @@ const submitDesignation = async () => {
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-border bg-card">
-                            <tr v-for="member in staff.data" :key="member.id" class="hover:bg-accent">
+                            <tr v-for="(member, memberIndex) in staff.data" :key="member.id" class="hover:bg-accent">
+                                <td class="px-4 py-3 text-sm text-muted-foreground">
+                                    {{ (staff.current_page - 1) * (staff.per_page || staff.data.length) + memberIndex + 1 }}
+                                </td>
                                 <td class="px-4 py-3">
                                     <Link :href="route('staff.people.show', member.id)" class="font-medium text-foreground hover:underline">
                                         {{ member.user?.name || '-' }}
@@ -511,7 +516,7 @@ const submitDesignation = async () => {
                                 </td>
                             </tr>
                             <tr v-if="!loading && staff.data.length === 0">
-                                <td colspan="6" class="px-4 py-10 text-center text-sm text-muted-foreground">No staff members found.</td>
+                                <td colspan="7" class="px-4 py-10 text-center text-sm text-muted-foreground">No staff members found.</td>
                             </tr>
                         </tbody>
                     </table>

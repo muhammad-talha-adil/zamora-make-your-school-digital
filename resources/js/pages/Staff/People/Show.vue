@@ -622,7 +622,6 @@ const activeJobsCount = computed(() => props.jobs.length);
                             </div>
                         </div>
                         <DialogFooter>
-                            <Button type="button" variant="outline" @click="showLeaveDialog = false">Cancel</Button>
                             <Button type="submit" variant="destructive" :disabled="employmentSaving">
                                 {{ employmentSaving ? 'Saving...' : 'Mark as Left' }}
                             </Button>
@@ -654,7 +653,6 @@ const activeJobsCount = computed(() => props.jobs.length);
                             </div>
                         </div>
                         <DialogFooter>
-                            <Button type="button" variant="outline" @click="showRejoinDialog = false">Cancel</Button>
                             <Button type="submit" :disabled="employmentSaving">
                                 {{ employmentSaving ? 'Saving...' : 'Rejoin' }}
                             </Button>
@@ -688,11 +686,11 @@ const activeJobsCount = computed(() => props.jobs.length);
                         <div class="grid gap-4 md:grid-cols-2">
                             <div>
                                 <label class="mb-2 block text-sm font-medium text-muted-foreground">CNIC</label>
-                                <Input v-model="personalForm.cnic" placeholder="00000-0000000-0" :disabled="!props.can.edit" />
+                                <Input v-model="personalForm.cnic" placeholder="00000-0000000-0" maxlength="15" :disabled="!props.can.edit" />
                             </div>
                             <div>
                                 <label class="mb-2 block text-sm font-medium text-muted-foreground">Phone</label>
-                                <Input v-model="personalForm.phone" :disabled="!props.can.edit" />
+                                <Input v-model="personalForm.phone" maxlength="11" :disabled="!props.can.edit" />
                             </div>
                         </div>
                         <div class="grid gap-4 md:grid-cols-2">
@@ -844,6 +842,7 @@ const activeJobsCount = computed(() => props.jobs.length);
                     <table class="min-w-full divide-y divide-border">
                         <thead class="bg-muted">
                             <tr>
+                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase text-muted-foreground">#</th>
                                 <th class="px-4 py-3 text-left text-xs font-semibold uppercase text-muted-foreground">Title</th>
                                 <th class="px-4 py-3 text-left text-xs font-semibold uppercase text-muted-foreground">Kind</th>
                                 <th class="px-4 py-3 text-left text-xs font-semibold uppercase text-muted-foreground">Expires</th>
@@ -851,7 +850,8 @@ const activeJobsCount = computed(() => props.jobs.length);
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-border">
-                            <tr v-for="doc in props.staff.documents" :key="doc.id">
+                            <tr v-for="(doc, docIndex) in props.staff.documents" :key="doc.id">
+                                <td class="px-4 py-3 text-sm text-muted-foreground">{{ docIndex + 1 }}</td>
                                 <td class="px-4 py-3 text-sm text-foreground">{{ doc.title }}</td>
                                 <td class="px-4 py-3 text-sm text-muted-foreground">{{ doc.kind }}</td>
                                 <td class="px-4 py-3 text-sm text-muted-foreground">{{ formatDate(doc.expires_on) }}</td>
@@ -859,7 +859,7 @@ const activeJobsCount = computed(() => props.jobs.length);
                                     <button v-if="props.can.edit" type="button" class="text-xs text-destructive hover:underline" @click="removeDocument(doc.id)">Remove</button>
                                 </td>
                             </tr>
-                            <tr v-if="props.staff.documents.length === 0"><td colspan="4" class="px-4 py-6 text-center text-sm text-muted-foreground">No documents on file.</td></tr>
+                            <tr v-if="props.staff.documents.length === 0"><td colspan="5" class="px-4 py-6 text-center text-sm text-muted-foreground">No documents on file.</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -974,6 +974,7 @@ const activeJobsCount = computed(() => props.jobs.length);
                     <table class="min-w-full divide-y divide-border">
                         <thead class="bg-muted">
                             <tr>
+                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase text-muted-foreground">#</th>
                                 <th class="px-4 py-3 text-left text-xs font-semibold uppercase text-muted-foreground">Date</th>
                                 <th class="px-4 py-3 text-left text-xs font-semibold uppercase text-muted-foreground">Status</th>
                                 <th class="px-4 py-3 text-left text-xs font-semibold uppercase text-muted-foreground">Check-in / out</th>
@@ -981,13 +982,14 @@ const activeJobsCount = computed(() => props.jobs.length);
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-border">
-                            <tr v-for="row in attendanceRows" :key="row.id">
+                            <tr v-for="(row, rowIndex) in attendanceRows" :key="row.id">
+                                <td class="px-4 py-3 text-sm text-muted-foreground">{{ rowIndex + 1 }}</td>
                                 <td class="px-4 py-3 text-sm text-foreground">{{ formatDate(row.attendance_date) }}</td>
                                 <td class="px-4 py-3 text-sm text-muted-foreground">{{ row.status?.name || '-' }}</td>
                                 <td class="px-4 py-3 text-sm text-muted-foreground">{{ row.check_in_at || '-' }} / {{ row.check_out_at || '-' }}</td>
                                 <td class="px-4 py-3 text-sm text-muted-foreground">{{ row.minutes_late }}</td>
                             </tr>
-                            <tr v-if="attendanceRows.length === 0"><td colspan="4" class="px-4 py-6 text-center text-sm text-muted-foreground">No attendance recorded yet.</td></tr>
+                            <tr v-if="attendanceRows.length === 0"><td colspan="5" class="px-4 py-6 text-center text-sm text-muted-foreground">No attendance recorded yet.</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -1025,6 +1027,7 @@ const activeJobsCount = computed(() => props.jobs.length);
                     <table class="min-w-full divide-y divide-border">
                         <thead class="bg-muted">
                             <tr>
+                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase text-muted-foreground">#</th>
                                 <th class="px-4 py-3 text-left text-xs font-semibold uppercase text-muted-foreground">Type</th>
                                 <th class="px-4 py-3 text-left text-xs font-semibold uppercase text-muted-foreground">Dates</th>
                                 <th class="px-4 py-3 text-left text-xs font-semibold uppercase text-muted-foreground">Days</th>
@@ -1033,7 +1036,8 @@ const activeJobsCount = computed(() => props.jobs.length);
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-border">
-                            <tr v-for="leave in leaveRows" :key="leave.id">
+                            <tr v-for="(leave, leaveIndex) in leaveRows" :key="leave.id">
+                                <td class="px-4 py-3 text-sm text-muted-foreground">{{ leaveIndex + 1 }}</td>
                                 <td class="px-4 py-3 text-sm text-foreground">{{ leave.leaveType?.name || '-' }}</td>
                                 <td class="px-4 py-3 text-sm text-muted-foreground">{{ formatDate(leave.from_date) }} - {{ formatDate(leave.to_date) }}</td>
                                 <td class="px-4 py-3 text-sm text-muted-foreground">{{ leave.days }}</td>
@@ -1053,7 +1057,7 @@ const activeJobsCount = computed(() => props.jobs.length);
                                     </template>
                                 </td>
                             </tr>
-                            <tr v-if="leaveRows.length === 0"><td colspan="5" class="px-4 py-6 text-center text-sm text-muted-foreground">No leave applications yet.</td></tr>
+                            <tr v-if="leaveRows.length === 0"><td colspan="6" class="px-4 py-6 text-center text-sm text-muted-foreground">No leave applications yet.</td></tr>
                         </tbody>
                     </table>
                 </div>
@@ -1092,6 +1096,7 @@ const activeJobsCount = computed(() => props.jobs.length);
                     <table class="min-w-full divide-y divide-border">
                         <thead class="bg-muted">
                             <tr>
+                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase text-muted-foreground">#</th>
                                 <th class="px-4 py-3 text-left text-xs font-semibold uppercase text-muted-foreground">Head</th>
                                 <th class="px-4 py-3 text-left text-xs font-semibold uppercase text-muted-foreground">Amount</th>
                                 <th class="px-4 py-3 text-left text-xs font-semibold uppercase text-muted-foreground">Effective From</th>
@@ -1099,7 +1104,8 @@ const activeJobsCount = computed(() => props.jobs.length);
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-border">
-                            <tr v-for="component in salaryComponents" :key="component.id">
+                            <tr v-for="(component, componentIndex) in salaryComponents" :key="component.id">
+                                <td class="px-4 py-3 text-sm text-muted-foreground">{{ componentIndex + 1 }}</td>
                                 <td class="px-4 py-3 text-sm text-foreground">{{ component.salaryHead?.name || '-' }}</td>
                                 <td class="px-4 py-3 text-sm text-muted-foreground">{{ formatMoney(component.amount) }}</td>
                                 <td class="px-4 py-3 text-sm text-muted-foreground">{{ formatDate(component.effective_from) }}</td>
@@ -1107,7 +1113,7 @@ const activeJobsCount = computed(() => props.jobs.length);
                                     <button v-if="props.can.manageSalary" type="button" class="text-xs text-destructive hover:underline" @click="endComponent(component)">End</button>
                                 </td>
                             </tr>
-                            <tr v-if="salaryComponents.length === 0"><td colspan="4" class="px-4 py-6 text-center text-sm text-muted-foreground">No named components — using the base salary and lump allowance/deduction.</td></tr>
+                            <tr v-if="salaryComponents.length === 0"><td colspan="5" class="px-4 py-6 text-center text-sm text-muted-foreground">No named components — using the base salary and lump allowance/deduction.</td></tr>
                         </tbody>
                     </table>
                 </div>

@@ -177,6 +177,7 @@ const give = async (candidate: Candidate) => {
                     <table class="min-w-full divide-y divide-border">
                         <thead class="bg-muted">
                             <tr>
+                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider">#</th>
                                 <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider">Student</th>
                                 <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider">Subject</th>
                                 <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider">Scored</th>
@@ -188,7 +189,8 @@ const give = async (candidate: Candidate) => {
                         </thead>
 
                         <tbody class="divide-y divide-border">
-                            <tr v-for="c in candidates" :key="c.result_line_id" class="hover:bg-muted/50">
+                            <tr v-for="(c, cIndex) in candidates" :key="c.result_line_id" class="hover:bg-muted/50">
+                                <td class="px-4 py-3 text-sm text-muted-foreground">{{ cIndex + 1 }}</td>
                                 <td class="px-4 py-3 text-sm font-medium">{{ c.student_name }}</td>
                                 <td class="px-4 py-3 text-sm">{{ c.subject }}</td>
                                 <td class="px-4 py-3 text-sm text-right">{{ c.obtained }}</td>

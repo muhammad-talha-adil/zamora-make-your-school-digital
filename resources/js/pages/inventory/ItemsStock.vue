@@ -708,6 +708,7 @@ const loadStocksPage = (url: string) => fetchStocks(url);
                     <table class="min-w-full divide-y divide-border">
                         <thead class="bg-muted">
                             <tr>
+                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">#</th>
                                 <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Date</th>
                                 <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Item</th>
                                 <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Campus</th>
@@ -719,7 +720,8 @@ const loadStocksPage = (url: string) => fetchStocks(url);
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-border bg-card">
-                            <tr v-for="adjustment in adjustmentsData" :key="adjustment.id" class="transition-colors hover:bg-accent">
+                            <tr v-for="(adjustment, adjustmentIndex) in adjustmentsData" :key="adjustment.id" class="transition-colors hover:bg-accent">
+                                <td class="px-4 py-3 text-sm text-muted-foreground">{{ adjustmentIndex + 1 }}</td>
                                 <td class="px-4 py-3 text-sm text-muted-foreground">{{ formatDateTime(adjustment.created_at) }}</td>
                                 <td class="px-4 py-3 text-sm font-medium text-foreground">{{ adjustment.item_name }}</td>
                                 <td class="px-4 py-3 text-sm text-muted-foreground">{{ adjustment.campus_name }}</td>

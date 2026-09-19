@@ -6,7 +6,6 @@ import { alert } from '@/utils'
 import { Button } from '@/components/ui/button'
 import {
     Dialog,
-    DialogClose,
     DialogContent,
     DialogDescription,
     DialogFooter,
@@ -390,11 +389,6 @@ const saveGradeItems = async () => {
             </div>
 
             <DialogFooter>
-              <DialogClose as-child>
-                <Button type="button" variant="secondary" @click="resetCreateForm">
-                  Cancel
-                </Button>
-              </DialogClose>
               <Button type="submit" :disabled="loading || !createForm.name">
                 {{ loading ? 'Creating...' : 'Create' }}
               </Button>
@@ -653,11 +647,6 @@ const saveGradeItems = async () => {
           </DialogDescription>
         </DialogHeader>
         <DialogFooter>
-          <DialogClose as-child>
-            <Button variant="secondary">
-              Cancel
-            </Button>
-          </DialogClose>
           <Button variant="destructive" @click="deleteSystem" :disabled="loading">
             <Icon icon="trash" class="w-4 h-4 mr-1" />
             Delete

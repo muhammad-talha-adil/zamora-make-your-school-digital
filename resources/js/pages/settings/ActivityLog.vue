@@ -157,6 +157,7 @@ const formatDate = (value: string | null): string => (value ? new Date(value).to
                     <table class="w-full text-sm">
                         <thead class="bg-muted/50 text-left text-xs uppercase text-muted-foreground">
                             <tr>
+                                <th class="px-4 py-2">#</th>
                                 <th class="px-4 py-2">When</th>
                                 <th class="px-4 py-2">Description</th>
                                 <th class="px-4 py-2">Model</th>
@@ -165,9 +166,10 @@ const formatDate = (value: string | null): string => (value ? new Date(value).to
                         </thead>
                         <tbody>
                             <tr v-if="props.activities.data.length === 0">
-                                <td colspan="4" class="px-4 py-6 text-center text-muted-foreground">No activity recorded yet.</td>
+                                <td colspan="5" class="px-4 py-6 text-center text-muted-foreground">No activity recorded yet.</td>
                             </tr>
-                            <tr v-for="activity in props.activities.data" :key="activity.id" class="border-t border-border">
+                            <tr v-for="(activity, activityIndex) in props.activities.data" :key="activity.id" class="border-t border-border">
+                                <td class="whitespace-nowrap px-4 py-2 text-muted-foreground">{{ ((props.activities.from || 1) - 1) + activityIndex + 1 }}</td>
                                 <td class="whitespace-nowrap px-4 py-2 text-muted-foreground">{{ formatDate(activity.created_at) }}</td>
                                 <td class="px-4 py-2">{{ activity.description }}</td>
                                 <td class="whitespace-nowrap px-4 py-2">

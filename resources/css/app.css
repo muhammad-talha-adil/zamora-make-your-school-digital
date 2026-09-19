@@ -284,6 +284,21 @@
     }
 }
 
+@layer base {
+    /*
+      Hide native number input spinner arrows project-wide (#68).
+    */
+    input[type='number']::-webkit-outer-spin-button,
+    input[type='number']::-webkit-inner-spin-button {
+        -webkit-appearance: none;
+        margin: 0;
+    }
+    input[type='number'] {
+        -moz-appearance: textfield;
+        appearance: textfield;
+    }
+}
+
 @layer components {
     /*
       Standard wrapper for data tables: scrolls horizontally on small screens

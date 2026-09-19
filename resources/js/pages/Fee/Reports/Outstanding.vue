@@ -160,13 +160,15 @@ const resetFilters = () => {
                     <table class="w-full text-sm">
                         <thead>
                             <tr class="border-b border-border">
+                                <th class="text-left py-2 text-muted-foreground">#</th>
                                 <th class="text-left py-2 text-muted-foreground">Student</th>
                                 <th class="text-right py-2 text-muted-foreground">Vouchers</th>
                                 <th class="text-right py-2 text-muted-foreground">Outstanding</th>
                             </tr>
                         </thead>
                         <tbody>
-                            <tr v-for="defaulter in props.topDefaulters" :key="defaulter.student_id" class="border-b border-border">
+                            <tr v-for="(defaulter, defaulterIndex) in props.topDefaulters" :key="defaulter.student_id" class="border-b border-border">
+                                <td class="py-2 text-muted-foreground">{{ defaulterIndex + 1 }}</td>
                                 <td class="py-2">
                                     <div class="text-foreground font-medium">
                                         {{ defaulter.student?.name || 'N/A' }}

@@ -135,6 +135,7 @@ const lookupWhoCanTeach = async () => {
                 <table class="min-w-full divide-y divide-border">
                     <thead class="bg-muted">
                         <tr>
+                            <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">#</th>
                             <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Teacher</th>
                             <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Class / Section</th>
                             <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Subject</th>
@@ -142,7 +143,8 @@ const lookupWhoCanTeach = async () => {
                         </tr>
                     </thead>
                     <tbody class="divide-y divide-border bg-card">
-                        <tr v-for="assignment in assignments" :key="assignment.id" class="hover:bg-accent">
+                        <tr v-for="(assignment, assignmentIndex) in assignments" :key="assignment.id" class="hover:bg-accent">
+                            <td class="px-4 py-3 text-sm text-muted-foreground">{{ assignmentIndex + 1 }}</td>
                             <td class="px-4 py-3">
                                 <Link
                                     v-if="assignment.staff_profile"
@@ -158,7 +160,7 @@ const lookupWhoCanTeach = async () => {
                             <td class="px-4 py-3 text-sm text-muted-foreground">{{ assignment.periods_per_week || '-' }}</td>
                         </tr>
                         <tr v-if="!loading && assignments.length === 0">
-                            <td colspan="4" class="px-4 py-10 text-center text-sm text-muted-foreground">No assignments for this filter.</td>
+                            <td colspan="5" class="px-4 py-10 text-center text-sm text-muted-foreground">No assignments for this filter.</td>
                         </tr>
                     </tbody>
                 </table>

@@ -9,7 +9,7 @@ import InputError from '@/components/InputError.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Dialog, DialogClose, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import ComboboxInput from '@/components/ui/combobox/ComboboxInput.vue';
 import { alert } from '@/utils';
 import type { BreadcrumbItem } from '@/types';
@@ -401,6 +401,7 @@ const studentLabel = (leave: LeaveRow): string => {
                             <table class="min-w-full divide-y divide-border">
                                 <thead class="bg-muted">
                                     <tr>
+                                        <th class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">#</th>
                                         <th class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">Student</th>
                                         <th class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">Leave Type</th>
                                         <th class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">Dates</th>
@@ -410,7 +411,8 @@ const studentLabel = (leave: LeaveRow): string => {
                                     </tr>
                                 </thead>
                                 <tbody class="divide-y divide-border bg-card">
-                                    <tr v-for="leave in leaves" :key="leave.id" class="transition-colors hover:bg-accent">
+                                    <tr v-for="(leave, leaveIndex) in leaves" :key="leave.id" class="transition-colors hover:bg-accent">
+                                        <td class="px-4 py-3 whitespace-nowrap text-sm text-muted-foreground">{{ leaveIndex + 1 }}</td>
                                         <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-foreground">{{ studentLabel(leave) }}</td>
                                         <td class="px-4 py-3 whitespace-nowrap text-sm text-muted-foreground">{{ leave.leave_type?.name }}</td>
                                         <td class="px-4 py-3 whitespace-nowrap text-sm text-muted-foreground">
@@ -499,9 +501,6 @@ const studentLabel = (leave: LeaveRow): string => {
                     </div>
 
                     <div class="flex flex-wrap justify-end gap-2 pt-2">
-                        <DialogClose as-child>
-                            <Button type="button" variant="outline">Cancel</Button>
-                        </DialogClose>
                         <Button type="submit" :disabled="applyProcessing">
                             <Icon v-if="applyProcessing" icon="loader" class="mr-2 h-4 w-4 animate-spin" />
                             Submit Application
@@ -536,9 +535,6 @@ const studentLabel = (leave: LeaveRow): string => {
                     </div>
 
                     <div class="flex flex-wrap justify-end gap-2 pt-2">
-                        <DialogClose as-child>
-                            <Button type="button" variant="outline">Cancel</Button>
-                        </DialogClose>
                         <Button type="submit" variant="destructive" :disabled="rejectProcessing">
                             <Icon v-if="rejectProcessing" icon="loader" class="mr-2 h-4 w-4 animate-spin" />
                             Reject Application

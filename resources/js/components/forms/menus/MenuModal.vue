@@ -244,9 +244,6 @@ watch(
                 </div>
 
                 <DialogFooter>
-                    <Button type="button" variant="secondary" @click="closeModal">
-                        Cancel
-                    </Button>
                     <Button type="submit" :disabled="form.processing">
                         {{ buttonText }}
                     </Button>

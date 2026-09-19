@@ -151,7 +151,6 @@ const submitReverse = () => {
                         </div>
 
                         <DialogFooter>
-                            <Button type="button" variant="outline" @click="showReverseDialog = false">Cancel</Button>
                             <Button type="submit" variant="destructive" :disabled="reversing">
                                 {{ reversing ? 'Reversing...' : 'Reverse Payment' }}
                             </Button>
@@ -212,6 +211,9 @@ const submitReverse = () => {
                                 <thead class="bg-muted">
                                     <tr>
                                         <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">
+                                            #
+                                        </th>
+                                        <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">
                                             Voucher No
                                         </th>
                                         <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">
@@ -223,7 +225,8 @@ const submitReverse = () => {
                                     </tr>
                                 </thead>
                                 <tbody class="divide-y divide-border">
-                                    <tr v-for="allocation in payment.allocations" :key="allocation.id" class="hover:bg-accent">
+                                    <tr v-for="(allocation, allocationIndex) in payment.allocations" :key="allocation.id" class="hover:bg-accent">
+                                        <td class="px-4 py-3 text-muted-foreground">{{ allocationIndex + 1 }}</td>
                                         <td class="px-4 py-3 font-medium">{{ allocation.voucher.voucher_no }}</td>
                                         <td class="px-4 py-3">{{ allocation.voucher.voucher_month?.name }} {{ allocation.voucher.voucher_year }}</td>
                                         <td class="px-4 py-3 text-right">{{ formatCurrency(allocation.allocated_amount) }}</td>

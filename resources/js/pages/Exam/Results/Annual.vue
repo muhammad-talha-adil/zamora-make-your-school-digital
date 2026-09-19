@@ -168,6 +168,7 @@ const percentageOf = (row: AnnualResult, examName: string): string => {
                     <table class="min-w-full divide-y divide-border">
                         <thead class="bg-muted">
                             <tr>
+                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider">#</th>
                                 <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider">Student</th>
                                 <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider">Adm No</th>
                                 <th
@@ -185,7 +186,8 @@ const percentageOf = (row: AnnualResult, examName: string): string => {
                         </thead>
 
                         <tbody class="divide-y divide-border">
-                            <tr v-for="row in rows" :key="row.student_id" class="hover:bg-muted/50">
+                            <tr v-for="(row, rowIndex) in rows" :key="row.student_id" class="hover:bg-muted/50">
+                                <td class="px-4 py-3 text-sm text-muted-foreground">{{ rowIndex + 1 }}</td>
                                 <td class="px-4 py-3 text-sm font-medium">{{ row.name }}</td>
                                 <td class="px-4 py-3 text-sm text-muted-foreground">{{ row.admission_no }}</td>
 

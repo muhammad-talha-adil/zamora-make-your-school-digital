@@ -240,6 +240,7 @@ const openPage = (url: string | null) => {
                     <table class="min-w-full divide-y divide-border">
                         <thead class="bg-muted">
                             <tr>
+                                <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">#</th>
                                 <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Date</th>
                                 <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">Reference</th>
                                 <th class="px-6 py-4 text-left text-xs font-semibold uppercase tracking-wide text-muted-foreground">System</th>
@@ -251,10 +252,13 @@ const openPage = (url: string | null) => {
                         </thead>
                         <tbody class="divide-y divide-border">
                             <tr
-                                v-for="transaction in transactions"
+                                v-for="(transaction, transactionIndex) in transactions"
                                 :key="transaction.id"
                                 class="hover:bg-accent"
                             >
+                                <td class="px-6 py-4 text-sm text-muted-foreground">
+                                    {{ ((props.transactions.from || 1) - 1) + transactionIndex + 1 }}
+                                </td>
                                 <td class="px-6 py-4 text-sm text-muted-foreground">
                                     {{ formatDate(transaction.transaction_date) }}
                                 </td>
@@ -287,7 +291,7 @@ const openPage = (url: string | null) => {
                                 </td>
                             </tr>
                             <tr v-if="transactions.length === 0">
-                                <td colspan="7" class="px-6 py-12 text-center text-sm text-muted-foreground">
+                                <td colspan="8" class="px-6 py-12 text-center text-sm text-muted-foreground">
                                     No finance transactions matched the current filters.
                                 </td>
                             </tr>

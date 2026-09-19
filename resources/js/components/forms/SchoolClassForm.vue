@@ -13,7 +13,6 @@ import {
     DialogHeader,
     DialogTitle,
     DialogTrigger,
-    DialogClose,
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -207,15 +206,6 @@ const resetForm = () => {
                 </div>
 
                 <DialogFooter>
-                    <DialogClose as-child>
-                        <Button
-                            type="button"
-                            variant="secondary"
-                            @click="resetForm"
-                        >
-                            Cancel
-                        </Button>
-                    </DialogClose>
                     <Button type="submit" :disabled="processing">
                         {{ processing ? 'Saving...' : (schoolClass ? 'Update' : 'Create') }}
                     </Button>
