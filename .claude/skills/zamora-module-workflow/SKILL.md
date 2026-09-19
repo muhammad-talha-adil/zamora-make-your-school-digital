@@ -88,3 +88,23 @@ smallest, cheapest path that correctly finishes the task:
 - Skip exploratory reads that don't change what gets written (e.g. don't
   read five sibling files "for convention" when one is enough to confirm the
   pattern).
+
+## Watch for agents running past a reasonable time for their task
+
+A background agent's task should take roughly as long as the task's own
+scope suggests (a single-file fix: minutes; a multi-file batch refactor:
+longer, but still bounded). If an agent has clearly run far longer than that
+— or reports "stalled"/"no progress"/a rate-limit failure — don't just wait
+indefinitely or assume it failed:
+
+- Check its actual output/partial progress and `git status`/`git diff`
+  directly before deciding anything. A "stalled" or "failed" status label is
+  not proof no work was done — verify the filesystem/git state first.
+- If real, verifiable progress exists, resume it via `SendMessage` to its
+  same agent ID with a tight instruction to finish from where it left off —
+  don't make it re-investigate or re-read files it already has.
+- Only restart a task from scratch (new agent) when there is genuinely no
+  usable progress to resume from.
+- If an agent is still actively working and within a reasonable time for its
+  scope, let it run — don't interrupt or duplicate it just because it's been
+  a while.
