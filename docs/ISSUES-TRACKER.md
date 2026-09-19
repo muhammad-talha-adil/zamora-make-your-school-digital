@@ -188,7 +188,7 @@ Dedupe karke ek-ek line item, lekin har jagah ke original numbers cite kiye hain
 | ✅ CNIC (13) / Phone (11) maxlength enforce everywhere | [#19](ISSUES-RAW.md#issue-19) |
 | Required fields poore bhare bina Submit/Create button disabled rahe | [#81](ISSUES-RAW.md#issue-81) |
 | ✅ Number input spinner arrows (up/down) hata do project-wide | [#68](ISSUES-RAW.md#issue-68) |
-| Campus → Class → Section → Session cascading select flow + auto-select for branch-scoped users + remembered active session everywhere | [#47, #64, #82, #99, #100](ISSUES-RAW.md#issue-64) |
+| 🔴 Campus → Class → Section → Session cascading select flow + auto-select for branch-scoped users + remembered active session everywhere — investigated, confirmed as a genuinely large effort (~22 pages each with independent cascade logic, no shared composable exists yet); needs its own dedicated multi-session tracked task, not folded into a quick P2 pass. See recommendation: build `useCascadingAcademicSelect.ts` composable first, roll out to attendance/Create, Exam/Papers/Create, students/Create, Fee/Vouchers/Generate as a pilot, then the remaining ~18 pages | [#47, #64, #82, #99, #100](ISSUES-RAW.md#issue-64) |
 | ✅ Modal me duplicate Close(×) / Cancel controls — behavior consistent/clear ho (kept header X where a primary action exists, kept footer Close where it's the only control) | [#54, #55](ISSUES-RAW.md#issue-54) |
 | Dark-mode background/contrast missing on specific dropdowns (grade system dropdown, revaluation dropdowns) | [#89, #97](ISSUES-RAW.md#issue-89) |
 | Dark/Light mode should persist correctly per current mode when opening `/settings/appearance` | [#13](ISSUES-RAW.md#issue-13) |
