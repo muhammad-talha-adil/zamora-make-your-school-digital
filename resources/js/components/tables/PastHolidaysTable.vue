@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import TablePagination from '@/components/tables/TablePagination.vue';
 import { Button } from '@/components/ui/button';
 import Icon from '@/components/Icon.vue';
 import axios from 'axios';
@@ -195,22 +196,11 @@ const getDaysCount = (start: string, end: string) => {
             </div>
         </div>
 
-        <div class="flex flex-wrap gap-2 justify-between items-center">
-            <div class="text-sm text-muted-foreground">
-                Showing {{ pagination.from }} to {{ pagination.to }} of {{ pagination.total }} entries
-            </div>
-            <div class="flex gap-1">
-                <Button
-                    v-for="link in pagination.links"
-                    :key="link.label"
-                    :variant="link.active ? 'default' : 'outline'"
-                    size="sm"
-                    :disabled="!link.url"
-                    @click="link.url ? fetchHolidays(parseInt(link.url.match(/page=(\d+)/)?.[1] || '1')) : null"
-                >
-                    <span v-html="link.label"></span>
-                </Button>
-            </div>
-        </div>
+        <TablePagination
+            v-model:per-page="perPage"
+            :pagination="pagination"
+            :show-per-page-selector="false"
+            @page="fetchHolidays"
+        />
     </div>
 </template>

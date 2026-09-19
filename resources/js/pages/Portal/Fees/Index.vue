@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Head, Link, router } from '@inertiajs/vue3';
+import TablePagination from '@/components/tables/TablePagination.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import Icon from '@/components/Icon.vue';
 import { formatCurrency, formatDate } from '@/utils/format';
@@ -179,19 +180,11 @@ const monthLabel = (voucher: Voucher): string => {
                 </div>
             </template>
 
-            <div v-if="props.vouchers.links.length > 3" class="flex flex-wrap gap-1">
-                <template v-for="link in props.vouchers.links" :key="`${link.label}-${link.url ?? 'disabled'}`">
-                    <Link
-                        v-if="link.url"
-                        :href="link.url"
-                        class="rounded px-3 py-1 text-sm border border-border"
-                        :class="link.active ? 'bg-primary text-primary-foreground border-primary' : 'text-foreground'"
-                    >
-                        <span v-html="link.label" />
-                    </Link>
-                    <span v-else class="rounded px-3 py-1 text-sm text-muted-foreground" v-html="link.label" />
-                </template>
-            </div>
+            <TablePagination
+                :pagination="props.vouchers"
+                :show-per-page-selector="false"
+                use-links
+            />
         </div>
     </AppLayout>
 </template>

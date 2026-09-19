@@ -133,26 +133,12 @@
                 </div>
 
                 <!-- Pagination -->
-                <div v-if="props.returns.links" class="px-6 py-4 border-t border-border flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                    <div class="text-sm text-muted-foreground">
-                        Showing {{ props.returns.from }} to {{ props.returns.to }} of {{ props.returns.total }} entries
-                    </div>
-                    <div class="flex flex-wrap gap-1">
-                        <Link
-                            v-for="link in props.returns.links"
-                            :key="link.label"
-                            :href="link.url || '#'"
-                            :class="[
-                                'px-3 py-2 text-sm rounded-md transition-colors min-h-11 flex items-center justify-center',
-                                link.active
-                                    ? 'bg-primary text-primary-foreground'
-                                    : 'bg-card text-muted-foreground hover:bg-accent border border-border'
-                            ]"
-                            preserve-state
-                        >
-                            <span v-html="link.label"></span>
-                        </Link>
-                    </div>
+                <div v-if="props.returns.links" class="px-6 py-4 border-t border-border">
+                    <TablePagination
+                        :pagination="props.returns"
+                        :show-per-page-selector="false"
+                        use-links
+                    />
                 </div>
             </div>
         </div>
@@ -161,6 +147,7 @@
 
 <script setup lang="ts">
 import { Head, router, Link } from '@inertiajs/vue3';
+import TablePagination from '@/components/tables/TablePagination.vue';
 import { reactive } from 'vue';
 import { formatCurrency } from '@/utils';
 import AppLayout from '@/layouts/AppLayout.vue';

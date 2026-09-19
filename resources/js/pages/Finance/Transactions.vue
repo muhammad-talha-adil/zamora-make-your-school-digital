@@ -4,6 +4,7 @@ import { computed, ref } from 'vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import TablePagination from '@/components/tables/TablePagination.vue';
 import type { BreadcrumbItem } from '@/types';
 
 interface TransactionRow {
@@ -294,26 +295,12 @@ const openPage = (url: string | null) => {
                     </table>
                 </div>
 
-                <div class="flex flex-col gap-4 border-t border-border px-6 py-4 text-sm md:flex-row md:items-center md:justify-between">
-                    <p class="text-muted-foreground">
-                        Showing {{ props.transactions.from ?? 0 }} to {{ props.transactions.to ?? 0 }} of {{ props.transactions.total }} entries
-                    </p>
-                    <div class="flex flex-wrap items-center gap-2">
-                        <button
-                            v-for="link in paginationLinks"
-                            :key="link.label"
-                            type="button"
-                            :disabled="!link.url"
-                            @click="openPage(link.url)"
-                            v-html="link.label"
-                            :class="[
-                                'rounded-lg border px-3 py-2 text-sm transition',
-                                link.active
-                                    ? 'border-primary bg-primary text-primary-foreground'
-                                    : 'border-border bg-card text-muted-foreground hover:bg-accent disabled:cursor-not-allowed disabled:opacity-50',
-                            ]"
-                        />
-                    </div>
+                <div class="border-t border-border px-6 py-4">
+                    <TablePagination
+                        :pagination="props.transactions"
+                        :show-per-page-selector="false"
+                        @page="(_page, url) => openPage(url)"
+                    />
                 </div>
             </div>
         </div>

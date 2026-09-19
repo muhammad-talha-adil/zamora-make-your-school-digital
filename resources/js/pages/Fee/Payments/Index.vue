@@ -5,6 +5,7 @@ import { route } from 'ziggy-js';
 import AppLayout from '@/layouts/AppLayout.vue';
 import type { BreadcrumbItem } from '@/types';
 import { Button } from '@/components/ui/button';
+import TablePagination from '@/components/tables/TablePagination.vue';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import Icon from '@/components/Icon.vue';
@@ -400,28 +401,11 @@ const getPageFromUrl = (url: string | null) => {
                 </div>
             </div>
 
-            <div v-if="paymentsPagination.links?.length" class="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
-                <div class="text-xs text-muted-foreground md:text-sm">
-                    Showing {{ paymentsPagination.from || 0 }} to {{ paymentsPagination.to || 0 }} of {{ paymentsPagination.total || 0 }} entries
-                </div>
-                <div class="flex flex-wrap gap-1">
-                    <button
-                        v-for="link in paymentsPagination.links"
-                        :key="`${link.label}-${link.url || 'disabled'}`"
-                        type="button"
-                        :disabled="!link.url"
-                        :class="[
-                            'min-h-10 items-center justify-center rounded-md px-3 py-2 text-sm transition-colors',
-                            link.active
-                                ? 'bg-primary text-primary-foreground'
-                                : 'border border-border bg-card text-muted-foreground hover:bg-accent disabled:cursor-not-allowed disabled:opacity-50'
-                        ]"
-                        @click="link.url ? loadPayments(getPageFromUrl(link.url)) : null"
-                    >
-                        <span v-html="link.label"></span>
-                    </button>
-                </div>
-            </div>
+            <TablePagination
+                :pagination="paymentsPagination"
+                :show-per-page-selector="false"
+                @page="loadPayments"
+            />
         </div>
     </AppLayout>
 </template>

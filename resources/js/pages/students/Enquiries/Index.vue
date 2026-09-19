@@ -12,6 +12,7 @@ import { Head, router } from '@inertiajs/vue3';
 import axios from 'axios';
 import { debounce } from 'lodash';
 import { route } from 'ziggy-js';
+import TablePagination from '@/components/tables/TablePagination.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import Icon from '@/components/Icon.vue';
 import InputError from '@/components/InputError.vue';
@@ -503,28 +504,11 @@ const admitEnquiry = async (enquiry: EnquiryRow) => {
                     </div>
 
                     <!-- Pagination -->
-                    <div v-if="pagination.links.length > 3" class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-                        <div class="text-xs md:text-sm text-muted-foreground">
-                            Showing {{ pagination.from }} to {{ pagination.to }} of {{ pagination.total }} entries
-                        </div>
-                        <div class="flex flex-wrap gap-1">
-                            <button
-                                v-for="link in pagination.links"
-                                :key="link.label"
-                                type="button"
-                                :disabled="!link.url"
-                                :class="[
-                                    'px-3 py-2 text-sm rounded-md transition-colors min-h-10 flex items-center justify-center',
-                                    link.active
-                                        ? 'bg-primary text-primary-foreground'
-                                        : 'bg-card text-muted-foreground hover:bg-accent border border-border disabled:opacity-40',
-                                ]"
-                                @click="link.url && fetchEnquiries(link.url)"
-                            >
-                                <span v-html="link.label"></span>
-                            </button>
-                        </div>
-                    </div>
+                    <TablePagination
+                        :pagination="pagination"
+                        :show-per-page-selector="false"
+                        @page="(_page, url) => url && fetchEnquiries(url)"
+                    />
                 </template>
             </template>
         </div>

@@ -165,26 +165,12 @@
                 </div>
 
                 <!-- Pagination -->
-                <div v-if="props.adjustments.links" class="px-6 py-4 border-t border-border flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                    <div class="text-sm text-muted-foreground">
-                        Showing {{ props.adjustments.from }} to {{ props.adjustments.to }} of {{ props.adjustments.total }} entries
-                    </div>
-                    <div class="flex flex-wrap gap-1">
-                        <Link
-                            v-for="link in props.adjustments.links"
-                            :key="link.label"
-                            :href="link.url || '#'"
-                            :class="[
-                                'px-3 py-2 text-sm rounded-md transition-colors min-h-11 flex items-center justify-center',
-                                link.active
-                                    ? 'bg-primary text-primary-foreground'
-                                    : 'bg-card text-muted-foreground hover:bg-accent border border-border'
-                            ]"
-                            preserve-state
-                        >
-                            <span v-html="link.label"></span>
-                        </Link>
-                    </div>
+                <div v-if="props.adjustments.links" class="px-6 py-4 border-t border-border">
+                    <TablePagination
+                        :pagination="props.adjustments"
+                        :show-per-page-selector="false"
+                        use-links
+                    />
                 </div>
             </div>
         </div>
@@ -193,6 +179,7 @@
 
 <script setup lang="ts">
 import { Head, router, Link } from '@inertiajs/vue3';
+import TablePagination from '@/components/tables/TablePagination.vue';
 import { reactive } from 'vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import type { BreadcrumbItem } from '@/types';

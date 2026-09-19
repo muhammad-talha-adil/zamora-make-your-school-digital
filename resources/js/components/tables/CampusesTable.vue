@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import TablePagination from '@/components/tables/TablePagination.vue';
 import CampusForm from '@/components/forms/CampusForm.vue';
 import { Button } from '@/components/ui/button';
 import Icon from '@/components/Icon.vue';
@@ -295,28 +296,11 @@ const inactivateCampus = (campus: any) => {
             </div>
         </div>
         <div class="flex flex-wrap gap-2 justify-between items-center">
-            <div class="flex items-center gap-4">
-                <div class="text-sm text-muted-foreground">
-                    Showing {{ pagination.from }} to {{ pagination.to }} of {{ pagination.total }} entries
-                </div>
-                <select v-model="perPage" class="rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm min-h-10 w-20">
-                    <option v-for="option in perPageOptions" :key="option.id" :value="option.id">
-                        {{ option.name }}
-                    </option>
-                </select>
-            </div>
-            <div class="flex gap-1">
-                <Button
-                    v-for="link in pagination.links"
-                    :key="link.label"
-                    :variant="link.active ? 'default' : 'outline'"
-                    size="sm"
-                    :disabled="!link.url"
-                    @click="link.url ? fetchCampuses(parseInt(link.url.match(/page=(\d+)/)?.[1] || '1')) : null"
-                >
-                    <span v-html="link.label"></span>
-                </Button>
-            </div>
-        </div>
+            <TablePagination
+            v-model:per-page="perPage"
+            :pagination="pagination"
+            :per-page-options="perPageOptions"
+            @page="fetchCampuses"
+        /></div>
     </div>
 </template>

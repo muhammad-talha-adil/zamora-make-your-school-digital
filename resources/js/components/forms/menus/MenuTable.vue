@@ -2,6 +2,7 @@
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import Icon from '@/components/Icon.vue';
+import TablePagination from '@/components/tables/TablePagination.vue';
 import { tableActionButtonClass } from '@/utils/table-actions';
 
 interface Menu {
@@ -185,34 +186,11 @@ const updatePerPage = (value: number) => {
             </div>
         </div>
 
-        <div class="flex flex-wrap gap-2 justify-between items-center">
-            <div class="flex items-center gap-4">
-                <div class="text-sm text-muted-foreground">
-                    Showing {{ pagination.from || 0 }} to {{ pagination.to || 0 }} of {{ pagination.total || 0 }} entries
-                </div>
-                <select 
-                    :value="pagination.per_page || 10" 
-                    @change="updatePerPage(($event.target as any).value)"
-                    class="w-20 rounded-md border border-border bg-card text-foreground px-2 py-1 text-sm"
-                >
-                    <option value="10">10</option>
-                    <option value="25">25</option>
-                    <option value="50">50</option>
-                    <option value="100">100</option>
-                </select>
-            </div>
-            <div class="flex gap-1">
-                <Button
-                    v-for="link in pagination.links"
-                    :key="link.label"
-                    :variant="link.active ? 'default' : 'outline'"
-                    size="sm"
-                    :disabled="!link.url"
-                    @click="handlePageClick(link)"
-                >
-                    <span v-html="link.label"></span>
-                </Button>
-            </div>
-        </div>
+        <TablePagination
+            :pagination="pagination"
+            :per-page="pagination.per_page || 10"
+            @update:per-page="updatePerPage"
+            @page="(page) => emit('fetchMenus', page)"
+        />
     </div>
 </template>

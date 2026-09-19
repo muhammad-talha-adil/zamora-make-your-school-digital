@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import TablePagination from '@/components/tables/TablePagination.vue';
 import ExamTypeForm from '@/components/forms/ExamTypeForm.vue';
 import { Button } from '@/components/ui/button';
 import Icon from '@/components/Icon.vue';
@@ -250,29 +251,10 @@ const forceDeleteExamType = (examType: any) => {
             </div>
         </div>
         <div class="flex flex-wrap gap-2 justify-between items-center">
-            <div class="flex items-center gap-4">
-                <div class="text-sm text-muted-foreground">
-                    Showing {{ pagination.from }} to {{ pagination.to }} of {{ pagination.total }} entries
-                </div>
-                <select v-model="perPage" class="w-20 rounded-md border border-border bg-card text-foreground px-2 py-1 text-sm">
-                    <option value="10">10</option>
-                    <option value="25">25</option>
-                    <option value="50">50</option>
-                    <option value="100">100</option>
-                </select>
-            </div>
-            <div class="flex gap-1">
-                <Button
-                    v-for="link in pagination.links"
-                    :key="link.label"
-                    :variant="link.active ? 'default' : 'outline'"
-                    size="sm"
-                    :disabled="!link.url"
-                    @click="link.url ? fetchExamTypes(parseInt(link.url.match(/page=(\d+)/)?.[1] || '1')) : null"
-                >
-                    <span v-html="link.label"></span>
-                </Button>
-            </div>
-        </div>
+            <TablePagination
+            v-model:per-page="perPage"
+            :pagination="pagination"
+            @page="fetchExamTypes"
+        /></div>
     </div>
 </template>

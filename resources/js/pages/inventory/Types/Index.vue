@@ -4,6 +4,7 @@ import { alert } from '@/utils';
 import { ref, watch } from 'vue';
 import axios from 'axios';
 import { route } from 'ziggy-js';
+import TablePagination from '@/components/tables/TablePagination.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { Button } from '@/components/ui/button';
 import Icon from '@/components/Icon.vue';
@@ -303,23 +304,12 @@ const handleSaved = () => {
             </div>
 
             <!-- Pagination -->
-            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                <div class="text-sm text-muted-foreground">
-                    Showing {{ pagination.from }} to {{ pagination.to }} of {{ pagination.total }} entries
-                </div>
-                <div class="flex flex-wrap gap-1">
-                    <Button
-                        v-for="link in pagination.links"
-                        :key="link.label"
-                        :variant="link.active ? 'default' : 'outline'"
-                        size="sm"
-                        :disabled="!link.url"
-                        @click="link.url && fetchInventoryTypes(parseInt(link.url.split('=').pop() || '1'))"
-                    >
-                        <span v-html="link.label"></span>
-                    </Button>
-                </div>
-            </div>
+            <TablePagination
+                :pagination="pagination"
+                :per-page="perPage"
+                :show-per-page-selector="false"
+                @page="fetchInventoryTypes"
+            />
         </div>
     </AppLayout>
 </template>

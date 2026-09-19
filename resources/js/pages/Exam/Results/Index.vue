@@ -427,23 +427,12 @@
                     </div>
 
                     <!-- Pagination -->
-                    <div v-if="pagination.last_page > 1" class="px-4 py-3 border-t border-border flex flex-col sm:flex-row justify-between items-center gap-3">
-                        <div class="text-sm text-muted-foreground">
-                            Showing {{ pagination.from }} to {{ pagination.to }} of {{ pagination.total }} entries
-                        </div>
-                        <div class="flex flex-wrap gap-1">
-                            <Button
-                                v-for="link in pagination.links"
-                                :key="link.label"
-                                :variant="link.active ? 'default' : 'outline'"
-                                size="sm"
-                                :disabled="!link.url"
-                                @click="handlePageChange(link.url)"
-                                class="min-w-8"
-                            >
-                                <span v-html="link.label"></span>
-                            </Button>
-                        </div>
+                    <div class="px-4 py-3 border-t border-border">
+                        <TablePagination
+                            :pagination="pagination"
+                            :show-per-page-selector="false"
+                            @page="handlePageChange"
+                        />
                     </div>
                 </div>
 
@@ -496,6 +485,7 @@ import axios from 'axios'
 import AppLayout from '@/layouts/AppLayout.vue'
 import type { BreadcrumbItem } from '@/types'
 import { Button } from '@/components/ui/button'
+import TablePagination from '@/components/tables/TablePagination.vue'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Printer, CalendarDays, RefreshCw } from 'lucide-vue-next'
 import { route } from 'ziggy-js'

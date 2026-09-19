@@ -5,6 +5,7 @@ import { ref, watch } from 'vue';
 import axios from 'axios';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { Button } from '@/components/ui/button';
+import TablePagination from '@/components/tables/TablePagination.vue';
 import Icon from '@/components/Icon.vue';
 import type { BreadcrumbItem } from '@/types';
 
@@ -211,23 +212,12 @@ const viewReturn = (returnItem: any) => {
                 </div>
             </div>
 
-            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-                <div class="text-sm text-muted-foreground">
-                    Showing {{ pagination.from }} to {{ pagination.to }} of {{ pagination.total }} entries
-                </div>
-                <div class="flex flex-wrap gap-1">
-                    <Button
-                        v-for="link in pagination.links"
-                        :key="link.label"
-                        :variant="link.active ? 'default' : 'outline'"
-                        size="sm"
-                        :disabled="!link.url"
-                        @click="link.url && fetchReturns(parseInt(link.url.split('=').pop() || '1'))"
-                    >
-                        <span v-html="link.label"></span>
-                    </Button>
-                </div>
-            </div>
+            <TablePagination
+                :pagination="pagination"
+                :per-page="perPage"
+                :show-per-page-selector="false"
+                @page="fetchReturns"
+            />
         </div>
     </AppLayout>
 </template>

@@ -5,6 +5,7 @@ import { ref, computed } from 'vue';
 import axios from 'axios';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { Button } from '@/components/ui/button';
+import TablePagination from '@/components/tables/TablePagination.vue';
 import Icon from '@/components/Icon.vue';
 import { Badge } from '@/components/ui/badge';
 import type { BreadcrumbItem } from '@/types';
@@ -448,23 +449,12 @@ const loadTypesPage = (url: string) => {
                 </div>
 
                 <!-- Types Pagination -->
-                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pt-4 border-t border-border">
-                    <div class="text-xs md:text-sm text-muted-foreground">
-                        Showing {{ paginationTypes.from }} to {{ paginationTypes.to }} of {{ paginationTypes.total }} entries
-                    </div>
-                    <div class="flex flex-wrap gap-1">
-                        <Button
-                            v-for="link in paginationTypes.links"
-                            :key="link.label"
-                            :variant="link.active ? 'default' : 'outline'"
-                            size="sm"
-                            :disabled="!link.url"
-                            @click="link.url && loadTypesPage(link.url)"
-                            class="min-h-8"
-                        >
-                            <span v-html="link.label"></span>
-                        </Button>
-                    </div>
+                <div class="pt-4 border-t border-border">
+                    <TablePagination
+                        :pagination="paginationTypes"
+                        :show-per-page-selector="false"
+                        @page="(_page, url) => url && loadTypesPage(url)"
+                    />
                 </div>
             </div>
 
@@ -640,23 +630,12 @@ const loadTypesPage = (url: string) => {
                 </div>
 
                 <!-- Items Pagination -->
-                <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 pt-4 border-t border-border">
-                    <div class="text-xs md:text-sm text-muted-foreground">
-                        Showing {{ paginationItems.from }} to {{ paginationItems.to }} of {{ paginationItems.total }} entries
-                    </div>
-                    <div class="flex flex-wrap gap-1">
-                        <Button
-                            v-for="link in paginationItems.links"
-                            :key="link.label"
-                            :variant="link.active ? 'default' : 'outline'"
-                            size="sm"
-                            :disabled="!link.url"
-                            @click="link.url && loadItemsPage(link.url)"
-                            class="min-h-8"
-                        >
-                            <span v-html="link.label"></span>
-                        </Button>
-                    </div>
+                <div class="pt-4 border-t border-border">
+                    <TablePagination
+                        :pagination="paginationItems"
+                        :show-per-page-selector="false"
+                        @page="(_page, url) => url && loadItemsPage(url)"
+                    />
                 </div>
             </div>
         </div>

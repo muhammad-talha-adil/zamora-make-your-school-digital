@@ -5,6 +5,7 @@ import { route } from 'ziggy-js';
 import axios from 'axios';
 import { alert } from '@/utils';
 import AppLayout from '@/layouts/AppLayout.vue';
+import TablePagination from '@/components/tables/TablePagination.vue';
 import { Button } from '@/components/ui/button';
 import Icon from '@/components/Icon.vue';
 import { Label } from '@/components/ui/label';
@@ -743,74 +744,26 @@ const loadStocksPage = (url: string) => fetchStocks(url);
                 </div>
             </div>
 
-            <div v-if="activeTab === 'types'" class="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
-                <div class="text-xs text-muted-foreground md:text-sm">
-                    Showing {{ paginationTypes.from || 0 }} to {{ paginationTypes.to || 0 }} of {{ paginationTypes.total || 0 }} entries
-                </div>
-                <div class="flex flex-wrap gap-1">
-                    <button
-                        v-for="link in paginationTypes.links || []"
-                        :key="`${link.label}-${link.url || 'disabled'}`"
-                        type="button"
-                        :disabled="!link.url"
-                        :class="[
-                            'min-h-10 rounded-md px-3 py-2 text-sm transition-colors',
-                            link.active
-                                ? 'bg-primary text-primary-foreground'
-                                : 'border border-border bg-card text-muted-foreground hover:bg-accent disabled:cursor-not-allowed disabled:opacity-50'
-                        ]"
-                        @click="link.url && loadTypesPage(link.url)"
-                    >
-                        <span v-html="link.label"></span>
-                    </button>
-                </div>
-            </div>
+            <TablePagination
+                v-if="activeTab === 'types'"
+                :pagination="paginationTypes"
+                :show-per-page-selector="false"
+                @page="(_page, url) => url && loadTypesPage(url)"
+            />
 
-            <div v-if="activeTab === 'items'" class="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
-                <div class="text-xs text-muted-foreground md:text-sm">
-                    Showing {{ paginationItems.from || 0 }} to {{ paginationItems.to || 0 }} of {{ paginationItems.total || 0 }} entries
-                </div>
-                <div class="flex flex-wrap gap-1">
-                    <button
-                        v-for="link in paginationItems.links || []"
-                        :key="`${link.label}-${link.url || 'disabled'}`"
-                        type="button"
-                        :disabled="!link.url"
-                        :class="[
-                            'min-h-10 rounded-md px-3 py-2 text-sm transition-colors',
-                            link.active
-                                ? 'bg-primary text-primary-foreground'
-                                : 'border border-border bg-card text-muted-foreground hover:bg-accent disabled:cursor-not-allowed disabled:opacity-50'
-                        ]"
-                        @click="link.url && loadItemsPage(link.url)"
-                    >
-                        <span v-html="link.label"></span>
-                    </button>
-                </div>
-            </div>
+            <TablePagination
+                v-if="activeTab === 'items'"
+                :pagination="paginationItems"
+                :show-per-page-selector="false"
+                @page="(_page, url) => url && loadItemsPage(url)"
+            />
 
-            <div v-if="activeTab === 'stocks'" class="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center">
-                <div class="text-xs text-muted-foreground md:text-sm">
-                    Showing {{ paginationStocks.from || 0 }} to {{ paginationStocks.to || 0 }} of {{ paginationStocks.total || 0 }} entries
-                </div>
-                <div class="flex flex-wrap gap-1">
-                    <button
-                        v-for="link in paginationStocks.links || []"
-                        :key="`${link.label}-${link.url || 'disabled'}`"
-                        type="button"
-                        :disabled="!link.url"
-                        :class="[
-                            'min-h-10 rounded-md px-3 py-2 text-sm transition-colors',
-                            link.active
-                                ? 'bg-primary text-primary-foreground'
-                                : 'border border-border bg-card text-muted-foreground hover:bg-accent disabled:cursor-not-allowed disabled:opacity-50'
-                        ]"
-                        @click="link.url && loadStocksPage(link.url)"
-                    >
-                        <span v-html="link.label"></span>
-                    </button>
-                </div>
-            </div>
+            <TablePagination
+                v-if="activeTab === 'stocks'"
+                :pagination="paginationStocks"
+                :show-per-page-selector="false"
+                @page="(_page, url) => url && loadStocksPage(url)"
+            />
         </div>
     </AppLayout>
 </template>

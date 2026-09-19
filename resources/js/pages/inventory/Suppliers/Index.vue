@@ -218,33 +218,18 @@
             </div>
 
             <!-- Pagination -->
-            <div v-if="props.suppliers.links" class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-                <div class="text-xs md:text-sm text-muted-foreground">
-                    Showing {{ props.suppliers.from }} to {{ props.suppliers.to }} of {{ props.suppliers.total }} entries
-                </div>
-                <div class="flex flex-wrap gap-1">
-                    <Link
-                        v-for="link in props.suppliers.links"
-                        :key="link.label"
-                        :href="link.url || '#'"
-                        :class="[
-                            'px-3 py-2 text-sm rounded-md transition-colors min-h-10 flex items-center justify-center',
-                            link.active
-                                ? 'bg-primary text-primary-foreground'
-                                : 'bg-card text-muted-foreground hover:bg-accent border border-border'
-                        ]"
-                        preserve-state
-                    >
-                        <span v-html="link.label"></span>
-                    </Link>
-                </div>
-            </div>
+            <TablePagination
+                :pagination="props.suppliers"
+                :show-per-page-selector="false"
+                use-links
+            />
         </div>
     </AppLayout>
 </template>
 
 <script setup lang="ts">
 import { Head, router, Link } from '@inertiajs/vue3';
+import TablePagination from '@/components/tables/TablePagination.vue';
 import { reactive } from 'vue';
 import { debounce } from 'lodash';
 import { route } from 'ziggy-js';

@@ -5,6 +5,7 @@ import { ref, watch } from 'vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { Button } from '@/components/ui/button';
 import Icon from '@/components/Icon.vue';
+import TablePagination from '@/components/tables/TablePagination.vue';
 import { Badge } from '@/components/ui/badge';
 import type { BreadcrumbItem } from '@/types';
 import ItemForm from '@/components/forms/inventory/ItemForm.vue';
@@ -350,23 +351,13 @@ const getStockStatus = (quantity: number) => {
             </div>
 
             <!-- Pagination -->
-            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 pt-4 border-t border-border">
-                <div class="text-sm text-muted-foreground">
-                    Showing {{ pagination.from }} to {{ pagination.to }} of {{ pagination.total }} entries
-                </div>
-                <div class="flex flex-wrap gap-1">
-                    <Button
-                        v-for="link in pagination.links"
-                        :key="link.label"
-                        :variant="link.active ? 'default' : 'outline'"
-                        size="sm"
-                        :disabled="!link.url"
-                        @click="link.url && router.visit(link.url, { preserveScroll: true })"
-                        class="min-h-9"
-                    >
-                        <span v-html="link.label"></span>
-                    </Button>
-                </div>
+            <div class="pt-4 border-t border-border">
+                <TablePagination
+                    :pagination="pagination"
+                    :per-page="perPage"
+                    :show-per-page-selector="false"
+                    @page="(_page, url) => url && router.visit(url, { preserveScroll: true })"
+                />
             </div>
         </div>
     </AppLayout>
