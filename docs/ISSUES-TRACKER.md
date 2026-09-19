@@ -189,13 +189,13 @@ Dedupe karke ek-ek line item, lekin har jagah ke original numbers cite kiye hain
 | Required fields poore bhare bina Submit/Create button disabled rahe | [#81](ISSUES-RAW.md#issue-81) |
 | ✅ Number input spinner arrows (up/down) hata do project-wide | [#68](ISSUES-RAW.md#issue-68) |
 | Campus → Class → Section → Session cascading select flow + auto-select for branch-scoped users + remembered active session everywhere | [#47, #64, #82, #99, #100](ISSUES-RAW.md#issue-64) |
-| ✅ Modal me duplicate Close(×) / Cancel controls — behavior consistent/clear ho | [#54, #55](ISSUES-RAW.md#issue-54) |
+| ✅ Modal me duplicate Close(×) / Cancel controls — behavior consistent/clear ho (kept header X where a primary action exists, kept footer Close where it's the only control) | [#54, #55](ISSUES-RAW.md#issue-54) |
 | Dark-mode background/contrast missing on specific dropdowns (grade system dropdown, revaluation dropdowns) | [#89, #97](ISSUES-RAW.md#issue-89) |
 | Dark/Light mode should persist correctly per current mode when opening `/settings/appearance` | [#13](ISSUES-RAW.md#issue-13) |
 | Fee Settings tabs pattern should match School Profile tabs pattern (consistent settings-page shell) | [#44](ISSUES-RAW.md#issue-44) |
 | Sidebar open/close state persist across page refresh | [#124](ISSUES-RAW.md#issue-124) |
 
-**P2 progress note:** #5, #6, #7, #8, #19, #68 fixed (commits `3b9768f`, `0428697`). #12 and #54/#55 fix is in progress (background agent, not yet committed as of this note). Remaining P2 line items (#9-11, #39/#41/#75/#111, #81, #47/#64/#82/#99/#100, #89/#97, #13, #44, #124) not yet started.
+**P2 progress note:** #5, #6, #7, #8, #12, #19, #54, #55, #68 fixed (commits `3b9768f`, `0428697`, `910f88c`). Remaining P2 line items (#9-11, #39/#41/#75/#111, #81, #47/#64/#82/#99/#100, #89/#97, #13, #44, #124) not yet started.
 
 ### P3 — Real Feature Gaps / Bigger Redesigns
 
