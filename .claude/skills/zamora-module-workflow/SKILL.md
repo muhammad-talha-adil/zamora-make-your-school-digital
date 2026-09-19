@@ -56,3 +56,15 @@ plus a plain-language, module-by-module description of what that role can actual
 permission names, no route names, no URLs, just what they can see/do in each module. When a new
 role is added, or a role's permissions change meaningfully, update that file in the same pass —
 don't let it drift out of sync with `RolesSeeder.php`.
+
+## Commit often, without waiting to be asked
+
+Don't let a large amount of finished, verified work sit uncommitted. Once a
+discrete piece of work is done and tested (a bug fixed, a feature built and
+its tests passing, a batch of related findings closed) — commit it locally
+right away, even without an explicit "commit this" from the user. Pushing
+still needs the user's go-ahead as usual (or a clear standing instruction to
+push), but a local commit is cheap, reversible, and is the safety net against
+losing work to a crash, a context reset, or an interrupted session. When
+several small things get done in the same stretch, commit each logical unit
+separately rather than batching unrelated changes into one commit.
