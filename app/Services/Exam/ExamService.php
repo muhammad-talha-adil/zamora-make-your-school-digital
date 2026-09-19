@@ -128,8 +128,40 @@ class ExamService
         return Exam::STATUS_SCHEDULED;
     }
 
+    /**
+     * The statuses each status is allowed to move to next.
+     *
+     * @var array<string, array<int, string>>
+     */
+    private const VALID_TRANSITIONS = [
+        Exam::STATUS_SCHEDULED => [Exam::STATUS_ACTIVE, Exam::STATUS_CANCELLED],
+        Exam::STATUS_ACTIVE => [Exam::STATUS_MARKING, Exam::STATUS_CANCELLED],
+        Exam::STATUS_MARKING => [Exam::STATUS_ACTIVE, Exam::STATUS_PUBLISHED, Exam::STATUS_CANCELLED],
+        Exam::STATUS_PUBLISHED => [Exam::STATUS_COMPLETED],
+        Exam::STATUS_COMPLETED => [],
+        Exam::STATUS_CANCELLED => [],
+    ];
+
+    /**
+     * Whether the exam can move from its current status to the given one.
+     */
+    public function isValidTransition(string $from, string $to): bool
+    {
+        if ($from === $to) {
+            return true;
+        }
+
+        return in_array($to, self::VALID_TRANSITIONS[$from] ?? [], true);
+    }
+
     public function changeStatus(Exam $exam, string $status)
     {
+        if (! $this->isValidTransition($exam->status, $status)) {
+            throw new \InvalidArgumentException(
+                "Cannot change exam status from \"{$exam->status}\" to \"{$status}\"."
+            );
+        }
+
         return DB::transaction(function () use ($exam, $status) {
             $exam->update(['status' => $status]);
             $exam = $exam->fresh(['examType', 'session']);

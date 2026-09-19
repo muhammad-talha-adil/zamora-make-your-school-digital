@@ -113,7 +113,7 @@ class ExamResultController extends Controller
 
         $this->authorize('viewAny', ExamResultHeader::class);
 
-        $query = ExamResultHeader::with(['student.user', 'campus', 'class', 'section', 'exam', 'overallGradeItem', 'examResultLines'])
+        $query = ExamResultHeader::with(['student.user', 'campus', 'class', 'section', 'exam', 'overallGradeItem', 'examResultLines.examPaper.subject'])
             ->where('exam_id', $examId)
             // Every signed-in user could read every child's marks in every
             // class of every campus. The policy guards one result; this filters
@@ -159,6 +159,14 @@ class ExamResultController extends Controller
                 // either of them out for itself.
                 'result_status' => $header->result_status,
                 'failed_subject_count' => (int) $header->failed_subject_count,
+                // Names of the subjects the child failed, so the UI can say
+                // *why* rather than just "Fail (1)" — the overall percentage
+                // can look like a pass even though a single paper failed it.
+                'failed_subjects' => $header->examResultLines
+                    ->where('is_pass', false)
+                    ->map(fn ($line) => $line->examPaper?->subject?->name)
+                    ->filter()
+                    ->values(),
                 'position_in_section' => $header->position_in_section,
                 'position_in_class' => $header->position_in_class,
                 'ranked_out_of' => $header->ranked_out_of,
@@ -170,8 +178,11 @@ class ExamResultController extends Controller
         // Sort by percentage descending
         $sortedResults = $allResults->sortByDesc('percentage')->values();
 
-        // Get top 5 toppers (from all results, not just current page)
-        $toppers = $sortedResults->take(5);
+        // Get top 5 toppers (from all results, not just current page).
+        // Ranking across an entire exam mixes students from different
+        // classes/campuses and is meaningless, so toppers only appear once a
+        // class (at minimum) has been selected to scope the comparison.
+        $toppers = $classId ? $sortedResults->take(5) : collect();
 
         // Paginate the sorted results
         $total = $sortedResults->count();

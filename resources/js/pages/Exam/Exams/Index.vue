@@ -458,6 +458,9 @@ const saveStatus = async (exam: Exam) => {
             window.dispatchEvent(new CustomEvent('toast', {
                 detail: { type: 'success', message: 'Status updated successfully!' }
             }));
+            // Refresh the exams prop in the background so paper/result counts and
+            // action-button states stay correct without a manual page refresh.
+            router.reload({ only: ['exams'], preserveScroll: true });
         }
     } catch (error: any) {
         console.error('Error saving status:', error);

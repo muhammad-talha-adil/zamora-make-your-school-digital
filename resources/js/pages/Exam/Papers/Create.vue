@@ -19,6 +19,13 @@
                 <AlertDescription>{{ errorMessage }}</AlertDescription>
             </Alert>
 
+            <!-- Info Alert (e.g. existing papers found for this combination) -->
+            <Alert v-if="infoMessage" variant="default" class="mb-4 bg-info/10 border-info/40">
+                <AlertCircle class="h-4 w-4 text-info" />
+                <AlertTitle class="text-info">Note</AlertTitle>
+                <AlertDescription class="text-info">{{ infoMessage }}</AlertDescription>
+            </Alert>
+
             <!-- Success Alert -->
             <Alert v-if="successMessage" variant="default" class="mb-4 bg-success/10 border-success/40">
                 <AlertCircle class="h-4 w-4 text-success" />
@@ -873,6 +880,7 @@ const isEditing = ref(false);
 const editingPaperId = ref<number | null>(null);
 const editingPaper = reactive<any>({});
 const errorMessage = ref('');
+const infoMessage = ref('');
 const successMessage = ref('');
 const validationErrors = reactive<Record<string, string>>({});
 
@@ -1197,6 +1205,7 @@ const loadPapersOrSubjects = async () => {
     loadingSubjects.value = true;
     subjectsLoaded.value = true;
     errorMessage.value = '';
+    infoMessage.value = '';
     successMessage.value = '';
     clearValidationErrors();
 
@@ -1218,7 +1227,7 @@ const loadPapersOrSubjects = async () => {
             // Fetch remaining subjects that don't have papers yet for adding new papers
             loadRemainingSubjects(filters.exam_id, filters.class_id, filters.section_id, filters.campus_id);
             
-            errorMessage.value = data.message || `${existingPapers.value.length} existing paper(s) found. You can edit them below.`;
+            infoMessage.value = data.message || `${existingPapers.value.length} existing paper(s) found. You can edit them below.`;
         } else if (data.type === 'subjects') {
             // No existing papers, show subjects
             existingPapers.value = [];

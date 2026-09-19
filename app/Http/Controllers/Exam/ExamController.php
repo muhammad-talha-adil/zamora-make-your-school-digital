@@ -148,7 +148,12 @@ class ExamController extends Controller
 
         $exam = Exam::findOrFail($id);
         $this->authorize('update', $exam);
-        $exam = $this->examService->changeStatus($exam, $request->status);
+
+        try {
+            $exam = $this->examService->changeStatus($exam, $request->status);
+        } catch (\InvalidArgumentException $e) {
+            return response()->json(['message' => $e->getMessage()], 422);
+        }
 
         return response()->json(['message' => 'Status changed successfully', 'data' => $exam]);
     }

@@ -80,7 +80,7 @@ class ExamTypeController extends Controller
             'is_active' => request('is_active', true),
         ]);
 
-        return redirect()->route('exam-types.index')->with('success', 'Exam type created successfully.');
+        return redirect()->back()->with('success', 'Exam type created successfully.');
     }
 
     /**
@@ -114,7 +114,7 @@ class ExamTypeController extends Controller
             'is_active' => request('is_active', true),
         ]);
 
-        return redirect()->route('exam-types.index')->with('success', 'Exam type updated successfully.');
+        return redirect()->back()->with('success', 'Exam type updated successfully.');
     }
 
     /**
@@ -127,11 +127,11 @@ class ExamTypeController extends Controller
         try {
             $examType->delete();
         } catch (QueryException $exception) {
-            return redirect()->route('exam-types.index')
+            return redirect()->back()
                 ->with('error', 'This exam type cannot be deleted because it is already in use by an exam.');
         }
 
-        return redirect()->route('exam-types.index')->with('success', 'Exam type deleted successfully.');
+        return redirect()->back()->with('success', 'Exam type deleted successfully.');
     }
 
     /**
@@ -143,7 +143,7 @@ class ExamTypeController extends Controller
 
         $examType->update(['is_active' => false]);
 
-        return redirect()->route('exam-types.index')->with('success', 'Exam type inactivated successfully.');
+        return redirect()->back()->with('success', 'Exam type inactivated successfully.');
     }
 
     /**
@@ -155,7 +155,7 @@ class ExamTypeController extends Controller
 
         $examType->update(['is_active' => true]);
 
-        return redirect()->route('exam-types.index')->with('success', 'Exam type activated successfully.');
+        return redirect()->back()->with('success', 'Exam type activated successfully.');
     }
 
     /**
@@ -168,7 +168,7 @@ class ExamTypeController extends Controller
         $examType = ExamType::onlyTrashed()->findOrFail($id);
         $examType->restore();
 
-        return redirect()->route('exam-types.index')->with('success', 'Exam type restored successfully.');
+        return redirect()->back()->with('success', 'Exam type restored successfully.');
     }
 
     /**
@@ -183,10 +183,10 @@ class ExamTypeController extends Controller
         try {
             $examType->forceDelete();
         } catch (QueryException $exception) {
-            return redirect()->route('exam-types.index')
+            return redirect()->back()
                 ->with('error', 'This exam type cannot be permanently deleted because it is already in use by an exam.');
         }
 
-        return redirect()->route('exam-types.index')->with('success', 'Exam type permanently deleted.');
+        return redirect()->back()->with('success', 'Exam type permanently deleted.');
     }
 }

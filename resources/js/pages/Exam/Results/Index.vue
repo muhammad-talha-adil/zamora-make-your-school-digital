@@ -395,9 +395,13 @@
                                                 'bg-destructive/10 text-destructive': result.result_status === 'fail',
                                                 'bg-muted text-muted-foreground': result.result_status !== 'pass' && result.result_status !== 'fail',
                                             }"
+                                            :title="failReason(result)"
                                         >
                                             {{ passLabel(result) }}
                                         </span>
+                                        <div v-if="failReason(result)" class="text-[10px] text-muted-foreground mt-0.5">
+                                            {{ failReason(result) }}
+                                        </div>
                                     </td>
 
                                     <td class="px-4 py-3 whitespace-nowrap text-center">
@@ -585,6 +589,7 @@ const results = ref<Array<{
     // result header rather than worked out in the browser.
     result_status?: string;
     failed_subject_count?: number;
+    failed_subjects?: string[];
     position_in_section?: number;
     ranked_out_of?: number;
 
@@ -824,6 +829,22 @@ const passLabel = (result: { result_status?: string; failed_subject_count?: numb
     }
 
     return result.result_status || 'pending'
+}
+
+/**
+ * Why a result failed, e.g. "Failed in: Mathematics, Physics".
+ *
+ * A student can fail overall on a single subject even when the aggregate
+ * percentage looks like a pass — every counted subject must clear its own
+ * passing marks. This spells out which one(s), instead of leaving the office
+ * to guess from just a subject count.
+ */
+const failReason = (result: { result_status?: string; failed_subjects?: string[] }): string => {
+    if (result.result_status === 'fail' && result.failed_subjects?.length) {
+        return `Failed in: ${result.failed_subjects.join(', ')}`
+    }
+
+    return ''
 }
 
 /** One child's card, in a new tab so the list stays where it was. */

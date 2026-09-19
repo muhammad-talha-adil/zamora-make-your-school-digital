@@ -160,7 +160,7 @@
                                         }"
                                         placeholder="-"
                                     />
-                                    <div v-if="getFieldError(student.student.id, paper.id)" class="text-[10px] text-destructive mt-0.5 text-center">
+                                    <div class="h-3.5 mt-0.5 text-[10px] text-destructive text-center leading-none">
                                         {{ getFieldError(student.student.id, paper.id) }}
                                     </div>
                                 </div>
