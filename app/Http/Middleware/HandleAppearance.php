@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\School;
 use App\Models\ThemeSetting;
 use Closure;
 use Illuminate\Http\Request;
@@ -32,6 +33,12 @@ class HandleAppearance
         View::share('theme', $themes->get($mode));
         View::share('themes', $themes);
         View::share('theme_mode', $mode);
+
+        // The favicon always mirrors the current school logo (falling back
+        // to the placeholder when none has been uploaded yet) so a changed
+        // logo is reflected on the next full page load without any extra
+        // deploy step.
+        View::share('faviconUrl', School::first()?->logo_path ?: '/sample-logo.png');
 
         return $next($request);
     }

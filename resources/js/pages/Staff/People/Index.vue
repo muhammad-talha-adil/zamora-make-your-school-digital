@@ -366,7 +366,7 @@ const submitDesignation = async () => {
                     <div class="space-y-4">
                         <div class="grid gap-4 md:grid-cols-2">
                             <div>
-                                <label class="mb-2 block text-sm font-medium text-muted-foreground">Name</label>
+                                <label class="mb-2 block text-sm font-medium text-muted-foreground">Name <span class="text-destructive">*</span></label>
                                 <Input v-model="staffForm.name" placeholder="Staff name" />
                             </div>
                             <div>

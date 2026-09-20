@@ -7,8 +7,10 @@
 </template>
 
 <script setup lang="ts">
+import { usePage } from '@inertiajs/vue3'
 import { computed } from 'vue'
 
+const page = usePage()
 const currentYear = computed(() => new Date().getFullYear())
-const schoolName = import.meta.env.VITE_SCHOOL_NAME || 'School'
+const schoolName = computed(() => page.props.name as string)
 </script>

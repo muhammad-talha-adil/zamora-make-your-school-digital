@@ -92,8 +92,8 @@
 
         <title inertia>{{ config('app.name', 'Laravel') }}</title>
 
-        <link rel="icon" href="/sample-logo.png" sizes="any">
-        <link rel="apple-touch-icon" href="/sample-logo.png">
+        <link rel="icon" href="{{ $faviconUrl ?? '/sample-logo.png' }}" sizes="any">
+        <link rel="apple-touch-icon" href="{{ $faviconUrl ?? '/sample-logo.png' }}">
 
         <link rel="preconnect" href="https://rsms.me/" />
         <link rel="stylesheet" href="https://rsms.me/inter/inter.css" />

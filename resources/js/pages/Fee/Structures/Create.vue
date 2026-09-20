@@ -30,6 +30,14 @@ const breadcrumbItems: BreadcrumbItem[] = [
     { title: 'Create', href: '/fee/structures/create' },
 ];
 
+/**
+ * When this page is reached from another page that already knows the scope
+ * (e.g. a "Set up fee structure" link from the class or section view), the
+ * query string carries campus_id/class_id/section_id/session_id so the
+ * clerk doesn't have to reselect what the linking page already established.
+ */
+const queryParams = new URLSearchParams(window.location.search);
+
 const form: {
     title: string | number | null;
     session_id: string;
@@ -42,10 +50,10 @@ const form: {
     notes: string;
 } = reactive({
     title: null,
-    session_id: String(props.active_session_id || ''), // Auto-select active session
-    campus_id: '',
-    class_id: '',
-    section_id: '',
+    session_id: queryParams.get('session_id') || String(props.active_session_id || ''), // Auto-select active session
+    campus_id: queryParams.get('campus_id') || '',
+    class_id: queryParams.get('class_id') || '',
+    section_id: queryParams.get('section_id') || '',
     effective_from: '',
     effective_to: '',
     status: 'active',
@@ -353,13 +361,16 @@ const cancel = () => {
                             <ComboboxInput
                                 id="title"
                                 v-model="form.title"
-                                :placeholder="'Search or enter title...'"
+                                :placeholder="'e.g. Class 1 Annual Fee Structure'"
                                 :search-url="titleSearchUrl"
                                 :value-type="'name'"
                                 display-key="title"
                                 classMinWidth="w-full"
                                 @update:modelValue="onTitleChange"
                             />
+                            <p class="text-xs text-muted-foreground">
+                                A short, descriptive name for this fee structure (e.g. "Class 1 Annual Fee Structure", "Grade 5 Term 1 Fees").
+                            </p>
                             <p v-if="errors.title" class="text-sm text-destructive">{{ errors.title }}</p>
                         </div>
 

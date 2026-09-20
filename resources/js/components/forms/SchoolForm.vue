@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import { router } from '@inertiajs/vue3';
-import { ref } from 'vue';
+import { router, usePage } from '@inertiajs/vue3';
+import { onBeforeUnmount, ref } from 'vue';
 import { alert } from '@/utils';
 
 // Components
@@ -47,6 +47,36 @@ const form = ref({
 const errors = ref({});
 const processing = ref(false);
 
+// Live preview of a newly selected logo file, before it's saved.
+const logoPreview = ref<string | null>(null);
+
+const onLogoChange = (e: Event) => {
+    const file = (e.target as HTMLInputElement).files?.[0] || null;
+    form.value.logo = file;
+
+    if (logoPreview.value) {
+        URL.revokeObjectURL(logoPreview.value);
+    }
+    logoPreview.value = file ? URL.createObjectURL(file) : null;
+};
+
+onBeforeUnmount(() => {
+    if (logoPreview.value) {
+        URL.revokeObjectURL(logoPreview.value);
+    }
+});
+
+/**
+ * Updates the browser tab's favicon immediately after a successful save,
+ * so a changed logo doesn't require a full page reload to be reflected.
+ */
+const updateFavicon = (logoPath: string): void => {
+    const links = document.querySelectorAll<HTMLLinkElement>('link[rel="icon"], link[rel="apple-touch-icon"]');
+    links.forEach((link) => {
+        link.href = logoPath;
+    });
+};
+
 // Methods
 const submit = () => {
     processing.value = true;
@@ -56,6 +86,10 @@ const submit = () => {
         preserveScroll: true,
         onSuccess: () => {
             alert.success('School information updated successfully!');
+            const updatedLogoPath = (usePage().props.school as { logo_path?: string } | undefined)?.logo_path;
+            if (updatedLogoPath) {
+                updateFavicon(updatedLogoPath);
+            }
             emit('saved');
         },
         onError: (err) => {
@@ -157,12 +191,7 @@ const submit = () => {
                     <Input
                         id="logo"
                         type="file"
-                        @change="
-                            (e: Event) =>
-                                (form.logo =
-                                    (e.target as HTMLInputElement)
-                                        .files?.[0] || null)
-                        "
+                        @change="onLogoChange"
                         accept="image/*"
                         :class="{ 'border-destructive': (errors as any).logo }"
                     />
@@ -170,18 +199,28 @@ const submit = () => {
                         Upload a new logo (optional, max 2MB)
                     </p>
                     <InputError :message="(errors as any).logo" />
-                    <div v-if="props.school?.logo_path" class="mt-2">
+                    <div v-if="logoPreview" class="mt-2">
+                        <p class="text-sm text-muted-foreground">New logo preview:</p>
+                        <img :src="logoPreview" alt="New logo preview" class="mt-1 h-16 w-16 object-cover rounded" />
+                    </div>
+                    <div v-else-if="props.school?.logo_path" class="mt-2">
                         <p class="text-sm text-muted-foreground">Current logo:</p>
                         <img :src="props.school.logo_path" alt="School Logo" class="mt-1 h-16 w-16 object-cover rounded" />
                     </div>
                 </div>
 
-                <div class="flex items-center justify-between gap-4 rounded-lg border border-border p-3">
-                    <Label for="is_active" class="flex items-center">
-                        <Icon icon="check-circle" class="mr-1 h-4 w-4" />
-                        School is Active
-                    </Label>
-                    <Switch id="is_active" v-model:checked="form.is_active" />
+                <div class="space-y-2">
+                    <div class="flex items-center justify-between gap-4 rounded-lg border border-border p-3">
+                        <Label for="is_active" class="flex items-center">
+                            <Icon icon="check-circle" class="mr-1 h-4 w-4" />
+                            School is Active
+                        </Label>
+                        <Switch id="is_active" v-model:checked="form.is_active" />
+                    </div>
+                    <p class="text-sm text-muted-foreground">
+                        When off, only the developer and owner can log in to the system; all other users are blocked.
+                    </p>
+                    <InputError :message="(errors as any).is_active" />
                 </div>
 
                 <div class="space-y-2">
