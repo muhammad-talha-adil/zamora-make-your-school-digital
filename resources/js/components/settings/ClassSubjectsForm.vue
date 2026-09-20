@@ -14,7 +14,8 @@
                         id="campus-filter"
                         v-model="filters.campus_id"
                         @change="onCampusChange"
-                        class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm"
+                        class="w-full rounded-md border bg-card text-foreground px-3 py-2 text-sm"
+                        :class="filters.campus_id ? 'border-green-500 focus:ring-green-500' : 'border-border'"
                     >
                         <option value="">Select Campus</option>
                         <option v-for="campus in campuses" :key="campus.id" :value="campus.id">
@@ -30,7 +31,8 @@
                         id="class-filter"
                         v-model="filters.class_id"
                         @change="onClassChange"
-                        class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm"
+                        class="w-full rounded-md border bg-card text-foreground px-3 py-2 text-sm"
+                        :class="filters.class_id ? 'border-green-500 focus:ring-green-500' : 'border-border'"
                     >
                         <option value="">Select Class</option>
                         <option v-for="cls in classes" :key="cls.id" :value="cls.id">
@@ -41,27 +43,35 @@
 
                 <!-- Section Filter -->
                 <div class="space-y-2">
-                    <Label for="section-filter">Section</Label>
+                    <Label for="section-filter">
+                        Section
+                        <span v-if="filters.class_id && classHasSections" class="text-destructive">*</span>
+                    </Label>
                     <select
                         id="section-filter"
                         v-model="filters.section_id"
                         @change="onSectionChange"
                         :disabled="!filters.class_id"
-                        class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm"
+                        class="w-full rounded-md border bg-card text-foreground px-3 py-2 text-sm disabled:opacity-50"
+                        :class="filters.section_id ? 'border-green-500 focus:ring-green-500' : 'border-border'"
                     >
-                        <option value="">All Sections</option>
+                        <option value="" v-if="!classHasSections">All Sections</option>
+                        <option value="" v-else>Select Section</option>
                         <option v-for="section in filteredSections" :key="section.id" :value="section.id">
                             {{ section.name }}
                         </option>
                     </select>
+                    <p v-if="filters.class_id && classHasSections && !filters.section_id" class="text-xs text-muted-foreground">
+                        Select a section to load its subjects.
+                    </p>
                 </div>
             </div>
 
             <!-- Load Button -->
             <div class="mt-4">
-                <Button 
-                    @click="loadAssignedSubjects" 
-                    :disabled="!filters.class_id || loading"
+                <Button
+                    @click="loadAssignedSubjects"
+                    :disabled="!canLoadSubjects || loading"
                     variant="secondary"
                 >
                     <Icon icon="search" class="mr-1"  />
@@ -192,6 +202,19 @@ const originalSubjects = ref<number[]>([]);
 const filteredSections = computed(() => {
     if (!filters.class_id) return [];
     return sections.value.filter(s => s.class_id === Number(filters.class_id));
+});
+
+// Whether the selected class has any sections at all. When it doesn't,
+// "Load Subjects" only needs the class (issue #26); when it does, a section
+// must be picked too, since subjects can be assigned per section.
+const classHasSections = computed(() => {
+    if (!filters.class_id) return false;
+    return sections.value.some(s => s.class_id === Number(filters.class_id));
+});
+
+const canLoadSubjects = computed(() => {
+    if (!filters.class_id) return false;
+    return !classHasSections.value || !!filters.section_id;
 });
 
 const hasChanges = computed(() => {

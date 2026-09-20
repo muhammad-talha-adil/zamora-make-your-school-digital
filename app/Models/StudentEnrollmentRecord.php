@@ -19,6 +19,7 @@ class StudentEnrollmentRecord extends Model
         'session_id',
         'class_id',
         'section_id',
+        'roll_number',
         'campus_id',
         'admission_date',
         'leave_date',

@@ -173,6 +173,7 @@ export function useStudentForm(
         session_id: '' as string | number,
         class_id: '' as string | number,
         section_id: '' as string | number,
+        roll_number: '' as string | number,
         student_status_id: activeStatusId,
         admission_date: todayDate,
         description: '',
@@ -231,6 +232,50 @@ export function useStudentForm(
             // Silently fail - don't disrupt the form
         } finally {
             feeLoading.value = false;
+        }
+    };
+
+    // Auto-suggest the next roll number for the selected session/class/section.
+    // Only overwrites the field when it is still empty or was left as the
+    // previous auto-suggestion, so it never clobbers a value the office typed.
+    const rollNumberLoading = ref(false);
+    const lastSuggestedRollNumber = ref<number | null>(null);
+
+    const fetchNextRollNumber = async () => {
+        const classId = form.value.class_id;
+        const sessionId = form.value.session_id;
+
+        if (!classId || !sessionId) {
+            return;
+        }
+
+        rollNumberLoading.value = true;
+
+        try {
+            const response = await axios.get(route('students.next-roll-number'), {
+                params: {
+                    session_id: sessionId,
+                    class_id: classId,
+                    section_id: form.value.section_id || null,
+                },
+            });
+
+            const suggested = response.data.next_roll_number as number;
+
+            if (
+                form.value.roll_number === '' ||
+                form.value.roll_number === null ||
+                Number(form.value.roll_number) === lastSuggestedRollNumber.value
+            ) {
+                form.value.roll_number = suggested;
+            }
+
+            lastSuggestedRollNumber.value = suggested;
+        } catch (error) {
+            console.error('Error fetching next roll number:', error);
+            // Silently fail - the field remains editable and optional.
+        } finally {
+            rollNumberLoading.value = false;
         }
     };
 
@@ -377,11 +422,26 @@ export function useStudentForm(
                 }
 
                 // Also fetch if session or campus changes
-                if ((newSessionId && newSessionId !== oldSessionId) || 
+                if ((newSessionId && newSessionId !== oldSessionId) ||
                     (newCampusId && newCampusId !== oldCampusId)) {
                     if (newClassId) {
                         fetchFeeStructure();
                     }
+                }
+
+                if (newClassId && newSessionId) {
+                    fetchNextRollNumber();
+                }
+            }
+        );
+
+        // Section changes on their own also shift the roll-number scope.
+        watch(
+            () => form.value.section_id,
+            () => {
+                if (processingRef.value) return;
+                if (form.value.class_id && form.value.session_id) {
+                    fetchNextRollNumber();
                 }
             }
         );
@@ -483,6 +543,7 @@ export function useStudentForm(
         siblingMatch,
         linkedGuardianId,
         feeLoading,
+        rollNumberLoading,
         fatherRelationId,
         otherRelations,
         campuses,

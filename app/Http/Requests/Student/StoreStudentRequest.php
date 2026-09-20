@@ -6,6 +6,7 @@ use App\Enums\Fee\FeeStructureStatus;
 use App\Models\Fee\FeeStructure;
 use App\Models\Guardian;
 use App\Models\Section;
+use App\Models\StudentEnrollmentRecord;
 use Carbon\Carbon;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
@@ -292,6 +293,11 @@ class StoreStudentRequest extends FormRequest
                 'integer',
                 Rule::exists('sections', 'id'),
             ],
+            'roll_number' => [
+                'nullable',
+                'integer',
+                'min:1',
+            ],
 
             // Guardian ID (optional - for linking existing guardian)
             'guardian_id' => [
@@ -498,6 +504,24 @@ class StoreStudentRequest extends FormRequest
                 }
             }
 
+            // Roll number must not repeat among students currently active in
+            // the same session/class/section (issue #85).
+            if (! empty($this->roll_number) && ! empty($this->class_id) && ! empty($this->session_id)) {
+                $rollTaken = StudentEnrollmentRecord::where('session_id', $this->session_id)
+                    ->where('class_id', $this->class_id)
+                    ->where('section_id', $this->section_id)
+                    ->where('roll_number', $this->roll_number)
+                    ->whereNull('leave_date')
+                    ->exists();
+
+                if ($rollTaken) {
+                    $validator->errors()->add(
+                        'roll_number',
+                        'This roll number is already assigned to another student in this class.'
+                    );
+                }
+            }
+
             $feeStructure = null;
             if (! empty($this->fee_structure_id)) {
                 $feeStructure = FeeStructure::with('items')->find((int) $this->fee_structure_id);
@@ -596,6 +620,7 @@ class StoreStudentRequest extends FormRequest
             'session_id' => 'academic session',
             'class_id' => 'class',
             'section_id' => 'section',
+            'roll_number' => 'roll number',
             'guardian_id' => 'guardian',
             'father_name' => "father's/guardian's name",
             'father_email' => "father's email",

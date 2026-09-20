@@ -7,6 +7,7 @@ use App\Http\Requests\Student\UpdateStudentRequest;
 use App\Models\AdmissionEnquiry;
 use App\Models\School;
 use App\Models\Student;
+use App\Models\StudentEnrollmentRecord;
 use App\Repositories\StudentRepository;
 use App\Services\Student\AdmissionCredentials;
 use App\Services\Student\IdCardService;
@@ -458,6 +459,34 @@ class StudentController extends Controller
 
         // `integer` validation accepts a numeric string from the query string.
         return $this->service->getSectionsByClass((int) $validated['class_id']);
+    }
+
+    /**
+     * Suggest the next available roll number for a class/section/session.
+     *
+     * A suggestion, not a lock (issue #85): the office can still type over
+     * it, and the store request enforces that whatever they pick does not
+     * repeat an existing roll number among active enrollments in that scope.
+     */
+    public function nextRollNumber(Request $request): JsonResponse
+    {
+        Gate::authorize('create', Student::class);
+
+        $validated = $request->validate([
+            'session_id' => 'required|integer|exists:academic_sessions,id',
+            'class_id' => 'required|integer|exists:school_classes,id',
+            'section_id' => 'nullable|integer|exists:sections,id',
+        ]);
+
+        $maxRoll = StudentEnrollmentRecord::where('session_id', $validated['session_id'])
+            ->where('class_id', $validated['class_id'])
+            ->where('section_id', $validated['section_id'] ?? null)
+            ->whereNull('leave_date')
+            ->max('roll_number');
+
+        return response()->json([
+            'next_roll_number' => ($maxRoll ?? 0) + 1,
+        ]);
     }
 
     /**

@@ -380,6 +380,7 @@ class StudentRepository
                 'session_id' => $data['session_id'],
                 'class_id' => $data['class_id'],
                 'section_id' => $data['section_id'] ?? null,
+                'roll_number' => $data['roll_number'] ?? null,
                 'campus_id' => $data['campus_id'],
                 'admission_date' => $data['admission_date'] ?? now()->toDateString(),
                 'leave_date' => null,

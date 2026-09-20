@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import axios from 'axios';
-import { ref, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { alert } from '@/utils';
 import { useFormValidity } from '@/composables/useFormValidity';
 
@@ -73,6 +73,64 @@ watch(open, (isOpen) => {
         errors.value = {};
     }
 });
+
+// Selectable years for the start/end year dropdowns (issue #25): 2000 up to
+// next year, so a session starting or ending next year can still be planned.
+const currentYear = new Date().getFullYear();
+const startYearOptions = Array.from(
+    { length: currentYear - 2000 + 1 },
+    (_, i) => 2000 + i,
+);
+const endYearOptions = Array.from(
+    { length: currentYear + 1 - 2000 + 1 },
+    (_, i) => 2000 + i,
+);
+
+/**
+ * The Session Name is derived from Start Year + End Year (issue #59) so the
+ * office never types the same years twice, once as a name and once as the
+ * selected years.
+ */
+watch(
+    [() => form.value.start_year, () => form.value.end_year],
+    ([startYear, endYear]) => {
+        if (startYear && endYear) {
+            form.value.name = `${startYear}-${endYear}`;
+        }
+    },
+    { immediate: true },
+);
+
+/**
+ * Keeps the start/end date pickers inside the year they belong to (issue
+ * #25): the start date calendar cannot leave the start year, and the end
+ * date calendar cannot leave the end year. Existing out-of-range values are
+ * cleared rather than silently kept.
+ */
+watch(
+    () => form.value.start_year,
+    (year) => {
+        if (!year) return;
+        if (form.value.start_date && !form.value.start_date.startsWith(String(year))) {
+            form.value.start_date = '';
+        }
+    },
+);
+
+watch(
+    () => form.value.end_year,
+    (year) => {
+        if (!year) return;
+        if (form.value.end_date && !form.value.end_date.startsWith(String(year))) {
+            form.value.end_date = '';
+        }
+    },
+);
+
+const startDateMin = computed(() => form.value.start_year ? `${form.value.start_year}-01-01` : undefined);
+const startDateMax = computed(() => form.value.start_year ? `${form.value.start_year}-12-31` : undefined);
+const endDateMin = computed(() => form.value.end_year ? `${form.value.end_year}-01-01` : undefined);
+const endDateMax = computed(() => form.value.end_year ? `${form.value.end_year}-12-31` : undefined);
 
 const submit = () => {
     processing.value = true;
@@ -158,43 +216,48 @@ const resetForm = () => {
                 </DialogHeader>
 
                 <div class="grid gap-4 py-4">
-                    <div class="grid gap-2">
-                        <Label for="name">Name <span class="text-destructive">*</span></Label>
-                        <Input
-                            id="name"
-                            v-model="form.name"
-                            placeholder="e.g., 2024-2025"
-                            :class="{ 'border-destructive': errors.name }"
-                        />
-                        <InputError :message="errors.name" />
-                    </div>
-
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div class="grid gap-2">
                             <Label for="start_year">Start Year <span class="text-destructive">*</span></Label>
-                            <Input
+                            <select
                                 id="start_year"
                                 v-model.number="form.start_year"
-                                type="number"
-                                min="2000"
-                                max="2100"
+                                class="h-10 w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground"
                                 :class="{ 'border-destructive': errors.start_year }"
-                            />
+                            >
+                                <option v-for="year in startYearOptions" :key="year" :value="year">
+                                    {{ year }}
+                                </option>
+                            </select>
                             <InputError :message="errors.start_year" />
                         </div>
 
                         <div class="grid gap-2">
                             <Label for="end_year">End Year <span class="text-destructive">*</span></Label>
-                            <Input
+                            <select
                                 id="end_year"
                                 v-model.number="form.end_year"
-                                type="number"
-                                min="2000"
-                                max="2100"
+                                class="h-10 w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground"
                                 :class="{ 'border-destructive': errors.end_year }"
-                            />
+                            >
+                                <option v-for="year in endYearOptions" :key="year" :value="year">
+                                    {{ year }}
+                                </option>
+                            </select>
                             <InputError :message="errors.end_year" />
                         </div>
+                    </div>
+
+                    <div class="grid gap-2">
+                        <Label for="name">Name</Label>
+                        <Input
+                            id="name"
+                            :model-value="form.name"
+                            readonly
+                            placeholder="Auto-generated from Start Year and End Year"
+                            :class="{ 'border-destructive': errors.name }"
+                        />
+                        <InputError :message="errors.name" />
                     </div>
 
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -204,6 +267,8 @@ const resetForm = () => {
                                 id="start_date"
                                 v-model="form.start_date"
                                 type="date"
+                                :min="startDateMin"
+                                :max="startDateMax"
                                 :class="{ 'border-destructive': errors.start_date }"
                             />
                             <InputError :message="errors.start_date" />
@@ -215,6 +280,8 @@ const resetForm = () => {
                                 id="end_date"
                                 v-model="form.end_date"
                                 type="date"
+                                :min="endDateMin"
+                                :max="endDateMax"
                                 :class="{ 'border-destructive': errors.end_date }"
                             />
                             <InputError :message="errors.end_date" />

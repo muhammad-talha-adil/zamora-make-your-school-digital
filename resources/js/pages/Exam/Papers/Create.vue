@@ -884,10 +884,11 @@ const infoMessage = ref('');
 const successMessage = ref('');
 const validationErrors = reactive<Record<string, string>>({});
 
-// Global settings for bulk time/date/marks assignment
+// Global settings for bulk time/date/marks assignment.
+// Defaults to 9:00 AM - 12:00 PM (issue #83), the school's usual paper slot.
 const globalSettings = reactive({
-    start_time: '',
-    end_time: '',
+    start_time: '09:00',
+    end_time: '12:00',
     paper_date: '',
     total_marks: '',
     passing_marks: '',
@@ -1094,9 +1095,9 @@ const resetPapers = () => {
     errorMessage.value = '';
     successMessage.value = '';
     clearValidationErrors();
-    // Reset global settings
-    globalSettings.start_time = '';
-    globalSettings.end_time = '';
+    // Reset global settings back to the default 9:00 AM - 12:00 PM slot (#83)
+    globalSettings.start_time = '09:00';
+    globalSettings.end_time = '12:00';
     globalSettings.paper_date = '';
     globalSettings.total_marks = '';
     globalSettings.passing_marks = '';
@@ -1155,17 +1156,21 @@ const loadRemainingSubjects = async (examId: string, classId: string, sectionId:
                 subject_id: subject.id,
                 subject_name: subject.name,
                 paper_date: '',
-                start_time: '',
-                end_time: '',
+                start_time: '09:00',
+                end_time: '12:00',
                 total_marks: '',
                 passing_marks: '',
                 saved: false,
                 exists: false,
                 touched: false,
                 error: undefined,
-                selected: false,
+                // Selected by default (issue #86): the bulk "Save All Papers" /
+                // "Apply to Selected" actions only act on selected rows, and an
+                // unchecked-by-default list made the bulk button look broken —
+                // nothing was ever selected to save.
+                selected: true,
             }));
-            
+
             // Add to existing papers
             subjectPapers.value = [...subjectPapers.value, ...newSubjects];
         }
@@ -1238,15 +1243,16 @@ const loadPapersOrSubjects = async () => {
                 subject_id: subject.id,
                 subject_name: subject.name,
                 paper_date: '',
-                start_time: '',
-                end_time: '',
+                start_time: '09:00',
+                end_time: '12:00',
                 total_marks: '',
                 passing_marks: '',
                 saved: false,
                 exists: subject.exists || false,
                 touched: false,
                 error: undefined,
-                selected: false,
+                // Selected by default (issue #86); see the note above.
+                selected: !(subject.exists || false),
             }));
         }
     } catch (error: any) {
@@ -1369,7 +1375,20 @@ const saveAllPapers = async () => {
         isPaperValid(p)
     );
 
-    if (validPapers.length === 0) return;
+    if (validPapers.length === 0) {
+        // Tell the office why nothing happened, instead of the button looking
+        // broken (issue #86): either nothing is selected, or a selected row
+        // is missing a required field.
+        const pendingSelected = subjectPapers.value.filter(p => p.selected && !p.saved && !p.exists);
+        if (pendingSelected.length === 0) {
+            errorMessage.value = 'No papers are selected. Check the papers you want to save.';
+        } else {
+            pendingSelected.forEach(p => { p.touched = true; });
+            errorMessage.value = 'Selected papers are missing a date, time or marks. Fill them in or set the global values above.';
+        }
+
+        return;
+    }
 
     savingAll.value = true;
 
@@ -1495,6 +1514,8 @@ const applyGlobalSettings = () => {
 
     if (count > 0) {
         successMessage.value = `Applied settings to ${count} selected paper(s).`;
+    } else {
+        errorMessage.value = 'No papers are selected. Check the papers you want to apply these settings to.';
     }
 };
 

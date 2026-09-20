@@ -56,6 +56,9 @@ Route::prefix('students')->name('students.')->middleware($middleware)->group(fun
         Route::get('/sections-by-class', [StudentController::class, 'getSectionsByClass'])
             ->name('sections-by-class')
             ->middleware('permission:students.view');
+        Route::get('/next-roll-number', [StudentController::class, 'nextRollNumber'])
+            ->name('next-roll-number')
+            ->middleware('permission:students.create');
         Route::get('/guardian-by-phone', [StudentController::class, 'getGuardianByPhone'])
             ->name('guardian-by-phone')
             ->middleware('permission:students.create|students.edit');
