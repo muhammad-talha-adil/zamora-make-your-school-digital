@@ -216,8 +216,8 @@ Dedupe karke ek-ek line item, lekin har jagah ke original numbers cite kiye hain
 | [#38](ISSUES-RAW.md#issue-38) | Inline "Add Fee Head" via modal directly from Fee Structure create screen, auto-populating the dropdown without page reload. |
 | [#25](ISSUES-RAW.md#issue-25) | Add Session: constrain calendar pickers to selected start/end year; searchable year dropdowns (2000–current, current+1). |
 | [#26](ISSUES-RAW.md#issue-26) | Class/Section selection UX for "Assign Subjects to Class Sections" (visual state cues, enable/disable Load Subjects button). |
-| [#27](ISSUES-RAW.md#issue-27) | New Enquiry — convert modal to full page (or well-structured grid modal) with 4-columns-per-row responsive layout; fix Father phone number field bug in Student create. |
-| [#37](ISSUES-RAW.md#issue-37) | Fee Structure create via query params should auto-select campus/class/section/session inputs. |
+| ✅ [#27](ISSUES-RAW.md#issue-27) | New Enquiry — convert modal to full page (or well-structured grid modal) with 4-columns-per-row responsive layout; fix Father phone number field bug in Student create. |
+| ✅ [#37](ISSUES-RAW.md#issue-37) | Fee Structure create via query params should auto-select campus/class/section/session inputs. |
 | [#59](ISSUES-RAW.md#issue-59) | Auto-generate Session Name from Start Year + End Year instead of manual duplicate entry. |
 | [#63](ISSUES-RAW.md#issue-63) | Fine Rules settings page UI cleanup — currently too bulky. |
 | [#83](ISSUES-RAW.md#issue-83) | Default global paper start/end time to 9am–12pm. |
