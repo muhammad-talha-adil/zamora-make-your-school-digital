@@ -201,18 +201,18 @@ Dedupe karke ek-ek line item, lekin har jagah ke original numbers cite kiye hain
 
 | Issue(s) | Summary |
 |---|---|
-| [#29](ISSUES-RAW.md#issue-29) | Student profile page (`/students/1`) full redesign. |
-| [#71](ISSUES-RAW.md#issue-71) | Student profile data display + UI still incomplete/poor (related to #29). |
-| [#33](ISSUES-RAW.md#issue-33) | ID card redesign to actual Pakistani CNIC-card size. |
-| [#35](ISSUES-RAW.md#issue-35) | Bulk ID card generation + direct print from filtered Students list. |
-| [#32](ISSUES-RAW.md#issue-32) | Student print page — polish further. |
+| ✅ [#29](ISSUES-RAW.md#issue-29) | Student profile page (`/students/1`) full redesign. |
+| ✅ [#71](ISSUES-RAW.md#issue-71) | Student profile data display + UI still incomplete/poor (related to #29). |
+| ✅ [#33](ISSUES-RAW.md#issue-33) | ID card redesign to actual Pakistani CNIC-card size. |
+| ✅ [#35](ISSUES-RAW.md#issue-35) | Bulk ID card generation + direct print from filtered Students list. |
+| ✅ [#32](ISSUES-RAW.md#issue-32) | Student print page — polish further. |
 | [#94](ISSUES-RAW.md#issue-94) | Datesheet UI — avoid multi-page layout when many papers exist, needs proper layout redesign. |
 | [#103](ISSUES-RAW.md#issue-103) | School timing/shift groups per class-group (with grace + break time), feeding into Attendance's Global Check-In/Check-Out defaults per class. |
 | [#105](ISSUES-RAW.md#issue-105) | Checkout time input should stay disabled until that date's "off time" arrives. |
 | [#107](ISSUES-RAW.md#issue-107) | Date-range attendance report (present/absent counts over a range) for a class. |
 | [#115](ISSUES-RAW.md#issue-115) | Sibling bulk voucher creation + single bulk payment across multiple sibling vouchers. |
 | [#116](ISSUES-RAW.md#issue-116) | Add a "Pay" button directly on the Vouchers list for direct payment. |
-| [#22, #76](ISSUES-RAW.md#issue-22) | Enforce single-active-session and single-active-exam-system-wide, with optional cron job to auto-switch sessions on start/end dates. |
+| ✅ [#22, #76](ISSUES-RAW.md#issue-22) | Enforce single-active-session and single-active-exam-system-wide, with optional cron job to auto-switch sessions on start/end dates. |
 | [#38](ISSUES-RAW.md#issue-38) | Inline "Add Fee Head" via modal directly from Fee Structure create screen, auto-populating the dropdown without page reload. |
 | ✅ [#25](ISSUES-RAW.md#issue-25) | Add Session: constrain calendar pickers to selected start/end year; searchable year dropdowns (2000–current, current+1). |
 | ✅ [#26](ISSUES-RAW.md#issue-26) | Class/Section selection UX for "Assign Subjects to Class Sections" (visual state cues, enable/disable Load Subjects button). |
@@ -224,7 +224,7 @@ Dedupe karke ek-ek line item, lekin har jagah ke original numbers cite kiye hain
 | [#84](ISSUES-RAW.md#issue-84) | Paper timing/dates set from Papers create should reflect on the relevant class's student & teacher portals. |
 | ✅ [#85](ISSUES-RAW.md#issue-85) | Auto-suggest next class roll number on admission (editable, no repeats). |
 | ✅ [#86](ISSUES-RAW.md#issue-86) | Bulk "Save Papers" button on Papers create should work properly. |
-| [#91](ISSUES-RAW.md#issue-91) | Grace marks system — clarify/build where missing in Marking. |
+| ✅ [#91](ISSUES-RAW.md#issue-91) | Grace marks system — clarify/build where missing in Marking. |
 | [#109, #110](ISSUES-RAW.md#issue-109) | Voucher generate page — months UI not responsive, needs a full dedicated test pass. |
 | [#120](ISSUES-RAW.md#issue-120) | Fee Payments create — "Pay Amount" column purpose unclear + Voucher Dues table not responsive (columns/rows misaligned). |
 | [#122](ISSUES-RAW.md#issue-122) | Fee Reports page needs a tab system. |
