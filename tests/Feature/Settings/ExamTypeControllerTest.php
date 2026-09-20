@@ -54,6 +54,52 @@ it('soft deletes, restores and permanently deletes an exam type without crashing
     expect(ExamType::withTrashed()->find($examType->id))->toBeNull();
 });
 
+it('deactivates every other exam type when a new one is created active', function () {
+    $actor = $this->world->school->actor;
+
+    $this->actingAs($actor)->post(route('exam-types.store'), [
+        'name' => 'Second Term',
+        'is_active' => true,
+    ])->assertRedirect();
+
+    expect($this->world->examType->fresh()->is_active)->toBeFalse();
+    expect(ExamType::where('name', 'Second Term')->first()->is_active)->toBeTrue();
+});
+
+it('deactivates every other exam type when one is edited to active', function () {
+    $actor = $this->world->school->actor;
+    $second = ExamType::create(['name' => 'Second Term', 'short_name' => 'ST', 'is_active' => false]);
+
+    $this->actingAs($actor)->patch(route('exam-types.update', $second), [
+        'name' => 'Second Term',
+        'short_name' => 'ST',
+        'is_active' => true,
+    ])->assertRedirect();
+
+    expect($second->fresh()->is_active)->toBeTrue();
+    expect($this->world->examType->fresh()->is_active)->toBeFalse();
+});
+
+it('deactivates every other exam type when one is activated directly', function () {
+    $actor = $this->world->school->actor;
+    $second = ExamType::create(['name' => 'Second Term', 'short_name' => 'ST', 'is_active' => false]);
+
+    $this->actingAs($actor)->patch(route('exam-types.activate', $second))->assertRedirect();
+
+    expect($second->fresh()->is_active)->toBeTrue();
+    expect($this->world->examType->fresh()->is_active)->toBeFalse();
+});
+
+it('refuses to deactivate the only active exam type', function () {
+    $actor = $this->world->school->actor;
+
+    $response = $this->actingAs($actor)->patch(route('exam-types.inactivate', $this->world->examType));
+
+    $response->assertRedirect();
+    expect($this->world->examType->fresh()->is_active)->toBeTrue();
+    expect(session('error'))->not->toBeNull();
+});
+
 it('refuses to permanently delete an exam type that is in use by an exam', function () {
     $actor = $this->world->school->actor;
 

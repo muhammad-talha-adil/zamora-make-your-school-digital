@@ -74,10 +74,19 @@ class ExamTypeController extends Controller
             'is_active' => 'boolean',
         ]);
 
+        $isActive = request()->boolean('is_active', true);
+
+        // Only one exam type may be active at a time: the same rule
+        // activate() enforces, applied here so this form cannot create a
+        // second one.
+        if ($isActive) {
+            ExamType::query()->update(['is_active' => false]);
+        }
+
         ExamType::create([
             'name' => request('name'),
             'short_name' => request('short_name'),
-            'is_active' => request('is_active', true),
+            'is_active' => $isActive,
         ]);
 
         return redirect()->back()->with('success', 'Exam type created successfully.');
@@ -108,10 +117,18 @@ class ExamTypeController extends Controller
             'is_active' => 'boolean',
         ]);
 
+        $isActive = request()->boolean('is_active', true);
+
+        // Same single-active-exam-type rule as store(): edit-in-place must
+        // not be able to leave two exam types active at once.
+        if ($isActive) {
+            ExamType::where('id', '!=', $examType->id)->update(['is_active' => false]);
+        }
+
         $examType->update([
             'name' => request('name'),
             'short_name' => request('short_name'),
-            'is_active' => request('is_active', true),
+            'is_active' => $isActive,
         ]);
 
         return redirect()->back()->with('success', 'Exam type updated successfully.');
@@ -141,6 +158,14 @@ class ExamTypeController extends Controller
     {
         $this->authorize('exam.settings');
 
+        // A school always needs exactly one current exam type for exam/
+        // marking screens that resolve "the" active exam type — so the last
+        // one standing cannot be switched off.
+        if ($examType->is_active && ExamType::where('is_active', true)->count() <= 1) {
+            return redirect()->back()
+                ->with('error', 'This is the only active exam type, so it cannot be deactivated. Activate another exam type first.');
+        }
+
         $examType->update(['is_active' => false]);
 
         return redirect()->back()->with('success', 'Exam type inactivated successfully.');
@@ -152,6 +177,9 @@ class ExamTypeController extends Controller
     public function activate(ExamType $examType): RedirectResponse
     {
         $this->authorize('exam.settings');
+
+        // Deactivate all other exam types first
+        ExamType::where('id', '!=', $examType->id)->update(['is_active' => false]);
 
         $examType->update(['is_active' => true]);
 

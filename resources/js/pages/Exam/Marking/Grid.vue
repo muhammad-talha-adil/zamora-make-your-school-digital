@@ -18,8 +18,12 @@
                         <Icon icon="arrow-left" class="mr-1" />
                         Back
                     </Button>
-                    <Button 
-                        @click="saveBulk" 
+                    <Button @click="goToGrace" variant="outline" class="flex-1 sm:flex-none">
+                        <Icon icon="award" class="mr-1" />
+                        Grace Marks
+                    </Button>
+                    <Button
+                        @click="saveBulk"
                         :disabled="!hasChanges || isLocked"
                         variant="default"
                         class="flex-1 sm:flex-none"
@@ -555,6 +559,12 @@ async function saveBulk() {
 
 function goBack() {
     router.visit('/exams/marking');
+}
+
+function goToGrace() {
+    const params = new URLSearchParams();
+    if (props.filters.exam_id) params.append('exam_id', String(props.filters.exam_id));
+    router.visit(`/exams/marking/grace?${params.toString()}`);
 }
 
 function onGradeSystemChange() {
