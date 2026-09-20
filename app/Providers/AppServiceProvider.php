@@ -129,5 +129,20 @@ class AppServiceProvider extends ServiceProvider
                 'email' => 'This school has been deactivated. Please contact your school owner or administrator.',
             ]);
         });
+
+        // Every successful sign-in, for the audit trail (#17) - logins have no
+        // Eloquent "dirty attribute" of their own, so LogsActivity on User
+        // never sees them; this is the only place the event exists.
+        Event::listen(Login::class, function (Login $event): void {
+            if (! $event->user instanceof User) {
+                return;
+            }
+
+            activity()
+                ->causedBy($event->user)
+                ->performedOn($event->user)
+                ->event('login')
+                ->log('user logged in');
+        });
     }
 }

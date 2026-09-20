@@ -8,6 +8,7 @@
  */
 
 use App\Enums\Fee\VoucherStatus;
+use App\Models\AdmissionEnquiry;
 use App\Models\Fee\FeeVoucher;
 use App\Models\Role;
 use App\Models\StaffProfile;
@@ -128,6 +129,49 @@ it('logs a user role change as its own activity entry', function () {
 
     expect($activity)->not->toBeNull();
     expect($activity->properties->get('after'))->toBe(['teacher']);
+});
+
+it('logs an admission enquiry being created', function () {
+    $causer = makeActivityLogUserWithRole('owner');
+    $this->actingAs($causer);
+
+    $enquiry = AdmissionEnquiry::create([
+        'student_name' => 'Ali Raza',
+        'guardian_name' => 'Raza Ahmed',
+        'phone' => '03001234567',
+        'status' => AdmissionEnquiry::STATUS_OPEN,
+    ]);
+
+    $activity = Activity::query()
+        ->where('subject_type', AdmissionEnquiry::class)
+        ->where('subject_id', $enquiry->id)
+        ->where('description', 'admission enquiry created')
+        ->orderByDesc('id')
+        ->first();
+
+    expect($activity)->not->toBeNull();
+    expect($activity->causer_id)->toBe($causer->id);
+    expect($activity->attribute_changes->get('attributes'))->toHaveKey('student_name');
+});
+
+it('logs a successful login', function () {
+    $user = makeActivityLogUserWithRole('owner');
+
+    $this->post(route('login.store'), [
+        'email' => $user->email,
+        'password' => 'password',
+    ]);
+
+    $activity = Activity::query()
+        ->where('subject_type', User::class)
+        ->where('subject_id', $user->id)
+        ->where('description', 'user logged in')
+        ->orderByDesc('id')
+        ->first();
+
+    expect($activity)->not->toBeNull();
+    expect($activity->causer_id)->toBe($user->id);
+    expect($activity->event)->toBe('login');
 });
 
 it('lets an owner and a developer view the activity log', function (string $role) {

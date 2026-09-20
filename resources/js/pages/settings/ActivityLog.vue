@@ -83,6 +83,45 @@ const resetFilters = () => {
 };
 
 const formatDate = (value: string | null): string => (value ? new Date(value).toLocaleString() : '-');
+
+const describe = (description: string): string => description.charAt(0).toUpperCase() + description.slice(1);
+
+const eventStyles: Record<string, string> = {
+    created: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
+    login: 'bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
+    updated: 'bg-amber-500/10 text-amber-600 dark:text-amber-400',
+    deleted: 'bg-destructive/10 text-destructive',
+};
+
+const eventBadgeClass = (event: string | null): string => eventStyles[event ?? ''] ?? 'bg-muted text-muted-foreground';
+
+const formatValue = (value: unknown): string => {
+    if (value === null || value === undefined || value === '') {
+        return '-';
+    }
+
+    return typeof value === 'object' ? JSON.stringify(value) : String(value);
+};
+
+/**
+ * `changes` comes from Spatie's `attribute_changes`: `{ attributes, old }` for
+ * an update, or just the new values for a create. Turned into readable
+ * "field: old -> new" lines instead of the raw JSON blob.
+ */
+const changeLines = (changes: Record<string, unknown> | null): Array<{ field: string; old?: string; new: string }> => {
+    if (!changes) {
+        return [];
+    }
+
+    const after = (changes.attributes ?? changes) as Record<string, unknown>;
+    const before = (changes.old ?? {}) as Record<string, unknown>;
+
+    return Object.keys(after).map((field) => ({
+        field,
+        old: changes.old ? formatValue(before[field]) : undefined,
+        new: formatValue(after[field]),
+    }));
+};
 </script>
 
 <template>
@@ -159,24 +198,47 @@ const formatDate = (value: string | null): string => (value ? new Date(value).to
                             <tr>
                                 <th class="px-4 py-2">#</th>
                                 <th class="px-4 py-2">When</th>
+                                <th class="px-4 py-2">Action</th>
                                 <th class="px-4 py-2">Description</th>
-                                <th class="px-4 py-2">Model</th>
-                                <th class="px-4 py-2">User</th>
+                                <th class="px-4 py-2">Record</th>
+                                <th class="px-4 py-2">By</th>
+                                <th class="px-4 py-2">What changed</th>
                             </tr>
                         </thead>
                         <tbody>
                             <tr v-if="props.activities.data.length === 0">
-                                <td colspan="5" class="px-4 py-6 text-center text-muted-foreground">No activity recorded yet.</td>
+                                <td colspan="7" class="px-4 py-6 text-center text-muted-foreground">No activity recorded yet.</td>
                             </tr>
-                            <tr v-for="(activity, activityIndex) in props.activities.data" :key="activity.id" class="border-t border-border">
+                            <tr v-for="(activity, activityIndex) in props.activities.data" :key="activity.id" class="border-t border-border align-top">
                                 <td class="whitespace-nowrap px-4 py-2 text-muted-foreground">{{ ((props.activities.from || 1) - 1) + activityIndex + 1 }}</td>
                                 <td class="whitespace-nowrap px-4 py-2 text-muted-foreground">{{ formatDate(activity.created_at) }}</td>
-                                <td class="px-4 py-2">{{ activity.description }}</td>
+                                <td class="whitespace-nowrap px-4 py-2">
+                                    <span
+                                        v-if="activity.event"
+                                        class="inline-flex items-center rounded-full px-2 py-0.5 text-xs font-medium capitalize"
+                                        :class="eventBadgeClass(activity.event)"
+                                    >
+                                        {{ activity.event }}
+                                    </span>
+                                    <span v-else class="text-muted-foreground">-</span>
+                                </td>
+                                <td class="px-4 py-2">{{ describe(activity.description) }}</td>
                                 <td class="whitespace-nowrap px-4 py-2">
                                     <span v-if="activity.subject_type">{{ activity.subject_type }} #{{ activity.subject_id }}</span>
                                     <span v-else class="text-muted-foreground">-</span>
                                 </td>
                                 <td class="whitespace-nowrap px-4 py-2">{{ activity.causer_name ?? 'System' }}</td>
+                                <td class="px-4 py-2">
+                                    <ul v-if="changeLines(activity.changes).length" class="space-y-0.5">
+                                        <li v-for="change in changeLines(activity.changes)" :key="change.field" class="text-xs">
+                                            <span class="font-medium text-foreground">{{ change.field }}:</span>
+                                            <span class="text-muted-foreground">
+                                                <template v-if="change.old !== undefined">{{ change.old }} &rarr; </template>{{ change.new }}
+                                            </span>
+                                        </li>
+                                    </ul>
+                                    <span v-else class="text-muted-foreground">-</span>
+                                </td>
                             </tr>
                         </tbody>
                     </table>

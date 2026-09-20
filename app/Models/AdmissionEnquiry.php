@@ -5,6 +5,8 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Spatie\Activitylog\Models\Concerns\LogsActivity;
+use Spatie\Activitylog\Support\LogOptions;
 
 /**
  * A family who asked about a place, before there is a child on the roll.
@@ -15,7 +17,20 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  */
 class AdmissionEnquiry extends Model
 {
-    use SoftDeletes;
+    use LogsActivity, SoftDeletes;
+
+    /**
+     * New enquiries and status/handling changes - not every touch (notes are
+     * free text and would flood the log with no audit value).
+     */
+    public function getActivitylogOptions(): LogOptions
+    {
+        return LogOptions::defaults()
+            ->logOnly(['student_name', 'status', 'handled_by', 'follow_up_on', 'student_id'])
+            ->logOnlyDirty()
+            ->dontLogEmptyChanges()
+            ->setDescriptionForEvent(fn (string $eventName): string => "admission enquiry {$eventName}");
+    }
 
     public const STATUS_OPEN = 'open';
 
