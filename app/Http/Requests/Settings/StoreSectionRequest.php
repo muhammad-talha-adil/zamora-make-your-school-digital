@@ -33,7 +33,6 @@ class StoreSectionRequest extends FormRequest
                 'max:255',
                 Rule::unique('sections', 'name')->where('class_id', $this->input('class_id')),
             ],
-            'code' => 'nullable|string|max:255',
             'description' => 'nullable|string',
             'is_active' => 'boolean',
             'class_id' => 'required|exists:school_classes,id',

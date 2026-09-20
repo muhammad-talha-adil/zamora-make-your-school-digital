@@ -24,8 +24,6 @@ class UpdateSubjectRequest extends FormRequest
     {
         return [
             'name' => 'required|string|max:255|unique:subjects,name,'.$this->route('subject')->id,
-            'short_name' => 'nullable|string|max:50',
-            'code' => 'nullable|string|max:255|unique:subjects,code,'.$this->route('subject')->id,
             'description' => 'nullable|string',
             'is_active' => 'boolean',
         ];

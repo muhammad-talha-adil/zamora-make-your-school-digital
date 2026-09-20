@@ -26,7 +26,6 @@ class UpdateSchoolClassRequest extends FormRequest
 
         return [
             'name' => 'required|string|max:255|unique:school_classes,name,'.$schoolClassId,
-            'code' => 'required|string|max:255|unique:school_classes,code,'.$schoolClassId,
             'description' => 'nullable|string',
         ];
     }

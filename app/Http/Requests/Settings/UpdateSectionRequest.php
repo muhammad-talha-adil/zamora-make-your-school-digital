@@ -35,7 +35,6 @@ class UpdateSectionRequest extends FormRequest
                     ->where('class_id', $this->input('class_id'))
                     ->ignore($this->route('section')->id),
             ],
-            'code' => 'nullable|string|max:255',
             'description' => 'nullable|string',
             'is_active' => 'boolean',
             'class_id' => 'required|exists:school_classes,id',

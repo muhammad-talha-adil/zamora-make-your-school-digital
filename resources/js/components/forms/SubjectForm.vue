@@ -27,6 +27,7 @@ interface Props {
         id: number;
         name: string;
         code: string;
+        short_name?: string;
         description?: string;
         is_active: boolean;
     };
@@ -50,7 +51,7 @@ const emit = defineEmits<{
 const getInitialForm = () => ({
     name: props.subject?.name || '',
     code: props.subject?.code || '',
-    short_name: (props.subject as { short_name?: string } | undefined)?.short_name || '',
+    short_name: props.subject?.short_name || '',
     description: props.subject?.description || '',
     is_active: props.subject?.is_active ?? true,
 });
@@ -77,8 +78,6 @@ const submit = () => {
 
     const formData = {
         name: form.value.name,
-        code: form.value.code,
-        short_name: form.value.short_name || null,
         description: form.value.description,
         is_active: form.value.is_active ? 1 : 0,
     };
@@ -165,27 +164,19 @@ const resetForm = () => {
                         <InputError :message="errors.name" />
                     </div>
 
-                    <div class="grid gap-2">
-                        <Label for="code">Code</Label>
-                        <Input
-                            id="code"
-                            v-model="form.code"
-                            placeholder="Enter subject code"
-                            :class="{ 'border-destructive': errors.code }"
-                        />
-                        <InputError :message="errors.code" />
-                    </div>
+                    <template v-if="props.subject">
+                        <div class="grid gap-2">
+                            <Label for="code">Code</Label>
+                            <Input id="code" v-model="form.code" disabled class="bg-muted" />
+                            <p class="text-xs text-muted-foreground">System-generated, cannot be changed.</p>
+                        </div>
 
-                    <div class="grid gap-2">
-                        <Label for="short_name">Short Name</Label>
-                        <Input
-                            id="short_name"
-                            v-model="form.short_name"
-                            placeholder="Enter short name (optional)"
-                            :class="{ 'border-destructive': errors.short_name }"
-                        />
-                        <InputError :message="errors.short_name" />
-                    </div>
+                        <div class="grid gap-2">
+                            <Label for="short_name">Short Name</Label>
+                            <Input id="short_name" v-model="form.short_name" disabled class="bg-muted" />
+                            <p class="text-xs text-muted-foreground">System-generated, cannot be changed.</p>
+                        </div>
+                    </template>
 
                     <div class="grid gap-2">
                         <Label for="description">Description</Label>

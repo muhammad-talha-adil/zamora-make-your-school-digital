@@ -79,7 +79,6 @@ const submit = () => {
 
     const formData = {
         name: form.value.name,
-        code: form.value.code,
         description: form.value.description,
         class_id: form.value.class_id,
     };
@@ -184,15 +183,10 @@ const resetForm = () => {
                         <InputError :message="errors.class_id" />
                     </div>
 
-                    <div class="grid gap-2">
+                    <div v-if="props.section" class="grid gap-2">
                         <Label for="code">Code</Label>
-                        <Input
-                            id="code"
-                            v-model="form.code"
-                            placeholder="Enter section code"
-                            :class="{ 'border-destructive': errors.code }"
-                        />
-                        <InputError :message="errors.code" />
+                        <Input id="code" v-model="form.code" disabled class="bg-muted" />
+                        <p class="text-xs text-muted-foreground">System-generated, cannot be changed.</p>
                     </div>
 
                     <div class="grid gap-2">

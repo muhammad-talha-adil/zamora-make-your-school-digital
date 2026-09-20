@@ -55,7 +55,7 @@ const form = ref(getInitialForm());
 
 const errors = ref<Record<string, string>>({});
 const processing = ref(false);
-const { isValid } = useFormValidity(form, ['name', 'code']);
+const { isValid } = useFormValidity(form, ['name']);
 
 // Dialog
 const open = ref(false);
@@ -81,7 +81,6 @@ const submit = () => {
 
     const formData = {
         name: form.value.name,
-        code: form.value.code,
         description: form.value.description,
     };
 
@@ -181,15 +180,10 @@ const resetForm = () => {
                         <InputError :message="errors.name" />
                     </div>
 
-                    <div class="grid gap-2">
-                        <Label for="code">Code <span class="text-destructive">*</span></Label>
-                        <Input
-                            id="code"
-                            v-model="form.code"
-                            placeholder='e.g., "CLS-001", "GRD-10"'
-                            :class="{ 'border-destructive': errors.code }"
-                        />
-                        <InputError :message="errors.code" />
+                    <div v-if="props.schoolClass" class="grid gap-2">
+                        <Label for="code">Code</Label>
+                        <Input id="code" v-model="form.code" disabled class="bg-muted" />
+                        <p class="text-xs text-muted-foreground">System-generated, cannot be changed.</p>
                     </div>
 
                     <div class="grid gap-2">

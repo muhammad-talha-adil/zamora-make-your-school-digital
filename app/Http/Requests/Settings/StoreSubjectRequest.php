@@ -24,8 +24,6 @@ class StoreSubjectRequest extends FormRequest
     {
         return [
             'name' => 'required|string|max:255|unique:subjects,name',
-            'short_name' => 'nullable|string|max:50',
-            'code' => 'nullable|string|max:255|unique:subjects,code',
             'description' => 'nullable|string',
             'is_active' => 'boolean',
         ];

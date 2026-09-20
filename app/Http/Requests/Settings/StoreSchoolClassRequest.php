@@ -24,7 +24,6 @@ class StoreSchoolClassRequest extends FormRequest
     {
         return [
             'name' => 'required|string|max:255|unique:school_classes,name',
-            'code' => 'required|string|max:255|unique:school_classes,code',
             'description' => 'nullable|string',
         ];
     }
