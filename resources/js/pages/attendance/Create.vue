@@ -107,22 +107,30 @@
                     <div class="flex flex-col sm:flex-row gap-3 sm:items-end">
                         <div class="flex-1">
                             <label class="block text-sm font-medium text-muted-foreground mb-1">Global Check In</label>
-                            <input 
-                                v-model="globalCheckIn" 
-                                type="time" 
+                            <input
+                                v-model="globalCheckIn"
+                                type="time"
                                 class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm"
                             />
                         </div>
                         <div class="flex-1">
                             <label class="block text-sm font-medium text-muted-foreground mb-1">Global Check Out</label>
-                            <input 
-                                v-model="globalCheckOut" 
-                                type="time" 
+                            <input
+                                v-model="globalCheckOut"
+                                type="time"
+                                :disabled="checkoutDisabled"
+                                :title="checkoutDisabled ? checkoutDisabledReason : ''"
                                 class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm"
+                                :class="{ 'opacity-50 cursor-not-allowed': checkoutDisabled }"
                             />
                         </div>
                         <Button variant="secondary" size="sm" @click="applyGlobalTimes" class="w-full sm:w-auto">Apply Times</Button>
                     </div>
+                    <p v-if="props.shiftTiming" class="text-xs text-muted-foreground">
+                        Shift "{{ props.shiftTiming.name }}": {{ props.shiftTiming.check_in }}
+                        <template v-if="props.shiftTiming.check_out"> – {{ props.shiftTiming.check_out }}</template>
+                        <template v-if="checkoutDisabled"> · check-out opens at {{ props.shiftTiming.check_out }}</template>
+                    </p>
                 </div>
             </div>
 
@@ -188,6 +196,8 @@
                                 :index="index + 1"
                                 :statuses="props.attendanceStatuses"
                                 :leaveTypes="props.leaveTypes"
+                                :checkoutDisabled="checkoutDisabled"
+                                :checkoutDisabledReason="checkoutDisabledReason"
                                 v-model="formData.attendances[index]"
                             />
                         </tbody>
@@ -254,9 +264,40 @@ watch(() => props.selectedClassId, (newVal) => {
     }
 }, { immediate: true });
 
-// Global check-in/check-out times
-const globalCheckIn = ref<string>('');
+// Global check-in/check-out times, defaulted from the class's shift timing
+// when one is set (#103) rather than left blank.
+const globalCheckIn = ref<string>(props.shiftTiming?.check_in || '');
 const globalCheckOut = ref<string>('');
+
+/**
+ * Nobody may record a check-out before the shift's own off time has actually
+ * arrived — only meaningful when marking today, since a past date's day is
+ * already over and a future date cannot be marked at all (#105).
+ */
+const checkoutDisabled = computed(() => {
+    const timing = props.shiftTiming;
+    if (!timing || !timing.check_out) return false;
+
+    const today = new Date().toISOString().split('T')[0];
+    if (selectedDate.value !== today) return false;
+
+    const now = new Date();
+    const nowHm = `${String(now.getHours()).padStart(2, '0')}:${String(now.getMinutes()).padStart(2, '0')}`;
+
+    return nowHm < timing.check_out;
+});
+
+const checkoutDisabledReason = computed(() =>
+    props.shiftTiming?.check_out
+        ? `Check-out opens at ${props.shiftTiming.check_out}.`
+        : ''
+);
+
+watch(() => props.shiftTiming, (timing) => {
+    if (timing?.check_in && !globalCheckIn.value) {
+        globalCheckIn.value = timing.check_in;
+    }
+}, { immediate: true });
 
 const formData = reactive({
     attendance_date: props.selectedDate || '',
@@ -282,7 +323,9 @@ watch(students, (newStudents) => {
             id: existing?.id, // Include existing attendance ID for updates
             attendance_status_id: existing?.attendance_status_id || 0,
             leave_type_id: existing?.leave_type_id,
-            check_in: existing?.check_in || '',
+            // The class's shift check-in is the sensible default for a row
+            // nobody has marked yet, rather than blank (#103).
+            check_in: existing?.check_in || props.shiftTiming?.check_in || '',
             check_out: existing?.check_out || '',
             remarks: existing?.remarks || '',
         };
@@ -300,7 +343,7 @@ onMounted(() => {
                 id: existing?.id,
                 attendance_status_id: existing?.attendance_status_id || 0,
                 leave_type_id: existing?.leave_type_id,
-                check_in: existing?.check_in || '',
+                check_in: existing?.check_in || props.shiftTiming?.check_in || '',
                 check_out: existing?.check_out || '',
                 remarks: existing?.remarks || '',
             };
@@ -378,7 +421,7 @@ const applyGlobalTimes = () => {
     if (globalCheckIn.value) {
         formData.attendances.forEach((a) => { a.check_in = globalCheckIn.value; });
     }
-    if (globalCheckOut.value) {
+    if (globalCheckOut.value && !checkoutDisabled.value) {
         formData.attendances.forEach((a) => { a.check_out = globalCheckOut.value; });
     }
 };

@@ -317,6 +317,13 @@ class AttendanceController extends Controller
             );
         }
 
+        // The shift timing for the class picked, so the screen can default the
+        // Global Check In/Out to it instead of leaving them blank, and know
+        // when checking out actually becomes allowed.
+        $shiftTiming = $selectedClassId
+            ? $this->lateArrivals->timingFor($selectedCampusId, $selectedDate, $selectedSessionId, (int) $selectedClassId)
+            : null;
+
         return Inertia::render('attendance/Create', [
             'campuses' => $campuses,
             'sessions' => $sessions,
@@ -337,6 +344,14 @@ class AttendanceController extends Controller
                 'end_date' => $holiday->end_date,
                 'is_national' => $holiday->is_national,
                 'campus' => $holiday->campus ? $holiday->campus->name : null,
+            ] : null,
+            'shiftTiming' => $shiftTiming ? [
+                'check_in' => substr((string) $shiftTiming->day_starts_at, 0, 5),
+                'check_out' => $shiftTiming->day_ends_at ? substr((string) $shiftTiming->day_ends_at, 0, 5) : null,
+                'late_after' => substr((string) $shiftTiming->late_after, 0, 5),
+                'break_starts_at' => $shiftTiming->break_starts_at ? substr((string) $shiftTiming->break_starts_at, 0, 5) : null,
+                'break_ends_at' => $shiftTiming->break_ends_at ? substr((string) $shiftTiming->break_ends_at, 0, 5) : null,
+                'name' => $shiftTiming->name,
             ] : null,
         ]);
     }
@@ -1001,6 +1016,11 @@ class AttendanceController extends Controller
             ? Section::where('class_id', $request->class_id)->orderBy('name')->get(['id', 'name'])
             : [];
 
+        // A date range takes precedence over the month/year picker when both
+        // ends of it are given — "how many present/absent across this range"
+        // rather than always a whole calendar month.
+        $usingRange = $request->filled('date_from') && $request->filled('date_to');
+
         // If no class_id provided, show empty report form
         if (! $request->filled('class_id')) {
             return Inertia::render('attendance/ClassReport', [
@@ -1009,6 +1029,8 @@ class AttendanceController extends Controller
                 'summary' => [],
                 'month' => $request->month ?? now()->month,
                 'year' => $request->year ?? now()->year,
+                'dateFrom' => $request->date_from,
+                'dateTo' => $request->date_to,
                 'classes' => $classes,
                 'selectedClassId' => null,
                 'selectedSectionId' => null,
@@ -1019,14 +1041,21 @@ class AttendanceController extends Controller
         $request->validate([
             'class_id' => 'required|exists:school_classes,id',
             'section_id' => 'nullable|exists:sections,id',
-            'month' => 'required|integer|min:1|max:12',
-            'year' => 'required|integer|min:2020|max:2100',
+            'month' => $usingRange ? 'nullable|integer|min:1|max:12' : 'required|integer|min:1|max:12',
+            'year' => $usingRange ? 'nullable|integer|min:2020|max:2100' : 'required|integer|min:2020|max:2100',
+            'date_from' => 'nullable|date',
+            'date_to' => 'nullable|date|after_or_equal:date_from',
         ]);
 
         $class = SchoolClass::with('sections')->findOrFail($request->class_id);
 
-        $startDate = now()->setDate($request->year, $request->month, 1)->startOfMonth();
-        $endDate = $startDate->copy()->endOfMonth();
+        if ($usingRange) {
+            $startDate = now()->parse($request->date_from)->startOfDay();
+            $endDate = now()->parse($request->date_to)->endOfDay();
+        } else {
+            $startDate = now()->setDate($request->year, $request->month, 1)->startOfMonth();
+            $endDate = $startDate->copy()->endOfMonth();
+        }
 
         /*
          * Every child who was on this class's roll at any point in the month,
@@ -1125,6 +1154,8 @@ class AttendanceController extends Controller
             'summary' => $summary,
             'month' => $request->month,
             'year' => $request->year,
+            'dateFrom' => $usingRange ? $startDate->toDateString() : null,
+            'dateTo' => $usingRange ? $endDate->toDateString() : null,
             'classes' => $classes,
             'selectedClassId' => $request->class_id,
             'selectedSectionId' => $request->section_id,

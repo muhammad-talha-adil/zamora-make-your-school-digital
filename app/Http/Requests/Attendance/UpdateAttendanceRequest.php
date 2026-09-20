@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Attendance;
 
+use App\Models\AttendanceTiming;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -71,7 +72,47 @@ class UpdateAttendanceRequest extends FormRequest
                     );
                 }
             }
+
+            $this->assertCheckoutTimeHasArrived($validator);
         });
+    }
+
+    /**
+     * Same rule as the initial save (`StoreBulkAttendanceRequest`): a
+     * check-out cannot be recorded before the shift's off time has actually
+     * arrived, on the day being marked. Only meaningful for today.
+     */
+    private function assertCheckoutTimeHasArrived($validator): void
+    {
+        $register = $this->route('attendance');
+
+        if (! $register || ! $register->attendance_date->isToday()) {
+            return;
+        }
+
+        $timing = AttendanceTiming::inForce(
+            $register->campus_id,
+            $register->attendance_date,
+            $register->session_id,
+            $register->class_id
+        );
+
+        if (! $timing || ! $timing->day_ends_at) {
+            return;
+        }
+
+        if (now()->format('H:i:s') >= (string) $timing->day_ends_at) {
+            return;
+        }
+
+        foreach ($this->input('attendances', []) as $index => $row) {
+            if (! empty($row['check_out'])) {
+                $validator->errors()->add(
+                    "attendances.{$index}.check_out",
+                    'Check-out cannot be recorded before the shift ends at '.substr((string) $timing->day_ends_at, 0, 5).'.'
+                );
+            }
+        }
     }
 
     /**

@@ -2,9 +2,11 @@
 
 namespace App\Http\Requests\Attendance;
 
+use App\Models\AttendanceTiming;
 use App\Models\Section;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Support\Carbon;
 use Illuminate\Validation\Rule;
 
 /**
@@ -126,7 +128,51 @@ class StoreBulkAttendanceRequest extends FormRequest
             if ($studentIds->count() !== $studentIds->unique()->count()) {
                 $validator->errors()->add('attendances', 'Each student may only appear once on a register.');
             }
+
+            $this->assertCheckoutTimeHasArrived($validator);
         });
+    }
+
+    /**
+     * Refuses a check-out before the shift's own off time has actually
+     * arrived, on the day it is being marked.
+     *
+     * Only meaningful for today: a register being caught up for a past date
+     * already knows the whole day happened, and a future date cannot be
+     * marked at all. Nothing to compare against — no timing configured for
+     * the class — lets it through exactly as it always has.
+     */
+    private function assertCheckoutTimeHasArrived($validator): void
+    {
+        $date = $this->input('attendance_date');
+
+        if (! $date || ! Carbon::parse($date)->isToday()) {
+            return;
+        }
+
+        $timing = AttendanceTiming::inForce(
+            $this->input('campus_id'),
+            $date,
+            $this->input('session_id'),
+            (int) $this->input('class_id')
+        );
+
+        if (! $timing || ! $timing->day_ends_at) {
+            return;
+        }
+
+        if (now()->format('H:i:s') >= (string) $timing->day_ends_at) {
+            return;
+        }
+
+        foreach ($this->input('attendances', []) as $index => $row) {
+            if (! empty($row['check_out'])) {
+                $validator->errors()->add(
+                    "attendances.{$index}.check_out",
+                    'Check-out cannot be recorded before the shift ends at '.substr((string) $timing->day_ends_at, 0, 5).'.'
+                );
+            }
+        }
     }
 
     /**

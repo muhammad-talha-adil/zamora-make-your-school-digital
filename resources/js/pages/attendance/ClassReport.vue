@@ -37,7 +37,7 @@
                     </div>
 
                     <!-- Month -->
-                    <div>
+                    <div v-if="reportMode === 'month'">
                         <label class="block text-sm font-medium text-muted-foreground mb-1">Month</label>
                         <select v-model="selectedMonth" class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm">
                             <option v-for="(name, index) in monthNames" :key="index + 1" :value="index + 1">{{ name }}</option>
@@ -45,16 +45,44 @@
                     </div>
 
                     <!-- Year -->
-                    <div>
+                    <div v-if="reportMode === 'month'">
                         <label class="block text-sm font-medium text-muted-foreground mb-1">Year</label>
                         <select v-model="selectedYear" class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm">
                             <option v-for="year in yearRange" :key="year" :value="year">{{ year }}</option>
                         </select>
                     </div>
+
+                    <!-- Date range -->
+                    <template v-if="reportMode === 'range'">
+                        <div>
+                            <label class="block text-sm font-medium text-muted-foreground mb-1">From</label>
+                            <input v-model="dateFrom" type="date" class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm" />
+                        </div>
+                        <div>
+                            <label class="block text-sm font-medium text-muted-foreground mb-1">To</label>
+                            <input v-model="dateTo" type="date" class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm" />
+                        </div>
+                    </template>
                 </div>
 
-                <!-- Generate Report Button -->
-                <div class="mt-4">
+                <!-- Mode toggle + Generate Report Button -->
+                <div class="mt-4 flex flex-wrap items-center gap-3">
+                    <div class="flex rounded-md border border-border overflow-hidden text-sm">
+                        <button
+                            type="button"
+                            @click="reportMode = 'month'"
+                            :class="['px-3 py-1.5', reportMode === 'month' ? 'bg-primary text-primary-foreground' : 'bg-card text-muted-foreground']"
+                        >
+                            Month
+                        </button>
+                        <button
+                            type="button"
+                            @click="reportMode = 'range'"
+                            :class="['px-3 py-1.5', reportMode === 'range' ? 'bg-primary text-primary-foreground' : 'bg-card text-muted-foreground']"
+                        >
+                            Date Range
+                        </button>
+                    </div>
                     <Button @click="generateReport" :disabled="!canGenerate">
                         <Icon icon="file-text" class="mr-1" />
                         Generate Report
@@ -185,6 +213,9 @@ const selectedClassId = ref(props.selectedClassId || '');
 const selectedSectionId = ref(props.selectedSectionId || '');
 const selectedMonth = ref(props.month || new Date().getMonth() + 1);
 const selectedYear = ref(props.year || new Date().getFullYear());
+const reportMode = ref<'month' | 'range'>(props.dateFrom && props.dateTo ? 'range' : 'month');
+const dateFrom = ref(props.dateFrom || '');
+const dateTo = ref(props.dateTo || '');
 const hasSearched = ref(false);
 const showReport = computed(() => props.summary && props.summary.length > 0);
 
@@ -201,7 +232,12 @@ const filteredSections = computed(() => {
     return props.sections.filter((s) => s.class_id === Number(selectedClassId.value));
 });
 
-const canGenerate = computed(() => selectedClassId.value && selectedMonth.value && selectedYear.value);
+const canGenerate = computed(() => {
+    if (!selectedClassId.value) return false;
+    return reportMode.value === 'range'
+        ? !!dateFrom.value && !!dateTo.value
+        : !!selectedMonth.value && !!selectedYear.value;
+});
 
 const totalPresent = computed(() => props.summary.reduce((sum, s) => sum + s.present, 0));
 const totalAbsent = computed(() => props.summary.reduce((sum, s) => sum + s.absent, 0));
@@ -217,14 +253,21 @@ const attendancePercentage = computed(() => {
 const generateReport = () => {
     if (!canGenerate.value) return;
     hasSearched.value = true;
-    router.visit(route('attendance.class-report'), {
-        data: {
-            class_id: selectedClassId.value,
-            section_id: selectedSectionId.value,
-            month: selectedMonth.value,
-            year: selectedYear.value,
-        },
-    });
+
+    const data: Record<string, unknown> = {
+        class_id: selectedClassId.value,
+        section_id: selectedSectionId.value,
+    };
+
+    if (reportMode.value === 'range') {
+        data.date_from = dateFrom.value;
+        data.date_to = dateTo.value;
+    } else {
+        data.month = selectedMonth.value;
+        data.year = selectedYear.value;
+    }
+
+    router.visit(route('attendance.class-report'), { data });
 };
 
 const getPercentage = (student: any): number => {

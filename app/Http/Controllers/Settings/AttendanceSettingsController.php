@@ -3,11 +3,14 @@
 namespace App\Http\Controllers\Settings;
 
 use App\Http\Controllers\Controller;
+use App\Models\AttendanceTiming;
 use App\Models\Campus;
 use App\Models\Holiday;
 use App\Models\LeaveType;
+use App\Models\SchoolClass;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -36,12 +39,85 @@ class AttendanceSettingsController extends Controller
         });
 
         $campuses = Campus::orderBy('name', 'asc')->get(['id', 'name']);
+        $classes = SchoolClass::orderBy('id', 'asc')->get(['id', 'name']);
+        $shiftTimings = AttendanceTiming::with('campus')->orderBy('id', 'desc')->get();
 
         return Inertia::render('attendance/Settings', [
             'leaveTypes' => $leaveTypes,
             'holidays' => $holidays,
             'campuses' => $campuses,
+            'classes' => $classes,
+            'shiftTimings' => $shiftTimings,
         ]);
+    }
+
+    /**
+     * Store a newly created shift timing (#103): a school's own timing/shift
+     * group — check-in, check-out, the grace window before a late mark, and a
+     * break — optionally scoped to a set of classes.
+     */
+    public function storeShiftTiming(Request $request): RedirectResponse
+    {
+        $this->authorize('attendance.settings');
+
+        $validated = $this->validateShiftTiming($request);
+
+        AttendanceTiming::create($validated);
+
+        return back()->with('success', 'Shift timing created successfully.');
+    }
+
+    /**
+     * Update the specified shift timing.
+     */
+    public function updateShiftTiming(Request $request, AttendanceTiming $shiftTiming): RedirectResponse
+    {
+        $this->authorize('attendance.settings');
+
+        $validated = $this->validateShiftTiming($request);
+
+        $shiftTiming->update($validated);
+
+        return back()->with('success', 'Shift timing updated successfully.');
+    }
+
+    /**
+     * Remove the specified shift timing.
+     */
+    public function destroyShiftTiming(AttendanceTiming $shiftTiming): RedirectResponse
+    {
+        $this->authorize('attendance.settings');
+
+        $shiftTiming->delete();
+
+        return back()->with('success', 'Shift timing deleted successfully.');
+    }
+
+    /**
+     * @return array<string, mixed>
+     */
+    private function validateShiftTiming(Request $request): array
+    {
+        $validated = $request->validate([
+            'campus_id' => ['required', 'integer', Rule::exists('campuses', 'id')],
+            'session_id' => ['nullable', 'integer', Rule::exists('academic_sessions', 'id')],
+            'class_ids' => ['nullable', 'array'],
+            'class_ids.*' => ['integer', Rule::exists('school_classes', 'id')],
+            'name' => ['required', 'string', 'max:60'],
+            'starts_on' => ['required', 'date'],
+            'ends_on' => ['required', 'date', 'after_or_equal:starts_on'],
+            'day_starts_at' => ['required', 'date_format:H:i'],
+            'late_after' => ['required', 'date_format:H:i'],
+            'break_starts_at' => ['nullable', 'date_format:H:i'],
+            'break_ends_at' => ['nullable', 'date_format:H:i', 'after:break_starts_at'],
+            'day_ends_at' => ['nullable', 'date_format:H:i'],
+            'is_active' => ['boolean'],
+            'notes' => ['nullable', 'string'],
+        ]);
+
+        $validated['class_ids'] = empty($validated['class_ids']) ? null : $validated['class_ids'];
+
+        return $validated;
     }
 
     /**

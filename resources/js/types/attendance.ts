@@ -201,6 +201,14 @@ export interface AttendanceCreateProps {
         is_national: boolean;
         campus: string | null;
     } | null;
+    shiftTiming: {
+        check_in: string;
+        check_out: string | null;
+        late_after: string;
+        break_starts_at: string | null;
+        break_ends_at: string | null;
+        name: string;
+    } | null;
 }
 
 export interface AttendanceEditProps {
@@ -229,6 +237,8 @@ export interface AttendanceClassReportProps {
     summary: StudentClassAttendanceSummary[];
     month: number;
     year: number;
+    dateFrom?: string | null;
+    dateTo?: string | null;
     classes: SchoolClass[];
     selectedClassId: number | null;
     selectedSectionId: number | null;

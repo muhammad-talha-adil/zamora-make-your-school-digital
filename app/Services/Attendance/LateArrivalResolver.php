@@ -44,7 +44,8 @@ class LateArrivalResolver
         ?string $checkIn,
         ?int $campusId,
         $onDate,
-        ?int $sessionId = null
+        ?int $sessionId = null,
+        ?int $classId = null
     ): int {
         if (! $checkIn || ! $campusId) {
             return $statusId;
@@ -57,7 +58,7 @@ class LateArrivalResolver
             return $statusId;
         }
 
-        $timing = AttendanceTiming::inForce($campusId, $onDate, $sessionId);
+        $timing = AttendanceTiming::inForce($campusId, $onDate, $sessionId, $classId);
 
         if (! $timing || ! $timing->isLate($checkIn)) {
             return $statusId;
@@ -82,7 +83,8 @@ class LateArrivalResolver
             $checkIn,
             $attendance->campus_id,
             $attendance->attendance_date,
-            $attendance->session_id
+            $attendance->session_id,
+            $attendance->class_id
         );
     }
 
@@ -102,10 +104,10 @@ class LateArrivalResolver
     /**
      * The clock a screen should show while a register is being marked.
      */
-    public function timingFor(?int $campusId, $onDate, ?int $sessionId = null): ?AttendanceTiming
+    public function timingFor(?int $campusId, $onDate, ?int $sessionId = null, ?int $classId = null): ?AttendanceTiming
     {
         return $campusId
-            ? AttendanceTiming::inForce($campusId, $onDate instanceof Carbon ? $onDate : $onDate, $sessionId)
+            ? AttendanceTiming::inForce($campusId, $onDate instanceof Carbon ? $onDate : $onDate, $sessionId, $classId)
             : null;
     }
 

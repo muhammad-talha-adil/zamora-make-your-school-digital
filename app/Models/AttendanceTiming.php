@@ -18,11 +18,14 @@ class AttendanceTiming extends Model
     protected $fillable = [
         'campus_id',
         'session_id',
+        'class_ids',
         'name',
         'starts_on',
         'ends_on',
         'day_starts_at',
         'late_after',
+        'break_starts_at',
+        'break_ends_at',
         'day_ends_at',
         'is_active',
         'notes',
@@ -32,6 +35,7 @@ class AttendanceTiming extends Model
         'starts_on' => 'date',
         'ends_on' => 'date',
         'is_active' => 'boolean',
+        'class_ids' => 'array',
     ];
 
     /**
@@ -44,8 +48,13 @@ class AttendanceTiming extends Model
      *
      * Null when the campus has set nothing, which leaves lateness a matter of
      * judgement rather than of the clock — as it was before this existed.
+     *
+     * A `$classId` narrows this further: a timing whose `class_ids` names that
+     * class wins over one that applies campus-wide, whatever their spans are —
+     * "5 junior classes finish at 12" should not lose to a shorter general
+     * timing that says nothing about classes at all.
      */
-    public static function inForce(?int $campusId, $date, ?int $sessionId = null): ?self
+    public static function inForce(?int $campusId, $date, ?int $sessionId = null, ?int $classId = null): ?self
     {
         if (! $campusId) {
             return null;
@@ -64,11 +73,39 @@ class AttendanceTiming extends Model
             ->whereDate('starts_on', '<=', $on)
             ->whereDate('ends_on', '>=', $on)
             ->get()
-            // Narrowest wins. Sorted here rather than in SQL because the date
-            // arithmetic that would do it is spelled differently by every
-            // database, and there are only ever a handful of rows per campus.
-            ->sortBy(fn (self $timing) => $timing->starts_on->diffInDays($timing->ends_on))
+            ->filter(fn (self $timing) => $timing->coversClass($classId))
+            // Class-specific first, then narrowest span. Sorted here rather
+            // than in SQL because the date arithmetic that would do it is
+            // spelled differently by every database, and there are only ever
+            // a handful of rows per campus.
+            ->sortBy(fn (self $timing) => [
+                $timing->hasClassScope() ? 0 : 1,
+                $timing->starts_on->diffInDays($timing->ends_on),
+            ])
             ->first();
+    }
+
+    /**
+     * Whether this timing names any specific classes at all.
+     */
+    public function hasClassScope(): bool
+    {
+        return ! empty($this->class_ids);
+    }
+
+    /**
+     * Whether this timing applies to a given class.
+     *
+     * A timing with no `class_ids` is the campus/session's general timing and
+     * covers every class; one with a list covers only the classes named.
+     */
+    public function coversClass(?int $classId): bool
+    {
+        if (! $this->hasClassScope()) {
+            return true;
+        }
+
+        return $classId !== null && in_array($classId, $this->class_ids, false);
     }
 
     public function campus(): BelongsTo

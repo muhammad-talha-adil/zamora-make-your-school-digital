@@ -66,9 +66,10 @@
                 :value="modelValue.check_out"
                 @input="onCheckOutChange"
                 type="time"
-                :disabled="disabled"
+                :disabled="disabled || checkoutDisabled"
+                :title="checkoutDisabled ? checkoutDisabledReason : ''"
                 class="w-full min-w-[80px] rounded-md border border-border bg-card text-foreground px-2 md:px-3 py-1.5 md:py-2 text-xs md:text-sm"
-                :class="{ 'opacity-50 cursor-not-allowed': disabled }"
+                :class="{ 'opacity-50 cursor-not-allowed': disabled || checkoutDisabled }"
             />
         </td>
 
@@ -121,9 +122,12 @@ interface Props {
     leaveTypes: LeaveType[];
     modelValue: StudentAttendanceFormData;
     disabled?: boolean;
+    /** True until the shift's own off time has actually arrived today. */
+    checkoutDisabled?: boolean;
+    checkoutDisabledReason?: string;
 }
 
-const props = withDefaults(defineProps<Props>(), { disabled: false });
+const props = withDefaults(defineProps<Props>(), { disabled: false, checkoutDisabled: false, checkoutDisabledReason: '' });
 
 const emit = defineEmits<{ (e: 'update:modelValue', value: StudentAttendanceFormData): void }>();
 

@@ -5,17 +5,23 @@ import { ref } from 'vue';
 import LeaveTypesTable from '@/components/tables/LeaveTypesTable.vue';
 import HolidaysTable from '@/components/tables/HolidaysTable.vue';
 import PastHolidaysTable from '@/components/tables/PastHolidaysTable.vue';
+import ShiftTimingsTable from '@/components/tables/ShiftTimingsTable.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import SettingsLayout from '@/layouts/settings/Layout.vue';
+import { router } from '@inertiajs/vue3';
 import { type BreadcrumbItem } from '@/types';
 
 interface Props {
     leaveTypes: any;
     holidays: any;
     campuses: any;
+    classes: any;
+    shiftTimings: any;
 }
 
 defineProps<Props>();
+
+const reloadShiftTimings = () => router.reload({ only: ['shiftTimings'] });
 
 const breadcrumbItems: BreadcrumbItem[] = [
     {
@@ -74,6 +80,17 @@ const showPastHolidays = ref(false);
                         >
                             Holidays
                         </button>
+                        <button
+                            @click="activeTab = 'shift-timings'"
+                            :class="[
+                                activeTab === 'shift-timings'
+                                    ? 'border-primary text-primary'
+                                    : 'border-transparent text-muted-foreground hover:border-border hover:text-foreground',
+                                'border-b-2 px-1 py-2 text-sm font-medium whitespace-nowrap',
+                            ]"
+                        >
+                            Shift Timings
+                        </button>
                     </nav>
                 </div>
 
@@ -94,6 +111,16 @@ const showPastHolidays = ref(false);
                     <template v-else>
                         <PastHolidaysTable @back="showPastHolidays = false" />
                     </template>
+                </div>
+
+                <!-- Shift Timings Tab -->
+                <div v-if="activeTab === 'shift-timings'">
+                    <ShiftTimingsTable
+                        :shift-timings="shiftTimings"
+                        :campuses="campuses"
+                        :classes="classes"
+                        @saved="reloadShiftTimings"
+                    />
                 </div>
             </div>
         </SettingsLayout>
