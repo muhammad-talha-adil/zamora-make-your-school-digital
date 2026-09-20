@@ -19,6 +19,15 @@ interface ExamResult {
     overallGradeItem?: { grade_letter: string } | null;
 }
 
+interface UpcomingPaper {
+    id: number;
+    exam: string | null;
+    subject: string | null;
+    paper_date: string | null;
+    start_time: string | null;
+    end_time: string | null;
+}
+
 interface PaginationLink {
     url: string | null;
     label: string;
@@ -34,9 +43,18 @@ interface Props {
     student: ChildOption;
     students: ChildOption[];
     results: Paginated<ExamResult>;
+    upcomingPapers: UpcomingPaper[];
 }
 
 const props = defineProps<Props>();
+
+const formatDate = (date: string | null): string => {
+    if (!date) {
+        return '—';
+    }
+
+    return new Date(date).toLocaleDateString(undefined, { day: '2-digit', month: 'short', year: 'numeric' });
+};
 
 const resultClass = (status: string | null): string => {
     return (
@@ -79,6 +97,26 @@ const classLabel = (result: ExamResult): string => {
                         </option>
                     </select>
                 </label>
+            </div>
+
+            <!-- Upcoming papers -->
+            <div v-if="props.upcomingPapers.length > 0" class="bg-card rounded-lg border border-border p-4">
+                <h2 class="text-sm font-semibold text-foreground mb-3">Upcoming Papers</h2>
+                <div class="space-y-2">
+                    <div
+                        v-for="paper in props.upcomingPapers"
+                        :key="paper.id"
+                        class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1 rounded-md border border-border px-3 py-2 text-sm"
+                    >
+                        <div>
+                            <span class="font-medium text-foreground">{{ paper.subject }}</span>
+                            <span class="text-muted-foreground"> · {{ paper.exam }}</span>
+                        </div>
+                        <div class="text-muted-foreground">
+                            {{ formatDate(paper.paper_date) }}, {{ paper.start_time }} – {{ paper.end_time }}
+                        </div>
+                    </div>
+                </div>
             </div>
 
             <!-- Empty state -->

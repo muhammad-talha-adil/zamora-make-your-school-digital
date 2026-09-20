@@ -5,8 +5,11 @@ namespace App\Http\Controllers\Portal;
 use App\Http\Controllers\Concerns\ResolvesOwnStudent;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\Exam\ExamReportCardController;
+use App\Models\Exam\ExamPaper;
 use App\Models\Exam\ExamResultHeader;
+use App\Models\Student;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -54,7 +57,45 @@ class PortalExamController extends Controller
             'student' => ['id' => $student->id, 'name' => $student->user?->name],
             'students' => $students->map(fn ($s) => ['id' => $s->id, 'name' => $s->user?->name])->values(),
             'results' => $results,
+            'upcomingPapers' => $this->upcomingPapers($student),
         ]);
+    }
+
+    /**
+     * The papers still ahead on the timetable, for this child's class.
+     *
+     * A family sets its expectations from this list well before any result
+     * exists to show — the timing set on the papers screen is exactly what
+     * belongs here.
+     *
+     * @return Collection<int, array<string, mixed>>
+     */
+    private function upcomingPapers(Student $student): Collection
+    {
+        $enrollment = $student->currentEnrollment;
+
+        if (! $enrollment) {
+            return collect();
+        }
+
+        return ExamPaper::with(['exam:id,name', 'subject:id,name'])
+            ->where('status', '!=', 'cancelled')
+            ->where('paper_date', '>=', now()->toDateString())
+            ->where('class_id', $enrollment->class_id)
+            ->where(function ($query) use ($enrollment) {
+                $query->whereNull('section_id')->orWhere('section_id', $enrollment->section_id);
+            })
+            ->orderBy('paper_date')
+            ->orderBy('start_time')
+            ->get()
+            ->map(fn (ExamPaper $paper) => [
+                'id' => $paper->id,
+                'exam' => $paper->exam?->name,
+                'subject' => $paper->subject?->name,
+                'paper_date' => $paper->paper_date?->toDateString(),
+                'start_time' => $paper->start_time,
+                'end_time' => $paper->end_time,
+            ]);
     }
 
     /**

@@ -7,13 +7,17 @@ use App\Models\Attendance;
 use App\Models\AttendanceStatus;
 use App\Models\AttendanceStudent;
 use App\Models\Exam\Exam;
+use App\Models\Exam\ExamPaper;
 use App\Models\Exam\ExamResultHeader;
 use App\Models\Exam\ExamType;
 use App\Models\Fee\FeeVoucher;
 use App\Models\Guardian;
 use App\Models\Month;
+use App\Models\StaffProfile;
 use App\Models\Student;
 use App\Models\StudentEnrollmentRecord;
+use App\Models\Subject;
+use App\Models\TeacherClassAssignment;
 use App\Models\User;
 use Database\Seeders\AttendanceStatusesSeeder;
 use Spatie\Permission\PermissionRegistrar;
@@ -206,6 +210,78 @@ class PortalWorld
             'student_id' => $student->id,
             'attendance_status_id' => AttendanceStatus::where('code', $statusCode)->firstOrFail()->id,
         ]);
+    }
+
+    /**
+     * A paper on the timetable, for the shared class and section.
+     */
+    public function paperFor(string $subjectName = 'English', string $paperDate = '2026-09-25'): ExamPaper
+    {
+        $examType = ExamType::firstOrCreate(
+            ['name' => 'Portal Term'],
+            ['short_name' => 'PT', 'is_active' => true]
+        );
+
+        $exam = Exam::firstOrCreate(
+            ['name' => 'Portal Term Exam'],
+            [
+                'session_id' => $this->fee->school->session->id,
+                'exam_type_id' => $examType->id,
+                'start_date' => '2026-09-01',
+                'end_date' => '2026-10-10',
+                'status' => 'scheduled',
+                'is_locked' => false,
+            ]
+        );
+
+        $subject = Subject::firstOrCreate(
+            ['name' => $subjectName],
+            ['short_name' => substr($subjectName, 0, 4), 'is_active' => true]
+        );
+
+        return ExamPaper::create([
+            'exam_id' => $exam->id,
+            'campus_id' => $this->fee->school->campus->id,
+            'class_id' => $this->fee->school->class->id,
+            'section_id' => $this->fee->school->section->id,
+            'scope_type' => 'SECTION',
+            'subject_id' => $subject->id,
+            'paper_date' => $paperDate,
+            'start_time' => '09:00',
+            'end_time' => '11:00',
+            'total_marks' => 100,
+            'passing_marks' => 40,
+            'status' => 'scheduled',
+        ]);
+    }
+
+    /**
+     * A teacher given the shared class/section, holding the real `teacher`
+     * role.
+     */
+    public function teacherFor(): User
+    {
+        $user = $this->fee->school->userWithRole('teacher', 'teacher.'.uniqid().'@school.test');
+
+        $staffProfile = StaffProfile::create([
+            'user_id' => $user->id,
+            'employee_no' => 'EMP-PORTAL-'.$user->id,
+            'campus_id' => $this->fee->school->campus->id,
+            'employment_type' => 'permanent',
+            'hire_date' => '2026-04-01',
+            'is_active' => true,
+        ]);
+
+        TeacherClassAssignment::create([
+            'staff_profile_id' => $staffProfile->id,
+            'session_id' => $this->fee->school->session->id,
+            'class_id' => $this->fee->school->class->id,
+            'section_id' => $this->fee->school->section->id,
+            'is_class_teacher' => true,
+            'is_active' => true,
+        ]);
+
+        return $user->fresh();
     }
 
     /**

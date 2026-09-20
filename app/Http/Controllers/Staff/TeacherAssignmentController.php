@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Staff;
 
 use App\Http\Controllers\Controller;
+use App\Models\Exam\ExamPaper;
 use App\Models\SchoolClass;
 use App\Models\Section;
 use App\Models\Session;
@@ -167,6 +168,41 @@ class TeacherAssignmentController extends Controller
                 (int) $validated['subject_id'],
                 $request->user()?->campusId()
             ),
+        ]);
+    }
+
+    /**
+     * The papers still on the timetable, for the classes this teacher holds.
+     *
+     * `ExamPaper::scopeVisibleTo()` already narrows a list to a teacher's own
+     * `teacher_class_assignments` — the same width the marking and result
+     * screens read — so a teacher setting timing on the papers screen now has
+     * somewhere of their own to see it land.
+     */
+    public function examPapers(Request $request)
+    {
+        Gate::authorize('viewTeaching', StaffProfile::class);
+
+        $papers = ExamPaper::visibleTo($request->user())
+            ->with(['exam:id,name', 'subject:id,name', 'class:id,name', 'section:id,name'])
+            ->where('status', '!=', 'cancelled')
+            ->where('paper_date', '>=', now()->toDateString())
+            ->orderBy('paper_date')
+            ->orderBy('start_time')
+            ->get()
+            ->map(fn (ExamPaper $paper) => [
+                'id' => $paper->id,
+                'exam' => $paper->exam?->name,
+                'subject' => $paper->subject?->name,
+                'class' => $paper->class?->name,
+                'section' => $paper->section?->name,
+                'paper_date' => $paper->paper_date?->toDateString(),
+                'start_time' => $paper->start_time,
+                'end_time' => $paper->end_time,
+            ]);
+
+        return Inertia::render('Staff/Teaching/Exams', [
+            'papers' => $papers,
         ]);
     }
 

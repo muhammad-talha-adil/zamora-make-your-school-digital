@@ -45,36 +45,44 @@
             text-align: center;
             font-weight: bold;
         }
-        .day { margin-top: 18px; }
+        .day { margin-top: 10px; page-break-inside: avoid; }
         .day h3 {
-            margin: 0 0 6px;
-            font-size: 13.5px;
+            margin: 0 0 4px;
+            font-size: 12.5px;
             background: #eee;
             border: 1px solid #ccc;
             border-radius: 4px 4px 0 0;
-            padding: 7px 10px;
+            padding: 4px 10px;
         }
         table { width: 100%; border-collapse: collapse; }
-        th, td { border: 1px solid #bbb; padding: 6px 9px; text-align: left; }
-        th { background: #f4f4f4; font-size: 11.5px; text-transform: uppercase; letter-spacing: .4px; }
+        th, td { border: 1px solid #bbb; padding: 3px 8px; text-align: left; }
+        th { background: #f4f4f4; font-size: 10.5px; text-transform: uppercase; letter-spacing: .4px; }
         td.num, th.num { text-align: right; }
         td.mid, th.mid { text-align: center; }
         tr.cancelled td { color: #999; text-decoration: line-through; }
         tr.cancelled td.tag { text-decoration: none; color: #b00020; font-weight: bold; }
         .empty { margin-top: 20px; padding: 20px; text-align: center; color: #777; border: 1px dashed #ccc; border-radius: 4px; }
-        .notes { margin-top: 22px; font-size: 12px; }
-        .notes ul { margin: 6px 0 0; padding-left: 18px; }
+        .notes { margin-top: 14px; font-size: 11px; }
+        .notes ul { margin: 4px 0 0; padding-left: 18px; }
         .signatures {
             display: grid;
             grid-template-columns: repeat(2, 1fr);
             gap: 40px;
-            margin-top: 46px;
+            margin-top: 28px;
             text-align: center;
+            page-break-inside: avoid;
         }
         .signatures div { border-top: 1px solid #444; padding-top: 6px; font-size: 11.5px; }
         @media print {
-            body { background: #fff; padding: 0; }
-            .sheet { border: 1px solid #222; border-radius: 0; margin: 0; max-width: none; }
+            body { background: #fff; padding: 0; font-size: 11px; }
+            .sheet { border: 1px solid #222; border-radius: 0; margin: 0; max-width: none; padding: 14px 20px; }
+            .head h1 { font-size: 18px; }
+            .head h2 { font-size: 14px; margin-top: 8px; }
+            .for { margin-top: 8px; padding: 6px 10px; }
+            .day { margin-top: 8px; }
+            .day h3 { padding: 3px 10px; }
+            th, td { padding: 2px 7px; }
+            .signatures { margin-top: 20px; }
         }
     </style>
 </head>

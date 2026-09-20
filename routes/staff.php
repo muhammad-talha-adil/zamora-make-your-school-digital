@@ -160,6 +160,8 @@ Route::prefix('staff')->name('staff.')->middleware($middleware)->group(function 
             ->middleware('permission:staff.view|staff.view.own');
         Route::get('/teaching/who-can-teach', 'whoCanTeach')->name('teaching.who-can-teach')
             ->middleware('permission:staff.view|staff.view.own');
+        Route::get('/teaching/exams', 'examPapers')->name('teaching.exams')
+            ->middleware('permission:staff.view|staff.view.own');
 
         Route::post('/people/{staffProfile}/classes', 'store')->name('teaching.assign')
             ->middleware('permission:staff.manage');
