@@ -59,9 +59,6 @@ const validateForm = () => {
     if (!form.name.trim()) {
         errors.value.name = 'Name is required';
     }
-    if (!form.code.trim()) {
-        errors.value.code = 'Code is required';
-    }
     if (!form.category) {
         errors.value.category = 'Category is required';
     }
@@ -133,14 +130,9 @@ const cancel = () => {
                         </div>
 
                         <div class="space-y-2">
-                            <Label for="code">Code <span class="text-destructive">*</span></Label>
-                            <Input
-                                id="code"
-                                v-model="form.code"
-                                placeholder="e.g., TF"
-                                :class="{ 'border-destructive': errors.code }"
-                            />
-                            <p v-if="errors.code" class="text-sm text-destructive">{{ errors.code }}</p>
+                            <Label for="code">Code</Label>
+                            <Input id="code" v-model="form.code" disabled class="bg-muted" />
+                            <p class="text-xs text-muted-foreground">System-generated reference, cannot be changed.</p>
                         </div>
                     </div>
 

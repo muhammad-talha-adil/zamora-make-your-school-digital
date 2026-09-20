@@ -58,7 +58,6 @@ class FeeHeadController extends Controller
 
         Log::info('FeeHeadController: Storing fee head', [
             'user_id' => auth()->id(),
-            'code' => $request->code,
         ]);
 
         try {

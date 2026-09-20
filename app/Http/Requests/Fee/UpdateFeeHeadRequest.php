@@ -16,12 +16,8 @@ class UpdateFeeHeadRequest extends FormRequest
 
     public function rules(): array
     {
-        $feeHead = $this->route('feeHead');
-        $feeHeadId = is_object($feeHead) ? $feeHead->id : $feeHead;
-
         return [
             'name' => ['required', 'string', 'max:100'],
-            'code' => ['required', 'string', 'max:50', Rule::unique('fee_heads', 'code')->ignore($feeHeadId)],
             'category' => ['required', Rule::enum(FeeHeadCategory::class)],
             'is_recurring' => ['boolean'],
             'default_frequency' => ['required', Rule::enum(FeeFrequency::class)],
@@ -36,8 +32,6 @@ class UpdateFeeHeadRequest extends FormRequest
     {
         return [
             'name.required' => 'Fee head name is required.',
-            'code.required' => 'Fee head code is required.',
-            'code.unique' => 'This fee head code already exists.',
             'category.required' => 'Please select a category.',
             'default_frequency.required' => 'Please select a frequency.',
         ];

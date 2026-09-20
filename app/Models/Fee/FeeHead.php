@@ -7,6 +7,7 @@ use App\Enums\Fee\FeeHeadCategory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Str;
 
 /**
  * Fee Head Model
@@ -37,6 +38,34 @@ class FeeHead extends Model
         'sort_order' => 'integer',
         'is_active' => 'boolean',
     ];
+
+    protected static function booted(): void
+    {
+        static::creating(function (FeeHead $feeHead): void {
+            if (blank($feeHead->code)) {
+                $feeHead->code = self::generateCode($feeHead->name);
+            }
+        });
+    }
+
+    /**
+     * A short, unique reference code derived from the name — office staff never
+     * type one, but vouchers/reports still get something stable to key on.
+     */
+    public static function generateCode(string $name): string
+    {
+        $base = Str::of($name)->upper()->replaceMatches('/[^A-Z0-9]+/', '_')->trim('_')->limit(20, '');
+        $base = $base->isEmpty() ? 'FH' : (string) $base;
+
+        $code = $base;
+        $suffix = 1;
+
+        while (self::withTrashed()->where('code', $code)->exists()) {
+            $code = $base.'_'.(++$suffix);
+        }
+
+        return $code;
+    }
 
     /**
      * Get fee structure items using this fee head

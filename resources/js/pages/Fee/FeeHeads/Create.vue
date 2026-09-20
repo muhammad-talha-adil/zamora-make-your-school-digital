@@ -27,7 +27,6 @@ const breadcrumbItems: BreadcrumbItem[] = [
 
 const form = reactive({
     name: '',
-    code: '',
     description: '',
     category: 'tuition',
     default_frequency: 'monthly',
@@ -45,9 +44,6 @@ const validateForm = () => {
     
     if (!form.name.trim()) {
         errors.value.name = 'Name is required';
-    }
-    if (!form.code.trim()) {
-        errors.value.code = 'Code is required';
     }
     if (!form.category) {
         errors.value.category = 'Category is required';
@@ -106,29 +102,16 @@ const cancel = () => {
             <!-- Form -->
             <div class="bg-card rounded-lg border border-border p-4 md:p-6">
                 <form @submit.prevent="submitForm" class="space-y-6">
-                    <!-- Name & Code -->
-                    <div class="grid gap-4 md:grid-cols-2">
-                        <div class="space-y-2">
-                            <Label for="name">Name <span class="text-destructive">*</span></Label>
-                            <Input
-                                id="name"
-                                v-model="form.name"
-                                placeholder="e.g., Tuition Fee"
-                                :class="{ 'border-destructive': errors.name }"
-                            />
-                            <p v-if="errors.name" class="text-sm text-destructive">{{ errors.name }}</p>
-                        </div>
-
-                        <div class="space-y-2">
-                            <Label for="code">Code <span class="text-destructive">*</span></Label>
-                            <Input
-                                id="code"
-                                v-model="form.code"
-                                placeholder="e.g., TF"
-                                :class="{ 'border-destructive': errors.code }"
-                            />
-                            <p v-if="errors.code" class="text-sm text-destructive">{{ errors.code }}</p>
-                        </div>
+                    <!-- Name -->
+                    <div class="space-y-2">
+                        <Label for="name">Name <span class="text-destructive">*</span></Label>
+                        <Input
+                            id="name"
+                            v-model="form.name"
+                            placeholder="e.g., Tuition Fee"
+                            :class="{ 'border-destructive': errors.name }"
+                        />
+                        <p v-if="errors.name" class="text-sm text-destructive">{{ errors.name }}</p>
                     </div>
 
                     <!-- Description -->
