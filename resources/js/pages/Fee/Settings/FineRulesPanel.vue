@@ -5,6 +5,9 @@ import axios from 'axios';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import RowActions from '@/components/tables/RowActions.vue';
+import RowAction from '@/components/tables/RowAction.vue';
 import { alert } from '@/utils';
 
 interface FineRule {
@@ -398,67 +401,53 @@ const fineTypeOptions = [
         </div>
 
         <!-- Filters -->
-        <div class="bg-card rounded-lg border border-border p-4">
-            <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
-                <div class="space-y-2">
-                    <Label for="fine-rule-filter-campus">Campus</Label>
-                    <select
-                        id="fine-rule-filter-campus"
-                        v-model="filterCampus"
-                        class="w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground"
-                    >
-                        <option value="">All Campuses</option>
-                        <option v-for="campus in props.campuses" :key="campus.id" :value="campus.id.toString()">
-                            {{ campus.name }}
-                        </option>
-                    </select>
-                </div>
-                <div class="space-y-2">
-                    <Label for="fine-rule-filter-session">Session</Label>
-                    <select
-                        id="fine-rule-filter-session"
-                        v-model="filterSession"
-                        class="w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground"
-                    >
-                        <option value="">All Sessions</option>
-                        <option v-for="session in props.sessions" :key="session.id" :value="session.id.toString()">
-                            {{ session.name }}
-                        </option>
-                    </select>
-                </div>
-                <div class="space-y-2">
-                    <Label for="fine-rule-filter-class">Class</Label>
-                    <select
-                        id="fine-rule-filter-class"
-                        v-model="filterClass"
-                        class="w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground"
-                    >
-                        <option value="">All Classes</option>
-                        <option v-for="cls in props.classes" :key="cls.id" :value="cls.id.toString()">
-                            {{ cls.name }}
-                        </option>
-                    </select>
-                </div>
-                <div class="space-y-2">
-                    <Label for="fine-rule-filter-status">Status</Label>
-                    <select
-                        id="fine-rule-filter-status"
-                        v-model="filterActive"
-                        class="w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground"
-                    >
-                        <option value="">All Status</option>
-                        <option value="true">Active</option>
-                        <option value="false">Inactive</option>
-                    </select>
-                </div>
-                <div class="space-y-2">
-                    <Label for="fine-rule-search">Search</Label>
-                    <Input
-                        id="fine-rule-search"
-                        v-model="searchQuery"
-                        placeholder="Search rules..."
-                    />
-                </div>
+        <div class="bg-card rounded-lg border border-border p-3">
+            <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
+                <select
+                    v-model="filterCampus"
+                    aria-label="Filter by campus"
+                    class="w-full rounded-md border border-border bg-card px-2.5 py-1.5 text-sm text-foreground"
+                >
+                    <option value="">All Campuses</option>
+                    <option v-for="campus in props.campuses" :key="campus.id" :value="campus.id.toString()">
+                        {{ campus.name }}
+                    </option>
+                </select>
+                <select
+                    v-model="filterSession"
+                    aria-label="Filter by session"
+                    class="w-full rounded-md border border-border bg-card px-2.5 py-1.5 text-sm text-foreground"
+                >
+                    <option value="">All Sessions</option>
+                    <option v-for="session in props.sessions" :key="session.id" :value="session.id.toString()">
+                        {{ session.name }}
+                    </option>
+                </select>
+                <select
+                    v-model="filterClass"
+                    aria-label="Filter by class"
+                    class="w-full rounded-md border border-border bg-card px-2.5 py-1.5 text-sm text-foreground"
+                >
+                    <option value="">All Classes</option>
+                    <option v-for="cls in props.classes" :key="cls.id" :value="cls.id.toString()">
+                        {{ cls.name }}
+                    </option>
+                </select>
+                <select
+                    v-model="filterActive"
+                    aria-label="Filter by status"
+                    class="w-full rounded-md border border-border bg-card px-2.5 py-1.5 text-sm text-foreground"
+                >
+                    <option value="">All Status</option>
+                    <option value="true">Active</option>
+                    <option value="false">Inactive</option>
+                </select>
+                <Input
+                    v-model="searchQuery"
+                    placeholder="Search rules..."
+                    class="col-span-2 sm:col-span-1 py-1.5"
+                    aria-label="Search fine rules"
+                />
             </div>
         </div>
 
@@ -468,64 +457,47 @@ const fineTypeOptions = [
                 <table class="w-full text-sm">
                     <thead class="bg-muted">
                         <tr>
-                            <th class="text-left py-3 px-4 text-muted-foreground">Sr#</th>
-                            <th class="text-left py-3 px-4 text-muted-foreground">Name</th>
-                            <th class="text-left py-3 px-4 text-muted-foreground">Scope</th>
-                            <th class="text-left py-3 px-4 text-muted-foreground">Grace Days</th>
-                            <th class="text-left py-3 px-4 text-muted-foreground">Fine Type</th>
-                            <th class="text-right py-3 px-4 text-muted-foreground">Value</th>
-                            <th class="text-left py-3 px-4 text-muted-foreground">Effective From</th>
-                            <th class="text-left py-3 px-4 text-muted-foreground">Fee Head</th>
-                            <th class="text-center py-3 px-4 text-muted-foreground">Status</th>
-                            <th class="text-center py-3 px-4 text-muted-foreground">Actions</th>
+                            <th class="text-left py-2 px-3 text-xs font-medium text-muted-foreground">Name</th>
+                            <th class="text-left py-2 px-3 text-xs font-medium text-muted-foreground">Scope</th>
+                            <th class="text-left py-2 px-3 text-xs font-medium text-muted-foreground">Rule</th>
+                            <th class="text-right py-2 px-3 text-xs font-medium text-muted-foreground">Value</th>
+                            <th class="text-left py-2 px-3 text-xs font-medium text-muted-foreground">Effective</th>
+                            <th class="text-center py-2 px-3 text-xs font-medium text-muted-foreground">Status</th>
+                            <th class="text-right py-2 px-3 text-xs font-medium text-muted-foreground">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
-                        <tr v-for="(rule, index) in fineRulesData" :key="rule.id" class="border-t border-border">
-                            <td class="py-3 px-4 text-muted-foreground">{{ index + 1 }}</td>
-                            <td class="py-3 px-4 text-foreground font-medium">{{ rule.name }}</td>
-                            <td class="py-3 px-4 text-muted-foreground">
-                                <div class="text-xs">
-                                    <div>{{ rule.campus?.name || 'All' }}</div>
-                                    <div v-if="rule.schoolClass" class="text-muted-foreground">{{ rule.schoolClass.name }}</div>
-                                </div>
+                        <tr v-for="rule in fineRulesData" :key="rule.id" class="border-t border-border">
+                            <td class="py-2 px-3 text-foreground font-medium">
+                                {{ rule.name }}
+                                <div class="text-xs text-muted-foreground font-normal">{{ rule.feeHead?.name || 'All Fees' }}</div>
                             </td>
-                            <td class="py-3 px-4 text-muted-foreground">{{ rule.grace_days }} days</td>
-                            <td class="py-3 px-4 text-muted-foreground">{{ getFineTypeLabel(rule.fine_type) }}</td>
-                            <td class="py-3 px-4 text-right text-foreground">
+                            <td class="py-2 px-3 text-xs text-muted-foreground">
+                                {{ rule.campus?.name || 'All' }}
+                                <span v-if="rule.schoolClass"> · {{ rule.schoolClass.name }}</span>
+                            </td>
+                            <td class="py-2 px-3 text-xs text-muted-foreground">
+                                {{ getFineTypeLabel(rule.fine_type) }}, {{ rule.grace_days }}d grace
+                            </td>
+                            <td class="py-2 px-3 text-right text-foreground">
                                 {{ rule.fine_value }}<span v-if="rule.fine_type === 'percent'">%</span>
                             </td>
-                            <td class="py-3 px-4 text-muted-foreground">
-                                {{ formatDate(rule.effective_from) }}
-                                <span v-if="rule.effective_to" class="text-xs text-muted-foreground"> - {{ formatDate(rule.effective_to) }}</span>
+                            <td class="py-2 px-3 text-xs text-muted-foreground">
+                                {{ formatDate(rule.effective_from) }}<span v-if="rule.effective_to"> - {{ formatDate(rule.effective_to) }}</span>
                             </td>
-                            <td class="py-3 px-4 text-muted-foreground">
-                                {{ rule.feeHead?.name || 'All Fees' }}
-                            </td>
-                            <td class="py-3 px-4 text-center">
+                            <td class="py-2 px-3 text-center">
                                 <button
                                     @click="toggleStatus(rule)"
-                                    :class="['inline-flex items-center px-2 py-1 rounded-full text-xs font-medium cursor-pointer hover:opacity-80', rule.is_active ? 'bg-success/10 text-success' : 'bg-muted text-foreground']"
+                                    :class="['inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium cursor-pointer hover:opacity-80', rule.is_active ? 'bg-success/10 text-success' : 'bg-muted text-foreground']"
                                 >
                                     {{ rule.is_active ? 'Active' : 'Inactive' }}
                                 </button>
                             </td>
-                            <td class="py-3 px-4 text-center">
-                                <div class="flex justify-center gap-2">
-                                    <Button
-                                        :variant="rule.is_active ? 'outline' : 'default'"
-                                        size="sm"
-                                        @click="toggleStatus(rule)"
-                                    >
-                                        {{ rule.is_active ? 'Inactive' : 'Active' }}
-                                    </Button>
-                                    <Button variant="outline" size="sm" @click="openEditModal(rule)">
-                                        Edit
-                                    </Button>
-                                    <Button variant="destructive" size="sm" @click="deleteRule(rule)">
-                                        Delete
-                                    </Button>
-                                </div>
+                            <td class="py-2 px-3">
+                                <RowActions>
+                                    <RowAction kind="edit" @click="openEditModal(rule)" />
+                                    <RowAction kind="delete" @click="deleteRule(rule)" />
+                                </RowActions>
                             </td>
                         </tr>
                     </tbody>
@@ -540,11 +512,11 @@ const fineTypeOptions = [
         </div>
 
         <!-- Create/Edit Modal -->
-        <div v-if="showCreateModal" class="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 p-4">
-            <div class="bg-card rounded-lg p-6 w-full max-w-lg max-h-[90vh] overflow-y-auto">
-                <h2 class="text-lg font-semibold text-foreground mb-4">
-                    {{ editingRule ? 'Edit Fine Rule' : 'Add Fine Rule' }}
-                </h2>
+        <Dialog v-model:open="showCreateModal">
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>{{ editingRule ? 'Edit Fine Rule' : 'Add Fine Rule' }}</DialogTitle>
+                </DialogHeader>
                 <form @submit.prevent="submitForm" class="space-y-4">
                     <!-- Rule Name -->
                     <div class="space-y-2">
@@ -729,15 +701,14 @@ const fineTypeOptions = [
                         <Label for="is_active" class="text-sm font-normal">Active</Label>
                     </div>
 
-                    <!-- Form Actions -->
-                    <div class="flex flex-wrap justify-end gap-3 pt-4">
+                    <DialogFooter>
                         <Button type="button" variant="outline" @click="closeModal">Cancel</Button>
                         <Button type="submit" :disabled="isSubmitting">
                             {{ isSubmitting ? 'Saving...' : (editingRule ? 'Update' : 'Create') }}
                         </Button>
-                    </div>
+                    </DialogFooter>
                 </form>
-            </div>
-        </div>
+            </DialogContent>
+        </Dialog>
     </div>
 </template>

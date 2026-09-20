@@ -211,7 +211,11 @@ Route::prefix('fee')->name('fee.')->middleware($middleware)->group(function () {
             ->middleware('permission:fee.payment.collect');
         Route::get('/search-students', [FeePaymentController::class, 'searchStudents'])->name('search-students')
             ->middleware('permission:fee.payment.collect');
+        Route::get('/siblings', [FeePaymentController::class, 'siblings'])->name('siblings')
+            ->middleware('permission:fee.payment.collect');
         Route::post('/', [FeePaymentController::class, 'store'])->name('store')
+            ->middleware('permission:fee.payment.collect');
+        Route::post('/bulk', [FeePaymentController::class, 'storeBulk'])->name('store-bulk')
             ->middleware('permission:fee.payment.collect');
         // `fee.view.own` lets a child or their family read their own receipt;
         // `FeePaymentPolicy::view()`/`viewByStudent()` still check it really

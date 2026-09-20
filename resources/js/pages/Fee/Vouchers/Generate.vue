@@ -442,7 +442,7 @@ const generateVouchers = () => {
                                 </Button>
                             </div>
                         </div>
-                        <div class="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 xl:grid-cols-12 gap-3">
+                        <div class="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 gap-2">
                             <label
                                 v-for="month in props.months"
                                 :key="month.id"
@@ -453,9 +453,9 @@ const generateVouchers = () => {
                                     type="checkbox"
                                     :checked="form.month_ids.includes(month.id)"
                                     @change="toggleMonth(month.id)"
-                                    class="w-4 h-4 text-primary rounded"
+                                    class="w-4 h-4 shrink-0 text-primary rounded"
                                 />
-                                <span class="text-sm">{{ month.name }}</span>
+                                <span class="text-sm truncate">{{ month.name }}</span>
                             </label>
                         </div>
                         <p class="mt-2 text-sm text-muted-foreground">

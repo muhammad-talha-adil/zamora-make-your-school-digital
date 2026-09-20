@@ -7,6 +7,7 @@ use App\Enums\Fee\WalletDirection;
 use App\Enums\Fee\WalletTransactionType;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Fee\ReverseFeePaymentRequest;
+use App\Http\Requests\Fee\StoreBulkFeePaymentRequest;
 use App\Http\Requests\Fee\StoreFeePaymentRequest;
 use App\Models\Campus;
 use App\Models\Fee\FeePayment;
@@ -19,6 +20,7 @@ use App\Models\Student;
 use App\Services\Fee\FeePaymentService;
 use App\Services\Finance\StudentBillingService;
 use App\Services\Finance\UnifiedAccountingService;
+use App\Services\Student\SiblingService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
@@ -163,6 +165,49 @@ class FeePaymentController extends Controller
 
         return redirect()->route('fee.payments.show', $payment->id)
             ->with('success', 'Payment recorded successfully.');
+    }
+
+    /**
+     * The other children of this student's guardians still on the roll, for
+     * the "pay for siblings together" flow (#115).
+     */
+    public function siblings(Request $request, SiblingService $siblingService)
+    {
+        Gate::authorize('create', FeePayment::class);
+
+        $student = Student::with('user:id,name')->findOrFail($request->integer('student_id'));
+
+        $siblings = $siblingService->siblingsOf($student);
+
+        return response()->json(
+            $siblings->map(fn (Student $sibling) => [
+                'id' => $sibling->id,
+                'name' => $sibling->user?->name,
+                'registration_number' => $sibling->registration_number,
+            ])->values()
+        );
+    }
+
+    /**
+     * Record a payment for several siblings in one submission (#115).
+     *
+     * Each sibling still gets their own FeePayment record - the underlying
+     * model is one payment per student - but the cashier fills in the dues
+     * for the whole family once and everyone is settled together, in one
+     * database transaction so it's all-or-nothing.
+     */
+    public function storeBulk(StoreBulkFeePaymentRequest $request)
+    {
+        Gate::authorize('create', FeePayment::class);
+
+        $payments = DB::transaction(function () use ($request) {
+            return collect($request->validated('payments'))
+                ->map(fn (array $payload) => $this->feePaymentService->record($payload))
+                ->all();
+        });
+
+        return redirect()->route('fee.payments.show', $payments[0]->id)
+            ->with('success', count($payments).' payment(s) recorded successfully for the family.');
     }
 
     /**

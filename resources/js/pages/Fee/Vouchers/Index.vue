@@ -17,7 +17,7 @@ import { tableActionButtonClass } from '@/utils/table-actions';
 interface FeeVoucher {
     id: number;
     voucher_no: string;
-    student: { id: number; name: string; registration_number: string };
+    student: { id: number; name: string; registration_number: string } | null;
     voucher_month: { id: number; name: string };
     voucher_year: number;
     issue_date: string;
@@ -230,6 +230,20 @@ const printVoucher = (voucherId: number) => {
     window.open('/fee/print-voucher/' + voucherId, '_blank');
 };
 
+// Whether a voucher still has a balance worth collecting (#116)
+const isPayable = (voucher: FeeVoucher) => {
+    return voucher.status !== 'paid' && voucher.status !== 'cancelled' && voucher.balance_amount > 0;
+};
+
+// Jump straight into recording a payment for this voucher's student (#116)
+const payVoucher = (voucher: FeeVoucher) => {
+    if (!voucher.student?.id) {
+        return;
+    }
+
+    router.visit(route('fee.payments.create', { student_id: voucher.student.id }));
+};
+
 const getStatusColor = (status: string) => {
     const colors: Record<string, string> = {
         unpaid: 'bg-warning/10 text-warning',
@@ -415,7 +429,10 @@ const isOverdueVoucher = (voucher: FeeVoucher) => {
                         <div>Amount: {{ formatCurrency(voucher.net_amount) }}</div>
                         <div>Balance: {{ formatCurrency(voucher.balance_amount) }}</div>
                     </div>
-                    <div class="flex gap-2 pt-2">
+                    <div class="flex flex-wrap gap-2 pt-2">
+                        <Button v-if="isPayable(voucher)" size="sm" @click="payVoucher(voucher)">
+                            <Icon icon="credit-card" class="mr-1" />Pay
+                        </Button>
                         <Button variant="outline" size="sm" :class="tableActionButtonClass.view" @click="router.visit(route('fee.vouchers.show', voucher.id))">
                             <Icon icon="eye" class="mr-1" />View
                         </Button>
@@ -523,6 +540,9 @@ const isOverdueVoucher = (voucher: FeeVoucher) => {
                                 </td>
                                 <td class="px-4 py-3 text-sm font-medium whitespace-nowrap">
                                     <div class="flex flex-wrap gap-2 justify-end">
+                                        <Button v-if="isPayable(voucher)" size="sm" @click="payVoucher(voucher)">
+                                            <Icon icon="credit-card" class="mr-1 h-3 w-3" />Pay
+                                        </Button>
                                         <Button variant="outline" size="sm" :class="tableActionButtonClass.view" @click="router.visit(route('fee.vouchers.show', voucher.id))">
                                             <Icon icon="eye" class="mr-1 h-3 w-3" />View
                                         </Button>

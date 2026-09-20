@@ -2,6 +2,7 @@
 import { Head, router } from '@inertiajs/vue3';
 import { reactive, ref, computed, watch, onMounted, nextTick } from 'vue';
 import { route } from 'ziggy-js';
+import axios from 'axios';
 import { alert } from '@/utils';
 import AppLayout from '@/layouts/AppLayout.vue';
 import type { BreadcrumbItem } from '@/types';
@@ -9,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { ComboboxInput } from '@/components/ui/combobox';
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import Icon from '@/components/Icon.vue';
 
 interface Props {
@@ -19,9 +21,15 @@ interface Props {
     sections: Array<{ id: number; name: string; class_id: number }>;
     months: Array<{ id: number; name: string; month_number: number }>;
     feeHeads: Array<{ id: number; name: string; category: string; default_frequency: string }>;
+    feeHeadCategories: Array<{ value: string; label: string }>;
+    feeHeadFrequencies: Array<{ value: string; label: string }>;
 }
 
 const props = defineProps<Props>();
+
+// Local, mutable copy so a fee head added inline via the modal shows up in the
+// dropdown immediately without a full page reload.
+const feeHeadsList = ref([...props.feeHeads]);
 
 const breadcrumbItems: BreadcrumbItem[] = [
     { title: 'Dashboard', href: '/dashboard' },
@@ -78,6 +86,68 @@ const itemForm = reactive({
 });
 
 const itemErrors = ref<Record<string, string>>({});
+
+// Inline "Add Fee Head" modal - avoids navigating away from this form (#38)
+const showFeeHeadModal = ref(false);
+const isSavingFeeHead = ref(false);
+const feeHeadForm = reactive({
+    name: '',
+    code: '',
+    category: 'monthly',
+    default_frequency: 'monthly',
+});
+const feeHeadFormErrors = ref<Record<string, string>>({});
+
+const openAddFeeHeadModal = () => {
+    feeHeadForm.name = '';
+    feeHeadForm.code = '';
+    feeHeadForm.category = 'monthly';
+    feeHeadForm.default_frequency = 'monthly';
+    feeHeadFormErrors.value = {};
+    showFeeHeadModal.value = true;
+};
+
+const saveFeeHead = async () => {
+    feeHeadFormErrors.value = {};
+    isSavingFeeHead.value = true;
+
+    try {
+        const response = await axios.post(route('fee.heads.store'), {
+            name: feeHeadForm.name,
+            code: feeHeadForm.code || feeHeadForm.name.toUpperCase().replace(/[^A-Z0-9]+/g, '_').slice(0, 50),
+            category: feeHeadForm.category,
+            default_frequency: feeHeadForm.default_frequency,
+            is_recurring: feeHeadForm.default_frequency !== 'once',
+            is_optional: false,
+            is_active: true,
+        }, { headers: { Accept: 'application/json' } });
+
+        const newFeeHead = response.data.feeHead;
+        feeHeadsList.value.push({
+            id: newFeeHead.id,
+            name: newFeeHead.name,
+            category: newFeeHead.category,
+            default_frequency: newFeeHead.default_frequency,
+        });
+
+        // Pre-select the new fee head in the "add item" form
+        itemForm.fee_head_id = String(newFeeHead.id);
+
+        showFeeHeadModal.value = false;
+        alert.success('Fee head created successfully!');
+    } catch (err: unknown) {
+        const response = (err as { response?: { data?: { errors?: Record<string, string[]>; message?: string } } }).response;
+        if (response?.data?.errors) {
+            feeHeadFormErrors.value = Object.fromEntries(
+                Object.entries(response.data.errors).map(([key, value]) => [key, value[0]])
+            );
+        } else {
+            alert.error(response?.data?.message || 'Failed to create fee head.');
+        }
+    } finally {
+        isSavingFeeHead.value = false;
+    }
+};
 
 // Filter sections based on selected class
 const filteredSections = computed(() => {
@@ -234,7 +304,7 @@ const addItem = () => {
     if (!validateItemForm()) return;
     
     // Get the fee head to auto-fill frequency
-    const feeHead = props.feeHeads.find(fh => fh.id === Number(itemForm.fee_head_id));
+    const feeHead = feeHeadsList.value.find(fh => fh.id === Number(itemForm.fee_head_id));
     const frequency = feeHead?.default_frequency || 'monthly';
     
     feeItems.value.push({
@@ -252,7 +322,7 @@ const removeItem = (tempId: number) => {
 };
 
 const getFeeHeadName = (id: number) => {
-    const fh = props.feeHeads.find(f => f.id === id);
+    const fh = feeHeadsList.value.find(f => f.id === id);
     return fh ? fh.name : 'Unknown';
 };
 
@@ -494,13 +564,18 @@ const cancel = () => {
                     <h3 class="font-semibold mb-4">Add New Fee Item</h3>
                     <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
                         <div class="space-y-2">
-                            <Label>Fee Head <span class="text-destructive">*</span></Label>
+                            <div class="flex items-center justify-between gap-2">
+                                <Label>Fee Head <span class="text-destructive">*</span></Label>
+                                <button type="button" class="text-xs text-primary hover:underline" @click="openAddFeeHeadModal">
+                                    + Add Fee Head
+                                </button>
+                            </div>
                             <select
                                 v-model="itemForm.fee_head_id"
                                 :class="['w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm', { 'border-destructive': itemErrors.fee_head_id }]"
                             >
                                 <option value="">Select Fee Head</option>
-                                <option v-for="fh in props.feeHeads" :key="fh.id" :value="fh.id">
+                                <option v-for="fh in feeHeadsList" :key="fh.id" :value="fh.id">
                                     {{ fh.name }}
                                 </option>
                             </select>
@@ -632,5 +707,51 @@ const cancel = () => {
                 </div>
             </div>
         </div>
+
+        <!-- Add Fee Head Modal (#38) -->
+        <Dialog v-model:open="showFeeHeadModal">
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Add Fee Head</DialogTitle>
+                </DialogHeader>
+
+                <div class="space-y-4">
+                    <div class="space-y-2">
+                        <Label for="fh-name">Name <span class="text-destructive">*</span></Label>
+                        <Input id="fh-name" v-model="feeHeadForm.name" placeholder="e.g. Tuition Fee" :class="{ 'border-destructive': feeHeadFormErrors.name }" />
+                        <p v-if="feeHeadFormErrors.name" class="text-sm text-destructive">{{ feeHeadFormErrors.name }}</p>
+                    </div>
+
+                    <div class="space-y-2">
+                        <Label for="fh-code">Code (optional, auto-generated if left blank)</Label>
+                        <Input id="fh-code" v-model="feeHeadForm.code" placeholder="e.g. TUITION" :class="{ 'border-destructive': feeHeadFormErrors.code }" />
+                        <p v-if="feeHeadFormErrors.code" class="text-sm text-destructive">{{ feeHeadFormErrors.code }}</p>
+                    </div>
+
+                    <div class="grid gap-4 sm:grid-cols-2">
+                        <div class="space-y-2">
+                            <Label for="fh-category">Category <span class="text-destructive">*</span></Label>
+                            <select id="fh-category" v-model="feeHeadForm.category" class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm">
+                                <option v-for="cat in props.feeHeadCategories" :key="cat.value" :value="cat.value">{{ cat.label }}</option>
+                            </select>
+                        </div>
+
+                        <div class="space-y-2">
+                            <Label for="fh-frequency">Frequency <span class="text-destructive">*</span></Label>
+                            <select id="fh-frequency" v-model="feeHeadForm.default_frequency" class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm">
+                                <option v-for="freq in props.feeHeadFrequencies" :key="freq.value" :value="freq.value">{{ freq.label }}</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <DialogFooter>
+                    <Button variant="outline" @click="showFeeHeadModal = false">Cancel</Button>
+                    <Button @click="saveFeeHead" :disabled="isSavingFeeHead || !feeHeadForm.name">
+                        {{ isSavingFeeHead ? 'Saving...' : 'Save Fee Head' }}
+                    </Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
     </AppLayout>
 </template>

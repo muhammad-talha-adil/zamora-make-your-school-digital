@@ -62,7 +62,15 @@ class FeeHeadController extends Controller
         ]);
 
         try {
-            $this->service->create($request->validated());
+            $feeHead = $this->service->create($request->validated());
+
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Fee head created successfully.',
+                    'feeHead' => $feeHead,
+                ]);
+            }
 
             return redirect()->route('fee.heads.index')
                 ->with('success', 'Fee head created successfully.');
@@ -71,6 +79,13 @@ class FeeHeadController extends Controller
                 'user_id' => auth()->id(),
                 'error' => $e->getMessage(),
             ]);
+
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to create fee head: '.$e->getMessage(),
+                ], 422);
+            }
 
             return redirect()->back()
                 ->with('error', 'Failed to create fee head: '.$e->getMessage())

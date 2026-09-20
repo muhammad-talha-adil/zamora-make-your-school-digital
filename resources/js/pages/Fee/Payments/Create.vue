@@ -58,6 +58,17 @@ interface Props {
     selectedStudent?: StudentSearchResult | null;
 }
 
+interface SiblingPayment {
+    id: number;
+    name: string;
+    registration_number: string;
+    included: boolean;
+    loading: boolean;
+    vouchers: Voucher[];
+    charges: ChargeAllocation[];
+    received_amount: number;
+}
+
 const props = defineProps<Props>();
 
 const breadcrumbItems: BreadcrumbItem[] = [
@@ -83,6 +94,11 @@ const isSearching = ref(false);
 const isLoadingVouchers = ref(false);
 const isSubmitting = ref(false);
 const selectedStudent = ref<StudentSearchResult | null>(props.selectedStudent || null);
+
+// Sibling bulk payment (#115): let the cashier settle several siblings'
+// vouchers in one go instead of repeating this whole form per child.
+const siblings = ref<SiblingPayment[]>([]);
+const isLoadingSiblings = ref(false);
 
 const form = reactive({
     student_id: props.studentId || '',
@@ -110,6 +126,10 @@ const initializeVouchers = (vouchers: Voucher[]) => {
 };
 
 initializeVouchers(props.unpaidVouchers || []);
+
+if (props.studentId) {
+    fetchSiblings(props.studentId);
+}
 
 let searchTimeout: ReturnType<typeof setTimeout> | null = null;
 
@@ -161,13 +181,77 @@ const fetchUnpaidVouchers = (studentId: number) => {
     });
 };
 
+const fetchSiblings = (studentId: number) => {
+    isLoadingSiblings.value = true;
+
+    axios.get(route('fee.payments.siblings'), {
+        params: { student_id: studentId },
+        headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+    }).then((response) => {
+        siblings.value = (response.data || []).map((sibling: { id: number; name: string; registration_number: string }) => ({
+            ...sibling,
+            included: false,
+            loading: false,
+            vouchers: [],
+            charges: [],
+            received_amount: 0,
+        }));
+    }).catch(() => {
+        siblings.value = [];
+    }).finally(() => {
+        isLoadingSiblings.value = false;
+    });
+};
+
 const selectStudent = (student: StudentSearchResult) => {
     selectedStudent.value = student;
     form.student_id = student.id;
     searchQuery.value = student.name;
     searchResults.value = [];
+    siblings.value = [];
     fetchUnpaidVouchers(student.id);
+    fetchSiblings(student.id);
 };
+
+const toggleSibling = (sibling: SiblingPayment) => {
+    sibling.included = !sibling.included;
+
+    if (sibling.included && sibling.vouchers.length === 0 && !sibling.loading) {
+        sibling.loading = true;
+
+        axios.get(route('fee.vouchers.unpaid'), {
+            params: { student_id: sibling.id },
+            headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+        }).then((response) => {
+            const vouchers: Voucher[] = response.data || [];
+            sibling.vouchers = vouchers;
+            sibling.charges = vouchers.flatMap((voucher) =>
+                (voucher.items || []).map((item) => ({
+                    voucher_id: voucher.id,
+                    fee_voucher_item_id: item.id,
+                    student_account_charge_id: item.student_account_charge_id,
+                    source_module: item.source_module || 'fee',
+                    amount: Number(item.balance_amount),
+                    enabled: true,
+                }))
+            );
+            sibling.received_amount = sibling.charges.reduce((sum, c) => sum + Number(c.amount || 0), 0);
+        }).catch(() => {
+            alert.error(`Failed to load unpaid vouchers for ${sibling.name}.`);
+            sibling.included = false;
+        }).finally(() => {
+            sibling.loading = false;
+        });
+    }
+};
+
+const siblingTotal = (sibling: SiblingPayment) => sibling.charges.reduce((sum, c) => (c.enabled ? sum + Number(c.amount || 0) : sum), 0);
+
+const includedSiblings = computed(() => siblings.value.filter((s) => s.included && s.vouchers.length > 0));
+
+const familyGrandTotal = computed(() =>
+    totalAllocated.value + includedSiblings.value.reduce((sum, s) => sum + siblingTotal(s), 0)
+);
 
 const getChargeAllocation = (voucherId: number, itemId: number) => {
     return form.charges.find((charge) => charge.voucher_id === voucherId && charge.fee_voucher_item_id === itemId);
@@ -244,10 +328,54 @@ const submitForm = () => {
 
     isSubmitting.value = true;
 
-    router.post(route('fee.payments.store'), {
-        ...form,
+    const sharedFields = {
+        payment_date: form.payment_date,
+        payment_method: form.payment_method,
         reference_no: form.payment_method === 'cash' ? '' : form.reference_no,
         bank_name: ['bank', 'cheque'].includes(form.payment_method) ? form.bank_name : '',
+    };
+
+    // If any siblings are included, settle the whole family in one bulk
+    // submission - each still becomes its own payment record, but the
+    // cashier only fills the form once (#115).
+    if (includedSiblings.value.length > 0) {
+        const payments = [
+            {
+                student_id: form.student_id,
+                ...sharedFields,
+                received_amount: Number(form.received_amount),
+                charges,
+                remarks: form.remarks,
+            },
+            ...includedSiblings.value.map((sibling) => ({
+                student_id: sibling.id,
+                ...sharedFields,
+                received_amount: Number(sibling.received_amount),
+                charges: sibling.charges
+                    .filter((c) => c.enabled && Number(c.amount) > 0)
+                    .map((c) => ({
+                        voucher_id: c.voucher_id,
+                        fee_voucher_item_id: c.fee_voucher_item_id,
+                        student_account_charge_id: c.student_account_charge_id,
+                        source_module: c.source_module,
+                        amount: Number(c.amount),
+                    })),
+                remarks: form.remarks,
+            })),
+        ];
+
+        router.post(route('fee.payments.store-bulk'), { payments }, {
+            onFinish: () => {
+                isSubmitting.value = false;
+            },
+        });
+
+        return;
+    }
+
+    router.post(route('fee.payments.store'), {
+        ...form,
+        ...sharedFields,
         charges,
     }, {
         onFinish: () => {
@@ -395,12 +523,6 @@ const submitForm = () => {
                                         Select
                                     </th>
                                     <th class="px-4 py-3 text-left text-xs font-semibold uppercase text-muted-foreground">
-                                        Voucher No
-                                    </th>
-                                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase text-muted-foreground">
-                                        Month
-                                    </th>
-                                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase text-muted-foreground">
                                         Module
                                     </th>
                                     <th class="px-4 py-3 text-left text-xs font-semibold uppercase text-muted-foreground">
@@ -415,13 +537,9 @@ const submitForm = () => {
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-border">
-                                <tr
-                                    v-for="voucher in availableVouchers"
-                                    :key="voucher.id"
-                                    class="hover:bg-accent"
-                                >
-                                    <td colspan="6" class="px-0 py-0">
-                                        <div class="border-b border-border bg-muted px-4 py-3">
+                                <template v-for="voucher in availableVouchers" :key="voucher.id">
+                                    <tr class="bg-muted/60">
+                                        <td colspan="5" class="px-4 py-2">
                                             <div class="flex flex-col gap-1 md:flex-row md:items-center md:justify-between">
                                                 <div class="font-medium text-foreground">
                                                     {{ voucher.voucher_no }}
@@ -433,64 +551,107 @@ const submitForm = () => {
                                                     Voucher balance: {{ formatCurrency(voucher.balance_amount) }}
                                                 </div>
                                             </div>
-                                        </div>
-                                        <table class="min-w-full">
-                                            <tbody>
-                                                <tr
-                                                    v-for="item in voucher.items"
-                                                    :key="item.id"
-                                                    class="border-t border-border"
-                                                >
-                                                    <td class="px-4 py-3 align-top">
-                                                        <input
-                                                            type="checkbox"
-                                                            :checked="getChargeAllocation(voucher.id, item.id)?.enabled"
-                                                            class="rounded"
-                                                            @change="toggleCharge(voucher.id, item)"
-                                                        />
-                                                    </td>
-                                                    <td class="px-4 py-3 align-top text-sm text-muted-foreground">
-                                                        {{ voucher.voucher_month?.name || 'N/A' }} {{ voucher.voucher_year }}
-                                                    </td>
-                                                    <td class="px-4 py-3 align-top">
-                                                        <span
-                                                            :class="item.source_module === 'inventory'
-                                                                ? 'inline-flex rounded-full bg-warning/10 px-2 py-1 text-xs font-medium text-warning'
-                                                                : 'inline-flex rounded-full bg-primary/10 px-2 py-1 text-xs font-medium text-primary'"
-                                                        >
-                                                            {{ item.source_module === 'inventory' ? 'Inventory' : 'Fee' }}
-                                                        </span>
-                                                    </td>
-                                                    <td class="px-4 py-3 align-top">
-                                                        <div class="font-medium text-foreground">
-                                                            {{ item.fee_head_name || item.description }}
-                                                        </div>
-                                                        <div class="text-sm text-muted-foreground">
-                                                            {{ item.description }}
-                                                        </div>
-                                                    </td>
-                                                    <td class="px-4 py-3 align-top text-right text-muted-foreground">
-                                                        {{ formatCurrency(item.balance_amount) }}
-                                                    </td>
-                                                    <td class="px-4 py-3 align-top">
-                                                        <Input
-                                                            :model-value="String(getChargeAllocation(voucher.id, item.id)?.amount ?? item.balance_amount)"
-                                                            @update:model-value="(value) => { const allocation = getChargeAllocation(voucher.id, item.id); if (allocation) allocation.amount = Number(value); }"
-                                                            type="number"
-                                                            :max="item.balance_amount"
-                                                            step="0.01"
-                                                            min="0"
-                                                            :disabled="!getChargeAllocation(voucher.id, item.id)?.enabled"
-                                                            class="ml-auto w-36 text-right"
-                                                        />
-                                                    </td>
-                                                </tr>
-                                            </tbody>
-                                        </table>
-                                    </td>
-                                </tr>
+                                        </td>
+                                    </tr>
+                                    <tr
+                                        v-for="item in voucher.items"
+                                        :key="item.id"
+                                        class="hover:bg-accent"
+                                    >
+                                        <td class="px-4 py-3 align-top">
+                                            <input
+                                                type="checkbox"
+                                                :checked="getChargeAllocation(voucher.id, item.id)?.enabled"
+                                                class="rounded"
+                                                @change="toggleCharge(voucher.id, item)"
+                                            />
+                                        </td>
+                                        <td class="px-4 py-3 align-top">
+                                            <span
+                                                :class="item.source_module === 'inventory'
+                                                    ? 'inline-flex rounded-full bg-warning/10 px-2 py-1 text-xs font-medium text-warning'
+                                                    : 'inline-flex rounded-full bg-primary/10 px-2 py-1 text-xs font-medium text-primary'"
+                                            >
+                                                {{ item.source_module === 'inventory' ? 'Inventory' : 'Fee' }}
+                                            </span>
+                                        </td>
+                                        <td class="px-4 py-3 align-top">
+                                            <div class="font-medium text-foreground">
+                                                {{ item.fee_head_name || item.description }}
+                                            </div>
+                                            <div class="text-sm text-muted-foreground">
+                                                {{ item.description }}
+                                            </div>
+                                        </td>
+                                        <td class="px-4 py-3 align-top text-right text-muted-foreground">
+                                            {{ formatCurrency(item.balance_amount) }}
+                                        </td>
+                                        <td class="px-4 py-3 align-top">
+                                            <Input
+                                                :model-value="String(getChargeAllocation(voucher.id, item.id)?.amount ?? item.balance_amount)"
+                                                @update:model-value="(value) => { const allocation = getChargeAllocation(voucher.id, item.id); if (allocation) allocation.amount = Number(value); }"
+                                                type="number"
+                                                :max="item.balance_amount"
+                                                step="0.01"
+                                                min="0"
+                                                :disabled="!getChargeAllocation(voucher.id, item.id)?.enabled"
+                                                class="ml-auto w-32 text-right"
+                                            />
+                                            <p class="mt-1 text-right text-[11px] text-muted-foreground">
+                                                Amount to settle now for this due
+                                            </p>
+                                        </td>
+                                    </tr>
+                                </template>
                             </tbody>
                         </table>
+                    </div>
+                </div>
+
+                <!-- Siblings (#115) - pay for the whole family in one submission -->
+                <div v-if="siblings.length > 0" class="overflow-hidden rounded-lg border border-border bg-card">
+                    <div class="border-b border-border px-6 py-4">
+                        <h2 class="text-lg font-semibold text-foreground">Siblings</h2>
+                        <p class="mt-1 text-sm text-muted-foreground">
+                            Include a sibling to settle their unpaid vouchers together with this payment.
+                        </p>
+                    </div>
+                    <div v-if="isLoadingSiblings" class="py-6 text-center text-muted-foreground">Loading siblings...</div>
+                    <div v-else class="divide-y divide-border">
+                        <div v-for="sibling in siblings" :key="sibling.id" class="px-6 py-4">
+                            <label class="flex items-center gap-3 cursor-pointer">
+                                <input
+                                    type="checkbox"
+                                    :checked="sibling.included"
+                                    class="rounded"
+                                    @change="toggleSibling(sibling)"
+                                />
+                                <span class="font-medium text-foreground">{{ sibling.name }}</span>
+                                <span class="text-sm text-muted-foreground">{{ sibling.registration_number }}</span>
+                                <Icon v-if="sibling.loading" icon="loader" class="h-4 w-4 animate-spin text-muted-foreground" />
+                            </label>
+
+                            <div v-if="sibling.included && sibling.vouchers.length > 0" class="mt-3 space-y-2 pl-7">
+                                <div v-for="voucher in sibling.vouchers" :key="voucher.id" class="text-sm text-muted-foreground">
+                                    {{ voucher.voucher_no }} - {{ voucher.voucher_month?.name || 'N/A' }} {{ voucher.voucher_year }}
+                                    (balance {{ formatCurrency(voucher.balance_amount) }})
+                                </div>
+                                <div>
+                                    <Label :for="`sibling-amount-${sibling.id}`">Amount to receive for {{ sibling.name }}</Label>
+                                    <Input
+                                        :id="`sibling-amount-${sibling.id}`"
+                                        v-model.number="sibling.received_amount"
+                                        type="number"
+                                        step="0.01"
+                                        min="0"
+                                        class="max-w-xs"
+                                    />
+                                </div>
+                            </div>
+                            <p v-else-if="sibling.included && !sibling.loading" class="mt-2 pl-7 text-sm text-muted-foreground">
+                                No unpaid vouchers for {{ sibling.name }}.
+                            </p>
+                        </div>
                     </div>
                 </div>
 
@@ -513,6 +674,10 @@ const submitForm = () => {
                                 {{ formatCurrency(Math.max(0, remainingAmount)) }}
                             </p>
                         </div>
+                    </div>
+                    <div v-if="includedSiblings.length > 0" class="mt-4 border-t border-border pt-4 text-center">
+                        <p class="text-sm text-muted-foreground">Family Total (this student + {{ includedSiblings.length }} sibling(s))</p>
+                        <p class="text-xl font-bold text-foreground">{{ formatCurrency(familyGrandTotal) }}</p>
                     </div>
                 </div>
 
