@@ -228,13 +228,13 @@ Dedupe karke ek-ek line item, lekin har jagah ke original numbers cite kiye hain
 | [#109, #110](ISSUES-RAW.md#issue-109) | Voucher generate page — months UI not responsive, needs a full dedicated test pass. |
 | [#120](ISSUES-RAW.md#issue-120) | Fee Payments create — "Pay Amount" column purpose unclear + Voucher Dues table not responsive (columns/rows misaligned). |
 | [#122](ISSUES-RAW.md#issue-122) | Fee Reports page needs a tab system. |
-| [#36](ISSUES-RAW.md#issue-36) | Fee Structure create — add placeholders to every field + clarify Title field labeling (example hints). |
-| [#123](ISSUES-RAW.md#issue-123) | Add red `*` next to Name on New Staff Member form (required-field indicator). |
-| [#48](ISSUES-RAW.md#issue-48) | Add helper description text under "School is Active" toggle (mirroring "Public Website Active"). |
-| [#49](ISSUES-RAW.md#issue-49) | Favicon should auto-update when logo changes. |
-| [#50](ISSUES-RAW.md#issue-50) | Copyright footer should reflect current school name automatically. |
-| [#51](ISSUES-RAW.md#issue-51) | Show a preview of newly-selected logo file before saving. |
-| [#1](ISSUES-RAW.md#issue-1) | Favicon should update immediately when logo changes (browser tab, duplicate of #49's root cause — same fix). |
+| ✅ [#36](ISSUES-RAW.md#issue-36) | Fee Structure create — add placeholders to every field + clarify Title field labeling (example hints). |
+| ✅ [#123](ISSUES-RAW.md#issue-123) | Add red `*` next to Name on New Staff Member form (required-field indicator). |
+| ✅ [#48](ISSUES-RAW.md#issue-48) | Add helper description text under "School is Active" toggle (mirroring "Public Website Active"). |
+| ✅ [#49](ISSUES-RAW.md#issue-49) | Favicon should auto-update when logo changes. |
+| ✅ [#50](ISSUES-RAW.md#issue-50) | Copyright footer should reflect current school name automatically. |
+| ✅ [#51](ISSUES-RAW.md#issue-51) | Show a preview of newly-selected logo file before saving. |
+| ✅ [#1](ISSUES-RAW.md#issue-1) | Favicon should update immediately when logo changes (browser tab, duplicate of #49's root cause — same fix). |
 | ✅ [#17](ISSUES-RAW.md#issue-17) | Activity Log should capture every meaningful action (logins, enquiries added, etc.), not just current sparse coverage. |
 | ✅ [#14](ISSUES-RAW.md#issue-14) | Activity Log page needs to become genuinely user-friendly (more/better columns) rather than developer-only raw data. |
 
