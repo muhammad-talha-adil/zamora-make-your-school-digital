@@ -48,16 +48,19 @@
             border-left: 4px solid #0056b3;
             margin-top: 25px;
             margin-bottom: 15px;
+            break-after: avoid;
         }
         table {
             width: 100%;
             border-collapse: collapse;
             margin-bottom: 15px;
+            break-inside: avoid;
         }
         table th, table td {
             border: 1px solid #ddd;
             padding: 8px 10px;
             text-align: left;
+            word-break: break-word;
         }
         table th {
             width: 25%;
@@ -69,6 +72,7 @@
             margin-top: 50px;
             display: flex;
             justify-content: space-between;
+            break-inside: avoid;
         }
         .signature-box {
             text-align: center;
@@ -216,7 +220,7 @@
 
         <div class="section-title">Guardian Details</div>
         @forelse($student->studentGuardians as $sg)
-            <div style="margin-bottom: 12px; border: 1px solid #ddd; padding: 10px; background: #fff;">
+            <div style="margin-bottom: 12px; border: 1px solid #ddd; padding: 10px; background: #fff; break-inside: avoid;">
                 <h4 style="margin: 0 0 10px; font-size: 14px; color: #333;">
                     {{ optional($sg->relation)->name ?? 'Guardian' }}
                     @if($sg->is_primary)

@@ -2,7 +2,7 @@
     <AppLayout :breadcrumbs="breadcrumbItems">
         <Head title="Student Details" />
 
-        <div class="space-y-6 p-4 md:p-6 max-w-5xl mx-auto">
+        <div class="space-y-6 p-4 md:p-6 max-w-6xl mx-auto">
             <!-- Header -->
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 md:gap-4">
                 <div>
@@ -13,7 +13,15 @@
                         View complete student and guardian information
                     </p>
                 </div>
-                <div class="flex gap-2">
+                <div class="flex flex-wrap gap-2">
+                    <Button variant="outline" @click="router.visit(route('students.print', student?.id))">
+                        <Icon icon="printer" class="mr-1" />
+                        Print
+                    </Button>
+                    <Button variant="outline" @click="router.visit(route('students.id-cards', { student_ids: [student?.id] }))">
+                        <Icon icon="id-card" class="mr-1" />
+                        ID Card
+                    </Button>
                     <Button variant="outline" @click="router.visit(route('students.edit', student?.id))">
                         <Icon icon="edit" class="mr-1" />
                         Edit
@@ -28,7 +36,7 @@
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <!-- Student Profile Card -->
                 <div class="lg:col-span-1">
-                    <div class="bg-card rounded-lg border border-border p-6 text-center">
+                    <div class="bg-card rounded-lg border border-border p-6 text-center sticky top-4">
                         <!-- Student Photo -->
                         <div class="mb-4">
                             <div v-if="student?.image_url" class="h-32 w-32 mx-auto rounded-full overflow-hidden border-4 border-border">
@@ -52,6 +60,9 @@
                         <p class="text-muted-foreground text-sm mt-1">
                             {{ student?.registration_no }}
                         </p>
+                        <p class="text-muted-foreground text-xs mt-0.5">
+                            Adm No: {{ student?.admission_no || '-' }}
+                        </p>
 
                         <!-- Status Badge -->
                         <div class="mt-4">
@@ -59,7 +70,7 @@
                                 :class="[
                                     'px-3 py-1 text-sm font-medium rounded-full',
                                     student?.student_status?.name === 'Active'
-                                        ? 'bg-success/10 text-success'
+                                        ? 'bg-success/10 text-success dark:bg-success/20'
                                         : 'bg-muted text-foreground'
                                 ]"
                             >
@@ -71,7 +82,7 @@
                         <div class="mt-6 pt-6 border-t border-border text-left">
                             <div class="space-y-3">
                                 <div class="flex items-center gap-3">
-                                    <Icon icon="calendar" class="h-5 w-5 text-muted-foreground" />
+                                    <Icon icon="calendar" class="h-5 w-5 text-muted-foreground shrink-0" />
                                     <div>
                                         <p class="text-xs text-muted-foreground">Date of Birth</p>
                                         <p class="text-sm font-medium text-foreground">
@@ -80,7 +91,7 @@
                                     </div>
                                 </div>
                                 <div class="flex items-center gap-3">
-                                    <Icon icon="user" class="h-5 w-5 text-muted-foreground" />
+                                    <Icon icon="user" class="h-5 w-5 text-muted-foreground shrink-0" />
                                     <div>
                                         <p class="text-xs text-muted-foreground">Gender</p>
                                         <p class="text-sm font-medium text-foreground">
@@ -89,7 +100,7 @@
                                     </div>
                                 </div>
                                 <div v-if="student?.b_form" class="flex items-center gap-3">
-                                    <Icon icon="id-card" class="h-5 w-5 text-muted-foreground" />
+                                    <Icon icon="id-card" class="h-5 w-5 text-muted-foreground shrink-0" />
                                     <div>
                                         <p class="text-xs text-muted-foreground">B-Form</p>
                                         <p class="text-sm font-medium text-foreground">
@@ -98,7 +109,7 @@
                                     </div>
                                 </div>
                                 <div class="flex items-center gap-3">
-                                    <Icon icon="building" class="h-5 w-5 text-muted-foreground" />
+                                    <Icon icon="building" class="h-5 w-5 text-muted-foreground shrink-0" />
                                     <div>
                                         <p class="text-xs text-muted-foreground">Campus</p>
                                         <p class="text-sm font-medium text-foreground">
@@ -107,7 +118,7 @@
                                     </div>
                                 </div>
                                 <div class="flex items-center gap-3">
-                                    <Icon icon="book" class="h-5 w-5 text-muted-foreground" />
+                                    <Icon icon="book" class="h-5 w-5 text-muted-foreground shrink-0" />
                                     <div>
                                         <p class="text-xs text-muted-foreground">Class / Section</p>
                                         <p class="text-sm font-medium text-foreground">
@@ -116,7 +127,7 @@
                                     </div>
                                 </div>
                                 <div class="flex items-center gap-3">
-                                    <Icon icon="calendar" class="h-5 w-5 text-muted-foreground" />
+                                    <Icon icon="calendar" class="h-5 w-5 text-muted-foreground shrink-0" />
                                     <div>
                                         <p class="text-xs text-muted-foreground">Academic Session</p>
                                         <p class="text-sm font-medium text-foreground">
@@ -125,7 +136,7 @@
                                     </div>
                                 </div>
                                 <div class="flex items-center gap-3">
-                                    <Icon icon="dollar-sign" class="h-5 w-5 text-muted-foreground" />
+                                    <Icon icon="dollar-sign" class="h-5 w-5 text-muted-foreground shrink-0" />
                                     <div>
                                         <p class="text-xs text-muted-foreground">Monthly Fee</p>
                                         <p class="text-sm font-medium text-foreground">
@@ -134,7 +145,7 @@
                                     </div>
                                 </div>
                                 <div class="flex items-center gap-3">
-                                    <Icon icon="dollar-sign" class="h-5 w-5 text-muted-foreground" />
+                                    <Icon icon="dollar-sign" class="h-5 w-5 text-muted-foreground shrink-0" />
                                     <div>
                                         <p class="text-xs text-muted-foreground">Annual Fee</p>
                                         <p class="text-sm font-medium text-foreground">
@@ -143,11 +154,11 @@
                                     </div>
                                 </div>
                                 <div class="flex items-center gap-3">
-                                    <Icon icon="calendar" class="h-5 w-5 text-muted-foreground" />
+                                    <Icon icon="calendar" class="h-5 w-5 text-muted-foreground shrink-0" />
                                     <div>
                                         <p class="text-xs text-muted-foreground">Admission Date</p>
                                         <p class="text-sm font-medium text-foreground">
-                                            {{ formatDate(student?.admission_date) }}
+                                            {{ formatDate(currentEnrollment?.admission_date || student?.admission_date) }}
                                         </p>
                                     </div>
                                 </div>
@@ -240,6 +251,38 @@
                         </div>
                     </div>
 
+                    <!-- Enrollment History Card -->
+                    <div v-if="student?.enrollment_records?.length" class="bg-card rounded-lg border border-border p-6">
+                        <h3 class="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
+                            <Icon icon="history" class="h-5 w-5 text-primary" />
+                            Enrollment History
+                        </h3>
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-sm">
+                                <thead>
+                                    <tr class="text-left text-xs text-muted-foreground border-b border-border">
+                                        <th class="pb-2 pr-4 font-medium">Session</th>
+                                        <th class="pb-2 pr-4 font-medium">Class / Section</th>
+                                        <th class="pb-2 pr-4 font-medium">Admitted</th>
+                                        <th class="pb-2 font-medium">Left</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr
+                                        v-for="record in student.enrollment_records"
+                                        :key="record.id"
+                                        class="border-b border-border last:border-0"
+                                    >
+                                        <td class="py-2 pr-4 text-foreground">{{ record.session?.name || '-' }}</td>
+                                        <td class="py-2 pr-4 text-foreground">{{ record.class?.name || '-' }} - {{ record.section?.name || '-' }}</td>
+                                        <td class="py-2 pr-4 text-foreground">{{ formatDate(record.admission_date) }}</td>
+                                        <td class="py-2 text-foreground">{{ record.leave_date ? formatDate(record.leave_date) : '—' }}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
                     <!-- Description Card -->
                     <div v-if="student?.description" class="bg-card rounded-lg border border-border p-6">
                         <h3 class="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
@@ -273,7 +316,20 @@ interface GuardianData {
     cnic: string;
     pivot?: {
         relation_id: number;
+        is_primary?: boolean;
     };
+}
+
+interface EnrollmentRecord {
+    id: number;
+    campus?: { name: string } | null;
+    class?: { name: string } | null;
+    section?: { name: string } | null;
+    session?: { name: string } | null;
+    monthly_fee: number;
+    annual_fee: number;
+    admission_date: string | null;
+    leave_date: string | null;
 }
 
 interface Props {
@@ -284,10 +340,6 @@ interface Props {
         dob: string;
         gender_id: number;
         b_form: string;
-        campus_id: number;
-        session_id: number;
-        class_id: number;
-        section_id: number;
         student_status_id: number;
         admission_date: string;
         description: string;
@@ -296,44 +348,14 @@ interface Props {
         user?: {
             name: string;
         };
-        campus?: {
-            name: string;
-        };
-        class?: {
-            name: string;
-        };
-        section?: {
-            name: string;
-        };
         gender?: {
-            name: string;
-        };
-        session?: {
             name: string;
         };
         student_status?: {
             name: string;
         };
         guardians?: GuardianData[];
-        enrollment_records?: Array<{
-            id: number;
-            campus?: {
-                name: string;
-            };
-            class?: {
-                name: string;
-            };
-            section?: {
-                name: string;
-            };
-            session?: {
-                name: string;
-            };
-            monthly_fee: number;
-            annual_fee: number;
-            admission_date: string;
-            leave_date: string | null;
-        }>;
+        enrollment_records?: EnrollmentRecord[];
     };
     relations: Array<{
         id: number;
@@ -382,11 +404,11 @@ const formatCurrency = (amount: number | undefined | null): string => {
 const currentEnrollment = computed(() => {
     const records = props.student?.enrollment_records;
     if (!records || records.length === 0) return null;
-    
+
     // First try to find active enrollment (no leave_date)
     const activeEnrollment = records.find(r => r.leave_date === null);
     if (activeEnrollment) return activeEnrollment;
-    
+
     // Otherwise return most recent
     return records[0];
 });
@@ -395,10 +417,10 @@ const currentEnrollment = computed(() => {
 const getGuardianByRelation = (relationName: string): GuardianData | undefined => {
     const guardians = props.student?.guardians;
     if (!guardians) return undefined;
-    
+
     return guardians.find(g => {
         const relationId = g.pivot?.relation_id;
-        const relation = props.relations.find(r => r.id === relationId);
+        const relation = props.relations?.find(r => r.id === relationId);
         return relation?.name?.toLowerCase() === relationName;
     });
 };
@@ -407,10 +429,10 @@ const getGuardianByRelation = (relationName: string): GuardianData | undefined =
 const otherGuardian = computed(() => {
     const guardians = props.student?.guardians;
     if (!guardians) return undefined;
-    
+
     return guardians.find(g => {
         const relationId = g.pivot?.relation_id;
-        const relation = props.relations.find(r => r.id === relationId);
+        const relation = props.relations?.find(r => r.id === relationId);
         const relationName = relation?.name?.toLowerCase() || '';
         return relationName !== 'father' && relationName !== 'mother';
     });
@@ -419,7 +441,7 @@ const otherGuardian = computed(() => {
 // Get relation name for a guardian
 const getGuardianRelation = (guardian: GuardianData): string => {
     const relationId = guardian.pivot?.relation_id;
-    const relation = props.relations.find(r => r.id === relationId);
+    const relation = props.relations?.find(r => r.id === relationId);
     return relation?.name || '-';
 };
 </script>

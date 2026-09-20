@@ -260,8 +260,54 @@ class StudentService
             'enrollmentRecords.previousEnrollment',
         ]);
 
+        $lookupData = $this->repository->getLookupData();
+
+        $studentData = [
+            'id' => $student->id,
+            'admission_no' => $student->admission_no,
+            'registration_no' => $student->registration_no,
+            'student_code' => $student->student_code,
+            'dob' => $student->dob?->format('Y-m-d'),
+            'gender_id' => $student->gender_id,
+            'b_form' => $student->b_form,
+            'student_status_id' => $student->student_status_id,
+            'admission_date' => $student->admission_date?->format('Y-m-d'),
+            'description' => $student->description,
+            'image' => $student->image,
+            'image_url' => $student->image_url,
+            'user' => $student->user ? ['name' => $student->user->name] : null,
+            'gender' => $student->gender ? ['name' => $student->gender->name] : null,
+            'student_status' => $student->studentStatus ? ['name' => $student->studentStatus->name] : null,
+            'guardians' => $student->studentGuardians->map(fn ($studentGuardian) => [
+                'id' => $studentGuardian->guardian->id ?? 0,
+                'name' => $studentGuardian->guardian?->user?->name,
+                'phone' => $studentGuardian->guardian?->phone,
+                'email' => $studentGuardian->guardian?->user?->email,
+                'cnic' => $studentGuardian->guardian?->cnic,
+                'pivot' => [
+                    'relation_id' => $studentGuardian->relation_id,
+                    'is_primary' => $studentGuardian->is_primary,
+                ],
+            ])->values()->toArray(),
+            'enrollment_records' => $student->enrollmentRecords
+                ->sortByDesc('admission_date')
+                ->values()
+                ->map(fn ($enrollment) => [
+                    'id' => $enrollment->id,
+                    'campus' => $enrollment->campus ? ['name' => $enrollment->campus->name] : null,
+                    'class' => $enrollment->class ? ['name' => $enrollment->class->name] : null,
+                    'section' => $enrollment->section ? ['name' => $enrollment->section->name] : null,
+                    'session' => $enrollment->session ? ['name' => $enrollment->session->name] : null,
+                    'monthly_fee' => $enrollment->monthly_fee,
+                    'annual_fee' => $enrollment->annual_fee,
+                    'admission_date' => $enrollment->admission_date?->format('Y-m-d'),
+                    'leave_date' => $enrollment->leave_date?->format('Y-m-d'),
+                ])->toArray(),
+        ];
+
         return [
-            'student' => $student,
+            'student' => $studentData,
+            'relations' => $lookupData['relations'],
         ];
     }
 

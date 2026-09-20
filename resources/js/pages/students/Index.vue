@@ -115,6 +115,15 @@
                         </svg>
                     </button>
                 </div>
+                <Button
+                    variant="outline"
+                    :disabled="!filters.class_id"
+                    :title="!filters.class_id ? 'Select a class to enable bulk ID card generation' : undefined"
+                    @click="printBulkIdCards"
+                >
+                    <Icon icon="id-card" class="mr-1" />
+                    Bulk ID Cards
+                </Button>
             </div>
 
             <!-- Mobile Card View -->
@@ -502,6 +511,20 @@ const printStudent = (student: { id: number; registration_no: string }) => {
 /** The child's ID card. The photograph has been stored since admission. */
 const printIdCard = (student: { id: number }) => {
     window.open(`${route('students.id-cards')}?student_ids[]=${student.id}`, '_blank');
+};
+
+/**
+ * ID cards for a whole class (and section, if one is also selected) at once —
+ * the same filters already on this page, sent straight to the print view.
+ */
+const printBulkIdCards = () => {
+    if (!filters.class_id) return;
+
+    const params = new URLSearchParams();
+    params.append('class_id', filters.class_id);
+    if (filters.section_id) params.append('section_id', filters.section_id);
+
+    window.open(`${route('students.id-cards')}?${params.toString()}`, '_blank');
 };
 
 /**
