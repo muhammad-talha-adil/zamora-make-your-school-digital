@@ -176,7 +176,7 @@ const setAsDefault = (id: number) => {
 
 // Set as active
 const setAsActive = (id: number) => {
-  alert.confirm('Set this grade system as active?', 'Set Active')
+  alert.confirm('Set this grade system as active?', 'Set Active', 'Yes, activate it!')
     .then((result) => {
       if (result.isConfirmed) {
         loading.value = true
