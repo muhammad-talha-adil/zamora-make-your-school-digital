@@ -16,6 +16,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
 import ComboboxInput from '@/components/ui/combobox/ComboboxInput.vue';
 import Icon from '@/components/Icon.vue';
 import RowAction from '@/components/tables/RowAction.vue';
@@ -260,16 +261,21 @@ const handleCampusTypeSaved = (campusType: { id: number; name: string } | undefi
                                      class="h-11"
                                  />
                                  </div>
-                                 <Button
-                                     type="button"
-                                     variant="outline"
-                                     size="icon"
-                                     @click="openCampusTypeModal"
-                                     title="Manage Campus Types"
-                                     class="h-11 w-11"
-                                 >
-                                     <Icon icon="settings" class="h-4 w-4" />
-                                 </Button>
+                                 <Tooltip>
+                                     <TooltipTrigger as-child>
+                                         <Button
+                                             type="button"
+                                             variant="outline"
+                                             size="icon"
+                                             @click="openCampusTypeModal"
+                                             aria-label="Manage Campus Types"
+                                             class="h-11 w-11"
+                                         >
+                                             <Icon icon="settings" class="h-4 w-4" />
+                                         </Button>
+                                     </TooltipTrigger>
+                                     <TooltipContent>Manage Campus Types</TooltipContent>
+                                 </Tooltip>
                              </div>
                              <InputError :message="errors.campus_type_id" />
                          </div>
