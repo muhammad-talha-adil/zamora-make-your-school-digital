@@ -298,6 +298,22 @@
                             <InputError :message="errors.section_id" />
                         </div>
 
+                        <!-- Roll Number -->
+                        <div class="space-y-2">
+                            <Label for="roll_number">Class Roll Number</Label>
+                            <Input
+                                id="roll_number"
+                                v-model="form.roll_number"
+                                type="number"
+                                min="1"
+                                class="h-11"
+                                :class="{ 'border-destructive': errors.roll_number }"
+                                :placeholder="rollNumberLoading ? 'Suggesting…' : 'Auto-suggested next roll number'"
+                            />
+                            <p class="text-xs text-muted-foreground">Auto-suggested from the class; you can change it.</p>
+                            <InputError :message="errors.roll_number" />
+                        </div>
+
                         <!-- Status - READ-ONLY FOR NEW ADMISSION -->
                         <div class="space-y-2">
                             <Label for="student_status_id"
@@ -456,13 +472,12 @@
                                     placeholder="0321-1234567"
                                     maxlength="12"
                                     @input="onFatherPhoneInput"
-                                    :disabled="guardianLookupLoading"
                                     :class="{
                                         'border-destructive': errors.father_phone,
                                     }"
                                     required
                                 />
-                                <!-- Loading spinner -->
+                                <!-- Loading spinner: indicates the sibling lookup only, never blocks typing -->
                                 <Icon
                                     v-if="guardianLookupLoading"
                                     icon="loader"
@@ -786,6 +801,7 @@ const {
     fatherRelationId,
     otherRelations,
     campuses,
+    rollNumberLoading,
     showSectionField,
     showOtherGuardianSection,
     includeOtherGuardian,
@@ -867,6 +883,7 @@ const setupErrorClearWatchers = () => {
     watch(() => form.value.session_id, () => { if (errors.value.session_id) delete errors.value.session_id; });
     watch(() => form.value.class_id, () => { if (errors.value.class_id) delete errors.value.class_id; });
     watch(() => form.value.section_id, () => { if (errors.value.section_id) delete errors.value.section_id; });
+    watch(() => form.value.roll_number, () => { if (errors.value.roll_number) delete errors.value.roll_number; });
     watch(() => form.value.student_status_id, () => { if (errors.value.student_status_id) delete errors.value.student_status_id; });
     watch(() => form.value.monthly_fee, () => { if (errors.value.monthly_fee) delete errors.value.monthly_fee; });
     watch(() => form.value.annual_fee, () => { if (errors.value.annual_fee) delete errors.value.annual_fee; });
@@ -1084,6 +1101,14 @@ const submitForm = () => {
         formData.set(
             'section_id',
             String(parseInt(form.value.section_id.toString()) || 0),
+        );
+    }
+
+    // Roll number is optional but, when set, must be a whole number.
+    if (form.value.roll_number !== '' && form.value.roll_number !== null) {
+        formData.set(
+            'roll_number',
+            String(parseInt(form.value.roll_number.toString()) || ''),
         );
     }
     formData.set(

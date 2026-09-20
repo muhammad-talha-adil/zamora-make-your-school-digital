@@ -519,13 +519,13 @@ const admitEnquiry = async (enquiry: EnquiryRow) => {
 
         <!-- New / Edit Enquiry Dialog -->
         <Dialog v-model:open="showFormDialog">
-            <DialogContent class="sm:max-w-2xl">
+            <DialogContent class="sm:max-w-4xl lg:max-w-5xl">
                 <DialogHeader>
                     <DialogTitle>{{ isEditing ? 'Edit Enquiry' : 'New Enquiry' }}</DialogTitle>
                 </DialogHeader>
 
                 <form @submit.prevent="submitEnquiryForm" class="space-y-4">
-                    <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+                    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
                         <div class="space-y-2">
                             <Label for="student_name">Child's Name <span class="text-destructive">*</span></Label>
                             <Input id="student_name" v-model="enquiryForm.student_name" type="text" placeholder="Enter child's name" required />
