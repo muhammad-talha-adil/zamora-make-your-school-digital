@@ -235,8 +235,8 @@ Dedupe karke ek-ek line item, lekin har jagah ke original numbers cite kiye hain
 | [#50](ISSUES-RAW.md#issue-50) | Copyright footer should reflect current school name automatically. |
 | [#51](ISSUES-RAW.md#issue-51) | Show a preview of newly-selected logo file before saving. |
 | [#1](ISSUES-RAW.md#issue-1) | Favicon should update immediately when logo changes (browser tab, duplicate of #49's root cause — same fix). |
-| [#17](ISSUES-RAW.md#issue-17) | Activity Log should capture every meaningful action (logins, enquiries added, etc.), not just current sparse coverage. |
-| [#14](ISSUES-RAW.md#issue-14) | Activity Log page needs to become genuinely user-friendly (more/better columns) rather than developer-only raw data. |
+| ✅ [#17](ISSUES-RAW.md#issue-17) | Activity Log should capture every meaningful action (logins, enquiries added, etc.), not just current sparse coverage. |
+| ✅ [#14](ISSUES-RAW.md#issue-14) | Activity Log page needs to become genuinely user-friendly (more/better columns) rather than developer-only raw data. |
 
 ### P4 — Needs an Explicit Product Decision Before Any Code Is Touched
 
