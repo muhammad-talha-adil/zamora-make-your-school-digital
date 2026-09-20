@@ -34,6 +34,9 @@ Route::prefix('attendance')->name('attendance.')->middleware(['auth', 'verified'
     // Dashboard route - before index to avoid conflicts
     Route::get('/dashboard', [AttendanceController::class, 'dashboard'])->name('dashboard');
 
+    // Merged Attendance List / Mark Attendance / Student Reports / Leave page (#108)
+    Route::get('/hub', [AttendanceController::class, 'hub'])->name('hub');
+
     // Main routes
     Route::get('/', [AttendanceController::class, 'index'])->name('index');
     Route::get('/create', [AttendanceController::class, 'create'])->name('create');

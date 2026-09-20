@@ -206,63 +206,21 @@ class MenuSeeder extends Seeder
         ]);
 
         // ==================== ATTENDANCE MENU ====================
-        $attendance = Menu::create([
+        // Merged into the Students sub-menu (#108): Attendance List, Mark
+        // Attendance, Student Reports and Leave are now tabs on one page
+        // (attendance/Hub.vue) rather than five separate menu entries under
+        // their own top-level "Attendance" heading. Attendance Settings is
+        // reachable from the School Setting hub (#101) instead of staying
+        // here as a sixth entry.
+        Menu::create([
             'title' => 'Attendance',
             'icon' => 'calendar-check',
             'type' => 'main',
-            'order' => 4,
-            'is_active' => true,
-        ]);
-
-        // Attendance child menus
-        Menu::create([
-            'title' => 'Attendance List',
-            'icon' => 'list',
-            'type' => 'main',
-            'order' => 1,
-            'parent_id' => $attendance->id,
-            'is_active' => true,
-            'url' => '/attendance',
-        ]);
-
-        Menu::create([
-            'title' => 'Mark Attendance',
-            'icon' => 'check-circle',
-            'type' => 'main',
-            'order' => 2,
-            'parent_id' => $attendance->id,
-            'is_active' => true,
-            'url' => '/attendance/create',
-        ]);
-
-        Menu::create([
-            'title' => 'Student Reports',
-            'icon' => 'file-bar-chart',
-            'type' => 'main',
-            'order' => 3,
-            'parent_id' => $attendance->id,
-            'is_active' => true,
-            'url' => '/attendance/class/report',
-        ]);
-
-        Menu::create([
-            'title' => 'Student Leaves',
-            'icon' => 'calendar-off',
-            'type' => 'main',
-            'order' => 4,
-            'parent_id' => $attendance->id,
-            'is_active' => true,
-            'url' => '/student-leaves/page',
-        ]);
-
-        Menu::create([
-            'title' => 'Settings',
-            'icon' => 'settings',
-            'type' => 'main',
             'order' => 5,
-            'parent_id' => $attendance->id,
+            'parent_id' => $students->id,
             'is_active' => true,
-            'url' => '/attendance/settings',
+            'url' => '/attendance/hub',
+            'role' => 'developer,owner,super_admin,campus_admin,teacher,head_teacher,accountant,clerk,receptionist',
         ]);
 
         // ==================== FEE MENU ====================
@@ -755,6 +713,19 @@ class MenuSeeder extends Seeder
             'url' => '/settings/school-profile',
         ]);
 
+        // School Setting hub (#101): one central page linking out to every
+        // module's own settings screen, alongside the individual School
+        // Profile entry above (kept for anyone used to it).
+        Menu::create([
+            'title' => 'School Setting',
+            'icon' => 'settings-2',
+            'type' => 'footer',
+            'order' => 4,
+            'parent_id' => $settings->id,
+            'is_active' => true,
+            'url' => '/settings/school-hub',
+        ]);
+
         // Developer-only: sidebar/menu structure is system-level configuration,
         // kept out of even the owner's reach (see routes/settings.php).
         Menu::create([
@@ -762,7 +733,7 @@ class MenuSeeder extends Seeder
             'icon' => 'cog',
             'type' => 'footer',
             'role' => 'developer',
-            'order' => 4,
+            'order' => 5,
             'parent_id' => $settings->id,
             'is_active' => true,
             'url' => '/settings/menu-settings',
@@ -776,7 +747,7 @@ class MenuSeeder extends Seeder
             'icon' => 'history',
             'type' => 'footer',
             'role' => 'owner,developer',
-            'order' => 5,
+            'order' => 6,
             'parent_id' => $settings->id,
             'is_active' => true,
             'url' => '/settings/activity-log',

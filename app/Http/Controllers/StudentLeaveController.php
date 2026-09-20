@@ -33,6 +33,17 @@ class StudentLeaveController extends Controller
      */
     public function page(Request $request): InertiaResponse
     {
+        return Inertia::render('attendance/StudentLeaves/Index', $this->pageData($request));
+    }
+
+    /**
+     * The Leave tab's data — shared by its own route and the merged
+     * Attendance/Leave hub (#108).
+     *
+     * @return array<string, mixed>
+     */
+    public function pageData(Request $request): array
+    {
         $user = $request->user();
 
         $canViewPending = $user->hasPermission('attendance.view') || $user->isSuperAdmin();
@@ -47,7 +58,7 @@ class StudentLeaveController extends Controller
                 ->get(['id', 'user_id', 'registration_no'])
             : $this->ownStudents($user);
 
-        return Inertia::render('attendance/StudentLeaves/Index', [
+        return [
             'leaveTypes' => LeaveType::active()->orderBy('name')->get(['id', 'name']),
             'students' => $students->map(fn (Student $student) => [
                 'id' => $student->id,
@@ -57,7 +68,7 @@ class StudentLeaveController extends Controller
             'canViewPending' => $canViewPending,
             'canDecide' => $canDecide,
             'defaultStudentId' => $canViewPending ? null : $students->first()?->id,
-        ]);
+        ];
     }
 
     /**

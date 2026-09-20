@@ -11,6 +11,7 @@ use App\Http\Controllers\Settings\PasswordController;
 use App\Http\Controllers\Settings\ProfileController;
 use App\Http\Controllers\Settings\SchoolClassController;
 use App\Http\Controllers\Settings\SchoolController;
+use App\Http\Controllers\Settings\SchoolHubController;
 use App\Http\Controllers\Settings\SectionController;
 use App\Http\Controllers\Settings\SessionController;
 use App\Http\Controllers\Settings\SubjectController;
@@ -51,6 +52,10 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // ActivityLogController::authorizeUser() as defense-in-depth)
     Route::get('settings/activity-log', [ActivityLogController::class, 'index'])->name('activity-log.index')
         ->middleware('role.only:owner|developer');
+
+    // School Setting hub (#101) — one central page linking out to each
+    // module's own settings screen.
+    Route::get('settings/school-hub', [SchoolHubController::class, 'index'])->name('school-hub.index');
 
     // School Profile Routes
     Route::get('settings/school-profile', [SchoolController::class, 'show'])->name('school-profile.show');

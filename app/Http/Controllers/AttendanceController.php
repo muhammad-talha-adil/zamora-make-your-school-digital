@@ -31,6 +31,7 @@ use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -43,7 +44,29 @@ class AttendanceController extends Controller
         protected AbsenceAlertService $absenceAlerts,
         protected WorkingDayCalculator $workingDays,
         protected LateArrivalResolver $lateArrivals,
+        protected StudentLeaveController $studentLeaves,
     ) {}
+
+    /**
+     * The merged Attendance List / Mark Attendance / Student Reports / Leave
+     * page (#108) — one Inertia response gathering each tab's own data, kept
+     * mounted with `v-show` so switching tabs never loses in-progress state.
+     * Each tab is only included when the caller may see it, the same gating
+     * `FeeSettingsController::index()` uses for its own tabs.
+     */
+    public function hub(Request $request): Response
+    {
+        $canViewList = Gate::check('viewAny', Attendance::class);
+        $canMark = Gate::check('create', Attendance::class);
+        $canViewReports = Gate::check('viewReports', Attendance::class);
+
+        return Inertia::render('attendance/Hub', [
+            'listData' => $canViewList ? $this->indexData($request) : null,
+            'createData' => $canMark ? $this->createData($request) : null,
+            'classReportData' => $canViewReports ? $this->classReportData($request) : null,
+            'leaveData' => $this->studentLeaves->pageData($request),
+        ]);
+    }
 
     /**
      * Display a listing of attendance records.
@@ -52,6 +75,17 @@ class AttendanceController extends Controller
     {
         $this->authorize('viewAny', Attendance::class);
 
+        return Inertia::render('attendance/Index', $this->indexData($request));
+    }
+
+    /**
+     * The Attendance List tab's data — shared by its own route and the
+     * merged Attendance/Leave hub (#108).
+     *
+     * @return array<string, mixed>
+     */
+    private function indexData(Request $request): array
+    {
         $query = Attendance::with(['campus', 'session', 'class', 'section', 'takenBy'])
             ->visibleTo($request->user());
 
@@ -91,7 +125,7 @@ class AttendanceController extends Controller
         $sections = Section::orderBy('name')->get(['id', 'name', 'class_id']);
         $attendanceStatuses = AttendanceStatus::orderBy('name')->get(['id', 'name', 'code']);
 
-        return Inertia::render('attendance/Index', [
+        return [
             'attendances' => $attendances,
             'campuses' => $campuses,
             'sessions' => $sessions,
@@ -99,7 +133,7 @@ class AttendanceController extends Controller
             'sections' => $sections,
             'attendanceStatuses' => $attendanceStatuses,
             'filters' => $request->only(['campus_id', 'session_id', 'class_id', 'section_id', 'date', 'locked']),
-        ]);
+        ];
     }
 
     /**
@@ -281,6 +315,17 @@ class AttendanceController extends Controller
     {
         $this->authorize('create', Attendance::class);
 
+        return Inertia::render('attendance/Create', $this->createData($request));
+    }
+
+    /**
+     * The Mark Attendance tab's data — shared by its own route and the
+     * merged Attendance/Leave hub (#108).
+     *
+     * @return array<string, mixed>
+     */
+    private function createData(Request $request): array
+    {
         $campuses = Campus::orderBy('name')->get(['id', 'name']);
         $sessions = Session::where('is_active', true)->orderBy('name')->get(['id', 'name']);
         $classes = SchoolClass::orderBy('id', 'asc')->get(['id', 'name']);
@@ -324,7 +369,7 @@ class AttendanceController extends Controller
             ? $this->lateArrivals->timingFor($selectedCampusId, $selectedDate, $selectedSessionId, (int) $selectedClassId)
             : null;
 
-        return Inertia::render('attendance/Create', [
+        return [
             'campuses' => $campuses,
             'sessions' => $sessions,
             'classes' => $classes,
@@ -353,7 +398,7 @@ class AttendanceController extends Controller
                 'break_ends_at' => $shiftTiming->break_ends_at ? substr((string) $shiftTiming->break_ends_at, 0, 5) : null,
                 'name' => $shiftTiming->name,
             ] : null,
-        ]);
+        ];
     }
 
     /**
@@ -1009,6 +1054,17 @@ class AttendanceController extends Controller
          * permission says they may run a report; this says on whom — the same
          * separation the policy makes for a register.
          */
+        return Inertia::render('attendance/ClassReport', $this->classReportData($request));
+    }
+
+    /**
+     * The Student Reports (class report) tab's data — shared by its own
+     * route and the merged Attendance/Leave hub (#108).
+     *
+     * @return array<string, mixed>
+     */
+    private function classReportData(Request $request): array
+    {
         $this->assertMayReportOn($request->user(), $request->class_id, $request->section_id);
 
         $classes = $this->reportableClasses($request->user());
@@ -1023,7 +1079,7 @@ class AttendanceController extends Controller
 
         // If no class_id provided, show empty report form
         if (! $request->filled('class_id')) {
-            return Inertia::render('attendance/ClassReport', [
+            return [
                 'class' => null,
                 'sections' => [],
                 'summary' => [],
@@ -1034,7 +1090,7 @@ class AttendanceController extends Controller
                 'classes' => $classes,
                 'selectedClassId' => null,
                 'selectedSectionId' => null,
-            ]);
+            ];
         }
 
         // Validate required parameters
@@ -1148,7 +1204,7 @@ class AttendanceController extends Controller
             ];
         });
 
-        return Inertia::render('attendance/ClassReport', [
+        return [
             'class' => $class,
             'sections' => $sections,
             'summary' => $summary,
@@ -1159,7 +1215,7 @@ class AttendanceController extends Controller
             'classes' => $classes,
             'selectedClassId' => $request->class_id,
             'selectedSectionId' => $request->section_id,
-        ]);
+        ];
     }
 
     /**
