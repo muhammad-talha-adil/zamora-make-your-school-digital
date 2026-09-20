@@ -214,16 +214,16 @@ Dedupe karke ek-ek line item, lekin har jagah ke original numbers cite kiye hain
 | [#116](ISSUES-RAW.md#issue-116) | Add a "Pay" button directly on the Vouchers list for direct payment. |
 | [#22, #76](ISSUES-RAW.md#issue-22) | Enforce single-active-session and single-active-exam-system-wide, with optional cron job to auto-switch sessions on start/end dates. |
 | [#38](ISSUES-RAW.md#issue-38) | Inline "Add Fee Head" via modal directly from Fee Structure create screen, auto-populating the dropdown without page reload. |
-| [#25](ISSUES-RAW.md#issue-25) | Add Session: constrain calendar pickers to selected start/end year; searchable year dropdowns (2000–current, current+1). |
-| [#26](ISSUES-RAW.md#issue-26) | Class/Section selection UX for "Assign Subjects to Class Sections" (visual state cues, enable/disable Load Subjects button). |
+| ✅ [#25](ISSUES-RAW.md#issue-25) | Add Session: constrain calendar pickers to selected start/end year; searchable year dropdowns (2000–current, current+1). |
+| ✅ [#26](ISSUES-RAW.md#issue-26) | Class/Section selection UX for "Assign Subjects to Class Sections" (visual state cues, enable/disable Load Subjects button). |
 | ✅ [#27](ISSUES-RAW.md#issue-27) | New Enquiry — convert modal to full page (or well-structured grid modal) with 4-columns-per-row responsive layout; fix Father phone number field bug in Student create. |
 | ✅ [#37](ISSUES-RAW.md#issue-37) | Fee Structure create via query params should auto-select campus/class/section/session inputs. |
-| [#59](ISSUES-RAW.md#issue-59) | Auto-generate Session Name from Start Year + End Year instead of manual duplicate entry. |
+| ✅ [#59](ISSUES-RAW.md#issue-59) | Auto-generate Session Name from Start Year + End Year instead of manual duplicate entry. |
 | [#63](ISSUES-RAW.md#issue-63) | Fine Rules settings page UI cleanup — currently too bulky. |
-| [#83](ISSUES-RAW.md#issue-83) | Default global paper start/end time to 9am–12pm. |
+| ✅ [#83](ISSUES-RAW.md#issue-83) | Default global paper start/end time to 9am–12pm. |
 | [#84](ISSUES-RAW.md#issue-84) | Paper timing/dates set from Papers create should reflect on the relevant class's student & teacher portals. |
-| [#85](ISSUES-RAW.md#issue-85) | Auto-suggest next class roll number on admission (editable, no repeats). |
-| [#86](ISSUES-RAW.md#issue-86) | Bulk "Save Papers" button on Papers create should work properly. |
+| ✅ [#85](ISSUES-RAW.md#issue-85) | Auto-suggest next class roll number on admission (editable, no repeats). |
+| ✅ [#86](ISSUES-RAW.md#issue-86) | Bulk "Save Papers" button on Papers create should work properly. |
 | [#91](ISSUES-RAW.md#issue-91) | Grace marks system — clarify/build where missing in Marking. |
 | [#109, #110](ISSUES-RAW.md#issue-109) | Voucher generate page — months UI not responsive, needs a full dedicated test pass. |
 | [#120](ISSUES-RAW.md#issue-120) | Fee Payments create — "Pay Amount" column purpose unclear + Voucher Dues table not responsive (columns/rows misaligned). |
