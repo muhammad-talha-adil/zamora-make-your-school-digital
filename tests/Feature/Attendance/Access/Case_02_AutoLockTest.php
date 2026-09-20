@@ -7,8 +7,9 @@
  * stayed editable for ever — and a register that can still be changed a year
  * later is not a record of anything.
  *
- * Each campus sets its own window, and zero — the default — closes nothing, so
- * a school that has not asked for this sees no change at all.
+ * Each campus sets its own window. One day — the default — locks a register
+ * the day after it was taken; a campus that wants registers to stay open
+ * longer (or forever) can set a bigger window, or zero to opt out entirely.
  */
 
 use App\Models\Attendance;
@@ -34,7 +35,16 @@ function lockWindow(AttendanceWorld $world, int $days): AttendancePolicy
     );
 }
 
-it('closes nothing when no window is set', function () {
+it('closes a stale register by default when no policy is set', function () {
+    $this->world->register('2026-01-01');
+
+    $this->artisan('attendance:lock-settled')->assertSuccessful();
+
+    expect(Attendance::firstOrFail()->is_locked)->toBeTrue();
+});
+
+it('closes nothing when a campus opts out with a zero window', function () {
+    lockWindow($this->world, 0);
     $this->world->register('2026-01-01');
 
     $this->artisan('attendance:lock-settled')->assertSuccessful();

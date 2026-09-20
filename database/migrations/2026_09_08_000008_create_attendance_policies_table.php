@@ -48,9 +48,10 @@ return new class extends Migration
             // `attendance_absence_alerts`.
             $table->boolean('absence_alert_enabled')->default(false);
 
-            // Closes a register by itself once the month has settled. Zero, the
-            // default, keeps a register editable until a person locks it.
-            $table->unsignedSmallInteger('lock_after_days')->default(0);
+            // Closes a register by itself the given number of days after it was
+            // taken. One, the default, locks it the next day; zero keeps it
+            // editable until a person locks it by hand.
+            $table->unsignedSmallInteger('lock_after_days')->default(1);
 
             // Charging for repeated late arrival — where a school does that. Off
             // by default and stays off until a campus turns it on.

@@ -35,7 +35,7 @@ class AttendancePolicy extends Model
 
     protected $attributes = [
         'absence_alert_enabled' => false,
-        'lock_after_days' => 0,
+        'lock_after_days' => 1,
         'late_fine_enabled' => false,
         'late_fine_grace_count' => 3,
         'late_fine_amount' => 0,
@@ -57,8 +57,9 @@ class AttendancePolicy extends Model
     /**
      * Whether a register taken on this date is old enough to close itself.
      *
-     * Zero — the default — never closes anything, which is how the module
-     * behaved before this setting existed.
+     * One day — the default — locks a register the day after it was taken.
+     * Zero turns auto-lock off entirely (how the module behaved before this
+     * setting existed), which a campus can still choose.
      */
     public function shouldAutoLock(Carbon $registerDate, ?Carbon $asOf = null): bool
     {

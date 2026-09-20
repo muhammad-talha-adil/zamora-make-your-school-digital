@@ -149,6 +149,8 @@ class RolesSeeder extends Seeder
                     // destructive actions stay above this level
                     '-students.delete', '-exam.delete', '-fee.voucher.delete',
                     '-inventory.purchase.delete', '-staff.delete',
+                    // reopening a closed attendance register stays owner-only
+                    '-attendance.unlock',
                 ],
             ],
 
