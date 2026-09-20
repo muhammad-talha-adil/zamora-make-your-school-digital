@@ -100,11 +100,11 @@ it('rejects a fee structure id that does not exist', function () {
     ]))->assertSessionHasErrors('fee_structure_id');
 });
 
-it('allows an admission with no fee structure at all', function () {
-    $this->post(route('students.store'), $this->world->payload())
-        ->assertSessionHasNoErrors();
+it('rejects an admission with no fee structure at all', function () {
+    $this->post(route('students.store'), $this->world->payload(['fee_structure_id' => null, 'fee_mode' => null]))
+        ->assertSessionHasErrors('fee_structure_id');
 
-    expect(StudentEnrollmentRecord::firstOrFail()->fee_structure_id)->toBeNull();
+    expect(Student::count())->toBe(0);
 });
 
 it('rejects a fee mode outside the allowed set', function () {

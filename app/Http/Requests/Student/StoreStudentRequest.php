@@ -174,9 +174,11 @@ class StoreStudentRequest extends FormRequest
                 'decimal:0,2',
             ],
 
-            // NEW: Fee Structure Integration Fields
+            // Fee Structure Integration Fields
+            // Every admission must be tied to a fee structure — an
+            // enrollment with no structure silently skips billing.
             'fee_structure_id' => [
-                'nullable',
+                'required',
                 'integer',
                 Rule::exists('fee_structures', 'id'),
             ],

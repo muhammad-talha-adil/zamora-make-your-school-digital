@@ -3,6 +3,7 @@
         <h2 class="mb-4 flex items-center gap-2 text-lg font-semibold text-foreground">
             <Icon icon="credit-card" class="h-5 w-5 text-primary" />
             Fee Structure
+            <span class="text-destructive">*</span>
         </h2>
 
         <!-- No Class Selected Yet -->

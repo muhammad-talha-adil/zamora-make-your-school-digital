@@ -1153,6 +1153,15 @@ const submitForm = () => {
 
     // ==================== FEE STRUCTURE DATA ====================
     const feeStructureRef = feeStructureSelector.value;
+
+    // Every admission must be tied to a fee structure — an admission that
+    // skips this silently drops the child from every future fee run.
+    if (!feeStructureRef?.feeStructure) {
+        processing.value = false;
+        alert.error('Please select a fee structure before admitting the student.');
+        return;
+    }
+
     if (feeStructureRef?.feeStructure) {
         const feeValidationMessage = feeStructureRef.validateActiveMode?.();
         if (feeValidationMessage) {

@@ -71,6 +71,9 @@ class AdmissionWorld
 
     private int $payloadCounter = 0;
 
+    /** @var array<string, FeeStructure> */
+    private array $memoizedDefaultFeeStructures = [];
+
     public function __construct()
     {
         $this->seedAcademicStructure();
@@ -444,6 +447,39 @@ class AdmissionWorld
     }
 
     /**
+     * The fee structure `payload()` attaches by default so every admission
+     * test satisfies the now-required `fee_structure_id` without needing to
+     * build one itself. Keyed by campus/session/class so a test that
+     * overrides one of those still gets a structure that actually matches
+     * it, and memoized per combination so repeated payload() calls reuse
+     * the same structure instead of creating a new one each time.
+     */
+    private function defaultFeeStructure(int $campusId, int $sessionId, int $classId): ?FeeStructure
+    {
+        $key = "{$campusId}:{$sessionId}:{$classId}";
+
+        if (isset($this->memoizedDefaultFeeStructures[$key])) {
+            return $this->memoizedDefaultFeeStructures[$key];
+        }
+
+        // A test deliberately passing a bogus campus/session/class id (to
+        // prove that field is rejected) has nothing valid to build a
+        // matching structure against — leave fee_structure_id unset rather
+        // than blow up on a foreign key violation before the request is
+        // even sent.
+        try {
+            return $this->memoizedDefaultFeeStructures[$key] = $this->feeStructure([
+                'campus_id' => $campusId,
+                'session_id' => $sessionId,
+                'class_id' => $classId,
+                'is_default' => false,
+            ]);
+        } catch (\Throwable) {
+            return null;
+        }
+    }
+
+    /**
      * A payload that passes validation.
      *
      * Tests override only the keys they are exercising; passing null for a key
@@ -478,6 +514,16 @@ class AdmissionWorld
             'father_occupation' => 'Engineer',
             'father_address' => 'Model Town, Lahore',
         ];
+
+        // Every admission must carry a fee structure. Built to match
+        // whichever campus/session/class this payload ends up with, so a
+        // test overriding one of those still gets a structure that fits it.
+        // A test exercising fee-structure validation itself passes its own.
+        $payload['fee_structure_id'] = $this->defaultFeeStructure(
+            $overrides['campus_id'] ?? $payload['campus_id'],
+            $overrides['session_id'] ?? $payload['session_id'],
+            $overrides['class_id'] ?? $payload['class_id'],
+        )?->id;
 
         foreach ($overrides as $key => $value) {
             if ($value === null && ! array_key_exists($key, $overrides)) {
