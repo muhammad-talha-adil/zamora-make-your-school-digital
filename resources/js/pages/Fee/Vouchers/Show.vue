@@ -36,6 +36,8 @@ interface FeeVoucher {
         discount_amount: number;
         fine_amount: number;
         net_amount: number;
+        source_module: string | null;
+        student_account_charge: { id: number; source_module: string | null; charge_category: string | null; title: string | null } | null;
     }>;
     payments: Array<{
         id: number;
@@ -66,10 +68,20 @@ interface CohortVoucher {
     due_date: string;
 }
 
+interface OtherVoucher {
+    id: number;
+    voucher_no: string;
+    voucher_month: { id: number; name: string } | null;
+    status: string;
+    net_amount: number;
+    balance_amount: number;
+}
+
 interface Props {
     voucher: FeeVoucher;
     cohortSummary: CohortSummary;
     cohortVouchers: CohortVoucher[];
+    otherVouchers: OtherVoucher[];
 }
 
 const props = defineProps<Props>();
@@ -107,6 +119,14 @@ const getStatusCountClass = (tone: 'green' | 'blue' | 'yellow' | 'red' | 'gray')
     };
 
     return tones[tone];
+};
+
+const sourceModuleLabel = (item: FeeVoucher['items'][number]) => {
+    const source = item.source_module ?? item.student_account_charge?.source_module;
+    if (!source || source.toLowerCase() === 'fee') {
+        return null;
+    }
+    return source.charAt(0).toUpperCase() + source.slice(1);
 };
 
 const handleCancel = () => {
@@ -224,7 +244,15 @@ const handleCancel = () => {
                                             {{ index + 1 }}
                                         </td>
                                         <td class="px-2 md:px-4 py-3">
-                                            <div class="font-medium text-sm">{{ item.fee_head?.name }}</div>
+                                            <div class="flex items-center gap-2">
+                                                <span class="font-medium text-sm">{{ item.fee_head?.name }}</span>
+                                                <span
+                                                    v-if="sourceModuleLabel(item)"
+                                                    class="px-2 py-0.5 text-xs font-medium rounded-full bg-primary/10 text-primary"
+                                                >
+                                                    {{ sourceModuleLabel(item) }}
+                                                </span>
+                                            </div>
                                             <div class="text-xs text-muted-foreground">{{ item.description }}</div>
                                         </td>
                                         <td class="px-2 md:px-4 py-3 text-right text-sm">{{ formatCurrency(item.amount) }}</td>
@@ -390,6 +418,45 @@ const handleCancel = () => {
                             </Button>
                         </div>
                     </div>
+                </div>
+            </div>
+
+            <div v-if="otherVouchers.length > 0" class="bg-card rounded-lg border border-border overflow-hidden">
+                <div class="px-4 md:px-6 py-4 border-b border-border">
+                    <h2 class="text-lg font-semibold">Other Vouchers for this Student</h2>
+                </div>
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-border">
+                        <thead class="bg-muted">
+                            <tr>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Voucher</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Month</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Status</th>
+                                <th class="px-4 py-3 text-right text-xs font-semibold text-muted-foreground uppercase">Net</th>
+                                <th class="px-4 py-3 text-right text-xs font-semibold text-muted-foreground uppercase">Balance</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-border bg-card">
+                            <tr
+                                v-for="other in otherVouchers"
+                                :key="other.id"
+                                class="hover:bg-accent cursor-pointer"
+                                @click="router.visit(route('fee.vouchers.show', other.id))"
+                            >
+                                <td class="px-4 py-3 text-sm font-medium text-primary">{{ other.voucher_no }}</td>
+                                <td class="px-4 py-3 text-sm text-muted-foreground">{{ other.voucher_month?.name }}</td>
+                                <td class="px-4 py-3">
+                                    <span :class="['px-2 py-1 text-xs font-medium rounded-full', getStatusColor(other.status)]">
+                                        {{ other.status }}
+                                    </span>
+                                </td>
+                                <td class="px-4 py-3 text-right text-sm text-muted-foreground">{{ formatCurrency(other.net_amount) }}</td>
+                                <td class="px-4 py-3 text-right text-sm font-medium" :class="other.balance_amount > 0 ? 'text-destructive' : 'text-foreground'">
+                                    {{ formatCurrency(other.balance_amount) }}
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
                 </div>
             </div>
 

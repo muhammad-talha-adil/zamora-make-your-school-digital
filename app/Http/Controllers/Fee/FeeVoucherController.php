@@ -469,10 +469,25 @@ class FeeVoucherController extends Controller
             'schoolClass',
             'section',
             'items.feeHead',
+            'items.studentAccountCharge',
             'paymentAllocations.payment',
         ]);
 
         [$cohortSummary, $cohortVouchers] = $this->buildCohortAnalytics($voucher);
+
+        $otherVouchers = FeeVoucher::where('student_id', $voucher->student_id)
+            ->where('id', '!=', $voucher->id)
+            ->with('voucherMonth')
+            ->orderByDesc('issue_date')
+            ->get(['id', 'voucher_no', 'voucher_month_id', 'status', 'net_amount', 'balance_amount'])
+            ->map(fn (FeeVoucher $other) => [
+                'id' => $other->id,
+                'voucher_no' => $other->voucher_no,
+                'voucher_month' => $other->voucherMonth,
+                'status' => $other->status,
+                'net_amount' => (float) $other->net_amount,
+                'balance_amount' => (float) $other->balance_amount,
+            ])->toArray();
 
         // Transform payment allocations to flat payments array for the UI
         $payments = $voucher->paymentAllocations->map(function ($allocation) {
@@ -504,7 +519,7 @@ class FeeVoucherController extends Controller
                 'campus' => $voucher->campus,
                 'class' => $voucher->schoolClass,
                 'section' => $voucher->section,
-                'items' => $voucher->items->map(function ($item) {
+                'items' => $voucher->items->map(function (FeeVoucherItem $item) {
                     return [
                         'id' => $item->id,
                         'fee_head_id' => $item->fee_head_id,
@@ -514,12 +529,20 @@ class FeeVoucherController extends Controller
                         'discount_amount' => (float) $item->discount_amount,
                         'fine_amount' => (float) $item->fine_amount,
                         'net_amount' => (float) $item->net_amount,
+                        'source_module' => $item->source_module,
+                        'student_account_charge' => $item->studentAccountCharge ? [
+                            'id' => $item->studentAccountCharge->id,
+                            'source_module' => $item->studentAccountCharge->source_module,
+                            'charge_category' => $item->studentAccountCharge->charge_category,
+                            'title' => $item->studentAccountCharge->title,
+                        ] : null,
                     ];
                 })->toArray(),
                 'payments' => $payments,
             ],
             'cohortSummary' => $cohortSummary,
             'cohortVouchers' => $cohortVouchers,
+            'otherVouchers' => $otherVouchers,
         ]);
     }
 
