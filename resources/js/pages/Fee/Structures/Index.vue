@@ -11,7 +11,8 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import Icon from '@/components/Icon.vue';
 import { alert } from '@/utils';
-import { tableActionButtonClass } from '@/utils/table-actions';
+import RowAction from '@/components/tables/RowAction.vue';
+import RowActions from '@/components/tables/RowActions.vue';
 
 interface FeeStructure {
     id: number;
@@ -343,9 +344,14 @@ const deleteStructure = (structure: FeeStructure) => {
                             <div class="font-medium text-foreground">{{ structure.title }}</div>
                             <div class="text-xs text-muted-foreground">{{ structure.session?.name || '-' }}</div>
                         </div>
-                        <span :class="['px-2 py-1 text-xs font-medium rounded-full', getStatusColor(structure.status)]">
+                        <button
+                            type="button"
+                            :class="['px-2 py-1 text-xs font-medium rounded-full cursor-pointer transition-opacity hover:opacity-80', getStatusColor(structure.status)]"
+                            :title="structure.status === 'active' ? 'Click to deactivate' : 'Click to activate'"
+                            @click="toggleStatus(structure)"
+                        >
                             {{ structure.status }}
-                        </span>
+                        </button>
                     </div>
                     <div class="text-sm text-muted-foreground space-y-1 pt-2 border-t border-border">
                         <div>Campus: {{ structure.campus?.name || '-' }}</div>
@@ -357,24 +363,12 @@ const deleteStructure = (structure: FeeStructure) => {
                         </div>
                         <div>Items: {{ structure.items_count }}</div>
                     </div>
-                    <div class="flex flex-wrap gap-2 pt-2">
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            :class="structure.status === 'active' ? tableActionButtonClass.deactivate : tableActionButtonClass.activate"
-                            @click="toggleStatus(structure)"
-                        >
-                            {{ structure.status === 'active' ? 'Inactive' : 'Active' }}
-                        </Button>
-                        <Button variant="outline" size="sm" :class="tableActionButtonClass.view" @click="router.visit(route('fee.structures.show', structure.id))">
-                            <Icon icon="eye" class="mr-1 h-3 w-3" />View
-                        </Button>
-                        <Button variant="outline" size="sm" :class="tableActionButtonClass.edit" @click="router.visit(route('fee.structures.edit', structure.id))">
-                            <Icon icon="edit" class="mr-1 h-3 w-3" />Edit
-                        </Button>
-                        <Button variant="outline" size="sm" :class="tableActionButtonClass.delete" @click="deleteStructure(structure)">
-                            Delete
-                        </Button>
+                    <div class="flex justify-end pt-2">
+                        <RowActions>
+                            <RowAction kind="view" @click="router.visit(route('fee.structures.show', structure.id))" />
+                            <RowAction kind="edit" @click="router.visit(route('fee.structures.edit', structure.id))" />
+                            <RowAction kind="delete" @click="deleteStructure(structure)" />
+                        </RowActions>
                     </div>
                 </div>
                 <div v-if="isLoading" class="text-center py-8 text-muted-foreground">
@@ -442,33 +436,24 @@ const deleteStructure = (structure: FeeStructure) => {
                                     </div>
                                 </td>
                                 <td class="px-4 py-3 whitespace-nowrap">
-                                    <span :class="['px-2 py-1 text-xs font-medium rounded-full', getStatusColor(structure.status)]">
+                                    <button
+                                        type="button"
+                                        :class="['px-2 py-1 text-xs font-medium rounded-full cursor-pointer transition-opacity hover:opacity-80', getStatusColor(structure.status)]"
+                                        :title="structure.status === 'active' ? 'Click to deactivate' : 'Click to activate'"
+                                        @click="toggleStatus(structure)"
+                                    >
                                         {{ structure.status }}
-                                    </span>
+                                    </button>
                                 </td>
                                 <td class="px-4 py-3 whitespace-nowrap">
                                     <div class="text-sm text-muted-foreground">{{ structure.items_count }}</div>
                                 </td>
                                 <td class="px-4 py-3 text-sm font-medium whitespace-nowrap">
-                                    <div class="flex flex-wrap gap-2 justify-end">
-                                        <Button
-                                            variant="outline"
-                                            size="sm"
-                                            :class="structure.status === 'active' ? tableActionButtonClass.deactivate : tableActionButtonClass.activate"
-                                            @click="toggleStatus(structure)"
-                                        >
-                                            {{ structure.status === 'active' ? 'Inactive' : 'Active' }}
-                                        </Button>
-                                        <Button variant="outline" size="sm" :class="tableActionButtonClass.view" @click="router.visit(route('fee.structures.show', structure.id))">
-                                            <Icon icon="eye" class="mr-1 h-3 w-3" />View
-                                        </Button>
-                                        <Button variant="outline" size="sm" :class="tableActionButtonClass.edit" @click="router.visit(route('fee.structures.edit', structure.id))">
-                                            <Icon icon="edit" class="mr-1 h-3 w-3" />Edit
-                                        </Button>
-                                        <Button variant="outline" size="sm" :class="tableActionButtonClass.delete" @click="deleteStructure(structure)">
-                                            Delete
-                                        </Button>
-                                    </div>
+                                    <RowActions>
+                                        <RowAction kind="view" @click="router.visit(route('fee.structures.show', structure.id))" />
+                                        <RowAction kind="edit" @click="router.visit(route('fee.structures.edit', structure.id))" />
+                                        <RowAction kind="delete" @click="deleteStructure(structure)" />
+                                    </RowActions>
                                 </td>
                             </tr>
                         </tbody>
