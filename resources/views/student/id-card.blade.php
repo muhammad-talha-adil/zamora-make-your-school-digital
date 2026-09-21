@@ -5,9 +5,11 @@
     can print onto real ID card stock, or laminate them straight off an A4
     sheet without trimming to a different size. Each card prints as a front
     panel and a back panel side by side (browser-print friendly — no duplex
-    needed), matching the front/back reference designs the school shared.
-    The photograph is already uploaded and stored; this is the same kind of
-    print view as the fee challan.
+    needed). Styled as a wearable badge: a wave-shaped colour band, a
+    punch-hole/lanyard graphic at the top, and a photo that straddles the
+    header/body boundary — matching the reference badge designs the school
+    shared. The photograph is already uploaded and stored; this is the same
+    kind of print view as the fee challan.
 --}}
 <!DOCTYPE html>
 <html lang="en">
@@ -21,9 +23,10 @@
             /* CR80 / CNIC card size. */
             --card-w: 85.6mm;
             --card-h: 53.98mm;
-            --brand: #0f5fa6;
+            --brand: #0f7ea6;
             --brand-dark: #0a3d6e;
-            --brand-light: #eaf3fb;
+            --brand-light: #e4f4f8;
+            --accent: #17b3a3;
         }
         body {
             font-family: Arial, sans-serif;
@@ -62,136 +65,212 @@
             width: var(--card-w);
             height: var(--card-h);
             background: #fff;
-            border: 0.3mm solid #ccc;
+            border: 0.3mm solid #d9dde1;
             border-radius: 3mm;
             overflow: hidden;
             position: relative;
+            box-shadow: 0 0.3mm 1mm rgba(0, 0, 0, .08);
+        }
+
+        /* ===== Shared: punch hole / lanyard loop ===== */
+        .punch-hole {
+            position: absolute;
+            top: 1.1mm;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 3.4mm;
+            height: 3.4mm;
+            border-radius: 50%;
+            background: #fff;
+            border: 0.3mm solid rgba(0, 0, 0, .12);
+            z-index: 3;
         }
 
         /* ===== Front ===== */
         .card-front { display: flex; flex-direction: column; }
         .card-front .header {
-            background: linear-gradient(135deg, var(--brand) 0%, var(--brand-dark) 100%);
-            color: #fff;
-            padding: 2mm 3mm;
+            position: relative;
+            height: 17mm;
+            background: linear-gradient(120deg, var(--accent) 0%, var(--brand) 55%, var(--brand-dark) 100%);
+            clip-path: polygon(0 0, 100% 0, 100% 68%, 70% 84%, 40% 70%, 0 88%);
+            padding: 4.6mm 3mm 0;
             display: flex;
-            align-items: center;
-            gap: 2mm;
+            align-items: flex-start;
+            gap: 1.8mm;
         }
         .card-front .logo {
-            width: 7mm;
-            height: 7mm;
+            width: 6.5mm;
+            height: 6.5mm;
             border-radius: 50%;
             background: #fff;
             object-fit: contain;
             flex-shrink: 0;
+            padding: 0.3mm;
         }
         .card-front .school-name {
-            font-size: 2.9mm;
-            font-weight: bold;
+            font-size: 2.8mm;
+            font-weight: 800;
+            color: #fff;
             text-transform: uppercase;
-            line-height: 1.15;
+            line-height: 1.1;
+            letter-spacing: .1px;
         }
-        .card-front .campus { font-size: 2mm; opacity: .85; margin-top: .3mm; }
+        .card-front .campus { font-size: 1.8mm; color: #fff; opacity: .9; margin-top: .3mm; }
         .card-front .body {
             flex: 1;
             display: flex;
             flex-direction: column;
             align-items: center;
-            padding: 2mm 3mm 1mm;
+            padding: 0 3mm 1.4mm;
             min-height: 0;
         }
         .photo {
-            width: 15mm;
-            height: 15mm;
+            width: 14mm;
+            height: 14mm;
             border-radius: 50%;
-            border: 0.5mm solid var(--brand);
+            border: 0.7mm solid #fff;
+            box-shadow: 0 0 0 0.5mm var(--accent);
             object-fit: cover;
             background: #eee;
             flex-shrink: 0;
+            margin-top: -8mm;
+            position: relative;
+            z-index: 2;
         }
         .photo-empty {
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 1.7mm;
+            font-size: 1.6mm;
             color: #999;
             text-align: center;
+            background: #f0f0f0;
         }
         .card-front .name {
             font-size: 2.9mm;
-            font-weight: bold;
-            margin-top: 1mm;
+            font-weight: 800;
+            margin-top: 1.2mm;
             text-align: center;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
             max-width: 100%;
+            color: #16222b;
         }
-        .card-front .role {
-            font-size: 2mm;
-            color: var(--brand-dark);
-            font-weight: 600;
-            margin-top: .3mm;
+        .role-badge {
+            display: inline-block;
+            font-size: 1.8mm;
+            font-weight: 700;
+            color: #fff;
+            background: linear-gradient(120deg, var(--accent), var(--brand));
+            border-radius: 3mm;
+            padding: .6mm 2.6mm;
+            margin-top: .8mm;
+            letter-spacing: .2px;
         }
         .card-front .fields {
+            display: grid;
+            grid-template-columns: 14.5mm 1fr;
+            column-gap: 1.8mm;
+            row-gap: 1.3mm;
+            align-content: center;
             width: 100%;
-            font-size: 2.1mm;
-            line-height: 1.5;
-            margin-top: 1.2mm;
+            max-width: 62mm;
+            flex: 1;
+            margin: 1.8mm auto 0;
+            padding: 1.8mm 2.8mm;
+            font-size: 2.15mm;
+            line-height: 1.3;
+            background: var(--brand-light);
+            border-radius: 1.6mm;
         }
-        .card-front .fields .row { display: flex; justify-content: center; gap: 1.2mm; }
-        .card-front .fields .k { color: #666; }
-        .card-front .fields .v { font-weight: bold; }
+        .card-front .fields .k { color: #6b7176; text-align: left; }
+        .card-front .fields .v { font-weight: 700; color: #16222b; text-align: left; }
         .card-front .accent-bar {
-            height: 1.5mm;
-            background: var(--brand);
+            height: 1.3mm;
+            background: linear-gradient(90deg, var(--accent), var(--brand), var(--brand-dark));
         }
 
         /* ===== Back ===== */
         .card-back { display: flex; flex-direction: column; }
-        .card-back .header {
-            background: var(--brand-dark);
+        .card-back .top-bar {
             height: 3mm;
+            background: linear-gradient(90deg, var(--accent), var(--brand-dark));
         }
         .card-back .content {
             flex: 1;
             display: flex;
-            align-items: center;
-            gap: 3mm;
-            padding: 2mm 3mm;
+            align-items: stretch;
+            gap: 2.8mm;
+            padding: 2.2mm 3mm;
             min-height: 0;
         }
-        .card-back .qr {
-            width: 17mm;
-            height: 17mm;
+        .qr-frame {
             flex-shrink: 0;
+            align-self: center;
+            width: 16.5mm;
+            height: 16.5mm;
+            padding: 0.9mm;
+            background: #fff;
+            border: 0.25mm solid #dde2e6;
+            border-radius: 1.2mm;
+            box-shadow: 0 0.2mm .6mm rgba(0, 0, 0, .08);
+        }
+        .card-back .qr {
+            width: 100%;
+            height: 100%;
+            display: block;
         }
         .card-back .info {
             flex: 1;
             min-width: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            gap: .8mm;
             font-size: 1.9mm;
-            line-height: 1.5;
+            line-height: 1.4;
             color: #333;
         }
         .card-back .info .school-name {
             font-size: 2.3mm;
-            font-weight: bold;
+            font-weight: 800;
             color: var(--brand-dark);
-            margin-bottom: .6mm;
         }
-        .card-back .info .muted { color: #666; }
-        .card-back .footer {
-            border-top: 0.2mm dashed #bbb;
-            padding: 1mm 3mm;
-            font-size: 1.7mm;
+        .card-back .info .school-address {
             color: #555;
+        }
+        .card-back .datafields {
+            display: grid;
+            grid-template-columns: 15mm 1fr;
+            column-gap: 1.6mm;
+            row-gap: .9mm;
+            margin-top: .6mm;
+            padding: 1.4mm 2mm;
+            background: var(--brand-light);
+            border-radius: 1.4mm;
+            font-size: 1.85mm;
+        }
+        .card-back .datafields .k { color: #6b7176; text-align: left; }
+        .card-back .datafields .v { font-weight: 700; color: #16222b; text-align: left; }
+        .card-back .footer {
+            position: relative;
+            height: 7mm;
+            background: var(--brand-dark);
+            clip-path: polygon(0 40%, 25% 15%, 50% 35%, 75% 10%, 100% 30%, 100% 100%, 0 100%);
+            color: #fff;
+            font-size: 1.6mm;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            padding-bottom: 0.9mm;
             text-align: center;
         }
         @media print {
             body { background: #fff; padding: 0; }
             .controls { display: none; }
             .sheet { gap: 4mm; }
+            .card { box-shadow: none; }
             @page {
                 size: auto;
                 margin: 8mm;
@@ -208,6 +287,7 @@
     @php $student = $card['student']; @endphp
     <div class="card-pair">
         <div class="card card-front">
+            <div class="punch-hole"></div>
             <div class="header">
                 @if ($school?->logo_path)
                     <img class="logo" src="{{ $school->logo_path }}" alt="">
@@ -228,33 +308,38 @@
                 @endif
 
                 <div class="name">{{ $student->user?->name ?? '—' }}</div>
-                <div class="role">Student</div>
+                <div class="role-badge">Student</div>
 
                 <div class="fields">
-                    <div class="row"><span class="k">Adm No:</span><span class="v">{{ $student->admission_no ?? '—' }}</span></div>
-                    <div class="row"><span class="k">Class:</span><span class="v">{{ $card['class'] ?? '—' }}{{ $card['section'] ? ' — '.$card['section'] : '' }}</span></div>
-                    <div class="row"><span class="k">Session:</span><span class="v">{{ $card['session'] ?? '—' }}</span></div>
+                    <span class="k">Adm No:</span><span class="v">{{ $student->admission_no ?? '—' }}</span>
+                    <span class="k">Class:</span><span class="v">{{ $card['class'] ?? '—' }}{{ $card['section'] ? ' — '.$card['section'] : '' }}</span>
+                    <span class="k">Session:</span><span class="v">{{ $card['session'] ?? '—' }}</span>
                 </div>
             </div>
             <div class="accent-bar"></div>
         </div>
 
         <div class="card card-back">
-            <div class="header"></div>
+            <div class="punch-hole"></div>
+            <div class="top-bar"></div>
             <div class="content">
-                @if (! empty($card['attendance_qr']))
-                    <img class="qr" src="{{ $card['attendance_qr'] }}" alt="Scan to mark attendance">
-                @endif
+                <div class="qr-frame">
+                    @if (! empty($card['attendance_qr']))
+                        <img class="qr" src="{{ $card['attendance_qr'] }}" alt="Scan to mark attendance">
+                    @endif
+                </div>
                 <div class="info">
                     <div class="school-name">{{ $school?->name ?? 'School' }}</div>
                     @if ($school?->address)
-                        <div>{{ $school->address }}</div>
+                        <div class="school-address">{{ $school->address }}</div>
                     @endif
                     @if ($school?->phone)
-                        <div>Ph: {{ $school->phone }}</div>
+                        <div class="school-address">Ph: {{ $school->phone }}</div>
                     @endif
-                    <div class="muted">Guardian: {{ $card['guardian_phone'] ?? '—' }}</div>
-                    <div class="muted">D.O.B: {{ $student->dob?->format('d M Y') ?? '—' }}</div>
+                    <div class="datafields">
+                        <span class="k">Guardian:</span><span class="v">{{ $card['guardian_phone'] ?? '—' }}</span>
+                        <span class="k">D.O.B:</span><span class="v">{{ $student->dob?->format('d M Y') ?? '—' }}</span>
+                    </div>
                 </div>
             </div>
             <div class="footer">If found, please return this card to the school office</div>
