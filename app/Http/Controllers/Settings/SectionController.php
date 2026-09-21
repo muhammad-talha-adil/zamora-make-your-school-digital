@@ -24,8 +24,11 @@ class SectionController extends Controller
             ->orderBy('id', 'desc')
             ->paginate(10);
 
+        $schoolClasses = SchoolClass::orderBy('name', 'asc')->get(['id', 'name']);
+
         return Inertia::render('settings/Sections/Index', [
             'tableSections' => $sections,
+            'schoolClasses' => $schoolClasses,
         ]);
     }
 

@@ -160,6 +160,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::delete('settings/subjects/{id}/force-delete', [SubjectController::class, 'forceDelete'])->name('subjects.force-delete');
 
     // Class Subjects Routes (Subjects to Class)
+    Route::get('settings/class-subjects/page', [ClassSubjectController::class, 'page'])->name('class-subjects.page');
     Route::get('settings/class-subjects', [ClassSubjectController::class, 'index'])->name('class-subjects.index');
     Route::get('settings/class-subjects/sections', [ClassSubjectController::class, 'getSections'])->name('class-subjects.sections');
     Route::get('settings/class-subjects/assigned', [ClassSubjectController::class, 'getAssignedSubjects'])->name('class-subjects.assigned');

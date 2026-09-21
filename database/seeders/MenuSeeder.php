@@ -195,15 +195,8 @@ class MenuSeeder extends Seeder
             'url' => '/exams/revaluations',
         ]);
 
-        Menu::create([
-            'title' => 'Settings',
-            'icon' => 'settings',
-            'type' => 'main',
-            'order' => 6,
-            'parent_id' => $exam->id,
-            'is_active' => true,
-            'url' => '/exams/settings',
-        ]);
+        // Exam Settings menu removed (#101) - reachable only from the
+        // central School Setting hub now, same as Attendance's above.
 
         // ==================== ATTENDANCE MENU ====================
         // Merged into the Students sub-menu (#108): Attendance List, Mark
@@ -296,19 +289,8 @@ class MenuSeeder extends Seeder
             'role' => 'developer,owner,super_admin,campus_admin,accountant',
         ]);
 
-        // Settings (leads to /fee/settings which contains Fee Heads, Discount Types, Fine Rules)
-        Menu::create([
-            'title' => 'Settings',
-            'icon' => 'settings',
-            'type' => 'main',
-            'order' => 8,
-            'parent_id' => $fee->id,
-            'is_active' => true,
-            'url' => '/fee/settings',
-            // fee.head.manage|fee.discount.manage|fee.fine.manage|fee.structure.manage:
-            // campus_admin and accountant only.
-            'role' => 'developer,owner,super_admin,campus_admin,accountant',
-        ]);
+        // Fee Settings menu removed (#101) - reachable only from the
+        // central School Setting hub now.
 
         // ==================== INVENTORY MENU ====================
         $inventory = Menu::create([
@@ -450,17 +432,8 @@ class MenuSeeder extends Seeder
             'role' => 'developer,owner,super_admin,campus_admin',
         ]);
 
-        Menu::create([
-            'title' => 'Settings',
-            'icon' => 'settings',
-            'type' => 'main',
-            'order' => 7,
-            'parent_id' => $staff->id,
-            'is_active' => true,
-            'url' => '/staff/settings',
-            // staff.department.manage: campus_admin only among non-admin roles.
-            'role' => 'developer,owner,super_admin,campus_admin',
-        ]);
+        // Staff Settings menu removed (#101) - reachable only from the
+        // central School Setting hub now.
 
         // ==================== TRANSPORT MENU ====================
         $transport = Menu::create([

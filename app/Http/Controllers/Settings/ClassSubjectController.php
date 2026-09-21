@@ -10,9 +10,23 @@ use App\Models\Subject;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Inertia\Inertia;
+use Inertia\Response;
 
 class ClassSubjectController extends Controller
 {
+    /**
+     * The "Subjects to Class" page (moved out of School Profile per #101) -
+     * the ClassSubjectsForm component fetches its own data via the
+     * class-subjects.index JSON endpoint below, so this just renders it.
+     */
+    public function page(): Response
+    {
+        $this->authorize('academics.class.manage');
+
+        return Inertia::render('settings/ClassSubjects/Index');
+    }
+
     /**
      * Get data for subject-class assignment page.
      */

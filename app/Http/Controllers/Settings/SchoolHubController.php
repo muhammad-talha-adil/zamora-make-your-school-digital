@@ -3,7 +3,11 @@
 namespace App\Http\Controllers\Settings;
 
 use App\Http\Controllers\Controller;
+use App\Models\Campus;
+use App\Models\SchoolClass;
+use App\Models\Section;
 use App\Models\StaffProfile;
+use App\Models\Subject;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
@@ -18,7 +22,9 @@ class SchoolHubController extends Controller
      * of the settings pages being linked (Fee, Exam, Staff, School Profile)
      * are already substantial tab-hubs in their own right, so a link-out
      * card is simpler and safer here than inlining every one of them as a
-     * full tab on top of a tab.
+     * full tab on top of a tab. Campuses/classes/sections/sessions/subjects
+     * used to be tabs on School Profile itself - they now get their own
+     * cards here so School Profile stays just the school-info form.
      */
     public function index(Request $request): Response
     {
@@ -28,9 +34,51 @@ class SchoolHubController extends Controller
             [
                 'key' => 'school',
                 'title' => 'School Profile',
-                'description' => 'School info, campuses, campus types, classes, sections, sessions and subjects.',
+                'description' => 'School name, logo, address and other basic information.',
                 'route' => 'school-profile.show',
                 'visible' => $user?->can('school.profile.manage') ?? false,
+            ],
+            [
+                'key' => 'campuses',
+                'title' => 'Campuses',
+                'description' => 'Manage the school\'s campuses and campus types.',
+                'route' => 'campuses.index',
+                'visible' => $user?->can('viewAny', Campus::class) ?? false,
+            ],
+            [
+                'key' => 'classes',
+                'title' => 'Classes',
+                'description' => 'Manage the school\'s classes.',
+                'route' => 'school-classes.index',
+                'visible' => $user?->can('viewAny', SchoolClass::class) ?? false,
+            ],
+            [
+                'key' => 'sections',
+                'title' => 'Sections',
+                'description' => 'Manage the school\'s sections.',
+                'route' => 'sections.index',
+                'visible' => $user?->can('viewAny', Section::class) ?? false,
+            ],
+            [
+                'key' => 'sessions',
+                'title' => 'Sessions',
+                'description' => 'Manage academic sessions.',
+                'route' => 'sessions.index',
+                'visible' => $user?->can('academics.session.manage') ?? false,
+            ],
+            [
+                'key' => 'subjects',
+                'title' => 'Subjects',
+                'description' => 'Manage subjects.',
+                'route' => 'subjects.index',
+                'visible' => $user?->can('viewAny', Subject::class) ?? false,
+            ],
+            [
+                'key' => 'class-subjects',
+                'title' => 'Subjects to Class',
+                'description' => 'Assign subjects to class sections.',
+                'route' => 'class-subjects.page',
+                'visible' => $user?->can('academics.class.manage') ?? false,
             ],
             [
                 'key' => 'attendance',
