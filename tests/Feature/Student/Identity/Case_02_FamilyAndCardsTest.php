@@ -122,6 +122,18 @@ it('prints an ID card for a section', function () {
         ->and($page)->toContain('ADM-F2');
 });
 
+it('embeds a scannable attendance QR code on each card', function () {
+    $page = $this->get(route('students.id-cards', [
+        'class_id' => $this->world->class->id,
+    ]))->assertSuccessful()->getContent();
+
+    // One QR `<img>` per card, each a real inline PNG data URI — not a
+    // broken image tag, and not the raw signed URL printed as text (which
+    // would defeat the point of a scannable code).
+    expect(substr_count($page, 'class="qr"'))->toBe(2)
+        ->and($page)->toContain('data:image/png;base64,');
+});
+
 it('puts the guardian s phone on the card', function () {
     // The one field on the card that exists for the child's safety rather than
     // the school's records.

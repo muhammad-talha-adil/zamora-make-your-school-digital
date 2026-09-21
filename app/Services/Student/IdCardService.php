@@ -4,6 +4,7 @@ namespace App\Services\Student;
 
 use App\Models\Student;
 use App\Models\User;
+use App\Services\Attendance\QrCodeService;
 use Illuminate\Support\Collection;
 
 /**
@@ -19,6 +20,10 @@ use Illuminate\Support\Collection;
  */
 class IdCardService
 {
+    public function __construct(
+        private QrCodeService $qrCodes
+    ) {}
+
     /**
      * Cards for a set of children.
      *
@@ -43,6 +48,9 @@ class IdCardService
             'campus' => $student->currentEnrollment?->campus?->name,
             'session' => $student->currentEnrollment?->session?->name,
             'guardian_phone' => $this->phoneFor($student),
+            // Scanning this marks the child present for today — see
+            // `QrAttendanceController` / `routes/attendance.php`.
+            'attendance_qr' => $this->qrCodes->forStudent($student),
         ])->values()->all();
     }
 

@@ -514,6 +514,11 @@ class StudentController extends Controller
     {
         Gate::authorize('export', Student::class);
 
+        $request->validate([
+            'ids' => ['nullable', 'array'],
+            'ids.*' => ['integer', 'exists:students,id'],
+        ]);
+
         return $this->service->export($request);
     }
 

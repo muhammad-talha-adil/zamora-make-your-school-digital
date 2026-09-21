@@ -91,6 +91,22 @@ it('exports only the children this person may see', function () {
     expect($csv)->not->toContain('ADM-E9');
 });
 
+it('exports only the explicitly checked children when ids are given', function () {
+    $this->post(route('students.store'), $this->world->payload(['admission_no' => 'ADM-SEL1']))
+        ->assertSessionHasNoErrors();
+    $selected = Student::where('admission_no', 'ADM-SEL1')->firstOrFail();
+
+    $this->post(route('students.store'), $this->world->payload(['admission_no' => 'ADM-SEL2']))
+        ->assertSessionHasNoErrors();
+
+    // A checkbox selection overrides class/section/campus filters rather
+    // than adding to them — the person picked exactly this child.
+    $csv = $this->get(route('students.export', ['ids' => [$selected->id]]))->streamedContent();
+
+    expect($csv)->toContain('ADM-SEL1')
+        ->and($csv)->not->toContain('ADM-SEL2');
+});
+
 /* -------------------------------------------------------------------- import */
 
 it('imports the children in the file', function () {

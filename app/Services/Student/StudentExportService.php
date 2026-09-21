@@ -139,6 +139,13 @@ class StudentExportService
                     ->whereNull('leave_date')
                     ->where('campus_id', $filters['campus_id']))
             )
+            // An explicit selection from the list screen, checked box by box,
+            // overrides the class/section/campus filters rather than adding
+            // to them — the person picked exactly these children.
+            ->when(
+                ! empty($filters['ids']),
+                fn ($q) => $q->whereIn('id', $filters['ids'])
+            )
             ->orderBy('id');
     }
 

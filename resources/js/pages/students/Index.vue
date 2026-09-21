@@ -124,6 +124,22 @@
                     <Icon icon="id-card" class="mr-1" />
                     Bulk ID Cards
                 </Button>
+                <Button
+                    v-if="selectedStudents.length > 0"
+                    variant="outline"
+                    @click="printSelectedIdCards"
+                >
+                    <Icon icon="id-card" class="mr-1" />
+                    Print Selected ID Cards ({{ selectedStudents.length }})
+                </Button>
+                <Button
+                    v-if="selectedStudents.length > 0"
+                    variant="outline"
+                    @click="exportSelected"
+                >
+                    <Icon icon="printer" class="mr-1" />
+                    Export Selected ({{ selectedStudents.length }})
+                </Button>
             </div>
 
             <!-- Mobile Card View -->
@@ -131,9 +147,16 @@
                 <div
                     v-for="student in props.tableStudents.data"
                     :key="student.id"
-                    class="bg-card rounded-lg border border-border p-4 space-y-2"
+                    class="relative bg-card rounded-lg border border-border p-4 space-y-2"
                 >
-                    <div class="flex flex-wrap gap-2 justify-between items-start">
+                    <input
+                        type="checkbox"
+                        :checked="isSelected(student.id)"
+                        @change="toggleStudent(student.id)"
+                        class="absolute top-3 right-3 w-4 h-4 rounded"
+                        aria-label="Select student"
+                    />
+                    <div class="flex flex-wrap gap-2 justify-between items-start pr-6">
                         <div class="flex items-center gap-3">
                             <div class="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
                                 <span class="text-primary font-medium">{{ student.serial }}</span>
@@ -190,6 +213,14 @@
                     <table class="min-w-full divide-y divide-border">
                         <thead class="bg-muted">
                             <tr>
+                                <th scope="col" class="px-2 py-3 text-center text-xs font-semibold tracking-wider text-muted-foreground uppercase">
+                                    <input
+                                        type="checkbox"
+                                        :checked="selectAll"
+                                        @change="toggleSelectAll"
+                                        class="w-4 h-4 rounded"
+                                    />
+                                </th>
                                 <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase w-16">
                                     #
                                 </th>
@@ -218,6 +249,14 @@
                         </thead>
                         <tbody class="divide-y divide-border bg-card">
                             <tr v-for="student in props.tableStudents.data" :key="student.id" class="transition-colors hover:bg-accent">
+                                <td class="px-2 py-3 whitespace-nowrap text-center">
+                                    <input
+                                        type="checkbox"
+                                        :checked="isSelected(student.id)"
+                                        @change="toggleStudent(student.id)"
+                                        class="w-4 h-4 rounded"
+                                    />
+                                </td>
                                 <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-foreground">
                                     {{ student.serial }}
                                 </td>
@@ -312,7 +351,7 @@
 
 <script setup lang="ts">
 import { Head, router, Link } from '@inertiajs/vue3';
-import { reactive, ref } from 'vue';
+import { reactive, ref, watch } from 'vue';
 import { debounce } from 'lodash';
 import { route } from 'ziggy-js';
 import AppLayout from '@/layouts/AppLayout.vue';
@@ -474,6 +513,62 @@ const handleSearch = () => {
 const clearSearch = () => {
     filters.search = '';
     applyFilters();
+};
+
+// Row selection (checkbox pattern from Fee/Vouchers/Index.vue)
+const selectedStudents = ref<number[]>([]);
+const selectAll = ref(false);
+
+// Toggle select all
+const toggleSelectAll = () => {
+    if (selectAll.value) {
+        selectedStudents.value = props.tableStudents.data.map((student) => student.id);
+    } else {
+        selectedStudents.value = [];
+    }
+};
+
+// Toggle single student
+const toggleStudent = (studentId: number) => {
+    const index = selectedStudents.value.indexOf(studentId);
+    if (index === -1) {
+        selectedStudents.value.push(studentId);
+    } else {
+        selectedStudents.value.splice(index, 1);
+    }
+
+    selectAll.value = props.tableStudents.data.length > 0 && selectedStudents.value.length === props.tableStudents.data.length;
+};
+
+// Check if student is selected
+const isSelected = (studentId: number) => {
+    return selectedStudents.value.includes(studentId);
+};
+
+// Reset selection whenever the visible page of students changes (filters, pagination, reload)
+watch(() => props.tableStudents.data, () => {
+    selectedStudents.value = [];
+    selectAll.value = false;
+}, { deep: false });
+
+/** ID cards for exactly the children checked on this page, ignoring filters. */
+const printSelectedIdCards = () => {
+    if (selectedStudents.value.length === 0) return;
+
+    const params = new URLSearchParams();
+    selectedStudents.value.forEach((id) => params.append('student_ids[]', String(id)));
+
+    window.open(`${route('students.id-cards')}?${params.toString()}`, '_blank');
+};
+
+/** The roll, exported as CSV, scoped to exactly the children checked. */
+const exportSelected = () => {
+    if (selectedStudents.value.length === 0) return;
+
+    const params = new URLSearchParams();
+    selectedStudents.value.forEach((id) => params.append('ids[]', String(id)));
+
+    window.open(`${route('students.export')}?${params.toString()}`, '_blank');
 };
 
 // Modal state

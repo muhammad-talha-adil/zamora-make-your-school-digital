@@ -471,7 +471,7 @@ class StudentService
     {
         return $this->exports->stream(
             $request->user(),
-            $request->only(['campus_id', 'class_id', 'section_id'])
+            $request->only(['campus_id', 'class_id', 'section_id', 'ids'])
         );
     }
 
