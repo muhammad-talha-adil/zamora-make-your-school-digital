@@ -143,18 +143,13 @@
                                 <div class="text-xs text-muted-foreground">{{ student.registration_no }}</div>
                             </div>
                         </div>
-                        <button
-                            type="button"
-                            @click="openStatusModal(student)"
-                            :class="[
-                                'px-2 py-1 text-xs font-medium rounded-full shrink-0 cursor-pointer transition-colors hover:opacity-80',
-                                student.student_status?.name === 'Active'
-                                    ? 'bg-success/10 text-success'
-                                    : 'bg-muted text-foreground'
-                            ]"
-                        >
-                            {{ student.student_status?.name || 'Unknown' }}
-                        </button>
+                        <StatusToggle
+                            :active="student.student_status?.name === 'Active'"
+                            :active-label="student.student_status?.name || 'Unknown'"
+                            :inactive-label="student.student_status?.name || 'Unknown'"
+                            class="shrink-0"
+                            @toggle="openStatusModal(student)"
+                        />
                     </div>
                     <div class="text-sm text-muted-foreground space-y-1 pt-2 border-t border-border">
                         <div class="flex items-center gap-2">
@@ -257,18 +252,12 @@
                                     <span v-if="!getPrimaryGuardian(student)" class="text-xs text-muted-foreground">No guardians</span>
                                 </td>
                                 <td class="px-4 py-3 whitespace-nowrap">
-                                    <button
-                                        type="button"
-                                        @click="openStatusModal(student)"
-                                        :class="[
-                                            'px-2 py-1 text-xs font-medium rounded-full cursor-pointer transition-colors hover:opacity-80',
-                                            student.student_status?.name === 'Active'
-                                                ? 'bg-success/10 text-success'
-                                                : 'bg-muted text-foreground'
-                                        ]"
-                                    >
-                                        {{ student.student_status?.name || 'Unknown' }}
-                                    </button>
+                                    <StatusToggle
+                                        :active="student.student_status?.name === 'Active'"
+                                        :active-label="student.student_status?.name || 'Unknown'"
+                                        :inactive-label="student.student_status?.name || 'Unknown'"
+                                        @toggle="openStatusModal(student)"
+                                    />
                                 </td>
                                 <td class="px-4 py-3 text-sm font-medium whitespace-nowrap">
                                     <RowActions>
@@ -335,6 +324,7 @@ import Icon from '@/components/Icon.vue';
 import RowAction from '@/components/tables/RowAction.vue';
 import RowActions from '@/components/tables/RowActions.vue';
 import TablePagination from '@/components/tables/TablePagination.vue';
+import StatusToggle from '@/components/tables/StatusToggle.vue';
 import StudentStatusModal from '@/components/modals/StudentStatusModal.vue';
 
 interface Props {
