@@ -1,11 +1,13 @@
 {{--
-    The student ID card.
+    The student ID card — two-sided.
 
     Sized to Pakistan's CNIC / CR80 standard (85.60mm x 53.98mm) so a school
     can print onto real ID card stock, or laminate them straight off an A4
-    sheet without trimming to a different size. The photograph is already
-    uploaded and stored; this is the same kind of print view as the fee
-    challan.
+    sheet without trimming to a different size. Each card prints as a front
+    panel and a back panel side by side (browser-print friendly — no duplex
+    needed), matching the front/back reference designs the school shared.
+    The photograph is already uploaded and stored; this is the same kind of
+    print view as the fee challan.
 --}}
 <!DOCTYPE html>
 <html lang="en">
@@ -19,6 +21,9 @@
             /* CR80 / CNIC card size. */
             --card-w: 85.6mm;
             --card-h: 53.98mm;
+            --brand: #0f5fa6;
+            --brand-dark: #0a3d6e;
+            --brand-light: #eaf3fb;
         }
         body {
             font-family: Arial, sans-serif;
@@ -47,37 +52,60 @@
             gap: 5mm;
             justify-content: center;
         }
+        .card-pair {
+            display: flex;
+            gap: 3mm;
+            break-inside: avoid;
+            page-break-inside: avoid;
+        }
         .card {
             width: var(--card-w);
             height: var(--card-h);
             background: #fff;
-            border: 1px solid #222;
+            border: 0.3mm solid #ccc;
             border-radius: 3mm;
             overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            break-inside: avoid;
-            page-break-inside: avoid;
+            position: relative;
         }
-        .card .top {
-            background: #1f2937;
+
+        /* ===== Front ===== */
+        .card-front { display: flex; flex-direction: column; }
+        .card-front .header {
+            background: linear-gradient(135deg, var(--brand) 0%, var(--brand-dark) 100%);
             color: #fff;
             padding: 2mm 3mm;
-            text-align: center;
+            display: flex;
+            align-items: center;
+            gap: 2mm;
         }
-        .card .top .school {
-            font-size: 3mm;
+        .card-front .logo {
+            width: 7mm;
+            height: 7mm;
+            border-radius: 50%;
+            background: #fff;
+            object-fit: contain;
+            flex-shrink: 0;
+        }
+        .card-front .school-name {
+            font-size: 2.9mm;
             font-weight: bold;
             text-transform: uppercase;
-            line-height: 1.2;
+            line-height: 1.15;
         }
-        .card .top .campus { font-size: 2.2mm; opacity: .85; margin-top: .5mm; }
-        .card .body { display: flex; gap: 2.5mm; padding: 2.5mm 3mm; flex: 1; min-height: 0; }
+        .card-front .campus { font-size: 2mm; opacity: .85; margin-top: .3mm; }
+        .card-front .body {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 2mm 3mm 1mm;
+            min-height: 0;
+        }
         .photo {
-            width: 16mm;
-            height: 20mm;
-            border: 0.3mm solid #999;
-            border-radius: 1mm;
+            width: 15mm;
+            height: 15mm;
+            border-radius: 50%;
+            border: 0.5mm solid var(--brand);
             object-fit: cover;
             background: #eee;
             flex-shrink: 0;
@@ -86,35 +114,79 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: 2mm;
+            font-size: 1.7mm;
             color: #999;
             text-align: center;
         }
-        .fields { font-size: 2.4mm; line-height: 1.45; flex: 1; min-width: 0; overflow: hidden; }
-        .qr {
-            width: 12mm;
-            height: 12mm;
-            flex-shrink: 0;
-            align-self: flex-end;
-        }
-        .fields .name {
-            font-size: 3mm;
+        .card-front .name {
+            font-size: 2.9mm;
             font-weight: bold;
-            margin-bottom: .8mm;
+            margin-top: 1mm;
+            text-align: center;
             white-space: nowrap;
             overflow: hidden;
             text-overflow: ellipsis;
+            max-width: 100%;
         }
-        .fields .row { display: flex; gap: 1mm; }
-        .fields .k { color: #666; min-width: 13mm; }
-        .fields .v { font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-        .card .foot {
+        .card-front .role {
+            font-size: 2mm;
+            color: var(--brand-dark);
+            font-weight: 600;
+            margin-top: .3mm;
+        }
+        .card-front .fields {
+            width: 100%;
+            font-size: 2.1mm;
+            line-height: 1.5;
+            margin-top: 1.2mm;
+        }
+        .card-front .fields .row { display: flex; justify-content: center; gap: 1.2mm; }
+        .card-front .fields .k { color: #666; }
+        .card-front .fields .v { font-weight: bold; }
+        .card-front .accent-bar {
+            height: 1.5mm;
+            background: var(--brand);
+        }
+
+        /* ===== Back ===== */
+        .card-back { display: flex; flex-direction: column; }
+        .card-back .header {
+            background: var(--brand-dark);
+            height: 3mm;
+        }
+        .card-back .content {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            gap: 3mm;
+            padding: 2mm 3mm;
+            min-height: 0;
+        }
+        .card-back .qr {
+            width: 17mm;
+            height: 17mm;
+            flex-shrink: 0;
+        }
+        .card-back .info {
+            flex: 1;
+            min-width: 0;
+            font-size: 1.9mm;
+            line-height: 1.5;
+            color: #333;
+        }
+        .card-back .info .school-name {
+            font-size: 2.3mm;
+            font-weight: bold;
+            color: var(--brand-dark);
+            margin-bottom: .6mm;
+        }
+        .card-back .info .muted { color: #666; }
+        .card-back .footer {
             border-top: 0.2mm dashed #bbb;
             padding: 1mm 3mm;
-            font-size: 1.9mm;
+            font-size: 1.7mm;
             color: #555;
-            display: flex;
-            justify-content: space-between;
+            text-align: center;
         }
         @media print {
             body { background: #fff; padding: 0; }
@@ -134,38 +206,58 @@
 <div class="sheet">
 @foreach ($cards as $card)
     @php $student = $card['student']; @endphp
-    <div class="card">
-        <div class="top">
-            <div class="school">{{ $school?->name ?? 'School' }}</div>
-            @if ($card['campus'])
-                <div class="campus">{{ $card['campus'] }} Campus</div>
-            @endif
-        </div>
-
-        <div class="body">
-            @if ($student->image_url)
-                <img class="photo" src="{{ $student->image_url }}" alt="">
-            @else
-                <div class="photo photo-empty">No<br>photo</div>
-            @endif
-
-            <div class="fields">
-                <div class="name">{{ $student->user?->name ?? '—' }}</div>
-                <div class="row"><span class="k">Adm No</span><span class="v">{{ $student->admission_no ?? '—' }}</span></div>
-                <div class="row"><span class="k">Class</span><span class="v">{{ $card['class'] ?? '—' }}{{ $card['section'] ? ' — '.$card['section'] : '' }}</span></div>
-                <div class="row"><span class="k">Session</span><span class="v">{{ $card['session'] ?? '—' }}</span></div>
-                <div class="row"><span class="k">D.O.B</span><span class="v">{{ $student->dob?->format('d M Y') ?? '—' }}</span></div>
-                <div class="row"><span class="k">Guardian</span><span class="v">{{ $card['guardian_phone'] ?? '—' }}</span></div>
+    <div class="card-pair">
+        <div class="card card-front">
+            <div class="header">
+                @if ($school?->logo_path)
+                    <img class="logo" src="{{ $school->logo_path }}" alt="">
+                @endif
+                <div>
+                    <div class="school-name">{{ $school?->name ?? 'School' }}</div>
+                    @if ($card['campus'])
+                        <div class="campus">{{ $card['campus'] }} Campus</div>
+                    @endif
+                </div>
             </div>
 
-            @if (! empty($card['attendance_qr']))
-                <img class="qr" src="{{ $card['attendance_qr'] }}" alt="Scan to mark attendance">
-            @endif
+            <div class="body">
+                @if ($student->image_url)
+                    <img class="photo" src="{{ $student->image_url }}" alt="">
+                @else
+                    <div class="photo photo-empty">No<br>photo</div>
+                @endif
+
+                <div class="name">{{ $student->user?->name ?? '—' }}</div>
+                <div class="role">Student</div>
+
+                <div class="fields">
+                    <div class="row"><span class="k">Adm No:</span><span class="v">{{ $student->admission_no ?? '—' }}</span></div>
+                    <div class="row"><span class="k">Class:</span><span class="v">{{ $card['class'] ?? '—' }}{{ $card['section'] ? ' — '.$card['section'] : '' }}</span></div>
+                    <div class="row"><span class="k">Session:</span><span class="v">{{ $card['session'] ?? '—' }}</span></div>
+                </div>
+            </div>
+            <div class="accent-bar"></div>
         </div>
 
-        <div class="foot">
-            <span>Valid for the session shown</span>
-            <span>If found, please return</span>
+        <div class="card card-back">
+            <div class="header"></div>
+            <div class="content">
+                @if (! empty($card['attendance_qr']))
+                    <img class="qr" src="{{ $card['attendance_qr'] }}" alt="Scan to mark attendance">
+                @endif
+                <div class="info">
+                    <div class="school-name">{{ $school?->name ?? 'School' }}</div>
+                    @if ($school?->address)
+                        <div>{{ $school->address }}</div>
+                    @endif
+                    @if ($school?->phone)
+                        <div>Ph: {{ $school->phone }}</div>
+                    @endif
+                    <div class="muted">Guardian: {{ $card['guardian_phone'] ?? '—' }}</div>
+                    <div class="muted">D.O.B: {{ $student->dob?->format('d M Y') ?? '—' }}</div>
+                </div>
+            </div>
+            <div class="footer">If found, please return this card to the school office</div>
         </div>
     </div>
 @endforeach
