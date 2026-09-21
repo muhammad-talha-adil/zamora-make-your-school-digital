@@ -4,6 +4,7 @@ import RowAction from '@/components/tables/RowAction.vue';
 import RowActions from '@/components/tables/RowActions.vue';
 import TablePagination from '@/components/tables/TablePagination.vue';
 import { alert, formatDate } from '@/utils';
+import StatusToggle from '@/components/tables/StatusToggle.vue';
 import axios from 'axios';
 import { ref, watch } from 'vue';
 import { route } from 'ziggy-js';
@@ -213,19 +214,10 @@ const inactivateSession = (session: any) => {
                                 </div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
-                                <button
-                                    type="button"
-                                    :class="[
-                                        'inline-flex cursor-pointer rounded-full px-2 py-1 text-xs font-semibold transition-opacity hover:opacity-80',
-                                        session.is_active
-                                            ? 'bg-success/10 text-success'
-                                            : 'bg-destructive/10 text-destructive',
-                                    ]"
-                                    :title="session.is_active ? 'Click to deactivate' : 'Click to activate'"
-                                    @click="session.is_active ? inactivateSession(session) : activateSession(session)"
-                                >
-                                    {{ session.is_active ? 'Active' : 'Inactive' }}
-                                </button>
+                                <StatusToggle
+                                    :active="session.is_active"
+                                    @toggle="session.is_active ? inactivateSession(session) : activateSession(session)"
+                                />
                             </td>
                             <td class="px-6 py-4 text-sm font-medium whitespace-nowrap">
                                 <RowActions>

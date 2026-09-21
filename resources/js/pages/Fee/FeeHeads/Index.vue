@@ -11,6 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import Icon from '@/components/Icon.vue';
 import { alert } from '@/utils';
+import StatusToggle from '@/components/tables/StatusToggle.vue';
 
 interface FeeHead {
     id: number;
@@ -277,14 +278,7 @@ const getFrequencyLabel = (frequency: string) => {
                         <div>Frequency: {{ getFrequencyLabel(feeHead.default_frequency) }}</div>
                         <div>Order: {{ feeHead.sort_order }}</div>
                         <div>
-                            <button
-                                type="button"
-                                :class="['px-2 py-1 text-xs font-medium rounded-full cursor-pointer transition-opacity hover:opacity-80', feeHead.is_active ? 'bg-success/10 text-success' : 'bg-muted text-foreground']"
-                                :title="feeHead.is_active ? 'Click to deactivate' : 'Click to activate'"
-                                @click="toggleActive(feeHead)"
-                            >
-                                {{ feeHead.is_active ? 'Active' : 'Inactive' }}
-                            </button>
+                            <StatusToggle :active="feeHead.is_active" @toggle="toggleActive(feeHead)" />
                         </div>
                     </div>
                     <div class="flex gap-2 pt-2">
@@ -357,14 +351,7 @@ const getFrequencyLabel = (frequency: string) => {
                                     <div class="text-sm text-muted-foreground">{{ getFrequencyLabel(feeHead.default_frequency) }}</div>
                                 </td>
                                 <td class="px-4 py-3">
-                                    <button
-                                        type="button"
-                                        :class="['px-2 py-1 text-xs font-medium rounded-full cursor-pointer transition-opacity hover:opacity-80', feeHead.is_active ? 'bg-success/10 text-success' : 'bg-muted text-foreground']"
-                                        :title="feeHead.is_active ? 'Click to deactivate' : 'Click to activate'"
-                                        @click="toggleActive(feeHead)"
-                                    >
-                                        {{ feeHead.is_active ? 'Active' : 'Inactive' }}
-                                    </button>
+                                    <StatusToggle :active="feeHead.is_active" @toggle="toggleActive(feeHead)" />
                                 </td>
                                 <td class="px-4 py-3 text-sm font-medium whitespace-nowrap">
                                     <div class="flex flex-wrap gap-2 justify-end">

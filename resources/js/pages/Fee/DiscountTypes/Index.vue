@@ -8,6 +8,7 @@ import type { BreadcrumbItem } from '@/types';
 import { Button } from '@/components/ui/button';
 import Icon from '@/components/Icon.vue';
 import axios from 'axios';
+import StatusToggle from '@/components/tables/StatusToggle.vue';
 
 interface DiscountType {
     id: number;
@@ -124,13 +125,7 @@ const deleteDiscountType = (discountType: DiscountType) => {
                             <div class="text-xs text-muted-foreground">Code: {{ discountType.code }}</div>
                         </div>
                         <button
-                            type="button"
-                            :class="['px-2 py-1 text-xs font-medium rounded-full cursor-pointer transition-opacity hover:opacity-80', discountType.is_active ? 'bg-success/10 text-success' : 'bg-muted text-foreground']"
-                            :title="discountType.is_active ? 'Click to deactivate' : 'Click to activate'"
-                            @click="toggleActiveStatus(discountType)"
-                        >
-                            {{ discountType.is_active ? 'Active' : 'Inactive' }}
-                        </button>
+                            <StatusToggle :active="discountType.is_active" @toggle="toggleActiveStatus(discountType)" />
                     </div>
                     <div class="text-sm text-muted-foreground space-y-1 pt-2 border-t border-border">
                         <div>Default: {{ formatValue(discountType.value_type, discountType.default_value) }}</div>
@@ -199,13 +194,7 @@ const deleteDiscountType = (discountType: DiscountType) => {
                                 </td>
                                 <td class="px-4 py-3">
                                     <button
-                                        type="button"
-                                        :class="['px-2 py-1 text-xs font-medium rounded-full cursor-pointer transition-opacity hover:opacity-80', discountType.is_active ? 'bg-success/10 text-success' : 'bg-muted text-foreground']"
-                                        :title="discountType.is_active ? 'Click to deactivate' : 'Click to activate'"
-                                        @click="toggleActiveStatus(discountType)"
-                                    >
-                                        {{ discountType.is_active ? 'Active' : 'Inactive' }}
-                                    </button>
+                                    <StatusToggle :active="discountType.is_active" @toggle="toggleActiveStatus(discountType)" />
                                 </td>
                                 <td class="px-4 py-3 text-sm font-medium whitespace-nowrap">
                                     <div class="flex flex-wrap gap-2 justify-end">

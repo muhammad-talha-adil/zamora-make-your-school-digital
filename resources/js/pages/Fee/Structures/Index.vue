@@ -13,6 +13,7 @@ import Icon from '@/components/Icon.vue';
 import { alert } from '@/utils';
 import RowAction from '@/components/tables/RowAction.vue';
 import RowActions from '@/components/tables/RowActions.vue';
+import StatusToggle from '@/components/tables/StatusToggle.vue';
 
 interface FeeStructure {
     id: number;
@@ -344,14 +345,7 @@ const deleteStructure = (structure: FeeStructure) => {
                             <div class="font-medium text-foreground">{{ structure.title }}</div>
                             <div class="text-xs text-muted-foreground">{{ structure.session?.name || '-' }}</div>
                         </div>
-                        <button
-                            type="button"
-                            :class="['px-2 py-1 text-xs font-medium rounded-full cursor-pointer transition-opacity hover:opacity-80', getStatusColor(structure.status)]"
-                            :title="structure.status === 'active' ? 'Click to deactivate' : 'Click to activate'"
-                            @click="toggleStatus(structure)"
-                        >
-                            {{ structure.status }}
-                        </button>
+                        <StatusToggle :active="structure.status === 'active'" @toggle="toggleStatus(structure)" />
                     </div>
                     <div class="text-sm text-muted-foreground space-y-1 pt-2 border-t border-border">
                         <div>Campus: {{ structure.campus?.name || '-' }}</div>
@@ -436,14 +430,7 @@ const deleteStructure = (structure: FeeStructure) => {
                                     </div>
                                 </td>
                                 <td class="px-4 py-3 whitespace-nowrap">
-                                    <button
-                                        type="button"
-                                        :class="['px-2 py-1 text-xs font-medium rounded-full cursor-pointer transition-opacity hover:opacity-80', getStatusColor(structure.status)]"
-                                        :title="structure.status === 'active' ? 'Click to deactivate' : 'Click to activate'"
-                                        @click="toggleStatus(structure)"
-                                    >
-                                        {{ structure.status }}
-                                    </button>
+                                    <StatusToggle :active="structure.status === 'active'" @toggle="toggleStatus(structure)" />
                                 </td>
                                 <td class="px-4 py-3 whitespace-nowrap">
                                     <div class="text-sm text-muted-foreground">{{ structure.items_count }}</div>

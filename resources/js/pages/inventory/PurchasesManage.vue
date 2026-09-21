@@ -13,6 +13,7 @@ import type { BreadcrumbItem } from '@/types';
 import SupplierForm from '@/components/forms/inventory/SupplierForm.vue';
 import DateRangePicker from '@/components/ui/date-range-picker/DateRangePicker.vue';
 import ComboboxInput from '@/components/ui/combobox/ComboboxInput.vue';
+import StatusToggle from '@/components/tables/StatusToggle.vue';
 
 interface Props {
     purchases: any;
@@ -440,17 +441,12 @@ fetchPurchases();
                                     <td class="px-3 md:px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">{{ supplier.email || '-' }}</td>
                                     <td class="px-3 md:px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">{{ supplier.campus?.name || 'All Campuses' }}</td>
                                     <td class="px-3 md:px-6 py-4 whitespace-nowrap">
-                                        <Badge :variant="supplier.is_active ? 'default' : 'destructive'">
-                                            {{ supplier.is_active ? 'Active' : 'Inactive' }}
-                                        </Badge>
+                                        <StatusToggle :active="supplier.is_active" @toggle="toggleActiveSupplier(supplier)" />
                                     </td>
                                     <td class="px-3 md:px-6 py-4 whitespace-nowrap">
                                         <div class="flex flex-wrap gap-1 md:gap-2">
                                             <Button variant="outline" size="sm" @click="editingSupplier = supplier" class="text-xs md:text-sm">
                                                 <Icon icon="edit" class="mr-1" />
-                                            </Button>
-                                            <Button :variant="supplier.is_active ? 'destructive' : 'default'" size="sm" @click="toggleActiveSupplier(supplier)" class="text-xs md:text-sm">
-                                                <Icon :icon="supplier.is_active ? 'eye-off' : 'eye'" class="mr-1" />
                                             </Button>
                                         </div>
                                     </td>

@@ -66,19 +66,10 @@
                                 <div class="text-xs text-muted-foreground">{{ supplier.campus?.name }}</div>
                             </div>
                         </div>
-                        <button
-                            type="button"
-                            :class="[
-                                'px-2 py-1 text-xs font-medium rounded-full shrink-0 cursor-pointer transition-opacity hover:opacity-80',
-                                supplier.is_active
-                                    ? 'bg-success/10 text-success'
-                                    : 'bg-destructive/10 text-destructive'
-                            ]"
-                            :title="supplier.is_active ? 'Click to inactivate' : 'Click to activate'"
-                            @click="supplier.is_active ? inactivateSupplier(supplier.id) : activateSupplier(supplier.id)"
-                        >
-                            {{ supplier.is_active ? 'Active' : 'Inactive' }}
-                        </button>
+                        <StatusToggle
+                            :active="supplier.is_active"
+                            @toggle="supplier.is_active ? inactivateSupplier(supplier.id) : activateSupplier(supplier.id)"
+                        />
                     </div>
                     <div v-if="supplier.contact_person || supplier.phone || supplier.email" class="text-sm text-muted-foreground space-y-1 pt-2 border-t border-border">
                         <div v-if="supplier.contact_person" class="flex items-center gap-2">
@@ -163,19 +154,10 @@
                                     <div class="text-sm text-muted-foreground truncate max-w-[200px]">{{ supplier.email || '-' }}</div>
                                 </td>
                                 <td class="px-4 py-3 whitespace-nowrap">
-                                    <button
-                                        type="button"
-                                        :class="[
-                                            'px-2 py-1 text-xs font-medium rounded-full cursor-pointer transition-opacity hover:opacity-80',
-                                            supplier.is_active
-                                                ? 'bg-success/10 text-success'
-                                                : 'bg-destructive/10 text-destructive'
-                                        ]"
-                                        :title="supplier.is_active ? 'Click to inactivate' : 'Click to activate'"
-                                        @click="supplier.is_active ? inactivateSupplier(supplier.id) : activateSupplier(supplier.id)"
-                                    >
-                                        {{ supplier.is_active ? 'Active' : 'Inactive' }}
-                                    </button>
+                                    <StatusToggle
+                                        :active="supplier.is_active"
+                                        @toggle="supplier.is_active ? inactivateSupplier(supplier.id) : activateSupplier(supplier.id)"
+                                    />
                                 </td>
                                 <td class="px-4 py-3 text-sm font-medium whitespace-nowrap">
                                     <div class="flex flex-wrap gap-2 justify-end">
@@ -215,6 +197,7 @@ import SupplierForm from '@/components/forms/inventory/SupplierForm.vue';
 import { Button } from '@/components/ui/button';
 import Icon from '@/components/Icon.vue';
 import { alert } from '@/utils';
+import StatusToggle from '@/components/tables/StatusToggle.vue';
 
 interface Props {
     suppliers: {

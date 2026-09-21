@@ -8,6 +8,7 @@ import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import RowActions from '@/components/tables/RowActions.vue';
 import RowAction from '@/components/tables/RowAction.vue';
+import StatusToggle from '@/components/tables/StatusToggle.vue';
 import { alert } from '@/utils';
 
 interface FineRule {
@@ -486,12 +487,7 @@ const fineTypeOptions = [
                                 {{ formatDate(rule.effective_from) }}<span v-if="rule.effective_to"> - {{ formatDate(rule.effective_to) }}</span>
                             </td>
                             <td class="py-2 px-3 text-center">
-                                <button
-                                    @click="toggleStatus(rule)"
-                                    :class="['inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium cursor-pointer hover:opacity-80', rule.is_active ? 'bg-success/10 text-success' : 'bg-muted text-foreground']"
-                                >
-                                    {{ rule.is_active ? 'Active' : 'Inactive' }}
-                                </button>
+                                <StatusToggle :active="rule.is_active" @toggle="toggleStatus(rule)" />
                             </td>
                             <td class="py-2 px-3">
                                 <RowActions>

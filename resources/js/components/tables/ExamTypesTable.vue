@@ -6,6 +6,7 @@ import RowActions from '@/components/tables/RowActions.vue';
 import { Button } from '@/components/ui/button';
 import Icon from '@/components/Icon.vue';
 import { alert } from '@/utils';
+import StatusToggle from '@/components/tables/StatusToggle.vue';
 import { router } from '@inertiajs/vue3';
 import axios from 'axios';
 import { ref, watch } from 'vue';
@@ -200,19 +201,10 @@ const forceDeleteExamType = (examType: any) => {
                                 </div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
-                                <button
-                                    type="button"
-                                    :class="[
-                                        'inline-flex cursor-pointer rounded-full px-2 py-1 text-xs font-semibold transition-opacity hover:opacity-80',
-                                        examType.is_active
-                                            ? 'bg-success/10 text-success'
-                                            : 'bg-destructive/10 text-destructive',
-                                    ]"
-                                    :title="examType.is_active ? 'Click to deactivate' : 'Click to activate'"
-                                    @click="examType.is_active ? inactivateExamType(examType) : activateExamType(examType)"
-                                >
-                                    {{ examType.is_active ? 'Active' : 'Inactive' }}
-                                </button>
+                                <StatusToggle
+                                    :active="examType.is_active"
+                                    @toggle="examType.is_active ? inactivateExamType(examType) : activateExamType(examType)"
+                                />
                             </td>
                             <td class="px-6 py-4 text-sm font-medium whitespace-nowrap">
                                 <RowActions v-if="!showInactive">

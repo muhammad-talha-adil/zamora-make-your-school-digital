@@ -4,6 +4,7 @@ import RowAction from '@/components/tables/RowAction.vue';
 import RowActions from '@/components/tables/RowActions.vue';
 import TablePagination from '@/components/tables/TablePagination.vue';
 import { alert } from '@/utils';
+import StatusToggle from '@/components/tables/StatusToggle.vue';
 import axios from 'axios';
 import { ref, watch } from 'vue';
 import { route } from 'ziggy-js';
@@ -193,19 +194,10 @@ const inactivateSubject = (subject: any) => {
                                 </div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
-                                <button
-                                    type="button"
-                                    :class="[
-                                        'inline-flex cursor-pointer rounded-full px-2 py-1 text-xs font-semibold transition-opacity hover:opacity-80',
-                                        subject.is_active
-                                            ? 'bg-success/10 text-success'
-                                            : 'bg-destructive/10 text-destructive',
-                                    ]"
-                                    :title="subject.is_active ? 'Click to deactivate' : 'Click to activate'"
-                                    @click="subject.is_active ? inactivateSubject(subject) : activateSubject(subject)"
-                                >
-                                    {{ subject.is_active ? 'Active' : 'Inactive' }}
-                                </button>
+                                <StatusToggle
+                                    :active="subject.is_active"
+                                    @toggle="subject.is_active ? inactivateSubject(subject) : activateSubject(subject)"
+                                />
                             </td>
                             <td class="px-6 py-4 text-sm font-medium whitespace-nowrap">
                                 <RowActions>

@@ -9,6 +9,7 @@ import Icon from '@/components/Icon.vue';
 import TablePagination from '@/components/tables/TablePagination.vue';
 import { Badge } from '@/components/ui/badge';
 import type { BreadcrumbItem } from '@/types';
+import StatusToggle from '@/components/tables/StatusToggle.vue';
 import ItemForm from '@/components/forms/inventory/ItemForm.vue';
 
 interface InventoryItemData {
@@ -316,14 +317,7 @@ const getStockStatus = (quantity: number) => {
                                     </div>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
-                                    <Badge
-                                        :variant="item.is_active ? 'default' : 'destructive'"
-                                        class="cursor-pointer transition-opacity hover:opacity-80"
-                                        :title="item.is_active ? 'Click to inactivate' : 'Click to activate'"
-                                        @click="toggleActive(item)"
-                                    >
-                                        {{ item.is_active ? 'Active' : 'Inactive' }}
-                                    </Badge>
+                                    <StatusToggle :active="item.is_active" @toggle="toggleActive(item)" />
                                 </td>
                                 <td class="px-6 py-4 text-sm font-medium whitespace-nowrap">
                                     <div class="flex flex-wrap gap-2" v-if="!showDeleted">

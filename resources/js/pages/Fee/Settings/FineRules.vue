@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { alert } from '@/utils';
+import StatusToggle from '@/components/tables/StatusToggle.vue';
 
 interface FineRule {
     id: number;
@@ -534,12 +535,7 @@ const fineTypeOptions = [
                                     {{ rule.feeHead?.name || 'All Fees' }}
                                 </td>
                                 <td class="py-3 px-4 text-center">
-                                    <button 
-                                        @click="toggleStatus(rule)"
-                                        :class="['inline-flex items-center px-2 py-1 rounded-full text-xs font-medium cursor-pointer hover:opacity-80', rule.is_active ? 'bg-success/10 text-success' : 'bg-muted text-foreground']"
-                                    >
-                                        {{ rule.is_active ? 'Active' : 'Inactive' }}
-                                    </button>
+                                    <StatusToggle :active="rule.is_active" @toggle="toggleStatus(rule)" />
                                 </td>
                                 <td class="py-3 px-4 text-center">
                                     <div class="flex justify-center gap-2">

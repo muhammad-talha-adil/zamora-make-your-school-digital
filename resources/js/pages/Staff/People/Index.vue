@@ -11,6 +11,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { alert } from '@/utils';
 import { tableActionButtonClass } from '@/utils/table-actions';
 import type { BreadcrumbItem } from '@/types';
+import StatusToggle from '@/components/tables/StatusToggle.vue';
 
 interface Lookup {
     id: number;
@@ -498,15 +499,7 @@ const submitDesignation = async () => {
                                 <td class="px-4 py-3 text-sm text-muted-foreground">{{ member.campus?.name || '-' }}</td>
                                 <td class="px-4 py-3 text-sm text-muted-foreground">{{ member.jobs_count }}</td>
                                 <td class="px-4 py-3">
-                                    <button
-                                        type="button"
-                                        :class="member.is_active ? 'bg-success/10 text-success' : 'bg-muted text-muted-foreground'"
-                                        class="inline-flex cursor-pointer rounded-full px-2.5 py-1 text-xs font-medium transition-opacity hover:opacity-80"
-                                        :title="member.is_active ? 'Click to deactivate' : 'Click to activate'"
-                                        @click="toggleStaff(member)"
-                                    >
-                                        {{ member.is_active ? 'Active' : 'Inactive' }}
-                                    </button>
+                                    <StatusToggle :active="member.is_active" @toggle="toggleStaff(member)" />
                                 </td>
                                 <td class="px-4 py-3">
                                     <div class="flex flex-wrap justify-end gap-2">

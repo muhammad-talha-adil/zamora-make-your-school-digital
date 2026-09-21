@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import Icon from '@/components/Icon.vue';
 import { Badge } from '@/components/ui/badge';
 import type { BreadcrumbItem } from '@/types';
+import StatusToggle from '@/components/tables/StatusToggle.vue';
 import InventoryTypeForm from '@/components/forms/InventoryTypeForm.vue';
 
 interface Props {
@@ -264,14 +265,7 @@ const handleSaved = () => {
                                     </Badge>
                                 </td>
                                 <td class="px-6 py-4 whitespace-nowrap">
-                                    <Badge
-                                        :variant="type.is_active ? 'default' : 'destructive'"
-                                        class="cursor-pointer transition-opacity hover:opacity-80"
-                                        :title="type.is_active ? 'Click to inactivate' : 'Click to activate'"
-                                        @click="toggleActive(type)"
-                                    >
-                                        {{ type.is_active ? 'Active' : 'Inactive' }}
-                                    </Badge>
+                                    <StatusToggle :active="type.is_active" @toggle="toggleActive(type)" />
                                 </td>
                                 <td class="px-6 py-4 text-sm font-medium whitespace-nowrap">
                                     <div class="flex flex-wrap gap-2" v-if="!showInactive">

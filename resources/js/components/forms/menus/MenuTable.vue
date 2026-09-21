@@ -4,6 +4,7 @@ import { Badge } from '@/components/ui/badge';
 import Icon from '@/components/Icon.vue';
 import TablePagination from '@/components/tables/TablePagination.vue';
 import { tableActionButtonClass } from '@/utils/table-actions';
+import StatusToggle from '@/components/tables/StatusToggle.vue';
 
 interface Menu {
     id: number;
@@ -131,14 +132,11 @@ const updatePerPage = (value: number) => {
                                 </div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
-                                <Badge
-                                    :variant="menu.is_active ? 'default' : 'destructive'"
-                                    :class="hasManageMenusPermission && !showInactive ? 'cursor-pointer transition-opacity hover:opacity-80' : ''"
-                                    :title="hasManageMenusPermission && !showInactive ? (menu.is_active ? 'Click to inactivate' : 'Click to activate') : undefined"
-                                    @click="hasManageMenusPermission && !showInactive && emit('toggleActive', menu)"
-                                >
-                                    {{ menu.is_active ? 'Active' : 'Inactive' }}
-                                </Badge>
+                                <StatusToggle
+                                    :active="menu.is_active"
+                                    :disabled="!hasManageMenusPermission || showInactive"
+                                    @toggle="hasManageMenusPermission && !showInactive && emit('toggleActive', menu)"
+                                />
                             </td>
                             <td class="px-6 py-4 text-sm font-medium whitespace-nowrap">
                                 <div class="flex flex-wrap justify-end gap-2" v-if="!showInactive && hasManageMenusPermission">
