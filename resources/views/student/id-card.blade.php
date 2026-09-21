@@ -200,16 +200,22 @@
         .card-back .content {
             flex: 1;
             display: flex;
+            flex-direction: column;
             align-items: stretch;
-            gap: 2.8mm;
-            padding: 2.2mm 3mm;
+            justify-content: center;
+            gap: 1.6mm;
+            padding: 2mm 3mm;
             min-height: 0;
+        }
+        .card-back .top-row {
+            display: flex;
+            align-items: center;
+            gap: 2.8mm;
         }
         .qr-frame {
             flex-shrink: 0;
-            align-self: center;
-            width: 16.5mm;
-            height: 16.5mm;
+            width: 15mm;
+            height: 15mm;
             padding: 0.9mm;
             background: #fff;
             border: 0.25mm solid #dde2e6;
@@ -226,10 +232,10 @@
             min-width: 0;
             display: flex;
             flex-direction: column;
-            justify-content: space-between;
-            gap: .8mm;
+            justify-content: center;
+            gap: .7mm;
             font-size: 1.9mm;
-            line-height: 1.4;
+            line-height: 1.35;
             color: #333;
         }
         .card-back .info .school-name {
@@ -245,7 +251,6 @@
             grid-template-columns: 15mm 1fr;
             column-gap: 1.6mm;
             row-gap: .9mm;
-            margin-top: .6mm;
             padding: 1.4mm 2mm;
             background: var(--brand-light);
             border-radius: 1.4mm;
@@ -323,23 +328,25 @@
             <div class="punch-hole"></div>
             <div class="top-bar"></div>
             <div class="content">
-                <div class="qr-frame">
-                    @if (! empty($card['attendance_qr']))
-                        <img class="qr" src="{{ $card['attendance_qr'] }}" alt="Scan to mark attendance">
-                    @endif
-                </div>
-                <div class="info">
-                    <div class="school-name">{{ $school?->name ?? 'School' }}</div>
-                    @if ($school?->address)
-                        <div class="school-address">{{ $school->address }}</div>
-                    @endif
-                    @if ($school?->phone)
-                        <div class="school-address">Ph: {{ $school->phone }}</div>
-                    @endif
-                    <div class="datafields">
-                        <span class="k">Guardian:</span><span class="v">{{ $card['guardian_phone'] ?? '—' }}</span>
-                        <span class="k">D.O.B:</span><span class="v">{{ $student->dob?->format('d M Y') ?? '—' }}</span>
+                <div class="top-row">
+                    <div class="qr-frame">
+                        @if (! empty($card['attendance_qr']))
+                            <img class="qr" src="{{ $card['attendance_qr'] }}" alt="Scan to mark attendance">
+                        @endif
                     </div>
+                    <div class="info">
+                        <div class="school-name">{{ $school?->name ?? 'School' }}</div>
+                        @if ($school?->address)
+                            <div class="school-address">{{ $school->address }}</div>
+                        @endif
+                        @if ($school?->phone)
+                            <div class="school-address">Ph: {{ $school->phone }}</div>
+                        @endif
+                    </div>
+                </div>
+                <div class="datafields">
+                    <span class="k">Guardian:</span><span class="v">{{ $card['guardian_phone'] ?? '—' }}</span>
+                    <span class="k">D.O.B:</span><span class="v">{{ $student->dob?->format('d M Y') ?? '—' }}</span>
                 </div>
             </div>
             <div class="footer">If found, please return this card to the school office</div>
