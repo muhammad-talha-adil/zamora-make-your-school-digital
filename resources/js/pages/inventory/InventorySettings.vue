@@ -1,13 +1,16 @@
 <script setup lang="ts">
-import { Head } from '@inertiajs/vue3';
+import { Head, router } from '@inertiajs/vue3';
 import { alert, formatCurrency } from '@/utils';
 import { ref, computed } from 'vue';
 import axios from 'axios';
+import { route } from 'ziggy-js';
 import AppLayout from '@/layouts/AppLayout.vue';
+import FilterCard from '@/components/FilterCard.vue';
 import { Button } from '@/components/ui/button';
 import TablePagination from '@/components/tables/TablePagination.vue';
 import Icon from '@/components/Icon.vue';
 import { Badge } from '@/components/ui/badge';
+import StatusToggle from '@/components/tables/StatusToggle.vue';
 import type { BreadcrumbItem } from '@/types';
 import InventoryTypeForm from '@/components/forms/InventoryTypeForm.vue';
 import ItemForm from '@/components/forms/inventory/ItemForm.vue';
@@ -76,7 +79,6 @@ const props = defineProps<Props>();
 const activeTab = ref('types');
 
 // Types state
-const showInactiveTypes = ref(false);
 const campusFilter = ref(props.filters?.campus_id || '');
 const inventoryTypesData = ref(props.inventoryTypes.data || []);
 const paginationTypes = ref(props.inventoryTypes);
@@ -86,7 +88,6 @@ const perPageTypes = ref(25);
 const perPageOptions = [25, 50, 75, 100];
 
 // Items state
-const showInactiveItems = ref(false);
 const typeFilter = ref('');
 const perPageItems = ref(25);
 const inventoryItemsData = ref(props.inventoryItems.data || []);
@@ -120,7 +121,6 @@ const reloadTypes = () => {
         per_page: perPageTypes.value,
     };
     if (campusFilter.value) params.campus_id = campusFilter.value;
-    if (showInactiveTypes.value) params.status = 'inactive';
 
     axios.get(`/inventory/types/paginated?${new URLSearchParams(params as any).toString()}`).then((response) => {
         inventoryTypesData.value = response.data.data;
@@ -128,9 +128,27 @@ const reloadTypes = () => {
     });
 };
 
-const toggleShowInactiveTypes = () => {
-    showInactiveTypes.value = !showInactiveTypes.value;
-    reloadTypes();
+const toggleTypeActive = (type: InventoryTypeData) => {
+    const action = type.is_active ? 'inactivate' : 'activate';
+    alert
+        .confirm(
+            `Are you sure you want to ${action} "${type.name}"?`,
+            `${action.charAt(0).toUpperCase() + action.slice(1)} Inventory Type`,
+        )
+        .then((result) => {
+            if (result.isConfirmed) {
+                router.patch(route(`inventory.types.${action}`, type.id), {}, {
+                    preserveScroll: true,
+                    onSuccess: () => {
+                        alert.success(`Inventory type ${action}d successfully!`);
+                        reloadTypes();
+                    },
+                    onError: () => {
+                        alert.error(`Failed to ${action} inventory type. Please try again.`);
+                    },
+                });
+            }
+        });
 };
 
 const deleteType = (type: InventoryTypeData) => {
@@ -163,7 +181,6 @@ const reloadItems = () => {
     const campusId = campusFilter.value || defaultCampusId.value;
     if (campusId) params.campus_id = campusId;
     if (typeFilter.value) params.type_id = typeFilter.value;
-    if (showInactiveItems.value) params.status = 'inactive';
 
     axios.get(`/inventory/items/all?${new URLSearchParams(params as any).toString()}`).then((response) => {
         // Handle paginated response
@@ -204,9 +221,27 @@ const loadItemsPage = (url: string) => {
     });
 };
 
-const toggleShowInactiveItems = () => {
-    showInactiveItems.value = !showInactiveItems.value;
-    reloadItems();
+const toggleItemActive = (item: InventoryItemData) => {
+    const action = item.is_active ? 'inactivate' : 'activate';
+    alert
+        .confirm(
+            `Are you sure you want to ${action} "${item.name}"?`,
+            `${action.charAt(0).toUpperCase() + action.slice(1)} Inventory Item`,
+        )
+        .then((result) => {
+            if (result.isConfirmed) {
+                router.patch(route(`inventory.items.${action}`, item.id), {}, {
+                    preserveScroll: true,
+                    onSuccess: () => {
+                        alert.success(`Inventory item ${action}d successfully!`);
+                        reloadItems();
+                    },
+                    onError: () => {
+                        alert.error(`Failed to ${action} inventory item. Please try again.`);
+                    },
+                });
+            }
+        });
 };
 
 const openEditItem = (item: InventoryItemData) => {
@@ -315,10 +350,10 @@ const loadTypesPage = (url: string) => {
                 </div>
 
                 <!-- Types Filters -->
-                <div class="flex flex-col sm:flex-row gap-2 items-center">
-                    <select 
-                        v-model="campusFilter" 
-                        @change="reloadTypes" 
+                <FilterCard class="flex flex-col sm:flex-row gap-2 items-center">
+                    <select
+                        v-model="campusFilter"
+                        @change="reloadTypes"
                         class="w-full sm:w-44 md:w-48 rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm min-h-10 md:min-h-11"
                     >
                         <option value="">All Campuses</option>
@@ -335,16 +370,7 @@ const loadTypesPage = (url: string) => {
                             </option>
                         </select>
                     </div>
-                    <Button
-                        :variant="showInactiveTypes ? 'ghost' : 'default'"
-                        size="sm"
-                        @click="toggleShowInactiveTypes"
-                        class="min-h-10 md:min-h-11"
-                    >
-                        <Icon :icon="showInactiveTypes ? 'eye' : 'eye-off'" class="mr-1.5" />
-                        {{ showInactiveTypes ? 'Show Active' : 'Show Inactive' }}
-                    </Button>
-                </div>
+                </FilterCard>
 
                 <!-- Mobile Card View -->
                 <div class="block lg:hidden space-y-3">
@@ -358,26 +384,24 @@ const loadTypesPage = (url: string) => {
                                 <div class="font-medium text-foreground">{{ type.name }}</div>
                                 <div class="text-xs text-muted-foreground">{{ type.campus_name || 'N/A' }}</div>
                             </div>
-                            <Badge :variant="type.is_active ? 'default' : 'destructive'">
-                                {{ type.is_active ? 'Active' : 'Inactive' }}
-                            </Badge>
+                            <StatusToggle :active="type.is_active" @toggle="toggleTypeActive(type)" />
                         </div>
                         <div class="flex flex-wrap gap-2 justify-between items-center text-sm">
                             <Badge variant="secondary">{{ type.items_count }} items</Badge>
                         </div>
                         <div class="flex gap-2 pt-2">
-                            <Button 
-                                variant="outline" 
-                                size="sm" 
-                                @click="() => {}" 
+                            <Button
+                                variant="outline"
+                                size="sm"
+                                @click="() => {}"
                                 class="flex-1"
                             >
                                 <Icon icon="edit" class="mr-1" />Edit
                             </Button>
-                            <Button 
-                                variant="destructive" 
-                                size="sm" 
-                                @click="deleteType(type)" 
+                            <Button
+                                variant="destructive"
+                                size="sm"
+                                @click="deleteType(type)"
                                 class="flex-1"
                             >
                                 <Icon icon="trash" class="mr-1" />Delete
@@ -418,9 +442,7 @@ const loadTypesPage = (url: string) => {
                                         <Badge variant="secondary">{{ type.items_count }} items</Badge>
                                     </td>
                                     <td class="px-4 py-3 whitespace-nowrap">
-                                        <Badge :variant="type.is_active ? 'default' : 'destructive'">
-                                            {{ type.is_active ? 'Active' : 'Inactive' }}
-                                        </Badge>
+                                        <StatusToggle :active="type.is_active" @toggle="toggleTypeActive(type)" />
                                     </td>
                                     <td class="px-4 py-3 text-sm font-medium whitespace-nowrap">
                                         <div class="flex flex-wrap gap-2">
@@ -445,6 +467,9 @@ const loadTypesPage = (url: string) => {
                                 </tr>
                             </tbody>
                         </table>
+                        <div v-if="inventoryTypesData.length === 0" class="text-center py-8 text-muted-foreground">
+                            No types found.
+                        </div>
                     </div>
                 </div>
 
@@ -481,10 +506,10 @@ const loadTypesPage = (url: string) => {
                 </div>
 
                 <!-- Items Filters -->
-                <div class="flex flex-col sm:flex-row gap-2 items-center">
-                    <select 
-                        v-model="campusFilter" 
-                        @change="reloadItems" 
+                <FilterCard class="flex flex-col sm:flex-row gap-2 items-center">
+                    <select
+                        v-model="campusFilter"
+                        @change="reloadItems"
                         class="w-full sm:w-44 md:w-48 rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm min-h-10 md:min-h-11"
                     >
                         <option value="">All Campuses</option>
@@ -492,9 +517,9 @@ const loadTypesPage = (url: string) => {
                             {{ campus.name }}
                         </option>
                     </select>
-                    <select 
-                        v-model="typeFilter" 
-                        @change="reloadItems" 
+                    <select
+                        v-model="typeFilter"
+                        @change="reloadItems"
                         class="w-full sm:w-44 md:w-48 rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm min-h-10 md:min-h-11"
                     >
                         <option value="">All Types</option>
@@ -511,16 +536,7 @@ const loadTypesPage = (url: string) => {
                             </option>
                         </select>
                     </div>
-                    <Button
-                        :variant="showInactiveItems ? 'ghost' : 'default'"
-                        size="sm"
-                        @click="toggleShowInactiveItems"
-                        class="min-h-10 md:min-h-11"
-                    >
-                        <Icon :icon="showInactiveItems ? 'eye' : 'eye-off'" class="mr-1.5" />
-                        {{ showInactiveItems ? 'Show Active' : 'Show Inactive' }}
-                    </Button>
-                </div>
+                </FilterCard>
 
                 <!-- Mobile Card View -->
                 <div class="block lg:hidden space-y-3">
@@ -534,9 +550,7 @@ const loadTypesPage = (url: string) => {
                                 <div class="font-medium text-foreground">{{ item.name }}</div>
                                 <div class="text-xs text-muted-foreground truncate">{{ item.description || 'No description' }}</div>
                             </div>
-                            <Badge :variant="item.is_active ? 'default' : 'destructive'">
-                                {{ item.is_active ? 'Active' : 'Inactive' }}
-                            </Badge>
+                            <StatusToggle :active="item.is_active" @toggle="toggleItemActive(item)" />
                         </div>
                         <div class="flex flex-wrap gap-2 justify-between items-center text-sm">
                             <Badge variant="secondary">{{ item.inventory_type_name || 'N/A' }}</Badge>
@@ -609,9 +623,7 @@ const loadTypesPage = (url: string) => {
                                         </div>
                                     </td>
                                     <td class="px-4 py-3 whitespace-nowrap">
-                                        <Badge :variant="item.is_active ? 'default' : 'destructive'">
-                                            {{ item.is_active ? 'Active' : 'Inactive' }}
-                                        </Badge>
+                                        <StatusToggle :active="item.is_active" @toggle="toggleItemActive(item)" />
                                     </td>
                                     <td class="px-4 py-3 text-sm font-medium whitespace-nowrap">
                                         <div class="flex flex-wrap gap-2">
@@ -626,6 +638,9 @@ const loadTypesPage = (url: string) => {
                                 </tr>
                             </tbody>
                         </table>
+                        <div v-if="inventoryItemsData.length === 0" class="text-center py-8 text-muted-foreground">
+                            No items found.
+                        </div>
                     </div>
                 </div>
 

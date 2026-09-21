@@ -111,7 +111,6 @@ const deleteDiscountType = (discountType: DiscountType) => {
                         <div class="font-medium text-foreground">{{ discountType.name }}</div>
                         <div class="text-xs text-muted-foreground">Code: {{ discountType.code }}</div>
                     </div>
-                    <button
                     <StatusToggle :active="discountType.is_active" @toggle="toggleActiveStatus(discountType)" />
                 </div>
                 <div class="text-sm text-muted-foreground space-y-1 pt-2 border-t border-border">
@@ -166,7 +165,6 @@ const deleteDiscountType = (discountType: DiscountType) => {
                                 </span>
                             </td>
                             <td class="px-4 py-3">
-                                <button
                                 <StatusToggle :active="discountType.is_active" @toggle="toggleActiveStatus(discountType)" />
                             </td>
                             <td class="px-4 py-3 text-sm font-medium whitespace-nowrap">

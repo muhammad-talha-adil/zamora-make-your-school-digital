@@ -256,8 +256,7 @@ const getFrequencyLabel = (frequency: string) => {
                     <div>Frequency: {{ getFrequencyLabel(feeHead.default_frequency) }}</div>
                     <div>Order: {{ feeHead.sort_order }}</div>
                     <div>
-                        <button
-                            <StatusToggle :active="feeHead.is_active" @toggle="toggleActive(feeHead)" />
+                        <StatusToggle :active="feeHead.is_active" @toggle="toggleActive(feeHead)" />
                     </div>
                 </div>
                 <div class="flex gap-2 pt-2">
@@ -314,7 +313,6 @@ const getFrequencyLabel = (frequency: string) => {
                                 <div class="text-sm text-muted-foreground">{{ getFrequencyLabel(feeHead.default_frequency) }}</div>
                             </td>
                             <td class="px-4 py-3">
-                                <button
                                 <StatusToggle :active="feeHead.is_active" @toggle="toggleActive(feeHead)" />
                             </td>
                             <td class="px-4 py-3 text-sm font-medium whitespace-nowrap">
