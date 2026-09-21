@@ -24,6 +24,7 @@ type ActionKind =
     | 'activate'
     | 'deactivate'
     | 'generate'
+    | 'pay'
     | 'custom';
 
 interface Props {
@@ -61,6 +62,7 @@ const PRESETS: Record<Exclude<ActionKind, 'custom'>, { icon: string; label: stri
     activate: { icon: 'check', label: 'Activate', tone: 'text-muted-foreground hover:text-success hover:bg-success/10' },
     deactivate: { icon: 'pause', label: 'Deactivate', tone: 'text-muted-foreground hover:text-warning hover:bg-warning/10' },
     generate: { icon: 'file-plus', label: 'Generate', tone: 'text-muted-foreground hover:text-primary hover:bg-primary/10' },
+    pay: { icon: 'credit-card', label: 'Pay', tone: 'text-muted-foreground hover:text-success hover:bg-success/10' },
     restore: { icon: 'rotate-ccw', label: 'Restore', tone: 'text-muted-foreground hover:text-success hover:bg-success/10' },
     delete: { icon: 'trash-2', label: 'Delete', tone: 'text-muted-foreground hover:text-destructive hover:bg-destructive/10' },
 };

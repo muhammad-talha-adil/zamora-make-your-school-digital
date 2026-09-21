@@ -13,6 +13,8 @@ import Icon from '@/components/Icon.vue';
 import { formatCurrency } from '@/utils/currency';
 import { formatDate } from '@/utils/date';
 import { tableActionButtonClass } from '@/utils/table-actions';
+import RowAction from '@/components/tables/RowAction.vue';
+import RowActions from '@/components/tables/RowActions.vue';
 
 interface FeeVoucher {
     id: number;
@@ -429,16 +431,12 @@ const isOverdueVoucher = (voucher: FeeVoucher) => {
                         <div>Amount: {{ formatCurrency(voucher.net_amount) }}</div>
                         <div>Balance: {{ formatCurrency(voucher.balance_amount) }}</div>
                     </div>
-                    <div class="flex flex-wrap gap-2 pt-2">
-                        <Button v-if="isPayable(voucher)" size="sm" @click="payVoucher(voucher)">
-                            <Icon icon="credit-card" class="mr-1" />Pay
-                        </Button>
-                        <Button variant="outline" size="sm" :class="tableActionButtonClass.view" @click="router.visit(route('fee.vouchers.show', voucher.id))">
-                            <Icon icon="eye" class="mr-1" />View
-                        </Button>
-                        <Button variant="outline" size="sm" :class="tableActionButtonClass.print" @click="printVoucher(voucher.id)">
-                            <Icon icon="printer" class="mr-1" />Print
-                        </Button>
+                    <div class="flex justify-end pt-2">
+                        <RowActions>
+                            <RowAction v-if="isPayable(voucher)" kind="pay" @click="payVoucher(voucher)" />
+                            <RowAction kind="view" @click="router.visit(route('fee.vouchers.show', voucher.id))" />
+                            <RowAction kind="print" @click="printVoucher(voucher.id)" />
+                        </RowActions>
                     </div>
                 </div>
                 <div v-if="isLoading" class="text-center py-8 text-muted-foreground">
@@ -539,17 +537,11 @@ const isOverdueVoucher = (voucher: FeeVoucher) => {
                                     </span>
                                 </td>
                                 <td class="px-4 py-3 text-sm font-medium whitespace-nowrap">
-                                    <div class="flex flex-wrap gap-2 justify-end">
-                                        <Button v-if="isPayable(voucher)" size="sm" @click="payVoucher(voucher)">
-                                            <Icon icon="credit-card" class="mr-1 h-3 w-3" />Pay
-                                        </Button>
-                                        <Button variant="outline" size="sm" :class="tableActionButtonClass.view" @click="router.visit(route('fee.vouchers.show', voucher.id))">
-                                            <Icon icon="eye" class="mr-1 h-3 w-3" />View
-                                        </Button>
-                                        <Button variant="outline" size="sm" :class="tableActionButtonClass.print" @click="printVoucher(voucher.id)">
-                                            <Icon icon="printer" class="mr-1 h-3 w-3" />Print
-                                        </Button>
-                                    </div>
+                                    <RowActions>
+                                        <RowAction v-if="isPayable(voucher)" kind="pay" @click="payVoucher(voucher)" />
+                                        <RowAction kind="view" @click="router.visit(route('fee.vouchers.show', voucher.id))" />
+                                        <RowAction kind="print" @click="printVoucher(voucher.id)" />
+                                    </RowActions>
                                 </td>
                             </tr>
                         </tbody>
