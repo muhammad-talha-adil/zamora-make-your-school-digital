@@ -1,8 +1,4 @@
 <script setup lang="ts">
-import ProfileController from '@/actions/App/Http/Controllers/Settings/ProfileController';
-import PasswordController from '@/actions/App/Http/Controllers/Settings/PasswordController';
-import { edit } from '@/routes/profile';
-import { send } from '@/routes/verification';
 import { Form, Head, Link, usePage } from '@inertiajs/vue3';
 
 import DeleteUser from '@/components/DeleteUser.vue';
@@ -17,7 +13,6 @@ import { Label } from '@/components/ui/label';
 import { useTwoFactorAuth } from '@/composables/useTwoFactorAuth';
 import AppLayout from '@/layouts/AppLayout.vue';
 import SettingsLayout from '@/layouts/settings/Layout.vue';
-import { disable, enable } from '@/routes/two-factor';
 import { type BreadcrumbItem } from '@/types';
 import { ShieldBan, ShieldCheck } from 'lucide-vue-next';
 import { onUnmounted, ref } from 'vue';
@@ -37,7 +32,7 @@ withDefaults(defineProps<Props>(), {
 const breadcrumbItems: BreadcrumbItem[] = [
     {
         title: 'Profile settings',
-        href: edit().url,
+        href: route('profile.edit'),
     },
 ];
 
@@ -113,7 +108,8 @@ onUnmounted(() => {
                 <!-- Profile Tab -->
                 <div v-if="activeTab === 'profile'">
                     <Form
-                        v-bind="ProfileController.update.form()"
+                        :action="route('profile.update')"
+                        method="patch"
                         class="space-y-6"
                         v-slot="{ errors, processing, recentlySuccessful }"
                     >
@@ -150,7 +146,7 @@ onUnmounted(() => {
                             <p class="-mt-4 text-sm text-muted-foreground">
                                 Your email address is unverified.
                                 <Link
-                                    :href="send()"
+                                    :href="route('verification.send')"
                                     as="button"
                                     class="text-foreground underline text-muted-foreground underline-offset-4 transition-colors duration-300 ease-out hover:decoration-current!"
                                 >
@@ -202,7 +198,8 @@ onUnmounted(() => {
                         />
 
                         <Form
-                            v-bind="PasswordController.update.form()"
+                            :action="route('user-password.update')"
+                            method="put"
                             :options="{
                                 preserveScroll: true,
                             }"
@@ -311,7 +308,8 @@ onUnmounted(() => {
                                 </Button>
                                 <Form
                                     v-else
-                                    v-bind="enable.form()"
+                                    :action="route('two-factor.enable')"
+                                    method="post"
                                     @success="showSetupModal = true"
                                     #default="{ processing }"
                                 >
@@ -338,7 +336,7 @@ onUnmounted(() => {
                             <TwoFactorRecoveryCodes />
 
                             <div class="relative inline">
-                                <Form v-bind="disable.form()" #default="{ processing }">
+                                <Form :action="route('two-factor.disable')" method="delete" #default="{ processing }">
                                     <Button
                                         variant="destructive"
                                         type="submit"

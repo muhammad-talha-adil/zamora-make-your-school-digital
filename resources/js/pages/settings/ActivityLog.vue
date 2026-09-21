@@ -7,7 +7,6 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import AppLayout from '@/layouts/AppLayout.vue';
 import SettingsLayout from '@/layouts/settings/Layout.vue';
-import { index } from '@/actions/App/Http/Controllers/Settings/ActivityLogController';
 import { type BreadcrumbItem } from '@/types';
 import { ref } from 'vue';
 
@@ -63,7 +62,7 @@ const to = ref(props.filters.to ?? '');
 
 const applyFilters = () => {
     router.get(
-        index().url,
+        route('activity-log.index'),
         {
             subject_type: subjectType.value || undefined,
             causer_id: causerId.value || undefined,
@@ -79,7 +78,7 @@ const resetFilters = () => {
     causerId.value = '';
     from.value = '';
     to.value = '';
-    router.get(index().url, {}, { preserveState: true, preserveScroll: true });
+    router.get(route('activity-log.index'), {}, { preserveState: true, preserveScroll: true });
 };
 
 const formatDate = (value: string | null): string => (value ? new Date(value).toLocaleString() : '-');

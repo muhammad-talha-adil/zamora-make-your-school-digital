@@ -7,7 +7,6 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import AppLayout from '@/layouts/AppLayout.vue';
 import SettingsLayout from '@/layouts/settings/Layout.vue';
-import { update } from '@/actions/App/Http/Controllers/Settings/SubscriptionController';
 import { type BreadcrumbItem } from '@/types';
 
 interface Subscription {
@@ -48,7 +47,7 @@ const form = useForm({
 });
 
 const submit = () => {
-    form.patch(update().url, {
+    form.patch(route('subscription.update'), {
         preserveScroll: true,
     });
 };
