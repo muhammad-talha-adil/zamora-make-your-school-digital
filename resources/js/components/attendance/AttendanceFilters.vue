@@ -1,79 +1,83 @@
 <template>
-    <div class="flex flex-col sm:flex-row gap-2 md:gap-3 flex-wrap">
-        <!-- Campus Filter -->
-        <select
-            v-model="filters.campus_id"
-            class="w-full sm:w-44 md:w-48 rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm min-h-10 md:min-h-11"
-        >
-            <option value="">All Campuses</option>
-            <option v-for="campus in props.campuses" :key="campus.id" :value="campus.id">
-                {{ campus.name }}
-            </option>
-        </select>
+    <FilterCard>
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 md:gap-3">
+            <!-- Campus Filter -->
+            <select
+                v-model="filters.campus_id"
+                class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm min-h-10 md:min-h-11"
+            >
+                <option value="">All Campuses</option>
+                <option v-for="campus in props.campuses" :key="campus.id" :value="campus.id">
+                    {{ campus.name }}
+                </option>
+            </select>
 
-        <!-- Session Filter -->
-        <select
-            v-model="filters.session_id"
-            class="w-full sm:w-44 md:w-48 rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm min-h-10 md:min-h-11"
-        >
-            <option value="">All Sessions</option>
-            <option v-for="session in props.sessions" :key="session.id" :value="session.id">
-                {{ session.name }}
-            </option>
-        </select>
+            <!-- Session Filter -->
+            <select
+                v-model="filters.session_id"
+                class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm min-h-10 md:min-h-11"
+            >
+                <option value="">All Sessions</option>
+                <option v-for="session in props.sessions" :key="session.id" :value="session.id">
+                    {{ session.name }}
+                </option>
+            </select>
 
-        <!-- Class Filter -->
-        <select
-            v-model="filters.class_id"
-            @change="onClassChange"
-            class="w-full sm:w-44 md:w-48 rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm min-h-10 md:min-h-11"
-        >
-            <option value="">All Classes</option>
-            <option v-for="cls in props.classes" :key="cls.id" :value="cls.id">
-                {{ cls.name }}
-            </option>
-        </select>
+            <!-- Class Filter -->
+            <select
+                v-model="filters.class_id"
+                @change="onClassChange"
+                class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm min-h-10 md:min-h-11"
+            >
+                <option value="">All Classes</option>
+                <option v-for="cls in props.classes" :key="cls.id" :value="cls.id">
+                    {{ cls.name }}
+                </option>
+            </select>
 
-        <!-- Section Filter -->
-        <select
-            v-model="filters.section_id"
-            class="w-full sm:w-44 md:w-48 rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm min-h-10 md:min-h-11"
-        >
-            <option value="">All Sections</option>
-            <option v-for="section in filteredSections" :key="section.id" :value="section.id">
-                {{ section.name }}
-            </option>
-        </select>
+            <!-- Section Filter -->
+            <select
+                v-model="filters.section_id"
+                class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm min-h-10 md:min-h-11"
+            >
+                <option value="">All Sections</option>
+                <option v-for="section in filteredSections" :key="section.id" :value="section.id">
+                    {{ section.name }}
+                </option>
+            </select>
 
-        <!-- Date Filter -->
-        <input
-            v-model="filters.date"
-            type="date"
-            class="w-full sm:w-44 rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm min-h-10 md:min-h-11"
-        />
+            <!-- Date Filter -->
+            <input
+                v-model="filters.date"
+                type="date"
+                class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm min-h-10 md:min-h-11"
+            />
 
-        <!-- Locked Filter -->
-        <select
-            v-model="filters.locked"
-            class="w-full sm:w-40 rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm min-h-10 md:min-h-11"
-        >
-            <option value="">All Status</option>
-            <option value="1">Locked</option>
-            <option value="0">Unlocked</option>
-        </select>
+            <!-- Locked Filter -->
+            <select
+                v-model="filters.locked"
+                class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm min-h-10 md:min-h-11"
+            >
+                <option value="">All Status</option>
+                <option value="1">Locked</option>
+                <option value="0">Unlocked</option>
+            </select>
+        </div>
 
-        <!-- Load Button -->
-        <Button variant="default" size="sm" @click="applyFilters" class="min-h-10 md:min-h-11 bg-primary hover:bg-primary/90">
-            <Icon icon="search" class="mr-1 h-4 w-4" />
-            Load
-        </Button>
+        <div class="mt-3 flex flex-wrap gap-2">
+            <!-- Load Button -->
+            <Button variant="default" size="sm" @click="applyFilters" class="min-h-10 md:min-h-11 bg-primary hover:bg-primary/90">
+                <Icon icon="search" class="mr-1 h-4 w-4" />
+                Load
+            </Button>
 
-        <!-- Reset Button -->
-        <Button variant="outline" size="sm" @click="resetFilters" class="min-h-10 md:min-h-11">
-            <Icon icon="rotate-ccw" class="mr-1 h-4 w-4" />
-            Reset
-        </Button>
-    </div>
+            <!-- Reset Button -->
+            <Button variant="outline" size="sm" @click="resetFilters" class="min-h-10 md:min-h-11">
+                <Icon icon="rotate-ccw" class="mr-1 h-4 w-4" />
+                Reset
+            </Button>
+        </div>
+    </FilterCard>
 </template>
 
 <script setup lang="ts">
@@ -82,6 +86,7 @@ import { router } from '@inertiajs/vue3';
 import { route } from 'ziggy-js';
 import { Button } from '@/components/ui/button';
 import Icon from '@/components/Icon.vue';
+import FilterCard from '@/components/FilterCard.vue';
 import type { Campus, Session, SchoolClass, Section, AttendanceFilters } from '@/types/attendance';
 
 interface Props {
