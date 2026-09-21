@@ -112,17 +112,18 @@ export function useStudentForm(
     // Fee loading state
     const feeLoading = ref(false);
 
-    // Get Father relation ID
+    // Default relation for the primary guardian (Father, if it exists) — the
+    // field is user-selectable, this is only the initial value.
     const fatherRelationId = computed(() => {
         const father = props.relations.find((r) => r.name.toLowerCase() === 'father');
         return father?.id || 1;
     });
 
-    // Filter relations to exclude Father for "Other Guardian"
+    // "Other Guardian" can't be the same relation as the one already picked
+    // as primary guardian.
     const otherRelations = computed(() => {
         return props.relations.filter(
-            (r) =>
-                r.name.toLowerCase() !== 'father'
+            (r) => r.id !== form.value.father_relation_id
         );
     });
 

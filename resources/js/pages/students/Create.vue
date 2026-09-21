@@ -425,7 +425,7 @@
                     :section-id="form.section_id"
                 />
 
-                <!-- Father Information Card (Primary Guardian) -->
+                <!-- Primary Guardian Information -->
                 <div
                     class="rounded-lg border border-border bg-card p-6"
                 >
@@ -433,7 +433,7 @@
                         class="mb-4 flex items-center gap-2 text-lg font-semibold text-foreground"
                     >
                         <Icon icon="user-check" class="h-5 w-5 text-primary" />
-                        Father Information (Primary Guardian)
+                        Primary Guardian Information
                     </h2>
 
                     <div
@@ -557,7 +557,7 @@
                             <InputError :message="errors.father_address" />
                         </div>
 
-                        <!-- Father Relation - PRE-SELECTED AND DISABLED -->
+                        <!-- Primary Guardian Relation -->
                         <div class="space-y-2">
                             <Label for="father_relation_id"
                                 >Relation
@@ -566,15 +566,18 @@
                             <select
                                 id="father_relation_id"
                                 v-model="form.father_relation_id"
-                                class="h-11 w-full cursor-not-allowed rounded-md border border-border bg-muted px-3 py-2 text-sm text-foreground"
+                                class="h-11 w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground"
                                 :class="{
                                     'border-destructive': errors.father_relation_id,
                                 }"
                                 required
-                                disabled
                             >
-                                <option :value="fatherRelationId">
-                                    Father
+                                <option
+                                    v-for="relation in props.relations"
+                                    :key="relation.id"
+                                    :value="relation.id"
+                                >
+                                    {{ relation.name }}
                                 </option>
                             </select>
                             <p class="text-xs text-muted-foreground"></p>
@@ -1118,7 +1121,10 @@ const submitForm = () => {
                 activeStatusId.value,
         ),
     );
-    formData.set('father_relation_id', String(fatherRelationId.value));
+    formData.set(
+        'father_relation_id',
+        String(parseInt(form.value.father_relation_id.toString()) || fatherRelationId.value),
+    );
 
     // Handle other guardian data (only if checkbox is checked and name provided)
     if (includeOtherGuardian.value && form.value.other_name && form.value.other_name.trim()) {
