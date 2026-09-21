@@ -143,16 +143,18 @@
                                 <div class="text-xs text-muted-foreground">{{ student.registration_no }}</div>
                             </div>
                         </div>
-                        <span
+                        <button
+                            type="button"
+                            @click="openStatusModal(student)"
                             :class="[
-                                'px-2 py-1 text-xs font-medium rounded-full shrink-0',
+                                'px-2 py-1 text-xs font-medium rounded-full shrink-0 cursor-pointer transition-colors hover:opacity-80',
                                 student.student_status?.name === 'Active'
                                     ? 'bg-success/10 text-success'
                                     : 'bg-muted text-foreground'
                             ]"
                         >
                             {{ student.student_status?.name || 'Unknown' }}
-                        </span>
+                        </button>
                     </div>
                     <div class="text-sm text-muted-foreground space-y-1 pt-2 border-t border-border">
                         <div class="flex items-center gap-2">
@@ -255,16 +257,18 @@
                                     <span v-if="!getPrimaryGuardian(student)" class="text-xs text-muted-foreground">No guardians</span>
                                 </td>
                                 <td class="px-4 py-3 whitespace-nowrap">
-                                    <span
+                                    <button
+                                        type="button"
+                                        @click="openStatusModal(student)"
                                         :class="[
-                                            'px-2 py-1 text-xs font-medium rounded-full',
+                                            'px-2 py-1 text-xs font-medium rounded-full cursor-pointer transition-colors hover:opacity-80',
                                             student.student_status?.name === 'Active'
                                                 ? 'bg-success/10 text-success'
                                                 : 'bg-muted text-foreground'
                                         ]"
                                     >
                                         {{ student.student_status?.name || 'Unknown' }}
-                                    </span>
+                                    </button>
                                 </td>
                                 <td class="px-4 py-3 text-sm font-medium whitespace-nowrap">
                                     <RowActions>
@@ -290,7 +294,6 @@
                                             label="Leaving certificate"
                                             @click="printLeavingCertificate(student)"
                                         />
-                                        <RowAction kind="delete" @click="openStatusModal(student)" />
                                     </RowActions>
                                 </td>
                             </tr>
