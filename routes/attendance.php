@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Attendance\QrAttendanceController;
 use App\Http\Controllers\AttendanceController;
 use App\Http\Controllers\Settings\AttendanceSettingsController;
 use App\Http\Controllers\StudentLeaveController;
@@ -59,6 +60,23 @@ Route::prefix('attendance')->name('attendance.')->middleware(['auth', 'verified'
     // API routes - rate limited to prevent abuse
     Route::get('/api/students', [AttendanceController::class, 'getStudentsByClassSection'])->name('api.students')->middleware('throttle:60,1');
     Route::get('/api/check-holiday', [AttendanceController::class, 'checkHoliday'])->name('api.check-holiday')->middleware('throttle:60,1');
+});
+
+/*
+|--------------------------------------------------------------------------
+| QR / signed-URL attendance marking (no login)
+|--------------------------------------------------------------------------
+|
+| Hit by either a device camera scanning the QR code printed on a student's
+| or staff member's ID card, or a USB barcode scanner "typing" the same URL
+| into a focused browser address bar. `signed` is the only guard — there is
+| no session to check, so the route only works with a link this application
+| itself generated via `URL::signedRoute()`.
+|
+*/
+Route::prefix('attendance/qr')->name('attendance.qr.')->middleware('signed')->group(function () {
+    Route::get('/student/{student}', [QrAttendanceController::class, 'markStudent'])->name('student');
+    Route::get('/staff/{staffProfile}', [QrAttendanceController::class, 'markStaff'])->name('staff');
 });
 
 /*
