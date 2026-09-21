@@ -11,6 +11,7 @@
  * `attendance.settings`, the permission seeded for exactly this screen.
  */
 
+use App\Models\AttendanceTiming;
 use App\Models\Holiday;
 use App\Models\LeaveType;
 use Tests\Support\AttendanceWorld;
@@ -48,4 +49,43 @@ it('lets a campus admin manage holidays', function () {
     ])->assertSessionHasNoErrors();
 
     expect(Holiday::where('title', 'Independence Day')->exists())->toBeTrue();
+});
+
+it('lets a campus admin toggle a leave type active status', function () {
+    $leaveType = LeaveType::create(['name' => 'Casual Leave '.uniqid(), 'is_active' => true]);
+
+    $this->actingAs($this->authorized)
+        ->post(route('attendance.settings.leave-types.toggle-active', $leaveType))
+        ->assertSessionHasNoErrors();
+
+    expect($leaveType->fresh()->is_active)->toBeFalse();
+});
+
+it('turns an unpermissioned account away from toggling a leave type', function () {
+    $leaveType = LeaveType::create(['name' => 'Emergency Leave '.uniqid(), 'is_active' => true]);
+
+    $this->actingAs($this->outsider)
+        ->post(route('attendance.settings.leave-types.toggle-active', $leaveType))
+        ->assertForbidden();
+
+    expect($leaveType->fresh()->is_active)->toBeTrue();
+});
+
+it('lets a campus admin toggle a shift timing active status', function () {
+    $shiftTiming = AttendanceTiming::create([
+        'campus_id' => $this->world->school->campus->id,
+        'session_id' => $this->world->school->session->id,
+        'name' => 'Regular '.uniqid(),
+        'starts_on' => '2026-04-01',
+        'ends_on' => '2027-03-31',
+        'day_starts_at' => '08:00',
+        'late_after' => '08:15',
+        'is_active' => true,
+    ]);
+
+    $this->actingAs($this->authorized)
+        ->post(route('attendance.settings.shift-timings.toggle-active', $shiftTiming))
+        ->assertSessionHasNoErrors();
+
+    expect($shiftTiming->fresh()->is_active)->toBeFalse();
 });

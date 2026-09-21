@@ -94,6 +94,18 @@ class AttendanceSettingsController extends Controller
     }
 
     /**
+     * Toggle the active status of a shift timing.
+     */
+    public function toggleShiftTimingActive(AttendanceTiming $shiftTiming): RedirectResponse
+    {
+        $this->authorize('attendance.settings');
+
+        $shiftTiming->update(['is_active' => ! $shiftTiming->is_active]);
+
+        return back()->with('success', 'Shift timing status updated successfully.');
+    }
+
+    /**
      * @return array<string, mixed>
      */
     private function validateShiftTiming(Request $request): array
@@ -235,6 +247,18 @@ class AttendanceSettingsController extends Controller
         $leaveType->delete();
 
         return back()->with('success', 'Leave type deleted successfully.');
+    }
+
+    /**
+     * Toggle the active status of a leave type.
+     */
+    public function toggleLeaveTypeActive(LeaveType $leaveType): RedirectResponse
+    {
+        $this->authorize('attendance.settings');
+
+        $leaveType->update(['is_active' => ! $leaveType->is_active]);
+
+        return back()->with('success', 'Leave type status updated successfully.');
     }
 
     /**

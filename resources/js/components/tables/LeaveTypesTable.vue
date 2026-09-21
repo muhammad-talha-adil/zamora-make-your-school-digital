@@ -3,6 +3,7 @@ import TablePagination from '@/components/tables/TablePagination.vue';
 import LeaveTypeForm from '@/components/forms/LeaveTypeForm.vue';
 import RowAction from '@/components/tables/RowAction.vue';
 import RowActions from '@/components/tables/RowActions.vue';
+import StatusToggle from '@/components/tables/StatusToggle.vue';
 import { Button } from '@/components/ui/button';
 import Icon from '@/components/Icon.vue';
 import { alert } from '@/utils';
@@ -65,6 +66,30 @@ watch(() => props.leaveTypes, (newLeaveTypes) => {
 const handleSaved = () => {
     fetchLeaveTypes();
     emit('saved');
+};
+
+const toggleLeaveTypeActive = (leaveType: any) => {
+    const actionText = leaveType.is_active ? 'deactivate' : 'activate';
+
+    alert
+        .confirm(
+            `Are you sure you want to ${actionText} "${leaveType.name}"?`,
+            actionText.charAt(0).toUpperCase() + actionText.slice(1) + ' Leave Type',
+        )
+        .then((result) => {
+            if (result.isConfirmed) {
+                router.post(`/attendance/settings/leave-types/${leaveType.id}/toggle-active`, {}, {
+                    preserveScroll: true,
+                    onSuccess: () => {
+                        alert.success(`Leave type ${actionText}d successfully!`);
+                        fetchLeaveTypes();
+                    },
+                    onError: () => {
+                        alert.error('Failed to update status. Please try again.');
+                    },
+                });
+            }
+        });
 };
 
 const deleteLeaveType = (leaveType: any) => {
@@ -173,16 +198,7 @@ const deleteLeaveType = (leaveType: any) => {
                                 </div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
-                                <span
-                                    :class="[
-                                        'inline-flex rounded-full px-2 py-1 text-xs font-semibold',
-                                        leaveType.is_active
-                                            ? 'bg-success/10 text-success'
-                                            : 'bg-destructive/10 text-destructive',
-                                    ]"
-                                >
-                                    {{ leaveType.is_active ? 'Active' : 'Inactive' }}
-                                </span>
+                                <StatusToggle :active="leaveType.is_active" @toggle="toggleLeaveTypeActive(leaveType)" />
                             </td>
                             <td class="px-6 py-4 text-sm font-medium whitespace-nowrap">
                                 <RowActions>

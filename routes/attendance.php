@@ -23,6 +23,7 @@ Route::prefix('attendance')->name('attendance.')->middleware(['auth', 'verified'
     Route::post('/settings/leave-types', [AttendanceSettingsController::class, 'storeLeaveType'])->name('settings.leave-types.store')->middleware('throttle:10,1');
     Route::put('/settings/leave-types/{leaveType}', [AttendanceSettingsController::class, 'updateLeaveType'])->name('settings.leave-types.update')->middleware('throttle:10,1');
     Route::delete('/settings/leave-types/{leaveType}', [AttendanceSettingsController::class, 'destroyLeaveType'])->name('settings.leave-types.destroy')->middleware('throttle:10,1');
+    Route::post('/settings/leave-types/{leaveType}/toggle-active', [AttendanceSettingsController::class, 'toggleLeaveTypeActive'])->name('settings.leave-types.toggle-active')->middleware('throttle:10,1');
     Route::get('/settings/holidays', [AttendanceSettingsController::class, 'indexHolidays'])->name('settings.holidays.index');
     Route::post('/settings/holidays', [AttendanceSettingsController::class, 'storeHoliday'])->name('settings.holidays.store')->middleware('throttle:10,1');
     Route::put('/settings/holidays/{holiday}', [AttendanceSettingsController::class, 'updateHoliday'])->name('settings.holidays.update')->middleware('throttle:10,1');
@@ -31,6 +32,7 @@ Route::prefix('attendance')->name('attendance.')->middleware(['auth', 'verified'
     Route::post('/settings/shift-timings', [AttendanceSettingsController::class, 'storeShiftTiming'])->name('settings.shift-timings.store')->middleware('throttle:10,1');
     Route::put('/settings/shift-timings/{shiftTiming}', [AttendanceSettingsController::class, 'updateShiftTiming'])->name('settings.shift-timings.update')->middleware('throttle:10,1');
     Route::delete('/settings/shift-timings/{shiftTiming}', [AttendanceSettingsController::class, 'destroyShiftTiming'])->name('settings.shift-timings.destroy')->middleware('throttle:10,1');
+    Route::post('/settings/shift-timings/{shiftTiming}/toggle-active', [AttendanceSettingsController::class, 'toggleShiftTimingActive'])->name('settings.shift-timings.toggle-active')->middleware('throttle:10,1');
 
     // Dashboard route - before index to avoid conflicts
     Route::get('/dashboard', [AttendanceController::class, 'dashboard'])->name('dashboard');
