@@ -38,6 +38,10 @@ Route::prefix('attendance')->name('attendance.')->middleware(['auth', 'verified'
     // Merged Attendance List / Mark Attendance / Student Reports / Leave page (#108)
     Route::get('/hub', [AttendanceController::class, 'hub'])->name('hub');
 
+    // QR camera scan — Method 1 of QR attendance (see the unauthenticated
+    // `attendance/qr/*` group below for Method 2).
+    Route::get('/scan', [AttendanceController::class, 'scan'])->name('scan');
+
     // Main routes
     Route::get('/', [AttendanceController::class, 'index'])->name('index');
     Route::get('/create', [AttendanceController::class, 'create'])->name('create');

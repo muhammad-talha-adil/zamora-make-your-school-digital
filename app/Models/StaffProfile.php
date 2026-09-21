@@ -15,6 +15,7 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Support\Facades\Storage;
 use Spatie\Activitylog\Models\Concerns\LogsActivity;
 use Spatie\Activitylog\Support\LogOptions;
 
@@ -97,6 +98,30 @@ class StaffProfile extends Model
         'deduction_amount' => 'decimal:2',
         'is_active' => 'boolean',
     ];
+
+    /**
+     * `photo_url` is not in the database — it is appended so every consumer
+     * gets one resolved public URL instead of reconstructing it from the raw
+     * `photo` disk path, the same pattern `Student::image_url` uses.
+     *
+     * @var array<int, string>
+     */
+    protected $appends = [
+        'photo_url',
+    ];
+
+    /**
+     * The photograph's public URL, resolved from the `public` disk path
+     * stored in `photo`. Null when no photo has been uploaded.
+     */
+    public function getPhotoUrlAttribute(): ?string
+    {
+        if (! $this->photo) {
+            return null;
+        }
+
+        return Storage::disk('public')->url($this->photo);
+    }
 
     /**
      * @return BelongsTo<User, $this>

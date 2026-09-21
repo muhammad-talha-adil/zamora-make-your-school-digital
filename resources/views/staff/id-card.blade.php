@@ -1,18 +1,15 @@
 {{--
-    The student ID card.
-
-    Sized to Pakistan's CNIC / CR80 standard (85.60mm x 53.98mm) so a school
-    can print onto real ID card stock, or laminate them straight off an A4
-    sheet without trimming to a different size. The photograph is already
-    uploaded and stored; this is the same kind of print view as the fee
-    challan.
+    The staff ID card — the same CR80 / CNIC print sizing as
+    `resources/views/student/id-card.blade.php`, laid out for a member of
+    staff instead of a child: employee number and designation in place of
+    admission number and guardian phone.
 --}}
 <!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Student ID Cards</title>
+    <title>Staff ID Cards</title>
     <style>
         * { box-sizing: border-box; }
         :root {
@@ -91,12 +88,6 @@
             text-align: center;
         }
         .fields { font-size: 2.4mm; line-height: 1.45; flex: 1; min-width: 0; overflow: hidden; }
-        .qr {
-            width: 12mm;
-            height: 12mm;
-            flex-shrink: 0;
-            align-self: flex-end;
-        }
         .fields .name {
             font-size: 3mm;
             font-weight: bold;
@@ -108,6 +99,12 @@
         .fields .row { display: flex; gap: 1mm; }
         .fields .k { color: #666; min-width: 13mm; }
         .fields .v { font-weight: bold; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .qr {
+            width: 12mm;
+            height: 12mm;
+            flex-shrink: 0;
+            align-self: flex-end;
+        }
         .card .foot {
             border-top: 0.2mm dashed #bbb;
             padding: 1mm 3mm;
@@ -133,7 +130,7 @@
 </div>
 <div class="sheet">
 @foreach ($cards as $card)
-    @php $student = $card['student']; @endphp
+    @php $staff = $card['staff']; @endphp
     <div class="card">
         <div class="top">
             <div class="school">{{ $school?->name ?? 'School' }}</div>
@@ -143,19 +140,18 @@
         </div>
 
         <div class="body">
-            @if ($student->image_url)
-                <img class="photo" src="{{ $student->image_url }}" alt="">
+            @if ($staff->photo_url)
+                <img class="photo" src="{{ $staff->photo_url }}" alt="">
             @else
                 <div class="photo photo-empty">No<br>photo</div>
             @endif
 
             <div class="fields">
-                <div class="name">{{ $student->user?->name ?? '—' }}</div>
-                <div class="row"><span class="k">Adm No</span><span class="v">{{ $student->admission_no ?? '—' }}</span></div>
-                <div class="row"><span class="k">Class</span><span class="v">{{ $card['class'] ?? '—' }}{{ $card['section'] ? ' — '.$card['section'] : '' }}</span></div>
-                <div class="row"><span class="k">Session</span><span class="v">{{ $card['session'] ?? '—' }}</span></div>
-                <div class="row"><span class="k">D.O.B</span><span class="v">{{ $student->dob?->format('d M Y') ?? '—' }}</span></div>
-                <div class="row"><span class="k">Guardian</span><span class="v">{{ $card['guardian_phone'] ?? '—' }}</span></div>
+                <div class="name">{{ $staff->user?->name ?? '—' }}</div>
+                <div class="row"><span class="k">Emp No</span><span class="v">{{ $staff->employee_no ?? '—' }}</span></div>
+                <div class="row"><span class="k">Designation</span><span class="v">{{ $card['designation'] ?? '—' }}</span></div>
+                <div class="row"><span class="k">Department</span><span class="v">{{ $card['department'] ?? '—' }}</span></div>
+                <div class="row"><span class="k">Phone</span><span class="v">{{ $staff->phone ?? '—' }}</span></div>
             </div>
 
             @if (! empty($card['attendance_qr']))
@@ -164,7 +160,7 @@
         </div>
 
         <div class="foot">
-            <span>Valid for the session shown</span>
+            <span>Staff of {{ $school?->name ?? 'School' }}</span>
             <span>If found, please return</span>
         </div>
     </div>

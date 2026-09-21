@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Campus;
 use App\Models\Gender;
 use App\Models\Role;
+use App\Models\School;
 use App\Models\SchoolClass;
 use App\Models\Session;
 use App\Models\Staff\StaffAssignment;
@@ -19,6 +20,7 @@ use App\Models\StaffProfile;
 use App\Models\Subject;
 use App\Services\Staff\StaffAssignmentService;
 use App\Services\Staff\StaffEmploymentService;
+use App\Services\Staff\StaffIdCardService;
 use App\Services\Staff\TeacherAssignmentService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
@@ -348,5 +350,35 @@ class StaffProfileController extends Controller
         $document->delete();
 
         return response()->json(['message' => 'Document removed']);
+    }
+
+    /**
+     * ID cards — one campus, one department, or a picked list. Same shape
+     * as `StudentController::idCards()`, so a school prints one the same
+     * way it prints the other.
+     */
+    public function idCards(Request $request, StaffIdCardService $cards)
+    {
+        Gate::authorize('viewAny', StaffProfile::class);
+
+        $validated = $request->validate([
+            'staff_ids' => ['nullable', 'array'],
+            'staff_ids.*' => ['integer', 'exists:staff_profiles,id'],
+            'campus_id' => ['nullable', 'integer', 'exists:campuses,id'],
+            'department_id' => ['nullable', 'integer', 'exists:staff_departments,id'],
+        ]);
+
+        $staff = StaffProfile::query()
+            ->visibleTo($request->user())
+            ->where('is_active', true)
+            ->when(! empty($validated['staff_ids']), fn ($q) => $q->whereIn('id', $validated['staff_ids']))
+            ->when(! empty($validated['campus_id']), fn ($q) => $q->where('campus_id', $validated['campus_id']))
+            ->when(! empty($validated['department_id']), fn ($q) => $q->where('department_id', $validated['department_id']))
+            ->get();
+
+        return response()->view('staff.id-card', [
+            'cards' => $cards->forStaff($staff),
+            'school' => School::where('is_active', true)->first(),
+        ]);
     }
 }

@@ -15,6 +15,13 @@ is also the place to add a new entry the moment a new one goes in.
   `docs/MODULE-LOG.md`/`CURRENT-MODULE.md` for which models carry the
   `LogsActivity` trait and why.
 
+- **`endroid/qr-code`** (2026-09-21) — renders the QR code printed on
+  student/staff ID cards for QR attendance (`App\Services\Attendance\QrCodeService`).
+  Encodes a permanent `URL::signedRoute()` per person, never the raw
+  `employee_no`/`registration_no`. Chosen over `simple-qrcode` (a thinner,
+  less actively maintained wrapper around the same underlying libraries) —
+  no native extension requirement beyond GD, which Laravel already needs.
+
 ## Frontend (package.json)
 
 - **`chart.js`** (2026-09-14) — real charting for the Fee/Finance/Attendance/
@@ -24,3 +31,10 @@ is also the place to add a new entry the moment a new one goes in.
   (`resources/js/components/charts/LineChart.vue`), and covers everything
   these dashboards need (line/bar trends) without pulling in a heavier
   analytics library.
+
+- **`qr-scanner`** (2026-09-21) — reads a QR code off the device camera on
+  the `/attendance/scan` page (Method 1 of QR attendance). jsQR-based,
+  small (~16 KB gzipped), works in all browsers including Safari/iOS where
+  the native `BarcodeDetector` API isn't reliably available, so it was
+  chosen over that API + a fallback library, since the fallback library
+  would be needed either way.

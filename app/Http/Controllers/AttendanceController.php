@@ -69,6 +69,21 @@ class AttendanceController extends Controller
     }
 
     /**
+     * The camera-scan page — Method 1 of QR attendance. The camera reads the
+     * signed URL printed on an ID card and opens it, which is the same
+     * unauthenticated endpoint `QrAttendanceController` already serves for
+     * Method 2 (a phone's own camera app, or a USB barcode scanner). This
+     * page adds nothing to the marking logic itself, only a way to reach it
+     * without leaving the app.
+     */
+    public function scan(): Response
+    {
+        $this->authorize('create', Attendance::class);
+
+        return Inertia::render('attendance/Scan');
+    }
+
+    /**
      * Display a listing of attendance records.
      */
     public function index(Request $request): Response
