@@ -61,6 +61,7 @@ return Application::configure(basePath: dirname(__DIR__))
                 401 => 'errors/401',
                 403 => 'errors/403',
                 404 => 'errors/404',
+                409 => 'errors/409',
                 419 => 'errors/419',
                 429 => 'errors/429',
                 500 => 'errors/500',
@@ -75,7 +76,7 @@ return Application::configure(basePath: dirname(__DIR__))
             // messages are always a developer-authored, user-safe sentence
             // (e.g. "No student record is linked to this account."), unlike
             // a server error's message, which can carry internal detail.
-            $safeToShowMessage = in_array($status, [401, 403, 404, 419, 429], true);
+            $safeToShowMessage = in_array($status, [401, 403, 404, 409, 419, 429], true);
             $message = $safeToShowMessage ? $exception->getMessage() : '';
 
             return Inertia::render($pages[$status], [

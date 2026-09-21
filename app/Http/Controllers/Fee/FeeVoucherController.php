@@ -656,7 +656,7 @@ class FeeVoucherController extends Controller
          * printed as if still unpaid". A settled voucher's receipt is what
          * `FeePaymentController::receipt()` is for.
          */
-        abort_if($voucher->status === VoucherStatus::PAID, 403, 'This voucher has already been paid in full and cannot be printed again.');
+        abort_if($voucher->status === VoucherStatus::PAID, 409, 'This voucher has already been paid in full and cannot be printed again.');
 
         $voucher->load([
             'student',

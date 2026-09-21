@@ -110,6 +110,12 @@ class Handler extends ExceptionHandler
                     'status' => 403,
                 ])->toResponse($request)->setStatusCode(403);
 
+            case 409:
+                return Inertia::render('errors/409', [
+                    'message' => $exceptionMessage ?: 'This action cannot be completed in the record\'s current state.',
+                    'status' => 409,
+                ])->toResponse($request)->setStatusCode(409);
+
             case 429:
                 return Inertia::render('errors/429', [
                     'message' => $exceptionMessage ?: 'Too many requests. Please slow down and try again shortly.',
