@@ -160,7 +160,7 @@
     <div class="container">
         <div class="header">
             @if(isset($school) && $school->logo_path)
-                <img src="{{ Storage::url($school->logo_path) }}" alt="{{ $school->name }}" style="height: 60px; position: absolute; left: 0; top: -10px;">
+                <img src="{{ $school->logo_path }}" alt="{{ $school->name }}" style="height: 60px; position: absolute; left: 0; top: -10px;">
             @endif
             <h1>{{ $school->name ?? 'Admission Form' }}</h1>
             <p><strong>Registration No:</strong> {{ $student->registration_no }} &nbsp;&nbsp;|&nbsp;&nbsp; <strong>Admission No:</strong> {{ $student->admission_no }}</p>
