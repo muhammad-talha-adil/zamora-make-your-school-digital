@@ -20,127 +20,131 @@
             </div>
 
             <!-- Filters -->
-            <div class="flex flex-col sm:flex-row gap-2 md:gap-3 flex-wrap" role="search" aria-label="Student filters">
-                <div class="w-full sm:w-44 md:w-48">
-                    <Label for="filter-campus" class="sr-only">Filter by Campus</Label>
-                    <select
-                        id="filter-campus"
-                        v-model="filters.campus_id"
-                        @change="applyFilters"
-                        class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm min-h-10 md:min-h-11"
-                    >
-                        <option value="">All Campuses</option>
-                        <option v-for="campus in props.campuses" :key="campus.id" :value="campus.id">
-                            {{ campus.name }}
-                        </option>
-                    </select>
+            <FilterCard>
+                <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 md:gap-3" role="search" aria-label="Student filters">
+                    <div>
+                        <Label for="filter-campus" class="sr-only">Filter by Campus</Label>
+                        <select
+                            id="filter-campus"
+                            v-model="filters.campus_id"
+                            @change="applyFilters"
+                            class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm min-h-10 md:min-h-11"
+                        >
+                            <option value="">All Campuses</option>
+                            <option v-for="campus in props.campuses" :key="campus.id" :value="campus.id">
+                                {{ campus.name }}
+                            </option>
+                        </select>
+                    </div>
+                    <div>
+                        <Label for="filter-class" class="sr-only">Filter by Class</Label>
+                        <select
+                            id="filter-class"
+                            v-model="filters.class_id"
+                            @change="applyFilters"
+                            class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm min-h-10 md:min-h-11"
+                        >
+                            <option value="">All Classes</option>
+                            <option v-for="cls in props.classes" :key="cls.id" :value="cls.id">
+                                {{ cls.name }}
+                            </option>
+                        </select>
+                    </div>
+                    <div>
+                        <Label for="filter-section" class="sr-only">Filter by Section</Label>
+                        <select
+                            id="filter-section"
+                            v-model="filters.section_id"
+                            @change="applyFilters"
+                            class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm min-h-10 md:min-h-11"
+                        >
+                            <option value="">All Sections</option>
+                            <option v-for="section in props.sections" :key="section.id" :value="section.id">
+                                {{ section.name }}
+                            </option>
+                        </select>
+                    </div>
+                    <div>
+                        <Label for="filter-gender" class="sr-only">Filter by Gender</Label>
+                        <select
+                            id="filter-gender"
+                            v-model="filters.gender_id"
+                            @change="applyFilters"
+                            class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm min-h-10 md:min-h-11"
+                        >
+                            <option value="">All Genders</option>
+                            <option v-for="gender in props.genders" :key="gender.id" :value="gender.id">
+                                {{ gender.name }}
+                            </option>
+                        </select>
+                    </div>
+                    <div>
+                        <Label for="filter-status" class="sr-only">Filter by Status</Label>
+                        <select
+                            id="filter-status"
+                            v-model="filters.status"
+                            @change="applyFilters"
+                            class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm min-h-10 md:min-h-11"
+                        >
+                            <option value="">All Status</option>
+                            <option v-for="status in props.statuses" :key="status.id" :value="status.id">
+                                {{ status.name }}
+                            </option>
+                        </select>
+                    </div>
+                    <div class="relative col-span-2 sm:col-span-1">
+                        <Label for="search-students" class="sr-only">Search students</Label>
+                        <Input
+                            id="search-students"
+                            v-model="filters.search"
+                            type="text"
+                            placeholder="Search by name, reg no, admission no..."
+                            @input="handleSearch"
+                            @keydown.enter.prevent="applyFilters"
+                            class="w-full pr-8"
+                            aria-label="Search students by name, registration number, or admission number"
+                        />
+                        <button
+                            v-if="filters.search"
+                            @click="clearSearch"
+                            type="button"
+                            class="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                            aria-label="Clear search"
+                        >
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                            </svg>
+                        </button>
+                    </div>
                 </div>
-                <div class="w-full sm:w-44 md:w-48">
-                    <Label for="filter-class" class="sr-only">Filter by Class</Label>
-                    <select
-                        id="filter-class"
-                        v-model="filters.class_id"
-                        @change="applyFilters"
-                        class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm min-h-10 md:min-h-11"
+                <div class="flex flex-wrap gap-2 md:gap-3 mt-3">
+                    <Button
+                        variant="outline"
+                        :disabled="!filters.class_id"
+                        :title="!filters.class_id ? 'Select a class to enable bulk ID card generation' : undefined"
+                        @click="printBulkIdCards"
                     >
-                        <option value="">All Classes</option>
-                        <option v-for="cls in props.classes" :key="cls.id" :value="cls.id">
-                            {{ cls.name }}
-                        </option>
-                    </select>
-                </div>
-                <div class="w-full sm:w-44 md:w-48">
-                    <Label for="filter-section" class="sr-only">Filter by Section</Label>
-                    <select
-                        id="filter-section"
-                        v-model="filters.section_id"
-                        @change="applyFilters"
-                        class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm min-h-10 md:min-h-11"
+                        <Icon icon="id-card" class="mr-1" />
+                        Bulk ID Cards
+                    </Button>
+                    <Button
+                        v-if="selectedStudents.length > 0"
+                        variant="outline"
+                        @click="printSelectedIdCards"
                     >
-                        <option value="">All Sections</option>
-                        <option v-for="section in props.sections" :key="section.id" :value="section.id">
-                            {{ section.name }}
-                        </option>
-                    </select>
-                </div>
-                <div class="w-full sm:w-40">
-                    <Label for="filter-gender" class="sr-only">Filter by Gender</Label>
-                    <select
-                        id="filter-gender"
-                        v-model="filters.gender_id"
-                        @change="applyFilters"
-                        class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm min-h-10 md:min-h-11"
+                        <Icon icon="id-card" class="mr-1" />
+                        Print Selected ID Cards ({{ selectedStudents.length }})
+                    </Button>
+                    <Button
+                        v-if="selectedStudents.length > 0"
+                        variant="outline"
+                        @click="exportSelected"
                     >
-                        <option value="">All Genders</option>
-                        <option v-for="gender in props.genders" :key="gender.id" :value="gender.id">
-                            {{ gender.name }}
-                        </option>
-                    </select>
+                        <Icon icon="printer" class="mr-1" />
+                        Export Selected ({{ selectedStudents.length }})
+                    </Button>
                 </div>
-                <div class="w-full sm:w-40">
-                    <Label for="filter-status" class="sr-only">Filter by Status</Label>
-                    <select
-                        id="filter-status"
-                        v-model="filters.status"
-                        @change="applyFilters"
-                        class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm min-h-10 md:min-h-11"
-                    >
-                        <option value="">All Status</option>
-                        <option v-for="status in props.statuses" :key="status.id" :value="status.id">
-                            {{ status.name }}
-                        </option>
-                    </select>
-                </div>
-                <div class="w-full sm:w-64 relative">
-                    <Label for="search-students" class="sr-only">Search students</Label>
-                    <Input
-                        id="search-students"
-                        v-model="filters.search"
-                        type="text"
-                        placeholder="Search by name, reg no, admission no..."
-                        @input="handleSearch"
-                        @keydown.enter.prevent="applyFilters"
-                        class="w-full pr-8"
-                        aria-label="Search students by name, registration number, or admission number"
-                    />
-                    <button
-                        v-if="filters.search"
-                        @click="clearSearch"
-                        type="button"
-                        class="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                        aria-label="Clear search"
-                    >
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                        </svg>
-                    </button>
-                </div>
-                <Button
-                    variant="outline"
-                    :disabled="!filters.class_id"
-                    :title="!filters.class_id ? 'Select a class to enable bulk ID card generation' : undefined"
-                    @click="printBulkIdCards"
-                >
-                    <Icon icon="id-card" class="mr-1" />
-                    Bulk ID Cards
-                </Button>
-                <Button
-                    v-if="selectedStudents.length > 0"
-                    variant="outline"
-                    @click="printSelectedIdCards"
-                >
-                    <Icon icon="id-card" class="mr-1" />
-                    Print Selected ID Cards ({{ selectedStudents.length }})
-                </Button>
-                <Button
-                    v-if="selectedStudents.length > 0"
-                    variant="outline"
-                    @click="exportSelected"
-                >
-                    <Icon icon="printer" class="mr-1" />
-                    Export Selected ({{ selectedStudents.length }})
-                </Button>
-            </div>
+            </FilterCard>
 
             <!-- Mobile Card View -->
             <div class="block lg:hidden space-y-3">
@@ -355,6 +359,7 @@ import { reactive, ref, watch } from 'vue';
 import { debounce } from 'lodash';
 import { route } from 'ziggy-js';
 import AppLayout from '@/layouts/AppLayout.vue';
+import FilterCard from '@/components/FilterCard.vue';
 import type { BreadcrumbItem } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
