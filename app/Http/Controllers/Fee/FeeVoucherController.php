@@ -651,12 +651,22 @@ class FeeVoucherController extends Controller
 
         /*
          * Issue #119: once a voucher is fully paid it can no longer be
-         * printed — the owner's wording ("na again print ho sake") treats
-         * this the same as "can't be paid again", not merely "can't be
-         * printed as if still unpaid". A settled voucher's receipt is what
-         * `FeePaymentController::receipt()` is for.
+         * printed by ordinary staff — the owner's wording ("na again print
+         * ho sake") treats this the same as "can't be paid again", not
+         * merely "can't be printed as if still unpaid". A settled voucher's
+         * receipt is what `FeePaymentController::receipt()` is for.
+         *
+         * Developer/owner/super_admin are exempt — they still need to look
+         * at a paid voucher (auditing, a parent dispute, reprinting a lost
+         * copy), and this block was never meant to stop them specifically.
          */
-        abort_if($voucher->status === VoucherStatus::PAID, 409, 'This voucher has already been paid in full and cannot be printed again.');
+        $exemptFromBlock = auth()->check() && auth()->user()->isSuperAdmin();
+
+        abort_if(
+            $voucher->status === VoucherStatus::PAID && ! $exemptFromBlock,
+            409,
+            'This voucher has already been paid in full and cannot be printed again.'
+        );
 
         $voucher->load([
             'student',

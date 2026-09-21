@@ -17,6 +17,8 @@
 
 use App\Models\Fee\FeePayment;
 use App\Models\Fee\FeeVoucher;
+use App\Models\Role;
+use App\Models\User;
 use Tests\Support\FeeWorld;
 
 beforeEach(function () {
@@ -73,10 +75,32 @@ it('refuses a second payment against an already-paid voucher', function () {
     expect(FeePayment::count())->toBe(1);
 });
 
-it('refuses to print a paid voucher', function () {
+it('refuses ordinary staff to print a paid voucher', function () {
     $voucher = payVoucherInFull();
 
-    $this->get(route('fee.vouchers.print', $voucher->id))->assertForbidden();
+    $role = Role::firstOrCreate(
+        ['name' => 'campus_admin', 'guard_name' => 'web'],
+        ['label' => 'Campus Admin', 'scope_level' => Role::SCOPE_CAMPUS, 'is_active' => true]
+    );
+    $staff = User::create([
+        'name' => 'Campus Admin',
+        'username' => 'campus-admin-'.uniqid(),
+        'email' => 'campus-admin-'.uniqid().'@school.test',
+        'password' => bcrypt('password'),
+        'is_active' => true,
+    ]);
+    $staff->assignRole($role);
+    $staff->givePermissionTo('fee.voucher.print');
+
+    $this->actingAs($staff)
+        ->get(route('fee.vouchers.print', $voucher->id))
+        ->assertStatus(409);
+});
+
+it('still lets developer/owner/super_admin view a paid voucher', function () {
+    $voucher = payVoucherInFull();
+
+    $this->get(route('fee.vouchers.print', $voucher->id))->assertOk();
 });
 
 it('still allows printing an unpaid voucher', function () {
