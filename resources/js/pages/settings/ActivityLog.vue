@@ -3,6 +3,7 @@ import { Head, router } from '@inertiajs/vue3';
 
 import HeadingSmall from '@/components/HeadingSmall.vue';
 import Icon from '@/components/Icon.vue';
+import FilterCard from '@/components/FilterCard.vue';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import AppLayout from '@/layouts/AppLayout.vue';
@@ -164,56 +165,58 @@ const changeLines = (changes: Record<string, unknown> | null): Array<{ field: st
                     </span>
                 </div>
 
-                <form @submit.prevent="applyFilters" class="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
-                    <div class="grid gap-2">
-                        <Label for="subject_type">Model</Label>
-                        <select
-                            id="subject_type"
-                            v-model="subjectType"
-                            class="w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground shadow-sm focus:border-primary focus:outline-none focus:ring-primary"
-                        >
-                            <option value="">All</option>
-                            <option v-for="(label, value) in props.subjectTypes" :key="value" :value="value">{{ label }}</option>
-                        </select>
-                    </div>
+                <FilterCard>
+                    <form @submit.prevent="applyFilters" class="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
+                        <div class="grid gap-2">
+                            <Label for="subject_type">Model</Label>
+                            <select
+                                id="subject_type"
+                                v-model="subjectType"
+                                class="w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground shadow-sm focus:border-primary focus:outline-none focus:ring-primary"
+                            >
+                                <option value="">All</option>
+                                <option v-for="(label, value) in props.subjectTypes" :key="value" :value="value">{{ label }}</option>
+                            </select>
+                        </div>
 
-                    <div class="grid gap-2">
-                        <Label for="causer_id">User</Label>
-                        <select
-                            id="causer_id"
-                            v-model="causerId"
-                            class="w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground shadow-sm focus:border-primary focus:outline-none focus:ring-primary"
-                        >
-                            <option value="">All</option>
-                            <option v-for="user in props.users" :key="user.id" :value="user.id">{{ user.name }}</option>
-                        </select>
-                    </div>
+                        <div class="grid gap-2">
+                            <Label for="causer_id">User</Label>
+                            <select
+                                id="causer_id"
+                                v-model="causerId"
+                                class="w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground shadow-sm focus:border-primary focus:outline-none focus:ring-primary"
+                            >
+                                <option value="">All</option>
+                                <option v-for="user in props.users" :key="user.id" :value="user.id">{{ user.name }}</option>
+                            </select>
+                        </div>
 
-                    <div class="grid gap-2">
-                        <Label for="from">From</Label>
-                        <input
-                            id="from"
-                            v-model="from"
-                            type="date"
-                            class="w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground shadow-sm focus:border-primary focus:outline-none focus:ring-primary"
-                        />
-                    </div>
+                        <div class="grid gap-2">
+                            <Label for="from">From</Label>
+                            <input
+                                id="from"
+                                v-model="from"
+                                type="date"
+                                class="w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground shadow-sm focus:border-primary focus:outline-none focus:ring-primary"
+                            />
+                        </div>
 
-                    <div class="grid gap-2">
-                        <Label for="to">To</Label>
-                        <input
-                            id="to"
-                            v-model="to"
-                            type="date"
-                            class="w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground shadow-sm focus:border-primary focus:outline-none focus:ring-primary"
-                        />
-                    </div>
+                        <div class="grid gap-2">
+                            <Label for="to">To</Label>
+                            <input
+                                id="to"
+                                v-model="to"
+                                type="date"
+                                class="w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground shadow-sm focus:border-primary focus:outline-none focus:ring-primary"
+                            />
+                        </div>
 
-                    <div class="flex items-end gap-2">
-                        <Button type="submit">Filter</Button>
-                        <Button type="button" variant="ghost" @click="resetFilters">Reset</Button>
-                    </div>
-                </form>
+                        <div class="flex items-end gap-2">
+                            <Button type="submit">Filter</Button>
+                            <Button type="button" variant="ghost" @click="resetFilters">Reset</Button>
+                        </div>
+                    </form>
+                </FilterCard>
 
                 <!-- Mobile Card View -->
                 <div class="block lg:hidden space-y-3">
