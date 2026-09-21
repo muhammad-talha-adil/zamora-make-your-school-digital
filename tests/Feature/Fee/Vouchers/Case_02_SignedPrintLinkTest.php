@@ -73,3 +73,35 @@ it('lets an owner (with no campus of their own) open the print-voucher URL for a
 
     $this->get(route('fee.print-voucher.single', $this->voucher->id))->assertOk();
 });
+
+it('prints the same voucher three times on one sheet, cut apart by copy', function () {
+    $signed = URL::signedRoute('fee.print-voucher.single', $this->voucher->id);
+
+    $response = $this->get($signed);
+
+    $response->assertOk();
+    $response->assertSeeInOrder(['Bank Copy', 'School Copy', 'Student Copy']);
+    // The voucher number appears in the <title> plus once per copy.
+    expect(substr_count($response->getContent(), $this->voucher->voucher_no))->toBe(4);
+});
+
+it('groups batch-printed vouchers three to a sheet', function () {
+    $this->actingAs($this->world->school->actor);
+
+    $this->world->generate(5);
+    $this->world->generate(6);
+    $this->world->generate(7);
+    $voucherIds = [
+        $this->voucher->id,
+        $this->world->voucherFor(5)->id,
+        $this->world->voucherFor(6)->id,
+        $this->world->voucherFor(7)->id,
+    ];
+
+    $response = $this->get(route('fee.print-voucher.batch', ['voucher_ids' => implode(',', $voucherIds)]));
+
+    $response->assertOk();
+    // 4 vouchers chunked by 3 -> two "sheet" groups (3 + 1).
+    expect(substr_count($response->getContent(), 'class="sheet"'))->toBe(2);
+    expect(substr_count($response->getContent(), 'class="copy"'))->toBe(4);
+});
