@@ -6,10 +6,10 @@
     <title>Fee Voucher - {{ $voucher->voucher_no }}</title>
     <style>
         /*
-         * A standard fee voucher: three identical copies of the SAME voucher
-         * stacked on one A4 sheet, each occupying exactly a third of the page
-         * height, cut apart along a dashed line — Bank keeps one, School
-         * keeps one, the Student/Parent keeps the third.
+         * A single fee voucher, printed alone. It occupies exactly a third
+         * of the A4 page height — the same panel size a voucher takes when
+         * printed 3-per-page in the batch print (see print-batch.blade.php)
+         * — with the rest of the sheet left blank.
          */
         :root {
             --page-height: 297mm;
@@ -131,18 +131,8 @@
         <button class="btn btn-secondary" onclick="window.close()">Close</button>
     </div>
 
-    @php
-        /*
-         * Same voucher, three copies — the bank keeps one, the school keeps
-         * one, the student/parent keeps the third as proof of payment.
-         */
-        $copies = ['Bank Copy', 'School Copy', 'Student Copy'];
-    @endphp
-
     <div class="sheet">
-        @foreach($copies as $copyLabel)
-            @include('fee.vouchers.partials.voucher-copy', ['voucher' => $voucher, 'school' => $school ?? null, 'copyLabel' => $copyLabel])
-        @endforeach
+        @include('fee.vouchers.partials.voucher-copy', ['voucher' => $voucher, 'school' => $school ?? null])
     </div>
 
     <script>

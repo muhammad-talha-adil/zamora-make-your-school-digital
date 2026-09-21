@@ -74,15 +74,17 @@ it('lets an owner (with no campus of their own) open the print-voucher URL for a
     $this->get(route('fee.print-voucher.single', $this->voucher->id))->assertOk();
 });
 
-it('prints the same voucher three times on one sheet, cut apart by copy', function () {
+it('prints a single voucher once, alone on the sheet', function () {
     $signed = URL::signedRoute('fee.print-voucher.single', $this->voucher->id);
 
     $response = $this->get($signed);
 
     $response->assertOk();
-    $response->assertSeeInOrder(['Bank Copy', 'School Copy', 'Student Copy']);
-    // The voucher number appears in the <title> plus once per copy.
-    expect(substr_count($response->getContent(), $this->voucher->voucher_no))->toBe(4);
+    $response->assertDontSee('Bank Copy');
+    $response->assertDontSee('School Copy');
+    $response->assertDontSee('Student Copy');
+    // The voucher number appears in the <title> plus once for the single copy.
+    expect(substr_count($response->getContent(), $this->voucher->voucher_no))->toBe(2);
 });
 
 it('groups batch-printed vouchers three to a sheet', function () {

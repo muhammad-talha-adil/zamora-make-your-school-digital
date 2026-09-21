@@ -1,21 +1,25 @@
 {{--
     One voucher's content, sized to occupy exactly one third of an A4 page.
-    Used both to print the same voucher three times (single print) and to
-    print three different vouchers stacked on one page (batch print) — see
-    fee/vouchers/print.blade.php and fee/vouchers/print-batch.blade.php.
+    Used both for a single voucher printed alone (see
+    fee/vouchers/print.blade.php) and for three different vouchers stacked on
+    one page (batch print, see fee/vouchers/print-batch.blade.php).
 
-    Expects: $voucher, $school, $copyLabel
+    Expects: $voucher, $school, $copyLabel (optional — omit to render without
+    a copy-type label, as the single-voucher print does)
 --}}
 <section class="copy">
-    <div class="copy-label">{{ $copyLabel }}</div>
+    @if($copyLabel ?? false)
+        <div class="copy-label">{{ $copyLabel }}</div>
+    @endif
 
     <div class="header">
         @if(isset($school) && $school->logo_path)
-            <img src="{{ Storage::url($school->logo_path) }}" alt="{{ $school->name }}" class="logo">
+            <img src="{{ $school->logo_path }}" alt="{{ $school->name }}" class="logo">
         @endif
         <h1>Fee Voucher</h1>
         <p><strong>{{ $school->name ?? $voucher->campus->name ?? 'School Name' }}</strong></p>
         @if($school->address ?? false)<p>{{ $school->address }}</p>@endif
+        @if($school->phone ?? false)<p>Ph: {{ $school->phone }}</p>@endif
     </div>
 
     <div class="info-grid">
