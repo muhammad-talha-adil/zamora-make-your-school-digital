@@ -2,6 +2,7 @@
 import { router, usePage } from '@inertiajs/vue3';
 import { onBeforeUnmount, ref } from 'vue';
 import { alert } from '@/utils';
+import { generateThemeFromLogo } from '@/utils/logoTheme';
 
 // Components
 import InputError from '@/components/InputError.vue';
@@ -42,6 +43,7 @@ const form = ref({
     logo: null as File | null,
     is_active: props.school?.is_active ?? true,
     website_enabled: props.school?.website_enabled ?? true,
+    theme_colors: null as string | null,
 });
 
 const errors = ref({});
@@ -53,11 +55,27 @@ const logoPreview = ref<string | null>(null);
 const onLogoChange = (e: Event) => {
     const file = (e.target as HTMLInputElement).files?.[0] || null;
     form.value.logo = file;
+    form.value.theme_colors = null;
 
     if (logoPreview.value) {
         URL.revokeObjectURL(logoPreview.value);
     }
     logoPreview.value = file ? URL.createObjectURL(file) : null;
+
+    if (file) {
+        // Best-effort: an auto-generated theme is a bonus on top of the
+        // upload, never a requirement for it. Runs alongside the existing
+        // preview logic and never blocks or fails the form.
+        generateThemeFromLogo(file)
+            .then((theme) => {
+                if (theme && form.value.logo === file) {
+                    form.value.theme_colors = JSON.stringify(theme);
+                }
+            })
+            .catch(() => {
+                // Silently fall back to no auto-theme.
+            });
+    }
 };
 
 onBeforeUnmount(() => {
