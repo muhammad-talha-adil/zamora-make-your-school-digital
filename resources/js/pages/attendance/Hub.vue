@@ -1,8 +1,11 @@
 <script setup lang="ts">
-import { Head } from '@inertiajs/vue3';
+import { Head, Link } from '@inertiajs/vue3';
 import { ref, computed } from 'vue';
+import { route } from 'ziggy-js';
 
 import AppLayout from '@/layouts/AppLayout.vue';
+import { Button } from '@/components/ui/button';
+import Icon from '@/components/Icon.vue';
 import type { BreadcrumbItem } from '@/types';
 import type { AttendanceIndexProps, AttendanceCreateProps, AttendanceClassReportProps } from '@/types/attendance';
 import AttendanceListPanel from './panels/AttendanceListPanel.vue';
@@ -58,13 +61,21 @@ const activeTab = ref(tabs.value[0]?.id ?? 'list');
 
         <div class="space-y-4 md:space-y-6 p-4 md:p-6">
             <!-- Header -->
-            <div>
-                <h1 class="text-lg md:text-2xl font-bold text-foreground">
-                    Attendance
-                </h1>
-                <p class="mt-1 text-xs md:text-sm text-muted-foreground">
-                    Mark, review and report on student attendance, and manage leave applications
-                </p>
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
+                <div>
+                    <h1 class="text-lg md:text-2xl font-bold text-foreground">
+                        Attendance
+                    </h1>
+                    <p class="mt-1 text-xs md:text-sm text-muted-foreground">
+                        Mark, review and report on student attendance, and manage leave applications
+                    </p>
+                </div>
+                <Button as-child variant="outline" v-if="createData">
+                    <Link :href="route('attendance.scan')">
+                        <Icon icon="qr-code" class="mr-1 h-4 w-4" />
+                        Scan QR to Mark
+                    </Link>
+                </Button>
             </div>
 
             <!-- Tabs -->
