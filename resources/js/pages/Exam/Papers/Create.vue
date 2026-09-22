@@ -74,8 +74,9 @@
                             id="campus_id"
                             v-model="filters.campus_id"
                             @change="onSelectionChange"
+                            :disabled="isCampusLocked"
                             class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm"
-                            :class="{ 'border-destructive': validationErrors.campus_id }"
+                            :class="{ 'border-destructive': validationErrors.campus_id, 'bg-muted opacity-50 cursor-not-allowed': isCampusLocked }"
                         >
                             <option value="">Select Campus</option>
                             <option v-for="campus in props.campuses" :key="campus.id" :value="campus.id">
@@ -116,7 +117,7 @@
                         >
                             <option value="">Select Section</option>
                             <option value="all">All Sections</option>
-                            <option v-for="section in classSections" :key="section.id" :value="section.id">
+                            <option v-for="section in availableSections" :key="section.id" :value="section.id">
                                 {{ section.name }}
                             </option>
                         </select>
@@ -808,6 +809,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import Icon from '@/components/Icon.vue';
+import { useCascadingAcademicSelect } from '@/composables/useCascadingAcademicSelect';
 
 interface Exam {
     id: number;
@@ -867,6 +869,31 @@ const filters = reactive({
     class_id: '',
     section_id: '',
 });
+
+// Campus lock + class → section cascade (#47/#64/#82/#99/#100). This page has
+// no session selector of its own (it scopes by exam instead), so an empty
+// session list is passed through. `filters.campus_id`/`filters.class_id`
+// stay the source of truth the rest of the page already reads from; they're
+// kept in sync with the composable's own refs below.
+const { selectedCampusId: cascadeCampusId, selectedClassId: cascadeClassId, isCampusLocked, lockedCampusId, availableSections } = useCascadingAcademicSelect({
+    campuses: computed(() => props.campuses),
+    classes: computed(() => props.classes),
+    sections: computed(() => props.sections),
+    sessions: [],
+    initialCampusId: filters.campus_id,
+    initialClassId: filters.class_id,
+    sessionStorageKey: 'exam-papers',
+});
+
+if (isCampusLocked.value && lockedCampusId.value) {
+    filters.campus_id = String(lockedCampusId.value);
+    cascadeCampusId.value = lockedCampusId.value;
+}
+
+watch(() => filters.campus_id, (value) => { cascadeCampusId.value = value; });
+watch(cascadeCampusId, (value) => { filters.campus_id = String(value ?? ''); });
+watch(() => filters.class_id, (value) => { cascadeClassId.value = value; });
+watch(cascadeClassId, (value) => { filters.class_id = String(value ?? ''); });
 
 // UI State
 const classSections = ref<Section[]>([]);

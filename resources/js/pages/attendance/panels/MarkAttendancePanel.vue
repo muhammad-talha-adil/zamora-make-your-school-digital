@@ -21,28 +21,19 @@
                     <!-- Campus -->
                     <div>
                         <label class="block text-sm font-medium text-muted-foreground mb-1">Campus</label>
-                        <select v-model="selectedCampusId" class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm">
-                            <option value="">Select Campus</option>
-                            <option v-for="campus in props.campuses" :key="campus.id" :value="campus.id">{{ campus.name }}</option>
-                        </select>
+                        <SearchableSelect v-model="selectedCampusId" :options="campusOptions" placeholder="Select Campus" :clearable="!isCampusLocked" :disabled="isCampusLocked" />
                     </div>
 
                     <!-- Session -->
                     <div>
                         <label class="block text-sm font-medium text-muted-foreground mb-1">Session</label>
-                        <select v-model="selectedSessionId" class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm">
-                            <option value="">Select Session</option>
-                            <option v-for="session in props.sessions" :key="session.id" :value="session.id">{{ session.name }}</option>
-                        </select>
+                        <SearchableSelect v-model="selectedSessionId" :options="sessionOptions" placeholder="Select Session" clearable />
                     </div>
 
                     <!-- Class -->
                     <div>
                         <label class="block text-sm font-medium text-muted-foreground mb-1">Class</label>
-                        <select v-model="selectedClassId" @change="onSectionReset" class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm">
-                            <option value="">Select Class</option>
-                            <option v-for="cls in props.classes" :key="cls.id" :value="cls.id">{{ cls.name }}</option>
-                        </select>
+                        <SearchableSelect v-model="selectedClassId" :options="classOptions" placeholder="Select Class" clearable @update:modelValue="onSectionReset" />
                     </div>
                 </div>
 
@@ -51,15 +42,12 @@
                     <!-- Section -->
                     <div>
                         <label class="block text-sm font-medium text-muted-foreground mb-1">Section</label>
-                        <select
+                        <SearchableSelect
                             v-model="selectedSectionId"
+                            :options="sectionOptions"
                             :disabled="!selectedClassId"
-                            class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm"
-                            :class="{ 'opacity-50 cursor-not-allowed': !selectedClassId }"
-                        >
-                            <option value="all">{{ selectedClassId ? 'All Sections' : 'Select Class First' }}</option>
-                            <option v-for="section in filteredSections" :key="section.id" :value="section.id">{{ section.name }}</option>
-                        </select>
+                            :placeholder="selectedClassId ? 'All Sections' : 'Select Class First'"
+                        />
                     </div>
 
                     <!-- Date -->
@@ -225,15 +213,31 @@ import { route } from 'ziggy-js';
 import AttendanceFormRow from '@/components/attendance/AttendanceFormRow.vue';
 import Icon from '@/components/Icon.vue';
 import { Button } from '@/components/ui/button';
+import SearchableSelect from '@/components/ui/searchable-select/SearchableSelect.vue';
 import type { AttendanceCreateProps, StudentAttendanceFormData } from '@/types/attendance';
+import { useCascadingAcademicSelect } from '@/composables/useCascadingAcademicSelect';
 
 const props = defineProps<AttendanceCreateProps>();
 
 const isSubmitting = computed(() => (usePage().props as any).processing || false);
 
-const selectedCampusId = ref<number | ''>(props.selectedCampusId || '');
-const selectedSessionId = ref<number | ''>(props.selectedSessionId || '');
-const selectedClassId = ref<number | ''>(props.selectedClassId || '');
+// Campus/session/class/section cascade + campus-lock + session default/persist (#47/#64/#82/#99/#100).
+const {
+    selectedCampusId,
+    selectedClassId,
+    selectedSessionId,
+    isCampusLocked,
+} = useCascadingAcademicSelect({
+    campuses: props.campuses,
+    classes: props.classes,
+    sections: props.sections,
+    sessions: props.sessions,
+    initialCampusId: props.selectedCampusId || '',
+    initialClassId: props.selectedClassId || '',
+    initialSessionId: props.selectedSessionId || '',
+    sessionStorageKey: 'attendance',
+});
+
 const selectedSectionId = ref<string | number>(props.selectedSectionId || 'all');
 const selectedDate = ref<string>(props.selectedDate || '');
 
@@ -299,6 +303,17 @@ const formData = reactive({
 const filteredSections = computed(() => {
     if (!selectedClassId.value) return props.sections;
     return props.sections.filter((s) => s.class_id === Number(selectedClassId.value));
+});
+
+const campusOptions = computed(() => props.campuses.map((campus) => ({ value: campus.id, label: campus.name })));
+const sessionOptions = computed(() => props.sessions.map((session) => ({ value: session.id, label: session.name })));
+const classOptions = computed(() => props.classes.map((cls) => ({ value: cls.id, label: cls.name })));
+const sectionOptions = computed(() => {
+    if (!selectedClassId.value) return [];
+    return [
+        { value: 'all', label: 'All Sections' },
+        ...filteredSections.value.map((section) => ({ value: section.id, label: section.name })),
+    ];
 });
 
 const students = computed(() => props.students);

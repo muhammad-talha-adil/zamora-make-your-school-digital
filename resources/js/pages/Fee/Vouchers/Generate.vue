@@ -10,6 +10,8 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import Icon from '@/components/Icon.vue';
 import { alert } from '@/utils';
+import { useCascadingAcademicSelect } from '@/composables/useCascadingAcademicSelect';
+import SearchableSelect from '@/components/ui/searchable-select/SearchableSelect.vue';
 
 interface Session {
     id: number;
@@ -129,11 +131,51 @@ const applicableFeeStructure = ref<FeeStructure | null>(null);
 const feeStructureSource = ref<string | null>(null);
 const noFeeStructureMessage = ref<string>('');
 
-// Filter sections based on selected class
-const filteredSections = computed(() => {
-    if (!form.class_id) return [];
-    return props.sections.filter((section) => section.class_id === Number(form.class_id));
+// Campus lock + class → section cascade + session default/persist
+// (#47/#64/#82/#99/#100). `form.*` stays the source of truth the rest of the
+// page already reads/submits, kept in sync with the composable's refs.
+const {
+    selectedCampusId: cascadeCampusId,
+    selectedClassId: cascadeClassId,
+    selectedSessionId: cascadeSessionId,
+    availableSections,
+    isCampusLocked,
+    lockedCampusId,
+} = useCascadingAcademicSelect({
+    campuses: computed(() => props.campuses),
+    classes: computed(() => props.classes),
+    sections: computed(() => props.sections),
+    sessions: computed(() => props.sessions),
+    initialCampusId: form.campus_id,
+    initialClassId: form.class_id,
+    initialSessionId: form.session_id,
+    sessionStorageKey: 'fee-vouchers-generate',
 });
+
+if (isCampusLocked.value && lockedCampusId.value) {
+    form.campus_id = String(lockedCampusId.value);
+    cascadeCampusId.value = lockedCampusId.value;
+}
+if (!form.session_id && cascadeSessionId.value) {
+    form.session_id = String(cascadeSessionId.value);
+}
+
+watch(() => form.campus_id, (value) => { cascadeCampusId.value = value; });
+watch(cascadeCampusId, (value) => { form.campus_id = String(value ?? ''); });
+watch(() => form.class_id, (value) => { cascadeClassId.value = value; });
+watch(cascadeClassId, (value) => { form.class_id = String(value ?? ''); });
+watch(() => form.session_id, (value) => { cascadeSessionId.value = value; });
+watch(cascadeSessionId, (value) => { form.session_id = String(value ?? ''); });
+
+// Filter sections based on selected class
+const filteredSections = availableSections;
+
+const sessionOptions = computed(() => props.sessions.map((session) => ({ value: String(session.id), label: session.name })));
+const campusOptions = computed(() => props.campuses.map((campus) => ({ value: String(campus.id), label: campus.name })));
+const classOptions = computed(() => props.classes.map((cls) => ({ value: String(cls.id), label: cls.name })));
+const sectionOptions = computed(() => filteredSections.value.map((section) => ({ value: String(section.id), label: section.name })));
+const yearOptions = computed(() => years.map((year) => ({ value: year, label: String(year) })));
+const feeHeadOptions = computed(() => props.feeHeads.map((feeHead) => ({ value: feeHead.id, label: feeHead.name })));
 
 // Fetch applicable fee structure when class/campus/session changes
 const fetchFeeStructure = async () => {
@@ -346,49 +388,35 @@ const generateVouchers = () => {
                         <!-- Session -->
                         <div>
                             <Label for="session_id">Academic Session *</Label>
-                            <select
+                            <SearchableSelect
                                 id="session_id"
                                 v-model="form.session_id"
-                                required
-                                class="mt-1 block w-full rounded-md border border-border bg-card text-foreground px-3 py-2"
-                            >
-                                <option value="">Select Session</option>
-                                <option v-for="session in props.sessions" :key="session.id" :value="session.id">
-                                    {{ session.name }}
-                                </option>
-                            </select>
+                                :options="sessionOptions"
+                                placeholder="Select Session"
+                            />
                         </div>
 
                         <!-- Campus -->
                         <div>
                             <Label for="campus_id">Campus *</Label>
-                            <select
+                            <SearchableSelect
                                 id="campus_id"
                                 v-model="form.campus_id"
-                                required
-                                class="mt-1 block w-full rounded-md border border-border bg-card text-foreground px-3 py-2"
-                            >
-                                <option value="">Select Campus</option>
-                                <option v-for="campus in props.campuses" :key="campus.id" :value="campus.id">
-                                    {{ campus.name }}
-                                </option>
-                            </select>
+                                :options="campusOptions"
+                                placeholder="Select Campus"
+                                :disabled="isCampusLocked"
+                            />
                         </div>
 
                         <!-- Class -->
                         <div>
                             <Label for="class_id">Class *</Label>
-                            <select
+                            <SearchableSelect
                                 id="class_id"
                                 v-model="form.class_id"
-                                required
-                                class="mt-1 block w-full rounded-md border border-border bg-card text-foreground px-3 py-2"
-                            >
-                                <option value="">Select Class</option>
-                                <option v-for="cls in props.classes" :key="cls.id" :value="cls.id">
-                                    {{ cls.name }}
-                                </option>
-                            </select>
+                                :options="classOptions"
+                                placeholder="Select Class"
+                            />
                         </div>
                     </div>
 
@@ -397,35 +425,25 @@ const generateVouchers = () => {
                         <!-- Section -->
                         <div>
                             <Label for="section_id">Section</Label>
-                            <select
+                            <SearchableSelect
                                 id="section_id"
                                 v-model="form.section_id"
+                                :options="sectionOptions"
+                                :placeholder="filteredSections.length > 0 ? 'All Sections' : 'No Sections Available'"
                                 :disabled="!form.class_id || filteredSections.length === 0"
-                                :class="[
-                                    'mt-1 block w-full rounded-md border border-border bg-card text-foreground px-3 py-2',
-                                    (!form.class_id || filteredSections.length === 0) ? 'cursor-not-allowed opacity-50' : '',
-                                ]"
-                            >
-                                <option value="">{{ filteredSections.length > 0 ? 'All Sections' : 'No Sections Available' }}</option>
-                                <option v-for="section in filteredSections" :key="section.id" :value="section.id">
-                                    {{ section.name }}
-                                </option>
-                            </select>
+                                clearable
+                            />
                         </div>
 
                         <!-- Year -->
                         <div>
                             <Label for="year">Year *</Label>
-                            <select
+                            <SearchableSelect
                                 id="year"
                                 v-model="form.year"
-                                required
-                                class="mt-1 block w-full rounded-md border border-border bg-card text-foreground px-3 py-2"
-                            >
-                                <option v-for="year in years" :key="year" :value="year">
-                                    {{ year }}
-                                </option>
-                            </select>
+                                :options="yearOptions"
+                                placeholder="Select Year"
+                            />
                         </div>
                     </div>
 
@@ -650,16 +668,12 @@ const generateVouchers = () => {
                 <div class="space-y-4">
                     <div>
                         <Label for="custom_fee_head_id">Fee Head</Label>
-                        <select
+                        <SearchableSelect
                             id="custom_fee_head_id"
-                            v-model.number="selectedFeeHeadId"
-                            class="mt-1 block w-full rounded-md border border-border bg-card text-foreground px-3 py-2"
-                        >
-                            <option value="">Select Fee Head</option>
-                            <option v-for="feeHead in props.feeHeads" :key="feeHead.id" :value="feeHead.id">
-                                {{ feeHead.name }}
-                            </option>
-                        </select>
+                            v-model="selectedFeeHeadId"
+                            :options="feeHeadOptions"
+                            placeholder="Select Fee Head"
+                        />
                     </div>
 
                     <div>

@@ -207,8 +207,9 @@
                             <select
                                 id="campus_id"
                                 v-model="form.campus_id"
+                                :disabled="isCampusLocked"
                                 class="h-11 w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground"
-                                :class="{ 'border-destructive': errors.campus_id }"
+                                :class="{ 'border-destructive': errors.campus_id, 'bg-muted opacity-50 cursor-not-allowed': isCampusLocked }"
                                 :required="campuses.length > 1"
                             >
                                 <option v-if="campuses.length > 1" value="">Select Campus</option>
@@ -705,7 +706,7 @@
                     >
                         Cancel
                     </Button>
-                    <Button type="submit" :disabled="processing">
+                    <Button type="submit" :disabled="processing || !isValid">
                         <Icon
                             v-if="processing"
                             icon="loader"
@@ -733,6 +734,8 @@ import axios from 'axios';
 import { computed, onMounted, ref, watch } from 'vue';
 import { route } from 'ziggy-js';
 import { useStudentForm } from '@/composables/useStudentForm';
+import { useCascadingAcademicSelect } from '@/composables/useCascadingAcademicSelect';
+import { useFormValidity } from '@/composables/useFormValidity';
 import FeeStructureSelector from '@/components/students/FeeStructureSelector.vue';
 import { alert } from '@/utils/alert';
 import { buildGeneratedEmail } from '@/utils/schoolEmail';
@@ -830,6 +833,28 @@ const {
     todayDate: todayDate.value,
 });
 
+// Campus lock + session default/persist (#47/#64/#82/#99/#100). Class/section
+// cascading here stays on `useStudentForm`'s own `filteredSections` (it also
+// drives the fee-structure lookup), so only the campus-lock and session
+// pieces are sourced from the shared composable.
+const { isCampusLocked, lockedCampusId, selectedSessionId: cascadeSessionId } = useCascadingAcademicSelect({
+    campuses: campuses,
+    classes: computed(() => props.classes),
+    sections: computed(() => props.sections),
+    sessions: computed(() => props.sessions),
+    initialCampusId: form.value.campus_id,
+    initialSessionId: form.value.session_id,
+    sessionStorageKey: 'students-create',
+});
+
+if (isCampusLocked.value && lockedCampusId.value) {
+    form.value.campus_id = String(lockedCampusId.value);
+}
+if (!form.value.session_id && cascadeSessionId.value) {
+    form.value.session_id = cascadeSessionId.value;
+}
+watch(() => form.value.session_id, (value) => { cascadeSessionId.value = value; });
+
 // Generate live email preview based on student name and school initials
 const schoolName = computed(() => page.props.school?.name ?? page.props.name ?? '');
 
@@ -842,6 +867,18 @@ const generatedEmailPreview = computed(() => {
 });
 
 const errors = ref<Record<string, string>>({});
+
+const { isValid } = useFormValidity(form, [
+    'name',
+    'admission_no',
+    'dob',
+    'gender_id',
+    'campus_id',
+    'session_id',
+    'class_id',
+    'father_name',
+    'father_phone',
+]);
 
 /**
  * The enquiry this admission is closing out, if it was opened from the

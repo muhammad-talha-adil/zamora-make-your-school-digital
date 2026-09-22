@@ -4,6 +4,7 @@ namespace App\Http\Middleware;
 
 use App\Models\Menu;
 use App\Models\School;
+use App\Models\Session;
 use App\Models\Subscription;
 use App\Models\ThemeSetting;
 use App\Models\User;
@@ -88,6 +89,24 @@ class HandleInertiaRequests extends Middleware
             'theme_mode' => $mode,
             'menus' => $menuData,
             'subscriptionWarning' => $this->buildSubscriptionWarning($user),
+            'academicScope' => $this->buildAcademicScope($user),
+        ];
+    }
+
+    /**
+     * Shared campus/session context for the Campus → Class → Section →
+     * Session cascading selects used across ~22 pages (#47/#64/#82/#99/#100).
+     * Reuses `campusId()`/`isCampusRestricted()` already on the User model
+     * rather than inventing new campus-scoping logic here.
+     *
+     * @return array{campusId: int|null, isCampusRestricted: bool, activeSessionId: int|null}
+     */
+    protected function buildAcademicScope(?User $user): array
+    {
+        return [
+            'campusId' => $user?->campusId(),
+            'isCampusRestricted' => $user?->isCampusRestricted() ?? false,
+            'activeSessionId' => Session::where('is_active', true)->value('id'),
         ];
     }
 

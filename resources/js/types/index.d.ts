@@ -47,6 +47,11 @@ export type AppPageProps<
         daysRemaining: number;
         status: string;
     } | null;
+    academicScope: {
+        campusId: number | null;
+        isCampusRestricted: boolean;
+        activeSessionId: number | null;
+    };
     [key: string]: unknown;
 }
 
