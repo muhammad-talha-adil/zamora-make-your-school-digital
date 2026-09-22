@@ -253,6 +253,11 @@ export function useFeeStructure() {
         if (formSectionId.value) {
             params.set('section_id', String(formSectionId.value));
         }
+        // Carry the calling page's URL along so the fee structure create
+        // screen can send the clerk back here instead of always landing on
+        // the fee structures index (see #65 — admission form state is
+        // preserved separately, via sessionStorage, before this navigation).
+        params.set('return_to', window.location.pathname + window.location.search);
         router.visit(route('fee.structures.create') + '?' + params.toString());
     }
 

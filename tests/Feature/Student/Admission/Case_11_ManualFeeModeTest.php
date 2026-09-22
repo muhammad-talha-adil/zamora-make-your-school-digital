@@ -12,6 +12,7 @@
  * only "at least one entry" is required.
  */
 
+use App\Models\Fee\StudentDiscount;
 use App\Models\Student;
 use App\Models\StudentEnrollmentRecord;
 use Tests\Support\AdmissionWorld;
@@ -123,6 +124,35 @@ it('accepts a zero amount, which is how a head is waived in manual mode', functi
     ]))->assertSessionHasNoErrors();
 
     expect(Student::count())->toBe(1);
+});
+
+it('ignores stale discount data left over from the discount tab when manual mode is active', function () {
+    // Issue #69: a manual-entry fee head that also needs to be free (0) plus
+    // a discount lives across two tabs — "free" on manual, "discount" on the
+    // discount tab. Only whichever tab is active when the form is submitted
+    // may be saved; a discount left over from switching tabs must not sneak
+    // in alongside the manual entry.
+    $type = $this->world->discountType();
+
+    $this->post(route('students.store'), $this->world->payload([
+        'fee_structure_id' => $this->structure->id,
+        'fee_mode' => 'manual',
+        'custom_fee_entries' => [
+            ['fee_head_id' => $this->world->monthlyHead->id, 'amount' => 0],
+            ['fee_head_id' => $this->world->annualHead->id, 'amount' => 9000],
+        ],
+        'discounts' => [[
+            'discount_type_id' => $type->id,
+            'fee_head_id' => $this->world->monthlyHead->id,
+            'value' => 20,
+            'value_type' => 'percent',
+        ]],
+    ]))->assertSessionHasNoErrors();
+
+    expect(StudentDiscount::count())->toBe(0);
+
+    $entries = collect(StudentEnrollmentRecord::firstOrFail()->custom_fee_entries);
+    expect($entries->firstWhere('fee_head_id', $this->world->monthlyHead->id)['amount'])->toEqual(0);
 });
 
 it('accepts entries sent as a JSON string, as the form posts them', function () {

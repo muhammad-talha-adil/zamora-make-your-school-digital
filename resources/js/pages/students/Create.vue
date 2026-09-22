@@ -423,6 +423,7 @@
                     :session-id="form.session_id"
                     :campus-id="form.campus_id"
                     :section-id="form.section_id"
+                    @before-create-fee-structure="saveAdmissionDraft"
                 />
 
                 <!-- Primary Guardian Information -->
@@ -871,6 +872,63 @@ const applyPrefill = () => {
 // Fee Structure Selector Ref
 const feeStructureSelector = ref<InstanceType<typeof FeeStructureSelector> | null>(null);
 
+/**
+ * Preserves in-progress admission data across the trip to the "Create Fee
+ * Structure" screen (see #65) — sessionStorage rather than a query string
+ * because the form can hold a lot of fields. The selected photo (a raw
+ * File) cannot be restored this way and must be reselected on return.
+ */
+const ADMISSION_DRAFT_KEY = 'zamora.admission.draft';
+
+const saveAdmissionDraft = (): void => {
+    try {
+        sessionStorage.setItem(
+            ADMISSION_DRAFT_KEY,
+            JSON.stringify({
+                form: form.value,
+                includeOtherGuardian: includeOtherGuardian.value,
+                linkedGuardianId: linkedGuardianId.value,
+                enquiryId: enquiryId.value,
+            }),
+        );
+    } catch {
+        // Storage can be unavailable (private browsing, quota) — losing the
+        // draft is no worse than the pre-fix behavior, so fail silently.
+    }
+};
+
+const restoreAdmissionDraft = (): void => {
+    let raw: string | null = null;
+    try {
+        raw = sessionStorage.getItem(ADMISSION_DRAFT_KEY);
+    } catch {
+        return;
+    }
+    if (!raw) {
+        return;
+    }
+    sessionStorage.removeItem(ADMISSION_DRAFT_KEY);
+
+    try {
+        const draft = JSON.parse(raw);
+        if (draft.form) {
+            Object.assign(form.value, draft.form);
+        }
+        if (typeof draft.includeOtherGuardian === 'boolean') {
+            includeOtherGuardian.value = draft.includeOtherGuardian;
+        }
+        if (draft.linkedGuardianId !== undefined) {
+            linkedGuardianId.value = draft.linkedGuardianId;
+        }
+        if (draft.enquiryId !== undefined) {
+            enquiryId.value = draft.enquiryId;
+        }
+        alert.success('Your admission form data has been restored.');
+    } catch {
+        // Corrupt draft — ignore and let the clerk start fresh.
+    }
+};
+
 // Guardian lookup loading state
 const guardianLookupLoading = ref(false);
 
@@ -922,6 +980,7 @@ setupErrorClearWatchers();
 onMounted(() => {
     initializeForm();
     applyPrefill();
+    restoreAdmissionDraft();
 });
 
 // Combined handler for father phone input

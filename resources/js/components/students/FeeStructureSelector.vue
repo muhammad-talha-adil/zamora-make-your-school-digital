@@ -27,7 +27,7 @@
                     No active fee structure exists for the selected branch, session, class, and section combination.
                     Please create the matching fee structure first.
                 </p>
-                <Button type="button" variant="outline" size="sm" class="mt-3" @click="createFeeStructure">
+                <Button type="button" variant="outline" size="sm" class="mt-3" @click="handleCreateFeeStructure">
                     <Icon icon="plus" class="mr-1 h-4 w-4" />
                     Create Fee Structure
                 </Button>
@@ -330,6 +330,15 @@ interface Props {
 
 const props = defineProps<Props>();
 
+/**
+ * Fired right before navigating away to the fee structure create screen, so
+ * the parent admission form can snapshot its own in-progress data (see #65)
+ * before the page unloads.
+ */
+const emit = defineEmits<{
+    (e: 'before-create-fee-structure'): void;
+}>();
+
 // Use the fee structure composable
 const {
     feeStructure,
@@ -407,6 +416,11 @@ watch(
         }
     }
 );
+
+function handleCreateFeeStructure() {
+    emit('before-create-fee-structure');
+    createFeeStructure();
+}
 
 // Handle discount type change - auto-populate the value
 const onDiscountTypeChange = () => {

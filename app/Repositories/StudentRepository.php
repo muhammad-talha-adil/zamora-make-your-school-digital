@@ -392,9 +392,7 @@ class StudentRepository
                 // New fee structure integration fields
                 'fee_structure_id' => $data['fee_structure_id'] ?? null,
                 'fee_mode' => $data['fee_mode'] ?? null,
-                'custom_fee_entries' => $data['custom_fee_entries'] ?? null,
-                'manual_discount_percentage' => $data['manual_discount_percentage'] ?? null,
-                'manual_discount_reason' => $data['manual_discount_reason'] ?? null,
+                ...$this->resolveFeeModeFields($data),
             ]);
 
             // The fee agreed at admission lives on the enrollment itself
@@ -574,9 +572,7 @@ class StudentRepository
                         // NEW: Fee structure integration fields
                         'fee_structure_id' => $data['fee_structure_id'] ?? null,
                         'fee_mode' => $data['fee_mode'] ?? 'structure',
-                        'custom_fee_entries' => $data['custom_fee_entries'] ?? null,
-                        'manual_discount_percentage' => $data['manual_discount_percentage'] ?? null,
-                        'manual_discount_reason' => $data['manual_discount_reason'] ?? null,
+                        ...$this->resolveFeeModeFields($data),
                     ]);
                 }
 
@@ -601,9 +597,7 @@ class StudentRepository
                     // NEW: Fee structure integration fields
                     'fee_structure_id' => $data['fee_structure_id'] ?? null,
                     'fee_mode' => $data['fee_mode'] ?? 'structure',
-                    'custom_fee_entries' => $data['custom_fee_entries'] ?? null,
-                    'manual_discount_percentage' => $data['manual_discount_percentage'] ?? null,
-                    'manual_discount_reason' => $data['manual_discount_reason'] ?? null,
+                    ...$this->resolveFeeModeFields($data),
                 ]);
 
                 if (($data['fee_mode'] ?? 'structure') === 'discount' && ! empty($data['discounts'])) {
@@ -717,9 +711,7 @@ class StudentRepository
             'annual_fee' => $data['annual_fee'] ?? 0,
             'fee_structure_id' => $data['fee_structure_id'] ?? null,
             'fee_mode' => $data['fee_mode'] ?? 'structure',
-            'custom_fee_entries' => $data['custom_fee_entries'] ?? null,
-            'manual_discount_percentage' => $data['manual_discount_percentage'] ?? null,
-            'manual_discount_reason' => $data['manual_discount_reason'] ?? null,
+            ...$this->resolveFeeModeFields($data),
         ]);
     }
 
@@ -803,6 +795,32 @@ class StudentRepository
         return Section::where('class_id', $classId)
             ->orderBy('name')
             ->get(['id', 'name']);
+    }
+
+    /**
+     * Fee data belongs to whichever mode tab was active when the admission
+     * form was submitted (`structure` / `discount` / `manual`). The frontend
+     * already only sends the active tab's fields, but a request built by
+     * hand — or a stray leftover from switching tabs — could still carry
+     * another mode's data. This keeps stale/off-mode fee fields (a manual
+     * amount sent alongside a discount-mode submission, for example) from
+     * ever reaching the enrollment record, matching `discounts` which are
+     * already gated the same way in {@see createDiscountsFromAdmission}.
+     *
+     * @param  array<string, mixed>  $data
+     * @return array{custom_fee_entries: mixed, manual_discount_percentage: mixed, manual_discount_reason: mixed}
+     */
+    private function resolveFeeModeFields(array $data): array
+    {
+        $feeMode = $data['fee_mode'] ?? 'structure';
+
+        return [
+            'custom_fee_entries' => $feeMode === 'manual' ? ($data['custom_fee_entries'] ?? null) : null,
+            'manual_discount_percentage' => in_array($feeMode, ['discount', 'manual'], true)
+                ? ($data['manual_discount_percentage'] ?? null)
+                : null,
+            'manual_discount_reason' => $feeMode === 'manual' ? ($data['manual_discount_reason'] ?? null) : null,
+        ];
     }
 
     /**

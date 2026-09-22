@@ -10,6 +10,7 @@
 
 use App\Models\Fee\StudentDiscount;
 use App\Models\Student;
+use App\Models\StudentEnrollmentRecord;
 use Tests\Support\AdmissionWorld;
 
 beforeEach(function () {
@@ -175,6 +176,35 @@ it('does not record discounts when the mode is not discount', function () {
     // Discounts only take effect in discount mode; sending them alongside a
     // plain structure must not quietly reduce the child's fee.
     expect(StudentDiscount::count())->toBe(0);
+});
+
+it('ignores stale custom fee entries left over from the manual tab when discount mode is active', function () {
+    // Issue #66/#69: the admission form's fee section has separate
+    // structure/discount/manual tabs. If the clerk had typed something into
+    // the manual tab before switching to discount, that leftover data must
+    // never be saved — only the active (discount) tab's data should land on
+    // the enrollment.
+    $type = $this->world->discountType();
+
+    $this->post(route('students.store'), $this->world->payload([
+        'fee_structure_id' => $this->structure->id,
+        'fee_mode' => 'discount',
+        'discounts' => [[
+            'discount_type_id' => $type->id,
+            'fee_head_id' => $this->world->monthlyHead->id,
+            'value' => 20,
+            'value_type' => 'percent',
+        ]],
+        'custom_fee_entries' => [
+            ['fee_head_id' => $this->world->monthlyHead->id, 'amount' => 0],
+        ],
+        'manual_discount_reason' => 'Stale reason left over from the manual tab',
+    ]))->assertSessionHasNoErrors();
+
+    $enrollment = StudentEnrollmentRecord::firstOrFail();
+
+    expect($enrollment->custom_fee_entries)->toBeNull()
+        ->and($enrollment->manual_discount_reason)->toBeNull();
 });
 
 it('rejects a percentage discount above one hundred', function () {
