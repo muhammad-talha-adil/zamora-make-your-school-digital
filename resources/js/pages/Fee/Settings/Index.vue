@@ -13,6 +13,8 @@ interface Props {
         feeHeads: unknown;
         filters?: Record<string, unknown>;
         categories: Array<{ value: string; label: string }>;
+        frequencies: Array<{ value: string; label: string }>;
+        nextOrder: number;
     } | null;
     discountTypes: unknown[] | null;
     fineRulesData: {
@@ -88,6 +90,8 @@ const activeTab = ref(tabs.value[0]?.id ?? 'fee-heads');
                     :fee-heads="feeHeadsData.feeHeads"
                     :filters="feeHeadsData.filters"
                     :categories="feeHeadsData.categories"
+                    :frequencies="feeHeadsData.frequencies"
+                    :next-order="feeHeadsData.nextOrder"
                 />
             </div>
 

@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { router } from '@inertiajs/vue3';
 import { reactive, ref, computed, watch } from 'vue';
 import { route } from 'ziggy-js';
 import axios from 'axios';
@@ -7,6 +6,7 @@ import TablePagination from '@/components/tables/TablePagination.vue';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import Icon from '@/components/Icon.vue';
 import { alert } from '@/utils';
 import StatusToggle from '@/components/tables/StatusToggle.vue';
@@ -18,6 +18,7 @@ interface FeeHead {
     description?: string;
     category: string;
     default_frequency: string;
+    is_recurring?: boolean;
     is_active: boolean;
     is_optional: boolean;
     sort_order: number;
@@ -37,9 +38,134 @@ interface Props {
         is_active?: string;
     };
     categories: Array<{ value: string; label: string }>;
+    frequencies: Array<{ value: string; label: string }>;
+    nextOrder: number;
 }
 
 const props = defineProps<Props>();
+
+const showCreateModal = ref(false);
+const editingFeeHead = ref<FeeHead | null>(null);
+const isSubmitting = ref(false);
+const formErrors = ref<Record<string, string>>({});
+
+const normalizeErrors = (errors: Record<string, string | string[]>) => {
+    return Object.fromEntries(
+        Object.entries(errors).map(([key, value]) => [
+            key,
+            Array.isArray(value) ? String(value[0] ?? 'Validation failed.') : String(value),
+        ]),
+    );
+};
+
+const form = ref({
+    name: '',
+    description: '',
+    category: props.categories[0]?.value || 'tuition',
+    default_frequency: props.frequencies[0]?.value || 'monthly',
+    is_recurring: true,
+    is_active: true,
+    is_optional: false,
+    sort_order: props.nextOrder,
+});
+
+const resetForm = () => {
+    form.value = {
+        name: '',
+        description: '',
+        category: props.categories[0]?.value || 'tuition',
+        default_frequency: props.frequencies[0]?.value || 'monthly',
+        is_recurring: true,
+        is_active: true,
+        is_optional: false,
+        sort_order: props.nextOrder,
+    };
+    formErrors.value = {};
+};
+
+const openCreateModal = () => {
+    resetForm();
+    editingFeeHead.value = null;
+    showCreateModal.value = true;
+};
+
+const openEditModal = (feeHead: FeeHead) => {
+    form.value = {
+        name: feeHead.name,
+        description: feeHead.description || '',
+        category: feeHead.category,
+        default_frequency: feeHead.default_frequency,
+        is_recurring: feeHead.is_recurring ?? true,
+        is_active: feeHead.is_active,
+        is_optional: feeHead.is_optional,
+        sort_order: feeHead.sort_order || 1,
+    };
+    formErrors.value = {};
+    editingFeeHead.value = feeHead;
+    showCreateModal.value = true;
+};
+
+const closeModal = () => {
+    showCreateModal.value = false;
+    editingFeeHead.value = null;
+    resetForm();
+};
+
+const validateForm = (): boolean => {
+    formErrors.value = {};
+    let isValid = true;
+
+    if (!form.value.name.trim()) {
+        formErrors.value.name = 'Name is required';
+        isValid = false;
+    }
+
+    if (!form.value.category) {
+        formErrors.value.category = 'Category is required';
+        isValid = false;
+    }
+
+    if (!form.value.default_frequency) {
+        formErrors.value.default_frequency = 'Frequency is required';
+        isValid = false;
+    }
+
+    return isValid;
+};
+
+const submitForm = () => {
+    if (!validateForm()) {
+        return;
+    }
+
+    isSubmitting.value = true;
+
+    const data = {
+        ...form.value,
+        sort_order: form.value.sort_order ? Number(form.value.sort_order) : 0,
+    };
+
+    const request = editingFeeHead.value
+        ? axios.put(route('fee.heads.update', editingFeeHead.value.id), data, {
+              headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+          })
+        : axios.post(route('fee.heads.store'), data, {
+              headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+          });
+
+    request
+        .then(() => {
+            alert.success(editingFeeHead.value ? 'Fee head updated successfully!' : 'Fee head created successfully!');
+            closeModal();
+            fetchFeeHeads(pagination.value.current_page || 1);
+        })
+        .catch((error) => {
+            formErrors.value = normalizeErrors(error.response?.data?.errors || {});
+        })
+        .finally(() => {
+            isSubmitting.value = false;
+        });
+};
 
 const feeHeadsData = ref<FeeHead[]>(props.feeHeads.data);
 const pagination = ref(props.feeHeads || { data: [], links: [], from: 0, to: 0, total: 0, current_page: 1, last_page: 1, per_page: 10 });
@@ -188,7 +314,7 @@ const getFrequencyLabel = (frequency: string) => {
                     Manage fee categories and heads
                 </p>
             </div>
-            <Button @click="router.visit(route('fee.heads.create'))">
+            <Button @click="openCreateModal">
                 <Icon icon="plus" class="mr-2 h-4 w-4" />
                 Create Fee Head
             </Button>
@@ -260,7 +386,7 @@ const getFrequencyLabel = (frequency: string) => {
                     </div>
                 </div>
                 <div class="flex gap-2 pt-2">
-                    <Button variant="outline" size="sm" @click="router.visit(route('fee.heads.edit', feeHead.id))">
+                    <Button variant="outline" size="sm" @click="openEditModal(feeHead)">
                         <Icon icon="edit" class="mr-1" />Edit
                     </Button>
                     <Button variant="destructive" size="sm" @click="deleteFeeHead(feeHead)" class="flex-1">
@@ -317,7 +443,7 @@ const getFrequencyLabel = (frequency: string) => {
                             </td>
                             <td class="px-4 py-3 text-sm font-medium whitespace-nowrap">
                                 <div class="flex flex-wrap gap-2 justify-end">
-                                    <Button variant="outline" size="sm" @click="router.visit(route('fee.heads.edit', feeHead.id))">
+                                    <Button variant="outline" size="sm" @click="openEditModal(feeHead)">
                                         <Icon icon="edit" class="mr-1 h-3 w-3" />Edit
                                     </Button>
                                     <Button variant="destructive" size="sm" @click="deleteFeeHead(feeHead)">
@@ -340,5 +466,119 @@ const getFrequencyLabel = (frequency: string) => {
                 @page="fetchFeeHeads"
             />
         </div>
+
+        <!-- Create/Edit Modal -->
+        <Dialog v-model:open="showCreateModal">
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>{{ editingFeeHead ? 'Edit Fee Head' : 'Create Fee Head' }}</DialogTitle>
+                </DialogHeader>
+                <form @submit.prevent="submitForm" class="space-y-4">
+                    <!-- Name & Code -->
+                    <div class="grid gap-4 md:grid-cols-2">
+                        <div class="space-y-2">
+                            <Label for="fh-name">Name *</Label>
+                            <Input
+                                id="fh-name"
+                                v-model="form.name"
+                                placeholder="e.g., Tuition Fee"
+                                :class="formErrors.name ? 'border-destructive' : ''"
+                            />
+                            <p v-if="formErrors.name" class="text-xs text-destructive">{{ formErrors.name }}</p>
+                        </div>
+                        <div v-if="editingFeeHead" class="space-y-2">
+                            <Label for="fh-code">Code</Label>
+                            <Input id="fh-code" :model-value="editingFeeHead.code" disabled class="bg-muted" />
+                            <p class="text-xs text-muted-foreground">System-generated reference, cannot be changed.</p>
+                        </div>
+                    </div>
+
+                    <!-- Description -->
+                    <div class="space-y-2">
+                        <Label for="fh-description">Description</Label>
+                        <textarea
+                            id="fh-description"
+                            v-model="form.description"
+                            rows="3"
+                            class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm"
+                            placeholder="Description of this fee head..."
+                        ></textarea>
+                    </div>
+
+                    <!-- Category & Frequency -->
+                    <div class="grid gap-4 md:grid-cols-2">
+                        <div class="space-y-2">
+                            <Label for="fh-category">Category *</Label>
+                            <select
+                                id="fh-category"
+                                v-model="form.category"
+                                :class="['w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm', formErrors.category ? 'border-destructive' : '']"
+                            >
+                                <option v-for="cat in props.categories" :key="cat.value" :value="cat.value">
+                                    {{ cat.label }}
+                                </option>
+                            </select>
+                            <p v-if="formErrors.category" class="text-xs text-destructive">{{ formErrors.category }}</p>
+                        </div>
+                        <div class="space-y-2">
+                            <Label for="fh-frequency">Frequency *</Label>
+                            <select
+                                id="fh-frequency"
+                                v-model="form.default_frequency"
+                                :class="['w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm', formErrors.default_frequency ? 'border-destructive' : '']"
+                            >
+                                <option v-for="freq in props.frequencies" :key="freq.value" :value="freq.value">
+                                    {{ freq.label }}
+                                </option>
+                            </select>
+                            <p v-if="formErrors.default_frequency" class="text-xs text-destructive">{{ formErrors.default_frequency }}</p>
+                        </div>
+                    </div>
+
+                    <!-- Order, Status & Optional -->
+                    <div class="grid gap-4 md:grid-cols-3">
+                        <div class="space-y-2">
+                            <Label for="fh-order">Display Order</Label>
+                            <Input
+                                id="fh-order"
+                                v-model="form.sort_order"
+                                type="number"
+                                min="1"
+                                :placeholder="String(props.nextOrder)"
+                            />
+                        </div>
+                        <div class="space-y-2">
+                            <Label for="fh-active">Status</Label>
+                            <select
+                                id="fh-active"
+                                v-model="form.is_active"
+                                class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm"
+                            >
+                                <option :value="true">Active</option>
+                                <option :value="false">Inactive</option>
+                            </select>
+                        </div>
+                        <div class="space-y-2">
+                            <Label for="fh-optional">Is Optional</Label>
+                            <select
+                                id="fh-optional"
+                                v-model="form.is_optional"
+                                class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm"
+                            >
+                                <option :value="false">Required</option>
+                                <option :value="true">Optional</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <DialogFooter>
+                        <Button type="button" variant="outline" @click="closeModal">Cancel</Button>
+                        <Button type="submit" :disabled="isSubmitting">
+                            {{ isSubmitting ? 'Saving...' : (editingFeeHead ? 'Save Changes' : 'Create') }}
+                        </Button>
+                    </DialogFooter>
+                </form>
+            </DialogContent>
+        </Dialog>
     </div>
 </template>
