@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Fee\DiscountApprovalController;
 use App\Http\Controllers\Fee\DiscountTypeController;
 use App\Http\Controllers\Fee\FeeDashboardController;
 use App\Http\Controllers\Fee\FeeHeadController;
@@ -70,6 +71,17 @@ Route::prefix('fee')->name('fee.')->middleware($middleware)->group(function () {
 
         // API endpoints
         Route::get('/all', [DiscountTypeController::class, 'getAll'])->name('all');
+    });
+
+    // ==================== DISCOUNT APPROVALS ====================
+    // The other half of the discount approval workflow: a `requires_approval`
+    // discount type leaves the `StudentDiscount` `pending` until Owner or
+    // Principal (`campus_admin`) signs off here — see
+    // `StudentDiscountPolicy`.
+    Route::prefix('discount-approvals')->name('discount-approvals.')->middleware('permission:fee.discount.approve')->group(function () {
+        Route::get('/', [DiscountApprovalController::class, 'index'])->name('index');
+        Route::patch('/{studentDiscount}/approve', [DiscountApprovalController::class, 'approve'])->name('approve');
+        Route::patch('/{studentDiscount}/reject', [DiscountApprovalController::class, 'reject'])->name('reject');
     });
 
     // ==================== FEE STRUCTURES ====================

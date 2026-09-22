@@ -289,6 +289,19 @@ class MenuSeeder extends Seeder
             'role' => 'developer,owner,super_admin,campus_admin,accountant',
         ]);
 
+        Menu::create([
+            'title' => 'Discount Approvals',
+            'icon' => 'badge-check',
+            'type' => 'main',
+            'order' => 6,
+            'parent_id' => $fee->id,
+            'is_active' => true,
+            'url' => '/fee/discount-approvals',
+            // fee.discount.approve: Owner/Principal (campus_admin) only -
+            // accountant/clerk/receptionist never hold it.
+            'role' => 'developer,owner,super_admin,campus_admin',
+        ]);
+
         // Fee Settings menu removed (#101) - reachable only from the
         // central School Setting hub now.
 
