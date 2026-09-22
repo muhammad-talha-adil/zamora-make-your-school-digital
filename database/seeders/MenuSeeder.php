@@ -390,6 +390,10 @@ class MenuSeeder extends Seeder
             'parent_id' => $staff->id,
             'is_active' => true,
             'url' => '/staff/me',
+            // Only accounts that actually have a staff record -- Developer/
+            // Owner/Super Admin/Campus Admin are management logins with no
+            // StaffProfile of their own, so "My Profile" makes no sense for them.
+            'role' => 'head_teacher,teacher,accountant,driver,clerk,receptionist,maid',
         ]);
 
         Menu::create([
