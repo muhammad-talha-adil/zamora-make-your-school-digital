@@ -17,7 +17,7 @@ class FeeHeadSeeder extends Seeder
             [
                 'name' => 'Tuition Fee',
                 'code' => 'MONTHLY_TUITION',
-                'category' => 'monthly',
+                'category' => 'tuition',
                 'is_recurring' => true,
                 'default_frequency' => 'monthly',
                 'is_optional' => false,
@@ -28,7 +28,7 @@ class FeeHeadSeeder extends Seeder
             [
                 'name' => 'Computer Lab Fee',
                 'code' => 'COMPUTER_LAB',
-                'category' => 'monthly',
+                'category' => 'laboratory',
                 'is_recurring' => true,
                 'default_frequency' => 'monthly',
                 'is_optional' => true,
@@ -39,7 +39,7 @@ class FeeHeadSeeder extends Seeder
             [
                 'name' => 'Science Lab Fee',
                 'code' => 'SCIENCE_LAB',
-                'category' => 'monthly',
+                'category' => 'laboratory',
                 'is_recurring' => true,
                 'default_frequency' => 'monthly',
                 'is_optional' => true,
@@ -50,9 +50,9 @@ class FeeHeadSeeder extends Seeder
             [
                 'name' => 'Library Fee',
                 'code' => 'LIBRARY',
-                'category' => 'monthly',
+                'category' => 'library',
                 'is_recurring' => true,
-                'default_frequency' => 'monthly',
+                'default_frequency' => 'yearly',
                 'is_optional' => true,
                 'sort_order' => 4,
                 'is_active' => true,
@@ -61,9 +61,9 @@ class FeeHeadSeeder extends Seeder
             [
                 'name' => 'Sports Fee',
                 'code' => 'SPORTS',
-                'category' => 'monthly',
+                'category' => 'sports',
                 'is_recurring' => true,
-                'default_frequency' => 'monthly',
+                'default_frequency' => 'yearly',
                 'is_optional' => true,
                 'sort_order' => 5,
                 'is_active' => true,
@@ -72,9 +72,9 @@ class FeeHeadSeeder extends Seeder
             [
                 'name' => 'Exam Fee',
                 'code' => 'EXAM_FEE',
-                'category' => 'monthly',
+                'category' => 'examination',
                 'is_recurring' => true,
-                'default_frequency' => 'monthly',
+                'default_frequency' => 'once',
                 'is_optional' => false,
                 'sort_order' => 6,
                 'is_active' => true,
@@ -85,7 +85,7 @@ class FeeHeadSeeder extends Seeder
             [
                 'name' => 'Annual Charges',
                 'code' => 'ANNUAL',
-                'category' => 'annual',
+                'category' => 'annual_charges',
                 'is_recurring' => true,
                 'default_frequency' => 'yearly',
                 'is_optional' => false,
@@ -96,9 +96,9 @@ class FeeHeadSeeder extends Seeder
             [
                 'name' => 'Registration Fee',
                 'code' => 'REGISTRATION',
-                'category' => 'annual',
-                'is_recurring' => true,
-                'default_frequency' => 'yearly',
+                'category' => 'admission',
+                'is_recurring' => false,
+                'default_frequency' => 'once',
                 'is_optional' => false,
                 'sort_order' => 11,
                 'is_active' => true,
@@ -107,7 +107,7 @@ class FeeHeadSeeder extends Seeder
             [
                 'name' => 'Books & Uniform',
                 'code' => 'BOOKS_UNIFORM',
-                'category' => 'annual',
+                'category' => 'annual_charges',
                 'is_recurring' => false,
                 'default_frequency' => 'yearly',
                 'is_optional' => true,
@@ -120,7 +120,7 @@ class FeeHeadSeeder extends Seeder
             [
                 'name' => 'Admission Fee',
                 'code' => 'ADMISSION',
-                'category' => 'one_time',
+                'category' => 'admission',
                 'is_recurring' => false,
                 'default_frequency' => 'once',
                 'is_optional' => false,
@@ -131,7 +131,7 @@ class FeeHeadSeeder extends Seeder
             [
                 'name' => 'Enrollment Fee',
                 'code' => 'ENROLLMENT',
-                'category' => 'one_time',
+                'category' => 'admission',
                 'is_recurring' => false,
                 'default_frequency' => 'once',
                 'is_optional' => false,

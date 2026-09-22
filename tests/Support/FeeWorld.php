@@ -150,7 +150,7 @@ class FeeWorld
             ['code' => 'ADMISSION'],
             [
                 'name' => 'Admission Fee',
-                'category' => 'one_time',
+                'category' => 'admission',
                 'is_recurring' => false,
                 'default_frequency' => 'once',
                 'is_optional' => false,

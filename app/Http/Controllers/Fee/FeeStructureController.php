@@ -92,7 +92,7 @@ class FeeStructureController extends Controller
             'sections' => Section::select('id', 'name', 'class_id')->get(),
             'months' => Month::select('id', 'name', 'month_number')->orderBy('month_number')->get(),
             'feeHeads' => FeeHead::active()->select('id', 'name', 'category', 'default_frequency')->ordered()->get(),
-            'feeHeadCategories' => collect(FeeHeadCategory::cases())->map(fn ($case) => ['value' => $case->value, 'label' => $case->label()])->values(),
+            'feeHeadCategories' => collect(FeeHeadCategory::cases())->map(fn ($case) => ['value' => $case->value, 'label' => $case->label(), 'default_frequency' => $case->defaultFrequency()->value])->values(),
             'feeHeadFrequencies' => collect(FeeFrequency::cases())->map(fn ($case) => ['value' => $case->value, 'label' => $case->label()])->values(),
         ]);
     }

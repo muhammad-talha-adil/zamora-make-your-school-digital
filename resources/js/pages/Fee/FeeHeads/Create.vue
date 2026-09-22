@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, router } from '@inertiajs/vue3';
-import { reactive, ref } from 'vue';
+import { reactive, ref, watch } from 'vue';
 import { route } from 'ziggy-js';
 import { alert } from '@/utils';
 import AppLayout from '@/layouts/AppLayout.vue';
@@ -11,7 +11,7 @@ import { Input } from '@/components/ui/input';
 import Icon from '@/components/Icon.vue';
 
 interface Props {
-    categories: Array<{ value: string; label: string }>;
+    categories: Array<{ value: string; label: string; default_frequency: string }>;
     frequencies: Array<{ value: string; label: string }>;
     nextOrder: number;
 }
@@ -38,6 +38,26 @@ const form = reactive({
 
 const errors = ref<Record<string, string>>({});
 const isSubmitting = ref(false);
+
+// Pre-fill frequency from the category's default whenever the category
+// changes, but only while the frequency still matches the previous
+// suggestion — so the office can still override it manually afterward.
+const lastSuggestedFrequency = ref<string | null>(null);
+
+watch(
+    () => form.category,
+    (category) => {
+        const suggested = props.categories.find((cat) => cat.value === category)?.default_frequency;
+        if (!suggested) return;
+
+        if (form.default_frequency === '' || form.default_frequency === lastSuggestedFrequency.value) {
+            form.default_frequency = suggested;
+        }
+
+        lastSuggestedFrequency.value = suggested;
+    },
+    { immediate: true },
+);
 
 const validateForm = () => {
     errors.value = {};

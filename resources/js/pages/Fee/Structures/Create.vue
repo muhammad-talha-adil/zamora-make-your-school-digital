@@ -21,7 +21,7 @@ interface Props {
     sections: Array<{ id: number; name: string; class_id: number }>;
     months: Array<{ id: number; name: string; month_number: number }>;
     feeHeads: Array<{ id: number; name: string; category: string; default_frequency: string }>;
-    feeHeadCategories: Array<{ value: string; label: string }>;
+    feeHeadCategories: Array<{ value: string; label: string; default_frequency: string }>;
     feeHeadFrequencies: Array<{ value: string; label: string }>;
 }
 
@@ -45,6 +45,14 @@ const breadcrumbItems: BreadcrumbItem[] = [
  * clerk doesn't have to reselect what the linking page already established.
  */
 const queryParams = new URLSearchParams(window.location.search);
+
+/**
+ * When this page was reached from the admission form's inline "Create Fee
+ * Structure" action, the calling page's URL is carried here so the clerk
+ * lands back on the admission form (with its data restored from
+ * sessionStorage) instead of the fee structures index (see #65).
+ */
+const returnTo = queryParams.get('return_to');
 
 const form: {
     title: string | number | null;
@@ -93,16 +101,36 @@ const isSavingFeeHead = ref(false);
 const feeHeadForm = reactive({
     name: '',
     code: '',
-    category: 'monthly',
+    category: 'tuition',
     default_frequency: 'monthly',
 });
 const feeHeadFormErrors = ref<Record<string, string>>({});
 
+// Pre-fill frequency from the category's default whenever the category
+// changes, but only while the frequency still matches the previous
+// suggestion — so it can still be overridden manually.
+const lastSuggestedFeeHeadFrequency = ref<string | null>(null);
+
+watch(
+    () => feeHeadForm.category,
+    (category) => {
+        const suggested = props.feeHeadCategories.find((cat) => cat.value === category)?.default_frequency;
+        if (!suggested) return;
+
+        if (feeHeadForm.default_frequency === '' || feeHeadForm.default_frequency === lastSuggestedFeeHeadFrequency.value) {
+            feeHeadForm.default_frequency = suggested;
+        }
+
+        lastSuggestedFeeHeadFrequency.value = suggested;
+    },
+);
+
 const openAddFeeHeadModal = () => {
     feeHeadForm.name = '';
     feeHeadForm.code = '';
-    feeHeadForm.category = 'monthly';
+    feeHeadForm.category = 'tuition';
     feeHeadForm.default_frequency = 'monthly';
+    lastSuggestedFeeHeadFrequency.value = null;
     feeHeadFormErrors.value = {};
     showFeeHeadModal.value = true;
 };
@@ -378,7 +406,7 @@ const submitForm = () => {
         onSuccess: () => {
             isSubmitting.value = false;
             alert.success('Fee structure created successfully!');
-            router.visit(route('fee.structures.index'));
+            router.visit(returnTo || route('fee.structures.index'));
         },
         onError: (err) => {
             isSubmitting.value = false;
@@ -390,7 +418,7 @@ const submitForm = () => {
 };
 
 const cancel = () => {
-    router.visit(route('fee.structures.index'));
+    router.visit(returnTo || route('fee.structures.index'));
 };
 </script>
 

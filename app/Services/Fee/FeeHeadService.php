@@ -26,6 +26,8 @@ class FeeHeadService
             'feeHeads' => $feeHeads,
             'filters' => $filters,
             'categories' => $this->getCategories(),
+            'frequencies' => $this->getFrequencies(),
+            'nextOrder' => $this->repository->getNextAvailableOrder(),
         ];
     }
 
@@ -95,6 +97,7 @@ class FeeHeadService
         return collect(FeeHeadCategory::cases())->map(fn ($case) => [
             'value' => $case->value,
             'label' => $case->label(),
+            'default_frequency' => $case->defaultFrequency()->value,
         ])->toArray();
     }
 

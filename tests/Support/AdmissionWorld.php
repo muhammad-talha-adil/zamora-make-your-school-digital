@@ -288,7 +288,7 @@ class AdmissionWorld
         $this->monthlyHead = FeeHead::create([
             'name' => 'Monthly Tuition',
             'code' => 'MONTHLY_TUITION',
-            'category' => 'monthly',
+            'category' => 'tuition',
             'is_recurring' => true,
             'default_frequency' => 'monthly',
             'is_optional' => false,
@@ -299,7 +299,7 @@ class AdmissionWorld
         $this->annualHead = FeeHead::create([
             'name' => 'Annual Charges',
             'code' => 'ANNUAL',
-            'category' => 'annual',
+            'category' => 'annual_charges',
             'is_recurring' => false,
             'default_frequency' => 'yearly',
             'is_optional' => false,
