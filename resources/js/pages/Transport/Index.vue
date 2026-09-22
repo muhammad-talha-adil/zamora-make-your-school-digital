@@ -8,7 +8,8 @@ import Icon from '@/components/Icon.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { alert } from '@/utils';
-import { tableActionButtonClass } from '@/utils/table-actions';
+import RowAction from '@/components/tables/RowAction.vue';
+import RowActions from '@/components/tables/RowActions.vue';
 import type { BreadcrumbItem } from '@/types';
 
 interface Campus {
@@ -816,12 +817,9 @@ const generateDues = async () => {
                                         </span>
                                     </td>
                                     <td class="px-4 py-3">
-                                        <div class="flex flex-wrap justify-end gap-2">
-                                            <Button variant="outline" size="sm" :class="tableActionButtonClass.edit" @click="editVehicle(vehicle)">
-                                                <Icon icon="square-pen" class="h-3.5 w-3.5" />
-                                                Edit
-                                            </Button>
-                                        </div>
+                                        <RowActions>
+                                            <RowAction kind="edit" @click="editVehicle(vehicle)" />
+                                        </RowActions>
                                     </td>
                                 </tr>
                                 <tr v-if="filteredVehicles.length === 0">
@@ -909,12 +907,9 @@ const generateDues = async () => {
                                     <td class="px-4 py-3 text-sm text-muted-foreground">{{ routeRow.stops.map((stop) => stop.name).join(', ') || '-' }}</td>
                                     <td class="px-4 py-3 text-sm font-medium text-primary">{{ formatMoney(routeRow.monthly_fee) }}</td>
                                     <td class="px-4 py-3">
-                                        <div class="flex flex-wrap justify-end gap-2">
-                                            <Button variant="outline" size="sm" :class="tableActionButtonClass.edit" @click="editRoute(routeRow)">
-                                                <Icon icon="square-pen" class="h-3.5 w-3.5" />
-                                                Edit
-                                            </Button>
-                                        </div>
+                                        <RowActions>
+                                            <RowAction kind="edit" @click="editRoute(routeRow)" />
+                                        </RowActions>
                                     </td>
                                 </tr>
                             </tbody>
@@ -980,12 +975,9 @@ const generateDues = async () => {
                                         {{ stop.pickup_time || '-' }} / {{ stop.drop_time || '-' }}
                                     </td>
                                     <td class="px-4 py-3">
-                                        <div class="flex flex-wrap justify-end gap-2">
-                                            <Button variant="outline" size="sm" :class="tableActionButtonClass.edit" @click="editStop(stop)">
-                                                <Icon icon="square-pen" class="h-3.5 w-3.5" />
-                                                Edit
-                                            </Button>
-                                        </div>
+                                        <RowActions>
+                                            <RowAction kind="edit" @click="editStop(stop)" />
+                                        </RowActions>
                                     </td>
                                 </tr>
                             </tbody>
@@ -1098,12 +1090,9 @@ const generateDues = async () => {
                                         </span>
                                     </td>
                                     <td class="px-4 py-3">
-                                        <div class="flex flex-wrap justify-end gap-2">
-                                            <Button variant="outline" size="sm" :class="tableActionButtonClass.edit" @click="editAssignment(assignment)">
-                                                <Icon icon="square-pen" class="h-3.5 w-3.5" />
-                                                Edit
-                                            </Button>
-                                        </div>
+                                        <RowActions>
+                                            <RowAction kind="edit" @click="editAssignment(assignment)" />
+                                        </RowActions>
                                     </td>
                                 </tr>
                             </tbody>
@@ -1200,12 +1189,9 @@ const generateDues = async () => {
                                     <td class="px-4 py-3 text-sm text-muted-foreground">{{ expense.campus?.name || '-' }}</td>
                                     <td class="px-4 py-3 text-sm font-medium text-destructive">{{ formatMoney(expense.amount) }}</td>
                                     <td class="px-4 py-3">
-                                        <div class="flex flex-wrap justify-end gap-2">
-                                            <Button variant="outline" size="sm" :class="tableActionButtonClass.edit" @click="editExpense(expense)">
-                                                <Icon icon="square-pen" class="h-3.5 w-3.5" />
-                                                Edit
-                                            </Button>
-                                        </div>
+                                        <RowActions>
+                                            <RowAction kind="edit" @click="editExpense(expense)" />
+                                        </RowActions>
                                     </td>
                                 </tr>
                             </tbody>

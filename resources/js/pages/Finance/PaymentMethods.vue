@@ -7,7 +7,9 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import type { BreadcrumbItem } from '@/types';
-import { tableActionButtonClass } from '@/utils/table-actions';
+import RowAction from '@/components/tables/RowAction.vue';
+import RowActions from '@/components/tables/RowActions.vue';
+import StatusToggle from '@/components/tables/StatusToggle.vue';
 
 interface PaymentMethod {
     id: number;
@@ -66,6 +68,15 @@ const submitForm = async () => {
     }
     showForm.value = false;
 };
+
+// Toggle active/inactive status
+const toggleMethodActive = async (method: PaymentMethod) => {
+    await router.put(`/finance/payment-methods/${method.id}`, {
+        name: method.name,
+        code: method.code,
+        is_active: !method.is_active,
+    });
+};
 </script>
 
 <template>
@@ -98,14 +109,12 @@ const submitForm = async () => {
                             <h3 class="font-semibold">{{ method.name }}</h3>
                             <p class="text-sm text-muted-foreground">{{ method.code }}</p>
                         </div>
-                        <div class="flex gap-2">
-                            <Button variant="outline" size="sm" :class="tableActionButtonClass.edit" @click="editMethod(method)">Edit</Button>
-                        </div>
+                        <RowActions>
+                            <RowAction kind="edit" @click="editMethod(method)" />
+                        </RowActions>
                     </div>
                     <div class="mt-2">
-                        <span :class="method.is_active ? 'bg-success/10 text-success' : 'bg-muted text-foreground'" class="px-2 py-1 text-xs rounded-full">
-                            {{ method.is_active ? 'Active' : 'Inactive' }}
-                        </span>
+                        <StatusToggle :active="method.is_active" @toggle="toggleMethodActive(method)" />
                     </div>
                 </div>
                 <p v-if="paymentMethods.length === 0" class="col-span-full text-center text-muted-foreground">No payment methods found</p>

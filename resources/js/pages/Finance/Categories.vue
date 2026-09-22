@@ -7,7 +7,10 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import type { BreadcrumbItem } from '@/types';
-import { tableActionButtonClass } from '@/utils/table-actions';
+import RowAction from '@/components/tables/RowAction.vue';
+import RowActions from '@/components/tables/RowActions.vue';
+import StatusToggle from '@/components/tables/StatusToggle.vue';
+import { alert } from '@/utils';
 
 interface Category {
     id: number;
@@ -80,9 +83,20 @@ const submitForm = async () => {
 
 // Delete category
 const deleteCategory = async (id: number) => {
-    if (confirm('Are you sure you want to delete this category?')) {
+    const result = await alert.confirm('Are you sure you want to delete this category?', 'Delete Category', 'Yes, delete it!');
+    if (result.isConfirmed) {
         await router.delete(`/finance/categories/${id}`);
     }
+};
+
+// Toggle active/inactive status
+const toggleCategoryActive = async (category: Category) => {
+    await router.put(`/finance/categories/${category.id}`, {
+        name: category.name,
+        type: category.type,
+        parent_id: category.parent_id,
+        is_active: !category.is_active,
+    });
 };
 
 
@@ -112,17 +126,20 @@ const deleteCategory = async (id: number) => {
                 <div class="bg-card rounded-lg border border-border p-6">
                     <h2 class="text-lg font-semibold text-success mb-4">Income Categories</h2>
                     <div class="space-y-2">
-                        <div 
-                            v-for="category in incomeCategories" 
+                        <div
+                            v-for="category in incomeCategories"
                             :key="category.id"
                             class="flex flex-wrap gap-2 items-center justify-between p-3 bg-muted rounded-lg"
                         >
                             <div class="flex items-center gap-2">
                                 <span :class="{'opacity-50': !category.is_active}">{{ category.name }}</span>
                             </div>
-                            <div class="flex gap-2">
-                                <Button variant="outline" size="sm" :class="tableActionButtonClass.edit" @click="editCategory(category)">Edit</Button>
-                                <Button variant="outline" size="sm" :class="tableActionButtonClass.delete" @click="deleteCategory(category.id)">Delete</Button>
+                            <div class="flex items-center gap-2">
+                                <StatusToggle :active="category.is_active" @toggle="toggleCategoryActive(category)" />
+                                <RowActions>
+                                    <RowAction kind="edit" @click="editCategory(category)" />
+                                    <RowAction kind="delete" @click="deleteCategory(category.id)" />
+                                </RowActions>
                             </div>
                         </div>
                         <p v-if="incomeCategories.length === 0" class="text-muted-foreground">No income categories</p>
@@ -133,17 +150,20 @@ const deleteCategory = async (id: number) => {
                 <div class="bg-card rounded-lg border border-border p-6">
                     <h2 class="text-lg font-semibold text-destructive mb-4">Expense Categories</h2>
                     <div class="space-y-2">
-                        <div 
-                            v-for="category in expenseCategories" 
+                        <div
+                            v-for="category in expenseCategories"
                             :key="category.id"
                             class="flex flex-wrap gap-2 items-center justify-between p-3 bg-muted rounded-lg"
                         >
                             <div class="flex items-center gap-2">
                                 <span :class="{'opacity-50': !category.is_active}">{{ category.name }}</span>
                             </div>
-                            <div class="flex gap-2">
-                                <Button variant="outline" size="sm" :class="tableActionButtonClass.edit" @click="editCategory(category)">Edit</Button>
-                                <Button variant="outline" size="sm" :class="tableActionButtonClass.delete" @click="deleteCategory(category.id)">Delete</Button>
+                            <div class="flex items-center gap-2">
+                                <StatusToggle :active="category.is_active" @toggle="toggleCategoryActive(category)" />
+                                <RowActions>
+                                    <RowAction kind="edit" @click="editCategory(category)" />
+                                    <RowAction kind="delete" @click="deleteCategory(category.id)" />
+                                </RowActions>
                             </div>
                         </div>
                         <p v-if="expenseCategories.length === 0" class="text-muted-foreground">No expense categories</p>

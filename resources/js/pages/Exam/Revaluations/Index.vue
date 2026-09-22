@@ -82,67 +82,33 @@
                                 </span>
                             </td>
                             <td class="px-4 py-4">
-                                <div class="flex flex-wrap justify-end gap-2">
-                                    <Button variant="outline" size="sm" :class="tableActionButtonClass.view" @click="viewHistory(item)">
-                                        <Icon icon="history" class="h-3.5 w-3.5" />
-                                        History
-                                    </Button>
+                                <RowActions>
+                                    <RowAction kind="custom" icon="history" label="History" @click="viewHistory(item)" />
 
                                     <template v-if="props.can.manage">
-                                        <Button
-                                            v-if="item.status === 'pending'"
-                                            variant="outline"
-                                            size="sm"
-                                            :class="tableActionButtonClass.edit"
-                                            @click="reviewRequest(item)"
-                                        >
-                                            <Icon icon="eye" class="h-3.5 w-3.5" />
-                                            Review
-                                        </Button>
+                                        <RowAction v-if="item.status === 'pending'" kind="view" label="Review" @click="reviewRequest(item)" />
 
                                         <template v-if="item.status === 'in_review'">
-                                            <Button
-                                                variant="outline"
-                                                size="sm"
-                                                :class="tableActionButtonClass.activate"
-                                                @click="openApproveModal(item)"
-                                            >
-                                                <Icon icon="check" class="h-3.5 w-3.5" />
-                                                Approve
-                                            </Button>
-                                            <Button
-                                                variant="outline"
-                                                size="sm"
-                                                :class="tableActionButtonClass.delete"
-                                                @click="openRejectModal(item)"
-                                            >
-                                                <Icon icon="x" class="h-3.5 w-3.5" />
-                                                Reject
-                                            </Button>
+                                            <RowAction kind="approve" @click="openApproveModal(item)" />
+                                            <RowAction kind="reject" @click="openRejectModal(item)" />
                                         </template>
 
-                                        <Button
+                                        <RowAction
                                             v-if="item.status === 'approved'"
-                                            variant="outline"
-                                            size="sm"
-                                            :class="tableActionButtonClass.activate"
+                                            kind="custom"
+                                            icon="check-check"
+                                            label="Apply Change"
                                             @click="applyChange(item)"
-                                        >
-                                            <Icon icon="check-check" class="h-3.5 w-3.5" />
-                                            Apply Change
-                                        </Button>
+                                        />
                                     </template>
 
-                                    <Button
+                                    <RowAction
                                         v-if="!props.can.manage && item.status === 'pending' && isOwnRequest(item)"
-                                        variant="outline"
-                                        size="sm"
-                                        :class="tableActionButtonClass.delete"
+                                        kind="delete"
+                                        label="Cancel"
                                         @click="cancelRequest(item)"
-                                    >
-                                        Cancel
-                                    </Button>
-                                </div>
+                                    />
+                                </RowActions>
                             </td>
                         </tr>
                     </tbody>
@@ -325,8 +291,9 @@ import {
     DialogTitle,
 } from '@/components/ui/dialog'
 import { alert } from '@/utils'
-import { tableActionButtonClass } from '@/utils/table-actions'
 import { formatDate } from '@/utils/date'
+import RowAction from '@/components/tables/RowAction.vue'
+import RowActions from '@/components/tables/RowActions.vue'
 import type { AppPageProps, BreadcrumbItem } from '@/types'
 
 interface Exam {

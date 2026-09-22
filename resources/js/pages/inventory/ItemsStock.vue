@@ -11,7 +11,7 @@ import Icon from '@/components/Icon.vue';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import type { BreadcrumbItem } from '@/types';
-import { tableActionButtonClass } from '@/utils/table-actions';
+import StatusToggle from '@/components/tables/StatusToggle.vue';
 import InventoryTypeForm from '@/components/forms/InventoryTypeForm.vue';
 import ItemForm from '@/components/forms/inventory/ItemForm.vue';
 import AdjustmentForm from '@/components/forms/inventory/AdjustmentForm.vue';
@@ -149,12 +149,6 @@ const getStockStatusBadge = (stock: InventoryStockRow) => {
     }
 
     return { label: 'Healthy', className: 'bg-success/10 text-success' };
-};
-
-const getStatusBadge = (isActive: boolean) => {
-    return isActive
-        ? 'bg-success/10 text-success'
-        : 'bg-muted text-foreground';
 };
 
 const getAdjustmentBadge = (type: string) => {
@@ -578,9 +572,7 @@ const loadStocksPage = (url: string) => fetchStocks(url);
                                 <td class="px-4 py-3 text-sm text-muted-foreground">{{ type.campus_name }}</td>
                                 <td class="px-4 py-3 text-sm text-muted-foreground">{{ type.items_count }}</td>
                                 <td class="px-4 py-3">
-                                    <span :class="['rounded-full px-2 py-1 text-xs font-medium', getStatusBadge(type.is_active)]">
-                                        {{ type.is_active ? 'Active' : 'Inactive' }}
-                                    </span>
+                                    <StatusToggle :active="type.is_active" @toggle="toggleTypeStatus(type)" />
                                 </td>
                                 <td class="px-4 py-3 text-sm font-medium">
                                     <div class="flex flex-wrap justify-end gap-2">
@@ -592,15 +584,6 @@ const loadStocksPage = (url: string) => fetchStocks(url);
                                             size="sm"
                                             @saved="fetchInventoryTypes()"
                                         />
-                                        <Button
-                                            variant="outline"
-                                            size="sm"
-                                            :class="type.is_active ? tableActionButtonClass.deactivate : tableActionButtonClass.activate"
-                                            @click="toggleTypeStatus(type)"
-                                        >
-                                            <Icon :icon="type.is_active ? 'eye-off' : 'eye'" class="mr-1 h-3 w-3" />
-                                            {{ type.is_active ? 'Inactive' : 'Active' }}
-                                        </Button>
                                     </div>
                                 </td>
                             </tr>
@@ -634,9 +617,7 @@ const loadStocksPage = (url: string) => fetchStocks(url);
                                 <td class="px-4 py-3 text-sm text-muted-foreground">{{ item.campus_name }}</td>
                                 <td class="px-4 py-3 text-sm text-muted-foreground">{{ item.current_stock ?? 0 }}</td>
                                 <td class="px-4 py-3">
-                                    <span :class="['rounded-full px-2 py-1 text-xs font-medium', getStatusBadge(item.is_active)]">
-                                        {{ item.is_active ? 'Active' : 'Inactive' }}
-                                    </span>
+                                    <StatusToggle :active="item.is_active" @toggle="toggleItemStatus(item)" />
                                 </td>
                                 <td class="px-4 py-3 text-sm font-medium">
                                     <div class="flex flex-wrap justify-end gap-2">
@@ -649,15 +630,6 @@ const loadStocksPage = (url: string) => fetchStocks(url);
                                             size="sm"
                                             @saved="fetchInventoryItems()"
                                         />
-                                        <Button
-                                            variant="outline"
-                                            size="sm"
-                                            :class="item.is_active ? tableActionButtonClass.deactivate : tableActionButtonClass.activate"
-                                            @click="toggleItemStatus(item)"
-                                        >
-                                            <Icon :icon="item.is_active ? 'eye-off' : 'eye'" class="mr-1 h-3 w-3" />
-                                            {{ item.is_active ? 'Inactive' : 'Active' }}
-                                        </Button>
                                     </div>
                                 </td>
                             </tr>

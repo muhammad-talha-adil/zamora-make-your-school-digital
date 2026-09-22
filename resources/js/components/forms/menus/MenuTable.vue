@@ -1,10 +1,9 @@
 <script setup lang="ts">
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import Icon from '@/components/Icon.vue';
 import TablePagination from '@/components/tables/TablePagination.vue';
-import { tableActionButtonClass } from '@/utils/table-actions';
 import StatusToggle from '@/components/tables/StatusToggle.vue';
+import RowAction from '@/components/tables/RowAction.vue';
+import RowActions from '@/components/tables/RowActions.vue';
 
 interface Menu {
     id: number;
@@ -139,38 +138,14 @@ const updatePerPage = (value: number) => {
                                 />
                             </td>
                             <td class="px-6 py-4 text-sm font-medium whitespace-nowrap">
-                                <div class="flex flex-wrap justify-end gap-2" v-if="!showInactive && hasManageMenusPermission">
-                                    <Button variant="outline" size="sm" :class="tableActionButtonClass.edit" title="Edit Menu" @click="emit('edit', menu)">
-                                        <Icon icon="edit" class="mr-1" />Edit
-                                    </Button>
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        :class="tableActionButtonClass.delete"
-                                        title="Delete Menu"
-                                        @click="emit('delete', menu)"
-                                    >
-                                        <Icon icon="trash-2" class="mr-1" />Delete
-                                    </Button>
-                                </div>
-                                <div class="flex flex-wrap justify-end gap-2" v-else-if="showInactive && hasManageMenusPermission">
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        :class="tableActionButtonClass.restore"
-                                        @click="emit('restore', menu)"
-                                    >
-                                        <Icon icon="refresh" class="mr-1" />Restore
-                                    </Button>
-                                    <Button
-                                        variant="outline"
-                                        size="sm"
-                                        :class="tableActionButtonClass.delete"
-                                        @click="emit('forceDelete', menu)"
-                                    >
-                                        <Icon icon="x" class="mr-1" />Delete
-                                    </Button>
-                                </div>
+                                <RowActions v-if="!showInactive && hasManageMenusPermission">
+                                    <RowAction kind="edit" @click="emit('edit', menu)" />
+                                    <RowAction kind="delete" @click="emit('delete', menu)" />
+                                </RowActions>
+                                <RowActions v-else-if="showInactive && hasManageMenusPermission">
+                                    <RowAction kind="restore" @click="emit('restore', menu)" />
+                                    <RowAction kind="delete" label="Delete Permanently" @click="emit('forceDelete', menu)" />
+                                </RowActions>
                                 <span v-else class="text-xs text-muted-foreground">&mdash;</span>
                             </td>
                         </tr>
