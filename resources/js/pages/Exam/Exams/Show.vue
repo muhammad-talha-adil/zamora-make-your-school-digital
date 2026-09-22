@@ -166,6 +166,7 @@ import type { BreadcrumbItem } from '@/types';
 import { Button } from '@/components/ui/button';
 import Icon from '@/components/Icon.vue';
 import type { ExamShowProps } from '@/types/exam';
+import { alert } from '@/utils/alert';
 
 const props = defineProps<ExamShowProps>();
 
@@ -197,7 +198,9 @@ const run = async (call: () => Promise<{ data: { data?: Record<string, unknown> 
     } catch (e: unknown) {
         if (axios.isAxiosError(e) && e.response?.status === 422) {
             // The refusal carries the list. That is the whole point of it.
-            problems.value = e.response.data?.errors?.exam ?? [e.response.data?.message];
+            problems.value = e.response.data?.errors?.exam
+                ?? e.response.data?.errors?.password
+                ?? [e.response.data?.message];
 
             return false;
         }
@@ -219,7 +222,16 @@ const publish = async (force: boolean) => {
 };
 
 const unpublish = async () => {
-    if (await run(() => axios.patch(route('exam.unpublish', exam.id)))) {
+    // Unpublishing reverses a published result, so the acting user re-enters
+    // their password — same pattern as other sensitive actions in the app.
+    const { isConfirmed, password } = await alert.confirmWithPassword(
+        'This will take the published results off the board. Enter your password to confirm.',
+        'Unpublish results?',
+    );
+
+    if (!isConfirmed) return;
+
+    if (await run(() => axios.patch(route('exam.unpublish', exam.id), { password }))) {
         message.value = 'Taken back off the board.';
     }
 };

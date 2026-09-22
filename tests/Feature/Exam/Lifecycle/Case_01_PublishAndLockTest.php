@@ -112,11 +112,13 @@ it('reports readiness before anybody presses publish', function () {
         ->assertJsonPath('data.is_ready', true);
 });
 
-it('takes a published result back off the board', function () {
+it('takes a published result back off the board when the password is confirmed', function () {
     markEveryone($this->world);
     $this->patchJson(route('exam.publish', $this->world->exam->id));
 
-    $this->patchJson(route('exam.unpublish', $this->world->exam->id))->assertSuccessful();
+    $this->patchJson(route('exam.unpublish', $this->world->exam->id), [
+        'password' => 'password',
+    ])->assertSuccessful();
 
     $exam = $this->world->exam->fresh();
 
@@ -124,6 +126,30 @@ it('takes a published result back off the board', function () {
         ->and($exam->published_at)->toBeNull()
         ->and(ExamResultHeader::where('exam_id', $exam->id)
             ->where('status', ExamResultHeader::STATUS_PUBLISHED)->count())->toBe(0);
+});
+
+it('refuses to unpublish without the acting user password', function () {
+    markEveryone($this->world);
+    $this->patchJson(route('exam.publish', $this->world->exam->id));
+
+    $this->patchJson(route('exam.unpublish', $this->world->exam->id))
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors('password');
+
+    expect($this->world->exam->fresh()->status)->toBe(Exam::STATUS_PUBLISHED);
+});
+
+it('refuses to unpublish with the wrong password', function () {
+    markEveryone($this->world);
+    $this->patchJson(route('exam.publish', $this->world->exam->id));
+
+    $this->patchJson(route('exam.unpublish', $this->world->exam->id), [
+        'password' => 'not-the-right-password',
+    ])
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors('password');
+
+    expect($this->world->exam->fresh()->status)->toBe(Exam::STATUS_PUBLISHED);
 });
 
 it('does not unpublish an exam because somebody edited its name', function () {

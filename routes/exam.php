@@ -173,7 +173,10 @@ Route::prefix('exams')->name('exam.')->middleware(['web', 'auth'])->group(functi
         Route::put('/{id}', 'update')->name('update')->middleware('permission:exam.manage');
         Route::patch('/{id}/status', 'changeStatus')->name('status')->middleware('permission:exam.manage');
         Route::patch('/{id}/publish', 'publish')->name('publish')->middleware('permission:exam.result.publish');
-        Route::patch('/{id}/unpublish', 'unpublish')->name('unpublish')->middleware('permission:exam.result.publish');
+        // Unpublishing reverses a published result — the acting user's own
+        // password is re-verified server-side before it runs.
+        Route::patch('/{id}/unpublish', 'unpublish')->name('unpublish')
+            ->middleware(['permission:exam.result.publish', 'password.confirm.server']);
         Route::get('/{id}/readiness', 'readiness')->name('readiness')->middleware('permission:exam.result.publish|exam.manage');
         Route::patch('/{id}/lock', 'lock')->name('lock')->middleware('permission:exam.manage');
         Route::patch('/{id}/unlock', 'unlock')->name('unlock')->middleware('permission:exam.marks.verify');
