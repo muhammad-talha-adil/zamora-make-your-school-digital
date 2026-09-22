@@ -101,7 +101,7 @@
                     <Button type="button" variant="outline" @click="router.visit(route('exam.index-page'))">
                         Cancel
                     </Button>
-                    <Button type="submit" :disabled="form.processing">
+                    <Button type="submit" :disabled="form.processing || !isValid">
                         Create Exam
                     </Button>
                 </div>
@@ -120,6 +120,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import InputError from '@/components/InputError.vue';
+import { useFormValidity } from '@/composables/useFormValidity';
 import type { ExamCreateProps } from '@/types/exam';
 
 const props = defineProps<ExamCreateProps>();
@@ -138,6 +139,8 @@ const form = useForm({
     end_date: '',
     status: 'draft',
 });
+
+const { isValid } = useFormValidity(form, ['name', 'exam_type_id', 'session_id', 'start_date', 'end_date']);
 
 const submitForm = () => {
     form.post(route('exam.store'), {

@@ -60,7 +60,7 @@
                     <Button type="button" variant="outline" @click="router.visit(route('exam.papers.index-page'))">
                         Cancel
                     </Button>
-                    <Button type="submit" :disabled="form.processing">
+                    <Button type="submit" :disabled="form.processing || !isValid">
                         Update Paper
                     </Button>
                 </div>
@@ -78,6 +78,7 @@ import type { BreadcrumbItem } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import { useFormValidity } from '@/composables/useFormValidity';
 import type { PaperEditProps } from '@/types/exam';
 
 const props = defineProps<PaperEditProps>();
@@ -97,6 +98,8 @@ const form = useForm({
     total_marks: props.paper.total_marks,
     passing_marks: props.paper.passing_marks,
 });
+
+const { isValid } = useFormValidity(form, ['subject_id', 'paper_date', 'start_time', 'end_time', 'total_marks', 'passing_marks']);
 
 const submitForm = () => {
     form.put(route('exam.papers.update', props.paper.id), {

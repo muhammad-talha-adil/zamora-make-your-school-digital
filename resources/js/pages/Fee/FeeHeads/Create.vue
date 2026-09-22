@@ -3,6 +3,7 @@ import { Head, router } from '@inertiajs/vue3';
 import { reactive, ref, watch } from 'vue';
 import { route } from 'ziggy-js';
 import { alert } from '@/utils';
+import { useFormValidity } from '@/composables/useFormValidity';
 import AppLayout from '@/layouts/AppLayout.vue';
 import type { BreadcrumbItem } from '@/types';
 import { Button } from '@/components/ui/button';
@@ -38,6 +39,8 @@ const form = reactive({
 
 const errors = ref<Record<string, string>>({});
 const isSubmitting = ref(false);
+
+const { isValid } = useFormValidity(form, ['name', 'category', 'default_frequency']);
 
 // Pre-fill frequency from the category's default whenever the category
 // changes, but only while the frequency still matches the previous
@@ -221,7 +224,7 @@ const cancel = () => {
                         <Button type="button" variant="outline" @click="cancel">
                             Cancel
                         </Button>
-                        <Button type="submit" :disabled="isSubmitting">
+                        <Button type="submit" :disabled="isSubmitting || !isValid">
                             <Icon icon="check" class="mr-2 h-4 w-4" />
                             {{ isSubmitting ? 'Creating...' : 'Create Fee Head' }}
                         </Button>

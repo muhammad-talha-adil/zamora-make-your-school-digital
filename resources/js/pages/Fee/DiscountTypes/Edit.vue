@@ -3,6 +3,7 @@ import { Head, router } from '@inertiajs/vue3';
 import { reactive, ref } from 'vue';
 import { route } from 'ziggy-js';
 import { alert } from '@/utils';
+import { useFormValidity } from '@/composables/useFormValidity';
 import AppLayout from '@/layouts/AppLayout.vue';
 import type { BreadcrumbItem } from '@/types';
 import { Button } from '@/components/ui/button';
@@ -44,6 +45,8 @@ const form = reactive({
 
 const errors = ref<Record<string, string>>({});
 const isSubmitting = ref(false);
+
+const { isValid } = useFormValidity(form, ['name', 'code', 'default_value']);
 
 const getFirstErrorMessage = (value: unknown) => {
     if (Array.isArray(value)) {
@@ -118,7 +121,7 @@ const cancel = () => {
                         <Icon icon="x" class="mr-2 h-4 w-4" />
                         Cancel
                     </Button>
-                    <Button @click="submitForm" :disabled="isSubmitting">
+                    <Button @click="submitForm" :disabled="isSubmitting || !isValid">
                         <Icon icon="check" class="mr-2 h-4 w-4" />
                         {{ isSubmitting ? 'Saving...' : 'Save Changes' }}
                     </Button>
@@ -214,7 +217,7 @@ const cancel = () => {
                         <Button type="button" variant="outline" @click="cancel">
                             Cancel
                         </Button>
-                        <Button type="submit" :disabled="isSubmitting">
+                        <Button type="submit" :disabled="isSubmitting || !isValid">
                             <Icon icon="check" class="mr-2 h-4 w-4" />
                             {{ isSubmitting ? 'Saving...' : 'Save Changes' }}
                         </Button>

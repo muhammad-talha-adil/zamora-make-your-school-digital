@@ -3,6 +3,7 @@ import { Head, router } from '@inertiajs/vue3';
 import { reactive, ref, computed, watch, onMounted, nextTick } from 'vue';
 import { route } from 'ziggy-js';
 import { alert } from '@/utils';
+import { useFormValidity } from '@/composables/useFormValidity';
 import AppLayout from '@/layouts/AppLayout.vue';
 import type { BreadcrumbItem } from '@/types';
 import { Button } from '@/components/ui/button';
@@ -10,6 +11,7 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { ComboboxInput } from '@/components/ui/combobox';
 import Icon from '@/components/Icon.vue';
+import SearchableSelect from '@/components/ui/searchable-select/SearchableSelect.vue';
 
 interface FeeStructureItem {
     id: number;
@@ -95,6 +97,8 @@ const breadcrumbItems: BreadcrumbItem[] = [
 const errors = ref<Record<string, string>>({});
 const isSubmitting = ref(false);
 
+const { isValid } = useFormValidity(form, ['title', 'session_id', 'campus_id', 'status']);
+
 // Fee Item Form
 const showItemForm = ref(false);
 const editingItem = ref<number | null>(null);
@@ -108,6 +112,20 @@ const itemForm = reactive({
 
 const itemErrors = ref<Record<string, string>>({});
 const isItemSubmitting = ref(false);
+
+const sessionOptions = computed(() => props.sessions.map((session) => ({ value: String(session.id), label: session.name })));
+const campusOptions = computed(() => props.campuses.map((campus) => ({ value: String(campus.id), label: campus.name })));
+const classOptions = computed(() => props.classes.map((cls) => ({ value: String(cls.id), label: cls.name })));
+const sectionOptions = computed(() => {
+    const options = filteredSections.value.map((section) => ({ value: String(section.id), label: section.name }));
+    if (form.class_id && filteredSections.value.length > 0) {
+        options.unshift({ value: 'all', label: `All Sections (${filteredSections.value.length})` });
+    }
+    return options;
+});
+const itemFeeHeadOptions = computed(() =>
+    (!editingItem.value ? availableFeeHeads.value : props.feeHeads).map((fh) => ({ value: String(fh.id), label: fh.name })),
+);
 
 // Filter sections based on selected class
 const filteredSections = computed(() => {
@@ -428,7 +446,7 @@ const getFrequencyLabel = (freq: string) => {
                         <Icon icon="x" class="mr-2 h-4 w-4" />
                         Cancel
                     </Button>
-                    <Button @click="submitForm" :disabled="isSubmitting">
+                    <Button @click="submitForm" :disabled="isSubmitting || !isValid">
                         <Icon icon="check" class="mr-2 h-4 w-4" />
                         {{ isSubmitting ? 'Saving...' : 'Save Changes' }}
                     </Button>
@@ -475,31 +493,25 @@ const getFrequencyLabel = (freq: string) => {
                     <div class="grid gap-4 md:grid-cols-2">
                         <div class="space-y-2">
                             <Label for="session">Session <span class="text-destructive">*</span></Label>
-                            <select
+                            <SearchableSelect
                                 id="session"
                                 v-model="form.session_id"
-                                :class="['w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm', { 'border-destructive': errors.session_id }]"
-                            >
-                                <option value="">Select Session</option>
-                                <option v-for="session in props.sessions" :key="session.id" :value="session.id">
-                                    {{ session.name }}
-                                </option>
-                            </select>
+                                :options="sessionOptions"
+                                placeholder="Select Session"
+                                :class="errors.session_id ? 'border-destructive' : ''"
+                            />
                             <p v-if="errors.session_id" class="text-sm text-destructive">{{ errors.session_id }}</p>
                         </div>
 
                         <div class="space-y-2">
                             <Label for="campus">Campus <span class="text-destructive">*</span></Label>
-                            <select
+                            <SearchableSelect
                                 id="campus"
                                 v-model="form.campus_id"
-                                :class="['w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm', { 'border-destructive': errors.campus_id }]"
-                            >
-                                <option value="">Select Campus</option>
-                                <option v-for="campus in props.campuses" :key="campus.id" :value="campus.id">
-                                    {{ campus.name }}
-                                </option>
-                            </select>
+                                :options="campusOptions"
+                                placeholder="Select Campus"
+                                :class="errors.campus_id ? 'border-destructive' : ''"
+                            />
                             <p v-if="errors.campus_id" class="text-sm text-destructive">{{ errors.campus_id }}</p>
                         </div>
                     </div>
@@ -508,34 +520,28 @@ const getFrequencyLabel = (freq: string) => {
                     <div class="grid gap-4 md:grid-cols-2">
                         <div class="space-y-2">
                             <Label for="class">Class (Optional)</Label>
-                            <select
+                            <SearchableSelect
                                 id="class"
                                 v-model="form.class_id"
-                                @change="onClassChange"
-                                class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm"
-                            >
-                                <option value="">Select Class</option>
-                                <option v-for="cls in props.classes" :key="cls.id" :value="cls.id">
-                                    {{ cls.name }}
-                                </option>
-                            </select>
+                                :options="classOptions"
+                                placeholder="Select Class"
+                                clearable
+                                @update:modelValue="onClassChange"
+                            />
                             <p class="text-xs text-muted-foreground">Leave empty to apply to all classes</p>
                         </div>
 
                         <div class="space-y-2">
                             <Label for="section">Section (Optional)</Label>
-                            <select
+                            <SearchableSelect
                                 id="section"
                                 v-model="form.section_id"
+                                :options="sectionOptions"
+                                placeholder="Select Section"
                                 :disabled="!form.class_id"
-                                :class="['w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm', { 'opacity-50': !form.class_id, 'border-destructive': errors.section_id }]"
-                            >
-                                <option value="">Select Section</option>
-                                <option v-if="form.class_id && filteredSections.length > 0" value="all">All Sections ({{ filteredSections.length }})</option>
-                                <option v-for="section in filteredSections" :key="section.id" :value="section.id">
-                                    {{ section.name }}
-                                </option>
-                            </select>
+                                clearable
+                                :class="errors.section_id ? 'border-destructive' : ''"
+                            />
                             <p class="text-xs text-muted-foreground">
                                 <span v-if="form.section_id === 'all'">Applied to all sections of this class</span>
                                 <span v-else-if="form.section_id">Applied to single section</span>
@@ -591,7 +597,7 @@ const getFrequencyLabel = (freq: string) => {
                         <Button type="button" variant="outline" @click="cancel">
                             Cancel
                         </Button>
-                        <Button type="submit" :disabled="isSubmitting">
+                        <Button type="submit" :disabled="isSubmitting || !isValid">
                             <Icon icon="check" class="mr-2 h-4 w-4" />
                             {{ isSubmitting ? 'Saving...' : 'Save Changes' }}
                         </Button>
@@ -618,15 +624,12 @@ const getFrequencyLabel = (freq: string) => {
                     <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
                         <div class="space-y-2">
                             <Label>Fee Head <span class="text-destructive">*</span></Label>
-                            <select
+                            <SearchableSelect
                                 v-model="itemForm.fee_head_id"
-                                :class="['w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm', { 'border-destructive': itemErrors.fee_head_id }]"
-                            >
-                                <option value="">Select Fee Head</option>
-                                <option v-for="fh in (!editingItem ? availableFeeHeads : props.feeHeads)" :key="fh.id" :value="fh.id">
-                                    {{ fh.name }}
-                                </option>
-                            </select>
+                                :options="itemFeeHeadOptions"
+                                placeholder="Select Fee Head"
+                                :class="itemErrors.fee_head_id ? 'border-destructive' : ''"
+                            />
                             <p v-if="itemErrors.fee_head_id" class="text-sm text-destructive">{{ itemErrors.fee_head_id }}</p>
                         </div>
 

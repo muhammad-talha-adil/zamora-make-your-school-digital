@@ -549,7 +549,7 @@
                     <Button type="button" variant="outline" @click="router.visit(route('students.index'))">
                         Cancel
                     </Button>
-                    <Button type="submit" :disabled="processing">
+                    <Button type="submit" :disabled="processing || !isValid">
                         <Icon v-if="processing" icon="loader" class="mr-2 h-4 w-4 animate-spin" />
                         <Icon v-else icon="check" class="mr-2 h-4 w-4" />
                         Update Student
@@ -574,6 +574,7 @@ import { Label } from '@/components/ui/label';
 import InputError from '@/components/InputError.vue';
 import Icon from '@/components/Icon.vue';
 import { useStudentForm } from '@/composables/useStudentForm';
+import { useFormValidity } from '@/composables/useFormValidity';
 import FeeStructureSelector from '@/components/students/FeeStructureSelector.vue';
 import { alert } from '@/utils/alert';
 import { buildGeneratedEmail } from '@/utils/schoolEmail';
@@ -684,6 +685,17 @@ const generatedEmailPreview = computed(() => {
 });
 
 const errors = ref<Record<string, string>>({});
+
+const { isValid } = useFormValidity(form, [
+    'name',
+    'dob',
+    'gender_id',
+    'campus_id',
+    'session_id',
+    'class_id',
+    'father_name',
+    'father_phone',
+]);
 
 // Fee Structure Selector Ref
 const feeStructureSelector = ref<InstanceType<typeof FeeStructureSelector> | null>(null);

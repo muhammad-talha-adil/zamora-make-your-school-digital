@@ -14,6 +14,7 @@ import { alert } from '@/utils';
 import RowAction from '@/components/tables/RowAction.vue';
 import RowActions from '@/components/tables/RowActions.vue';
 import StatusToggle from '@/components/tables/StatusToggle.vue';
+import SearchableSelect from '@/components/ui/searchable-select/SearchableSelect.vue';
 
 interface FeeStructure {
     id: number;
@@ -92,6 +93,11 @@ const filteredSections = computed(() => {
 
     return props.sections.filter((section) => section.class_id === Number(filterClass.value));
 });
+
+const campusOptions = computed(() => props.campuses.map((campus) => ({ value: String(campus.id), label: campus.name })));
+const sessionOptions = computed(() => props.sessions.map((session) => ({ value: String(session.id), label: session.name })));
+const classOptions = computed(() => props.classes.map((cls) => ({ value: String(cls.id), label: cls.name })));
+const sectionOptions = computed(() => filteredSections.value.map((section) => ({ value: String(section.id), label: section.name })));
 
 let searchDebounceTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -255,59 +261,44 @@ const deleteStructure = (structure: FeeStructure) => {
                 <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
                     <div class="space-y-2">
                         <Label for="filter-campus">Campus</Label>
-                        <select
+                        <SearchableSelect
                             id="filter-campus"
                             v-model="filterCampus"
-                            class="w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground"
-                        >
-                            <option value="">All Campuses</option>
-                            <option v-for="campus in props.campuses" :key="campus.id" :value="String(campus.id)">
-                                {{ campus.name }}
-                            </option>
-                        </select>
+                            :options="campusOptions"
+                            placeholder="All Campuses"
+                            clearable
+                        />
                     </div>
                     <div class="space-y-2">
                         <Label for="filter-session">Session</Label>
-                        <select
+                        <SearchableSelect
                             id="filter-session"
                             v-model="filterSession"
-                            class="w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground"
-                        >
-                            <option value="">All Sessions</option>
-                            <option v-for="session in props.sessions" :key="session.id" :value="String(session.id)">
-                                {{ session.name }}
-                            </option>
-                        </select>
+                            :options="sessionOptions"
+                            placeholder="All Sessions"
+                            clearable
+                        />
                     </div>
                     <div class="space-y-2">
                         <Label for="filter-class">Class</Label>
-                        <select
+                        <SearchableSelect
                             id="filter-class"
                             v-model="filterClass"
-                            class="w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground"
-                        >
-                            <option value="">All Classes</option>
-                            <option v-for="cls in props.classes" :key="cls.id" :value="String(cls.id)">
-                                {{ cls.name }}
-                            </option>
-                        </select>
+                            :options="classOptions"
+                            placeholder="All Classes"
+                            clearable
+                        />
                     </div>
                     <div class="space-y-2">
                         <Label for="filter-section">Section</Label>
-                        <select
+                        <SearchableSelect
                             id="filter-section"
                             v-model="filterSection"
+                            :options="sectionOptions"
+                            placeholder="All Sections"
                             :disabled="!filterClass"
-                            :class="[
-                                'w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground',
-                                !filterClass ? 'opacity-50 cursor-not-allowed' : '',
-                            ]"
-                        >
-                            <option value="">All Sections</option>
-                            <option v-for="section in filteredSections" :key="section.id" :value="String(section.id)">
-                                {{ section.name }}
-                            </option>
-                        </select>
+                            clearable
+                        />
                     </div>
                     <div class="space-y-2">
                         <Label for="filter-status">Status</Label>
