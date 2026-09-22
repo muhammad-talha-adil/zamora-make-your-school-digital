@@ -44,9 +44,7 @@
                 <div class="flex flex-col sm:flex-row gap-4">
                     <div>
                         <label class="block text-sm font-medium text-muted-foreground mb-1">Month</label>
-                        <select v-model="selectedMonth" @change="loadReport" class="rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm">
-                            <option v-for="(name, index) in monthNames" :key="index + 1" :value="index + 1">{{ name }}</option>
-                        </select>
+                        <SearchableSelect v-model="selectedMonth" :options="monthOptions" placeholder="Select Month" class="w-48" @update:modelValue="loadReport" />
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-muted-foreground mb-1">Year</label>
@@ -95,6 +93,7 @@ import { Head, router } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 import { route } from 'ziggy-js';
 import AppLayout from '@/layouts/AppLayout.vue';
+import SearchableSelect from '@/components/ui/searchable-select/SearchableSelect.vue';
 import type { BreadcrumbItem } from '@/types';
 import type { AttendanceStudentReportProps } from '@/types/attendance';
 
@@ -109,6 +108,8 @@ const breadcrumbItems: BreadcrumbItem[] = [
 const monthNames = ['', 'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
 const selectedMonth = ref(props.month);
 const selectedYear = ref(props.year);
+
+const monthOptions = computed(() => monthNames.slice(1).map((name, index) => ({ value: index + 1, label: name })));
 
 const yearRange = computed(() => {
     const years = [];

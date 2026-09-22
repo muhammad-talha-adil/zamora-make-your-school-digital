@@ -7,8 +7,10 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import Icon from '@/components/Icon.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import SearchableSelect from '@/components/ui/searchable-select/SearchableSelect.vue';
 import { alert } from '@/utils';
-import { tableActionButtonClass } from '@/utils/table-actions';
+import RowAction from '@/components/tables/RowAction.vue';
+import RowActions from '@/components/tables/RowActions.vue';
 import type { BreadcrumbItem } from '@/types';
 
 interface Campus {
@@ -87,6 +89,9 @@ const formatDate = (value?: string | null) => {
     return new Date(value).toLocaleDateString('en-PK', { year: 'numeric', month: 'short', day: 'numeric' });
 };
 
+const campusOptions = computed(() => props.campuses.map((campus) => ({ value: String(campus.id), label: campus.name })));
+const monthOptions = computed(() => props.months.map((month) => ({ value: String(month.id), label: month.name })));
+
 const filteredRuns = computed(() => {
     if (!campusFilter.value) return props.payrollRuns;
     return props.payrollRuns.filter((run) => String(run.campus_id ?? '') === campusFilter.value);
@@ -139,17 +144,11 @@ const markPayrollPaid = async (item: PayrollItem) => {
                 <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
                     <div>
                         <label class="mb-2 block text-sm font-medium text-muted-foreground">Campus</label>
-                        <select v-model="payrollForm.campus_id" :class="selectClass">
-                            <option value="">All Campuses</option>
-                            <option v-for="campus in props.campuses" :key="campus.id" :value="String(campus.id)">{{ campus.name }}</option>
-                        </select>
+                        <SearchableSelect v-model="payrollForm.campus_id" :options="campusOptions" placeholder="All Campuses" clearable />
                     </div>
                     <div>
                         <label class="mb-2 block text-sm font-medium text-muted-foreground">Month</label>
-                        <select v-model="payrollForm.payroll_month_id" :class="selectClass">
-                            <option value="">Select month</option>
-                            <option v-for="month in props.months" :key="month.id" :value="String(month.id)">{{ month.name }}</option>
-                        </select>
+                        <SearchableSelect v-model="payrollForm.payroll_month_id" :options="monthOptions" placeholder="Select month" clearable />
                     </div>
                     <div>
                         <label class="mb-2 block text-sm font-medium text-muted-foreground">Year</label>
@@ -170,10 +169,7 @@ const markPayrollPaid = async (item: PayrollItem) => {
 
             <div>
                 <label class="mb-2 block text-sm font-medium text-muted-foreground">Filter by Campus</label>
-                <select v-model="campusFilter" :class="selectClass" style="max-width: 260px">
-                    <option value="">All Campuses</option>
-                    <option v-for="campus in props.campuses" :key="campus.id" :value="String(campus.id)">{{ campus.name }}</option>
-                </select>
+                <SearchableSelect v-model="campusFilter" :options="campusOptions" placeholder="All Campuses" clearable class="max-w-65" />
             </div>
 
             <div class="space-y-4">
@@ -226,18 +222,14 @@ const markPayrollPaid = async (item: PayrollItem) => {
                                         <span :class="item.status === 'paid' ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'" class="inline-flex rounded-full px-2.5 py-1 text-xs font-medium uppercase">{{ item.status }}</span>
                                     </td>
                                     <td class="px-4 py-3">
-                                        <div v-if="props.can.approve" class="flex flex-wrap justify-end gap-2">
-                                            <Button
-                                                variant="outline"
-                                                size="sm"
-                                                :class="item.status === 'paid' ? tableActionButtonClass.view : tableActionButtonClass.activate"
+                                        <RowActions v-if="props.can.approve">
+                                            <RowAction
+                                                kind="pay"
+                                                :label="item.status === 'paid' ? 'Paid' : 'Mark Paid'"
                                                 :disabled="item.status === 'paid'"
                                                 @click="markPayrollPaid(item)"
-                                            >
-                                                <Icon :icon="item.status === 'paid' ? 'check' : 'wallet'" class="h-3.5 w-3.5" />
-                                                {{ item.status === 'paid' ? 'Paid' : 'Mark Paid' }}
-                                            </Button>
-                                        </div>
+                                            />
+                                        </RowActions>
                                     </td>
                                 </tr>
                             </tbody>

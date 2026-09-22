@@ -15,6 +15,7 @@ import { formatDate } from '@/utils/date';
 import { tableActionButtonClass } from '@/utils/table-actions';
 import RowAction from '@/components/tables/RowAction.vue';
 import RowActions from '@/components/tables/RowActions.vue';
+import SearchableSelect from '@/components/ui/searchable-select/SearchableSelect.vue';
 
 interface FeeVoucher {
     id: number;
@@ -105,6 +106,12 @@ const filteredSections = computed(() => {
     if (!filters.class_id) return [];
     return props.sections.filter(s => s.class_id === Number(filters.class_id));
 });
+
+const campusOptions = computed(() => props.campuses.map((campus) => ({ value: String(campus.id), label: campus.name })));
+const classOptions = computed(() => props.classes.map((cls) => ({ value: String(cls.id), label: cls.name })));
+const sectionOptions = computed(() => filteredSections.value.map((section) => ({ value: String(section.id), label: section.name })));
+const monthOptions = computed(() => props.months.map((month) => ({ value: String(month.id), label: month.name })));
+const yearOptions = computed(() => years.map((year) => ({ value: String(year), label: String(year) })));
 
 // Watch for campus changes to reset class and section
 watch(() => filters.campus_id, () => {
@@ -304,72 +311,54 @@ const isOverdueVoucher = (voucher: FeeVoucher) => {
                 <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
                     <div class="space-y-2">
                     <Label for="filter-campus">Campus</Label>
-                    <select
+                    <SearchableSelect
                         id="filter-campus"
                         v-model="filters.campus_id"
-                        class="w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground"
-                    >
-                        <option value="">All Campuses</option>
-                        <option v-for="campus in props.campuses" :key="campus.id" :value="campus.id">
-                            {{ campus.name }}
-                        </option>
-                    </select>
+                        :options="campusOptions"
+                        placeholder="All Campuses"
+                        clearable
+                    />
                     </div>
                     <div class="space-y-2">
                     <Label for="filter-class">Class</Label>
-                    <select
+                    <SearchableSelect
                         id="filter-class"
                         v-model="filters.class_id"
-                        class="w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground"
-                    >
-                        <option value="">All Classes</option>
-                        <option v-for="cls in props.classes" :key="cls.id" :value="cls.id">
-                            {{ cls.name }}
-                        </option>
-                    </select>
+                        :options="classOptions"
+                        placeholder="All Classes"
+                        clearable
+                    />
                     </div>
                     <div class="space-y-2">
                     <Label for="filter-section">Section</Label>
-                    <select
+                    <SearchableSelect
                         id="filter-section"
                         v-model="filters.section_id"
+                        :options="sectionOptions"
+                        placeholder="All Sections"
                         :disabled="!filters.class_id"
-                        :class="[
-                            'w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground',
-                            !filters.class_id ? 'opacity-50 cursor-not-allowed' : '',
-                        ]"
-                    >
-                        <option value="">All Sections</option>
-                        <option v-for="section in filteredSections" :key="section.id" :value="section.id">
-                            {{ section.name }}
-                        </option>
-                    </select>
+                        clearable
+                    />
                     </div>
                     <div class="space-y-2">
                     <Label for="filter-month">Month</Label>
-                    <select
+                    <SearchableSelect
                         id="filter-month"
                         v-model="filters.month_id"
-                        class="w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground"
-                    >
-                        <option value="">All Months</option>
-                        <option v-for="month in props.months" :key="month.id" :value="month.id">
-                            {{ month.name }}
-                        </option>
-                    </select>
+                        :options="monthOptions"
+                        placeholder="All Months"
+                        clearable
+                    />
                     </div>
                     <div class="space-y-2">
                     <Label for="filter-year">Year</Label>
-                    <select
+                    <SearchableSelect
                         id="filter-year"
                         v-model="filters.year"
-                        class="w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground"
-                    >
-                        <option value="">All Years</option>
-                        <option v-for="year in years" :key="year" :value="year">
-                            {{ year }}
-                        </option>
-                    </select>
+                        :options="yearOptions"
+                        placeholder="All Years"
+                        clearable
+                    />
                     </div>
                     <div class="space-y-2">
                     <Label for="filter-status">Status</Label>

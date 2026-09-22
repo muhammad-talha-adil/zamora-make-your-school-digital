@@ -12,6 +12,7 @@ import { Input } from '@/components/ui/input';
 import Icon from '@/components/Icon.vue';
 import { alert } from '@/utils';
 import StatusToggle from '@/components/tables/StatusToggle.vue';
+import SearchableSelect from '@/components/ui/searchable-select/SearchableSelect.vue';
 
 interface FeeHead {
     id: number;
@@ -67,6 +68,8 @@ const filters = reactive({
         ? String(props.filters.is_active) 
         : '',
 });
+
+const categoryOptions = computed(() => props.categories.map((cat) => ({ value: cat.value, label: cat.label })));
 
 let searchDebounceTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -230,17 +233,14 @@ const getFrequencyLabel = (frequency: string) => {
                 </div>
                 <div class="w-full sm:w-44 md:w-48">
                     <Label for="filter-category" class="sr-only">Category</Label>
-                    <select
+                    <SearchableSelect
                         id="filter-category"
                         v-model="filters.category"
-                        @change="applyFilters"
-                        class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm min-h-10 md:min-h-11"
-                    >
-                        <option value="">All Categories</option>
-                        <option v-for="cat in props.categories" :key="cat.value" :value="cat.value">
-                            {{ cat.label }}
-                        </option>
-                    </select>
+                        :options="categoryOptions"
+                        placeholder="All Categories"
+                        clearable
+                        @update:modelValue="applyFilters"
+                    />
                 </div>
                 <div class="w-full sm:w-44 md:w-48">
                     <Label for="filter-active" class="sr-only">Status</Label>

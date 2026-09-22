@@ -21,63 +21,49 @@
                         <Label for="exam">
                             Select Exam <span class="text-destructive">*</span>
                         </Label>
-                        <select
-                            id="exam"
+                        <SearchableSelect
                             v-model="filters.exam_id"
+                            :options="examOptions"
                             :disabled="isExamLocked"
-                            class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm focus:ring-2 focus:ring-primary focus:border-primary disabled:bg-muted disabled:cursor-not-allowed"
-                            :class="{ 'bg-primary/10 border-primary/40': isExamLocked }"
-                        >
-                            <option value="">Select Exam</option>
-                            <option v-for="exam in exams" :key="exam.id" :value="exam.id">
-                                {{ exam.name }}
-                            </option>
-                        </select>
+                            placeholder="Select Exam"
+                            class="w-full"
+                        />
                     </div>
 
                     <!-- Campus Filter -->
                     <div class="space-y-2">
                         <Label for="campus">Campus</Label>
-                        <select
-                            id="campus"
-                            v-model="filters.campus_id"
-                            class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm focus:ring-2 focus:ring-primary focus:border-primary"
-                        >
-                            <option value="all">All Campuses</option>
-                            <option v-for="campus in filterOptions.campuses" :key="campus.id" :value="campus.id">
-                                {{ campus.name }}
-                            </option>
-                        </select>
+                        <SearchableSelect
+                            v-model="campusFilterValue"
+                            :options="campusOptions"
+                            placeholder="All Campuses"
+                            clearable
+                            class="w-full"
+                        />
                     </div>
 
                     <!-- Class Filter -->
                     <div class="space-y-2">
                         <Label for="class">Class</Label>
-                        <select
-                            id="class"
-                            v-model="filters.class_id"
-                            class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm focus:ring-2 focus:ring-primary focus:border-primary"
-                        >
-                            <option value="all">All Classes</option>
-                            <option v-for="cls in filterOptions.classes" :key="cls.id" :value="cls.id">
-                                {{ cls.name }}
-                            </option>
-                        </select>
+                        <SearchableSelect
+                            v-model="classFilterValue"
+                            :options="classOptions"
+                            placeholder="All Classes"
+                            clearable
+                            class="w-full"
+                        />
                     </div>
 
                     <!-- Section Filter -->
                     <div class="space-y-2">
                         <Label for="section">Section</Label>
-                        <select
-                            id="section"
-                            v-model="filters.section_id"
-                            class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm focus:ring-2 focus:ring-primary focus:border-primary"
-                        >
-                            <option value="all">All Sections</option>
-                            <option v-for="section in filterOptions.sections" :key="section.id" :value="section.id">
-                                {{ section.name }}
-                            </option>
-                        </select>
+                        <SearchableSelect
+                            v-model="sectionFilterValue"
+                            :options="sectionOptions"
+                            placeholder="All Sections"
+                            clearable
+                            class="w-full"
+                        />
                     </div>
 
                     <!-- Student Search -->
@@ -484,6 +470,7 @@ import axios from 'axios'
 import AppLayout from '@/layouts/AppLayout.vue'
 import type { BreadcrumbItem } from '@/types'
 import { Button } from '@/components/ui/button'
+import SearchableSelect from '@/components/ui/searchable-select/SearchableSelect.vue'
 import TablePagination from '@/components/tables/TablePagination.vue'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog'
 import { Printer, CalendarDays, RefreshCw } from 'lucide-vue-next'
@@ -619,6 +606,37 @@ const filters = reactive({
     class_id: 'all',
     section_id: 'all',
     search: '',
+});
+
+const examOptions = computed(() =>
+    props.exams.map((exam) => ({ value: exam.id, label: exam.name }))
+);
+
+const campusOptions = computed(() =>
+    filterOptions.campuses.map((campus) => ({ value: String(campus.id), label: campus.name }))
+);
+
+const classOptions = computed(() =>
+    filterOptions.classes.map((cls) => ({ value: String(cls.id), label: cls.name }))
+);
+
+const sectionOptions = computed(() =>
+    filterOptions.sections.map((section) => ({ value: String(section.id), label: section.name }))
+);
+
+const campusFilterValue = computed({
+    get: () => (filters.campus_id === 'all' ? null : filters.campus_id),
+    set: (value) => { filters.campus_id = value ?? 'all'; },
+});
+
+const classFilterValue = computed({
+    get: () => (filters.class_id === 'all' ? null : filters.class_id),
+    set: (value) => { filters.class_id = value ?? 'all'; },
+});
+
+const sectionFilterValue = computed({
+    get: () => (filters.section_id === 'all' ? null : filters.section_id),
+    set: (value) => { filters.section_id = value ?? 'all'; },
 });
 
 // Watch for exam selection changes to load filter options

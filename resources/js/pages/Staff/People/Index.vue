@@ -1,17 +1,19 @@
 <script setup lang="ts">
 import { Head, Link, router } from '@inertiajs/vue3';
 import axios from 'axios';
-import { onMounted, reactive, ref, watch } from 'vue';
+import { computed, onMounted, reactive, ref, watch } from 'vue';
 import { route } from 'ziggy-js';
 import AppLayout from '@/layouts/AppLayout.vue';
 import Icon from '@/components/Icon.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
+import SearchableSelect from '@/components/ui/searchable-select/SearchableSelect.vue';
 import { alert } from '@/utils';
-import { tableActionButtonClass } from '@/utils/table-actions';
 import type { BreadcrumbItem } from '@/types';
 import StatusToggle from '@/components/tables/StatusToggle.vue';
+import RowAction from '@/components/tables/RowAction.vue';
+import RowActions from '@/components/tables/RowActions.vue';
 
 interface Lookup {
     id: number;
@@ -119,6 +121,11 @@ const staffForm = reactive({
 
 const departmentForm = reactive({ id: null as number | null, name: '', description: '', is_active: true });
 const designationForm = reactive({ id: null as number | null, name: '', description: '', role: '' as string | null, is_active: true });
+
+const campusOptions = computed(() => props.campuses.map((campus) => ({ value: String(campus.id), label: campus.name })));
+const departmentOptions = computed(() => props.departments.map((d) => ({ value: String(d.id), label: d.name })));
+const designationOptions = computed(() => props.designations.map((d) => ({ value: String(d.id), label: d.name })));
+const roleOptions = computed(() => props.roles.map((r) => ({ value: r.name, label: r.label || r.name })));
 
 const formatMoney = (amount: number | string | null | undefined) => {
     if (amount === null || amount === undefined) {
@@ -302,10 +309,7 @@ const submitDesignation = async () => {
                                     <div class="mb-3 space-y-2">
                                         <Input v-model="designationForm.name" placeholder="Designation name" />
                                         <textarea v-model="designationForm.description" :class="textareaClass" placeholder="Description" />
-                                        <select v-model="designationForm.role" :class="selectClass">
-                                            <option :value="''">System Role — none —</option>
-                                            <option v-for="r in props.roles" :key="r.id" :value="r.name">{{ r.label || r.name }}</option>
-                                        </select>
+                                        <SearchableSelect v-model="designationForm.role" :options="roleOptions" placeholder="System Role — none —" clearable />
                                         <div class="flex gap-2">
                                             <Button size="sm" @click="submitDesignation">{{ designationForm.id ? 'Update' : 'Add' }}</Button>
                                             <Button v-if="designationForm.id" size="sm" variant="outline" @click="designationForm.id = null; designationForm.name = ''; designationForm.description = ''; designationForm.role = ''">Cancel</Button>
@@ -336,17 +340,11 @@ const submitDesignation = async () => {
                     </div>
                     <div>
                         <label class="mb-2 block text-sm font-medium text-muted-foreground">Campus</label>
-                        <select v-model="filters.campus_id" :class="selectClass">
-                            <option value="">All Campuses</option>
-                            <option v-for="campus in props.campuses" :key="campus.id" :value="String(campus.id)">{{ campus.name }}</option>
-                        </select>
+                        <SearchableSelect v-model="filters.campus_id" :options="campusOptions" placeholder="All Campuses" clearable />
                     </div>
                     <div>
                         <label class="mb-2 block text-sm font-medium text-muted-foreground">Department</label>
-                        <select v-model="filters.department_id" :class="selectClass">
-                            <option value="">All Departments</option>
-                            <option v-for="d in props.departments" :key="d.id" :value="String(d.id)">{{ d.name }}</option>
-                        </select>
+                        <SearchableSelect v-model="filters.department_id" :options="departmentOptions" placeholder="All Departments" clearable />
                     </div>
                     <div>
                         <label class="mb-2 block text-sm font-medium text-muted-foreground">Status</label>
@@ -382,26 +380,17 @@ const submitDesignation = async () => {
                             </div>
                             <div>
                                 <label class="mb-2 block text-sm font-medium text-muted-foreground">Campus</label>
-                                <select v-model="staffForm.campus_id" :class="selectClass">
-                                    <option value="">Select campus</option>
-                                    <option v-for="campus in props.campuses" :key="campus.id" :value="String(campus.id)">{{ campus.name }}</option>
-                                </select>
+                                <SearchableSelect v-model="staffForm.campus_id" :options="campusOptions" placeholder="Select campus" clearable />
                             </div>
                         </div>
                         <div class="grid gap-4 md:grid-cols-2">
                             <div>
                                 <label class="mb-2 block text-sm font-medium text-muted-foreground">Department</label>
-                                <select v-model="staffForm.department_id" :class="selectClass">
-                                    <option value="">Select department</option>
-                                    <option v-for="d in props.departments" :key="d.id" :value="String(d.id)">{{ d.name }}</option>
-                                </select>
+                                <SearchableSelect v-model="staffForm.department_id" :options="departmentOptions" placeholder="Select department" clearable />
                             </div>
                             <div>
                                 <label class="mb-2 block text-sm font-medium text-muted-foreground">Designation</label>
-                                <select v-model="staffForm.designation_id" :class="selectClass">
-                                    <option value="">Select designation</option>
-                                    <option v-for="d in props.designations" :key="d.id" :value="String(d.id)">{{ d.name }}</option>
-                                </select>
+                                <SearchableSelect v-model="staffForm.designation_id" :options="designationOptions" placeholder="Select designation" clearable />
                             </div>
                         </div>
                         <div class="grid gap-4 md:grid-cols-2">
@@ -502,12 +491,9 @@ const submitDesignation = async () => {
                                     <StatusToggle :active="member.is_active" @toggle="toggleStaff(member)" />
                                 </td>
                                 <td class="px-4 py-3">
-                                    <div class="flex flex-wrap justify-end gap-2">
-                                        <Button variant="outline" size="sm" :class="tableActionButtonClass.view" @click="router.visit(route('staff.people.show', member.id))">
-                                            <Icon icon="eye" class="h-3.5 w-3.5" />
-                                            View
-                                        </Button>
-                                    </div>
+                                    <RowActions>
+                                        <RowAction kind="view" @click="router.visit(route('staff.people.show', member.id))" />
+                                    </RowActions>
                                 </td>
                             </tr>
                             <tr v-if="!loading && staff.data.length === 0">

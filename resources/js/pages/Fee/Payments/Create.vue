@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import Icon from '@/components/Icon.vue';
 import { alert, formatCurrency } from '@/utils';
+import SearchableSelect from '@/components/ui/searchable-select/SearchableSelect.vue';
 
 interface StudentSearchResult {
     id: number;
@@ -86,6 +87,8 @@ const paymentMethods = [
     { value: 'easypaisa', label: 'EasyPaisa' },
     { value: 'cheque', label: 'Cheque' },
 ];
+
+const paymentMethodOptions = paymentMethods.map((method) => ({ value: method.value, label: method.label }));
 
 const availableVouchers = ref<Voucher[]>(props.unpaidVouchers || []);
 const searchQuery = ref(props.selectedStudent?.name || '');
@@ -454,16 +457,12 @@ const submitForm = () => {
 
                     <div>
                         <Label for="payment_method">Payment Method *</Label>
-                        <select
+                        <SearchableSelect
                             id="payment_method"
                             v-model="form.payment_method"
-                            required
-                            class="w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground"
-                        >
-                            <option v-for="method in paymentMethods" :key="method.value" :value="method.value">
-                                {{ method.label }}
-                            </option>
-                        </select>
+                            :options="paymentMethodOptions"
+                            placeholder="Select Payment Method"
+                        />
                     </div>
 
                     <div v-if="form.payment_method !== 'cash'">

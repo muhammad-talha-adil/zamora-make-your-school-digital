@@ -25,31 +25,23 @@
             <div class="flex flex-col sm:flex-row gap-2 md:gap-3 flex-wrap" role="search" aria-label="Exam filters">
                 <div class="w-full sm:w-44 md:w-48">
                     <Label for="filter-session" class="sr-only">Filter by Session</Label>
-                    <select
-                        id="filter-session"
+                    <SearchableSelect
                         v-model="filters.session_id"
-                        @change="applyFilters"
-                        class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm min-h-10 md:min-h-11"
-                    >
-                        <option value="">All Sessions</option>
-                        <option v-for="session in props.sessions" :key="session.id" :value="session.id">
-                            {{ session.name }}
-                        </option>
-                    </select>
+                        :options="sessionOptions"
+                        placeholder="All Sessions"
+                        clearable
+                        @update:model-value="applyFilters"
+                    />
                 </div>
                 <div class="w-full sm:w-44 md:w-48">
                     <Label for="filter-type" class="sr-only">Filter by Type</Label>
-                    <select
-                        id="filter-type"
+                    <SearchableSelect
                         v-model="filters.exam_type_id"
-                        @change="applyFilters"
-                        class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm min-h-10 md:min-h-11"
-                    >
-                        <option value="">All Types</option>
-                        <option v-for="type in props.examTypes" :key="type.id" :value="type.id">
-                            {{ type.name }}
-                        </option>
-                    </select>
+                        :options="examTypeOptions"
+                        placeholder="All Types"
+                        clearable
+                        @update:model-value="applyFilters"
+                    />
                 </div>
                 <div class="w-full sm:w-44 md:w-48">
                     <Label for="search-exam" class="sr-only">Search by Exam Name</Label>
@@ -308,7 +300,7 @@
 
 <script setup lang="ts">
 import { Head, router } from '@inertiajs/vue3';
-import { reactive, ref, watch } from 'vue';
+import { computed, reactive, ref, watch } from 'vue';
 import { route } from 'ziggy-js';
 import axios from 'axios';
 import AppLayout from '@/layouts/AppLayout.vue';
@@ -318,9 +310,18 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import Icon from '@/components/Icon.vue';
 import ExamForm from '@/components/forms/ExamForm.vue';
+import SearchableSelect from '@/components/ui/searchable-select/SearchableSelect.vue';
 import type { ExamIndexProps, Exam } from '@/types/exam';
 
 const props = defineProps<ExamIndexProps>();
+
+const sessionOptions = computed(() =>
+    props.sessions.map((session) => ({ value: String(session.id), label: session.name }))
+);
+
+const examTypeOptions = computed(() =>
+    props.examTypes.map((type) => ({ value: String(type.id), label: type.name }))
+);
 
 // Local state for exams (real-time updates)
 const examsData = ref<Exam[]>(props.exams);
@@ -396,8 +397,8 @@ const isEditDisabled = (exam: Exam): boolean => {
 // Fetch exams from API (real-time update without page reload)
 const fetchExams = () => {
     const params = new URLSearchParams();
-    if (filters.session_id) params.append('session_id', filters.session_id);
-    if (filters.exam_type_id) params.append('exam_type_id', filters.exam_type_id);
+    if (filters.session_id) params.append('session_id', String(filters.session_id));
+    if (filters.exam_type_id) params.append('exam_type_id', String(filters.exam_type_id));
     if (filters.search) params.append('search', filters.search);
 
     axios.get(route('exam.index') + `?${params.toString()}`).then((response) => {
@@ -412,8 +413,8 @@ const breadcrumbItems: BreadcrumbItem[] = [
 ];
 
 const filters = reactive({
-    session_id: props.filters?.session_id || '',
-    exam_type_id: props.filters?.exam_type_id || '',
+    session_id: (props.filters?.session_id || '') as string | number | null,
+    exam_type_id: (props.filters?.exam_type_id || '') as string | number | null,
     search: props.filters?.search || '',
 });
 
@@ -430,8 +431,8 @@ const onSearchInput = () => {
 
 const buildQueryString = () => {
     const params = new URLSearchParams();
-    if (filters.session_id) params.append('session_id', filters.session_id);
-    if (filters.exam_type_id) params.append('exam_type_id', filters.exam_type_id);
+    if (filters.session_id) params.append('session_id', String(filters.session_id));
+    if (filters.exam_type_id) params.append('exam_type_id', String(filters.exam_type_id));
     if (filters.search) params.append('search', filters.search);
     return params.toString();
 };

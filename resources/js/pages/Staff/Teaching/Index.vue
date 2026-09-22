@@ -1,11 +1,12 @@
 <script setup lang="ts">
 import { Head, Link } from '@inertiajs/vue3';
 import axios from 'axios';
-import { onMounted, reactive, ref, watch } from 'vue';
+import { computed, onMounted, reactive, ref, watch } from 'vue';
 import { route } from 'ziggy-js';
 import AppLayout from '@/layouts/AppLayout.vue';
 import Icon from '@/components/Icon.vue';
 import { Button } from '@/components/ui/button';
+import SearchableSelect from '@/components/ui/searchable-select/SearchableSelect.vue';
 import type { BreadcrumbItem } from '@/types';
 
 interface Lookup {
@@ -42,13 +43,16 @@ const breadcrumbItems: BreadcrumbItem[] = [
     { title: 'Teaching', href: route('staff.teaching.page') },
 ];
 
-const selectClass = 'w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground';
-
 const filters = reactive({
     session_id: props.filters.session_id ?? (props.sessions[0]?.id ? String(props.sessions[0].id) : ''),
     class_id: props.filters.class_id ?? '',
     section_id: props.filters.section_id ?? '',
 });
+
+const sessionOptions = computed(() => props.sessions.map((s) => ({ value: String(s.id), label: s.name })));
+const classOptions = computed(() => props.classes.map((c) => ({ value: String(c.id), label: c.name })));
+const subjectOptions = computed(() => props.subjects.map((s) => ({ value: String(s.id), label: s.name })));
+const sectionOptions = computed(() => sections.value.map((s) => ({ value: String(s.id), label: s.name })));
 
 const sections = ref<Lookup[]>([]);
 const assignments = ref<Assignment[]>([]);
@@ -110,23 +114,15 @@ const lookupWhoCanTeach = async () => {
                 <div class="grid gap-4 md:grid-cols-3">
                     <div>
                         <label class="mb-2 block text-sm font-medium text-muted-foreground">Session</label>
-                        <select v-model="filters.session_id" :class="selectClass">
-                            <option v-for="s in props.sessions" :key="s.id" :value="String(s.id)">{{ s.name }}</option>
-                        </select>
+                        <SearchableSelect v-model="filters.session_id" :options="sessionOptions" placeholder="Select Session" />
                     </div>
                     <div>
                         <label class="mb-2 block text-sm font-medium text-muted-foreground">Class</label>
-                        <select v-model="filters.class_id" :class="selectClass">
-                            <option value="">All Classes</option>
-                            <option v-for="c in props.classes" :key="c.id" :value="String(c.id)">{{ c.name }}</option>
-                        </select>
+                        <SearchableSelect v-model="filters.class_id" :options="classOptions" placeholder="All Classes" clearable />
                     </div>
                     <div>
                         <label class="mb-2 block text-sm font-medium text-muted-foreground">Section</label>
-                        <select v-model="filters.section_id" :class="selectClass" :disabled="sections.length === 0">
-                            <option value="">All Sections</option>
-                            <option v-for="s in sections" :key="s.id" :value="String(s.id)">{{ s.name }}</option>
-                        </select>
+                        <SearchableSelect v-model="filters.section_id" :options="sectionOptions" placeholder="All Sections" clearable :disabled="sections.length === 0" />
                     </div>
                 </div>
             </div>
@@ -170,10 +166,7 @@ const lookupWhoCanTeach = async () => {
                 <h2 class="mb-3 text-lg font-semibold text-foreground">Who Can Cover a Subject</h2>
                 <p class="mb-4 text-sm text-muted-foreground">The question a school asks when somebody rings in sick.</p>
                 <div class="flex flex-wrap gap-2">
-                    <select v-model="whoCanTeachSubjectId" :class="selectClass" style="max-width: 260px">
-                        <option value="">Select subject</option>
-                        <option v-for="s in props.subjects" :key="s.id" :value="String(s.id)">{{ s.name }}</option>
-                    </select>
+                    <SearchableSelect v-model="whoCanTeachSubjectId" :options="subjectOptions" placeholder="Select subject" clearable class="max-w-65" />
                     <Button @click="lookupWhoCanTeach"><Icon icon="search" class="h-4 w-4" />Find</Button>
                 </div>
                 <ul v-if="whoCanTeachLoaded" class="mt-4 space-y-1">

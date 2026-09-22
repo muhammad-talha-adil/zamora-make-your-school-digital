@@ -12,6 +12,7 @@ import { ref, reactive, computed } from 'vue'
 import axios from 'axios'
 import AppLayout from '@/layouts/AppLayout.vue'
 import { Button } from '@/components/ui/button'
+import SearchableSelect from '@/components/ui/searchable-select/SearchableSelect.vue'
 import { Search, Printer } from 'lucide-vue-next'
 import { route } from 'ziggy-js'
 import type { BreadcrumbItem } from '@/types'
@@ -54,6 +55,14 @@ const filters = reactive({
     class_id: '' as string | number,
     section_id: '' as string | number,
 })
+
+const sessionOptions = computed(() =>
+    props.sessions.map((s) => ({ value: s.id, label: s.name }))
+)
+
+const classOptions = computed(() =>
+    props.classes.map((c) => ({ value: c.id, label: c.name }))
+)
 
 const rows = ref<Array<AnnualResult & { name: string; admission_no: string }>>([])
 const loading = ref(false)
@@ -138,18 +147,20 @@ const percentageOf = (row: AnnualResult, examName: string): string => {
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
                         <label class="block text-sm font-medium mb-1">Session</label>
-                        <select v-model="filters.session_id" class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
-                            <option value="">Choose a session</option>
-                            <option v-for="s in props.sessions" :key="s.id" :value="s.id">{{ s.name }}</option>
-                        </select>
+                        <SearchableSelect
+                            v-model="filters.session_id"
+                            :options="sessionOptions"
+                            placeholder="Choose a session"
+                        />
                     </div>
 
                     <div>
                         <label class="block text-sm font-medium mb-1">Class</label>
-                        <select v-model="filters.class_id" class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
-                            <option value="">Choose a class</option>
-                            <option v-for="c in props.classes" :key="c.id" :value="c.id">{{ c.name }}</option>
-                        </select>
+                        <SearchableSelect
+                            v-model="filters.class_id"
+                            :options="classOptions"
+                            placeholder="Choose a class"
+                        />
                     </div>
 
                     <div class="flex items-end">

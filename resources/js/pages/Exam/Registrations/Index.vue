@@ -19,17 +19,13 @@
             <FilterCard>
                 <div class="w-full sm:w-56 md:w-64">
                     <Label for="filter-group" class="sr-only">Filter by Group</Label>
-                    <select
-                        id="filter-group"
+                    <SearchableSelect
                         v-model="filters.group_id"
-                        @change="applyFilters"
-                        class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm min-h-10 md:min-h-11"
-                    >
-                        <option value="">All Groups</option>
-                        <option v-for="group in props.groups" :key="group.id" :value="group.id">
-                            {{ group.exam_offering?.exam?.name }} - {{ group.class?.name }} {{ group.section?.name }}
-                        </option>
-                    </select>
+                        :options="groupOptions"
+                        placeholder="All Groups"
+                        clearable
+                        @update:model-value="applyFilters"
+                    />
                 </div>
             </FilterCard>
 
@@ -133,7 +129,7 @@
 
 <script setup lang="ts">
 import { Head, router } from '@inertiajs/vue3';
-import { reactive } from 'vue';
+import { computed, reactive } from 'vue';
 import { route } from 'ziggy-js';
 import AppLayout from '@/layouts/AppLayout.vue';
 import type { BreadcrumbItem } from '@/types';
@@ -141,9 +137,17 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import Icon from '@/components/Icon.vue';
 import FilterCard from '@/components/FilterCard.vue';
+import SearchableSelect from '@/components/ui/searchable-select/SearchableSelect.vue';
 import type { RegistrationIndexProps } from '@/types/exam';
 
 const props = defineProps<RegistrationIndexProps>();
+
+const groupOptions = computed(() =>
+    props.groups.map((group) => ({
+        value: String(group.id),
+        label: `${group.exam_offering?.exam?.name ?? ''} - ${group.class?.name ?? ''} ${group.section?.name ?? ''}`.trim(),
+    }))
+);
 
 const breadcrumbItems: BreadcrumbItem[] = [
     { title: 'Dashboard', href: '/dashboard' },
@@ -156,7 +160,7 @@ const filters = reactive({
 });
 
 const applyFilters = () => {
-    router.visit(route('exam.registrations.index-page') + `?group_id=${filters.group_id}`, {
+    router.visit(route('exam.registrations.index-page') + `?group_id=${filters.group_id || ''}`, {
         preserveState: true,
     });
 };

@@ -10,6 +10,7 @@ import { Input } from '@/components/ui/input';
 import Icon from '@/components/Icon.vue';
 import axios from 'axios';
 import { alert } from '@/utils';
+import SearchableSelect from '@/components/ui/searchable-select/SearchableSelect.vue';
 
 interface FeeVoucherItem {
     id: number;
@@ -147,6 +148,8 @@ const filteredFeeHeads = computed(() => {
     if (!props.feeHeads) return availableFeeHeads.value;
     return props.feeHeads.filter(fh => !existingFeeHeadIds.value.includes(fh.id));
 });
+
+const feeHeadOptions = computed(() => filteredFeeHeads.value.map((fh) => ({ value: fh.id, label: `${fh.name} (${fh.code})` })));
 
 const validateForm = () => {
     errors.value = {};
@@ -702,22 +705,13 @@ const removeItem = async (item: FeeVoucherItem) => {
                     <!-- Fee Head Selection -->
                     <div class="space-y-2">
                         <Label for="fee_head_id">Fee Head <span class="text-destructive">*</span></Label>
-                        <select
+                        <SearchableSelect
                             id="fee_head_id"
                             v-model="newItemForm.fee_head_id"
-                            class="h-11 w-full rounded-md border border-border bg-card px-3 py-2 text-sm"
+                            :options="feeHeadOptions"
+                            placeholder="Select Fee Head"
                             :disabled="isLoadingFeeHeads"
-                            required
-                        >
-                            <option value="">Select Fee Head</option>
-                            <option
-                                v-for="fh in filteredFeeHeads"
-                                :key="fh.id"
-                                :value="fh.id"
-                            >
-                                {{ fh.name }} ({{ fh.code }})
-                            </option>
-                        </select>
+                        />
                         <p v-if="errors.fee_head_id" class="text-sm text-destructive">{{ errors.fee_head_id }}</p>
                     </div>
 

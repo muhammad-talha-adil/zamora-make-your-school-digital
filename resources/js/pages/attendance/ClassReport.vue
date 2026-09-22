@@ -21,27 +21,19 @@
                     <!-- Class -->
                     <div>
                         <label class="block text-sm font-medium text-muted-foreground mb-1">Class</label>
-                        <select v-model="selectedClassId" class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm">
-                            <option value="">Select Class</option>
-                            <option v-for="cls in props.classes" :key="cls.id" :value="cls.id">{{ cls.name }}</option>
-                        </select>
+                        <SearchableSelect v-model="selectedClassId" :options="classOptions" placeholder="Select Class" clearable />
                     </div>
 
                     <!-- Section -->
                     <div>
                         <label class="block text-sm font-medium text-muted-foreground mb-1">Section</label>
-                        <select v-model="selectedSectionId" class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm">
-                            <option value="">All Sections</option>
-                            <option v-for="section in filteredSections" :key="section.id" :value="section.id">{{ section.name }}</option>
-                        </select>
+                        <SearchableSelect v-model="selectedSectionId" :options="sectionOptions" placeholder="All Sections" clearable />
                     </div>
 
                     <!-- Month -->
                     <div v-if="reportMode === 'month'">
                         <label class="block text-sm font-medium text-muted-foreground mb-1">Month</label>
-                        <select v-model="selectedMonth" class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm">
-                            <option v-for="(name, index) in monthNames" :key="index + 1" :value="index + 1">{{ name }}</option>
-                        </select>
+                        <SearchableSelect v-model="selectedMonth" :options="monthOptions" placeholder="Select Month" />
                     </div>
 
                     <!-- Year -->
@@ -196,6 +188,7 @@ import { route } from 'ziggy-js';
 import AppLayout from '@/layouts/AppLayout.vue';
 import Icon from '@/components/Icon.vue';
 import { Button } from '@/components/ui/button';
+import SearchableSelect from '@/components/ui/searchable-select/SearchableSelect.vue';
 import type { BreadcrumbItem } from '@/types';
 import type { AttendanceClassReportProps } from '@/types/attendance';
 
@@ -231,6 +224,10 @@ const filteredSections = computed(() => {
     if (!selectedClassId.value) return [];
     return props.sections.filter((s) => s.class_id === Number(selectedClassId.value));
 });
+
+const classOptions = computed(() => props.classes.map((cls) => ({ value: cls.id, label: cls.name })));
+const sectionOptions = computed(() => filteredSections.value.map((section) => ({ value: section.id, label: section.name })));
+const monthOptions = computed(() => monthNames.slice(1).map((name, index) => ({ value: index + 1, label: name })));
 
 const canGenerate = computed(() => {
     if (!selectedClassId.value) return false;

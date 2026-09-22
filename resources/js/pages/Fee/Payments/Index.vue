@@ -12,7 +12,8 @@ import Icon from '@/components/Icon.vue';
 import SearchableSelect from '@/components/ui/searchable-select/SearchableSelect.vue';
 import { formatCurrency } from '@/utils/currency';
 import { formatDate } from '@/utils/date';
-import { tableActionButtonClass } from '@/utils/table-actions';
+import RowAction from '@/components/tables/RowAction.vue';
+import RowActions from '@/components/tables/RowActions.vue';
 
 interface FeePayment {
     id: number;
@@ -267,23 +268,11 @@ const getPageFromUrl = (url: string | null) => {
                         <div>Amount: {{ formatCurrency(payment.received_amount) }}</div>
                         <div>Allocated: {{ formatCurrency(payment.allocated_amount) }}</div>
                     </div>
-                    <div class="flex flex-wrap gap-2 pt-2">
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            :class="tableActionButtonClass.view"
-                            @click="router.visit(route('fee.payments.show', payment.id))"
-                        >
-                            <Icon icon="eye" class="mr-1 h-3 w-3" />View
-                        </Button>
-                        <Button
-                            variant="outline"
-                            size="sm"
-                            :class="tableActionButtonClass.print"
-                            @click="router.visit(route('fee.payments.receipt', payment.id))"
-                        >
-                            <Icon icon="printer" class="mr-1 h-3 w-3" />Receipt
-                        </Button>
+                    <div class="flex justify-end pt-2">
+                        <RowActions>
+                            <RowAction kind="view" @click="router.visit(route('fee.payments.show', payment.id))" />
+                            <RowAction kind="print" label="Receipt" @click="router.visit(route('fee.payments.receipt', payment.id))" />
+                        </RowActions>
                     </div>
                 </div>
                 <div v-if="paymentsData.length === 0" class="py-8 text-center text-muted-foreground">
@@ -376,24 +365,10 @@ const getPageFromUrl = (url: string | null) => {
                                     </span>
                                 </td>
                                 <td class="whitespace-nowrap px-4 py-3 text-sm font-medium">
-                                    <div class="flex flex-wrap justify-end gap-2">
-                                        <Button
-                                            variant="outline"
-                                            size="sm"
-                                            :class="tableActionButtonClass.view"
-                                            @click="router.visit(route('fee.payments.show', payment.id))"
-                                        >
-                                            <Icon icon="eye" class="mr-1 h-3 w-3" />View
-                                        </Button>
-                                        <Button
-                                            variant="outline"
-                                            size="sm"
-                                            :class="tableActionButtonClass.print"
-                                            @click="router.visit(route('fee.payments.receipt', payment.id))"
-                                        >
-                                            <Icon icon="printer" class="mr-1 h-3 w-3" />Receipt
-                                        </Button>
-                                    </div>
+                                    <RowActions>
+                                        <RowAction kind="view" @click="router.visit(route('fee.payments.show', payment.id))" />
+                                        <RowAction kind="print" label="Receipt" @click="router.visit(route('fee.payments.receipt', payment.id))" />
+                                    </RowActions>
                                 </td>
                             </tr>
                         </tbody>
