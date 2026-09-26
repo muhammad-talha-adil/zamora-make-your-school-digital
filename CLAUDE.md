@@ -50,4 +50,9 @@ Stack: PHP 8.4, Laravel 12, Inertia v2 + Vue 3, Tailwind v4, Pest 3, Ziggy, Pint
 - Tailwind v4 is CSS-first (`@theme` in CSS, `@import "tailwindcss"`, no `tailwind.config.js`). No `corePlugins`.
 - Deprecated → replacement: `bg/text/border/divide/ring/placeholder-opacity-*` → `*-black/*`; `flex-shrink-*`→`shrink-*`; `flex-grow-*`→`grow-*`; `overflow-ellipsis`→`text-ellipsis`; `decoration-slice/clone`→`box-decoration-slice/clone`.
 - Gap utilities for list spacing, not margins. Match existing `dark:` usage on any touched component.
+
+## Claude tooling (.claude/)
+- Agents: architect, migration-builder, model-builder, backend-builder, frontend-builder, security-auditor, test-writer, qa-runner (Zamora stack, non-overlapping file ownership).
+- Skills: zamora-module-workflow (start here), impeccable (/impeccable audit|polish|critique), taste-skill, redesign-skill, output-skill, emil-design-eng + animation skills, token-reducer (context_pipeline.py; its hooks are intentionally NOT installed).
+- UI changes: run /impeccable audit then polish on the touched page; check dark mode and mobile width.
 </laravel-boost-guidelines>

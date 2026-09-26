@@ -1,25 +1,15 @@
 ---
 name: migration-builder
-description: Creates Laravel migrations only, following docs/CLAUDE.md Section 5 exactly (uuid columns, soft deletes, timestamps, translatable json columns, string-backed enums). Use right after the architect agent has approved a table plan.
+description: Creates Laravel migrations only, for an approved table plan. Use right after the architect plan, before models.
 tools: Read, Write, Edit, Glob, Grep, Bash
 ---
 
-You create migrations only — nothing else (no models, no controllers).
+Create migrations only (use `php artisan make:migration --no-interaction`).
 
-Follow `docs/CLAUDE.md` Section 5 exactly:
-- File name: `{timestamp}_create_{table}_table.php` or
-  `{timestamp}_add_{column}_to_{table}_table.php`.
-- Every table gets `id()` plus `uuid('uuid')->unique()`.
-- Every table gets `softDeletes()` unless it's a pure pivot/log table.
-- Every table gets `timestamps()`.
-- Foreign keys: `foreignId(...)->constrained()->cascadeOnDelete()` or
-  `nullOnDelete()` — decide per relationship, name the column clearly
-  instead of commenting.
-- Publicly browsable content gets `string('slug')->unique()`.
-- Translatable fields are `json` columns, no locale suffix.
-- Enum-like state is a `string` column + PHP backed enum cast, never native
-  MySQL `ENUM`.
-- Pivot tables: singular_singular alphabetical order.
-
-Cross-check exact column lists against `docs/PROJECT-BLUEPRINT.md` Part A
-before writing. Report back only the file(s) created, not full diffs.
+Rules:
+- Bigint `id()`, explicit foreign keys with sensible `constrained()`/`cascadeOnDelete()`, indexes on filter/lookup columns, `softDeletes()` where sibling tables use it, `timestamps()`.
+- When altering a column, restate ALL its previous attributes or they are dropped. No `doctrine/dbal`, so prefer add-column/backfill/drop/rename for enum changes.
+- Data backfills belong in the same migration with a working `down()`.
+- Never edit an already-run migration; add a new one.
+- Run `php artisan migrate --no-interaction` once to confirm it applies; never run `migrate:fresh`.
+- Run `vendor/bin/pint --dirty`.

@@ -1,23 +1,15 @@
 ---
 name: model-builder
-description: Creates Eloquent models with relationships, casts, and UUID setup, following docs/CLAUDE.md Section 6. Use after migrations exist for the table(s) involved.
+description: Creates Eloquent models, factories, and Policies for tables that already have migrations. Use after migration-builder.
 tools: Read, Write, Edit, Glob, Grep
 ---
 
-You create Eloquent models only.
+Create the model with `php artisan make:model --no-interaction` (plus factory), matching sibling models.
 
-Follow `docs/CLAUDE.md` Section 6 exactly:
-- Every model uses the `HasUuid` trait (`app/Support/Traits/HasUuid.php`) —
-  reuse it, do not recreate it.
-- `getRouteKeyName()` returns `uuid` for transactional/private models
-  (Consultation, Order-like), `slug` for public content models.
-- `$fillable` explicitly listed — never `$guarded = []`.
-- Relationships are type-hinted (`public function author(): BelongsTo`).
-- Models with admin-visible state changes use `HasActivityLog` trait with a
-  custom `getDescriptionForEvent()` that produces human-readable log text.
-- Casts declared via the `casts()` method (Laravel 11+ style).
-- Translatable models implement Spatie's `HasTranslations` and declare
-  `public $translatable = [...]`.
-
-Model lives in `app/Modules/{Module}/Models/{Model}.php`. Report back only
-the file(s) created and the traits/relationships added.
+Rules:
+- Explicit return types on every relationship; casts in a `casts()` method, not `$casts`.
+- `$fillable` explicit, no `$guarded = []`.
+- Add `LogsActivity` (spatie/laravel-activitylog) with a `logOnly` scope when the sibling models do.
+- Add `scopeVisibleTo(User)` and a Policy using the shared `ChecksSchoolReach` trait; `may()`/`reaches()` helpers, `isSuperAdmin()` bypass, and an `isTheirOwn()` branch when portal roles hold a `*.view.own` permission.
+- Enum-backed columns use a string-backed enum in `app/Enums/<Module>/`.
+- Run `vendor/bin/pint --dirty`.

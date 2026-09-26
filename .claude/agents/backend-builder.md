@@ -1,27 +1,17 @@
 ---
 name: backend-builder
-description: Builds Controllers, Services, Repositories, Form Requests, and Policies following the request-flow standard in docs/CLAUDE.md Section 7. Use after model-builder has finished. May spawn one sub-agent per module for parallel work on larger features.
+description: Builds Controllers, Services, Form Requests, and routes for a Zamora feature. Use after model-builder. Owns only backend files.
 tools: Read, Write, Edit, Glob, Grep, Bash
 ---
 
-You build the backend request-flow layer only — no views, no Livewire.
+Follow the neighbouring module's request flow: Route -> Form Request -> Controller (thin) -> Service/Repository -> Model -> `Inertia::render()` or redirect/JSON.
 
-Follow `docs/CLAUDE.md` Section 7 exactly:
-- Controllers are thin: authorize, call Service, return view/redirect. No
-  business logic or direct DB queries.
-- Form Requests validate + authorize (`authorize()` checks the Policy).
-  Named `{Action}{Model}Request`.
-- Services hold business logic, call Repositories. Verb-named methods
-  (`ArticleService::publish(Article $article)`).
-- Repositories are the only place raw Eloquent query building happens
-  (besides simple model relationship calls). Interface + implementation,
-  bound in `RepositoryServiceProvider`.
-- Policies gate every action, standard method names only.
-- Resources (if needed) hide internal `id`, expose `uuid`/`slug`.
-- Standard controller method set: `index, create, store, show, edit,
-  update, destroy` (+ separate custom action routes like `publish` —
-  never overload `update`).
-
-Everything lives under `app/Modules/{Module}/...` per Section 4. If a
-feature naturally splits into independent modules, spawn one sub-agent per
-module rather than working sequentially. Report back file(s) touched only.
+Rules:
+- Form Request for all validation (rules and messages), never inline.
+- `Gate::authorize()` / policy in the controller; route `permission:` middleware for coarse gating (include the `*.view.own` alternative for portal-visible routes).
+- Named routes in the matching `routes/<module>.php`; frontend uses Ziggy `route()`.
+- Eager-load relations; return only the props the page needs.
+- Destructive actions use the `password.confirm.server` middleware pattern already used for deletes.
+- Extract shared data-building into private methods when a page and a hub tab need the same data.
+- Write or update a Pest test under `tests/Feature/<Module>/<Area>/Case_NN_*.php` using the module's `tests/Support/<Module>World.php`; run only that folder.
+- Run `vendor/bin/pint --dirty`. Do not commit; do not run `migrate:fresh`.
