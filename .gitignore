@@ -45,3 +45,7 @@ Homestead.yaml
 ## OS files
 .DS_Store
 Thumbs.db
+
+## Claude tooling caches
+/.cache/
+__pycache__/
