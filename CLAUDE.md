@@ -50,4 +50,23 @@ Stack: PHP 8.4, Laravel 12, Inertia v2 + Vue 3, Tailwind v4, Pest 3, Ziggy, Pint
 - Tailwind v4 is CSS-first (`@theme` in CSS, `@import "tailwindcss"`, no `tailwind.config.js`). No `corePlugins`.
 - Deprecated → replacement: `bg/text/border/divide/ring/placeholder-opacity-*` → `*-black/*`; `flex-shrink-*`→`shrink-*`; `flex-grow-*`→`grow-*`; `overflow-ellipsis`→`text-ellipsis`; `decoration-slice/clone`→`box-decoration-slice/clone`.
 - Gap utilities for list spacing, not margins. Match existing `dark:` usage on any touched component.
+
+## Claude tooling: when to use what (.claude/)
+Start every session with the zamora-module-workflow skill. Delegate independent work to agents with non-overlapping files; each agent commits nothing, never runs migrate:fresh, leaves no dev servers running.
+
+Agents (in order for a new feature): architect (plan, read-only) -> migration-builder -> model-builder -> backend-builder -> frontend-builder -> security-auditor (read-only, before tests) -> test-writer -> qa-runner (narrow tests, pint, build). Small fixes skip the chain.
+
+Skills:
+- New page/component or UI redesign: taste-skill first, then implement with existing components (RowAction, StatusToggle, FilterCard, SearchableSelect).
+- After any UI change: /impeccable audit <page>, then /impeccable polish <page>. Say 'check dark mode and mobile width'. /impeccable init once creates PRODUCT.md (optional).
+- Redesign of an existing screen: redesign-skill. Long/complete files or exhaustive lists: output-skill (no placeholders, no truncation).
+- Motion: find-animation-opportunities, then animate; audits via review-animations/improve-animations; vocabulary via animation-vocabulary; principles in emil-design-eng.
+- /doctor is built in; run it when tooling misbehaves.
+
+Token discipline (always):
+- Never paste large code/logs into chat; read only the needed line ranges, grep before reading, do not re-read a file already in context.
+- For questions spanning many files, run token-reducer instead of reading them: python .claude/skills/token-reducer/scripts/context_pipeline.py run --inputs <specific dir> --query "<specific question>" --top-k 3. Use a narrow --inputs (never . or node_modules/vendor/public/build) and a specific query.
+- Agent prompts and reports stay short (under about 200 words); agents return findings, not file dumps.
+- Run only narrow tests; long commands in the background; one build per batch.
+- /compact around 10-15 turns of heavy work, start a new chat after a finished batch. token-reducer hooks are intentionally not installed.
 </laravel-boost-guidelines>
