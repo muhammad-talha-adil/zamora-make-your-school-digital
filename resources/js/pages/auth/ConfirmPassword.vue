@@ -1,53 +1,46 @@
 <script setup lang="ts">
+import { Head } from '@inertiajs/vue3';
+import { route } from 'ziggy-js';
+import AuthSplitLayout from '@/components/auth/AuthSplitLayout.vue';
+import AuthFormWrapper from '@/components/auth/AuthFormWrapper.vue';
 import InputError from '@/components/InputError.vue';
-import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Spinner } from '@/components/ui/spinner';
-import AuthLayout from '@/layouts/AuthLayout.vue';
-import { Form, Head } from '@inertiajs/vue3';
 </script>
 
 <template>
-    <AuthLayout
+    <AuthSplitLayout
         title="Confirm your password"
         description="This is a secure area of the application. Please confirm your password before continuing."
+        illustration="confirm"
     >
         <Head title="Confirm password" />
 
-        <Form
+        <AuthFormWrapper
+            :action="route('password.confirm')"
             method="post"
-            :url="route('password.confirm')"
             reset-on-success
-            v-slot="{ errors, processing }"
+            submit-label="Confirm password"
+            class="space-y-6"
+            v-slot="{ errors }"
         >
-            <div class="space-y-6">
-                <div class="grid gap-2">
-                    <Label htmlFor="password">Password</Label>
+            <div class="space-y-4">
+                <div class="space-y-2">
+                    <Label for="password" class="text-sm font-medium">Password</Label>
                     <Input
                         id="password"
                         type="password"
                         name="password"
-                        class="mt-1 block w-full"
+                        class="h-10"
                         required
                         autocomplete="current-password"
                         autofocus
+                        :tabindex="1"
+                        :class="{ 'aria-invalid:border-destructive': errors.password }"
                     />
-
                     <InputError :message="errors.password" />
                 </div>
-
-                <div class="flex items-center">
-                    <Button
-                        class="w-full"
-                        :disabled="processing"
-                        data-test="confirm-password-button"
-                    >
-                        <Spinner v-if="processing" />
-                        Confirm Password
-                    </Button>
-                </div>
             </div>
-        </Form>
-    </AuthLayout>
+        </AuthFormWrapper>
+    </AuthSplitLayout>
 </template>

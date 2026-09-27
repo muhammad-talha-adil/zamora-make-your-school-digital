@@ -8,7 +8,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import type { User } from '@/types';
 import { Link, router } from '@inertiajs/vue3';
-import { LogOut, Settings } from 'lucide-vue-next';
+import { LogOut, Settings, User, Shield } from 'lucide-vue-next';
 
 interface Props {
     user: User;
@@ -22,32 +22,45 @@ defineProps<Props>();
 </script>
 
 <template>
-    <DropdownMenuLabel class="p-0 font-normal">
-        <div class="flex items-center gap-2 px-1 py-1.5 text-left text-sm">
-            <UserInfo :user="user" :show-email="true" />
-        </div>
-    </DropdownMenuLabel>
-    <DropdownMenuSeparator />
-    <DropdownMenuGroup>
+    <div class="space-y-1">
+        <DropdownMenuLabel class="p-1">
+            <div class="flex items-center gap-3 px-1 py-2">
+                <UserInfo :user="user" :show-email="true" />
+            </div>
+        </DropdownMenuLabel>
+        <DropdownMenuSeparator class="my-1" />
+        <DropdownMenuGroup>
+            <DropdownMenuItem :as-child="true">
+                <Link class="flex items-center gap-2 w-full cursor-pointer" :href="route('profile.edit')" prefetch>
+                    <User class="h-4 w-4" />
+                    <span>Profile</span>
+                </Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem :as-child="true">
+                <Link class="flex items-center gap-2 w-full cursor-pointer" :href="route('settings.index')" prefetch>
+                    <Settings class="h-4 w-4" />
+                    <span>Settings</span>
+                </Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem v-if="user.roles?.includes('admin')" :as-child="true">
+                <Link class="flex items-center gap-2 w-full cursor-pointer" :href="route('admin.index')" prefetch>
+                    <Shield class="h-4 w-4" />
+                    <span>Admin Panel</span>
+                </Link>
+            </DropdownMenuItem>
+        </DropdownMenuGroup>
+        <DropdownMenuSeparator class="my-1" />
         <DropdownMenuItem :as-child="true">
-            <Link class="block w-full cursor-pointer" :href="route('profile.edit')" prefetch>
-                <Settings class="mr-2 h-4 w-4" />
-                Settings
+            <Link
+                class="flex items-center gap-2 w-full cursor-pointer text-destructive focus:text-destructive"
+                :href="route('logout')"
+                @click="handleLogout"
+                as="button"
+                data-test="logout-button"
+            >
+                <LogOut class="h-4 w-4" />
+                <span>Log out</span>
             </Link>
         </DropdownMenuItem>
-    </DropdownMenuGroup>
-    <DropdownMenuSeparator />
-    <DropdownMenuItem :as-child="true">
-        <Link
-            class="block w-full cursor-pointer"
-            :href="route('logout')"
-            @click="handleLogout"
-            as="button"
-            data-test="logout-button"
-        >
-            <LogOut class="mr-2 h-4 w-4" />
-            Log out
-        </Link>
-    </DropdownMenuItem>
+    </div>
 </template>
-

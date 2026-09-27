@@ -14,18 +14,17 @@ import { ref } from 'vue';
 
 defineProps<{
     items: MenuItem[];
+    registerMenuItem?: (el: HTMLElement | null, index: number) => void;
 }>();
 
 const { urlIsActive } = useActiveUrl();
 
-// Accordion behavior - track which sub-menu is open
 const openSubmenuId = ref<string | number | null>(null);
 
-// Function to toggle submenu - accordion style
 const toggleSubmenu = (event: MouseEvent, id: string | number) => {
     event.preventDefault();
     event.stopPropagation();
-    
+
     if (openSubmenuId.value === id) {
         openSubmenuId.value = null;
     } else {
@@ -37,10 +36,11 @@ const isSubmenuOpen = (id: string | number) => {
     return openSubmenuId.value === id;
 };
 
-// Close submenu when clicking on a link in the submenu
 const closeSubmenu = () => {
     openSubmenuId.value = null;
 };
+
+let itemIndex = 0;
 </script>
 
 <template>
@@ -54,7 +54,9 @@ const closeSubmenu = () => {
                         as-child
                         :is-active="urlIsActive(item.href)"
                         :tooltip="item.title"
-                        class="group bg-transparent hover:bg-accent rounded-md transition-colors duration-150"
+                        ref="(el) => props.registerMenuItem?.(el, itemIndex++)"
+                        class="group bg-transparent hover:bg-accent rounded-md transition-colors duration-150 focus-ring"
+                        tabindex="0"
                     >
                         <Link :href="item.href" class="flex min-w-0 items-center gap-3">
                             <Icon
@@ -72,12 +74,18 @@ const closeSubmenu = () => {
                     <button
                         type="button"
                         :class="[
-                            'group flex w-full min-w-0 items-center gap-3 rounded-md px-2 py-2 text-sm font-medium transition-colors duration-150',
+                            'group flex w-full min-w-0 items-center gap-3 rounded-md px-2 py-2 text-sm font-medium transition-colors duration-150 focus-ring',
                             isSubmenuOpen(item.id || item.title) || urlIsActive(item.href)
                                 ? 'bg-muted text-foreground'
                                 : 'text-muted-foreground hover:bg-accent',
                         ]"
                         @click="toggleSubmenu($event, item.id || item.title)"
+                        :ref="(el) => props.registerMenuItem?.(el, itemIndex++)"
+                        :aria-expanded="isSubmenuOpen(item.id || item.title)"
+                        :aria-controls="`submenu-${item.id || item.title}`"
+                        tabindex="0"
+                        @keydown.enter="toggleSubmenu($event, item.id || item.title)"
+                        @keydown.space.prevent="toggleSubmenu($event, item.id || item.title)"
                     >
                         <Icon
                             :icon="item.icon"
@@ -94,20 +102,26 @@ const closeSubmenu = () => {
 
                     <!-- Submenu -->
                     <div
+                        :id="`submenu-${item.id || item.title}`"
                         v-show="isSubmenuOpen(item.id || item.title)"
-                        class="mt-1 ml-4 space-y-1 border-l border-sidebar-border pl-2"
+                        class="mt-1 ml-4 space-y-1 border-l border-sidebar-border pl-2 animate-accordion-down"
+                        role="region"
+                        :aria-label="`${item.title} submenu`"
                     >
                         <template v-for="child in item.children" :key="child.id || child.title">
                             <Link
                                 :href="child.href"
                                 :title="child.title"
                                 :class="[
-                                    'group flex min-w-0 items-center gap-2 rounded-md px-2 py-1.5 text-sm transition-all duration-150',
+                                    'group flex min-w-0 items-center gap-2 rounded-md px-2 py-1.5 text-sm transition-all duration-150 focus-ring',
                                     urlIsActive(child.href)
                                         ? 'bg-muted text-foreground'
                                         : 'text-muted-foreground hover:bg-accent hover:translate-x-0.5',
                                 ]"
                                 @click="closeSubmenu"
+                                :ref="(el) => props.registerMenuItem?.(el, itemIndex++)"
+                                :aria-current="urlIsActive(child.href) ? 'page' : undefined"
+                                tabindex="0"
                             >
                                 <Icon
                                     :icon="child.icon"
@@ -123,4 +137,3 @@ const closeSubmenu = () => {
         </SidebarMenu>
     </SidebarGroup>
 </template>
-

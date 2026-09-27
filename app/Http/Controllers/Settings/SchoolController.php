@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Settings;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Settings\UpdateSchoolWebsiteContentRequest;
 use App\Models\School;
 use App\Models\ThemeSetting;
 use Illuminate\Http\RedirectResponse;
@@ -66,6 +67,25 @@ class SchoolController extends Controller
         }
 
         return back()->with('success', 'School information updated successfully.');
+    }
+
+    /**
+     * Updates the JSON/text-driven public website content (hero, about,
+     * contact, academics and admissions page copy) shared globally via
+     * HandleInertiaRequests. Kept separate from the core profile `update`
+     * so each form only validates and submits what it owns.
+     */
+    public function updateWebsiteContent(UpdateSchoolWebsiteContentRequest $request): RedirectResponse
+    {
+        $school = School::first();
+
+        if (! $school) {
+            $school = School::create($request->validated());
+        } else {
+            $school->update($request->validated());
+        }
+
+        return back()->with('success', 'Website content updated successfully.');
     }
 
     /**

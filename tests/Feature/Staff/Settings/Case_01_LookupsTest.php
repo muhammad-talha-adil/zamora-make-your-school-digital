@@ -1,5 +1,6 @@
 <?php
 
+use App\Models\Role;
 use App\Models\Staff\StaffDocumentType;
 use App\Models\StaffDepartment;
 use Tests\Support\StaffWorld;
@@ -107,6 +108,29 @@ it('soft-deletes a document type without touching documents already filed under 
     expect(StaffDocumentType::find($type->id))->toBeNull();
     expect(StaffDocumentType::withTrashed()->find($type->id))->not->toBeNull();
     expect($document->fresh()->kind)->toBe('Contract');
+});
+
+it('the settings page never offers self-scoped roles for a staff designation', function () {
+    $viewer = $this->world->person('Head Office', ['staff.department.manage']);
+    Role::create(['name' => 'student', 'guard_name' => 'web', 'scope_level' => Role::SCOPE_SELF]);
+    Role::create(['name' => 'teacher', 'guard_name' => 'web', 'scope_level' => Role::SCOPE_CAMPUS]);
+
+    $response = $this->actingAs($viewer->user)->get(route('staff.settings.page'));
+
+    $response->assertOk();
+    $roles = $response->viewData('page')['props']['roles'];
+    expect(collect($roles)->pluck('name'))->not->toContain('student')
+        ->and(collect($roles)->pluck('name'))->toContain('teacher');
+});
+
+it('refuses to save a designation mapped to a self-scoped role like student', function () {
+    $viewer = $this->world->person('Head Office', ['staff.department.manage']);
+    Role::create(['name' => 'student', 'guard_name' => 'web', 'scope_level' => Role::SCOPE_SELF]);
+
+    $this->actingAs($viewer->user)->postJson(route('staff.designations.store'), [
+        'name' => 'Bogus Post',
+        'role' => 'student',
+    ])->assertUnprocessable();
 });
 
 it('a person without staff.department.manage may not manage document types', function () {

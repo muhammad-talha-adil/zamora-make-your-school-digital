@@ -12,6 +12,7 @@ import {
 import { toUrl } from '@/lib/utils';
 import { type MenuItem } from '@/types';
 import Icon from '@/components/Icon.vue';
+import { Link } from '@inertiajs/vue3';
 
 interface Props {
     items: MenuItem[];
@@ -30,33 +31,29 @@ defineProps<Props>();
                 <template v-for="item in items" :key="item.title">
                     <SidebarMenuItem v-if="!item.children">
                         <SidebarMenuButton
-                            class="text-muted-foreground hover:text-foreground"
+                            class="text-muted-foreground hover:text-foreground transition-colors"
                             as-child
                         >
-                            <a
-                                :href="toUrl(item.href)"
-                                target="_blank"
-                                rel="noopener noreferrer"
-                            >
-                                <Icon :icon="item.icon" :size="24" />
+                            <Link :href="toUrl(item.href)" class="flex items-center gap-3">
+                                <Icon :icon="item.icon" :size="24" class="shrink-0" />
                                 <span>{{ item.title }}</span>
-                            </a>
+                            </Link>
                         </SidebarMenuButton>
                     </SidebarMenuItem>
                     <SidebarMenuItem v-else>
                         <SidebarMenuButton
-                            class="text-muted-foreground hover:text-foreground"
+                            class="text-muted-foreground hover:text-foreground transition-colors"
                         >
-                            <Icon :icon="item.icon" :size="24" />
+                            <Icon :icon="item.icon" :size="24" class="shrink-0" />
                             <span>{{ item.title }}</span>
                         </SidebarMenuButton>
                         <SidebarMenuSub>
                             <SidebarMenuSubItem v-for="child in item.children" :key="child.title">
                                 <SidebarMenuSubButton as-child>
-                                    <a :href="toUrl(child.href)">
-                                        <Icon :icon="child.icon" :size="24" class="text-muted-foreground" />
+                                    <Link :href="toUrl(child.href)">
+                                        <Icon :icon="child.icon" :size="24" class="text-muted-foreground shrink-0" />
                                         <span>{{ child.title }}</span>
-                                    </a>
+                                    </Link>
                                 </SidebarMenuSubButton>
                             </SidebarMenuSubItem>
                         </SidebarMenuSub>

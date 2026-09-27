@@ -21,6 +21,7 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 
 class StaffController extends Controller
@@ -115,7 +116,9 @@ class StaffController extends Controller
             'departments' => StaffDepartment::orderBy('name')->get(),
             'designations' => StaffDesignation::orderBy('name')->get(),
             'documentTypes' => StaffDocumentType::orderBy('name')->get(),
-            'roles' => Role::orderBy('name')->get(['id', 'name', 'label']),
+            // Self-scoped roles (student, guardian) are never valid for a
+            // staff designation — only staff-facing roles belong here.
+            'roles' => Role::where('scope_level', '!=', Role::SCOPE_SELF)->orderBy('name')->get(['id', 'name', 'label']),
         ]);
     }
 
@@ -184,7 +187,9 @@ class StaffController extends Controller
         $data = $request->validate([
             'name' => 'required|string|max:100|unique:staff_designations,name',
             'description' => 'nullable|string|max:255',
-            'role' => 'nullable|string|exists:roles,name',
+            // Self-scoped roles (student, guardian) are never valid for a
+            // staff designation.
+            'role' => ['nullable', 'string', Rule::exists('roles', 'name')->where(fn ($q) => $q->where('scope_level', '!=', Role::SCOPE_SELF))],
         ]);
 
         $designation = StaffDesignation::create($data + ['is_active' => true]);
@@ -201,7 +206,7 @@ class StaffController extends Controller
         $data = $request->validate([
             'name' => 'required|string|max:100|unique:staff_designations,name,'.$designation->id,
             'description' => 'nullable|string|max:255',
-            'role' => 'nullable|string|exists:roles,name',
+            'role' => ['nullable', 'string', Rule::exists('roles', 'name')->where(fn ($q) => $q->where('scope_level', '!=', Role::SCOPE_SELF))],
             'is_active' => 'boolean',
         ]);
 

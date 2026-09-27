@@ -24,14 +24,54 @@ class PageController extends Controller
         protected UnifiedAccountingService $accountingService,
     ) {}
 
+    /**
+     * All public pages render the `school` Inertia prop from
+     * HandleInertiaRequests (shared on every request), which already sends
+     * the full School model — no need to redeclare a narrower subset here.
+     */
     public function home(): Response
     {
-        return Inertia::render('Home');
+        return Inertia::render('Home', [
+            'live_stats' => [
+                'students' => Student::query()->whereHas('currentEnrollment')->count(),
+                'teachers' => StaffProfile::query()->where('is_active', true)->count(),
+            ],
+        ]);
     }
 
+    /**
+     * Student/teacher counts on the About page are live counts, not the
+     * admin-entered `school.stats` numbers — those two rows would drift out
+     * of date the moment someone is admitted or leaves.
+     */
     public function about(): Response
     {
-        return Inertia::render('About');
+        return Inertia::render('About', [
+            'live_stats' => [
+                'students' => Student::query()->whereHas('currentEnrollment')->count(),
+                'teachers' => StaffProfile::query()->where('is_active', true)->count(),
+            ],
+        ]);
+    }
+
+    public function academics(): Response
+    {
+        return Inertia::render('Academics');
+    }
+
+    public function admissions(): Response
+    {
+        return Inertia::render('Admissions');
+    }
+
+    public function privacy(): Response
+    {
+        return Inertia::render('Privacy');
+    }
+
+    public function terms(): Response
+    {
+        return Inertia::render('Terms');
     }
 
     public function contact(): Response
@@ -166,7 +206,7 @@ class PageController extends Controller
      * admissions, merged and sorted by when they happened. Nothing more than
      * that is worth building until this application has a real activity log.
      *
-     * @return array<int, array{description: string, at: string}>
+     * @return Collection<int, array{description: string, at: string}>
      */
     private function recentActivity(?User $viewer): Collection
     {

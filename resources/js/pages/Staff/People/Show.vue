@@ -1,13 +1,18 @@
 <script setup lang="ts">
 import { Head, router } from '@inertiajs/vue3';
 import axios from 'axios';
-import { computed, reactive, ref } from 'vue';
+import { computed, reactive, ref, onMounted } from 'vue';
 import { route } from 'ziggy-js';
-import AppLayout from '@/layouts/AppLayout.vue';
+import PortalLayout from '@/layouts/PortalLayout.vue';
 import Icon from '@/components/Icon.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Separator } from '@/components/ui/separator';
 import { alert } from '@/utils';
 import type { BreadcrumbItem } from '@/types';
 
@@ -92,6 +97,7 @@ interface StaffDetail {
     department?: Lookup | null;
     designation?: Lookup | null;
     gender?: Lookup | null;
+    avatar?: string | null;
     qualifications: Qualification[];
     subjects: SubjectCapability[];
     documents: StaffDocumentRow[];
@@ -125,26 +131,21 @@ interface Props {
 
 const props = defineProps<Props>();
 
-const breadcrumbItems: BreadcrumbItem[] = [
-    { title: 'Dashboard', href: '/dashboard' },
-    { title: 'Staff', href: route('staff.index') },
-    { title: 'Directory', href: route('staff.people.index') },
-    { title: props.staff.user?.name ?? 'Profile', href: route('staff.people.show', props.staff.id) },
-];
+const breadcrumbs = computed(() => [
+    { title: 'Staff Portal', href: route('staff.dashboard') },
+    { title: 'My Profile', href: route('staff.me') },
+]);
 
 const selectClass = 'w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground';
 
-type TabKey = 'personal' | 'jobs' | 'documents' | 'teaching' | 'attendance' | 'leave' | 'salary';
+type TabKey = 'personal' | 'attendance' | 'leave' | 'salary';
 const activeTab = ref<TabKey>('personal');
 
-const tabs: { key: TabKey; label: string; show: boolean }[] = [
-    { key: 'personal', label: 'Personal', show: true },
-    { key: 'jobs', label: 'Jobs', show: true },
-    { key: 'documents', label: 'Documents', show: true },
-    { key: 'teaching', label: 'Teaching', show: true },
-    { key: 'attendance', label: 'Attendance', show: props.can.viewAttendance },
-    { key: 'leave', label: 'Leave', show: props.can.viewAttendance || props.can.applyForLeave },
-    { key: 'salary', label: 'Salary', show: props.can.viewSalary },
+const tabs: { key: TabKey; label: string; icon: any; show: boolean }[] = [
+    { key: 'personal', label: 'Personal', icon: 'user', show: true },
+    { key: 'attendance', label: 'Attendance', icon: 'calendar-check', show: props.can.viewAttendance },
+    { key: 'leave', label: 'Leave', icon: 'calendar-x', show: props.can.viewAttendance || props.can.applyForLeave },
+    { key: 'salary', label: 'Salary', icon: 'wallet', show: props.can.viewSalary },
 ];
 
 const formatMoney = (amount: number | string | null | undefined) => {
@@ -172,6 +173,36 @@ const personalForm = reactive({
     emergency_contact_phone: props.staff.emergency_contact_phone ?? '',
     emergency_contact_relation: props.staff.emergency_contact_relation ?? '',
 });
+
+const avatarFile = ref<File | null>(null);
+const avatarPreview = ref<string | null>(props.staff.avatar ?? null);
+const savingAvatar = ref(false);
+
+const onAvatarChange = (event: Event) => {
+    const file = (event.target as HTMLInputElement).files?.[0];
+    if (file) {
+        avatarFile.value = file;
+        avatarPreview.value = URL.createObjectURL(file);
+    }
+};
+
+const uploadAvatar = async () => {
+    if (!avatarFile.value) return;
+    savingAvatar.value = true;
+    try {
+        const formData = new FormData();
+        formData.append('avatar', avatarFile.value);
+        await axios.post(route('staff.people.avatar', props.staff.id), formData, {
+            headers: { 'Content-Type': 'multipart/form-data' },
+        });
+        alert.success('Avatar updated.');
+        router.reload({ only: ['staff'] });
+    } catch (error: any) {
+        alert.error(error?.response?.data?.message || 'Failed to upload avatar.');
+    } finally {
+        savingAvatar.value = false;
+    }
+};
 
 const savePersonal = async () => {
     try {
@@ -220,179 +251,7 @@ const rejoinStaff = async () => {
     }
 };
 
-/* -------------------------------------------------------------------- jobs */
-
-const jobForm = reactive({
-    designation_id: '',
-    department_id: '',
-    campus_id: '',
-    is_primary: false,
-    started_on: '',
-    notes: '',
-});
-
-const addJob = async () => {
-    try {
-        await axios.post(route('staff.people.jobs.add', props.staff.id), jobForm);
-        alert.success('Job added.');
-        jobForm.designation_id = '';
-        jobForm.department_id = '';
-        jobForm.campus_id = '';
-        jobForm.is_primary = false;
-        jobForm.started_on = '';
-        jobForm.notes = '';
-        router.reload({ only: ['jobs', 'jobHistory'] });
-    } catch (error: any) {
-        alert.error(error?.response?.data?.message || 'Failed to add job.');
-    }
-};
-
-const makePrimary = async (job: Job) => {
-    try {
-        await axios.patch(route('staff.jobs.primary', job.id));
-        alert.success('Primary job changed.');
-        router.reload({ only: ['jobs'] });
-    } catch (error: any) {
-        alert.error(error?.response?.data?.message || 'Failed to change primary job.');
-    }
-};
-
-const endJob = async (job: Job) => {
-    const result = await alert.confirm('End this job?', 'End Job', 'End Job');
-    if (!result.isConfirmed) return;
-
-    try {
-        await axios.patch(route('staff.jobs.end', job.id), {});
-        alert.success('Job ended.');
-        router.reload({ only: ['jobs', 'jobHistory'] });
-    } catch (error: any) {
-        alert.error(error?.response?.data?.message || 'Failed to end job.');
-    }
-};
-
-/* --------------------------------------------------------- qualifications */
-
-const qualificationForm = reactive({ title: '', institution: '', year_completed: '', grade: '' });
-
-const addQualification = async () => {
-    try {
-        await axios.post(route('staff.people.qualifications.add', props.staff.id), qualificationForm);
-        alert.success('Qualification added.');
-        qualificationForm.title = '';
-        qualificationForm.institution = '';
-        qualificationForm.year_completed = '';
-        qualificationForm.grade = '';
-        router.reload({ only: ['staff'] });
-    } catch (error: any) {
-        alert.error(error?.response?.data?.message || 'Failed to add qualification.');
-    }
-};
-
-const removeQualification = async (id: number) => {
-    const result = await alert.confirm('Remove this qualification?', 'Remove Qualification', 'Remove');
-    if (!result.isConfirmed) return;
-
-    await axios.delete(route('staff.qualifications.remove', id));
-    router.reload({ only: ['staff'] });
-};
-
-/* -------------------------------------------------------------- documents */
-
-const documentForm = reactive({ kind: '', title: '', reference_no: '', issued_on: '', expires_on: '', file: null as File | null });
-
-const onDocumentFile = (event: Event) => {
-    documentForm.file = (event.target as HTMLInputElement).files?.[0] ?? null;
-};
-
-const addDocument = async () => {
-    try {
-        const payload = new FormData();
-        payload.append('kind', documentForm.kind);
-        payload.append('title', documentForm.title);
-        if (documentForm.reference_no) payload.append('reference_no', documentForm.reference_no);
-        if (documentForm.issued_on) payload.append('issued_on', documentForm.issued_on);
-        if (documentForm.expires_on) payload.append('expires_on', documentForm.expires_on);
-        if (documentForm.file) payload.append('file', documentForm.file);
-
-        await axios.post(route('staff.people.documents.add', props.staff.id), payload, {
-            headers: { 'Content-Type': 'multipart/form-data' },
-        });
-        alert.success('Document filed.');
-        documentForm.kind = '';
-        documentForm.title = '';
-        documentForm.reference_no = '';
-        documentForm.issued_on = '';
-        documentForm.expires_on = '';
-        documentForm.file = null;
-        router.reload({ only: ['staff'] });
-    } catch (error: any) {
-        alert.error(error?.response?.data?.message || 'Failed to file document.');
-    }
-};
-
-const removeDocument = async (id: number) => {
-    const result = await alert.confirm('Remove this document?', 'Remove Document', 'Remove');
-    if (!result.isConfirmed) return;
-
-    await axios.delete(route('staff.documents.remove', id));
-    router.reload({ only: ['staff'] });
-};
-
-/* --------------------------------------------------------------- teaching */
-
-const classForm = reactive({
-    session_id: props.sessions[0]?.id ? String(props.sessions[0].id) : '',
-    class_id: '',
-    section_id: '',
-    subject_id: '',
-    is_class_teacher: false,
-    periods_per_week: '',
-});
-
-const assignClass = async () => {
-    try {
-        await axios.post(route('staff.teaching.assign', props.staff.id), classForm);
-        alert.success('Class assigned.');
-        classForm.class_id = '';
-        classForm.section_id = '';
-        classForm.subject_id = '';
-        classForm.is_class_teacher = false;
-        classForm.periods_per_week = '';
-        router.reload({ only: ['classes'] });
-    } catch (error: any) {
-        alert.error(error?.response?.data?.message || 'Failed to assign class.');
-    }
-};
-
-const unassignClass = async (assignment: ClassAssignment) => {
-    const result = await alert.confirm('Take this class away?', 'Unassign Class', 'Unassign');
-    if (!result.isConfirmed) return;
-
-    await axios.delete(route('staff.teaching.unassign', assignment.id));
-    router.reload({ only: ['classes'] });
-};
-
-const subjectCapabilityId = ref('');
-
-const addSubjectCapability = async () => {
-    if (!subjectCapabilityId.value) return;
-
-    try {
-        await axios.post(route('staff.teaching.subjects.add', props.staff.id), { subject_id: subjectCapabilityId.value });
-        alert.success('Subject added.');
-        subjectCapabilityId.value = '';
-        router.reload({ only: ['staff'] });
-    } catch (error: any) {
-        alert.error(error?.response?.data?.message || 'Failed to add subject.');
-    }
-};
-
-const removeSubjectCapability = async (subjectId: number) => {
-    await axios.delete(route('staff.teaching.subjects.remove', { staffProfile: props.staff.id, subjectId }));
-    router.reload({ only: ['staff'] });
-};
-
-/* ------------------------------------------------------------ attendance */
+/* -------------------------------------------------------------------- attendance */
 
 interface AttendanceRow {
     id: number;
@@ -407,6 +266,9 @@ const attendanceRows = ref<AttendanceRow[]>([]);
 const attendanceLoaded = ref(false);
 const attendanceSummary = ref<Record<string, number> | null>(null);
 const attendanceStatuses = ref<{ id: number; name: string; code: string }[]>([]);
+const currentAttendanceMonth = ref(new Date());
+const attendanceCalendarDays = ref<(Date | null)[]>([]);
+const attendanceMap = ref<Map<string, AttendanceRow>>(new Map());
 
 const markForm = reactive({
     attendance_date: new Date().toISOString().slice(0, 10),
@@ -425,6 +287,64 @@ const loadAttendance = async () => {
     attendanceRows.value = rows.data.data;
     if (statuses) attendanceStatuses.value = statuses.data.data;
     attendanceLoaded.value = true;
+    buildAttendanceCalendar();
+};
+
+const loadAttendanceSummary = async () => {
+    const now = new Date();
+    const response = await axios.get(route('staff.attendance.summary', props.staff.id), {
+        params: { from_month: now.getMonth() + 1, to_month: now.getMonth() + 1, year: now.getFullYear() },
+    });
+    attendanceSummary.value = response.data.data;
+};
+
+const buildAttendanceCalendar = () => {
+    const year = currentAttendanceMonth.value.getFullYear();
+    const month = currentAttendanceMonth.value.getMonth();
+    const firstDay = new Date(year, month, 1).getDay();
+    const daysInMonth = new Date(year, month + 1, 0).getDate();
+    const days: (Date | null)[] = [];
+
+    for (let i = 0; i < firstDay; i++) days.push(null);
+    for (let day = 1; day <= daysInMonth; day++) days.push(new Date(year, month, day));
+
+    attendanceCalendarDays.value = days;
+
+    attendanceMap.value.clear();
+    attendanceRows.value.forEach(record => {
+        if (record.attendance_date) {
+            attendanceMap.value.set(record.attendance_date, record);
+        }
+    });
+};
+
+const getDayAttendanceStatus = (date: Date | null) => {
+    if (!date) return null;
+    const key = date.toISOString().split('T')[0];
+    return attendanceMap.value.get(key)?.status?.code ?? null;
+};
+
+const isToday = (date: Date | null) => {
+    if (!date) return false;
+    const today = new Date();
+    return date.getDate() === today.getDate() &&
+           date.getMonth() === today.getMonth() &&
+           date.getFullYear() === today.getFullYear();
+};
+
+const prevAttendanceMonth = () => {
+    currentAttendanceMonth.value = new Date(currentAttendanceMonth.value.getFullYear(), currentAttendanceMonth.value.getMonth() - 1, 1);
+    buildAttendanceCalendar();
+};
+
+const nextAttendanceMonth = () => {
+    currentAttendanceMonth.value = new Date(currentAttendanceMonth.value.getFullYear(), currentAttendanceMonth.value.getMonth() + 1, 1);
+    buildAttendanceCalendar();
+};
+
+const goToTodayAttendance = () => {
+    currentAttendanceMonth.value = new Date();
+    buildAttendanceCalendar();
 };
 
 const markAttendance = async () => {
@@ -437,13 +357,9 @@ const markAttendance = async () => {
     }
 };
 
-const loadAttendanceSummary = async () => {
-    const now = new Date();
-    const response = await axios.get(route('staff.attendance.summary', props.staff.id), {
-        params: { from_month: now.getMonth() + 1, to_month: now.getMonth() + 1, year: now.getFullYear() },
-    });
-    attendanceSummary.value = response.data.data;
-};
+const attendanceMonthLabel = computed(() => {
+    return currentAttendanceMonth.value.toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
+});
 
 /* ------------------------------------------------------------------ leave */
 
@@ -463,6 +379,7 @@ const leaveTypes = ref<{ id: number; name: string; days_per_year: number | null 
 const leaveBalances = ref<{ leave_type: { id: number; name: string; code: string }; remaining: number | null }[]>([]);
 
 const leaveForm = reactive({ staff_leave_type_id: '', from_date: '', to_date: '', reason: '' });
+const showLeaveApplyDialog = ref(false);
 
 const loadLeave = async () => {
     const [rows, types, balances] = await Promise.all([
@@ -485,6 +402,7 @@ const applyLeave = async () => {
         leaveForm.from_date = '';
         leaveForm.to_date = '';
         leaveForm.reason = '';
+        showLeaveApplyDialog.value = false;
         loadLeave();
     } catch (error: any) {
         alert.error(error?.response?.data?.message || 'Failed to submit leave application.');
@@ -509,6 +427,16 @@ const cancelLeave = async (leave: LeaveRow) => {
     loadLeave();
 };
 
+const getLeaveStatusConfig = (status: string) => {
+    const configs: Record<string, { label: string; variant: 'success' | 'destructive' | 'warning' | 'secondary' | 'default'; color: string }> = {
+        pending: { label: 'Pending', variant: 'warning', color: 'text-warning' },
+        approved: { label: 'Approved', variant: 'success', color: 'text-success' },
+        rejected: { label: 'Rejected', variant: 'destructive', color: 'text-destructive' },
+        cancelled: { label: 'Cancelled', variant: 'secondary', color: 'text-muted-foreground' },
+    };
+    return configs[status] ?? { label: status, variant: 'default', color: 'text-muted-foreground' };
+};
+
 /* ----------------------------------------------------------------- salary */
 
 interface SalaryComponent {
@@ -524,6 +452,7 @@ const salaryHeads = ref<{ id: number; name: string; type: string }[]>([]);
 const salaryGross = ref<number | null>(null);
 const salaryDeductions = ref<number | null>(null);
 const salaryLoaded = ref(false);
+const showPayslipDialog = ref(false);
 
 const componentForm = reactive({ salary_head_id: '', amount: '', effective_from: new Date().toISOString().slice(0, 10) });
 
@@ -554,6 +483,10 @@ const endComponent = async (component: SalaryComponent) => {
 
     await axios.patch(route('staff.salary.end', component.id));
     loadSalary();
+};
+
+const downloadPayslip = () => {
+    window.open(route('staff.salary.payslip', props.staff.id), '_blank');
 };
 
 const switchTab = (tab: TabKey) => {
@@ -831,8 +764,14 @@ const activeJobsCount = computed(() => props.jobs.length);
                         </select>
                         <Input v-model="documentForm.title" placeholder="Title" />
                         <Input v-model="documentForm.reference_no" placeholder="Reference no (optional)" />
-                        <Input v-model="documentForm.issued_on" type="date" placeholder="Issued on" />
-                        <Input v-model="documentForm.expires_on" type="date" placeholder="Expires on" />
+                        <div>
+                            <label for="document_issued_on" class="mb-1 block text-xs font-medium text-muted-foreground">Issue Date</label>
+                            <Input id="document_issued_on" v-model="documentForm.issued_on" type="date" />
+                        </div>
+                        <div>
+                            <label for="document_expires_on" class="mb-1 block text-xs font-medium text-muted-foreground">Expiry Date</label>
+                            <Input id="document_expires_on" v-model="documentForm.expires_on" type="date" />
+                        </div>
                         <input type="file" accept=".pdf,.jpg,.jpeg,.png" class="text-sm" @change="onDocumentFile" />
                         <Button @click="addDocument">File Document</Button>
                     </div>

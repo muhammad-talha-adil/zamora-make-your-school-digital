@@ -1,13 +1,13 @@
 <script setup lang="ts">
+import { ref } from 'vue';
+import { Head } from '@inertiajs/vue3';
+import { route } from 'ziggy-js';
+import AuthSplitLayout from '@/components/auth/AuthSplitLayout.vue';
+import AuthFormWrapper from '@/components/auth/AuthFormWrapper.vue';
 import InputError from '@/components/InputError.vue';
-import { Button } from '@/components/ui/button';
+import TextLink from '@/components/TextLink.vue';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Spinner } from '@/components/ui/spinner';
-import AuthLayout from '@/layouts/AuthLayout.vue';
-import { Form, Head } from '@inertiajs/vue3';
-import { route } from 'ziggy-js';
-import { ref } from 'vue';
 
 const props = defineProps<{
     token: string;
@@ -15,76 +15,78 @@ const props = defineProps<{
 }>();
 
 const inputEmail = ref(props.email);
+
+const loginRoute = () => route('login');
 </script>
 
 <template>
-    <AuthLayout
+    <AuthSplitLayout
         title="Reset password"
         description="Please enter your new password below"
+        illustration="reset"
     >
         <Head title="Reset password" />
 
-        <Form
+        <AuthFormWrapper
+            :action="route('password.update')"
             method="post"
-            :url="route('password.update')"
             :transform="(data) => ({ ...data, token: props.token, email: inputEmail })"
             :reset-on-success="['password', 'password_confirmation']"
-            v-slot="{ errors, processing }"
+            submit-label="Reset password"
+            class="space-y-6"
+            v-slot="{ errors }"
         >
-            <div class="grid gap-6">
-                <div class="grid gap-2">
-                    <Label for="email">Email</Label>
+            <div class="space-y-4">
+                <div class="space-y-2">
+                    <Label for="email" class="text-sm font-medium">Email</Label>
                     <Input
                         id="email"
                         type="email"
                         name="email"
                         autocomplete="email"
                         v-model="inputEmail"
-                        class="mt-1 block w-full"
+                        class="h-10"
                         readonly
+                        :class="{ 'aria-invalid:border-destructive': errors.email }"
                     />
                     <InputError :message="errors.email" class="mt-2" />
                 </div>
 
-                <div class="grid gap-2">
-                    <Label for="password">Password</Label>
+                <div class="space-y-2">
+                    <Label for="password" class="text-sm font-medium">Password</Label>
                     <Input
                         id="password"
                         type="password"
                         name="password"
                         autocomplete="new-password"
-                        class="mt-1 block w-full"
+                        class="h-10"
                         autofocus
+                        :tabindex="1"
                         placeholder="Password"
+                        :class="{ 'aria-invalid:border-destructive': errors.password }"
                     />
                     <InputError :message="errors.password" />
                 </div>
 
-                <div class="grid gap-2">
-                    <Label for="password_confirmation">
-                        Confirm Password
-                    </Label>
+                <div class="space-y-2">
+                    <Label for="password_confirmation" class="text-sm font-medium">Confirm password</Label>
                     <Input
                         id="password_confirmation"
                         type="password"
                         name="password_confirmation"
                         autocomplete="new-password"
-                        class="mt-1 block w-full"
+                        class="h-10"
+                        :tabindex="2"
                         placeholder="Confirm password"
+                        :class="{ 'aria-invalid:border-destructive': errors.password_confirmation }"
                     />
                     <InputError :message="errors.password_confirmation" />
                 </div>
-
-                <Button
-                    type="submit"
-                    class="mt-4 w-full"
-                    :disabled="processing"
-                    data-test="reset-password-button"
-                >
-                    <Spinner v-if="processing" />
-                    Reset password
-                </Button>
             </div>
-        </Form>
-    </AuthLayout>
+
+            <div class="text-center text-sm text-muted-foreground mt-4">
+                <TextLink :href="loginRoute()">Back to log in</TextLink>
+            </div>
+        </AuthFormWrapper>
+    </AuthSplitLayout>
 </template>

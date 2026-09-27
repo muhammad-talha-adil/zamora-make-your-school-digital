@@ -10,6 +10,14 @@ Route::middleware('public.website')->group(function (): void {
 
     Route::get('/about', [PageController::class, 'about'])->name('about');
 
+    Route::get('/academics', [PageController::class, 'academics'])->name('academics');
+
+    Route::get('/admissions', [PageController::class, 'admissions'])->name('admissions');
+
+    Route::get('/privacy', [PageController::class, 'privacy'])->name('privacy');
+
+    Route::get('/terms', [PageController::class, 'terms'])->name('terms');
+
     Route::get('/contact', [PageController::class, 'contact'])->name('contact');
 });
 

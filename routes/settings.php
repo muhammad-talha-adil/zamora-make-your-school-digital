@@ -60,6 +60,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     // School Profile Routes
     Route::get('settings/school-profile', [SchoolController::class, 'show'])->name('school-profile.show');
     Route::post('settings/school-profile', [SchoolController::class, 'update'])->name('school-profile.update');
+    Route::post('settings/school-profile/website-content', [SchoolController::class, 'updateWebsiteContent'])->name('school-profile.website-content.update');
 
     // Two-Factor Authentication Routes
     Route::get('settings/two-factor', [TwoFactorAuthenticationController::class, 'show'])

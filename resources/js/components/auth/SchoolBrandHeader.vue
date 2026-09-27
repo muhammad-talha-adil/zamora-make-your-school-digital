@@ -7,8 +7,11 @@ interface School {
     tagline?: string;
 }
 
+type Variant = 'left-panel' | 'form-header';
+
 const props = defineProps<{
     school?: School;
+    variant?: Variant;
 }>();
 
 const schoolName = computed(() => {
@@ -22,18 +25,32 @@ const schoolTagline = computed(() => {
 const schoolLogo = computed(() => {
     return props.school?.logo_path || '/sample-logo.png';
 });
+
+const isLeftPanel = computed(() => props.variant === 'left-panel');
+const isFormHeader = computed(() => props.variant === 'form-header' || !props.variant);
 </script>
 
 <template>
-    <div class="text-center mb-8">
+    <div :class="[
+        'text-center',
+        isLeftPanel ? 'mb-8' : 'mb-6',
+        isFormHeader ? '' : '',
+    ]">
         <div class="flex justify-center mb-4">
             <img
                 :src="schoolLogo"
                 :alt="schoolName + ' logo'"
-                class="w-16 h-16 rounded-full shadow-lg border-2 border-border"
+                :class="[
+                    'rounded-full shadow-lg border-2 border-border transition-transform duration-300 hover:scale-105',
+                    isLeftPanel ? 'h-12 w-12' : 'h-10 w-10',
+                ]"
             />
         </div>
-        <h1 class="text-3xl font-bold text-foreground mb-2">{{ schoolName }}</h1>
-        <p class="text-muted-foreground text-lg">{{ schoolTagline }}</p>
+        <h1 :class="[isLeftPanel ? 'text-2xl' : 'text-xl', 'font-bold text-foreground mb-1']">
+            {{ schoolName }}
+        </h1>
+        <p :class="[isLeftPanel ? 'text-lg' : 'text-sm', 'text-muted-foreground']">
+            {{ schoolTagline }}
+        </p>
     </div>
 </template>

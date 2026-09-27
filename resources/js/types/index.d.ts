@@ -15,6 +15,29 @@ export interface School {
     name: string;
     logo_path?: string;
     tagline?: string;
+    hero_headline?: string;
+    hero_subtext?: string;
+    hero_cta_primary_text?: string;
+    hero_cta_primary_url?: string;
+    hero_cta_secondary_text?: string;
+    hero_cta_secondary_url?: string;
+    hero_illustration_seed?: string;
+    trust_logos?: Array<{name: string; logo_url: string; url: string}>;
+    mission_statement?: string;
+    vision_statement?: string;
+    values?: Array<{icon: string; title: string; description: string}>;
+    leadership_team?: Array<{name: string; role: string; bio: string; photo_url: string}>;
+    stats?: Array<{label: string; value: number | string; suffix: string}>;
+    history_timeline?: Array<{year: string; title: string; description: string}>;
+    contact_address?: string;
+    contact_phone?: string;
+    contact_email?: string;
+    contact_hours?: string;
+    map_embed_url?: string;
+    social_links?: Array<{platform: string; url: string; icon: string}>;
+    meta_title?: string;
+    meta_description?: string;
+    og_image_path?: string;
     [key: string]: unknown;
 }
 
