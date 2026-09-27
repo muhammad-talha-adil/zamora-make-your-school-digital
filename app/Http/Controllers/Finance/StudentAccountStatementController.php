@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Finance;
 
+use App\Http\Controllers\Concerns\ScopesCampusForUser;
 use App\Http\Controllers\Controller;
 use App\Models\Fee\FeePayment;
 use App\Models\Fee\StudentFeeWalletTransaction;
@@ -14,12 +15,16 @@ use Inertia\Inertia;
 
 class StudentAccountStatementController extends Controller
 {
+    use ScopesCampusForUser;
+
     public function __construct(
         protected StudentBillingService $studentBillingService
     ) {}
 
     public function index(Request $request)
     {
+        $this->authorize('viewAny', Student::class);
+
         $student = null;
         $statement = null;
 
@@ -30,7 +35,10 @@ class StudentAccountStatementController extends Controller
                 'currentEnrollment.section',
                 'currentEnrollment.campus',
                 'currentEnrollment.session',
-            ])->findOrFail($request->integer('student_id'));
+            ])->visibleTo($request->user())
+                ->findOrFail($request->integer('student_id'));
+
+            $this->authorize('view', $student);
 
             $statement = $this->buildStatement($student);
         }
@@ -62,6 +70,7 @@ class StudentAccountStatementController extends Controller
 
         $students = Student::query()
             ->with(['user', 'currentEnrollment.class', 'currentEnrollment.section'])
+            ->visibleTo($request->user())
             ->where(function ($builder) use ($query) {
                 $builder->where('registration_no', 'like', '%'.$query.'%')
                     ->orWhere('admission_no', 'like', '%'.$query.'%')
@@ -92,6 +101,7 @@ class StudentAccountStatementController extends Controller
 
     protected function buildStatement(Student $student): array
     {
+        $this->authorize('view', $student);
         $charges = StudentAccountCharge::with(['billingMonth', 'voucher', 'schoolClass', 'section'])
             ->where('student_id', $student->id)
             ->orderByDesc('charge_date')

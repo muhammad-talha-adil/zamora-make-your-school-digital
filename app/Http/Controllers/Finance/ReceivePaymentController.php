@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Finance;
 
+use App\Http\Controllers\Concerns\ScopesCampusForUser;
 use App\Http\Controllers\Controller;
 use App\Models\Campus;
 use App\Models\Fee\FeePayment;
@@ -20,6 +21,8 @@ use Inertia\Inertia;
 
 class ReceivePaymentController extends Controller
 {
+    use ScopesCampusForUser;
+
     protected $financeService;
 
     public function __construct(
@@ -67,9 +70,7 @@ class ReceivePaymentController extends Controller
      */
     public function getClasses(Request $request)
     {
-        $request->validate([
-            'campus_id' => 'required|exists:campuses,id',
-        ]);
+        $campusId = $this->resolveCampusId($request);
 
         // Get classes that have active enrollments in the selected campus
         $classes = SchoolClass::select('school_classes.id', 'school_classes.name')
@@ -77,7 +78,7 @@ class ReceivePaymentController extends Controller
                 $join->on('student_enrollment_records.class_id', '=', 'school_classes.id')
                     ->whereNull('student_enrollment_records.leave_date');
             })
-            ->where('student_enrollment_records.campus_id', $request->campus_id)
+            ->where('student_enrollment_records.campus_id', $campusId)
             ->distinct()
             ->orderBy('school_classes.name')
             ->get();
@@ -90,9 +91,10 @@ class ReceivePaymentController extends Controller
      */
     public function getSections(Request $request)
     {
+        $campusId = $this->resolveCampusId($request);
+
         $request->validate([
             'class_id' => 'required|exists:school_classes,id',
-            'campus_id' => 'nullable|exists:campuses,id',
         ]);
 
         // Get sections that have active enrollments for the selected class and campus
@@ -103,8 +105,8 @@ class ReceivePaymentController extends Controller
             })
             ->where('sections.class_id', $request->class_id);
 
-        if ($request->filled('campus_id')) {
-            $query->where('student_enrollment_records.campus_id', $request->campus_id);
+        if ($campusId !== null) {
+            $query->where('student_enrollment_records.campus_id', $campusId);
         }
 
         $sections = $query->distinct()
@@ -119,6 +121,8 @@ class ReceivePaymentController extends Controller
      */
     public function getStudents(Request $request)
     {
+        $campusId = $this->resolveCampusId($request);
+
         $request->validate([
             'campus_id' => 'required|exists:campuses,id',
             'class_id' => 'required|exists:school_classes,id',
@@ -129,7 +133,7 @@ class ReceivePaymentController extends Controller
         // Get students via enrollment records for active enrollments
         $enrollmentQuery = StudentEnrollmentRecord::select('student_id')
             ->where('class_id', $request->class_id)
-            ->where('campus_id', $request->campus_id)
+            ->where('campus_id', $campusId)
             ->whereNull('leave_date');
 
         if ($request->filled('section_id')) {

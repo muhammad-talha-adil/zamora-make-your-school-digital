@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Finance;
 
+use App\Http\Controllers\Concerns\ScopesCampusForUser;
 use App\Http\Controllers\Controller;
 use App\Models\Campus;
 use App\Models\Finance\StudentAccountCharge;
@@ -15,6 +16,8 @@ use Inertia\Inertia;
 
 class FinanceController extends Controller
 {
+    use ScopesCampusForUser;
+
     protected $financeService;
 
     protected $studentBillingService;
@@ -36,18 +39,7 @@ class FinanceController extends Controller
      */
     public function index(Request $request)
     {
-        // The `finance.view` permission is checked by route middleware — this
-        // dashboard has no per-record owner to check beyond the campus filter
-        // already applied to each query below.
-
-        // `campus_id` is not a real column on `User` — the accessor every
-        // other module reads is `campusId()`, through the staff profile. The
-        // bare attribute read here always returned null, so a campus-limited
-        // viewer's dashboard silently defaulted to whichever campus sorted
-        // first rather than their own.
-        $campusId = $request->filled('campus_id')
-            ? $request->campus_id
-            : (auth()->user()?->campusId() ?? Campus::first()?->id);
+        $campusId = $this->resolveCampusId($request);
 
         $today = now()->toDateString();
         $monthStart = now()->startOfMonth()->toDateString();

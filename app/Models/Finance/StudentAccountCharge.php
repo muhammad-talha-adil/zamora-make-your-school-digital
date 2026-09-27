@@ -12,6 +12,7 @@ use App\Models\Session;
 use App\Models\Student;
 use App\Models\StudentEnrollmentRecord;
 use App\Models\User;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -123,5 +124,43 @@ class StudentAccountCharge extends Model
     public function approver(): BelongsTo
     {
         return $this->belongsTo(User::class, 'approved_by');
+    }
+
+    /**
+     * Narrows a list to what this user may see.
+     */
+    public function scopeVisibleTo(Builder $query, ?User $user): Builder
+    {
+        if (! $user || $user->isSuperAdmin()) {
+            return $query;
+        }
+
+        $campusId = $user->campusId();
+
+        if ($campusId !== null) {
+            $query->where('campus_id', $campusId);
+        }
+
+        if (! $user->isClassRestricted()) {
+            return $query;
+        }
+
+        $assignments = $user->teachingAssignments()->active()->get(['class_id', 'section_id']);
+
+        if ($assignments->isEmpty()) {
+            return $query->whereRaw('1 = 0');
+        }
+
+        return $query->where(function ($outer) use ($assignments) {
+            foreach ($assignments as $assignment) {
+                $outer->orWhere(function ($q) use ($assignment) {
+                    $q->where('class_id', $assignment->class_id);
+
+                    if ($assignment->section_id !== null) {
+                        $q->where('section_id', $assignment->section_id);
+                    }
+                });
+            }
+        });
     }
 }

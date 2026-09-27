@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Finance;
 
+use App\Http\Controllers\Concerns\ScopesCampusForUser;
 use App\Http\Controllers\Controller;
 use App\Models\Campus;
 use App\Models\Ledger\LedgerCategory;
@@ -14,6 +15,8 @@ use Inertia\Inertia;
 
 class MakePaymentController extends Controller
 {
+    use ScopesCampusForUser;
+
     protected $financeService;
 
     public function __construct(FinanceService $financeService)
@@ -95,8 +98,9 @@ class MakePaymentController extends Controller
                 ->with('success', 'Payment made successfully!');
         }
 
+        $campusId = $this->resolveCampusId($request);
+
         $validated = $request->validate([
-            'campus_id' => 'required|exists:campuses,id',
             'amount' => 'required|numeric|min:1',
             'payment_method' => 'required',
             'category_id' => 'required|exists:ledger_categories,id',
@@ -114,7 +118,7 @@ class MakePaymentController extends Controller
             'reference_id' => null,
             'transaction_date' => $validated['transaction_date'],
             'description' => $validated['description'] ?? 'Manual expense paid: '.($validated['payee_name'] ?? 'Other'),
-            'campus_id' => $validated['campus_id'],
+            'campus_id' => $campusId,
         ]);
 
         return redirect()->route('finance.transactions.index')

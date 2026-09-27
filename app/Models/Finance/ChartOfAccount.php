@@ -2,6 +2,8 @@
 
 namespace App\Models\Finance;
 
+use App\Models\User;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -39,5 +41,21 @@ class ChartOfAccount extends Model
     public function journalLines(): HasMany
     {
         return $this->hasMany(JournalEntryLine::class, 'account_id');
+    }
+
+    /**
+     * Narrows a list to what this user may see.
+     *
+     * Chart of accounts is system-wide reference data. Super admins see all.
+     * Campus-restricted users see accounts they have access to (all by default,
+     * since COA is typically shared across campuses).
+     */
+    public function scopeVisibleTo(Builder $query, ?User $user): Builder
+    {
+        if (! $user || $user->isSuperAdmin()) {
+            return $query;
+        }
+
+        return $query;
     }
 }

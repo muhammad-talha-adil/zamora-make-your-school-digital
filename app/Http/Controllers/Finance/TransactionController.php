@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Finance;
 
+use App\Http\Controllers\Concerns\ScopesCampusForUser;
 use App\Http\Controllers\Controller;
 use App\Models\Campus;
 use App\Models\Finance\JournalEntry;
@@ -13,13 +14,17 @@ use Inertia\Inertia;
 
 class TransactionController extends Controller
 {
+    use ScopesCampusForUser;
+
     public function index(Request $request)
     {
+        $campusId = $this->resolveCampusId($request);
+
         $filters = $request->only(['campus_id', 'system', 'module', 'kind', 'date_from', 'date_to', 'search']);
 
         $transactions = collect()
-            ->concat($this->getLedgerTransactions($request))
-            ->concat($this->getJournalTransactions($request))
+            ->concat($this->getLedgerTransactions($request, $campusId))
+            ->concat($this->getJournalTransactions($request, $campusId))
             ->sortByDesc(fn (array $transaction) => sprintf(
                 '%s-%010d',
                 $transaction['transaction_date'],
@@ -45,17 +50,14 @@ class TransactionController extends Controller
         ]);
     }
 
-    protected function getLedgerTransactions(Request $request): Collection
+    protected function getLedgerTransactions(Request $request, ?int $campusId): Collection
     {
         if ($request->input('system') === 'journal' || ($request->filled('module') && $request->module !== 'finance')) {
             return collect();
         }
 
-        $query = Ledger::with(['category', 'campus', 'student.user', 'supplier', 'creator']);
-
-        if ($request->filled('campus_id')) {
-            $query->where('campus_id', $request->campus_id);
-        }
+        $query = Ledger::with(['category', 'campus', 'student.user', 'supplier', 'creator'])
+            ->when($campusId, fn ($q) => $q->where('campus_id', $campusId));
 
         if ($request->filled('kind')) {
             $kind = strtolower((string) $request->kind);
@@ -115,17 +117,14 @@ class TransactionController extends Controller
             });
     }
 
-    protected function getJournalTransactions(Request $request): Collection
+    protected function getJournalTransactions(Request $request, ?int $campusId): Collection
     {
         if ($request->input('system') === 'ledger') {
             return collect();
         }
 
-        $query = JournalEntry::with(['campus', 'student.user', 'lines.account', 'creator']);
-
-        if ($request->filled('campus_id')) {
-            $query->where('campus_id', $request->campus_id);
-        }
+        $query = JournalEntry::with(['campus', 'student.user', 'lines.account', 'creator'])
+            ->when($campusId, fn ($q) => $q->where('campus_id', $campusId));
 
         if ($request->filled('module')) {
             $query->where('source_module', $request->module);
