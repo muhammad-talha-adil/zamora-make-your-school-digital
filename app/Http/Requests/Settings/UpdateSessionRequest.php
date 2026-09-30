@@ -26,10 +26,10 @@ class UpdateSessionRequest extends FormRequest
             'name' => 'required|string|max:255|unique:academic_sessions,name,'.$this->route('session')->id,
             'description' => 'nullable|string',
             'is_active' => 'boolean',
-            'start_year' => 'nullable|integer|min:2000|max:2100',
-            'end_year' => 'nullable|integer|min:2000|max:2100|gte:start_year',
-            'start_date' => 'nullable|date',
-            'end_date' => 'nullable|date|after_or_equal:start_date',
+            'start_year' => 'required|integer|min:2000|max:2100',
+            'end_year' => 'required|integer|min:2000|max:2100|gte:start_year',
+            'start_date' => 'required|date',
+            'end_date' => 'required|date|after_or_equal:start_date',
         ];
     }
 }

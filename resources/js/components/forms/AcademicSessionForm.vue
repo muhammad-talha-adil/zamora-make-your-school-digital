@@ -62,7 +62,7 @@ const form = ref(getInitialForm());
 
 const errors = ref<Record<string, string>>({});
 const processing = ref(false);
-const { isValid } = useFormValidity(form, ['name', 'start_year', 'end_year']);
+const { isValid } = useFormValidity(form, ['name', 'start_year', 'end_year', 'start_date', 'end_date']);
 
 // Dialog
 const open = ref(false);
@@ -256,7 +256,7 @@ const resetForm = () => {
                     </div>
 
                     <div class="grid gap-2">
-                        <Label for="name">Name</Label>
+                        <Label for="name">Name <span class="text-destructive">*</span></Label>
                         <Input
                             id="name"
                             :model-value="form.name"
@@ -269,7 +269,7 @@ const resetForm = () => {
 
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div class="grid gap-2">
-                            <Label for="start_date">Start Date</Label>
+                            <Label for="start_date">Start Date <span class="text-destructive">*</span></Label>
                             <Input
                                 id="start_date"
                                 v-model="form.start_date"
@@ -282,7 +282,7 @@ const resetForm = () => {
                         </div>
 
                         <div class="grid gap-2">
-                            <Label for="end_date">End Date</Label>
+                            <Label for="end_date">End Date <span class="text-destructive">*</span></Label>
                             <Input
                                 id="end_date"
                                 v-model="form.end_date"
