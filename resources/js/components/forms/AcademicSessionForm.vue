@@ -70,6 +70,13 @@ const open = ref(false);
 watch(open, (isOpen) => {
     if (isOpen) {
         form.value = getInitialForm();
+        // The start/end-year watcher below only re-fires when those values
+        // actually change, so a reset to the same default years (e.g.
+        // reopening this dialog twice in one visit) would otherwise leave
+        // `name` blank and the Create button permanently disabled.
+        if (form.value.start_year && form.value.end_year) {
+            form.value.name = `${form.value.start_year}-${form.value.end_year}`;
+        }
         errors.value = {};
     }
 });
