@@ -43,7 +43,7 @@ const selectClass = 'w-full rounded-md border border-border bg-card px-3 py-2 te
 const textareaClass = 'min-h-20 w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground';
 
 type TabKey = 'departments' | 'designations' | 'documentTypes';
-const activeTab = ref<TabKey>('departments');
+const activeTab = ref<TabKey>('designations'); // TODO: re-enable Department when needed (was 'departments')
 
 const tabs: { key: TabKey; label: string }[] = [
     { key: 'departments', label: 'Departments' },
@@ -176,7 +176,7 @@ const deactivateDocumentType = async (type: Lookup) => {
 
             <div class="flex gap-2 border-b border-border">
                 <button
-                    v-for="tab in tabs"
+                    v-for="tab in tabs.filter((t) => t.key !== 'departments')"
                     :key="tab.key"
                     type="button"
                     class="px-4 py-2 text-sm font-medium border-b-2 -mb-px"
@@ -187,7 +187,7 @@ const deactivateDocumentType = async (type: Lookup) => {
                 </button>
             </div>
 
-            <!-- Departments -->
+            <!-- TODO: re-enable Department when needed
             <div v-if="activeTab === 'departments'" class="rounded-2xl border border-border bg-card p-5 shadow-sm">
                 <h2 class="mb-4 text-lg font-semibold text-foreground">Departments</h2>
                 <div class="grid gap-6 md:grid-cols-2">
@@ -211,6 +211,7 @@ const deactivateDocumentType = async (type: Lookup) => {
                     </ul>
                 </div>
             </div>
+            -->
 
             <!-- Designations -->
             <div v-if="activeTab === 'designations'" class="rounded-2xl border border-border bg-card p-5 shadow-sm">

@@ -280,13 +280,14 @@ const submitDesignation = async () => {
                     </Link>
                     <Dialog v-model:open="showLookups">
                         <DialogTrigger as-child>
-                            <Button variant="outline"><Icon icon="settings" class="h-4 w-4" />Departments &amp; Designations</Button>
+                            <Button variant="outline"><Icon icon="settings" class="h-4 w-4" />Designations</Button>
                         </DialogTrigger>
                         <DialogContent class="sm:max-w-[640px]">
                             <DialogHeader>
-                                <DialogTitle>Departments &amp; Designations</DialogTitle>
+                                <DialogTitle>Designations</DialogTitle>
                             </DialogHeader>
                             <div class="grid gap-6 md:grid-cols-2">
+                                <!-- TODO: re-enable Department when needed
                                 <div>
                                     <h3 class="mb-2 text-sm font-semibold text-foreground">Departments</h3>
                                     <div class="mb-3 space-y-2">
@@ -304,6 +305,7 @@ const submitDesignation = async () => {
                                         </li>
                                     </ul>
                                 </div>
+                                -->
                                 <div>
                                     <h3 class="mb-2 text-sm font-semibold text-foreground">Designations</h3>
                                     <div class="mb-3 space-y-2">
@@ -342,10 +344,12 @@ const submitDesignation = async () => {
                         <label class="mb-2 block text-sm font-medium text-muted-foreground">Campus</label>
                         <SearchableSelect v-model="filters.campus_id" :options="campusOptions" placeholder="All Campuses" clearable />
                     </div>
+                    <!-- TODO: re-enable Department when needed
                     <div>
                         <label class="mb-2 block text-sm font-medium text-muted-foreground">Department</label>
                         <SearchableSelect v-model="filters.department_id" :options="departmentOptions" placeholder="All Departments" clearable />
                     </div>
+                    -->
                     <div>
                         <label class="mb-2 block text-sm font-medium text-muted-foreground">Status</label>
                         <select v-model="filters.status" :class="selectClass">
@@ -384,10 +388,12 @@ const submitDesignation = async () => {
                             </div>
                         </div>
                         <div class="grid gap-4 md:grid-cols-2">
+                            <!-- TODO: re-enable Department when needed
                             <div>
                                 <label class="mb-2 block text-sm font-medium text-muted-foreground">Department</label>
                                 <SearchableSelect v-model="staffForm.department_id" :options="departmentOptions" placeholder="Select department" clearable />
                             </div>
+                            -->
                             <div>
                                 <label class="mb-2 block text-sm font-medium text-muted-foreground">Designation</label>
                                 <SearchableSelect v-model="staffForm.designation_id" :options="designationOptions" placeholder="Select designation" clearable />
@@ -461,7 +467,7 @@ const submitDesignation = async () => {
                             <tr>
                                 <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">#</th>
                                 <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Employee</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Department / Designation</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Designation</th>
                                 <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Campus</th>
                                 <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Jobs</th>
                                 <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Status</th>
@@ -482,7 +488,9 @@ const submitDesignation = async () => {
                                     </div>
                                 </td>
                                 <td class="px-4 py-3 text-sm text-muted-foreground">
+                                    <!-- TODO: re-enable Department when needed
                                     <div>{{ member.department?.name || '-' }}</div>
+                                    -->
                                     <div class="text-xs text-muted-foreground">{{ member.designation?.name || '-' }}</div>
                                 </td>
                                 <td class="px-4 py-3 text-sm text-muted-foreground">{{ member.campus?.name || '-' }}</td>
