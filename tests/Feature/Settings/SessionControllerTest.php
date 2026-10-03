@@ -24,10 +24,18 @@ it('turns an unpermissioned account away from every session action', function ()
 
     $this->actingAs($this->outsider)->post(route('sessions.store'), [
         'name' => '2027-2028',
+        'start_year' => 2027,
+        'end_year' => 2028,
+        'start_date' => '2027-01-01',
+        'end_date' => '2028-12-31',
     ])->assertForbidden();
 
     $this->actingAs($this->outsider)->patch(route('sessions.update', $this->world->otherSession), [
         'name' => 'Renamed',
+        'start_year' => 2027,
+        'end_year' => 2028,
+        'start_date' => '2027-01-01',
+        'end_date' => '2028-12-31',
     ])->assertForbidden();
 
     $this->actingAs($this->outsider)->patch(route('sessions.activate', $this->world->otherSession))
@@ -47,6 +55,10 @@ it('does not leave two sessions active when a new one is created active', functi
     $this->actingAs($this->authorized)->postJson(route('sessions.store'), [
         'name' => '2027-2028',
         'is_active' => true,
+        'start_year' => 2027,
+        'end_year' => 2028,
+        'start_date' => '2027-01-01',
+        'end_date' => '2028-01-01',
     ])->assertSuccessful();
 
     expect(Session::where('is_active', true)->count())->toBe(1);
@@ -59,6 +71,10 @@ it('does not leave two sessions active when an existing one is edited active', f
     $this->actingAs($this->authorized)->patchJson(route('sessions.update', $this->world->otherSession), [
         'name' => $this->world->otherSession->name,
         'is_active' => true,
+        'start_year' => $this->world->otherSession->start_year,
+        'end_year' => $this->world->otherSession->end_year,
+        'start_date' => '2024-01-01',
+        'end_date' => '2025-01-01',
     ])->assertSuccessful();
 
     expect(Session::where('is_active', true)->count())->toBe(1);
@@ -87,4 +103,21 @@ it('still allows deleting an inactive session', function () {
         ->assertSuccessful();
 
     expect(Session::find($this->world->otherSession->id))->toBeNull();
+});
+
+it('allows a new session to reuse the name of a soft-deleted one', function () {
+    $name = $this->world->otherSession->name;
+
+    $this->actingAs($this->authorized)->deleteJson(route('sessions.destroy', $this->world->otherSession))
+        ->assertSuccessful();
+
+    $this->actingAs($this->authorized)->postJson(route('sessions.store'), [
+        'name' => $name,
+        'start_year' => 2030,
+        'end_year' => 2031,
+        'start_date' => '2030-01-01',
+        'end_date' => '2031-01-01',
+    ])->assertSuccessful();
+
+    expect(Session::where('name', $name)->whereNull('deleted_at')->count())->toBe(1);
 });

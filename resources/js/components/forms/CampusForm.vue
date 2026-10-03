@@ -66,6 +66,11 @@ const errors = ref<Record<string, string>>({});
 const processing = ref(false);
 const { isValid } = useFormValidity(form, ['name', 'campus_type_id']);
 
+// Campus types newly created via the "Manage Campus Types" modal, kept
+// alongside the server-provided list so the combobox can display the
+// freshly selected type's name before the page's campusTypes prop refreshes.
+const locallyAddedCampusTypes = ref<Array<{ id: number; name: string }>>([]);
+
 // Modal states
 const campusDialogOpen = ref(false);
 const showCampusTypeModal = ref(false);
@@ -189,6 +194,7 @@ const handleCampusTypeSaved = (campusType: { id: number; name: string } | undefi
     // Add the new campus type to the list if not exists
     const exists = props.campusTypes.find(t => t.id === campusType.id);
     if (!exists && campusType.id) {
+        locallyAddedCampusTypes.value.push({ id: campusType.id, name: campusType.name });
         // The parent component should refresh the campus types
         emit('saved');
     }
@@ -256,7 +262,7 @@ const handleCampusTypeSaved = (campusType: { id: number; name: string } | undefi
                                      v-model="form.campus_type_id"
                                      placeholder="Search campus types..."
                                      :search-url="'/settings/campus-types/all'"
-                                     :initial-items="props.campusTypes.map(type => ({ id: type.id, name: type.name }))"
+                                     :initial-items="[...props.campusTypes, ...locallyAddedCampusTypes].map(type => ({ id: type.id, name: type.name }))"
                                      value-type="id"
                                      class="h-11"
                                  />

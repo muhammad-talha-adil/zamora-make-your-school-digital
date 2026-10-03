@@ -4,6 +4,7 @@ namespace App\Http\Requests\Settings;
 
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StoreSubjectRequest extends FormRequest
 {
@@ -23,7 +24,12 @@ class StoreSubjectRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => 'required|string|max:255|unique:subjects,name',
+            'name' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('subjects', 'name')->whereNull('deleted_at'),
+            ],
             'description' => 'nullable|string',
             'is_active' => 'boolean',
         ];

@@ -80,6 +80,7 @@ class HandleInertiaRequests extends Middleware
                 'results' => fn () => $request->session()->get('results'),
                 'cacheCleared' => fn () => $request->session()->get('cache-cleared'),
                 'cacheResults' => fn () => $request->session()->get('cache-results'),
+                'campusType' => fn () => $request->session()->get('campusType'),
             ],
             'auth' => [
                 'user' => $request->user() ? $request->user()->load('roles.permissions') : null,

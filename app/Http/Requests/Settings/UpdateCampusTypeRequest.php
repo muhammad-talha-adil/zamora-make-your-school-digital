@@ -4,6 +4,7 @@ namespace App\Http\Requests\Settings;
 
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class UpdateCampusTypeRequest extends FormRequest
 {
@@ -23,7 +24,14 @@ class UpdateCampusTypeRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => 'required|string|max:255|unique:campus_types,name,'.$this->route('campusType')->id,
+            'name' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('campus_types', 'name')
+                    ->ignore($this->route('campusType')->id)
+                    ->whereNull('deleted_at'),
+            ],
         ];
     }
 }

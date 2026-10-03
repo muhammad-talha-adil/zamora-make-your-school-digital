@@ -4,6 +4,7 @@ namespace App\Http\Requests\Settings;
 
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StoreSchoolClassRequest extends FormRequest
 {
@@ -23,7 +24,12 @@ class StoreSchoolClassRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => 'required|string|max:255|unique:school_classes,name',
+            'name' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('school_classes', 'name')->whereNull('deleted_at'),
+            ],
             'description' => 'nullable|string',
         ];
     }

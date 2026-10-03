@@ -4,6 +4,7 @@ namespace App\Http\Requests\Staff;
 
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class StoreStaffDocumentTypeRequest extends FormRequest
 {
@@ -23,7 +24,12 @@ class StoreStaffDocumentTypeRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => 'required|string|max:100|unique:staff_document_types,name',
+            'name' => [
+                'required',
+                'string',
+                'max:100',
+                Rule::unique('staff_document_types', 'name')->whereNull('deleted_at'),
+            ],
         ];
     }
 }

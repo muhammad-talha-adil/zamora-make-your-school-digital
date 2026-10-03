@@ -4,6 +4,7 @@ namespace App\Http\Requests\Staff;
 
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class UpdateStaffDocumentTypeRequest extends FormRequest
 {
@@ -23,7 +24,14 @@ class UpdateStaffDocumentTypeRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => 'required|string|max:100|unique:staff_document_types,name,'.$this->route('documentType')->id,
+            'name' => [
+                'required',
+                'string',
+                'max:100',
+                Rule::unique('staff_document_types', 'name')
+                    ->ignore($this->route('documentType')->id)
+                    ->whereNull('deleted_at'),
+            ],
             'is_active' => 'boolean',
         ];
     }

@@ -4,6 +4,7 @@ namespace App\Http\Requests\Settings;
 
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class UpdateSchoolClassRequest extends FormRequest
 {
@@ -25,7 +26,14 @@ class UpdateSchoolClassRequest extends FormRequest
         $schoolClassId = $this->route('schoolClass')->id;
 
         return [
-            'name' => 'required|string|max:255|unique:school_classes,name,'.$schoolClassId,
+            'name' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('school_classes', 'name')
+                    ->ignore($schoolClassId)
+                    ->whereNull('deleted_at'),
+            ],
             'description' => 'nullable|string',
         ];
     }

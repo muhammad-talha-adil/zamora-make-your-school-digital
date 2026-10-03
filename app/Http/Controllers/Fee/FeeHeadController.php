@@ -52,7 +52,7 @@ class FeeHeadController extends Controller
     /**
      * Store new fee head
      */
-    public function store(StoreFeeHeadRequest $request): RedirectResponse
+    public function store(StoreFeeHeadRequest $request): RedirectResponse|JsonResponse
     {
         Gate::authorize('create', FeeHead::class);
 

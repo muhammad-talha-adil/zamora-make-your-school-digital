@@ -4,6 +4,7 @@ namespace App\Http\Requests\Settings;
 
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class UpdateSessionRequest extends FormRequest
 {
@@ -23,7 +24,14 @@ class UpdateSessionRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => 'required|string|max:255|unique:academic_sessions,name,'.$this->route('session')->id,
+            'name' => [
+                'required',
+                'string',
+                'max:255',
+                Rule::unique('academic_sessions', 'name')
+                    ->ignore($this->route('session')->id)
+                    ->whereNull('deleted_at'),
+            ],
             'description' => 'nullable|string',
             'is_active' => 'boolean',
             'start_year' => 'required|integer|min:2000|max:2100',
