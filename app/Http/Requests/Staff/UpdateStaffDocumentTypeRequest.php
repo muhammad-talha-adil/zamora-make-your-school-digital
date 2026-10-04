@@ -32,6 +32,7 @@ class UpdateStaffDocumentTypeRequest extends FormRequest
                     ->ignore($this->route('documentType')->id)
                     ->whereNull('deleted_at'),
             ],
+            'is_required' => ['boolean'],
             'is_active' => 'boolean',
         ];
     }

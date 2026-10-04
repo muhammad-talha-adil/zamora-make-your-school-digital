@@ -19,10 +19,12 @@ class StaffDocumentType extends Model
 
     protected $fillable = [
         'name',
+        'is_required',
         'is_active',
     ];
 
     protected $casts = [
+        'is_required' => 'boolean',
         'is_active' => 'boolean',
     ];
 }

@@ -30,6 +30,7 @@ class StoreStaffDocumentTypeRequest extends FormRequest
                 'max:100',
                 Rule::unique('staff_document_types', 'name')->whereNull('deleted_at'),
             ],
+            'is_required' => ['boolean'],
         ];
     }
 }
