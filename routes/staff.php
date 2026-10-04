@@ -107,6 +107,8 @@ Route::prefix('staff')->name('staff.')->middleware($middleware)->group(function 
 
         Route::get('/people', 'index')->name('people.index')
             ->middleware('permission:staff.view');
+        Route::get('/people/create', 'create')->name('people.create')
+            ->middleware('permission:staff.manage');
         Route::get('/people/list', 'list')->name('people.list')
             ->middleware('permission:staff.view');
         // ID cards — same shape as the student list's `/id-cards`.

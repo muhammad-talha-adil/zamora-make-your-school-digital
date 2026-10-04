@@ -2,6 +2,8 @@
 
 use App\Http\Controllers\AdmissionEnquiryController;
 use App\Http\Controllers\StudentController;
+use App\Http\Controllers\StudentDocumentController;
+use App\Http\Controllers\StudentDocumentTypeController;
 use App\Http\Controllers\StudentPromotionController;
 use App\Models\Student;
 use Illuminate\Support\Facades\Route;
@@ -105,6 +107,41 @@ Route::prefix('students')->name('students.')->middleware($middleware)->group(fun
     Route::get('/id-cards', [StudentController::class, 'idCards'])
         ->name('id-cards')
         ->middleware('permission:students.view');
+
+    /*
+    |--------------------------------------------------------------------------
+    | Document types
+    |--------------------------------------------------------------------------
+    |
+    | The kinds of paper a school files against a student — a plain lookup
+    | table, the same shape as `staff.document-types.*`. Gated by
+    | `students.edit`, the same ability that files a document, rather than a
+    | new permission for one small list.
+    |
+    */
+    Route::controller(StudentDocumentTypeController::class)->prefix('document-types')->name('document-types.')->group(function () {
+        Route::get('/', 'index')->name('index')
+            ->middleware('permission:students.view|students.view.own');
+        Route::post('/', 'store')->name('store')
+            ->middleware('permission:students.edit');
+        Route::put('/{documentType}', 'update')->name('update')
+            ->middleware('permission:students.edit');
+        Route::delete('/{documentType}', 'destroy')->name('destroy')
+            ->middleware('permission:students.edit');
+    });
+
+    // One child's documents — filed, listed and removed through
+    // `StudentDocumentPolicy`, which scopes by the campus the document
+    // resolves to via its student.
+    Route::get('/{student}/documents', [StudentDocumentController::class, 'index'])
+        ->name('documents.index')
+        ->middleware('permission:students.view|students.view.own');
+    Route::post('/{student}/documents', [StudentDocumentController::class, 'store'])
+        ->name('documents.store')
+        ->middleware('permission:students.edit|students.edit.own');
+    Route::delete('/documents/{document}', [StudentDocumentController::class, 'destroy'])
+        ->name('documents.destroy')
+        ->middleware('permission:students.edit|students.edit.own');
 
     /*
     |--------------------------------------------------------------------------

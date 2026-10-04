@@ -7,6 +7,7 @@ use App\Http\Requests\Student\UpdateStudentRequest;
 use App\Models\AdmissionEnquiry;
 use App\Models\School;
 use App\Models\Student;
+use App\Models\StudentDocument;
 use App\Models\StudentEnrollmentRecord;
 use App\Repositories\StudentRepository;
 use App\Services\Student\AdmissionCredentials;
@@ -180,6 +181,9 @@ class StudentController extends Controller
         ]);
 
         $data = $this->service->getShowData($student);
+        $data['can'] = [
+            'manageDocuments' => Gate::check('create', [StudentDocument::class, $student]),
+        ];
 
         return Inertia::render('students/Show', $data);
     }

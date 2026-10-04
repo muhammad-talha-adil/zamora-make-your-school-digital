@@ -283,6 +283,72 @@
                         </div>
                     </div>
 
+                    <!-- Documents Card -->
+                    <div class="bg-card rounded-lg border border-border p-6">
+                        <h3 class="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
+                            <Icon icon="file-text" class="h-5 w-5 text-primary" />
+                            Documents
+                        </h3>
+
+                        <div v-if="can?.manageDocuments" class="mb-6 grid gap-3 rounded-lg border border-border p-4 md:grid-cols-2">
+                            <div>
+                                <label class="mb-1 block text-xs font-medium text-muted-foreground">Document Type</label>
+                                <select v-model="documentForm.student_document_type_id" class="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground">
+                                    <option :value="null">Select type</option>
+                                    <option v-for="type in documentTypes" :key="type.id" :value="type.id">
+                                        {{ type.name }}<span v-if="type.is_required"> (required)</span>
+                                    </option>
+                                </select>
+                            </div>
+                            <div>
+                                <label for="document_file" class="mb-1 block text-xs font-medium text-muted-foreground">File</label>
+                                <input id="document_file" type="file" accept=".pdf,.jpg,.jpeg,.png" class="w-full text-sm" @change="onDocumentFile" />
+                            </div>
+                            <div>
+                                <label for="document_issue_date" class="mb-1 block text-xs font-medium text-muted-foreground">Issue Date</label>
+                                <input id="document_issue_date" v-model="documentForm.issue_date" type="date" class="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground" />
+                            </div>
+                            <div>
+                                <label for="document_expiry_date" class="mb-1 block text-xs font-medium text-muted-foreground">Expiry Date</label>
+                                <input id="document_expiry_date" v-model="documentForm.expiry_date" type="date" class="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground" />
+                            </div>
+                            <div class="md:col-span-2">
+                                <Button size="sm" @click="addDocument">File Document</Button>
+                            </div>
+                        </div>
+
+                        <div class="overflow-x-auto">
+                            <table class="w-full text-sm">
+                                <thead>
+                                    <tr class="text-left text-xs text-muted-foreground border-b border-border">
+                                        <th class="pb-2 pr-4 font-medium">Type</th>
+                                        <th class="pb-2 pr-4 font-medium">Issue Date</th>
+                                        <th class="pb-2 pr-4 font-medium">Expiry Date</th>
+                                        <th class="pb-2 pr-4 font-medium">File</th>
+                                        <th v-if="can?.manageDocuments" class="pb-2 font-medium text-right">Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr v-for="doc in student?.documents" :key="doc.id" class="border-b border-border last:border-0">
+                                        <td class="py-2 pr-4 text-foreground">{{ doc.documentType?.name || '-' }}</td>
+                                        <td class="py-2 pr-4 text-foreground">{{ formatDate(doc.issue_date) }}</td>
+                                        <td class="py-2 pr-4 text-foreground">{{ doc.expiry_date ? formatDate(doc.expiry_date) : '—' }}</td>
+                                        <td class="py-2 pr-4">
+                                            <a v-if="doc.path" :href="`/storage/${doc.path}`" target="_blank" class="text-primary hover:underline">View</a>
+                                            <span v-else class="text-muted-foreground">—</span>
+                                        </td>
+                                        <td v-if="can?.manageDocuments" class="py-2 text-right">
+                                            <button type="button" class="text-xs text-destructive hover:underline" @click="removeDocument(doc.id)">Remove</button>
+                                        </td>
+                                    </tr>
+                                    <tr v-if="!student?.documents?.length">
+                                        <td :colspan="can?.manageDocuments ? 5 : 4" class="py-6 text-center text-muted-foreground">No documents on file.</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
                     <!-- Description Card -->
                     <div v-if="student?.description" class="bg-card rounded-lg border border-border p-6">
                         <h3 class="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
@@ -300,13 +366,16 @@
 </template>
 
 <script setup lang="ts">
-import { computed } from 'vue';
+import { computed, reactive } from 'vue';
 import { router } from '@inertiajs/vue3';
 import { Head } from '@inertiajs/vue3';
+import axios from 'axios';
+import { route } from 'ziggy-js';
 import AppLayout from '@/layouts/AppLayout.vue';
 import type { BreadcrumbItem } from '@/types';
 import { Button } from '@/components/ui/button';
 import Icon from '@/components/Icon.vue';
+import { alert } from '@/utils';
 
 interface GuardianData {
     id: number;
@@ -330,6 +399,22 @@ interface EnrollmentRecord {
     annual_fee: number;
     admission_date: string | null;
     leave_date: string | null;
+}
+
+interface DocumentType {
+    id: number;
+    name: string;
+    is_required: boolean;
+}
+
+interface StudentDocumentRow {
+    id: number;
+    student_document_type_id: number;
+    documentType?: { id: number; name: string } | null;
+    issue_date?: string | null;
+    expiry_date?: string | null;
+    path?: string | null;
+    uploadedBy?: { name: string } | null;
 }
 
 interface Props {
@@ -356,14 +441,21 @@ interface Props {
         };
         guardians?: GuardianData[];
         enrollment_records?: EnrollmentRecord[];
+        documents?: StudentDocumentRow[];
     };
     relations: Array<{
         id: number;
         name: string;
     }>;
+    documentTypes?: DocumentType[];
+    can?: {
+        manageDocuments: boolean;
+    };
 }
 
 const props = defineProps<Props>();
+const documentTypes = computed(() => props.documentTypes ?? []);
+const can = computed(() => props.can);
 
 const breadcrumbItems: BreadcrumbItem[] = [
     {
@@ -443,5 +535,69 @@ const getGuardianRelation = (guardian: GuardianData): string => {
     const relationId = guardian.pivot?.relation_id;
     const relation = props.relations?.find(r => r.id === relationId);
     return relation?.name || '-';
+};
+
+// Documents
+const documentForm = reactive({
+    student_document_type_id: null as number | null,
+    issue_date: '',
+    expiry_date: '',
+    file: null as File | null,
+});
+
+const onDocumentFile = (event: Event) => {
+    const target = event.target as HTMLInputElement;
+    documentForm.file = target.files?.[0] ?? null;
+};
+
+const resetDocumentForm = () => {
+    documentForm.student_document_type_id = null;
+    documentForm.issue_date = '';
+    documentForm.expiry_date = '';
+    documentForm.file = null;
+};
+
+const addDocument = async () => {
+    if (!props.student?.id || !documentForm.student_document_type_id) {
+        alert('Please select a document type.');
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append('student_document_type_id', String(documentForm.student_document_type_id));
+
+    if (documentForm.issue_date) {
+        formData.append('issue_date', documentForm.issue_date);
+    }
+    if (documentForm.expiry_date) {
+        formData.append('expiry_date', documentForm.expiry_date);
+    }
+    if (documentForm.file) {
+        formData.append('file', documentForm.file);
+    }
+
+    try {
+        await axios.post(route('students.documents.store', props.student.id), formData, {
+            headers: { 'Content-Type': 'multipart/form-data' },
+        });
+
+        resetDocumentForm();
+        router.reload({ only: ['student'] });
+    } catch (error: any) {
+        alert(error?.response?.data?.message || 'Failed to file document.');
+    }
+};
+
+const removeDocument = async (documentId: number) => {
+    if (!window.confirm('Remove this document?')) {
+        return;
+    }
+
+    try {
+        await axios.delete(route('students.documents.destroy', documentId));
+        router.reload({ only: ['student'] });
+    } catch (error: any) {
+        alert(error?.response?.data?.message || 'Failed to remove document.');
+    }
 };
 </script>

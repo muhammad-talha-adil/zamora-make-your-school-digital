@@ -97,27 +97,7 @@ const filters = reactive({
 
 const staff = ref<Paginated<StaffRow>>({ data: [], current_page: 1, last_page: 1, total: 0 });
 const loading = ref(false);
-const showCreateForm = ref(false);
 const showLookups = ref(false);
-
-const staffForm = reactive({
-    id: null as number | null,
-    name: '',
-    email: '',
-    employee_no: '',
-    campus_id: '',
-    department_id: '',
-    designation_id: '',
-    employment_type: 'permanent',
-    hire_date: '',
-    basic_salary: '',
-    allowance_amount: '0',
-    deduction_amount: '0',
-    payment_method: 'bank',
-    bank_name: '',
-    account_no: '',
-    is_active: true,
-});
 
 const departmentForm = reactive({ id: null as number | null, name: '', description: '', is_active: true });
 const designationForm = reactive({ id: null as number | null, name: '', description: '', role: '' as string | null, is_active: true });
@@ -156,51 +136,6 @@ watch(filters, () => {
 
 onMounted(() => loadStaff());
 
-const resetStaffForm = () => {
-    staffForm.id = null;
-    staffForm.name = '';
-    staffForm.email = '';
-    staffForm.employee_no = '';
-    staffForm.campus_id = '';
-    staffForm.department_id = '';
-    staffForm.designation_id = '';
-    staffForm.employment_type = 'permanent';
-    staffForm.hire_date = '';
-    staffForm.basic_salary = '';
-    staffForm.allowance_amount = '0';
-    staffForm.deduction_amount = '0';
-    staffForm.payment_method = 'bank';
-    staffForm.bank_name = '';
-    staffForm.account_no = '';
-    staffForm.is_active = true;
-};
-
-const submitStaff = async () => {
-    try {
-        const payload = {
-            ...staffForm,
-            campus_id: staffForm.campus_id || null,
-            department_id: staffForm.department_id || null,
-            designation_id: staffForm.designation_id || null,
-            email: staffForm.email || null,
-            employee_no: staffForm.employee_no || null,
-        };
-
-        if (staffForm.id) {
-            await axios.put(route('staff.members.update', staffForm.id), payload);
-            alert.success('Staff member updated successfully.');
-        } else {
-            await axios.post(route('staff.members.store'), payload);
-            alert.success('Staff member created successfully.');
-        }
-
-        resetStaffForm();
-        showCreateForm.value = false;
-        loadStaff(staff.value.current_page);
-    } catch (error: any) {
-        alert.error(error?.response?.data?.message || 'Failed to save staff member.');
-    }
-};
 
 const toggleStaff = async (member: StaffRow) => {
     // Activate/deactivate is a sensitive action: the confirm dialog also
@@ -327,10 +262,12 @@ const submitDesignation = async () => {
                             </div>
                         </DialogContent>
                     </Dialog>
-                    <Button @click="resetStaffForm(); showCreateForm = true">
-                        <Icon icon="user-plus" class="h-4 w-4" />
-                        New Staff Member
-                    </Button>
+                    <Link :href="route('staff.people.create')">
+                        <Button>
+                            <Icon icon="user-plus" class="h-4 w-4" />
+                            New Staff Member
+                        </Button>
+                    </Link>
                 </div>
             </div>
 
@@ -361,104 +298,6 @@ const submitDesignation = async () => {
                 </div>
             </div>
 
-            <Dialog v-model:open="showCreateForm">
-                <DialogContent class="sm:max-w-[600px] max-h-[90vh] overflow-y-auto">
-                    <DialogHeader>
-                        <DialogTitle>{{ staffForm.id ? 'Edit Staff Member' : 'New Staff Member' }}</DialogTitle>
-                    </DialogHeader>
-                    <div class="space-y-4">
-                        <div class="grid gap-4 md:grid-cols-2">
-                            <div>
-                                <label class="mb-2 block text-sm font-medium text-muted-foreground">Name <span class="text-destructive">*</span></label>
-                                <Input v-model="staffForm.name" placeholder="Staff name" />
-                            </div>
-                            <div>
-                                <label class="mb-2 block text-sm font-medium text-muted-foreground">Email</label>
-                                <Input v-model="staffForm.email" type="email" placeholder="Email (optional)" />
-                            </div>
-                        </div>
-                        <div class="grid gap-4 md:grid-cols-2">
-                            <div>
-                                <label class="mb-2 block text-sm font-medium text-muted-foreground">Employee No</label>
-                                <Input v-model="staffForm.employee_no" placeholder="Auto-generate if empty" />
-                            </div>
-                            <div>
-                                <label class="mb-2 block text-sm font-medium text-muted-foreground">Campus</label>
-                                <SearchableSelect v-model="staffForm.campus_id" :options="campusOptions" placeholder="Select campus" clearable />
-                            </div>
-                        </div>
-                        <div class="grid gap-4 md:grid-cols-2">
-                            <!-- TODO: re-enable Department when needed
-                            <div>
-                                <label class="mb-2 block text-sm font-medium text-muted-foreground">Department</label>
-                                <SearchableSelect v-model="staffForm.department_id" :options="departmentOptions" placeholder="Select department" clearable />
-                            </div>
-                            -->
-                            <div>
-                                <label class="mb-2 block text-sm font-medium text-muted-foreground">Designation</label>
-                                <SearchableSelect v-model="staffForm.designation_id" :options="designationOptions" placeholder="Select designation" clearable />
-                            </div>
-                        </div>
-                        <div class="grid gap-4 md:grid-cols-2">
-                            <div>
-                                <label class="mb-2 block text-sm font-medium text-muted-foreground">Employment Type</label>
-                                <select v-model="staffForm.employment_type" :class="selectClass">
-                                    <option value="permanent">Permanent</option>
-                                    <option value="contract">Contract</option>
-                                    <option value="part_time">Part Time</option>
-                                    <option value="daily_wage">Daily Wage</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label class="mb-2 block text-sm font-medium text-muted-foreground">Hire Date</label>
-                                <Input v-model="staffForm.hire_date" type="date" />
-                            </div>
-                        </div>
-                        <div class="grid gap-4 md:grid-cols-3">
-                            <div>
-                                <label class="mb-2 block text-sm font-medium text-muted-foreground">Basic Salary</label>
-                                <Input v-model="staffForm.basic_salary" type="number" min="0" />
-                            </div>
-                            <div>
-                                <label class="mb-2 block text-sm font-medium text-muted-foreground">Allowance</label>
-                                <Input v-model="staffForm.allowance_amount" type="number" min="0" />
-                            </div>
-                            <div>
-                                <label class="mb-2 block text-sm font-medium text-muted-foreground">Deduction</label>
-                                <Input v-model="staffForm.deduction_amount" type="number" min="0" />
-                            </div>
-                        </div>
-                        <div class="grid gap-4 md:grid-cols-3">
-                            <div>
-                                <label class="mb-2 block text-sm font-medium text-muted-foreground">Payment Method</label>
-                                <select v-model="staffForm.payment_method" :class="selectClass">
-                                    <option value="bank">Bank</option>
-                                    <option value="cash">Cash</option>
-                                    <option value="cheque">Cheque</option>
-                                </select>
-                            </div>
-                            <div>
-                                <label class="mb-2 block text-sm font-medium text-muted-foreground">Bank Name</label>
-                                <Input v-model="staffForm.bank_name" placeholder="Bank name" />
-                            </div>
-                            <div>
-                                <label class="mb-2 block text-sm font-medium text-muted-foreground">Account No</label>
-                                <Input v-model="staffForm.account_no" placeholder="Account number" />
-                            </div>
-                        </div>
-                        <label class="flex items-center gap-2 text-sm text-muted-foreground">
-                            <input v-model="staffForm.is_active" type="checkbox" class="h-4 w-4 rounded border-border text-primary" />
-                            Staff member is active
-                        </label>
-                        <div class="flex flex-wrap gap-2">
-                            <Button @click="submitStaff">
-                                <Icon icon="save" class="h-4 w-4" />
-                                {{ staffForm.id ? 'Update Staff' : 'Create Staff' }}
-                            </Button>
-                        </div>
-                    </div>
-                </DialogContent>
-            </Dialog>
 
             <div class="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
                 <div class="overflow-x-auto">

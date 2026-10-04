@@ -77,6 +77,20 @@ class StaffProfileController extends Controller
     }
 
     /**
+     * The full-page "New Staff Member" form.
+     */
+    public function create()
+    {
+        Gate::authorize('create', StaffProfile::class);
+
+        return Inertia::render('Staff/People/Create', [
+            'departments' => StaffDepartment::orderBy('name')->get(['id', 'name']),
+            'designations' => StaffDesignation::orderBy('name')->get(['id', 'name', 'description', 'role', 'is_active']),
+            'campuses' => Campus::orderBy('name')->get(['id', 'name']),
+        ]);
+    }
+
+    /**
      * The list itself (API), scoped to what this person may see.
      */
     public function list(Request $request)

@@ -169,6 +169,16 @@ class Student extends Model
     }
 
     /**
+     * The papers the school holds a copy of for this child.
+     *
+     * @return HasMany<StudentDocument, $this>
+     */
+    public function documents(): HasMany
+    {
+        return $this->hasMany(StudentDocument::class);
+    }
+
+    /**
      * Get primary guardian (father or mother)
      */
     public function primaryGuardian(): BelongsToMany

@@ -26,15 +26,35 @@ const props = defineProps<{
 // the real school name always renders instead of the generic placeholder.
 const school = computed<School | undefined>(() => props.school ?? (usePage().props.school as School | undefined));
 
-const illustrationDescriptions: Record<IllustrationType, string> = {
-    login: 'Your school dashboard at a glance',
-    register: 'Grow with our school management platform',
-    forgot: 'Secure password recovery',
-    reset: 'Set your new password securely',
-    verify: 'Verify your email to get started',
-    confirm: 'Confirm your identity for sensitive actions',
-    '2fa': 'Two-factor authentication protects your account',
+const illustrationCopy: Record<IllustrationType, { heading: string; description: string }> = {
+    login: { heading: 'Welcome Back', description: 'Your school dashboard at a glance' },
+    register: { heading: 'Create Account', description: 'Grow with our school management platform' },
+    forgot: { heading: 'Forgot Password', description: 'Secure password recovery' },
+    reset: { heading: 'Reset Password', description: 'Set your new password securely' },
+    verify: { heading: 'Verify Email', description: 'Verify your email to get started' },
+    confirm: { heading: 'Confirm Access', description: 'Confirm your identity for sensitive actions' },
+    '2fa': { heading: 'Two-Factor Auth', description: 'Two-factor authentication protects your account' },
 };
+
+const copy = computed(() => illustrationCopy[props.illustration]);
+
+const badgeIcons: Record<IllustrationType, string[]> = {
+    login: ['code', 'bell', 'lock'],
+    register: ['users', 'sparkles', 'badge-check'],
+    forgot: ['mail', 'key-round', 'shield'],
+    reset: ['lock', 'refresh-cw', 'shield-check'],
+    verify: ['mail-check', 'badge-check', 'sparkles'],
+    confirm: ['shield-check', 'lock', 'check-circle'],
+    '2fa': ['smartphone', 'shield', 'lock'],
+};
+
+const badges = computed(() => badgeIcons[props.illustration]);
+
+const badgePositions = [
+    'left-[6%] top-[12%]',
+    'right-[4%] top-[20%]',
+    'left-[10%] bottom-[14%]',
+];
 </script>
 
 <template>
@@ -51,34 +71,49 @@ const illustrationDescriptions: Record<IllustrationType, string> = {
                 Back to website
             </Link>
 
-            <div class="auth-split-layout w-full max-w-6xl min-h-[560px] lg:min-h-[640px] rounded-2xl overflow-hidden bg-card/50 backdrop-blur-[24px] border border-black/6 dark:border-white/10 shadow-2xl relative animate-in fade-in slide-in-from-bottom-4 duration-500 ease-out" style="backdrop-filter: blur(24px); -webkit-backdrop-filter: blur(24px);">
-                <!-- Subtle radial highlight for light mode -->
-                <div class="absolute inset-0 bg-gradient-radial from-card/10 via-transparent to-transparent rounded-2xl pointer-events-none"></div>
-
+            <div class="auth-split-layout w-full max-w-6xl min-h-[560px] lg:min-h-[640px] rounded-2xl overflow-hidden bg-card border border-black/6 dark:border-white/10 shadow-2xl relative animate-in fade-in slide-in-from-bottom-4 duration-500 ease-out">
                 <div class="grid lg:grid-cols-2 min-h-[560px] lg:min-h-[640px] relative">
-                    <!-- Left Panel: School Branding + Illustration -->
-                    <div class="hidden lg:flex lg:flex-col lg:justify-center lg:p-12 relative bg-primary/5 dark:bg-primary/10">
-                        <!-- Vertical Divider (Soft Gradient) -->
-                        <div class="absolute right-0 top-0 bottom-0 w-px bg-gradient-to-b from-transparent via-black/6 to-transparent"></div>
+                    <!-- Colored Panel: School Branding + Illustration (diagonal cut on lg+) -->
+                    <div
+                        class="hidden lg:flex lg:flex-col lg:justify-center lg:p-12 relative bg-gradient-to-br from-primary to-primary/70 text-primary-foreground overflow-hidden auth-diagonal-panel"
+                    >
+                        <div
+                            class="pointer-events-none absolute inset-0 opacity-[0.08]"
+                            style="background-image: radial-gradient(circle at 1px 1px, white 1px, transparent 0); background-size: 26px 26px;"
+                        />
+                        <div class="pointer-events-none absolute -bottom-20 -right-16 h-72 w-72 rounded-full bg-white/10 blur-2xl" />
 
-                        <div class="relative z-10 flex flex-col items-center text-center space-y-8 w-full max-w-md mx-auto">
+                        <div class="relative z-10 flex flex-col items-center text-center space-y-6 w-full max-w-md mx-auto">
                             <!-- School Branding -->
-                            <SchoolBrandHeader :school="school" class="w-full" />
+                            <SchoolBrandHeader :school="school" class="w-full [&_*]:text-primary-foreground" />
 
-                            <!-- Dynamic Illustration -->
-                            <div class="relative w-full aspect-square max-w-[320px] animate-in fade-in zoom-in-95 duration-700 delay-150 ease-out">
+                            <h1 class="text-3xl font-bold tracking-tight animate-in fade-in slide-in-from-bottom-2 duration-500 delay-100 ease-out">
+                                {{ copy.heading }}
+                            </h1>
+
+                            <!-- Dynamic Illustration + floating icon badges -->
+                            <div class="relative w-full aspect-square max-w-[300px] animate-in fade-in zoom-in-95 duration-700 delay-150 ease-out">
                                 <AuthIllustration :type="props.illustration" class="w-full h-full" />
+
+                                <div
+                                    v-for="(icon, index) in badges"
+                                    :key="icon"
+                                    :class="['absolute flex h-11 w-11 items-center justify-center rounded-xl bg-white/90 dark:bg-card/90 shadow-lg backdrop-blur animate-in fade-in zoom-in-50 duration-500 ease-out', badgePositions[index]]"
+                                    :style="{ animationDelay: `${300 + index * 120}ms` }"
+                                >
+                                    <Icon :icon="icon" class="h-5 w-5 text-primary" />
+                                </div>
                             </div>
 
                             <!-- Illustration Description -->
-                            <p class="text-muted-foreground text-lg font-medium">
-                                {{ illustrationDescriptions[props.illustration] }}
+                            <p class="text-primary-foreground/85 text-base font-medium">
+                                {{ copy.description }}
                             </p>
                         </div>
                     </div>
 
                     <!-- Right Panel: Form -->
-                    <div class="flex flex-col justify-center p-6 sm:p-8 lg:p-12 bg-card/35">
+                    <div class="flex flex-col justify-center p-6 sm:p-8 lg:p-12 bg-card">
                         <div class="max-w-md mx-auto w-full space-y-6 animate-in fade-in slide-in-from-bottom-2 duration-500 delay-100 ease-out">
                             <!-- Mobile Branding (hidden on lg where left panel takes over) -->
                             <SchoolBrandHeader :school="school" variant="form-header" class="lg:hidden" />
@@ -100,3 +135,11 @@ const illustrationDescriptions: Record<IllustrationType, string> = {
         </div>
     </div>
 </template>
+
+<style scoped>
+@media (min-width: 1024px) {
+    .auth-diagonal-panel {
+        clip-path: polygon(0 0, 100% 0, 82% 100%, 0 100%);
+    }
+}
+</style>

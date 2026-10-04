@@ -5,6 +5,7 @@ namespace App\Services;
 use App\Models\School;
 use App\Models\Section;
 use App\Models\Student;
+use App\Models\StudentDocumentType;
 use App\Repositories\StudentRepository;
 use App\Services\Student\StudentEnrollmentService;
 use App\Services\Student\StudentExportService;
@@ -258,6 +259,8 @@ class StudentService
             'enrollmentRecords.section',
             'enrollmentRecords.campus',
             'enrollmentRecords.previousEnrollment',
+            'documents.documentType',
+            'documents.uploadedBy',
         ]);
 
         $lookupData = $this->repository->getLookupData();
@@ -303,11 +306,21 @@ class StudentService
                     'admission_date' => $enrollment->admission_date?->format('Y-m-d'),
                     'leave_date' => $enrollment->leave_date?->format('Y-m-d'),
                 ])->toArray(),
+            'documents' => $student->documents->map(fn ($document) => [
+                'id' => $document->id,
+                'student_document_type_id' => $document->student_document_type_id,
+                'documentType' => $document->documentType ? ['id' => $document->documentType->id, 'name' => $document->documentType->name] : null,
+                'issue_date' => $document->issue_date?->format('Y-m-d'),
+                'expiry_date' => $document->expiry_date?->format('Y-m-d'),
+                'path' => $document->path,
+                'uploadedBy' => $document->uploadedBy ? ['name' => $document->uploadedBy->name] : null,
+            ])->values()->toArray(),
         ];
 
         return [
             'student' => $studentData,
             'relations' => $lookupData['relations'],
+            'documentTypes' => StudentDocumentType::where('is_active', true)->orderBy('name')->get(['id', 'name', 'is_required']),
         ];
     }
 
