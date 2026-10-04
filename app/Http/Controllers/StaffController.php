@@ -2,6 +2,9 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Requests\Staff\GiveStaffAdvanceRequest;
+use App\Http\Requests\Staff\PayPayrollItemRequest;
+use App\Http\Requests\Staff\ReturnStaffAdvanceRequest;
 use App\Models\Campus;
 use App\Models\Month;
 use App\Models\PayrollRun;
@@ -11,6 +14,7 @@ use App\Models\Staff\StaffAttendance;
 use App\Models\Staff\StaffDocument;
 use App\Models\Staff\StaffDocumentType;
 use App\Models\Staff\StaffLeave;
+use App\Models\StaffAdvance;
 use App\Models\StaffDepartment;
 use App\Models\StaffDesignation;
 use App\Models\StaffProfile;
@@ -398,22 +402,76 @@ class StaffController extends Controller
         ]);
     }
 
-    public function payPayrollItem(Request $request, PayrollRunItem $payrollRunItem)
+    public function payPayrollItem(PayPayrollItemRequest $request, PayrollRunItem $payrollRunItem)
     {
         // Releasing money is not the same act as working the figures out.
         Gate::authorize('approvePayroll', StaffProfile::class);
 
-        $data = $request->validate([
-            'payment_method' => 'required|string|max:50',
-            'reference_no' => 'nullable|string|max:150',
-        ]);
-
-        $payrollItem = $this->payroll->pay($payrollRunItem, $data);
+        $payrollItem = $this->payroll->pay($payrollRunItem, $request->validated());
 
         return response()->json([
             'success' => true,
-            'message' => 'Salary payment marked successfully.',
+            'message' => $payrollItem->status === 'paid'
+                ? 'Salary payment marked successfully.'
+                : 'Partial payment recorded.',
             'payrollItem' => $payrollItem,
+        ]);
+    }
+
+    /**
+     * Disburses a salary advance for a staff member — a lump sum now,
+     * outside any specific payroll item.
+     */
+    public function giveAdvance(GiveStaffAdvanceRequest $request)
+    {
+        $staff = StaffProfile::findOrFail($request->validated('staff_profile_id'));
+        Gate::authorize('approvePayroll', StaffProfile::class);
+        Gate::authorize('view', $staff);
+
+        $advance = $this->payroll->giveAdvance($request->validated(), auth()->id());
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Advance disbursed successfully.',
+            'advance' => $advance,
+        ]);
+    }
+
+    /**
+     * Lists a staff member's advance history — used by both the payroll
+     * screen and their own profile page.
+     */
+    public function advancesForStaff(StaffProfile $staffProfile)
+    {
+        Gate::authorize('view', $staffProfile);
+
+        $advances = $staffProfile->advances()
+            ->with('deductions')
+            ->latest('disbursed_date')
+            ->get();
+
+        return response()->json([
+            'advances' => $advances,
+        ]);
+    }
+
+    /**
+     * Early close: paid back directly, or waived. Stops future deductions.
+     */
+    public function returnAdvance(ReturnStaffAdvanceRequest $request, StaffAdvance $staffAdvance)
+    {
+        Gate::authorize('approvePayroll', StaffProfile::class);
+
+        $advance = $this->payroll->returnAdvance($staffAdvance, $request->validated('status'));
+
+        if ($request->filled('notes')) {
+            $advance->update(['notes' => $request->validated('notes')]);
+        }
+
+        return response()->json([
+            'success' => true,
+            'message' => 'Advance marked '.$advance->status.'.',
+            'advance' => $advance,
         ]);
     }
 

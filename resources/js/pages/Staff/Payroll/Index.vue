@@ -3,6 +3,7 @@ import { Head, router } from '@inertiajs/vue3';
 import axios from 'axios';
 import { computed, reactive, ref } from 'vue';
 import { route } from 'ziggy-js';
+import { useYearOptions } from '@/composables/useYearOptions';
 import AppLayout from '@/layouts/AppLayout.vue';
 import Icon from '@/components/Icon.vue';
 import { Button } from '@/components/ui/button';
@@ -19,6 +20,7 @@ import SearchableSelect from '@/components/ui/searchable-select/SearchableSelect
 import { alert } from '@/utils';
 import RowAction from '@/components/tables/RowAction.vue';
 import RowActions from '@/components/tables/RowActions.vue';
+import GiveAdvanceDialog from '@/components/Staff/GiveAdvanceDialog.vue';
 import type { BreadcrumbItem } from '@/types';
 
 interface Campus {
@@ -39,6 +41,8 @@ interface PayrollItem {
     allowance_amount: number | string;
     deduction_amount: number | string;
     net_salary: number | string;
+    amount_paid?: number | string;
+    advance_deduction_amount?: number | string;
     status: string;
     payment_method?: string | null;
     reference_no?: string | null;
@@ -81,6 +85,8 @@ const selectClass = 'w-full rounded-md border border-border bg-card px-3 py-2 te
 const expandedRunId = ref<number | null>(null);
 const campusFilter = ref('');
 
+const yearOptions = useYearOptions();
+
 const payrollForm = reactive({
     campus_id: '',
     payroll_month_id: props.months.find((m) => m.month_number === new Date().getMonth() + 1)?.id?.toString() ?? '',
@@ -120,13 +126,20 @@ const payDialog = reactive({
     item: null as PayrollItem | null,
     payment_method: 'bank',
     reference_no: '',
+    amount: '',
 });
+
+const amountDue = (item: PayrollItem) => {
+    const payable = Number(item.net_salary || 0) - Number(item.advance_deduction_amount || 0);
+    return Math.max(payable - Number(item.amount_paid || 0), 0);
+};
 
 const openPayDialog = (item: PayrollItem) => {
     if (item.status === 'paid') return;
     payDialog.item = item;
     payDialog.payment_method = item.payment_method || 'bank';
     payDialog.reference_no = item.reference_no || '';
+    payDialog.amount = String(amountDue(item));
     payDialog.open = true;
 };
 
@@ -139,13 +152,26 @@ const confirmPayrollPaid = async () => {
             payment_method: payDialog.payment_method,
             // Cheque/transaction reference number: always optional, shown for every payment method.
             reference_no: payDialog.reference_no || null,
+            amount: payDialog.amount || null,
         });
-        alert.success('Salary payment marked successfully.');
+        alert.success('Salary payment recorded.');
         payDialog.open = false;
         router.reload({ only: ['payrollRuns'] });
     } catch (error: any) {
-        alert.error(error?.response?.data?.message || 'Failed to mark salary as paid.');
+        alert.error(error?.response?.data?.message || 'Failed to record salary payment.');
     }
+};
+
+const showAdvanceDialog = ref(false);
+const advanceStaffId = ref<number | null>(null);
+
+const openAdvanceDialog = (staffProfileId: number) => {
+    advanceStaffId.value = staffProfileId;
+    showAdvanceDialog.value = true;
+};
+
+const onAdvanceGiven = () => {
+    router.reload({ only: ['payrollRuns'] });
 };
 
 </script>
@@ -172,7 +198,9 @@ const confirmPayrollPaid = async () => {
                     </div>
                     <div>
                         <label class="mb-2 block text-sm font-medium text-muted-foreground">Year</label>
-                        <Input v-model="payrollForm.payroll_year" type="number" min="2020" max="2100" />
+                        <select v-model.number="payrollForm.payroll_year" class="h-10 w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground">
+                            <option v-for="y in yearOptions" :key="y" :value="y">{{ y }}</option>
+                        </select>
                     </div>
                     <div class="xl:col-span-2">
                         <label class="mb-2 block text-sm font-medium text-muted-foreground">Title</label>
@@ -249,6 +277,12 @@ const confirmPayrollPaid = async () => {
                                                 :disabled="item.status === 'paid'"
                                                 @click="openPayDialog(item)"
                                             />
+                                            <RowAction
+                                                kind="custom"
+                                                icon="banknote"
+                                                label="Give Advance"
+                                                @click="openAdvanceDialog(item.staff_profile_id)"
+                                            />
                                         </RowActions>
                                     </td>
                                 </tr>
@@ -282,15 +316,26 @@ const confirmPayrollPaid = async () => {
                         </select>
                     </div>
                     <div class="space-y-2">
+                        <Label for="pay-amount">Amount</Label>
+                        <Input id="pay-amount" v-model="payDialog.amount" type="number" min="0.01" step="0.01" placeholder="Amount to pay now" />
+                        <p class="text-xs text-muted-foreground">Leave as-is to pay in full, or lower it to record a partial payment.</p>
+                    </div>
+                    <div class="space-y-2">
                         <Label for="pay-reference">Cheque / Reference Number <span class="text-muted-foreground font-normal">(optional)</span></Label>
                         <Input id="pay-reference" v-model="payDialog.reference_no" placeholder="Enter cheque or reference number" />
                     </div>
                 </div>
                 <DialogFooter>
                     <Button variant="outline" @click="payDialog.open = false">Cancel</Button>
-                    <Button @click="confirmPayrollPaid">Mark Paid</Button>
+                    <Button @click="confirmPayrollPaid">Record Payment</Button>
                 </DialogFooter>
             </DialogContent>
         </Dialog>
+
+        <GiveAdvanceDialog
+            v-model:open="showAdvanceDialog"
+            :staff-profile-id="advanceStaffId"
+            @given="onAdvanceGiven"
+        />
     </AppLayout>
 </template>

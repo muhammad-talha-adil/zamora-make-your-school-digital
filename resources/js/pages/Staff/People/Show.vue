@@ -14,6 +14,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { alert } from '@/utils';
+import GiveAdvanceDialog from '@/components/Staff/GiveAdvanceDialog.vue';
 import type { BreadcrumbItem } from '@/types';
 
 interface Lookup {
@@ -126,6 +127,7 @@ interface Props {
         markAttendance: boolean;
         applyForLeave: boolean;
         decideLeave: boolean;
+        manageAdvances: boolean;
     };
 }
 
@@ -138,7 +140,7 @@ const breadcrumbs = computed(() => [
 
 const selectClass = 'w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground';
 
-type TabKey = 'personal' | 'attendance' | 'leave' | 'salary';
+type TabKey = 'personal' | 'attendance' | 'leave' | 'salary' | 'advances';
 const activeTab = ref<TabKey>('personal');
 
 const tabs: { key: TabKey; label: string; icon: any; show: boolean }[] = [
@@ -146,6 +148,7 @@ const tabs: { key: TabKey; label: string; icon: any; show: boolean }[] = [
     { key: 'attendance', label: 'Attendance', icon: 'calendar-check', show: props.can.viewAttendance },
     { key: 'leave', label: 'Leave', icon: 'calendar-x', show: props.can.viewAttendance || props.can.applyForLeave },
     { key: 'salary', label: 'Salary', icon: 'wallet', show: props.can.viewSalary },
+    { key: 'advances', label: 'Advances', icon: 'banknote', show: props.can.viewSalary },
 ];
 
 const formatMoney = (amount: number | string | null | undefined) => {
@@ -485,6 +488,53 @@ const endComponent = async (component: SalaryComponent) => {
     loadSalary();
 };
 
+/* --------------------------------------------------------------- advances */
+
+interface AdvanceDeduction {
+    id: number;
+    amount: number | string;
+    deducted_on: string;
+    type: string;
+}
+
+interface Advance {
+    id: number;
+    amount: number | string;
+    disbursed_date: string;
+    monthly_deduction_amount?: number | string | null;
+    balance_remaining: number | string;
+    status: string;
+    notes?: string | null;
+    deductions?: AdvanceDeduction[];
+}
+
+const advances = ref<Advance[]>([]);
+const advancesLoaded = ref(false);
+const showAdvanceDialog = ref(false);
+
+const loadAdvances = async () => {
+    const response = await axios.get(route('staff.advances.index', props.staff.id));
+    advances.value = response.data.advances;
+    advancesLoaded.value = true;
+};
+
+const returnAdvance = async (advance: Advance, status: 'returned' | 'waived') => {
+    const result = await alert.confirmWithPassword(
+        status === 'returned' ? 'Mark this advance as paid back directly?' : 'Waive the remaining balance of this advance?',
+        status === 'returned' ? 'Return Advance' : 'Waive Advance',
+        status === 'returned' ? 'Mark Returned' : 'Waive',
+    );
+    if (!result.isConfirmed) return;
+
+    try {
+        await axios.patch(route('staff.advances.return', advance.id), { status, password: result.password });
+        alert.success('Advance updated.');
+        loadAdvances();
+    } catch (error: any) {
+        alert.error(error?.response?.data?.errors?.password?.[0] || error?.response?.data?.message || 'Failed to update the advance.');
+    }
+};
+
 const downloadPayslip = () => {
     window.open(route('staff.salary.payslip', props.staff.id), '_blank');
 };
@@ -499,6 +549,8 @@ const switchTab = (tab: TabKey) => {
         loadLeave();
     } else if (tab === 'salary' && !salaryLoaded.value && props.can.viewSalary) {
         loadSalary();
+    } else if (tab === 'advances' && !advancesLoaded.value && props.can.viewSalary) {
+        loadAdvances();
     }
 };
 
@@ -1057,6 +1109,59 @@ const activeJobsCount = computed(() => props.jobs.length);
                     </table>
                 </div>
             </div>
+
+            <!-- Advances & Payments -->
+            <div v-if="activeTab === 'advances'" class="space-y-4">
+                <div class="flex items-center justify-between">
+                    <h2 class="text-lg font-semibold text-foreground">Advances & Payments</h2>
+                    <Button v-if="props.can.manageAdvances" size="sm" @click="showAdvanceDialog = true">
+                        <Icon icon="banknote" class="h-4 w-4" />
+                        Give Advance
+                    </Button>
+                </div>
+
+                <div class="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
+                    <table class="min-w-full divide-y divide-border">
+                        <thead class="bg-muted">
+                            <tr>
+                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase text-muted-foreground">Disbursed</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase text-muted-foreground">Amount</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase text-muted-foreground">Monthly Deduction</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase text-muted-foreground">Balance</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase text-muted-foreground">Status</th>
+                                <th class="px-4 py-3 text-right text-xs font-semibold uppercase text-muted-foreground">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-border">
+                            <tr v-for="advance in advances" :key="advance.id">
+                                <td class="px-4 py-3 text-sm text-muted-foreground">{{ formatDate(advance.disbursed_date) }}</td>
+                                <td class="px-4 py-3 text-sm text-foreground">{{ formatMoney(advance.amount) }}</td>
+                                <td class="px-4 py-3 text-sm text-muted-foreground">{{ advance.monthly_deduction_amount ? formatMoney(advance.monthly_deduction_amount) : 'Full next payroll' }}</td>
+                                <td class="px-4 py-3 text-sm font-medium text-primary">{{ formatMoney(advance.balance_remaining) }}</td>
+                                <td class="px-4 py-3">
+                                    <span
+                                        :class="advance.status === 'active' ? 'bg-warning/10 text-warning' : 'bg-success/10 text-success'"
+                                        class="inline-flex rounded-full px-2.5 py-1 text-xs font-medium uppercase"
+                                    >{{ advance.status }}</span>
+                                </td>
+                                <td class="px-4 py-3 text-right">
+                                    <template v-if="props.can.manageAdvances && advance.status === 'active'">
+                                        <button type="button" class="text-xs text-primary hover:underline" @click="returnAdvance(advance, 'returned')">Mark Returned</button>
+                                        <button type="button" class="ml-2 text-xs text-destructive hover:underline" @click="returnAdvance(advance, 'waived')">Waive</button>
+                                    </template>
+                                </td>
+                            </tr>
+                            <tr v-if="advances.length === 0"><td colspan="6" class="px-4 py-6 text-center text-sm text-muted-foreground">No advances given yet.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
         </div>
+
+        <GiveAdvanceDialog
+            v-model:open="showAdvanceDialog"
+            :staff-profile-id="props.staff.id"
+            @given="loadAdvances"
+        />
     </AppLayout>
 </template>

@@ -12,6 +12,7 @@ import Icon from '@/components/Icon.vue';
 import { alert } from '@/utils';
 import { useCascadingAcademicSelect } from '@/composables/useCascadingAcademicSelect';
 import SearchableSelect from '@/components/ui/searchable-select/SearchableSelect.vue';
+import { useYearOptions } from '@/composables/useYearOptions';
 
 interface Session {
     id: number;
@@ -257,7 +258,7 @@ watch(() => form.class_id, () => {
 });
 
 // Available years (2000 to current year + 1)
-const years = Array.from({ length: (currentYear + 1) - 2000 + 1 }, (_, i) => 2000 + i);
+const years = useYearOptions();
 
 // Auto-select current year
 form.year = currentYear;

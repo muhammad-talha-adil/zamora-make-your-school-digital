@@ -16,6 +16,7 @@ import { tableActionButtonClass } from '@/utils/table-actions';
 import RowAction from '@/components/tables/RowAction.vue';
 import RowActions from '@/components/tables/RowActions.vue';
 import SearchableSelect from '@/components/ui/searchable-select/SearchableSelect.vue';
+import { useYearOptions } from '@/composables/useYearOptions';
 
 interface FeeVoucher {
     id: number;
@@ -82,7 +83,7 @@ const breadcrumbItems: BreadcrumbItem[] = [
 const currentYear = new Date().getFullYear();
 
 // Available years (2000 to current year + 1)
-const years = Array.from({ length: (currentYear + 1) - 2000 + 1 }, (_, i) => 2000 + i);
+const years = useYearOptions();
 
 const filters = reactive({
     campus_id: props.filters?.campus_id || '',

@@ -5,6 +5,8 @@ namespace App\Services\Staff;
 use App\Models\Month;
 use App\Models\PayrollRun;
 use App\Models\PayrollRunItem;
+use App\Models\StaffAdvance;
+use App\Models\StaffAdvanceDeduction;
 use App\Models\StaffProfile;
 use App\Services\Attendance\WorkingDayCalculator;
 use App\Services\Finance\UnifiedAccountingService;
@@ -75,7 +77,7 @@ class StaffPayrollService
             foreach ($staffProfiles as $profile) {
                 $figures = $this->figuresFor($profile, $from, $to);
 
-                $run->items()->create([
+                $item = $run->items()->create([
                     'staff_profile_id' => $profile->id,
                     'gross_salary' => $figures['basic'],
                     'allowance_amount' => $figures['allowance'],
@@ -87,6 +89,8 @@ class StaffPayrollService
                         ? "Includes deduction for {$figures['unpaid_days']} unpaid leave day(s)."
                         : null,
                 ]);
+
+                $this->applyAdvanceDeduction($item, $to);
 
                 $totals['gross'] += $figures['gross'];
                 $totals['deductions'] += $figures['deduction'];
@@ -108,18 +112,32 @@ class StaffPayrollService
     }
 
     /**
-     * Releases one person's pay.
+     * Releases one person's pay — in full, or a partial instalment.
      *
-     * @param  array{payment_method: string, reference_no?: string|null}  $data
+     * `amount` defaults to whatever is still due, so the existing "mark
+     * paid" callers that never sent one keep settling the item in full.
+     *
+     * @param  array{payment_method: string, reference_no?: string|null, amount?: float|string|null}  $data
      */
     public function pay(PayrollRunItem $item, array $data): PayrollRunItem
     {
-        $item->update([
-            'status' => 'paid',
-            'payment_method' => $data['payment_method'],
-            'reference_no' => $data['reference_no'] ?? null,
-            'paid_at' => now(),
-        ]);
+        $due = $item->amountDue();
+        $amount = isset($data['amount']) && $data['amount'] !== null && $data['amount'] !== ''
+            ? round((float) $data['amount'], 2)
+            : $due;
+
+        $newPaid = round((float) $item->amount_paid + $amount, 2);
+        $payable = round((float) $item->net_salary - (float) $item->advance_deduction_amount, 2);
+
+        DB::transaction(function () use ($item, $data, $newPaid, $payable) {
+            $item->update([
+                'amount_paid' => $newPaid,
+                'status' => $newPaid >= $payable ? 'paid' : 'partial',
+                'payment_method' => $data['payment_method'],
+                'reference_no' => $data['reference_no'] ?? null,
+                'paid_at' => now(),
+            ]);
+        });
 
         $this->accounting->postPayrollPaymentJournal($item->fresh(['payrollRun', 'staffProfile.user']));
 
@@ -130,6 +148,90 @@ class StaffPayrollService
         }
 
         return $item->fresh(['staffProfile.user']);
+    }
+
+    /**
+     * Disburses an advance: a lump sum now, outside any payroll item.
+     *
+     * @param  array{staff_profile_id: int, amount: float, disbursed_date: string, monthly_deduction_amount?: float|null, notes?: string|null}  $data
+     */
+    public function giveAdvance(array $data, ?int $actorId = null): StaffAdvance
+    {
+        return StaffAdvance::create([
+            'staff_profile_id' => $data['staff_profile_id'],
+            'amount' => $data['amount'],
+            'disbursed_date' => $data['disbursed_date'],
+            'monthly_deduction_amount' => $data['monthly_deduction_amount'] ?? null,
+            'balance_remaining' => $data['amount'],
+            'status' => 'active',
+            'notes' => $data['notes'] ?? null,
+            'given_by' => $actorId,
+        ]);
+    }
+
+    /**
+     * Early close: the staff member paid it back directly, or it is waived.
+     * Either way, no further payroll runs will deduct against it.
+     */
+    public function returnAdvance(StaffAdvance $advance, string $status = 'returned'): StaffAdvance
+    {
+        $advance->update([
+            'status' => $status,
+            'balance_remaining' => 0,
+            'settled_at' => now(),
+        ]);
+
+        return $advance->fresh();
+    }
+
+    /**
+     * Applies the staff member's active advance (if any) against this
+     * month's item, reducing what is payable and the advance's balance.
+     *
+     * A fixed `monthly_deduction_amount` is capped at whatever remains; a
+     * plan with none set deducts the whole remaining balance in one go.
+     */
+    private function applyAdvanceDeduction(PayrollRunItem $item, Carbon $monthEnd): void
+    {
+        $advance = StaffAdvance::where('staff_profile_id', $item->staff_profile_id)
+            ->where('status', 'active')
+            ->where('balance_remaining', '>', 0)
+            ->orderBy('disbursed_date')
+            ->first();
+
+        if (! $advance) {
+            return;
+        }
+
+        $planned = $advance->monthly_deduction_amount !== null
+            ? (float) $advance->monthly_deduction_amount
+            : (float) $advance->balance_remaining;
+
+        $installment = min($planned, (float) $advance->balance_remaining, (float) $item->net_salary);
+
+        if ($installment <= 0) {
+            return;
+        }
+
+        DB::transaction(function () use ($item, $advance, $installment, $monthEnd) {
+            $item->update(['advance_deduction_amount' => $installment]);
+
+            $advance->update([
+                'balance_remaining' => round((float) $advance->balance_remaining - $installment, 2),
+            ]);
+
+            if ((float) $advance->balance_remaining <= 0) {
+                $advance->update(['status' => 'settled', 'settled_at' => now()]);
+            }
+
+            StaffAdvanceDeduction::create([
+                'staff_advance_id' => $advance->id,
+                'payroll_run_item_id' => $item->id,
+                'amount' => $installment,
+                'deducted_on' => $monthEnd->toDateString(),
+                'type' => 'auto',
+            ]);
+        });
     }
 
     /**

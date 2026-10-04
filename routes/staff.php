@@ -94,6 +94,20 @@ Route::prefix('staff')->name('staff.')->middleware($middleware)->group(function 
     Route::post('/payroll/items/{payrollRunItem}/pay', [StaffController::class, 'payPayrollItem'])
         ->name('payroll.items.pay')
         ->middleware('permission:staff.payroll.approve');
+
+    // -------------------------------------------------------------- advances
+    Route::get('/members/{staffProfile}/advances', [StaffController::class, 'advancesForStaff'])
+        ->name('advances.index')
+        ->middleware('permission:staff.payroll.run|staff.view.own');
+    Route::post('/advances', [StaffController::class, 'giveAdvance'])
+        ->name('advances.store')
+        ->middleware('permission:staff.payroll.approve');
+    // Writing a balance off early is money leaving the books without a
+    // payroll item behind it — the acting user's password is re-verified
+    // server-side first, same as any other destructive action.
+    Route::patch('/advances/{staffAdvance}/return', [StaffController::class, 'returnAdvance'])
+        ->name('advances.return')
+        ->middleware(['permission:staff.payroll.approve', 'password.confirm.server']);
     // ================================================================
     // Phase 3 — the person, and their jobs
     // ================================================================

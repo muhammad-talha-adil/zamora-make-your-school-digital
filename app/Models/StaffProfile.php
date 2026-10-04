@@ -285,6 +285,11 @@ class StaffProfile extends Model
         return $this->hasMany(PayrollRunItem::class);
     }
 
+    public function advances(): HasMany
+    {
+        return $this->hasMany(StaffAdvance::class);
+    }
+
     /**
      * What the school quotes as the salary.
      *

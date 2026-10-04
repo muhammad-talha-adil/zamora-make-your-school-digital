@@ -192,6 +192,7 @@ class StaffProfileController extends Controller
                 'markAttendance' => $request->user()?->can('markAttendance', StaffProfile::class) ?? false,
                 'applyForLeave' => $request->user()?->can('applyForLeave', $staffProfile) ?? false,
                 'decideLeave' => $request->user()?->can('decideLeave', $staffProfile) ?? false,
+                'manageAdvances' => $request->user()?->can('approvePayroll', StaffProfile::class) ?? false,
             ],
         ]);
     }
