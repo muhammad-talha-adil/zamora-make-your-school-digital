@@ -8,6 +8,7 @@ use App\Models\InventoryItem;
 use App\Models\User;
 use Illuminate\Database\Seeder;
 
+// Dev/demo data only — not part of the default production seed list.
 class InventoryAdjustmentSeeder extends Seeder
 {
     /**

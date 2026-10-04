@@ -11,6 +11,7 @@ use App\Services\Finance\UnifiedAccountingService;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 
+// Dev/demo data only — not part of the default production seed list.
 class PayrollSeeder extends Seeder
 {
     public function run(): void

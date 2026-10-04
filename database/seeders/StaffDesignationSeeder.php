@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Models\StaffDesignation;
 use Illuminate\Database\Seeder;
 
+// Dev/demo data only — not part of the default production seed list.
 class StaffDesignationSeeder extends Seeder
 {
     public function run(): void
@@ -19,6 +20,7 @@ class StaffDesignationSeeder extends Seeder
             ['name' => 'Clerk', 'description' => 'Office and records support', 'role' => 'clerk'],
             ['name' => 'Head Teacher', 'description' => 'Senior teacher who also verifies marks and manages the timetable', 'role' => 'head_teacher'],
             ['name' => 'Support Staff', 'description' => 'General facility and cleaning support', 'role' => 'maid'],
+            ['name' => 'Discontinued Role', 'description' => 'No longer hired for', 'role' => null, 'is_active' => false],
         ];
 
         foreach ($designations as $designation) {

@@ -9,6 +9,7 @@ use App\Models\SchoolClass;
 use App\Models\Session;
 use Illuminate\Database\Seeder;
 
+// Dev/demo data only — not part of the default production seed list.
 class FineRuleSeeder extends Seeder
 {
     /**

@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Models\SchoolClass;
 use Illuminate\Database\Seeder;
 
+// Dev/demo data only — not part of the default production seed list.
 class SchoolClassSeeder extends Seeder
 {
     /**
@@ -28,6 +29,7 @@ class SchoolClassSeeder extends Seeder
             ['name' => 'Eight', 'code' => 'CLS-011', 'description' => 'Class Eight', 'is_active' => true],
             ['name' => 'Nine', 'code' => 'CLS-012', 'description' => 'Class Nine', 'is_active' => true],
             ['name' => 'Ten',  'code' => 'CLS-013', 'description' => 'Class Ten', 'is_active' => true],
+            ['name' => 'Eleven', 'code' => 'CLS-014', 'description' => 'Class Eleven', 'is_active' => false],
         ];
 
         foreach ($classes as $class) {
@@ -36,6 +38,13 @@ class SchoolClassSeeder extends Seeder
                 $class
             );
         }
+
+        // A soft-deleted class, to exercise reusing a soft-deleted name.
+        $retired = SchoolClass::firstOrCreate(
+            ['name' => 'Twelve'],
+            ['code' => 'CLS-015', 'description' => 'Discontinued class', 'is_active' => false]
+        );
+        $retired->delete();
 
         $this->command->info('School classes seeded successfully!');
     }

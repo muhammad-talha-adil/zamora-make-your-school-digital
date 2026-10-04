@@ -8,6 +8,7 @@ use App\Models\AttendanceStudent;
 use App\Models\Student;
 use Illuminate\Database\Seeder;
 
+// Dev/demo data only — not part of the default production seed list.
 class AttendanceSeeder extends Seeder
 {
     /**

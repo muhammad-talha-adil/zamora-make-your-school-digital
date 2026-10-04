@@ -20,6 +20,7 @@ use Illuminate\Database\Seeder;
  * as every other seeded account) — reusing all their real generated data for
  * free instead of building a parallel fixture from scratch.
  */
+// Dev/demo data only — not part of the default production seed list.
 class TestLoginFixturesSeeder extends Seeder
 {
     public function run(): void

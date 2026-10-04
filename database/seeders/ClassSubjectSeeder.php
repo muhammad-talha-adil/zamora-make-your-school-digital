@@ -7,6 +7,7 @@ use App\Models\Subject;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 
+// Dev/demo data only — not part of the default production seed list.
 class ClassSubjectSeeder extends Seeder
 {
     /**

@@ -6,6 +6,7 @@ use App\Models\SchoolClass;
 use App\Models\Section;
 use Illuminate\Database\Seeder;
 
+// Dev/demo data only — not part of the default production seed list.
 class SectionSeeder extends Seeder
 {
     /**

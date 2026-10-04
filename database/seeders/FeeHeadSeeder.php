@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Models\Fee\FeeHead;
 use Illuminate\Database\Seeder;
 
+// Dev/demo data only — not part of the default production seed list.
 class FeeHeadSeeder extends Seeder
 {
     /**

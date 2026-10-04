@@ -11,6 +11,7 @@ use App\Models\StudentInventory;
 use App\Models\StudentInventoryItem;
 use Illuminate\Database\Seeder;
 
+// Dev/demo data only — not part of the default production seed list.
 class StudentInventorySeeder extends Seeder
 {
     /**

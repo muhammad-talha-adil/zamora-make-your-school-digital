@@ -7,6 +7,7 @@ use App\Models\InventoryItem;
 use App\Models\InventoryStock;
 use Illuminate\Database\Seeder;
 
+// Dev/demo data only — not part of the default production seed list.
 class InventoryStockSeeder extends Seeder
 {
     /**

@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Models\StaffDepartment;
 use Illuminate\Database\Seeder;
 
+// Dev/demo data only — not part of the default production seed list.
 class StaffDepartmentSeeder extends Seeder
 {
     public function run(): void
@@ -15,6 +16,7 @@ class StaffDepartmentSeeder extends Seeder
             ['name' => 'Academics', 'description' => 'Teaching and academic coordination'],
             ['name' => 'Transport', 'description' => 'Transport routes, vehicles, and drivers'],
             ['name' => 'Support', 'description' => 'Reception, office support, and facility operations'],
+            ['name' => 'Discontinued Department', 'description' => 'No longer in use', 'is_active' => false],
         ];
 
         foreach ($departments as $department) {

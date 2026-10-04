@@ -9,6 +9,7 @@ use App\Models\PurchaseItem;
 use App\Models\Supplier;
 use Illuminate\Database\Seeder;
 
+// Dev/demo data only — not part of the default production seed list.
 class PurchaseSeeder extends Seeder
 {
     /**

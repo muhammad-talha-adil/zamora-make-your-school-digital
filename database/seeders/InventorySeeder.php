@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use Illuminate\Database\Seeder;
 
+// Dev/demo data only — not part of the default production seed list.
 class InventorySeeder extends Seeder
 {
     /**

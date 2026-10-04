@@ -15,6 +15,7 @@ use App\Services\Finance\StudentBillingService;
 use App\Services\Finance\UnifiedAccountingService;
 use Illuminate\Database\Seeder;
 
+// Dev/demo data only — not part of the default production seed list.
 class TransportSeeder extends Seeder
 {
     public function run(): void

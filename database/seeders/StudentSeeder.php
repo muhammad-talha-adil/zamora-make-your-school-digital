@@ -11,16 +11,20 @@ use App\Models\Student;
 use App\Models\StudentStatus;
 use App\Models\User;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Hash;
 
+// Dev/demo data only — not part of the default production seed list.
 class StudentSeeder extends Seeder
 {
     /**
      * Run the database seeds.
      *
-     * Generates 25+ students per class per section per campus.
-     * Students are linked to campus, class, and section via enrollment records.
-     * Uses Faker with Pakistani locale for realistic data.
+     * Generates a moderate bulk of ~30-40 students spread across a handful
+     * of classes/sections/campuses (not hundreds), with enrollment records.
+     * Uses Faker-style Pakistani names for realistic data. A few students
+     * get a "Left" status, and one is soft-deleted, to exercise filters and
+     * reusing a soft-deleted admission number.
      */
     public function run(): void
     {
@@ -28,7 +32,8 @@ class StudentSeeder extends Seeder
         $maleGender = Gender::where('name', 'Male')->first();
         $femaleGender = Gender::where('name', 'Female')->first();
         $activeStatus = StudentStatus::where('name', 'Active')->first();
-        $campuses = Campus::where('is_active', true)->get();
+        $leftStatus = StudentStatus::where('name', 'Left')->first();
+        $campuses = Campus::where('is_active', true)->take(3)->get();
         $currentSession = Session::where('is_active', true)->first();
 
         if (! $maleGender || ! $femaleGender || ! $activeStatus || $campuses->isEmpty() || ! $currentSession) {
@@ -37,7 +42,9 @@ class StudentSeeder extends Seeder
             return;
         }
 
-        $classes = SchoolClass::where('is_active', true)->get();
+        // A handful of classes is enough demo bulk; seeding every class
+        // times every section times every campus produced hundreds of rows.
+        $classes = SchoolClass::where('is_active', true)->orderBy('level')->take(3)->get();
 
         if ($classes->isEmpty()) {
             $this->command->warn('No classes found. Skipping student seeding.');
@@ -47,12 +54,16 @@ class StudentSeeder extends Seeder
 
         // Student counter for unique admission numbers
         $studentCounter = Student::max('id') ?? 0;
-        $studentsPerSection = 10; // Minimum students per section
+        $studentsPerSection = 3;
 
         $this->command->info('Starting student seeding...');
 
+        // One deterministic, campus-scoped "sample" student per campus with a
+        // known email, so a demo login list can reference a real account.
+        $this->seedSampleStudentPerCampus($campuses, $classes->first(), $currentSession, $maleGender, $activeStatus);
+
         foreach ($classes as $class) {
-            $sections = Section::where('class_id', $class->id)->where('is_active', true)->get();
+            $sections = Section::where('class_id', $class->id)->where('is_active', true)->take(1)->get();
 
             if ($sections->isEmpty()) {
                 $this->command->warn("No sections found for class {$class->name}. Skipping.");
@@ -81,7 +92,139 @@ class StudentSeeder extends Seeder
             $this->command->info("Completed seeding for class {$class->name}");
         }
 
+        $this->seedLeftAndRetiredStudents($classes->first(), $campuses->first(), $currentSession, $maleGender, $activeStatus, $leftStatus);
+
         $this->command->info('Student seeding completed!');
+    }
+
+    /**
+     * One deterministic student per campus (e.g. `student.campus1@school.com`)
+     * so a demo login list can point at a real, campus-scoped account.
+     */
+    private function seedSampleStudentPerCampus(
+        Collection $campuses,
+        SchoolClass $class,
+        Session $session,
+        Gender $gender,
+        StudentStatus $activeStatus
+    ): void {
+        $sections = Section::where('class_id', $class->id)->where('is_active', true)->take(1)->get();
+        $section = $sections->first();
+
+        foreach ($campuses as $campus) {
+            $email = "student.campus{$campus->id}@school.com";
+
+            $user = User::firstOrCreate(
+                ['email' => $email],
+                [
+                    'name' => "{$campus->name} Sample Student",
+                    'username' => "studentcampus{$campus->id}",
+                    'password' => Hash::make('123456'),
+                    'is_active' => true,
+                    'email_verified_at' => now(),
+                ]
+            );
+            $user->syncRoles(['student']);
+
+            $student = Student::firstOrCreate(
+                ['admission_no' => "ADM-SAMPLE-{$campus->id}"],
+                [
+                    'user_id' => $user->id,
+                    'student_code' => "STU-SAMPLE-{$campus->id}",
+                    'dob' => now()->subYears(8)->format('Y-m-d'),
+                    'gender_id' => $gender->id,
+                    'student_status_id' => $activeStatus->id,
+                    'admission_date' => now()->subMonths(6)->format('Y-m-d'),
+                ]
+            );
+
+            if ($section) {
+                $student->enrollmentRecords()->firstOrCreate(
+                    ['session_id' => $session->id],
+                    [
+                        'class_id' => $class->id,
+                        'section_id' => $section->id,
+                        'campus_id' => $campus->id,
+                        'admission_date' => $student->admission_date,
+                        'student_status_id' => $activeStatus->id,
+                        'monthly_fee' => $this->getFeeForClass($class->name),
+                        'annual_fee' => $this->getFeeForClass($class->name) * 12,
+                    ]
+                );
+            }
+        }
+    }
+
+    /**
+     * A couple of students with a "Left" status (filters/reports), and one
+     * soft-deleted student to exercise reusing a soft-deleted admission
+     * number.
+     */
+    private function seedLeftAndRetiredStudents(
+        SchoolClass $class,
+        Campus $campus,
+        Session $session,
+        Gender $gender,
+        StudentStatus $activeStatus,
+        ?StudentStatus $leftStatus
+    ): void {
+        if (! $leftStatus) {
+            return;
+        }
+
+        $user = User::firstOrCreate(
+            ['email' => 'left.student@school.com'],
+            ['name' => 'Left Student', 'username' => 'leftstudent', 'password' => Hash::make('123456'), 'is_active' => true]
+        );
+
+        $student = Student::firstOrCreate(
+            ['admission_no' => 'ADM-LEFT-0001'],
+            [
+                'user_id' => $user->id,
+                'student_code' => 'STU-LEFT-0001',
+                'dob' => now()->subYears(9)->format('Y-m-d'),
+                'gender_id' => $gender->id,
+                'student_status_id' => $leftStatus->id,
+                'admission_date' => now()->subYear()->format('Y-m-d'),
+            ]
+        );
+
+        $section = Section::where('class_id', $class->id)->where('is_active', true)->first();
+
+        if ($section) {
+            $student->enrollmentRecords()->firstOrCreate(
+                ['session_id' => $session->id],
+                [
+                    'class_id' => $class->id,
+                    'section_id' => $section->id,
+                    'campus_id' => $campus->id,
+                    'admission_date' => $student->admission_date,
+                    'leave_date' => now()->subMonths(2)->format('Y-m-d'),
+                    'student_status_id' => $leftStatus->id,
+                    'monthly_fee' => $this->getFeeForClass($class->name),
+                    'annual_fee' => $this->getFeeForClass($class->name) * 12,
+                ]
+            );
+        }
+
+        // Soft-deleted student, to exercise reusing a soft-deleted admission number.
+        $retiredUser = User::firstOrCreate(
+            ['email' => 'retired.student@school.com'],
+            ['name' => 'Retired Student', 'username' => 'retiredstudent', 'password' => Hash::make('123456'), 'is_active' => false]
+        );
+
+        $retiredStudent = Student::firstOrCreate(
+            ['admission_no' => 'ADM-RETIRED-0001'],
+            [
+                'user_id' => $retiredUser->id,
+                'student_code' => 'STU-RETIRED-0001',
+                'dob' => now()->subYears(10)->format('Y-m-d'),
+                'gender_id' => $gender->id,
+                'student_status_id' => $leftStatus->id,
+                'admission_date' => now()->subYears(2)->format('Y-m-d'),
+            ]
+        );
+        $retiredStudent->delete();
     }
 
     /**

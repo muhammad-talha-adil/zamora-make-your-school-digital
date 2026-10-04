@@ -21,6 +21,12 @@ class DatabaseSeeder extends Seeder
      * types, staff departments/designations/document types — starts at
      * zero, because it has its own screen to add it through.
      *
+     * For local development only, the other seeder classes in this folder
+     * (CampusSeeder, StudentSeeder, StaffSeeder, FeeHeadSeeder, etc.) carry
+     * bulk demo/test data for every CRUD module. They are never called from
+     * here; run any of them manually, e.g.
+     * `php artisan db:seed --class=CampusSeeder`.
+     *
      * Order matters due to foreign key dependencies!
      */
     public function run(): void

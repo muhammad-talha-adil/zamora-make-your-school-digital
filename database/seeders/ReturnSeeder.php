@@ -7,6 +7,7 @@ use App\Models\ReturnModel;
 use App\Models\StudentInventory;
 use Illuminate\Database\Seeder;
 
+// Dev/demo data only — not part of the default production seed list.
 class ReturnSeeder extends Seeder
 {
     /**

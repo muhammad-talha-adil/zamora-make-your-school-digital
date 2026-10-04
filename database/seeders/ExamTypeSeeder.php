@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Models\Exam\ExamType;
 use Illuminate\Database\Seeder;
 
+// Dev/demo data only — not part of the default production seed list.
 class ExamTypeSeeder extends Seeder
 {
     /**

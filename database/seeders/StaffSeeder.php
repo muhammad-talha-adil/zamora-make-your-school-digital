@@ -5,6 +5,8 @@ namespace Database\Seeders;
 use App\Models\Campus;
 use App\Models\Role;
 use App\Models\Staff\SalaryHead;
+use App\Models\Staff\StaffDocument;
+use App\Models\Staff\StaffDocumentType;
 use App\Models\Staff\StaffEmploymentPeriod;
 use App\Models\Staff\StaffQualification;
 use App\Models\Staff\StaffSalaryComponent;
@@ -18,6 +20,7 @@ use Illuminate\Database\Seeder;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Hash;
 
+// Dev/demo data only — not part of the default production seed list.
 class StaffSeeder extends Seeder
 {
     public function run(): void
@@ -235,9 +238,187 @@ class StaffSeeder extends Seeder
             $this->seedQualification($staffProfile, $seed['qualification']);
             $this->seedSubjects($staffProfile, $seed['subjects'], $subjects);
             $this->seedSalaryComponents($staffProfile, $seed, $hireDate, $allowanceHeads, $deductionHeads);
+            $this->seedDocuments($staffProfile, $user, $index);
         }
 
+        $this->seedInactiveAndRetiredStaff($campuses, $departments, $designations, $roles);
+        $this->seedPerCampusStaff($campuses, $departments, $designations, $roles);
+
         $this->command?->info('Staff records seeded successfully.');
+    }
+
+    /**
+     * Every active campus gets its own campus_admin and two of its own
+     * teachers, scoped via `campus_id` — not just the generic, mostly
+     * campus-0 staff above. Emails are deterministic (`admin.campus{id}@...`)
+     * so they can be documented as known demo logins.
+     *
+     * @param  Collection<int, Campus>  $campuses
+     * @param  Collection<string, StaffDepartment>  $departments
+     * @param  Collection<string, StaffDesignation>  $designations
+     * @param  Collection<string, Role>  $roles
+     */
+    private function seedPerCampusStaff(Collection $campuses, Collection $departments, Collection $designations, Collection $roles): void
+    {
+        foreach ($campuses as $campus) {
+            $adminUser = User::updateOrCreate(
+                ['email' => "admin.campus{$campus->id}@school.com"],
+                [
+                    'name' => "{$campus->name} Admin",
+                    'username' => "admincampus{$campus->id}",
+                    'password' => Hash::make('123456'),
+                    'email_verified_at' => now(),
+                    'is_active' => true,
+                ]
+            );
+
+            $adminProfile = StaffProfile::updateOrCreate(
+                ['user_id' => $adminUser->id],
+                [
+                    'employee_no' => "EMP-ADMIN-{$campus->id}",
+                    'campus_id' => $campus->id,
+                    'department_id' => $departments['Administration']->id ?? null,
+                    'designation_id' => $designations['Principal']->id ?? null,
+                    'employment_type' => 'permanent',
+                    'hire_date' => now()->subYears(2)->toDateString(),
+                    'basic_salary' => 120000,
+                    'payment_method' => 'bank',
+                    'is_active' => true,
+                ]
+            );
+
+            if (isset($roles['campus_admin'])) {
+                $adminUser->syncRoles([$roles['campus_admin']]);
+            }
+
+            $this->seedEmploymentPeriod($adminProfile, now()->subYears(2)->toDateString());
+
+            for ($i = 1; $i <= 2; $i++) {
+                $teacherUser = User::updateOrCreate(
+                    ['email' => "teacher{$i}.campus{$campus->id}@school.com"],
+                    [
+                        'name' => "{$campus->name} Teacher {$i}",
+                        'username' => "teacher{$i}campus{$campus->id}",
+                        'password' => Hash::make('123456'),
+                        'email_verified_at' => now(),
+                        'is_active' => true,
+                    ]
+                );
+
+                $teacherProfile = StaffProfile::updateOrCreate(
+                    ['user_id' => $teacherUser->id],
+                    [
+                        'employee_no' => "EMP-T{$i}-{$campus->id}",
+                        'campus_id' => $campus->id,
+                        'department_id' => $departments['Academics']->id ?? null,
+                        'designation_id' => $designations['Teacher']->id ?? null,
+                        'employment_type' => 'permanent',
+                        'hire_date' => now()->subYear()->toDateString(),
+                        'basic_salary' => 55000,
+                        'payment_method' => 'bank',
+                        'is_active' => true,
+                    ]
+                );
+
+                if (isset($roles['teacher'])) {
+                    $teacherUser->syncRoles([$roles['teacher']]);
+                }
+
+                $this->seedEmploymentPeriod($teacherProfile, now()->subYear()->toDateString());
+            }
+        }
+    }
+
+    /**
+     * Files a CNIC copy on every staff member, plus a Degree on every other
+     * one, so the Staff Documents tab has something to show across the set.
+     */
+    private function seedDocuments(StaffProfile $staffProfile, User $user, int $index): void
+    {
+        $cnicType = StaffDocumentType::where('name', 'CNIC')->first();
+        $degreeType = StaffDocumentType::where('name', 'Degree')->first();
+
+        if ($cnicType) {
+            StaffDocument::firstOrCreate(
+                ['staff_profile_id' => $staffProfile->id, 'kind' => 'cnic'],
+                ['title' => 'CNIC Copy', 'issued_on' => now()->subYears(2)->toDateString(), 'uploaded_by' => $user->id]
+            );
+        }
+
+        if ($degreeType && $index % 2 === 0) {
+            StaffDocument::firstOrCreate(
+                ['staff_profile_id' => $staffProfile->id, 'kind' => 'degree'],
+                ['title' => 'Degree Certificate', 'issued_on' => now()->subYears(5)->toDateString(), 'uploaded_by' => $user->id]
+            );
+        }
+
+        // One staff member carries an already-expired document, to exercise
+        // expiry alerts/filters.
+        if ($index === 0) {
+            StaffDocument::firstOrCreate(
+                ['staff_profile_id' => $staffProfile->id, 'kind' => 'police_verification'],
+                ['title' => 'Police Verification', 'issued_on' => now()->subYears(3)->toDateString(), 'expires_on' => now()->subMonth()->toDateString(), 'uploaded_by' => $user->id]
+            );
+        }
+    }
+
+    /**
+     * One deactivated staff member (filters/toggles) and one soft-deleted
+     * staff member (reusing a soft-deleted employee number/name).
+     *
+     * @param  Collection<string, Campus>  $campuses
+     * @param  Collection<string, StaffDepartment>  $departments
+     * @param  Collection<string, StaffDesignation>  $designations
+     * @param  Collection<string, Role>  $roles
+     */
+    private function seedInactiveAndRetiredStaff(Collection $campuses, Collection $departments, Collection $designations, Collection $roles): void
+    {
+        $campus = $campuses->first();
+
+        $inactiveUser = User::updateOrCreate(
+            ['email' => 'inactive.staff@school.com'],
+            ['name' => 'Inactive Staff Member', 'username' => 'inactivestaff', 'password' => Hash::make('123456'), 'is_active' => false]
+        );
+
+        $inactiveProfile = StaffProfile::updateOrCreate(
+            ['user_id' => $inactiveUser->id],
+            [
+                'employee_no' => 'EMP-00009',
+                'campus_id' => $campus?->id,
+                'department_id' => $departments['Support']->id ?? null,
+                'designation_id' => $designations['Support Staff']->id ?? null,
+                'employment_type' => 'permanent',
+                'hire_date' => now()->subYears(2)->toDateString(),
+                'basic_salary' => 30000,
+                'payment_method' => 'cash',
+                'is_active' => false,
+            ]
+        );
+
+        if (isset($roles['maid'])) {
+            $inactiveUser->syncRoles([$roles['maid']]);
+        }
+
+        $retiredUser = User::updateOrCreate(
+            ['email' => 'retired.staff@school.com'],
+            ['name' => 'Retired Staff Member', 'username' => 'retiredstaff', 'password' => Hash::make('123456'), 'is_active' => false]
+        );
+
+        $retiredProfile = StaffProfile::updateOrCreate(
+            ['user_id' => $retiredUser->id],
+            [
+                'employee_no' => 'EMP-00010',
+                'campus_id' => $campus?->id,
+                'employment_type' => 'permanent',
+                'hire_date' => now()->subYears(5)->toDateString(),
+                'basic_salary' => 28000,
+                'payment_method' => 'cash',
+                'is_active' => false,
+            ]
+        );
+
+        // Soft-deleted, to exercise reusing a soft-deleted employee number.
+        $retiredProfile->delete();
     }
 
     /**

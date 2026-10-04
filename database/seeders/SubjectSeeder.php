@@ -5,6 +5,7 @@ namespace Database\Seeders;
 use App\Models\Subject;
 use Illuminate\Database\Seeder;
 
+// Dev/demo data only — not part of the default production seed list.
 class SubjectSeeder extends Seeder
 {
     /**
@@ -34,6 +35,7 @@ class SubjectSeeder extends Seeder
             ['name' => 'Islamiyat (Elective)', 'short_name' => 'Islam(E)', 'code' => 'ISLE', 'description' => 'Islamic studies elective', 'is_active' => true],
             ['name' => 'Tarjma Quran', 'short_name' => 'TQ', 'code' => 'TQ', 'description' => 'Translation of Holy Quran', 'is_active' => true],
             ['name' => 'Psychology', 'short_name' => 'Psy', 'code' => 'PSY', 'description' => 'Psychology subject', 'is_active' => true],
+            ['name' => 'Home Economics', 'short_name' => 'H.Eco', 'code' => 'HECO', 'description' => 'Home economics subject', 'is_active' => false],
         ];
 
         foreach ($subjects as $subject) {
@@ -42,6 +44,13 @@ class SubjectSeeder extends Seeder
                 $subject
             );
         }
+
+        // A soft-deleted subject, to exercise reusing a soft-deleted name.
+        $retired = Subject::firstOrCreate(
+            ['name' => 'Discontinued Subject'],
+            ['short_name' => 'Disc', 'code' => 'DISC', 'is_active' => false]
+        );
+        $retired->delete();
 
         $this->command->info('Subjects seeded successfully!');
     }
