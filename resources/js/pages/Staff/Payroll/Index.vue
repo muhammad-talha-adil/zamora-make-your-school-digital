@@ -221,25 +221,26 @@ const onAdvanceGiven = () => {
             </div>
 
             <div class="space-y-4">
-                <div v-for="run in filteredRuns" :key="run.id" class="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
-                    <div class="flex flex-col gap-4 border-b border-border px-5 py-4 md:flex-row md:items-center md:justify-between">
-                        <div>
-                            <h3 class="text-lg font-semibold text-foreground">{{ run.title }}</h3>
-                            <p class="text-sm text-muted-foreground">{{ run.month?.name || 'Month' }} {{ run.payroll_year }} | {{ run.campus?.name || 'All Campuses' }}</p>
+                <div v-for="run in filteredRuns" :key="run.id" class="overflow-hidden rounded-2xl border border-border bg-card shadow-sm transition-shadow hover:shadow-md">
+                    <div class="flex flex-col gap-3 border-b border-border px-5 py-4">
+                        <div class="flex flex-wrap items-start justify-between gap-3">
+                            <div class="min-w-0">
+                                <h3 class="truncate text-lg font-semibold text-foreground">{{ run.title }}</h3>
+                                <p class="mt-0.5 text-sm text-muted-foreground">{{ run.month?.name || 'Month' }} {{ run.payroll_year }} &middot; {{ run.campus?.name || 'All Campuses' }}</p>
+                            </div>
+                            <span :class="run.status === 'paid' ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'" class="inline-flex shrink-0 rounded-full px-2.5 py-1 text-xs font-medium uppercase tracking-wide">{{ run.status }}</span>
                         </div>
-                        <div class="flex flex-wrap items-center gap-3 text-sm">
-                            <span :class="run.status === 'paid' ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'" class="inline-flex rounded-full px-2.5 py-1 font-medium uppercase">{{ run.status }}</span>
-                            <span class="font-medium text-muted-foreground">Net: {{ formatMoney(run.total_net) }}</span>
-                            <Button variant="outline" size="sm" @click="expandedRunId = expandedRunId === run.id ? null : run.id">
+                        <div class="flex flex-wrap items-center justify-between gap-3">
+                            <div class="flex flex-wrap items-center gap-x-6 gap-y-1 text-sm">
+                                <span class="text-muted-foreground">Gross <span class="font-medium text-foreground">{{ formatMoney(run.total_gross) }}</span></span>
+                                <span class="text-muted-foreground">Deductions <span class="font-medium text-destructive">{{ formatMoney(run.total_deductions) }}</span></span>
+                                <span class="text-muted-foreground">Net <span class="font-semibold text-foreground">{{ formatMoney(run.total_net) }}</span></span>
+                                <span class="text-muted-foreground">Processed <span class="font-medium text-foreground">{{ formatDate(run.processed_at) }}</span></span>
+                            </div>
+                            <Button variant="outline" size="sm" class="shrink-0" @click="expandedRunId = expandedRunId === run.id ? null : run.id">
                                 {{ expandedRunId === run.id ? 'Hide Items' : 'Show Items' }}
                             </Button>
                         </div>
-                    </div>
-
-                    <div class="grid gap-4 border-b border-border px-5 py-4 text-sm md:grid-cols-3">
-                        <div>Gross: <span class="font-medium text-foreground">{{ formatMoney(run.total_gross) }}</span></div>
-                        <div>Deductions: <span class="font-medium text-destructive">{{ formatMoney(run.total_deductions) }}</span></div>
-                        <div>Processed: <span class="font-medium text-foreground">{{ formatDate(run.processed_at) }}</span></div>
                     </div>
 
                     <div v-if="expandedRunId === run.id" class="overflow-x-auto">
