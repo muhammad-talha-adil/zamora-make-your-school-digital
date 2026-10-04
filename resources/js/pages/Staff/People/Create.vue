@@ -74,10 +74,6 @@
                             <Input id="allowance_amount" v-model="form.allowance_amount" type="number" min="0" />
                         </div>
                         <div class="space-y-2">
-                            <Label for="deduction_amount">Deduction</Label>
-                            <Input id="deduction_amount" v-model="form.deduction_amount" type="number" min="0" />
-                        </div>
-                        <div class="space-y-2">
                             <Label for="payment_method">Payment Method</Label>
                             <select id="payment_method" v-model="form.payment_method" :class="selectClass">
                                 <option value="bank">Bank</option>
@@ -85,20 +81,58 @@
                                 <option value="cheque">Cheque</option>
                             </select>
                         </div>
-                        <div class="space-y-2">
-                            <Label for="bank_name">Bank Name</Label>
-                            <Input id="bank_name" v-model="form.bank_name" placeholder="Bank name" />
-                        </div>
-                        <div class="space-y-2">
-                            <Label for="account_no">Account No</Label>
-                            <Input id="account_no" v-model="form.account_no" placeholder="Account number" />
-                        </div>
+                        <template v-if="form.payment_method === 'bank'">
+                            <div class="space-y-2">
+                                <Label for="bank_name">Bank Name</Label>
+                                <Input id="bank_name" v-model="form.bank_name" placeholder="Bank name" />
+                            </div>
+                            <div class="space-y-2">
+                                <Label for="account_no">Account No</Label>
+                                <Input id="account_no" v-model="form.account_no" placeholder="Account number" />
+                            </div>
+                        </template>
                     </div>
 
                     <label class="mt-4 flex items-center gap-2 text-sm text-muted-foreground">
                         <input v-model="form.is_active" type="checkbox" class="h-4 w-4 rounded border-border text-primary" />
                         Staff member is active
                     </label>
+                </div>
+
+                <div v-if="documentTypes.length" class="rounded-lg border border-border bg-card p-6">
+                    <h2 class="mb-4 flex items-center gap-2 text-lg font-semibold text-foreground">
+                        <Icon icon="file-text" class="h-5 w-5 text-primary" />
+                        Documents
+                    </h2>
+
+                    <div class="space-y-4">
+                        <div
+                            v-for="type in documentTypes"
+                            :key="type.id"
+                            class="grid grid-cols-1 gap-3 rounded-lg border border-border p-4 md:grid-cols-4"
+                        >
+                            <div class="space-y-2 md:col-span-1">
+                                <Label>
+                                    {{ type.name }}
+                                    <span v-if="type.is_required" class="text-destructive">*</span>
+                                </Label>
+                                <input
+                                    type="file"
+                                    accept=".pdf,.jpg,.jpeg,.png"
+                                    class="w-full text-sm text-foreground"
+                                    @change="onDocumentFile(type.id, $event)"
+                                />
+                            </div>
+                            <div class="space-y-2">
+                                <Label :for="`issued_on_${type.id}`">Issue Date</Label>
+                                <Input :id="`issued_on_${type.id}`" v-model="documents[type.id].issued_on" type="date" />
+                            </div>
+                            <div class="space-y-2">
+                                <Label :for="`expires_on_${type.id}`">Expiry Date</Label>
+                                <Input :id="`expires_on_${type.id}`" v-model="documents[type.id].expires_on" type="date" />
+                            </div>
+                        </div>
+                    </div>
                 </div>
 
                 <div class="flex flex-col justify-end gap-3 pt-4 sm:flex-row">
@@ -141,10 +175,17 @@ interface Campus {
     name: string;
 }
 
+interface DocumentType {
+    id: number;
+    name: string;
+    is_required: boolean;
+}
+
 interface Props {
     departments: Lookup[];
     designations: Lookup[];
     campuses: Campus[];
+    documentTypes?: DocumentType[];
 }
 
 const props = defineProps<Props>();
@@ -171,7 +212,6 @@ const form = reactive({
     hire_date: '',
     basic_salary: '',
     allowance_amount: '0',
-    deduction_amount: '0',
     payment_method: 'bank',
     bank_name: '',
     account_no: '',
@@ -180,6 +220,23 @@ const form = reactive({
 
 const campusOptions = computed(() => props.campuses.map((campus) => ({ value: String(campus.id), label: campus.name })));
 const designationOptions = computed(() => props.designations.map((d) => ({ value: String(d.id), label: d.name })));
+const documentTypes = computed(() => props.documentTypes ?? []);
+
+interface DocumentEntry {
+    file: File | null;
+    issued_on: string;
+    expires_on: string;
+}
+
+const documents = reactive<Record<number, DocumentEntry>>({});
+documentTypes.value.forEach((type) => {
+    documents[type.id] = { file: null, issued_on: '', expires_on: '' };
+});
+
+const onDocumentFile = (typeId: number, event: Event) => {
+    const target = event.target as HTMLInputElement;
+    documents[typeId].file = target.files?.[0] ?? null;
+};
 
 const { isValid } = useFormValidity(form, ['name']);
 
@@ -187,16 +244,43 @@ const submitStaff = async () => {
     processing.value = true;
 
     try {
-        const payload = {
-            ...form,
-            campus_id: form.campus_id || null,
-            department_id: form.department_id || null,
-            designation_id: form.designation_id || null,
-            email: form.email || null,
-            employee_no: form.employee_no || null,
-        };
+        const formData = new FormData();
 
-        await axios.post(route('staff.members.store'), payload);
+        Object.entries({
+            ...form,
+            campus_id: form.campus_id || '',
+            department_id: form.department_id || '',
+            designation_id: form.designation_id || '',
+            email: form.email || '',
+            employee_no: form.employee_no || '',
+        }).forEach(([key, value]) => {
+            formData.append(key, value === null || value === undefined ? '' : String(value));
+        });
+
+        documentTypes.value.forEach((type, index) => {
+            const entry = documents[type.id];
+
+            if (!entry.file && !entry.issued_on && !entry.expires_on) {
+                return;
+            }
+
+            formData.append(`documents[${index}][kind]`, type.name);
+            formData.append(`documents[${index}][title]`, type.name);
+
+            if (entry.file) {
+                formData.append(`documents[${index}][file]`, entry.file);
+            }
+            if (entry.issued_on) {
+                formData.append(`documents[${index}][issued_on]`, entry.issued_on);
+            }
+            if (entry.expires_on) {
+                formData.append(`documents[${index}][expires_on]`, entry.expires_on);
+            }
+        });
+
+        await axios.post(route('staff.members.store'), formData, {
+            headers: { 'Content-Type': 'multipart/form-data' },
+        });
         alert.success('Staff member created successfully.');
         router.visit(route('staff.people.index'));
     } catch (error: any) {

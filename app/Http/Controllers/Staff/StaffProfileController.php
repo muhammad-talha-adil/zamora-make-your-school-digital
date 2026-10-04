@@ -87,6 +87,7 @@ class StaffProfileController extends Controller
             'departments' => StaffDepartment::orderBy('name')->get(['id', 'name']),
             'designations' => StaffDesignation::orderBy('name')->get(['id', 'name', 'description', 'role', 'is_active']),
             'campuses' => Campus::orderBy('name')->get(['id', 'name']),
+            'documentTypes' => StaffDocumentType::where('is_active', true)->orderBy('name')->get(['id', 'name', 'is_required']),
         ]);
     }
 

@@ -7,6 +7,14 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import Icon from '@/components/Icon.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import { Label } from '@/components/ui/label';
+import {
+    Dialog,
+    DialogContent,
+    DialogFooter,
+    DialogHeader,
+    DialogTitle,
+} from '@/components/ui/dialog';
 import SearchableSelect from '@/components/ui/searchable-select/SearchableSelect.vue';
 import { alert } from '@/utils';
 import RowAction from '@/components/tables/RowAction.vue';
@@ -107,27 +115,39 @@ const generatePayroll = async () => {
     }
 };
 
-const markPayrollPaid = async (item: PayrollItem) => {
-    if (item.status === 'paid') return;
+const payDialog = reactive({
+    open: false,
+    item: null as PayrollItem | null,
+    payment_method: 'bank',
+    reference_no: '',
+});
 
-    const result = await alert.confirm(
-        `Mark salary payment as paid for ${item.staff_profile?.user?.name ?? 'this staff member'}?`,
-        'Mark Salary Paid',
-        'Mark Paid',
-    );
-    if (!result.isConfirmed) return;
+const openPayDialog = (item: PayrollItem) => {
+    if (item.status === 'paid') return;
+    payDialog.item = item;
+    payDialog.payment_method = item.payment_method || 'bank';
+    payDialog.reference_no = item.reference_no || '';
+    payDialog.open = true;
+};
+
+const confirmPayrollPaid = async () => {
+    const item = payDialog.item;
+    if (!item) return;
 
     try {
         await axios.post(route('staff.payroll.items.pay', item.id), {
-            payment_method: item.payment_method || 'bank',
-            reference_no: item.reference_no || null,
+            payment_method: payDialog.payment_method,
+            // Cheque/transaction reference number: always optional, shown for every payment method.
+            reference_no: payDialog.reference_no || null,
         });
         alert.success('Salary payment marked successfully.');
+        payDialog.open = false;
         router.reload({ only: ['payrollRuns'] });
     } catch (error: any) {
         alert.error(error?.response?.data?.message || 'Failed to mark salary as paid.');
     }
 };
+
 </script>
 
 <template>
@@ -227,7 +247,7 @@ const markPayrollPaid = async (item: PayrollItem) => {
                                                 kind="pay"
                                                 :label="item.status === 'paid' ? 'Paid' : 'Mark Paid'"
                                                 :disabled="item.status === 'paid'"
-                                                @click="markPayrollPaid(item)"
+                                                @click="openPayDialog(item)"
                                             />
                                         </RowActions>
                                     </td>
@@ -242,5 +262,35 @@ const markPayrollPaid = async (item: PayrollItem) => {
                 </div>
             </div>
         </div>
+
+        <Dialog v-model:open="payDialog.open">
+            <DialogContent class="sm:max-w-md">
+                <DialogHeader>
+                    <DialogTitle>Mark Salary Paid</DialogTitle>
+                </DialogHeader>
+                <div class="space-y-4 py-2">
+                    <div class="space-y-2">
+                        <Label for="pay-method">Payment Method</Label>
+                        <select
+                            id="pay-method"
+                            v-model="payDialog.payment_method"
+                            class="h-10 w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground"
+                        >
+                            <option value="bank">Bank</option>
+                            <option value="cash">Cash</option>
+                            <option value="cheque">Cheque</option>
+                        </select>
+                    </div>
+                    <div class="space-y-2">
+                        <Label for="pay-reference">Cheque / Reference Number <span class="text-muted-foreground font-normal">(optional)</span></Label>
+                        <Input id="pay-reference" v-model="payDialog.reference_no" placeholder="Enter cheque or reference number" />
+                    </div>
+                </div>
+                <DialogFooter>
+                    <Button variant="outline" @click="payDialog.open = false">Cancel</Button>
+                    <Button @click="confirmPayrollPaid">Mark Paid</Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
     </AppLayout>
 </template>

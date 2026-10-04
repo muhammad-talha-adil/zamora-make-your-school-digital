@@ -234,14 +234,19 @@ class StaffController extends Controller
             'hire_date' => 'nullable|date',
             'basic_salary' => 'required|numeric|min:0',
             'allowance_amount' => 'nullable|numeric|min:0',
-            'deduction_amount' => 'nullable|numeric|min:0',
             'payment_method' => 'required|string|max:50',
             'bank_name' => 'nullable|string|max:150',
             'account_no' => 'nullable|string|max:150',
             'is_active' => 'boolean',
+            'documents' => 'nullable|array',
+            'documents.*.kind' => 'required_with:documents|string|max:50',
+            'documents.*.title' => 'required_with:documents|string|max:150',
+            'documents.*.issued_on' => 'nullable|date',
+            'documents.*.expires_on' => 'nullable|date|after:documents.*.issued_on',
+            'documents.*.file' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
         ]);
 
-        $profile = DB::transaction(function () use ($data) {
+        $profile = DB::transaction(function () use ($data, $request) {
             $employeeNo = $data['employee_no'] ?: $this->generateEmployeeNo();
             $email = $data['email'] ?: strtolower(Str::slug($data['name'], '')).'.'.$employeeNo.'@staff.local';
 
@@ -263,7 +268,6 @@ class StaffController extends Controller
                 'hire_date' => $data['hire_date'] ?? null,
                 'basic_salary' => $data['basic_salary'],
                 'allowance_amount' => $data['allowance_amount'] ?? 0,
-                'deduction_amount' => $data['deduction_amount'] ?? 0,
                 'payment_method' => $data['payment_method'],
                 'bank_name' => $data['bank_name'] ?? null,
                 'account_no' => $data['account_no'] ?? null,
@@ -271,6 +275,20 @@ class StaffController extends Controller
             ]);
 
             $this->assignDesignationRole($user, $data['designation_id'] ?? null);
+
+            foreach ($data['documents'] ?? [] as $index => $document) {
+                $file = $request->file("documents.{$index}.file");
+                $path = $file?->store('staff/'.$profile->id, 'public');
+
+                $profile->documents()->create([
+                    'kind' => $document['kind'],
+                    'title' => $document['title'],
+                    'path' => $path,
+                    'issued_on' => $document['issued_on'] ?? null,
+                    'expires_on' => $document['expires_on'] ?? null,
+                    'uploaded_by' => auth()->id(),
+                ]);
+            }
 
             return $profile;
         });
