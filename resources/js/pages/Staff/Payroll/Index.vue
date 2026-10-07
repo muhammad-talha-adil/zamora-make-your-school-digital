@@ -221,26 +221,52 @@ const onAdvanceGiven = () => {
             </div>
 
             <div class="space-y-4">
-                <div v-for="run in filteredRuns" :key="run.id" class="overflow-hidden rounded-2xl border border-border bg-card shadow-sm transition-shadow hover:shadow-md">
-                    <div class="flex flex-col gap-3 border-b border-border px-5 py-4">
-                        <div class="flex flex-wrap items-start justify-between gap-3">
+                <div
+                    v-for="run in filteredRuns"
+                    :key="run.id"
+                    class="overflow-hidden rounded-2xl border border-border bg-card shadow-sm transition-shadow hover:shadow-md"
+                    :class="run.status === 'paid' ? 'border-l-4 border-l-success' : 'border-l-4 border-l-warning'"
+                >
+                    <div class="flex flex-col gap-4 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+                        <div class="flex min-w-0 items-center gap-3">
+                            <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
+                                <Icon icon="calendar-days" class="h-5 w-5" />
+                            </div>
                             <div class="min-w-0">
-                                <h3 class="truncate text-lg font-semibold text-foreground">{{ run.title }}</h3>
-                                <p class="mt-0.5 text-sm text-muted-foreground">{{ run.month?.name || 'Month' }} {{ run.payroll_year }} &middot; {{ run.campus?.name || 'All Campuses' }}</p>
+                                <h3 class="truncate text-base font-semibold text-foreground">{{ run.month?.name || 'Month' }} {{ run.payroll_year }}</h3>
+                                <p class="mt-0.5 truncate text-sm text-muted-foreground">{{ run.title }} &middot; {{ run.campus?.name || 'All Campuses' }}</p>
                             </div>
-                            <span :class="run.status === 'paid' ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'" class="inline-flex shrink-0 rounded-full px-2.5 py-1 text-xs font-medium uppercase tracking-wide">{{ run.status }}</span>
                         </div>
-                        <div class="flex flex-wrap items-center justify-between gap-3">
-                            <div class="flex flex-wrap items-center gap-x-6 gap-y-1 text-sm">
-                                <span class="text-muted-foreground">Gross <span class="font-medium text-foreground">{{ formatMoney(run.total_gross) }}</span></span>
-                                <span class="text-muted-foreground">Deductions <span class="font-medium text-destructive">{{ formatMoney(run.total_deductions) }}</span></span>
-                                <span class="text-muted-foreground">Net <span class="font-semibold text-foreground">{{ formatMoney(run.total_net) }}</span></span>
-                                <span class="text-muted-foreground">Processed <span class="font-medium text-foreground">{{ formatDate(run.processed_at) }}</span></span>
+
+                        <div class="flex items-center gap-6">
+                            <div class="hidden text-right sm:block">
+                                <p class="text-xs text-muted-foreground">Gross <span class="font-medium text-foreground">{{ formatMoney(run.total_gross) }}</span></p>
+                                <p class="text-xs text-muted-foreground">Deductions <span class="font-medium text-destructive">{{ formatMoney(run.total_deductions) }}</span></p>
                             </div>
-                            <Button variant="outline" size="sm" class="shrink-0" @click="expandedRunId = expandedRunId === run.id ? null : run.id">
-                                {{ expandedRunId === run.id ? 'Hide Items' : 'Show Items' }}
-                            </Button>
+                            <div class="text-right">
+                                <p class="text-xs text-muted-foreground">Net Payable</p>
+                                <p class="text-lg font-bold text-foreground">{{ formatMoney(run.total_net) }}</p>
+                            </div>
+                            <span
+                                :class="run.status === 'paid' ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'"
+                                class="inline-flex shrink-0 items-center gap-1.5 rounded-full px-3 py-1 text-xs font-semibold uppercase tracking-wide"
+                            >
+                                <span class="h-1.5 w-1.5 rounded-full" :class="run.status === 'paid' ? 'bg-success' : 'bg-warning'" />
+                                {{ run.status }}
+                            </span>
                         </div>
+                    </div>
+
+                    <div class="flex items-center justify-between gap-3 border-t border-border bg-muted/30 px-5 py-2.5 sm:hidden">
+                        <p class="text-xs text-muted-foreground">Gross {{ formatMoney(run.total_gross) }} &middot; Deductions <span class="text-destructive">{{ formatMoney(run.total_deductions) }}</span></p>
+                    </div>
+
+                    <div class="flex items-center justify-between gap-3 border-t border-border px-5 py-2.5">
+                        <p class="text-xs text-muted-foreground">Processed {{ formatDate(run.processed_at) }}</p>
+                        <Button variant="outline" size="sm" class="shrink-0 gap-1.5" @click="expandedRunId = expandedRunId === run.id ? null : run.id">
+                            <Icon :icon="expandedRunId === run.id ? 'chevron-up' : 'chevron-down'" class="h-3.5 w-3.5" />
+                            {{ expandedRunId === run.id ? 'Hide Items' : 'Show Items' }}
+                        </Button>
                     </div>
 
                     <div v-if="expandedRunId === run.id" class="overflow-x-auto">

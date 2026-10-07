@@ -21,12 +21,12 @@
 
             <!-- Filters -->
             <FilterCard>
-                <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 md:gap-3" role="search" aria-label="Student filters">
+                <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 md:gap-3" role="search" aria-label="Student filters">
                     <div>
                         <Label for="filter-campus" class="sr-only">Filter by Campus</Label>
                         <select
                             id="filter-campus"
-                            v-model="filters.campus_id"
+                            v-model="cascadeCampusId"
                             @change="applyFilters"
                             class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm min-h-10 md:min-h-11"
                         >
@@ -40,12 +40,12 @@
                         <Label for="filter-class" class="sr-only">Filter by Class</Label>
                         <select
                             id="filter-class"
-                            v-model="filters.class_id"
+                            v-model="cascadeClassId"
                             @change="applyFilters"
                             class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm min-h-10 md:min-h-11"
                         >
                             <option value="">All Classes</option>
-                            <option v-for="cls in props.classes" :key="cls.id" :value="cls.id">
+                            <option v-for="cls in availableClasses" :key="cls.id" :value="cls.id">
                                 {{ cls.name }}
                             </option>
                         </select>
@@ -54,12 +54,13 @@
                         <Label for="filter-section" class="sr-only">Filter by Section</Label>
                         <select
                             id="filter-section"
-                            v-model="filters.section_id"
+                            v-model="cascadeSectionId"
                             @change="applyFilters"
-                            class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm min-h-10 md:min-h-11"
+                            :disabled="!cascadeClassId"
+                            class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm min-h-10 md:min-h-11 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             <option value="">All Sections</option>
-                            <option v-for="section in props.sections" :key="section.id" :value="section.id">
+                            <option v-for="section in availableSections" :key="section.id" :value="section.id">
                                 {{ section.name }}
                             </option>
                         </select>
@@ -92,36 +93,36 @@
                             </option>
                         </select>
                     </div>
-                    <div class="relative col-span-2 sm:col-span-1">
-                        <Label for="search-students" class="sr-only">Search students</Label>
-                        <Input
-                            id="search-students"
-                            v-model="filters.search"
-                            type="text"
-                            placeholder="Search by name, reg no, admission no..."
-                            @input="handleSearch"
-                            @keydown.enter.prevent="applyFilters"
-                            class="w-full pr-8"
-                            aria-label="Search students by name, registration number, or admission number"
-                        />
-                        <button
-                            v-if="filters.search"
-                            @click="clearSearch"
-                            type="button"
-                            class="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-                            aria-label="Clear search"
-                        >
-                            <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
-                            </svg>
-                        </button>
-                    </div>
+                </div>
+                <div class="mt-3 relative">
+                    <Label for="search-students" class="sr-only">Search students</Label>
+                    <Input
+                        id="search-students"
+                        v-model="filters.search"
+                        type="text"
+                        placeholder="Search by name, reg no, admission no..."
+                        @input="handleSearch"
+                        @keydown.enter.prevent="applyFilters"
+                        class="w-full pr-8"
+                        aria-label="Search students by name, registration number, or admission number"
+                    />
+                    <button
+                        v-if="filters.search"
+                        @click="clearSearch"
+                        type="button"
+                        class="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
+                        aria-label="Clear search"
+                    >
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12" />
+                        </svg>
+                    </button>
                 </div>
                 <div class="flex flex-wrap gap-2 md:gap-3 mt-3">
                     <Button
                         variant="outline"
-                        :disabled="!filters.class_id"
-                        :title="!filters.class_id ? 'Select a class to enable bulk ID card generation' : undefined"
+                        :disabled="!cascadeClassId"
+                        :title="!cascadeClassId ? 'Select a class to enable bulk ID card generation' : undefined"
                         @click="printBulkIdCards"
                     >
                         <Icon icon="id-card" class="mr-1" />
@@ -355,11 +356,12 @@
 
 <script setup lang="ts">
 import { Head, router, Link } from '@inertiajs/vue3';
-import { reactive, ref, watch } from 'vue';
+import { computed, reactive, ref, watch } from 'vue';
 import { debounce } from 'lodash';
 import { route } from 'ziggy-js';
 import AppLayout from '@/layouts/AppLayout.vue';
 import FilterCard from '@/components/FilterCard.vue';
+import { useCascadingAcademicSelect } from '@/composables/useCascadingAcademicSelect';
 import type { BreadcrumbItem } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -440,6 +442,7 @@ interface Props {
     sections: Array<{
         id: number;
         name: string;
+        class_id: number;
     }>;
     genders: Array<{
         id: number;
@@ -477,19 +480,39 @@ const breadcrumbItems: BreadcrumbItem[] = [
 ];
 
 const filters = reactive({
-    campus_id: props.filters?.campus_id || '',
-    class_id: props.filters?.class_id || '',
-    section_id: props.filters?.section_id || '',
     gender_id: props.filters?.gender_id || '',
     status: props.filters?.status || '',
     search: props.filters?.search || '',
 });
 
+// Campus → Class → Section cascade (#47/#64/#82/#99/#100): narrows the
+// Section options to the selected Class's sections, and clears a lower
+// filter whenever the one above it changes, matching the pattern already
+// used on other pages (e.g. Fee/Vouchers/Generate.vue, students/Create.vue).
+// The cascade refs below are bound directly to the Campus/Class/Section
+// filter selects and are the source of truth for `filters.*`.
+const {
+    selectedCampusId: cascadeCampusId,
+    selectedClassId: cascadeClassId,
+    selectedSectionId: cascadeSectionId,
+    availableClasses,
+    availableSections,
+} = useCascadingAcademicSelect({
+    campuses: computed(() => props.campuses),
+    classes: computed(() => props.classes),
+    sections: computed(() => props.sections),
+    sessions: computed(() => []),
+    initialCampusId: props.filters?.campus_id,
+    initialClassId: props.filters?.class_id,
+    initialSectionId: props.filters?.section_id,
+    sessionStorageKey: 'students-index-filters',
+});
+
 const buildQueryString = () => {
     const params = new URLSearchParams();
-    if (filters.campus_id) params.append('campus_id', filters.campus_id);
-    if (filters.class_id) params.append('class_id', filters.class_id);
-    if (filters.section_id) params.append('section_id', filters.section_id);
+    if (cascadeCampusId.value) params.append('campus_id', String(cascadeCampusId.value));
+    if (cascadeClassId.value) params.append('class_id', String(cascadeClassId.value));
+    if (cascadeSectionId.value) params.append('section_id', String(cascadeSectionId.value));
     if (filters.gender_id) params.append('gender_id', filters.gender_id);
     if (filters.status) params.append('status', filters.status);
     if (filters.search) params.append('search', filters.search);
@@ -611,11 +634,11 @@ const printIdCard = (student: { id: number }) => {
  * the same filters already on this page, sent straight to the print view.
  */
 const printBulkIdCards = () => {
-    if (!filters.class_id) return;
+    if (!cascadeClassId.value) return;
 
     const params = new URLSearchParams();
-    params.append('class_id', filters.class_id);
-    if (filters.section_id) params.append('section_id', filters.section_id);
+    params.append('class_id', String(cascadeClassId.value));
+    if (cascadeSectionId.value) params.append('section_id', String(cascadeSectionId.value));
 
     window.open(`${route('students.id-cards')}?${params.toString()}`, '_blank');
 };

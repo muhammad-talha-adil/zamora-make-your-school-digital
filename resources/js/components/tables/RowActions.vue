@@ -10,7 +10,7 @@ import { TooltipProvider } from '@/components/ui/tooltip';
 
 <template>
     <TooltipProvider :delay-duration="150">
-        <div class="flex items-center justify-end gap-1">
+        <div class="flex items-center justify-end gap-1.5">
             <slot />
         </div>
     </TooltipProvider>

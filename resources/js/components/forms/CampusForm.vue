@@ -16,7 +16,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import ComboboxInput from '@/components/ui/combobox/ComboboxInput.vue';
 import Icon from '@/components/Icon.vue';
 import RowAction from '@/components/tables/RowAction.vue';
@@ -267,6 +267,7 @@ const handleCampusTypeSaved = (campusType: { id: number; name: string } | undefi
                                      class="h-11"
                                  />
                                  </div>
+                                 <TooltipProvider>
                                  <Tooltip>
                                      <TooltipTrigger as-child>
                                          <Button
@@ -282,6 +283,7 @@ const handleCampusTypeSaved = (campusType: { id: number; name: string } | undefi
                                      </TooltipTrigger>
                                      <TooltipContent>Manage Campus Types</TooltipContent>
                                  </Tooltip>
+                                 </TooltipProvider>
                              </div>
                              <InputError :message="errors.campus_type_id" />
                          </div>

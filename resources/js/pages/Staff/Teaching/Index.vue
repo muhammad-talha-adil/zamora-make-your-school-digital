@@ -110,7 +110,7 @@ const lookupWhoCanTeach = async () => {
                 <p class="mt-1 text-sm text-muted-foreground">Who teaches which class — change it from a teacher's own profile.</p>
             </div>
 
-            <div class="rounded-2xl border border-border bg-card p-4 shadow-sm">
+            <div class="rounded-2xl border border-border bg-card p-5 shadow-sm">
                 <div class="grid gap-4 md:grid-cols-3">
                     <div>
                         <label class="mb-2 block text-sm font-medium text-muted-foreground">Session</label>
@@ -127,54 +127,62 @@ const lookupWhoCanTeach = async () => {
                 </div>
             </div>
 
-            <div class="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
-                <table class="min-w-full divide-y divide-border">
-                    <thead class="bg-muted">
-                        <tr>
-                            <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">#</th>
-                            <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Teacher</th>
-                            <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Class / Section</th>
-                            <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Subject</th>
-                            <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Periods/Week</th>
-                        </tr>
-                    </thead>
-                    <tbody class="divide-y divide-border bg-card">
-                        <tr v-for="(assignment, assignmentIndex) in assignments" :key="assignment.id" class="hover:bg-accent">
-                            <td class="px-4 py-3 text-sm text-muted-foreground">{{ assignmentIndex + 1 }}</td>
-                            <td class="px-4 py-3">
-                                <Link
-                                    v-if="assignment.staff_profile"
-                                    :href="route('staff.people.show', assignment.staff_profile.id)"
-                                    class="font-medium text-foreground hover:underline"
-                                >
-                                    {{ assignment.staff_profile.user?.name || '-' }}
-                                </Link>
-                                <span v-if="assignment.is_class_teacher" class="ml-2 rounded-full bg-primary/10 px-2 py-0.5 text-xs text-primary">Class Teacher</span>
-                            </td>
-                            <td class="px-4 py-3 text-sm text-muted-foreground">{{ assignment.school_class?.name || '-' }} <span v-if="assignment.section">- {{ assignment.section.name }}</span></td>
-                            <td class="px-4 py-3 text-sm text-muted-foreground">{{ assignment.subject?.name || 'All subjects' }}</td>
-                            <td class="px-4 py-3 text-sm text-muted-foreground">{{ assignment.periods_per_week || '-' }}</td>
-                        </tr>
-                        <tr v-if="!loading && assignments.length === 0">
-                            <td colspan="5" class="px-4 py-10 text-center text-sm text-muted-foreground">No assignments for this filter.</td>
-                        </tr>
-                    </tbody>
-                </table>
+            <div class="rounded-2xl border border-border bg-card p-5 shadow-sm">
+                <h2 class="mb-1 text-lg font-semibold text-foreground">Assignments</h2>
+                <p class="mb-4 text-sm text-muted-foreground">Who teaches which class — change it from a teacher's own profile.</p>
+
+                <div v-if="assignments.length > 0" class="-mx-5 overflow-x-auto">
+                    <table class="min-w-full divide-y divide-border">
+                        <thead class="bg-muted">
+                            <tr>
+                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">#</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Teacher</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Class / Section</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Subject</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Periods/Week</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-border bg-card">
+                            <tr v-for="(assignment, assignmentIndex) in assignments" :key="assignment.id" class="hover:bg-accent">
+                                <td class="px-4 py-3 text-sm text-muted-foreground">{{ assignmentIndex + 1 }}</td>
+                                <td class="px-4 py-3">
+                                    <Link
+                                        v-if="assignment.staff_profile"
+                                        :href="route('staff.people.show', assignment.staff_profile.id)"
+                                        class="font-medium text-foreground hover:underline"
+                                    >
+                                        {{ assignment.staff_profile.user?.name || '-' }}
+                                    </Link>
+                                    <span v-if="assignment.is_class_teacher" class="ml-2 rounded-full bg-primary/10 px-2 py-0.5 text-xs text-primary">Class Teacher</span>
+                                </td>
+                                <td class="px-4 py-3 text-sm text-muted-foreground">{{ assignment.school_class?.name || '-' }} <span v-if="assignment.section">- {{ assignment.section.name }}</span></td>
+                                <td class="px-4 py-3 text-sm text-muted-foreground">{{ assignment.subject?.name || 'All subjects' }}</td>
+                                <td class="px-4 py-3 text-sm text-muted-foreground">{{ assignment.periods_per_week || '-' }}</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+
+                <div v-else-if="!loading" class="rounded-2xl border border-dashed border-border p-10 text-center text-sm text-muted-foreground">
+                    No assignments for this filter.
+                </div>
             </div>
 
             <div class="rounded-2xl border border-border bg-card p-5 shadow-sm">
-                <h2 class="mb-3 text-lg font-semibold text-foreground">Who Can Cover a Subject</h2>
+                <h2 class="mb-1 text-lg font-semibold text-foreground">Who Can Cover a Subject</h2>
                 <p class="mb-4 text-sm text-muted-foreground">The question a school asks when somebody rings in sick.</p>
                 <div class="flex flex-wrap gap-2">
                     <SearchableSelect v-model="whoCanTeachSubjectId" :options="subjectOptions" placeholder="Select subject" clearable class="max-w-65" />
                     <Button @click="lookupWhoCanTeach"><Icon icon="search" class="h-4 w-4" />Find</Button>
                 </div>
-                <ul v-if="whoCanTeachLoaded" class="mt-4 space-y-1">
+                <ul v-if="whoCanTeachLoaded && whoCanTeachResults.length > 0" class="mt-4 space-y-1">
                     <li v-for="teacher in whoCanTeachResults" :key="teacher.id" class="text-sm">
                         <Link :href="route('staff.people.show', teacher.id)" class="text-primary hover:underline">{{ teacher.user?.name || '-' }}</Link>
                     </li>
-                    <li v-if="whoCanTeachResults.length === 0" class="text-sm text-muted-foreground">Nobody is marked able to teach this subject.</li>
                 </ul>
+                <div v-else-if="whoCanTeachLoaded" class="mt-4 rounded-2xl border border-dashed border-border p-6 text-center text-sm text-muted-foreground">
+                    Nobody is marked able to teach this subject.
+                </div>
             </div>
         </div>
     </AppLayout>

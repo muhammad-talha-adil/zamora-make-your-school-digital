@@ -1,5 +1,5 @@
 <template>
-    <Dialog :open="isOpen" @open-change="handleOpenChange">
+    <Dialog :open="isOpen" @update:open="handleOpenChange">
         <DialogContent class="sm:max-w-md">
             <DialogHeader>
                 <DialogTitle>Update Student Status</DialogTitle>
