@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Head, router } from '@inertiajs/vue3';
 import { alert, formatCurrency } from '@/utils';
-import { ref, computed } from 'vue';
+import { ref, computed, watch } from 'vue';
 import axios from 'axios';
 import { route } from 'ziggy-js';
 import AppLayout from '@/layouts/AppLayout.vue';
@@ -96,6 +96,15 @@ const paginationItems = ref(props.inventoryItems);
 // Editing state
 const editingItem = ref<InventoryItemData | null>(null);
 const showItemForm = ref(false);
+
+// The "Add Item" trigger and each row's edit action share one ItemForm instance;
+// clear the stale edit target whenever the dialog closes without saving, so the
+// next "Add Item" click doesn't reopen it pre-filled with the last-edited item.
+watch(showItemForm, (open) => {
+    if (!open) {
+        editingItem.value = null;
+    }
+});
 
 // Default campus ID (first campus)
 const defaultCampusId = computed(() => props.campuses[0]?.id || '');

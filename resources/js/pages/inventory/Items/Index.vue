@@ -59,6 +59,15 @@ const props = defineProps<Props>();
 const editingItem = ref<InventoryItemData | null>(null);
 const showItemForm = ref(false);
 
+// The "Add Item" trigger and each row's edit action share one ItemForm instance;
+// clear the stale edit target whenever the dialog closes without saving, so the
+// next "Add Item" click doesn't reopen it pre-filled with the last-edited item.
+watch(showItemForm, (open) => {
+    if (!open) {
+        editingItem.value = null;
+    }
+});
+
 // Filter states
 const showDeleted = ref(false);
 const campusFilter = ref(props.filters?.campus_id || '');
