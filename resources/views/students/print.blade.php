@@ -242,9 +242,7 @@
                     </tr>
                     <tr>
                         <th style="background: none; border: none; padding: 4px 8px;">Occupation:</th>
-                        <td style="border: none; padding: 4px 8px;">{{ !empty(optional($sg->guardian)->occupation) ? $sg->guardian->occupation : '--' }}</td>
-                        <th style="background: none; border: none; padding: 4px 8px;">Address:</th>
-                        <td style="border: none; padding: 4px 8px;">{{ !empty(optional($sg->guardian)->address) ? $sg->guardian->address : '--' }}</td>
+                        <td style="border: none; padding: 4px 8px;" colspan="3">{{ !empty(optional($sg->guardian)->occupation) ? $sg->guardian->occupation : '--' }}</td>
                     </tr>
                 </table>
             </div>

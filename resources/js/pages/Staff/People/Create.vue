@@ -254,7 +254,13 @@ const submitStaff = async () => {
             email: form.email || '',
             employee_no: form.employee_no || '',
         }).forEach(([key, value]) => {
-            formData.append(key, value === null || value === undefined ? '' : String(value));
+            // Laravel's `boolean` rule accepts 1/0/"1"/"0"/true/false, not the
+            // "true"/"false" strings String(value) would produce for checkboxes.
+            if (typeof value === 'boolean') {
+                formData.append(key, value ? '1' : '0');
+            } else {
+                formData.append(key, value === null || value === undefined ? '' : String(value));
+            }
         });
 
         documentTypes.value.forEach((type, index) => {

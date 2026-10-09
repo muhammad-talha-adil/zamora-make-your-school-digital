@@ -208,6 +208,13 @@ class FeeHeadController extends Controller
                 'error' => $e->getMessage(),
             ]);
 
+            if ($request->expectsJson()) {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Failed to delete fee head: '.$e->getMessage(),
+                ], 422);
+            }
+
             return redirect()->back()
                 ->with('error', 'Failed to delete fee head: '.$e->getMessage());
         }

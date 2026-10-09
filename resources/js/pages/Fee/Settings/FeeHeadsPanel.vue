@@ -263,8 +263,8 @@ const deleteFeeHead = (feeHead: FeeHead) => {
                         alert.success('Fee head deleted successfully!');
                         fetchFeeHeads();
                     })
-                    .catch(() => {
-                        alert.error('Failed to delete fee head. Please try again.');
+                    .catch((err) => {
+                        alert.error(err.response?.data?.message || 'Failed to delete fee head. Please try again.');
                     });
             }
         });

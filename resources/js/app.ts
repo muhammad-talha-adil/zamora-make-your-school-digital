@@ -1,6 +1,6 @@
 import '../css/app.css';
 
-import { createInertiaApp } from '@inertiajs/vue3';
+import { createInertiaApp, router } from '@inertiajs/vue3';
 import { resolvePageComponent } from 'laravel-vite-plugin/inertia-helpers';
 import type { DefineComponent } from 'vue';
 import { createApp, h } from 'vue';
@@ -9,7 +9,10 @@ import { initializeTheme } from './composables/useAppearance';
 import { route } from 'ziggy-js';
 import './ziggy'; // Import for window.route setup
 
-const appName = import.meta.env.VITE_APP_NAME || 'Laravel';
+// Falls back to the build-time env name until the shared `name` prop (the
+// school's own configured name, from HandleInertiaRequests) arrives on the
+// first page load, then tracks it across every Inertia navigation.
+let appName = import.meta.env.VITE_APP_NAME || 'Laravel';
 
 // Create a Vue plugin to inject route into all components
 const routePlugin = {
@@ -27,6 +30,7 @@ createInertiaApp({
             import.meta.glob<DefineComponent>('./pages/**/*.vue'),
         ),
     setup({ el, App, props, plugin }) {
+        appName = (props.initialPage.props as { name?: string }).name || appName;
         createApp({ render: () => h(App, props) })
             .use(plugin)
             .use(createPinia())
@@ -41,6 +45,13 @@ createInertiaApp({
                 .getPropertyValue('--primary')
                 .trim() || '#2563eb',
     },
+});
+
+router.on('navigate', (event) => {
+    const name = (event.detail.page.props as { name?: string }).name;
+    if (name) {
+        appName = name;
+    }
 });
 
 // This will set light / dark mode on page load...

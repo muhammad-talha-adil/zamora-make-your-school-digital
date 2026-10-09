@@ -60,7 +60,10 @@ class FeeHead extends Model
         $code = $base;
         $suffix = 1;
 
-        while (self::withTrashed()->where('code', $code)->exists()) {
+        // Only active rows block reuse — a soft-deleted fee head's code is
+        // free again, mirroring how Campus/Class/Subject let a deleted
+        // name be recreated instead of silently picking a _2 suffix.
+        while (self::where('code', $code)->exists()) {
             $code = $base.'_'.(++$suffix);
         }
 

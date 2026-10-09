@@ -54,15 +54,22 @@ class InventoryPageController extends Controller
     {
         $campusId = $this->resolveCampusId($request);
 
+        // allTypes/allItems feed form dialogs (e.g. "New Stock Adjustment")
+        // that let a school-wide user pick their own campus independent of
+        // this page's campus filter — scoping them to the page's $campusId
+        // would empty the dialog's item list whenever the two disagree. A
+        // campus-restricted user must still never see another campus's data.
+        $restrictedCampusId = $request->user()?->isCampusRestricted() ? $request->user()->campusId() : null;
+
         $allTypes = InventoryType::with(['campus:id,name'])
             ->select('id', 'name', 'campus_id', 'is_active')
-            ->when($campusId, fn ($q) => $q->where('campus_id', $campusId))
+            ->when($restrictedCampusId, fn ($q) => $q->where('campus_id', $restrictedCampusId))
             ->orderBy('name')
             ->get();
 
         $allItems = InventoryItem::with(['campus:id,name', 'inventoryType:id,name', 'inventoryStock'])
             ->select('id', 'name', 'description', 'campus_id', 'inventory_type_id', 'is_active')
-            ->when($campusId, fn ($q) => $q->where('campus_id', $campusId))
+            ->when($restrictedCampusId, fn ($q) => $q->where('campus_id', $restrictedCampusId))
             ->orderBy('name')
             ->get()
             ->map(function ($item) {
