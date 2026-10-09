@@ -3,6 +3,7 @@
 namespace App\Policies\Fee;
 
 use App\Models\Fee\FeePayment;
+use App\Models\Student;
 use App\Models\User;
 use App\Policies\Concerns\ChecksSchoolReach;
 use Illuminate\Auth\Access\HandlesAuthorization;
@@ -64,9 +65,25 @@ class FeePaymentPolicy
         return $this->may($user, 'fee.view', 'fee.payment.collect');
     }
 
-    public function create(User $user): bool
+    /**
+     * When a `$studentId` is given — recording an actual payment, rather than
+     * just opening the form or searching — this also checks that the
+     * student's own campus is within the user's reach, so a cashier scoped to
+     * one campus cannot record a payment against another campus's student.
+     */
+    public function create(User $user, ?int $studentId = null): bool
     {
-        return $this->may($user, 'fee.payment.collect');
+        if (! $this->may($user, 'fee.payment.collect')) {
+            return false;
+        }
+
+        if ($studentId === null) {
+            return true;
+        }
+
+        $campusId = Student::find($studentId)?->currentEnrollment?->campus_id;
+
+        return $this->reaches($user, $campusId);
     }
 
     public function reverse(User $user, FeePayment $payment): bool

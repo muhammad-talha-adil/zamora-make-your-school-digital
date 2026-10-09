@@ -440,9 +440,9 @@ class AttendanceController extends Controller
      */
     public function storeBulk(StoreBulkAttendanceRequest $request): RedirectResponse
     {
-        $this->authorize('create', Attendance::class);
-
         $validated = $request->validated();
+
+        $this->authorize('create', [Attendance::class, $validated]);
 
         /*
          * Saving a register that already exists is editing it, not creating it.

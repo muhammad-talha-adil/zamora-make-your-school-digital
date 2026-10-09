@@ -159,7 +159,7 @@ class FeePaymentController extends Controller
      */
     public function store(StoreFeePaymentRequest $request)
     {
-        Gate::authorize('create', FeePayment::class);
+        Gate::authorize('create', [FeePayment::class, $request->integer('student_id')]);
 
         $payment = $this->feePaymentService->record($request->validated());
 
@@ -198,7 +198,9 @@ class FeePaymentController extends Controller
      */
     public function storeBulk(StoreBulkFeePaymentRequest $request)
     {
-        Gate::authorize('create', FeePayment::class);
+        foreach ($request->input('payments', []) as $payment) {
+            Gate::authorize('create', [FeePayment::class, (int) ($payment['student_id'] ?? null)]);
+        }
 
         $payments = DB::transaction(function () use ($request) {
             return collect($request->validated('payments'))

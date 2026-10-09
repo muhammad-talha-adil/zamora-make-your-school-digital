@@ -149,14 +149,26 @@ class StaffProfilePolicy
      * Two abilities on purpose: the person who works the figures out is not
      * automatically the person who releases the money.
      */
-    public function runPayroll(User $user): bool
+    public function runPayroll(User $user, ?int $campusId = null): bool
     {
-        return $this->may($user, 'staff.payroll.run');
+        if (! $this->may($user, 'staff.payroll.run')) {
+            return false;
+        }
+
+        $userCampus = $user->campusId();
+
+        return $userCampus === null || $campusId === null || (int) $campusId === (int) $userCampus;
     }
 
-    public function approvePayroll(User $user): bool
+    public function approvePayroll(User $user, ?int $campusId = null): bool
     {
-        return $this->may($user, 'staff.payroll.approve');
+        if (! $this->may($user, 'staff.payroll.approve')) {
+            return false;
+        }
+
+        $userCampus = $user->campusId();
+
+        return $userCampus === null || $campusId === null || (int) $campusId === (int) $userCampus;
     }
 
     /**

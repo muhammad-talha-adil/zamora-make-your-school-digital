@@ -52,13 +52,40 @@ class AttendancePolicy
     /**
      * Determine whether the user can create attendances.
      *
-     * Class-level: there is no record to check yet. The register being written
-     * is checked by `update()` when it already exists, and the controller
-     * authorises that before it touches anything.
+     * A brand-new register has no record for `update()` to check, so the
+     * class/section being filed has to be read out of the request data
+     * instead. Without this, a class-restricted teacher could file the very
+     * first register for any section simply by being the first to touch it
+     * that day — `registersTouchedBy()` only authorises sections that already
+     * have a register.
+     *
+     * @param  array{class_id?: int|null, section_id?: int|null, session_id?: int|null, campus_id?: int|null}  $data
      */
-    public function create(User $user): bool
+    public function create(User $user, array $data = []): bool
     {
-        return $user->hasPermission('attendance.mark') || $user->isSuperAdmin();
+        if (! $user->hasPermission('attendance.mark') && ! $user->isSuperAdmin()) {
+            return false;
+        }
+
+        if ($user->isSuperAdmin()) {
+            return true;
+        }
+
+        $campusId = $user->campusId();
+
+        if ($campusId !== null && isset($data['campus_id']) && (int) $data['campus_id'] !== (int) $campusId) {
+            return false;
+        }
+
+        if (! $user->isClassRestricted()) {
+            return true;
+        }
+
+        return $user->teachesSection(
+            $data['class_id'] ?? null,
+            $data['section_id'] ?? null,
+            $data['session_id'] ?? null
+        );
     }
 
     /**

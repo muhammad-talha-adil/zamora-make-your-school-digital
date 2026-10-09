@@ -251,8 +251,8 @@ class StaffController extends Controller
         ]);
 
         $profile = DB::transaction(function () use ($data, $request) {
-            $employeeNo = $data['employee_no'] ?: $this->generateEmployeeNo();
-            $email = $data['email'] ?: strtolower(Str::slug($data['name'], '')).'.'.$employeeNo.'@staff.local';
+            $employeeNo = $data['employee_no'] ?? $this->generateEmployeeNo();
+            $email = $data['email'] ?? strtolower(Str::slug($data['name'], '')).'.'.$employeeNo.'@staff.local';
 
             $user = User::create([
                 'username' => strtolower($employeeNo),
@@ -384,14 +384,14 @@ class StaffController extends Controller
 
     public function generatePayroll(Request $request)
     {
-        Gate::authorize('runPayroll', StaffProfile::class);
-
         $data = $request->validate([
             'campus_id' => 'nullable|exists:campuses,id',
             'payroll_month_id' => 'required|exists:months,id',
             'payroll_year' => 'required|integer|min:2000|max:2100',
             'title' => 'nullable|string|max:150',
         ]);
+
+        Gate::authorize('runPayroll', [StaffProfile::class, $data['campus_id'] ?? null]);
 
         $run = $this->payroll->generateRun($data, auth()->id());
 
@@ -405,7 +405,7 @@ class StaffController extends Controller
     public function payPayrollItem(PayPayrollItemRequest $request, PayrollRunItem $payrollRunItem)
     {
         // Releasing money is not the same act as working the figures out.
-        Gate::authorize('approvePayroll', StaffProfile::class);
+        Gate::authorize('approvePayroll', [StaffProfile::class, $payrollRunItem->staffProfile->campus_id]);
 
         $payrollItem = $this->payroll->pay($payrollRunItem, $request->validated());
 
@@ -425,7 +425,7 @@ class StaffController extends Controller
     public function giveAdvance(GiveStaffAdvanceRequest $request)
     {
         $staff = StaffProfile::findOrFail($request->validated('staff_profile_id'));
-        Gate::authorize('approvePayroll', StaffProfile::class);
+        Gate::authorize('approvePayroll', [StaffProfile::class, $staff->campus_id]);
         Gate::authorize('view', $staff);
 
         $advance = $this->payroll->giveAdvance($request->validated(), auth()->id());
@@ -460,7 +460,7 @@ class StaffController extends Controller
      */
     public function returnAdvance(ReturnStaffAdvanceRequest $request, StaffAdvance $staffAdvance)
     {
-        Gate::authorize('approvePayroll', StaffProfile::class);
+        Gate::authorize('approvePayroll', [StaffProfile::class, $staffAdvance->staffProfile->campus_id]);
 
         $advance = $this->payroll->returnAdvance($staffAdvance, $request->validated('status'));
 

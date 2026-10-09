@@ -115,7 +115,7 @@ class ExamSettingsController extends Controller
 
         $gradeScale = GradeSystem::create($validated);
 
-        return response()->json(['data' => $gradeScale], 201);
+        return back()->with('success', 'Grade scale created successfully.');
     }
 
     /**
@@ -136,7 +136,7 @@ class ExamSettingsController extends Controller
 
         $gradeScale->update($validated);
 
-        return response()->json(['data' => $gradeScale]);
+        return back()->with('success', 'Grade scale updated successfully.');
     }
 
     /**
@@ -149,7 +149,7 @@ class ExamSettingsController extends Controller
         $gradeScale = GradeSystem::findOrFail($id);
         $gradeScale->delete();
 
-        return response()->json(['message' => 'Grade scale deleted successfully']);
+        return back()->with('success', 'Grade scale deleted successfully.');
     }
 
     /**
@@ -167,7 +167,7 @@ class ExamSettingsController extends Controller
         // Set this one as default
         $gradeScale->update(['is_default' => true]);
 
-        return response()->json(['data' => $gradeScale->fresh()]);
+        return back()->with('success', 'Default grade scale updated.');
     }
 
     /**
@@ -185,7 +185,7 @@ class ExamSettingsController extends Controller
         // Activate the selected one
         $gradeScale->update(['is_active' => true]);
 
-        return response()->json(['data' => $gradeScale->fresh()]);
+        return back()->with('success', 'Grade scale activated.');
     }
 
     /**

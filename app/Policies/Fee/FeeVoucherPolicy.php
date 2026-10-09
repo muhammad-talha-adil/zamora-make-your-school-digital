@@ -56,9 +56,15 @@ class FeeVoucherPolicy
         return $this->may($user, 'fee.view', 'fee.voucher.view');
     }
 
-    public function generate(User $user): bool
+    /**
+     * When a `$campusId` is given — actually generating vouchers, rather than
+     * just opening the form — this also checks that campus is within the
+     * user's reach, so staff scoped to one campus cannot generate vouchers
+     * for another campus's students.
+     */
+    public function generate(User $user, ?int $campusId = null): bool
     {
-        return $this->may($user, 'fee.voucher.generate');
+        return $this->may($user, 'fee.voucher.generate') && $this->reaches($user, $campusId);
     }
 
     public function update(User $user, FeeVoucher $voucher): bool

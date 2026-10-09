@@ -119,6 +119,13 @@ class InventoryAdjustmentsController extends Controller
             'reference_number' => 'nullable|string|max:100',
         ]);
 
+        // A campus-restricted user must not be able to adjust another
+        // campus's stock by posting a different campus_id.
+        $user = $request->user();
+        if ($user && $user->isCampusRestricted() && $user->campusId() !== (int) $request->campus_id) {
+            abort(403);
+        }
+
         try {
             DB::transaction(function () use ($request) {
                 // Get or create stock record, locked for the duration of the

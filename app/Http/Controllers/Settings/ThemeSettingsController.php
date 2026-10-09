@@ -7,6 +7,7 @@ use App\Models\ThemePalette;
 use App\Models\ThemeSetting;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -98,7 +99,7 @@ class ThemeSettingsController extends Controller
         ThemeSetting::updateOrCreate(
             ['mode' => $mode],
             [
-                'selected_palette_id' => $validated['selected_palette_id'],
+                'selected_palette_id' => $validated['selected_palette_id'] ?? null,
                 'colors_json' => $validated['colors'],
                 'updated_by' => $userId,
             ]
@@ -115,7 +116,9 @@ class ThemeSettingsController extends Controller
             if (isset($colors[$bgSlot]) && isset($colors[$textSlot])) {
                 $contrast = $this->calculateContrast($colors[$bgSlot], $colors[$textSlot]);
                 if ($contrast < 4.5) {
-                    throw new \Exception("Insufficient contrast for {$textSlot}");
+                    throw ValidationException::withMessages([
+                        "colors.{$textSlot}" => "Insufficient contrast for {$textSlot}.",
+                    ]);
                 }
             }
         }

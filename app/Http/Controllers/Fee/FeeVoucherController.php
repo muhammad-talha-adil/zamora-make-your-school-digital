@@ -349,7 +349,7 @@ class FeeVoucherController extends Controller
      */
     public function generate(GenerateVouchersRequest $request)
     {
-        Gate::authorize('generate', FeeVoucher::class);
+        Gate::authorize('generate', [FeeVoucher::class, $request->integer('campus_id')]);
 
         $validated = $request->validated();
 
@@ -413,7 +413,7 @@ class FeeVoucherController extends Controller
      */
     public function generateBulk(GenerateVouchersBulkRequest $request)
     {
-        Gate::authorize('generate', FeeVoucher::class);
+        Gate::authorize('generate', [FeeVoucher::class, $request->integer('campus_id')]);
 
         $validated = $request->validated();
 
