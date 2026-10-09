@@ -42,6 +42,20 @@ export const formatDateTime = (date: string | Date): string => {
 };
 
 /**
+ * Format a "HH:MM" or "HH:MM:SS" time-only string as 12-hour with AM/PM.
+ */
+export const formatTime = (time: string | null | undefined): string => {
+    if (!time) {
+        return '—';
+    }
+    const [hourStr, minuteStr] = time.split(':');
+    const hour = parseInt(hourStr, 10);
+    const period = hour >= 12 ? 'PM' : 'AM';
+    const hour12 = hour % 12 === 0 ? 12 : hour % 12;
+    return `${hour12}:${minuteStr} ${period}`;
+};
+
+/**
  * Format number with commas
  */
 export const formatNumber = (num: number): string => {

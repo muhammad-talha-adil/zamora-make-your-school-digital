@@ -4,6 +4,7 @@ import RowAction from '@/components/tables/RowAction.vue';
 import RowActions from '@/components/tables/RowActions.vue';
 import StatusToggle from '@/components/tables/StatusToggle.vue';
 import { alert } from '@/utils';
+import { formatDate, formatTime } from '@/utils/format';
 import { router } from '@inertiajs/vue3';
 
 interface Props {
@@ -87,14 +88,16 @@ const deleteTiming = (timing: any) => {
                             </td>
                             <td class="px-6 py-4 text-sm text-muted-foreground max-w-xs">{{ classNames(timing) }}</td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
-                                {{ timing.day_starts_at?.slice(0, 5) }} / {{ timing.late_after?.slice(0, 5) }}
+                                {{ formatTime(timing.day_starts_at) }} / {{ formatTime(timing.late_after) }}
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
-                                <template v-if="timing.break_starts_at">{{ timing.break_starts_at.slice(0, 5) }} – {{ timing.break_ends_at?.slice(0, 5) }}</template>
+                                <template v-if="timing.break_starts_at">{{ formatTime(timing.break_starts_at) }} – {{ formatTime(timing.break_ends_at) }}</template>
                                 <template v-else>—</template>
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">{{ timing.day_ends_at?.slice(0, 5) || '—' }}</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">{{ timing.starts_on }} – {{ timing.ends_on }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">{{ formatTime(timing.day_ends_at) }}</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
+                                {{ timing.starts_on ? formatDate(timing.starts_on) : '—' }} – {{ timing.ends_on ? formatDate(timing.ends_on) : '—' }}
+                            </td>
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <StatusToggle :active="timing.is_active" @toggle="toggleTimingActive(timing)" />
                             </td>
