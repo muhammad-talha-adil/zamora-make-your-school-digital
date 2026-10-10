@@ -482,6 +482,11 @@ class StaffController extends Controller
      * to preserve, and a designation change should not strip a role an admin
      * granted by hand for reasons the designation mapping does not know
      * about.
+     *
+     * `campus_admin` carries two extra rules — only an owner/developer may
+     * hand it out, and a campus may only have one active holder — both
+     * enforced centrally in {@see User::assignRole()} so every grant path
+     * (not just this one) is covered.
      */
     protected function assignDesignationRole(User $user, ?int $designationId): void
     {

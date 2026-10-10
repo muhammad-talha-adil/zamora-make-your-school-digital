@@ -9,9 +9,11 @@ use Illuminate\Database\Eloquent\Relations\HasManyThrough;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
+use Illuminate\Validation\ValidationException;
 use Laravel\Fortify\TwoFactorAuthenticatable;
 use Spatie\Activitylog\Models\Concerns\LogsActivity;
 use Spatie\Activitylog\Support\LogOptions;
+use Spatie\Permission\Contracts\Role;
 use Spatie\Permission\Exceptions\PermissionDoesNotExist;
 use Spatie\Permission\Traits\HasRoles;
 
@@ -43,6 +45,8 @@ class User extends Authenticatable
     {
         $before = $this->getRoleNames()->all();
 
+        $this->guardCampusAdminChange($roles);
+
         $this->baseAssignRole(...$roles);
 
         $this->logRoleChange($before);
@@ -53,6 +57,8 @@ class User extends Authenticatable
     public function removeRole(...$role): static
     {
         $before = $this->getRoleNames()->all();
+
+        $this->guardCampusAdminChange($role, removing: true);
 
         $this->baseRemoveRole(...$role);
 
@@ -65,11 +71,68 @@ class User extends Authenticatable
     {
         $before = $this->getRoleNames()->all();
 
+        $this->guardCampusAdminChange($roles);
+
         $this->baseSyncRoles(...$roles);
 
         $this->logRoleChange($before);
 
         return $this;
+    }
+
+    /**
+     * `campus_admin` is not an ordinary designation role: only an
+     * owner/developer may grant or remove it, and a campus may only ever
+     * have one active holder. Every role-change path on this model
+     * (`assignRole`/`removeRole`/`syncRoles`) routes through here, rather
+     * than each call site re-implementing the rule — the alternative lets a
+     * forgotten call site quietly hand out admin access.
+     *
+     * The currently-authenticated user is who the rule is checked against,
+     * not `$this` — e.g. a console/seeder context has no authenticated user
+     * and is exempt, matching how the rest of the app's "owner only" checks
+     * already work.
+     *
+     * @param  array<int, mixed>  $roles
+     */
+    private function guardCampusAdminChange(array $roles, bool $removing = false): void
+    {
+        $flat = collect($roles)->flatten()->map(
+            fn ($role) => $role instanceof Role ? $role->name : $role
+        );
+
+        if (! $flat->contains('campus_admin')) {
+            return;
+        }
+
+        $actor = auth()->user();
+
+        if (! $actor) {
+            return;
+        }
+
+        abort_unless($actor->isSuperAdmin(), 403, 'Only the owner can assign or change a Campus Admin.');
+
+        if ($removing) {
+            return;
+        }
+
+        $campusId = $this->staffProfile?->campus_id;
+
+        if (! $campusId) {
+            return;
+        }
+
+        $existingAdmin = self::role('campus_admin')
+            ->whereHas('staffProfile', fn ($q) => $q->where('campus_id', $campusId)->where('is_active', true))
+            ->where('id', '!=', $this->id)
+            ->first();
+
+        if ($existingAdmin) {
+            throw ValidationException::withMessages([
+                'designation_id' => "This campus already has an admin ({$existingAdmin->name}). Deactivate them or give them another role first.",
+            ]);
+        }
     }
 
     /**
