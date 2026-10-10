@@ -97,7 +97,7 @@ it('refuses ordinary staff to print a paid voucher', function () {
         ->assertStatus(409);
 });
 
-it('still lets developer/owner/super_admin view a paid voucher', function () {
+it('still lets developer/owner view a paid voucher', function () {
     $voucher = payVoucherInFull();
 
     $this->get(route('fee.vouchers.print', $voucher->id))->assertOk();

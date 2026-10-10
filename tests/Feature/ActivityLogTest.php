@@ -184,7 +184,7 @@ it('turns away anyone else from the activity log', function (string $role) {
     $user = makeActivityLogUserWithRole($role);
 
     $this->actingAs($user)->get(route('activity-log.index'))->assertForbidden();
-})->with(['campus_admin', 'teacher', 'super_admin']);
+})->with(['campus_admin', 'teacher']);
 
 it('filters the activity log by subject type', function () {
     $world = FeeWorld::make();

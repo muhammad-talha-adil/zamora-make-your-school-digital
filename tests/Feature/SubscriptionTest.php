@@ -142,7 +142,7 @@ it('turns away a non-developer from the subscription management page', function 
 
     $this->actingAs($user)->get(route('subscription.index'))->assertForbidden();
     $this->actingAs($user)->patch(route('subscription.update'), ['status' => 'active'])->assertForbidden();
-})->with(['owner', 'super_admin', 'campus_admin']);
+})->with(['owner', 'campus_admin']);
 
 it('carries the 10-day warning banner data when within the window, not outside it', function () {
     $owner = makeSubscriptionUserWithRole('owner');
@@ -163,7 +163,7 @@ it('carries the 10-day warning banner data when within the window, not outside i
         ->assertInertia(fn ($page) => $page->where('subscriptionWarning', null));
 });
 
-it('does not show the warning banner to roles outside owner/campus_admin/super_admin', function () {
+it('does not show the warning banner to roles outside owner/campus_admin', function () {
     Subscription::current()->update([
         'status' => 'active',
         'subscription_expires_at' => now()->addDays(3),

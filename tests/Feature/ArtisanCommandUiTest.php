@@ -35,12 +35,12 @@ it('turns away a guest', function () {
     $this->get(route('artisan.ui'))->assertRedirect(route('login'));
 });
 
-it('turns away a non-developer, including owner and super_admin', function (string $role) {
+it('turns away a non-developer, including owner', function (string $role) {
     $user = makeUserWithRole($role);
 
     $this->actingAs($user)->get(route('artisan.ui'))->assertForbidden();
     $this->actingAs($user)->post(route('artisan.cache.clear'))->assertForbidden();
-})->with(['owner', 'super_admin', 'campus_admin']);
+})->with(['owner', 'campus_admin']);
 
 it('lets a developer reach the dashboard', function () {
     $developer = makeUserWithRole('developer');

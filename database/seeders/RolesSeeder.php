@@ -14,12 +14,11 @@ use Spatie\Permission\PermissionRegistrar;
  *
  *   developer     everything, and the only role that owns subscription and
  *                 system tooling
- *   owner         everything across every campus except the above
- *   super_admin   runs day-to-day operations across campuses, but cannot
- *                 change the business structure: no campus create/delete, no
- *                 branding, no salary changes or payroll approval, no user
- *                 deletion, and finance reports are read-only
- *   campus_admin  the same operational reach, limited to their own campus
+ *   owner         everything across every campus; the only school-wide
+ *                 operator now that super_admin is gone
+ *   campus_admin  the same operational reach as owner, limited to their own
+ *                 campus — one per campus (enforced at role-assignment, not
+ *                 here)
  *   teacher       their own classes: attendance, marks, papers, timetable
  *   head_teacher  a teacher, plus verifying marks and seeing the whole class
  *   accountant    everything financial
@@ -51,9 +50,42 @@ class RolesSeeder extends Seeder
             $role->syncPermissions($this->expand($definition['permissions']));
         }
 
+        $this->retireSuperAdmin();
+
         app(PermissionRegistrar::class)->forgetCachedPermissions();
 
         $this->command?->info('Roles seeded: '.count($this->roles()));
+    }
+
+    /**
+     * The `super_admin` role was removed in favour of `owner` (school-wide)
+     * and `campus_admin` (one per campus). Any user still holding it keeps
+     * acting the same way day-to-day, so they're moved to `campus_admin`
+     * rather than left without a role; a user with no campus falls back to
+     * `owner` since there's nowhere campus-scoped to put them.
+     */
+    private function retireSuperAdmin(): void
+    {
+        $role = Role::where('name', 'super_admin')->first();
+
+        if (! $role) {
+            return;
+        }
+
+        $campusAdmin = Role::where('name', 'campus_admin')->first();
+        $owner = Role::where('name', 'owner')->first();
+
+        foreach ($role->users as $user) {
+            $fallback = $user->staffProfile?->campus_id ? $campusAdmin : $owner;
+
+            if ($fallback) {
+                $user->assignRole($fallback);
+            }
+
+            $user->removeRole($role);
+        }
+
+        $role->delete();
     }
 
     /**
@@ -129,29 +161,6 @@ class RolesSeeder extends Seeder
                 // Everything except the subscription and system tooling that
                 // stays with the developer.
                 'permissions' => ['*', '-system.*'],
-            ],
-
-            'super_admin' => [
-                'label' => 'Super Admin',
-                'scope' => Role::SCOPE_SCHOOL,
-                'permissions' => [
-                    '*',
-                    '-system.*',
-                    // structure and branding belong to the owner
-                    '-school.campus.manage', '-school.campus.delete',
-                    '-school.profile.manage', '-school.theme.manage',
-                    // may manage staff and students, not owner-level accounts
-                    '-users.delete', '-users.role.manage',
-                    // may run payroll, not set pay or release it
-                    '-staff.salary.manage', '-staff.payroll.approve',
-                    // owner-only financial view
-                    '-finance.reports.owner',
-                    // destructive actions stay above this level
-                    '-students.delete', '-exam.delete', '-fee.voucher.delete',
-                    '-inventory.purchase.delete', '-staff.delete',
-                    // reopening a closed attendance register stays owner-only
-                    '-attendance.unlock',
-                ],
             ],
 
             'campus_admin' => [

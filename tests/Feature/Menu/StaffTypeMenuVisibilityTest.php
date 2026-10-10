@@ -8,7 +8,7 @@
  * explicit `role` value on the rows a staff-type role's own permissions
  * (RolesSeeder) don't cover, while every row an admin role already saw stays
  * visible to that admin role (no `role` value ever drops one of the four
- * admin roles: developer, owner, super_admin, campus_admin).
+ * admin roles: developer, owner, campus_admin).
  */
 
 use App\Models\Menu;
@@ -205,7 +205,7 @@ test('admin roles keep seeing exactly the same menu as before the staff-visibili
     ] as $expectedTitle) {
         expect($titles)->toContain($expectedTitle);
     }
-})->with(['developer', 'owner', 'super_admin', 'campus_admin']);
+})->with(['developer', 'owner', 'campus_admin']);
 
 test('an admin role loses no menu row it could see before the staff-visibility fix', function (string $role) {
     seedRealMenusAndRoles();
@@ -226,4 +226,4 @@ test('an admin role loses no menu row it could see before the staff-visibility f
         ->count();
 
     expect(count($titles))->toBe($expectedCount);
-})->with(['developer', 'owner', 'super_admin', 'campus_admin']);
+})->with(['developer', 'owner', 'campus_admin']);

@@ -112,15 +112,14 @@ class HandleInertiaRequests extends Middleware
     }
 
     /**
-     * Shown only to owner/campus_admin/super_admin, within 10 days of
-     * whichever expiry currently governs access - never to students,
-     * guardians, or staff.
+     * Shown only to owner/campus_admin, within 10 days of whichever expiry
+     * currently governs access - never to students, guardians, or staff.
      *
      * @return array{daysRemaining: int, status: string}|null
      */
     protected function buildSubscriptionWarning(?User $user): ?array
     {
-        if (! $user || ! $user->hasAnyRole(['owner', 'campus_admin', 'super_admin'])) {
+        if (! $user || ! $user->hasAnyRole(['owner', 'campus_admin'])) {
             return null;
         }
 

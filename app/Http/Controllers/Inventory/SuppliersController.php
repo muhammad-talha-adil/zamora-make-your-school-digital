@@ -90,7 +90,7 @@ class SuppliersController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'campus_id' => 'nullable|string|max:255',
+            'campus_id' => 'nullable|integer|exists:campuses,id',
             'name' => 'required|string|max:255',
             'contact_person' => 'nullable|string|max:255',
             'phone' => 'nullable|string|max:20',

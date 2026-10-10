@@ -32,7 +32,7 @@ it('lets a role holding students.create admit a student', function (string $role
         ->assertSessionHasNoErrors();
 
     expect(Student::count())->toBe(1);
-})->with(['campus_admin', 'super_admin', 'owner', 'clerk']);
+})->with(['campus_admin', 'owner', 'clerk']);
 
 it('refuses a role without students.create', function (string $role) {
     $user = $this->world->userWithRole($role, $role.'@school.test');
