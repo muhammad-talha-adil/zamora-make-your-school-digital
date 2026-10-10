@@ -208,7 +208,7 @@
           <!-- Right Side: User Menu -->
           <div class="flex shrink-0 items-center gap-2 sm:gap-4">
             <select
-              v-if="campusSwitcher"
+              v-if="campusSwitcher && campusSwitcher.campuses.length > 0"
               :value="campusSwitcher.activeCampusId ?? ''"
               @change="switchCampus(($event.target as HTMLSelectElement).value)"
               class="hidden sm:inline-block rounded-md border px-2 py-1.5 text-sm"
