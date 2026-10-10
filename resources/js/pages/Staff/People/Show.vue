@@ -574,6 +574,9 @@ const activeJobsCount = computed(() => props.jobs.length);
                     <span :class="props.staff.is_active ? 'bg-success/10 text-success' : 'bg-muted text-muted-foreground'" class="inline-flex rounded-full px-3 py-1 text-sm font-medium">
                         {{ props.staff.is_active ? 'Active' : 'Inactive' }}
                     </span>
+                    <Button v-if="props.can.edit" variant="outline" size="sm" @click="router.visit(route('staff.people.permissions', props.staff.id))">
+                        Permissions
+                    </Button>
                     <Button v-if="props.can.edit && props.staff.is_active" variant="outline" size="sm" @click="showLeaveDialog = true">
                         Mark as Left
                     </Button>

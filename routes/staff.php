@@ -158,6 +158,14 @@ Route::prefix('staff')->name('staff.')->middleware($middleware)->group(function 
             ->name('people.documents.add')->middleware('permission:staff.manage');
         Route::delete('/documents/{document}', 'removeDocument')
             ->name('documents.remove')->middleware('permission:staff.manage');
+
+        // Per-staff-member direct permission grants — role-independent,
+        // campus-scoped the same way every other `update` action on a
+        // StaffProfile is (StaffProfilePolicy::update).
+        Route::get('/people/{staffProfile}/permissions', 'permissions')
+            ->name('people.permissions')->middleware('permission:staff.manage');
+        Route::put('/people/{staffProfile}/permissions', 'updatePermissions')
+            ->name('people.permissions.update')->middleware('permission:staff.manage');
     });
 
     // ================================================================

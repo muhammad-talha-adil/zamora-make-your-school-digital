@@ -6,6 +6,7 @@ use App\Http\Controllers\Concerns\ResolvesOwnStaffProfile;
 use App\Http\Controllers\Controller;
 use App\Models\Campus;
 use App\Models\Gender;
+use App\Models\Permission;
 use App\Models\Role;
 use App\Models\School;
 use App\Models\SchoolClass;
@@ -398,5 +399,76 @@ class StaffProfileController extends Controller
             'cards' => $cards->forStaff($staff),
             'school' => School::where('is_active', true)->first(),
         ]);
+    }
+
+    /**
+     * Owner-only abilities — never grantable to a staff member from this
+     * page, no matter who is operating it or what they tick. A campus_admin
+     * granting these to their own staff would make that person their equal
+     * or better, which the role architecture does not allow (see
+     * ROLE-ARCHITECTURE-REDESIGN-PLAN.md, Section 4/5).
+     *
+     * @return list<string>
+     */
+    public static function ownerOnlyPermissions(): array
+    {
+        return [
+            'users.role.assign',
+            'users.delete',
+            'school.campus.manage',
+            'school.campus.delete',
+            'school.profile.manage',
+            'school.theme.manage',
+            'staff.salary.manage',
+            'staff.payroll.approve',
+            'finance.reports.owner',
+        ];
+    }
+
+    /**
+     * Every grantable permission, module-grouped, with this staff member's
+     * currently-held ones marked. Role-independent: `syncPermissions()` on
+     * the PUT below writes to the user's direct permissions, on top of
+     * whatever their role already grants.
+     */
+    public function permissions(StaffProfile $staffProfile)
+    {
+        Gate::authorize('update', $staffProfile);
+
+        $ownerOnly = self::ownerOnlyPermissions();
+        $granted = $staffProfile->user->getDirectPermissions()->pluck('name')->all();
+
+        $grouped = Permission::orderBy('name')->get(['name'])
+            ->reject(fn ($permission) => in_array($permission->name, $ownerOnly, true))
+            ->groupBy(fn ($permission) => explode('.', $permission->name)[0])
+            ->map(fn ($group) => $group->pluck('name')->values())
+            ->sortKeys();
+
+        return Inertia::render('Staff/People/Permissions', [
+            'staffProfile' => $staffProfile->load('user:id,name'),
+            'permissionGroups' => $grouped,
+            'grantedPermissions' => $granted,
+        ]);
+    }
+
+    public function updatePermissions(Request $request, StaffProfile $staffProfile)
+    {
+        Gate::authorize('update', $staffProfile);
+
+        $validated = $request->validate([
+            'permissions' => ['array'],
+            'permissions.*' => ['string'],
+        ]);
+
+        $ownerOnly = self::ownerOnlyPermissions();
+
+        // Defense-in-depth: strip owner-only abilities even if the request
+        // somehow carries one — the UI never offers them, but the real gate
+        // has to be here, not just in what the page renders.
+        $safePermissions = array_values(array_diff($validated['permissions'] ?? [], $ownerOnly));
+
+        $staffProfile->user->syncPermissions($safePermissions);
+
+        return back()->with('success', 'Permissions updated.');
     }
 }
