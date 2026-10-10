@@ -81,6 +81,14 @@ class AttendancePolicy
             return true;
         }
 
+        // No class/section given at all means this is a coarse page-visibility
+        // check (e.g. the QR scan page, the attendance hub tab) rather than an
+        // attempt to file a specific register — the real per-register check
+        // happens in `storeBulk()`, which always passes `data`.
+        if (! isset($data['class_id']) && ! isset($data['section_id'])) {
+            return true;
+        }
+
         return $user->teachesSection(
             $data['class_id'] ?? null,
             $data['section_id'] ?? null,

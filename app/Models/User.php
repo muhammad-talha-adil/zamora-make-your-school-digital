@@ -228,13 +228,22 @@ class User extends Authenticatable
     }
 
     /**
-     * The campus this user belongs to, if they are restricted to one.
+     * The campus this user is currently scoped to.
      *
-     * Taken from their staff record, which is where a member of staff's campus
-     * has always been kept.
+     * For campus-restricted staff this is simply their own campus. For a
+     * school-wide user (owner/developer) it is whichever campus they picked
+     * from the header switcher (`viewing_campus_id` in session) — there is no
+     * "all campuses" option, so this is the single source of truth every
+     * campus-scoping check in the app reads from.
      */
     public function campusId(): ?int
     {
+        if ($this->isSuperAdmin()) {
+            $viewingCampusId = session('viewing_campus_id');
+
+            return $viewingCampusId !== null ? (int) $viewingCampusId : null;
+        }
+
         return $this->staffProfile?->campus_id;
     }
 

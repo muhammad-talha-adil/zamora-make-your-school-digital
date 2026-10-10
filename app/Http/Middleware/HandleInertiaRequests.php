@@ -2,6 +2,7 @@
 
 namespace App\Http\Middleware;
 
+use App\Models\Campus;
 use App\Models\Menu;
 use App\Models\School;
 use App\Models\Session;
@@ -53,6 +54,17 @@ class HandleInertiaRequests extends Middleware
         $school = School::first();
         $user = $request->user();
 
+        // Owner/developer always have one campus "in view" — there is no
+        // "all campuses" option — so the very first request of their session
+        // picks one for them rather than leaving the panel unscoped.
+        if ($user && $user->isSuperAdmin() && ! $request->session()->has('viewing_campus_id')) {
+            $firstCampusId = Campus::where('is_active', true)->orderBy('name')->value('id');
+
+            if ($firstCampusId) {
+                $request->session()->put('viewing_campus_id', $firstCampusId);
+            }
+        }
+
         // A null `role` means visible to everyone; otherwise the menu entry
         // only renders for one of a comma-separated list of roles - e.g. the
         // developer-only Subscription page, or the owner/developer-only
@@ -91,6 +103,26 @@ class HandleInertiaRequests extends Middleware
             'menus' => $menuData,
             'subscriptionWarning' => $this->buildSubscriptionWarning($user),
             'academicScope' => $this->buildAcademicScope($user),
+            'campusSwitcher' => $this->buildCampusSwitcher($user),
+        ];
+    }
+
+    /**
+     * Header campus-switcher data for a school-wide user — the full campus
+     * list plus whichever one is currently in view. Null for anyone else
+     * (campus_admin and below never see the switcher).
+     *
+     * @return array{campuses: array<int, array{id: int, name: string}>, activeCampusId: int|null}|null
+     */
+    protected function buildCampusSwitcher(?User $user): ?array
+    {
+        if (! $user || ! $user->isSuperAdmin()) {
+            return null;
+        }
+
+        return [
+            'campuses' => Campus::where('is_active', true)->orderBy('name')->get(['id', 'name'])->toArray(),
+            'activeCampusId' => $user->campusId(),
         ];
     }
 

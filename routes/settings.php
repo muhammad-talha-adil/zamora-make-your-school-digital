@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Settings\ActivityLogController;
 use App\Http\Controllers\Settings\CampusController;
+use App\Http\Controllers\Settings\CampusSwitchController;
 use App\Http\Controllers\Settings\CampusTypeController;
 use App\Http\Controllers\Settings\ClassSubjectController;
 use App\Http\Controllers\Settings\ExamTypeController;
@@ -32,6 +33,8 @@ Route::middleware(['auth'])->group(function () {
 Route::middleware(['auth', 'verified'])->group(function () {
     // Profile Management Routes (continued)
     Route::delete('settings/profile', [ProfileController::class, 'destroy'])->name('profile.destroy');
+
+    Route::post('settings/switch-campus', [CampusSwitchController::class, 'update'])->name('switch-campus.update');
 
     // Password Management Routes
     Route::get('settings/password', [PasswordController::class, 'edit'])->name('user-password.edit');

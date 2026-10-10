@@ -42,7 +42,13 @@ it("only lists the restricted user's own campus stock, even when another campus 
     expect($campusIds)->not->toContain($this->world->school->otherCampus->id);
 });
 
-it('lets a school-wide actor filter by whichever campus it asks for', function () {
+it('lets a school-wide actor filter by whichever campus it asks for, once viewing that campus', function () {
+    // The header campus-switcher is now the single source of truth for a
+    // school-wide user (`User::campusId()`); a query-string `campus_id` no
+    // longer overrides it on its own, the same way it never could for a
+    // campus-restricted user.
+    session(['viewing_campus_id' => $this->world->school->otherCampus->id]);
+
     $response = $this->actingAs($this->world->school->actor)
         ->getJson(route('inventory.stocks.all', ['campus_id' => $this->world->school->otherCampus->id]));
 

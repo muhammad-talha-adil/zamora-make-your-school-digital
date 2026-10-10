@@ -41,7 +41,14 @@ trait ChecksSchoolReach
         ?int $sessionId = null
     ): bool {
         if ($user->isSuperAdmin()) {
-            return true;
+            // Narrowed to one campus via the header switcher: reach stops at
+            // that campus, same as a campus_admin's. `campusId()` already
+            // resolves the switcher's session value for a school-wide user.
+            $viewingCampusId = $user->campusId();
+
+            return $viewingCampusId === null
+                || $campusId === null
+                || (int) $campusId === (int) $viewingCampusId;
         }
 
         $userCampus = $user->campusId();

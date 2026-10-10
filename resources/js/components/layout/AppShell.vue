@@ -207,6 +207,17 @@
 
           <!-- Right Side: User Menu -->
           <div class="flex shrink-0 items-center gap-2 sm:gap-4">
+            <select
+              v-if="campusSwitcher"
+              :value="campusSwitcher.activeCampusId ?? ''"
+              @change="switchCampus(($event.target as HTMLSelectElement).value)"
+              class="hidden sm:inline-block rounded-md border px-2 py-1.5 text-sm"
+              :style="{ backgroundColor: 'var(--header-bg)', color: 'var(--header-text)', borderColor: 'var(--sidebar-border)' }"
+            >
+              <option v-for="campus in campusSwitcher.campuses" :key="campus.id" :value="campus.id">
+                {{ campus.name }}
+              </option>
+            </select>
             <span class="hidden lg:inline text-sm truncate max-w-56" :style="{ color: 'var(--header-text)' }">Welcome, {{ pageProps.auth?.user?.name || 'User' }}</span>
             <Link
               href="/logout"
@@ -253,7 +264,8 @@
 
 <script setup lang="ts">
 import { ref, watch, onMounted, computed } from 'vue'
-import { Link, usePage } from '@inertiajs/vue3'
+import { Link, usePage, router } from '@inertiajs/vue3'
+import { route } from 'ziggy-js'
 import { Sun, Moon, LogOut, ChevronDown, X, Menu } from 'lucide-vue-next'
 import { useAppearance } from '../../composables/useAppearance'
 import FooterBar from './FooterBar.vue'
@@ -349,6 +361,12 @@ const toggleTheme = () => {
 }
 
 const schoolName = computed(() => pageProps.value.name || 'School Management System')
+
+const campusSwitcher = computed(() => pageProps.value.campusSwitcher as { campuses: { id: number; name: string }[]; activeCampusId: number | null } | null)
+
+const switchCampus = (campusId: string) => {
+  router.post(route('switch-campus.update'), { campus_id: campusId }, { preserveScroll: true })
+}
 
 /*
   10-day-before-expiry warning, per the owner's explicit number. The server

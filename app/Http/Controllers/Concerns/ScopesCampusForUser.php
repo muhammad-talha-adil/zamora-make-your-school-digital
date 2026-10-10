@@ -29,12 +29,13 @@ trait ScopesCampusForUser
     {
         $user = $request->user();
 
-        if ($user && $user->isCampusRestricted()) {
-            $ownCampusId = $user->campusId();
+        // Campus-restricted staff: their own campus. School-wide user
+        // (owner/developer): whichever campus they picked from the header
+        // switcher — `User::campusId()` is the single source of truth for both.
+        $campusId = $user?->campusId();
 
-            if ($ownCampusId !== null) {
-                return $ownCampusId;
-            }
+        if ($campusId !== null) {
+            return $campusId;
         }
 
         $campusId = $request->get('campus_id');
