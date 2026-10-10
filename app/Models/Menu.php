@@ -18,6 +18,7 @@ class Menu extends Model
         'order',
         'type',
         'role',
+        'permission',
     ];
 
     protected $casts = [

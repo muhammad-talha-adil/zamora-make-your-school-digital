@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\Menu;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Route;
 
 class MenuSeeder extends Seeder
 {
@@ -742,5 +743,45 @@ class MenuSeeder extends Seeder
             'is_active' => true,
             'url' => '/settings/activity-log',
         ]);
+
+        $this->tagPermissionsFromRoutes();
+    }
+
+    /**
+     * Every row above names its viewers by `role`, which was the only lever
+     * that existed. Now that a staff member can also be granted a permission
+     * directly (Staff Permissions page, outside any role), a menu row needs
+     * a `permission` too, so its sidebar link shows up for a one-off grant
+     * the same way it already does for a role.
+     *
+     * Rather than hand-maintain ~40 permission strings in parallel with the
+     * `role` lists above (and have them drift), this reads the real answer
+     * off the route each menu's `url` points to: whatever `permission:`
+     * middleware actually gates that page is what the menu is tagged with.
+     * A menu with no `url` (a parent heading) or whose route carries no
+     * permission middleware is left untagged — `role` alone still governs it.
+     */
+    private function tagPermissionsFromRoutes(): void
+    {
+        $routesByUri = collect(Route::getRoutes())->keyBy(fn ($route) => '/'.ltrim($route->uri(), '/'));
+
+        Menu::whereNotNull('url')->get()->each(function (Menu $menu) use ($routesByUri) {
+            $route = $routesByUri->get($menu->url);
+
+            if (! $route) {
+                return;
+            }
+
+            foreach ($route->gatherMiddleware() as $middleware) {
+                if (str_starts_with($middleware, 'permission:')) {
+                    // A route like `permission:students.view|students.view.own`
+                    // offers several ways in; the first is enough for a menu
+                    // link, since any one of them already unlocks the page.
+                    $menu->update(['permission' => explode('|', substr($middleware, 11))[0]]);
+
+                    return;
+                }
+            }
+        });
     }
 }

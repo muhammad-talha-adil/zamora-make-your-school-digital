@@ -65,13 +65,27 @@ class HandleInertiaRequests extends Middleware
             }
         }
 
-        // A null `role` means visible to everyone; otherwise the menu entry
-        // only renders for one of a comma-separated list of roles - e.g. the
+        // A null `role` means visible to everyone by role; otherwise the menu
+        // entry renders for one of a comma-separated list of roles - e.g. the
         // developer-only Subscription page, or the owner/developer-only
-        // Activity Log page.
-        $allMenus = Menu::active()->orderBy('type')->orderBy('order')->get()
-            ->filter(fn (Menu $menu) => $menu->role === null || $user?->hasAnyRole(explode(',', $menu->role)))
+        // Activity Log page. `permission` is the same idea for an ability
+        // granted outside a role entirely (Staff Permissions page) - a menu
+        // row shows if EITHER side matches, so a one-off grant surfaces its
+        // own sidebar link without needing a role to carry it.
+        $activeMenus = Menu::active()->orderBy('type')->orderBy('order')->get();
+
+        $allMenus = $activeMenus
+            ->filter(fn (Menu $menu) => ($menu->role === null || $user?->hasAnyRole(explode(',', $menu->role)))
+                || ($menu->permission !== null && $user?->hasPermission($menu->permission)))
             ->values();
+
+        // A parent's own `role`/`permission` only governs whether IT shows a
+        // link of its own - it must not hide a child that earned its own way
+        // in via `permission` (a Staff Permissions grant outside the parent's
+        // role list). `buildMenuTree()` below only recurses into parents
+        // present in `$allMenus`, so every visible child's ancestor chain is
+        // added back in here even where the ancestor itself didn't match.
+        $allMenus = $this->withVisibleAncestors($allMenus, $activeMenus);
 
         if ($this->isPortalOnlyViewer($user)) {
             $allMenus = $this->restrictToPortalMenus($allMenus);
@@ -228,6 +242,39 @@ class HandleInertiaRequests extends Middleware
         }
 
         return $appearance;
+    }
+
+    /**
+     * Walks each visible menu's `parent_id` chain and adds back any ancestor
+     * missing from the visible set, so `buildMenuTree()` can still attach a
+     * permission-only-visible child under its (otherwise invisible) parent
+     * heading instead of silently dropping it.
+     *
+     * @param  Collection<int, Menu>  $visibleMenus
+     * @param  Collection<int, Menu>  $allActiveMenus
+     * @return Collection<int, Menu>
+     */
+    protected function withVisibleAncestors(Collection $visibleMenus, Collection $allActiveMenus): Collection
+    {
+        $byId = $allActiveMenus->keyBy('id');
+        $result = $visibleMenus->keyBy('id');
+
+        foreach ($visibleMenus as $menu) {
+            $parentId = $menu->parent_id;
+
+            while ($parentId !== null && ! $result->has($parentId)) {
+                $parent = $byId->get($parentId);
+
+                if (! $parent) {
+                    break;
+                }
+
+                $result->put($parent->id, $parent);
+                $parentId = $parent->parent_id;
+            }
+        }
+
+        return $result->values();
     }
 
     protected function buildMenuTree($parentMenus, $allMenus)

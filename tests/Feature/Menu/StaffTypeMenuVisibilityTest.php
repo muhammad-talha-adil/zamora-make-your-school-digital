@@ -221,9 +221,18 @@ test('an admin role loses no menu row it could see before the staff-visibility f
     // untouched by this fix and correctly excluded from the other admin
     // roles, so the baseline is "what the row's role list allows", not
     // "every row in the table".
-    $expectedCount = Menu::active()->get()
+    //
+    // `permission` can only ever add rows on top of that (a role's seeded
+    // permissions, or a Staff Permissions grant, reaching a row its `role`
+    // list doesn't name), never remove one - so the assertion is "every
+    // role-visible title is still there", not an exact count, which would
+    // also have to replicate `buildMenuTree()`'s parent-less-child pruning
+    // to stay correct.
+    $expectedTitles = Menu::active()->get()
         ->filter(fn (Menu $menu) => $menu->role === null || in_array($role, explode(',', $menu->role), true))
-        ->count();
+        ->pluck('title');
 
-    expect(count($titles))->toBe($expectedCount);
+    foreach ($expectedTitles as $expectedTitle) {
+        expect($titles)->toContain($expectedTitle);
+    }
 })->with(['developer', 'owner', 'campus_admin']);
