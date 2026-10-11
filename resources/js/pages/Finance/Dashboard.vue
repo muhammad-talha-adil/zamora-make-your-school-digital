@@ -1,10 +1,11 @@
 <script setup lang="ts">
 import { Head } from '@inertiajs/vue3';
-import { ref, computed } from 'vue';
+import { ref, computed, watch } from 'vue';
 import { router } from '@inertiajs/vue3';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { Button } from '@/components/ui/button';
 import LineChart from '@/components/charts/LineChart.vue';
+import SearchableSelect from '@/components/ui/searchable-select/SearchableSelect.vue';
 import type { BreadcrumbItem } from '@/types';
 
 interface Props {
@@ -41,6 +42,7 @@ const monthSummary = computed(() => props.month_summary || { income: 0, expense:
 const studentReceivables = computed(() => props.student_receivables || { total_open: 0, fee_open: 0, inventory_open: 0, transport_open: 0 });
 const operationsSummary = computed(() => props.operations_summary || { pending_salary_payable: 0, transport_expense_month: 0 });
 const campuses = computed(() => props.campuses || []);
+const campusOptions = computed(() => campuses.value.map((c) => ({ value: c.id, label: c.name })));
 const weeklyTrend = computed(() => props.weekly_trend || []);
 const incomeTrendPoints = computed(() =>
     weeklyTrend.value.map((point) => ({
@@ -81,6 +83,8 @@ const changeCampus = () => {
     router.get('/finance', params);
 };
 
+watch(selectedCampus, changeCampus);
+
 // Navigate to route
 const navigateTo = (path: string) => {
     router.get(path);
@@ -103,10 +107,13 @@ const navigateTo = (path: string) => {
                     </p>
                 </div>
                 <div class="flex items-center gap-2">
-                    <select v-model="selectedCampus" @change="changeCampus" class="rounded-md border-border">
-                        <option :value="undefined">All Campuses</option>
-                        <option v-for="campus in campuses" :key="campus.id" :value="campus.id">{{ campus.name }}</option>
-                    </select>
+                    <SearchableSelect
+                        v-model="selectedCampus"
+                        :options="campusOptions"
+                        placeholder="All Campuses"
+                        clearable
+                        class="w-48"
+                    />
                 </div>
             </div>
 

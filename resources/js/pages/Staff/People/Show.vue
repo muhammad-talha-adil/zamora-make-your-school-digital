@@ -15,6 +15,7 @@ import { Badge } from '@/components/ui/badge';
 import { Separator } from '@/components/ui/separator';
 import { alert } from '@/utils';
 import GiveAdvanceDialog from '@/components/Staff/GiveAdvanceDialog.vue';
+import SearchableSelect from '@/components/ui/searchable-select/SearchableSelect.vue';
 import type { BreadcrumbItem } from '@/types';
 
 interface Lookup {
@@ -139,6 +140,13 @@ const breadcrumbs = computed(() => [
 ]);
 
 const selectClass = 'w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground';
+
+const campusOptions = computed(() => props.campuses.map((c) => ({ value: String(c.id), label: c.name })));
+const designationOptions = computed(() => props.designations.map((d) => ({ value: String(d.id), label: d.name })));
+const departmentOptions = computed(() => props.departments.map((d) => ({ value: String(d.id), label: d.name })));
+const sessionOptions = computed(() => props.sessions.map((s) => ({ value: String(s.id), label: s.name })));
+const classSelectOptions = computed(() => props.classOptions.map((c) => ({ value: String(c.id), label: c.name })));
+const subjectSelectOptions = computed(() => props.subjectOptions.map((s) => ({ value: String(s.id), label: s.name })));
 
 type TabKey = 'personal' | 'attendance' | 'leave' | 'salary' | 'advances';
 const activeTab = ref<TabKey>('personal');
@@ -634,10 +642,7 @@ const activeJobsCount = computed(() => props.jobs.length);
                             </div>
                             <div>
                                 <label class="mb-2 block text-sm font-medium text-muted-foreground">Campus</label>
-                                <select v-model="rejoinEmploymentForm.campus_id" :class="selectClass">
-                                    <option value="">School-wide</option>
-                                    <option v-for="c in props.campuses" :key="c.id" :value="String(c.id)">{{ c.name }}</option>
-                                </select>
+                                <SearchableSelect v-model="rejoinEmploymentForm.campus_id" :options="campusOptions" placeholder="School-wide" clearable />
                             </div>
                         </div>
                         <DialogFooter>
@@ -750,18 +755,9 @@ const activeJobsCount = computed(() => props.jobs.length);
                 <div v-if="props.can.edit" class="rounded-2xl border border-border bg-card p-5 shadow-sm">
                     <h2 class="mb-4 text-lg font-semibold text-foreground">Give a Job</h2>
                     <div class="space-y-3">
-                        <select v-model="jobForm.designation_id" :class="selectClass">
-                            <option value="">Select designation</option>
-                            <option v-for="d in props.designations" :key="d.id" :value="String(d.id)">{{ d.name }}</option>
-                        </select>
-                        <select v-model="jobForm.department_id" :class="selectClass">
-                            <option value="">Select department</option>
-                            <option v-for="d in props.departments" :key="d.id" :value="String(d.id)">{{ d.name }}</option>
-                        </select>
-                        <select v-model="jobForm.campus_id" :class="selectClass">
-                            <option value="">School-wide</option>
-                            <option v-for="c in props.campuses" :key="c.id" :value="String(c.id)">{{ c.name }}</option>
-                        </select>
+                        <SearchableSelect v-model="jobForm.designation_id" :options="designationOptions" placeholder="Select designation" clearable />
+                        <SearchableSelect v-model="jobForm.department_id" :options="departmentOptions" placeholder="Select department" clearable />
+                        <SearchableSelect v-model="jobForm.campus_id" :options="campusOptions" placeholder="School-wide" clearable />
                         <Input v-model="jobForm.started_on" type="date" />
                         <label class="flex items-center gap-2 text-sm text-muted-foreground">
                             <input v-model="jobForm.is_primary" type="checkbox" class="h-4 w-4 rounded border-border text-primary" />
@@ -865,18 +861,9 @@ const activeJobsCount = computed(() => props.jobs.length);
                     <div v-if="props.can.edit" class="rounded-2xl border border-border bg-card p-5 shadow-sm">
                         <h2 class="mb-4 text-lg font-semibold text-foreground">Assign a Class</h2>
                         <div class="space-y-3">
-                            <select v-model="classForm.session_id" :class="selectClass">
-                                <option value="">Select session</option>
-                                <option v-for="s in props.sessions" :key="s.id" :value="String(s.id)">{{ s.name }}</option>
-                            </select>
-                            <select v-model="classForm.class_id" :class="selectClass">
-                                <option value="">Select class</option>
-                                <option v-for="c in props.classOptions" :key="c.id" :value="String(c.id)">{{ c.name }}</option>
-                            </select>
-                            <select v-model="classForm.subject_id" :class="selectClass">
-                                <option value="">Select subject (optional)</option>
-                                <option v-for="s in props.subjectOptions" :key="s.id" :value="String(s.id)">{{ s.name }}</option>
-                            </select>
+                            <SearchableSelect v-model="classForm.session_id" :options="sessionOptions" placeholder="Select session" clearable />
+                            <SearchableSelect v-model="classForm.class_id" :options="classSelectOptions" placeholder="Select class" clearable />
+                            <SearchableSelect v-model="classForm.subject_id" :options="subjectSelectOptions" placeholder="Select subject (optional)" clearable />
                             <Input v-model="classForm.periods_per_week" type="number" placeholder="Periods per week" />
                             <label class="flex items-center gap-2 text-sm text-muted-foreground">
                                 <input v-model="classForm.is_class_teacher" type="checkbox" class="h-4 w-4 rounded border-border text-primary" />
@@ -889,10 +876,7 @@ const activeJobsCount = computed(() => props.jobs.length);
                     <div v-if="props.can.edit" class="rounded-2xl border border-border bg-card p-5 shadow-sm">
                         <h2 class="mb-4 text-lg font-semibold text-foreground">Subjects They May Teach</h2>
                         <div class="mb-3 flex gap-2">
-                            <select v-model="subjectCapabilityId" :class="selectClass">
-                                <option value="">Select subject</option>
-                                <option v-for="s in props.subjectOptions" :key="s.id" :value="String(s.id)">{{ s.name }}</option>
-                            </select>
+                            <SearchableSelect v-model="subjectCapabilityId" :options="subjectSelectOptions" placeholder="Select subject" clearable />
                             <Button size="sm" @click="addSubjectCapability">Add</Button>
                         </div>
                         <div class="flex flex-wrap gap-2">

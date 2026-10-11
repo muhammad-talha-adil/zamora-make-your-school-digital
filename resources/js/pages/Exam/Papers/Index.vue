@@ -19,31 +19,23 @@
             <FilterCard class="flex flex-col sm:flex-row gap-2 md:gap-3 flex-wrap">
                 <div class="w-full sm:w-56 md:w-64">
                     <Label for="filter-exam" class="sr-only">Filter by Exam</Label>
-                    <select
+                    <SearchableSelect
                         id="filter-exam"
                         v-model="filters.exam_id"
-                        @change="applyFilters"
-                        class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm min-h-10 md:min-h-11"
-                    >
-                        <option value="">All Exams</option>
-                        <option v-for="exam in props.exams" :key="exam.id" :value="exam.id">
-                            {{ exam.name }}
-                        </option>
-                    </select>
+                        :options="examOptions"
+                        placeholder="All Exams"
+                        clearable
+                    />
                 </div>
                 <div class="w-full sm:w-56 md:w-64">
                     <Label for="filter-class" class="sr-only">Filter by Class</Label>
-                    <select
+                    <SearchableSelect
                         id="filter-class"
                         v-model="filters.class_id"
-                        @change="applyFilters"
-                        class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm min-h-10 md:min-h-11"
-                    >
-                        <option value="">All Classes</option>
-                        <option v-for="cls in props.classes" :key="cls.id" :value="cls.id">
-                            {{ cls.name }}
-                        </option>
-                    </select>
+                        :options="classOptions"
+                        placeholder="All Classes"
+                        clearable
+                    />
                 </div>
             </FilterCard>
 
@@ -157,7 +149,7 @@
 
 <script setup lang="ts">
 import { Head, router } from '@inertiajs/vue3';
-import { reactive } from 'vue';
+import { computed, reactive, watch } from 'vue';
 import { route } from 'ziggy-js';
 import AppLayout from '@/layouts/AppLayout.vue';
 import type { BreadcrumbItem } from '@/types';
@@ -165,6 +157,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import Icon from '@/components/Icon.vue';
 import FilterCard from '@/components/FilterCard.vue';
+import SearchableSelect from '@/components/ui/searchable-select/SearchableSelect.vue';
 
 interface Exam {
     id: number;
@@ -227,13 +220,18 @@ const filters = reactive({
     class_id: props.filters?.class_id || '',
 });
 
+const examOptions = computed(() => props.exams.map((exam) => ({ value: exam.id, label: exam.name })));
+const classOptions = computed(() => props.classes.map((cls) => ({ value: cls.id, label: cls.name })));
+
 const applyFilters = () => {
     const query: Record<string, string> = {};
     if (filters.exam_id) query.exam_id = String(filters.exam_id);
     if (filters.class_id) query.class_id = String(filters.class_id);
-    
+
     router.visit(route('exam.papers.index-page', query), {
         preserveState: true,
     });
 };
+
+watch(() => [filters.exam_id, filters.class_id], applyFilters);
 </script>

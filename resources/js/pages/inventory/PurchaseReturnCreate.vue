@@ -13,6 +13,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import Icon from '@/components/Icon.vue';
 import ComboboxInput from '@/components/ui/combobox/ComboboxInput.vue';
+import SearchableSelect from '@/components/ui/searchable-select/SearchableSelect.vue';
 import type { BreadcrumbItem } from '@/types';
 
 interface Purchase {
@@ -177,6 +178,12 @@ const availableItems = computed(() => {
     
     return purchaseItems.value;
 });
+
+const campusOptions = computed(() => props.campuses.map((campus) => ({ value: campus.id, label: campus.name })));
+const availableItemOptions = computed(() => availableItems.value.map((invItem: any) => ({
+    value: invItem.inventory_item_id,
+    label: invItem.item_name,
+})));
 
 // Total amount
 const totalAmount = computed(() => {
@@ -537,19 +544,14 @@ onMounted(async () => {
                                 <Icon icon="building" class="h-4 w-4" />
                                 Campus <span class="text-destructive">*</span>
                             </Label>
-                            <select
+                            <SearchableSelect
                                 id="campus_id"
                                 v-model="form.campus_id"
-                                @change="onCampusChange"
-                                class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm h-11"
-                                :class="{ 'border-destructive': errors.campus_id }"
-                                required
-                            >
-                                <option value="">Select Campus</option>
-                                <option v-for="campus in props.campuses" :key="campus.id" :value="campus.id">
-                                    {{ campus.name }}
-                                </option>
-                            </select>
+                                :options="campusOptions"
+                                placeholder="Select Campus"
+                                class="h-11"
+                                @update:model-value="onCampusChange"
+                            />
                             <InputError :message="errors.campus_id" />
                         </div>
 
@@ -643,23 +645,19 @@ onMounted(async () => {
                                     <tr v-for="(item, index) in form.items" :key="index">
                                         <td class="px-2 py-3">
                                             <div class="flex flex-col gap-1">
-                                                <select
+                                                <SearchableSelect
                                                     v-model="item.inventory_item_id"
-                                                    @change="() => {
+                                                    :options="availableItemOptions"
+                                                    placeholder="Select"
+                                                    class="min-w-[140px]"
+                                                    @update:model-value="() => {
                                                         const pi = purchaseItems.find(p => p.inventory_item_id === item.inventory_item_id);
                                                         if (pi) {
                                                             item.available_for_return = pi.available_for_return;
                                                             item.unit_price = pi.purchase_rate;
                                                         }
                                                     }"
-                                                    class="w-full rounded-md border border-border bg-card text-foreground px-2 py-1.5 text-sm h-10 min-w-[140px]"
-                                                    required
-                                                >
-                                                    <option :value="null">Select</option>
-                                                    <option v-for="invItem in availableItems" :key="invItem.inventory_item_id" :value="invItem.inventory_item_id">
-                                                        {{ invItem.item_name }}
-                                                    </option>
-                                                </select>
+                                                />
                                             </div>
                                         </td>
                                         <td class="px-2 py-3">

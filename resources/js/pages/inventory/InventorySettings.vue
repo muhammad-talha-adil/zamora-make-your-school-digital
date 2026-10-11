@@ -14,6 +14,7 @@ import StatusToggle from '@/components/tables/StatusToggle.vue';
 import type { BreadcrumbItem } from '@/types';
 import InventoryTypeForm from '@/components/forms/InventoryTypeForm.vue';
 import ItemForm from '@/components/forms/inventory/ItemForm.vue';
+import SearchableSelect from '@/components/ui/searchable-select/SearchableSelect.vue';
 
 // Types Interface
 interface InventoryTypeData {
@@ -89,6 +90,9 @@ const perPageOptions = [25, 50, 75, 100];
 
 // Items state
 const typeFilter = ref('');
+
+const campusOptions = computed(() => props.campuses.map((campus) => ({ value: campus.id, label: campus.name })));
+const typeOptions = computed(() => props.inventoryTypes.data.map((type) => ({ value: type.id, label: type.name })));
 const perPageItems = ref(25);
 const inventoryItemsData = ref(props.inventoryItems.data || []);
 const paginationItems = ref(props.inventoryItems);
@@ -183,6 +187,17 @@ const handleTypeSaved = () => {
 };
 
 // Items functions
+watch(campusFilter, () => {
+    if (activeTab.value === 'types') {
+        reloadTypes();
+    } else {
+        reloadItems();
+    }
+});
+watch(typeFilter, () => {
+    reloadItems();
+});
+
 const reloadItems = () => {
     const params: Record<string, string | number> = {
         per_page: perPageItems.value,
@@ -360,16 +375,13 @@ const loadTypesPage = (url: string) => {
 
                 <!-- Types Filters -->
                 <FilterCard class="flex flex-col sm:flex-row gap-2 items-center">
-                    <select
+                    <SearchableSelect
                         v-model="campusFilter"
-                        @change="reloadTypes"
-                        class="w-full sm:w-44 md:w-48 rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm min-h-10 md:min-h-11"
-                    >
-                        <option value="">All Campuses</option>
-                        <option v-for="campus in props.campuses" :key="campus.id" :value="campus.id">
-                            {{ campus.name }}
-                        </option>
-                    </select>
+                        :options="campusOptions"
+                        placeholder="All Campuses"
+                        clearable
+                        class="w-full sm:w-44 md:w-48"
+                    />
                     <div class="flex-1"></div>
                     <div class="flex items-center gap-2">
                         <label class="text-sm text-muted-foreground">Show:</label>
@@ -516,26 +528,20 @@ const loadTypesPage = (url: string) => {
 
                 <!-- Items Filters -->
                 <FilterCard class="flex flex-col sm:flex-row gap-2 items-center">
-                    <select
+                    <SearchableSelect
                         v-model="campusFilter"
-                        @change="reloadItems"
-                        class="w-full sm:w-44 md:w-48 rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm min-h-10 md:min-h-11"
-                    >
-                        <option value="">All Campuses</option>
-                        <option v-for="campus in props.campuses" :key="campus.id" :value="campus.id">
-                            {{ campus.name }}
-                        </option>
-                    </select>
-                    <select
+                        :options="campusOptions"
+                        placeholder="All Campuses"
+                        clearable
+                        class="w-full sm:w-44 md:w-48"
+                    />
+                    <SearchableSelect
                         v-model="typeFilter"
-                        @change="reloadItems"
-                        class="w-full sm:w-44 md:w-48 rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm min-h-10 md:min-h-11"
-                    >
-                        <option value="">All Types</option>
-                        <option v-for="type in props.inventoryTypes.data" :key="type.id" :value="type.id">
-                            {{ type.name }}
-                        </option>
-                    </select>
+                        :options="typeOptions"
+                        placeholder="All Types"
+                        clearable
+                        class="w-full sm:w-44 md:w-48"
+                    />
                     <div class="flex-1"></div>
                     <div class="flex items-center gap-2">
                         <label class="text-sm text-muted-foreground">Show:</label>

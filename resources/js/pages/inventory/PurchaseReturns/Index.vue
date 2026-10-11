@@ -22,29 +22,21 @@
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
                     <div>
                         <label class="block text-sm font-medium text-muted-foreground mb-1">Campus</label>
-                        <select
+                        <SearchableSelect
                             v-model="filters.campus_id"
-                            @change="router.visit(`/inventory/purchase-returns?campus_id=${filters.campus_id || ''}`)"
-                            class="w-full border border-border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary min-h-11"
-                        >
-                            <option value="">All Campuses</option>
-                            <option v-for="campus in props.campuses" :key="campus.id" :value="campus.id">
-                                {{ campus.name }}
-                            </option>
-                        </select>
+                            :options="campusOptions"
+                            placeholder="All Campuses"
+                            clearable
+                        />
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-muted-foreground mb-1">Supplier</label>
-                        <select
+                        <SearchableSelect
                             v-model="filters.supplier_id"
-                            @change="router.visit(`/inventory/purchase-returns?campus_id=${filters.campus_id || ''}&supplier_id=${filters.supplier_id || ''}`)"
-                            class="w-full border border-border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary min-h-11"
-                        >
-                            <option value="">All Suppliers</option>
-                            <option v-for="supplier in props.suppliers" :key="supplier.id" :value="supplier.id">
-                                {{ supplier.name }}
-                            </option>
-                        </select>
+                            :options="supplierOptions"
+                            placeholder="All Suppliers"
+                            clearable
+                        />
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-muted-foreground mb-1">From Date</label>
@@ -154,7 +146,8 @@
 <script setup lang="ts">
 import { Head, router, Link } from '@inertiajs/vue3';
 import TablePagination from '@/components/tables/TablePagination.vue';
-import { reactive } from 'vue';
+import { computed, reactive, watch } from 'vue';
+import SearchableSelect from '@/components/ui/searchable-select/SearchableSelect.vue';
 import { formatCurrency } from '@/utils';
 import AppLayout from '@/layouts/AppLayout.vue';
 import FilterCard from '@/components/FilterCard.vue';
@@ -221,5 +214,15 @@ const filters = reactive({
     supplier_id: props.filters?.supplier_id || '',
     from_date: props.filters?.from_date || '',
     to_date: props.filters?.to_date || '',
+});
+
+const campusOptions = computed(() => props.campuses.map((campus) => ({ value: campus.id, label: campus.name })));
+const supplierOptions = computed(() => props.suppliers.map((supplier) => ({ value: supplier.id, label: supplier.name })));
+
+watch(() => filters.campus_id, () => {
+    router.visit(`/inventory/purchase-returns?campus_id=${filters.campus_id || ''}`);
+});
+watch(() => filters.supplier_id, () => {
+    router.visit(`/inventory/purchase-returns?campus_id=${filters.campus_id || ''}&supplier_id=${filters.supplier_id || ''}`);
 });
 </script>

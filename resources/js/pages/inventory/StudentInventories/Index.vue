@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Head, router } from '@inertiajs/vue3';
 import { alert, formatCurrency } from '@/utils';
-import { ref, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 import axios from 'axios';
 import AppLayout from '@/layouts/AppLayout.vue';
 import FilterCard from '@/components/FilterCard.vue';
@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import Icon from '@/components/Icon.vue';
 import { Badge } from '@/components/ui/badge';
 import type { BreadcrumbItem } from '@/types';
+import SearchableSelect from '@/components/ui/searchable-select/SearchableSelect.vue';
 
 interface Props {
     studentInventories: {
@@ -52,6 +53,7 @@ const props = defineProps<Props>();
 // Filter states
 const perPage = ref(10);
 const campusFilter = ref('');
+const campusOptions = computed(() => props.campuses.map((campus) => ({ value: campus.id, label: campus.name })));
 const statusFilter = ref('');
 const studentInventoriesData = ref(props.studentInventories.data || []);
 const pagination = ref(props.studentInventories);
@@ -183,12 +185,13 @@ const formatDate = (date: string) => {
 
             <!-- Filters -->
             <FilterCard class="flex flex-wrap gap-3">
-                <select v-model="campusFilter" class="w-full sm:w-48 rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm min-h-11">
-                    <option value="">All Campuses</option>
-                    <option v-for="campus in props.campuses" :key="campus.id" :value="campus.id">
-                        {{ campus.name }}
-                    </option>
-                </select>
+                <SearchableSelect
+                    v-model="campusFilter"
+                    :options="campusOptions"
+                    placeholder="All Campuses"
+                    clearable
+                    class="w-full sm:w-48"
+                />
                 <select v-model="statusFilter" class="w-full sm:w-40 rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm min-h-11">
                     <option value="">All Status</option>
                     <option value="assigned">Assigned</option>

@@ -565,23 +565,12 @@
                                 >Relation
                                 <span class="text-destructive">*</span></Label
                             >
-                            <select
+                            <SearchableSelect
                                 id="father_relation_id"
                                 v-model="form.father_relation_id"
-                                class="h-11 w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground"
-                                :class="{
-                                    'border-destructive': errors.father_relation_id,
-                                }"
-                                required
-                            >
-                                <option
-                                    v-for="relation in props.relations"
-                                    :key="relation.id"
-                                    :value="relation.id"
-                                >
-                                    {{ relation.name }}
-                                </option>
-                            </select>
+                                :options="relationOptions"
+                                placeholder="Select Relation"
+                            />
                             <p class="text-xs text-muted-foreground"></p>
                             <InputError :message="errors.father_relation_id" />
                         </div>
@@ -679,20 +668,13 @@
                         <!-- Other Guardian Relation -->
                         <div class="space-y-2">
                             <Label for="other_relation_id">Relation</Label>
-                            <select
+                            <SearchableSelect
                                 id="other_relation_id"
                                 v-model="form.other_relation_id"
-                                class="h-11 w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground"
-                            >
-                                <option value="">Select Relation</option>
-                                <option
-                                    v-for="relation in otherRelations"
-                                    :key="relation.id"
-                                    :value="relation.id"
-                                >
-                                    {{ relation.name }}
-                                </option>
-                            </select>
+                                :options="otherRelationOptions"
+                                placeholder="Select Relation"
+                                clearable
+                            />
                         </div>
                     </div>
                 </div>
@@ -737,6 +719,7 @@ import { useStudentForm } from '@/composables/useStudentForm';
 import { useCascadingAcademicSelect } from '@/composables/useCascadingAcademicSelect';
 import { useFormValidity } from '@/composables/useFormValidity';
 import FeeStructureSelector from '@/components/students/FeeStructureSelector.vue';
+import SearchableSelect from '@/components/ui/searchable-select/SearchableSelect.vue';
 import { alert } from '@/utils/alert';
 import { buildGeneratedEmail } from '@/utils/schoolEmail';
 
@@ -795,6 +778,10 @@ const activeStatusId = computed(() => {
     );
     return active?.id || 1;
 });
+
+const relationOptions = computed(() =>
+    props.relations.map((relation) => ({ value: relation.id, label: relation.name })),
+);
 
 // Use the shared student form composable
 const {
@@ -864,6 +851,10 @@ if (!form.value.session_id && cascadeSessionId.value) {
     form.value.session_id = cascadeSessionId.value;
 }
 watch(() => form.value.session_id, (value) => { cascadeSessionId.value = value; });
+
+const otherRelationOptions = computed(() =>
+    otherRelations.value.map((relation) => ({ value: relation.id, label: relation.name })),
+);
 
 // Generate live email preview based on student name and school initials
 const schoolName = computed(() => page.props.school?.name ?? page.props.name ?? '');

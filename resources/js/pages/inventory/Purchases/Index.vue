@@ -9,6 +9,7 @@ import Icon from '@/components/Icon.vue';
 import { Badge } from '@/components/ui/badge';
 import type { BreadcrumbItem } from '@/types';
 import PurchaseForm from '@/components/forms/inventory/PurchaseForm.vue';
+import SearchableSelect from '@/components/ui/searchable-select/SearchableSelect.vue';
 
 interface Props {
     purchases: {
@@ -50,6 +51,9 @@ const props = defineProps<Props>();
 // Filter states
 const perPage = ref(10);
 const campusFilter = ref('');
+const campusOptions = computed(() => props.campuses.map((campus) => ({ value: campus.id, label: campus.name })));
+
+watch(campusFilter, () => fetchPurchases());
 const purchasesData = ref(props.purchases.data || []);
 const pagination = ref(props.purchases);
 
@@ -208,16 +212,13 @@ const summaryStats = computed(() => {
 
             <!-- Filters -->
             <div class="flex flex-col sm:flex-row gap-2 md:gap-3">
-                <select 
-                    v-model="campusFilter" 
-                    @change="() => fetchPurchases()"
-                    class="w-full sm:w-44 md:w-48 rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm min-h-10 md:min-h-11"
-                >
-                    <option value="">All Campuses</option>
-                    <option v-for="campus in props.campuses" :key="campus.id" :value="campus.id">
-                        {{ campus.name }}
-                    </option>
-                </select>
+                <SearchableSelect
+                    v-model="campusFilter"
+                    :options="campusOptions"
+                    placeholder="All Campuses"
+                    clearable
+                    class="w-full sm:w-44 md:w-48"
+                />
             </div>
 
             <!-- Mobile Card View (visible only on small screens) -->

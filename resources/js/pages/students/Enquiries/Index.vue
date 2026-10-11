@@ -23,6 +23,7 @@ import { Switch } from '@/components/ui/switch';
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import RowAction from '@/components/tables/RowAction.vue';
 import RowActions from '@/components/tables/RowActions.vue';
+import SearchableSelect from '@/components/ui/searchable-select/SearchableSelect.vue';
 import { alert } from '@/utils/alert';
 import type { BreadcrumbItem } from '@/types';
 
@@ -81,6 +82,10 @@ const breadcrumbItems: BreadcrumbItem[] = [
 
 const textareaClass = 'min-h-20 w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground';
 const selectClass = 'h-11 w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground';
+
+const campusOptions = computed(() => props.campuses.map((campus) => ({ value: campus.id, label: campus.name })));
+const classOptions = computed(() => props.classes.map((cls) => ({ value: cls.id, label: cls.name })));
+const sessionOptions = computed(() => props.sessions.map((session) => ({ value: session.id, label: session.name })));
 
 /* ==================== List + filters ==================== */
 
@@ -569,34 +574,19 @@ const admitEnquiry = async (enquiry: EnquiryRow) => {
 
                         <div class="space-y-2">
                             <Label for="campus_id">Intended Campus</Label>
-                            <select id="campus_id" v-model="enquiryForm.campus_id" :class="selectClass">
-                                <option value="">Not decided yet</option>
-                                <option v-for="campus in props.campuses" :key="campus.id" :value="campus.id">
-                                    {{ campus.name }}
-                                </option>
-                            </select>
+                            <SearchableSelect id="campus_id" v-model="enquiryForm.campus_id" :options="campusOptions" placeholder="Not decided yet" clearable />
                             <InputError :message="formErrors.campus_id" />
                         </div>
 
                         <div class="space-y-2">
                             <Label for="class_id">Intended Class</Label>
-                            <select id="class_id" v-model="enquiryForm.class_id" :class="selectClass">
-                                <option value="">Not decided yet</option>
-                                <option v-for="cls in props.classes" :key="cls.id" :value="cls.id">
-                                    {{ cls.name }}
-                                </option>
-                            </select>
+                            <SearchableSelect id="class_id" v-model="enquiryForm.class_id" :options="classOptions" placeholder="Not decided yet" clearable />
                             <InputError :message="formErrors.class_id" />
                         </div>
 
                         <div class="space-y-2">
                             <Label for="session_id">Intended Session</Label>
-                            <select id="session_id" v-model="enquiryForm.session_id" :class="selectClass">
-                                <option value="">Not decided yet</option>
-                                <option v-for="session in props.sessions" :key="session.id" :value="session.id">
-                                    {{ session.name }}
-                                </option>
-                            </select>
+                            <SearchableSelect id="session_id" v-model="enquiryForm.session_id" :options="sessionOptions" placeholder="Not decided yet" clearable />
                             <InputError :message="formErrors.session_id" />
                         </div>
 

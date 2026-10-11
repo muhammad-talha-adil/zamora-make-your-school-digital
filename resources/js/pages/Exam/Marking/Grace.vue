@@ -11,10 +11,11 @@
  * three marks" — rather than forty rows to scroll through.
  */
 import { Head } from '@inertiajs/vue3'
-import { ref, reactive } from 'vue'
+import { ref, reactive, computed } from 'vue'
 import axios from 'axios'
 import AppLayout from '@/layouts/AppLayout.vue'
 import { Button } from '@/components/ui/button'
+import SearchableSelect from '@/components/ui/searchable-select/SearchableSelect.vue'
 import { Search, Check } from 'lucide-vue-next'
 import { route } from 'ziggy-js'
 import type { BreadcrumbItem } from '@/types'
@@ -47,6 +48,9 @@ const loading = ref(false)
 const message = ref('')
 const error = ref('')
 const searched = ref(false)
+
+const examOptions = computed(() => props.exams.map((e) => ({ value: e.id, label: e.name })))
+const classOptions = computed(() => props.classes.map((c) => ({ value: c.id, label: c.name })))
 
 /** What the school is about to give each child, keyed by result line. */
 const amounts = reactive<Record<number, number>>({})
@@ -135,18 +139,21 @@ const give = async (candidate: Candidate) => {
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                     <div>
                         <label class="block text-sm font-medium mb-1">Exam</label>
-                        <select v-model="filters.exam_id" class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
-                            <option value="">Choose an exam</option>
-                            <option v-for="e in props.exams" :key="e.id" :value="e.id">{{ e.name }}</option>
-                        </select>
+                        <SearchableSelect
+                            v-model="filters.exam_id"
+                            :options="examOptions"
+                            placeholder="Choose an exam"
+                        />
                     </div>
 
                     <div>
                         <label class="block text-sm font-medium mb-1">Class</label>
-                        <select v-model="filters.class_id" class="w-full rounded-md border border-input bg-background px-3 py-2 text-sm">
-                            <option value="">All classes</option>
-                            <option v-for="c in props.classes" :key="c.id" :value="c.id">{{ c.name }}</option>
-                        </select>
+                        <SearchableSelect
+                            v-model="filters.class_id"
+                            :options="classOptions"
+                            placeholder="All classes"
+                            clearable
+                        />
                     </div>
 
                     <div>

@@ -16,6 +16,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import Icon from '@/components/Icon.vue';
 import ComboboxInput from '@/components/ui/combobox/ComboboxInput.vue';
+import SearchableSelect from '@/components/ui/searchable-select/SearchableSelect.vue';
 
 // Types
 interface InventoryType {
@@ -214,6 +215,17 @@ const getItemsForRow = (item: typeof form.value.items[0]): InventoryItem[] => {
     }
     // Otherwise return all items
     return inventoryItems.value;
+};
+
+const campusOptions = computed(() => props.campuses.map((campus) => ({ value: campus.id, label: campus.name })));
+const inventoryTypeOptions = computed(() => inventoryTypes.value.map((type) => ({ value: type.id, label: type.name })));
+
+const getItemOptionsForRow = (item: typeof form.value.items[0]) => {
+    return getItemsForRow(item).map((invItem) => ({
+        value: invItem.id,
+        label: `${invItem.name} - ${formatCurrency(invItem.sale_rate || 0)} (${invItem.available_stock} in stock)`,
+        disabled: invItem.available_stock === 0,
+    }));
 };
 
 // Computed
@@ -452,18 +464,13 @@ const submitForm = () => {
                             </div>
                             Campus <span class="text-destructive">*</span>
                         </Label>
-                        <select
+                        <SearchableSelect
                             id="campus_id"
                             v-model="form.campus_id"
-                            class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm h-11"
-                            :class="{ 'border-destructive': errors.campus_id }"
-                            required
-                        >
-                            <option value="">Select Campus</option>
-                            <option v-for="campus in props.campuses" :key="campus.id" :value="campus.id">
-                                {{ campus.name }}
-                            </option>
-                        </select>
+                            :options="campusOptions"
+                            placeholder="Select Campus"
+                            class="h-11"
+                        />
                         <InputError :message="errors.campus_id" />
                     </div>
 
@@ -538,39 +545,23 @@ const submitForm = () => {
                             <!-- Item Type -->
                             <div class="col-span-2 sm:col-span-3 md:col-span-2 space-y-2">
                                 <Label class="text-xs">Item Type</Label>
-                                <select
+                                <SearchableSelect
                                     v-model="item.inventory_type_id"
-                                    @change="onTypeChange(item)"
-                                    class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm h-10"
-                                >
-                                    <option :value="null">Select Type</option>
-                                    <option v-for="type in inventoryTypes" :key="type.id" :value="type.id">
-                                        {{ type.name }}
-                                    </option>
-                                </select>
+                                    :options="inventoryTypeOptions"
+                                    placeholder="Select Type"
+                                    clearable
+                                    @update:model-value="onTypeChange(item)"
+                                />
                             </div>
 
                             <!-- Item Selection -->
                             <div class="col-span-2 sm:col-span-3 md:col-span-2 space-y-2">
                                 <Label class="text-xs">Item <span class="text-destructive">*</span></Label>
-                                <select
+                                <SearchableSelect
                                     v-model="item.inventory_item_id"
-                                    class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm h-10"
-                                    :class="{ 'border-destructive': errors[`items.${index}.inventory_item_id`] }"
-                                    required
-                                >
-                                    <option :value="null">
-                                        {{ loadingItems ? 'Loading...' : 'Select Item' }}
-                                    </option>
-                                    <option 
-                                        v-for="invItem in getItemsForRow(item)" 
-                                        :key="invItem.id" 
-                                        :value="invItem.id"
-                                        :disabled="invItem.available_stock === 0"
-                                    >
-                                        {{ invItem.name }} - {{ formatCurrency(invItem.sale_rate || 0) }} ({{ invItem.available_stock }} in stock)
-                                    </option>
-                                </select>
+                                    :options="getItemOptionsForRow(item)"
+                                    :placeholder="loadingItems ? 'Loading...' : 'Select Item'"
+                                />
                                 <InputError :message="errors[`items.${index}.inventory_item_id`]" />
                             </div>
 

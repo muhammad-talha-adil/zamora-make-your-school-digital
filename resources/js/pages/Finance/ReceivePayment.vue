@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import Icon from '@/components/Icon.vue';
 import ComboboxInput from '@/components/ui/combobox/ComboboxInput.vue';
+import SearchableSelect from '@/components/ui/searchable-select/SearchableSelect.vue';
 
 interface Student {
     id: number;
@@ -66,6 +67,9 @@ const errors = ref<Record<string, string[]>>({});
 // Computed
 const categories = computed(() => props.categories || []);
 const paymentMethods = computed(() => props.paymentMethods || []);
+const campusOptions = computed(() => (props.campuses || []).map((c) => ({ value: c.id, label: c.name })));
+const classOptions = computed(() => (props.classes || []).map((c) => ({ value: c.id, label: c.name })));
+const sectionOptions = computed(() => filteredSections.value.map((s) => ({ value: s.id, label: s.name })));
 
 // Filtered sections based on selected class
 const filteredSections = computed(() => {
@@ -258,46 +262,36 @@ const formatMoney = (amount: number) => {
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                         <div>
                             <Label for="campus_id">Campus *</Label>
-                            <select 
-                                id="campus_id" 
+                            <SearchableSelect
+                                id="campus_id"
                                 v-model="form.campus_id"
-                                required
-                                class="mt-1 block w-full rounded-md border border-border bg-card text-foreground px-3 py-2"
-                            >
-                                <option value="">Select Campus</option>
-                                <option v-for="campus in props.campuses" :key="campus.id" :value="campus.id">
-                                    {{ campus.name }}
-                                </option>
-                            </select>
+                                :options="campusOptions"
+                                placeholder="Select Campus"
+                                class="mt-1"
+                            />
                         </div>
                         <div>
                             <Label for="class_id">Class *</Label>
-                            <select 
-                                id="class_id" 
+                            <SearchableSelect
+                                id="class_id"
                                 v-model="form.class_id"
-                                required
-                                class="mt-1 block w-full rounded-md border border-border bg-card text-foreground px-3 py-2"
+                                :options="classOptions"
                                 :disabled="!form.campus_id"
-                            >
-                                <option value="">Select Class</option>
-                                <option v-for="cls in props.classes" :key="cls.id" :value="cls.id">
-                                    {{ cls.name }}
-                                </option>
-                            </select>
+                                placeholder="Select Class"
+                                class="mt-1"
+                            />
                         </div>
                         <div>
                             <Label for="section_id">Section</Label>
-                            <select 
-                                id="section_id" 
+                            <SearchableSelect
+                                id="section_id"
                                 v-model="form.section_id"
-                                class="mt-1 block w-full rounded-md border border-border bg-card text-foreground px-3 py-2"
+                                :options="sectionOptions"
                                 :disabled="!form.class_id"
-                            >
-                                <option value="">All Sections</option>
-                                <option v-for="section in filteredSections" :key="section.id" :value="section.id">
-                                    {{ section.name }}
-                                </option>
-                            </select>
+                                placeholder="All Sections"
+                                clearable
+                                class="mt-1"
+                            />
                         </div>
                     </div>
 

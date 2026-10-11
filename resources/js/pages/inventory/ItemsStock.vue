@@ -15,6 +15,7 @@ import StatusToggle from '@/components/tables/StatusToggle.vue';
 import InventoryTypeForm from '@/components/forms/InventoryTypeForm.vue';
 import ItemForm from '@/components/forms/inventory/ItemForm.vue';
 import AdjustmentForm from '@/components/forms/inventory/AdjustmentForm.vue';
+import SearchableSelect from '@/components/ui/searchable-select/SearchableSelect.vue';
 
 interface PaginationLink {
     url: string | null;
@@ -131,6 +132,9 @@ const adjustmentItems = computed(() => {
 
     return props.allInventoryItems.filter((item) => String(item.campus_id) === campusFilter.value);
 });
+
+const campusOptions = computed(() => props.campuses.map((campus) => ({ value: String(campus.id), label: campus.name })));
+const adjustmentItemOptions = computed(() => adjustmentItems.value.map((item) => ({ value: String(item.id), label: item.name })));
 
 const summaryStats = computed(() => ({
     totalItems: stocksData.value.length,
@@ -390,16 +394,13 @@ const loadStocksPage = (url: string) => fetchStocks(url);
                 <div class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-5">
                     <div class="space-y-2">
                         <Label for="campus-filter">Campus</Label>
-                        <select
+                        <SearchableSelect
                             id="campus-filter"
                             v-model="campusFilter"
-                            class="w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground"
-                        >
-                            <option value="">All Campuses</option>
-                            <option v-for="campus in props.campuses" :key="campus.id" :value="String(campus.id)">
-                                {{ campus.name }}
-                            </option>
-                        </select>
+                            :options="campusOptions"
+                            placeholder="All Campuses"
+                            clearable
+                        />
                     </div>
 
                     <div v-if="['types', 'items'].includes(activeTab)" class="space-y-2">
@@ -451,16 +452,13 @@ const loadStocksPage = (url: string) => fetchStocks(url);
 
                     <div v-if="activeTab === 'adjustments'" class="space-y-2 md:col-span-2">
                         <Label for="adjustment-item-filter">Item</Label>
-                        <select
+                        <SearchableSelect
                             id="adjustment-item-filter"
                             v-model="adjustmentItemFilter"
-                            class="w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground"
-                        >
-                            <option value="">All Items</option>
-                            <option v-for="item in adjustmentItems" :key="item.id" :value="String(item.id)">
-                                {{ item.name }}
-                            </option>
-                        </select>
+                            :options="adjustmentItemOptions"
+                            placeholder="All Items"
+                            clearable
+                        />
                     </div>
 
                     <div v-if="['types', 'items'].includes(activeTab)" class="space-y-2 md:col-span-3">

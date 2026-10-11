@@ -5,6 +5,7 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import TablePagination from '@/components/tables/TablePagination.vue';
+import SearchableSelect from '@/components/ui/searchable-select/SearchableSelect.vue';
 import type { BreadcrumbItem } from '@/types';
 
 interface TransactionRow {
@@ -74,6 +75,7 @@ const filters = ref<Filters>({
 const transactions = computed(() => props.transactions?.data ?? []);
 const paginationLinks = computed(() => props.transactions?.links ?? []);
 const campuses = computed(() => props.campuses ?? []);
+const campusOptions = computed(() => campuses.value.map((c) => ({ value: c.id, label: c.name })));
 
 const formatMoney = (amount: number | null | undefined) => {
     if (amount === null || amount === undefined) return 'Rs 0';
@@ -170,12 +172,12 @@ const openPage = (url: string | null) => {
                 <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-6">
                     <div>
                         <label class="mb-2 block text-sm font-medium text-muted-foreground">Campus</label>
-                        <select v-model="filters.campus_id" class="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm">
-                            <option value="">All Campuses</option>
-                            <option v-for="campus in campuses" :key="campus.id" :value="campus.id">
-                                {{ campus.name }}
-                            </option>
-                        </select>
+                        <SearchableSelect
+                            v-model="filters.campus_id"
+                            :options="campusOptions"
+                            placeholder="All Campuses"
+                            clearable
+                        />
                     </div>
 
                     <div>

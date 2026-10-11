@@ -171,72 +171,48 @@
                         <!-- Campus -->
                         <div class="space-y-2">
                             <Label for="campus_id">Campus <span class="text-destructive">*</span></Label>
-                            <select
+                            <SearchableSelect
                                 id="campus_id"
                                 v-model="form.campus_id"
-                                class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm h-11"
-                                :class="{ 'border-destructive': errors.campus_id }"
-                                :required="campuses.length > 1"
-                            >
-                                <option v-if="campuses.length > 1" value="">Select Campus</option>
-                                <option v-for="campus in campuses" :key="campus.id" :value="campus.id">
-                                    {{ campus.name }}
-                                </option>
-                            </select>
+                                :options="campusOptions"
+                                placeholder="Select Campus"
+                            />
                             <InputError :message="errors.campus_id" />
                         </div>
 
                         <!-- Session -->
                         <div class="space-y-2">
                             <Label for="session_id">Academic Session <span class="text-destructive">*</span></Label>
-                            <select
+                            <SearchableSelect
                                 id="session_id"
                                 v-model="form.session_id"
-                                class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm h-11"
-                                :class="{ 'border-destructive': errors.session_id }"
-                                required
-                            >
-                                <option value="">Select Session</option>
-                                <option v-for="session in props.sessions" :key="session.id" :value="session.id">
-                                    {{ session.name }}
-                                </option>
-                            </select>
+                                :options="sessionOptions"
+                                placeholder="Select Session"
+                            />
                             <InputError :message="errors.session_id" />
                         </div>
 
                         <!-- Class -->
                         <div class="space-y-2">
                             <Label for="class_id">Class <span class="text-destructive">*</span></Label>
-                            <select
+                            <SearchableSelect
                                 id="class_id"
                                 v-model="form.class_id"
-                                class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm h-11"
-                                :class="{ 'border-destructive': errors.class_id }"
-                                required
-                            >
-                                <option value="">Select Class</option>
-                                <option v-for="cls in props.classes" :key="cls.id" :value="cls.id">
-                                    {{ cls.name }}
-                                </option>
-                            </select>
+                                :options="classOptions"
+                                placeholder="Select Class"
+                            />
                             <InputError :message="errors.class_id" />
                         </div>
 
                         <!-- Section -->
                         <div v-if="showSectionField" class="space-y-2">
                             <Label for="section_id">Section <span v-if="filteredSections.length > 1" class="text-destructive">*</span></Label>
-                            <select
+                            <SearchableSelect
                                 id="section_id"
                                 v-model="form.section_id"
-                                class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm h-11"
-                                :class="{ 'border-destructive': errors.section_id }"
-                                :required="filteredSections.length > 1"
-                            >
-                                <option v-if="filteredSections.length > 1" value="">Select Section</option>
-                                <option v-for="section in filteredSections" :key="section.id" :value="section.id">
-                                    {{ section.name }}
-                                </option>
-                            </select>
+                                :options="sectionOptions"
+                                placeholder="Select Section"
+                            />
                             <InputError :message="errors.section_id" />
                         </div>
 
@@ -530,16 +506,13 @@
                         <!-- Other Guardian Relation -->
                         <div class="space-y-2">
                             <Label for="other_relation_id">Relation</Label>
-                            <select
+                            <SearchableSelect
                                 id="other_relation_id"
                                 v-model="form.other_relation_id"
-                                class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm h-11"
-                            >
-                                <option value="">Select Relation</option>
-                                <option v-for="relation in otherRelations" :key="relation.id" :value="relation.id">
-                                    {{ relation.name }}
-                                </option>
-                            </select>
+                                :options="otherRelationOptions"
+                                placeholder="Select Relation"
+                                clearable
+                            />
                         </div>
                     </div>
                 </div>
@@ -576,6 +549,7 @@ import Icon from '@/components/Icon.vue';
 import { useStudentForm } from '@/composables/useStudentForm';
 import { useFormValidity } from '@/composables/useFormValidity';
 import FeeStructureSelector from '@/components/students/FeeStructureSelector.vue';
+import SearchableSelect from '@/components/ui/searchable-select/SearchableSelect.vue';
 import { alert } from '@/utils/alert';
 import { buildGeneratedEmail } from '@/utils/schoolEmail';
 
@@ -685,6 +659,12 @@ const generatedEmailPreview = computed(() => {
 });
 
 const errors = ref<Record<string, string>>({});
+
+const campusOptions = computed(() => campuses.value.map((campus) => ({ value: campus.id, label: campus.name })));
+const sessionOptions = computed(() => props.sessions.map((session) => ({ value: session.id, label: session.name })));
+const classOptions = computed(() => props.classes.map((cls) => ({ value: cls.id, label: cls.name })));
+const sectionOptions = computed(() => filteredSections.value.map((section) => ({ value: section.id, label: section.name })));
+const otherRelationOptions = computed(() => otherRelations.value.map((relation) => ({ value: relation.id, label: relation.name })));
 
 const { isValid } = useFormValidity(form, [
     'name',

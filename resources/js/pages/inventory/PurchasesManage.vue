@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head } from '@inertiajs/vue3';
-import { ref, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { alert, formatDate, formatCurrency } from '@/utils';
 import { router } from '@inertiajs/vue3';
 import { route } from 'ziggy-js';
@@ -14,6 +14,7 @@ import SupplierForm from '@/components/forms/inventory/SupplierForm.vue';
 import DateRangePicker from '@/components/ui/date-range-picker/DateRangePicker.vue';
 import ComboboxInput from '@/components/ui/combobox/ComboboxInput.vue';
 import StatusToggle from '@/components/tables/StatusToggle.vue';
+import SearchableSelect from '@/components/ui/searchable-select/SearchableSelect.vue';
 
 interface Props {
     purchases: any;
@@ -25,6 +26,13 @@ interface Props {
 const props = defineProps<Props>();
 const activeTab = ref('purchases');
 const campusFilter = ref('');
+const campusOptions = computed(() => props.campuses.map((campus) => ({ value: campus.id, label: campus.name })));
+
+watch(campusFilter, () => {
+    if (activeTab.value === 'purchases') fetchPurchases();
+    if (activeTab.value === 'suppliers') fetchSuppliers();
+    if (activeTab.value === 'returns') fetchPurchaseReturns();
+});
 
 // Purchase filters
 const searchQuery = ref('');
@@ -254,20 +262,13 @@ fetchPurchases();
                 <div class="overflow-x-auto pb-2 -mx-4 px-4 sm:mx-0 sm:px-0">
                     <div class="flex items-center gap-2 min-w-max">
                         <!-- Campus Dropdown -->
-                        <select 
-                            v-model="campusFilter" 
-                            @change="() => {
-                                if (activeTab === 'purchases') fetchPurchases();
-                                if (activeTab === 'suppliers') fetchSuppliers();
-                                if (activeTab === 'returns') fetchPurchaseReturns();
-                            }" 
-                            class="w-32 md:w-36 rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm h-9 flex-shrink-0"
-                        >
-                            <option value="">All Campuses</option>
-                            <option v-for="campus in props.campuses" :key="campus.id" :value="campus.id">
-                                {{ campus.name }}
-                            </option>
-                        </select>
+                        <SearchableSelect
+                            v-model="campusFilter"
+                            :options="campusOptions"
+                            placeholder="All Campuses"
+                            clearable
+                            class="w-32 md:w-36 shrink-0"
+                        />
 
                         <!-- Date Range Filter (Purchases) -->
                         <DateRangePicker

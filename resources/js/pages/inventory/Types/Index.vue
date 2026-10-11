@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Head, router } from '@inertiajs/vue3';
 import { alert } from '@/utils';
-import { ref, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 import axios from 'axios';
 import { route } from 'ziggy-js';
 import TablePagination from '@/components/tables/TablePagination.vue';
@@ -13,6 +13,7 @@ import { Badge } from '@/components/ui/badge';
 import type { BreadcrumbItem } from '@/types';
 import StatusToggle from '@/components/tables/StatusToggle.vue';
 import InventoryTypeForm from '@/components/forms/InventoryTypeForm.vue';
+import SearchableSelect from '@/components/ui/searchable-select/SearchableSelect.vue';
 
 interface Props {
     inventoryTypes: {
@@ -55,6 +56,8 @@ const pagination = ref(props.inventoryTypes);
 
 // Page size options
 const perPageOptions = [25, 50, 75, 100];
+
+const campusOptions = computed(() => props.campuses.map((campus) => ({ value: campus.id, label: campus.name })));
 
 const breadcrumbItems: BreadcrumbItem[] = [
     {
@@ -191,12 +194,13 @@ const handleSaved = () => {
 
             <!-- Filters -->
             <FilterCard class="flex flex-wrap gap-3 items-center">
-                <select v-model="campusFilter" class="w-full sm:w-48 rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm min-h-11">
-                    <option value="">All Campuses</option>
-                    <option v-for="campus in props.campuses" :key="campus.id" :value="campus.id">
-                        {{ campus.name }}
-                    </option>
-                </select>
+                <SearchableSelect
+                    v-model="campusFilter"
+                    :options="campusOptions"
+                    placeholder="All Campuses"
+                    clearable
+                    class="w-full sm:w-48"
+                />
                 <Button
                     :variant="showInactive ? 'default' : 'outline'"
                     size="sm"

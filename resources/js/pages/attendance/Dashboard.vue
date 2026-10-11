@@ -28,26 +28,12 @@
             <!-- Filters -->
             <div class="bg-card rounded-lg border border-border p-4">
                 <div class="flex flex-col sm:flex-row gap-4">
-                    <select
-                        v-model="filters.campus_id"
-                        @change="applyFilters"
-                        class="w-full sm:w-48 rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm"
-                    >
-                        <option value="">All Campuses</option>
-                        <option v-for="campus in props.campuses" :key="campus.id" :value="campus.id">
-                            {{ campus.name }}
-                        </option>
-                    </select>
-                    <select
-                        v-model="filters.session_id"
-                        @change="applyFilters"
-                        class="w-full sm:w-48 rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm"
-                    >
-                        <option value="">All Sessions</option>
-                        <option v-for="session in props.sessions" :key="session.id" :value="session.id">
-                            {{ session.name }}
-                        </option>
-                    </select>
+                    <div class="w-full sm:w-48">
+                        <SearchableSelect v-model="filters.campus_id" :options="campusOptions" placeholder="All Campuses" clearable />
+                    </div>
+                    <div class="w-full sm:w-48">
+                        <SearchableSelect v-model="filters.session_id" :options="sessionOptions" placeholder="All Sessions" clearable />
+                    </div>
                     <Button @click="applyFilters">
                         <Icon icon="filter" class="mr-1" />
                         Apply
@@ -261,6 +247,7 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import Icon from '@/components/Icon.vue';
 import { Button } from '@/components/ui/button';
 import LineChart from '@/components/charts/LineChart.vue';
+import SearchableSelect from '@/components/ui/searchable-select/SearchableSelect.vue';
 import type { BreadcrumbItem } from '@/types';
 
 interface Props {
@@ -338,6 +325,9 @@ const filters = reactive({
     campus_id: props.selectedCampusId || '',
     session_id: props.selectedSessionId || '',
 });
+
+const campusOptions = computed(() => props.campuses.map((campus) => ({ value: campus.id, label: campus.name })));
+const sessionOptions = computed(() => props.sessions.map((session) => ({ value: session.id, label: session.name })));
 
 const applyFilters = () => {
     router.visit(route('attendance.dashboard'), {

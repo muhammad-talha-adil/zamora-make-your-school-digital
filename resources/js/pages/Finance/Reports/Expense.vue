@@ -4,6 +4,7 @@ import { ref, computed } from 'vue';
 import { router } from '@inertiajs/vue3';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { Button } from '@/components/ui/button';
+import SearchableSelect from '@/components/ui/searchable-select/SearchableSelect.vue';
 import type { BreadcrumbItem } from '@/types';
 
 interface CategorySummary {
@@ -27,6 +28,7 @@ const props = defineProps<Props>();
 const byCategory = computed(() => props.byCategory || []);
 const totalExpense = computed(() => props.totalExpense || 0);
 const campuses = computed(() => props.campuses || []);
+const campusOptions = computed(() => campuses.value.map((c) => ({ value: c.id, label: c.name })));
 
 // Form state
 const fromDate = ref(props.fromDate || new Date().toISOString().split('T')[0]);
@@ -88,10 +90,13 @@ const loadReport = () => {
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-muted-foreground mb-1">Campus</label>
-                        <select v-model="selectedCampus" class="rounded-md border-border">
-                            <option :value="undefined">All Campuses</option>
-                            <option v-for="campus in campuses" :key="campus.id" :value="campus.id">{{ campus.name }}</option>
-                        </select>
+                        <SearchableSelect
+                            v-model="selectedCampus"
+                            :options="campusOptions"
+                            placeholder="All Campuses"
+                            clearable
+                            class="w-48"
+                        />
                     </div>
                     <Button @click="loadReport">Load Report</Button>
                 </div>

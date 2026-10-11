@@ -19,6 +19,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import InputError from '@/components/InputError.vue';
 import type { BreadcrumbItem } from '@/types';
+import SearchableSelect from '@/components/ui/searchable-select/SearchableSelect.vue';
 
 interface InventoryStockRow {
     id: number;
@@ -61,6 +62,9 @@ const props = defineProps<Props>();
 // Filter states
 const perPage = ref(25);
 const campusFilter = ref('');
+const campusOptions = computed(() => props.campuses.map((campus) => ({ value: campus.id, label: campus.name })));
+
+watch(campusFilter, () => fetchStocks());
 const lowStockOnly = ref(false);
 const stocksData = ref(props.inventoryStocks.data || []);
 const pagination = ref(props.inventoryStocks);
@@ -260,16 +264,13 @@ const summaryStats = computed(() => {
 
             <!-- Filters -->
             <div class="flex flex-col sm:flex-row gap-2 md:gap-3 items-center">
-                <select 
-                    v-model="campusFilter" 
-                    @change="() => fetchStocks()"
-                    class="w-full sm:w-44 md:w-48 rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm min-h-10 md:min-h-11"
-                >
-                    <option value="">All Campuses</option>
-                    <option v-for="campus in props.campuses" :key="campus.id" :value="campus.id">
-                        {{ campus.name }}
-                    </option>
-                </select>
+                <SearchableSelect
+                    v-model="campusFilter"
+                    :options="campusOptions"
+                    placeholder="All Campuses"
+                    clearable
+                    class="w-full sm:w-44 md:w-48"
+                />
                 <label class="flex items-center gap-2 text-sm text-muted-foreground min-h-10 px-2">
                     <input 
                         type="checkbox" 

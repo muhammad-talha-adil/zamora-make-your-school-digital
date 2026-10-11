@@ -24,61 +24,45 @@
                 <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
                     <div class="space-y-2">
                         <Label for="exam">Exam</Label>
-                        <select
+                        <SearchableSelect
                             id="exam"
                             v-model="selected.examId"
+                            :options="examOptions"
                             :disabled="isExamPreSelected"
-                            class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm"
-                            :class="{ 'bg-muted': isExamPreSelected }"
-                        >
-                            <option value="">Select Exam</option>
-                            <option v-for="exam in exams" :key="exam.id" :value="exam.id">
-                                {{ exam.name }}
-                            </option>
-                        </select>
+                            placeholder="Select Exam"
+                        />
                     </div>
 
                     <div class="space-y-2">
                         <Label for="campus">Campus</Label>
-                        <select
+                        <SearchableSelect
                             id="campus"
                             v-model="selected.campusId"
-                            class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm"
-                        >
-                            <option value="">All Campuses</option>
-                            <option v-for="campus in campuses" :key="campus.id" :value="campus.id">
-                                {{ campus.name }}
-                            </option>
-                        </select>
+                            :options="campusOptions"
+                            placeholder="All Campuses"
+                            clearable
+                        />
                     </div>
 
                     <div class="space-y-2">
                         <Label for="class">Class</Label>
-                        <select
+                        <SearchableSelect
                             id="class"
                             v-model="selected.classId"
-                            class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm"
-                        >
-                            <option value="">Select Class</option>
-                            <option v-for="cls in classes" :key="cls.id" :value="cls.id">
-                                {{ cls.name }}
-                            </option>
-                        </select>
+                            :options="classOptions"
+                            placeholder="Select Class"
+                        />
                     </div>
 
                     <div class="space-y-2">
                         <Label for="section">Section</Label>
-                        <select
+                        <SearchableSelect
                             id="section"
                             v-model="selected.sectionId"
+                            :options="sectionOptions"
                             :disabled="!selected.classId"
-                            class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm"
-                        >
-                            <option value="ALL">All Sections</option>
-                            <option v-for="section in filteredSections" :key="section.id" :value="section.id">
-                                {{ section.name }}
-                            </option>
-                        </select>
+                            placeholder="All Sections"
+                        />
                     </div>
                 </div>
 
@@ -117,6 +101,7 @@ import type { BreadcrumbItem } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import Icon from '@/components/Icon.vue';
+import SearchableSelect from '@/components/ui/searchable-select/SearchableSelect.vue';
 import MarkingGridComponent from './MarkingGridComponent.vue';
 
 interface Exam {
@@ -196,6 +181,14 @@ const filteredSections = computed(() => {
     if (!selected.classId || !props.sections) return [];
     return props.sections.filter((s: Section) => s.class_id === Number(selected.classId));
 });
+
+const examOptions = computed(() => props.exams.map((exam) => ({ value: exam.id, label: exam.name })));
+const campusOptions = computed(() => props.campuses.map((campus) => ({ value: campus.id, label: campus.name })));
+const classOptions = computed(() => props.classes.map((cls) => ({ value: cls.id, label: cls.name })));
+const sectionOptions = computed(() => [
+    { value: 'ALL', label: 'All Sections' },
+    ...filteredSections.value.map((section) => ({ value: section.id, label: section.name })),
+]);
 
 const loadMarkingGrid = () => {
     if (selected.examId && selected.classId) {

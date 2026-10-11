@@ -17,16 +17,12 @@
                     <div class="grid gap-4 md:grid-cols-2">
                         <div class="space-y-2">
                             <Label for="subject_id">Subject *</Label>
-                            <select
+                            <SearchableSelect
                                 id="subject_id"
                                 v-model="form.subject_id"
-                                class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm"
-                            >
-                                <option value="">Select Subject</option>
-                                <option v-for="subject in props.subjects" :key="subject.id" :value="subject.id">
-                                    {{ subject.name }}
-                                </option>
-                            </select>
+                                :options="subjectOptions"
+                                placeholder="Select Subject"
+                            />
                         </div>
 
                         <div class="space-y-2">
@@ -72,16 +68,22 @@
 <script setup lang="ts">
 import { Head, router } from '@inertiajs/vue3';
 import { useForm } from '@inertiajs/vue3';
+import { computed } from 'vue';
 import { route } from 'ziggy-js';
 import AppLayout from '@/layouts/AppLayout.vue';
 import type { BreadcrumbItem } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import SearchableSelect from '@/components/ui/searchable-select/SearchableSelect.vue';
 import { useFormValidity } from '@/composables/useFormValidity';
 import type { PaperEditProps } from '@/types/exam';
 
 const props = defineProps<PaperEditProps>();
+
+const subjectOptions = computed(() =>
+    props.subjects.map((subject) => ({ value: subject.id, label: subject.name })),
+);
 
 const breadcrumbItems: BreadcrumbItem[] = [
     { title: 'Dashboard', href: '/dashboard' },

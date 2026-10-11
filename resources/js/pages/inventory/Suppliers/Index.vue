@@ -21,16 +21,13 @@
 
             <!-- Filters -->
             <div class="flex flex-col sm:flex-row gap-2 md:gap-3">
-                <select 
+                <SearchableSelect
                     v-model="filters.campus_id"
-                    @change="router.visit(route('inventory.suppliers.index') + `?campus_id=${filters.campus_id || ''}`)"
-                    class="w-full sm:w-44 md:w-48 rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm min-h-10 md:min-h-11"
-                >
-                    <option value="">All Campuses</option>
-                    <option v-for="campus in props.campuses" :key="campus.id" :value="campus.id">
-                        {{ campus.name }}
-                    </option>
-                </select>
+                    :options="campusOptions"
+                    placeholder="All Campuses"
+                    clearable
+                    class="w-full sm:w-44 md:w-48"
+                />
                 <input
                     v-model="filters.search"
                     type="text"
@@ -188,7 +185,8 @@
 <script setup lang="ts">
 import { Head, router, Link } from '@inertiajs/vue3';
 import TablePagination from '@/components/tables/TablePagination.vue';
-import { reactive } from 'vue';
+import { computed, reactive, watch } from 'vue';
+import SearchableSelect from '@/components/ui/searchable-select/SearchableSelect.vue';
 import { debounce } from 'lodash';
 import { route } from 'ziggy-js';
 import AppLayout from '@/layouts/AppLayout.vue';
@@ -253,6 +251,12 @@ const filters = reactive({
     campus_id: props.filters?.campus_id || '',
     search: props.filters?.search || '',
     active_only: props.filters?.active_only,
+});
+
+const campusOptions = computed(() => props.campuses.map((campus) => ({ value: campus.id, label: campus.name })));
+
+watch(() => filters.campus_id, () => {
+    router.visit(route('inventory.suppliers.index') + `?campus_id=${filters.campus_id || ''}`);
 });
 
 const debouncedSearch = debounce(() => {

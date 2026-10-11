@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Head, router } from '@inertiajs/vue3';
 import { formatCurrency } from '@/utils';
-import { ref, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 import axios from 'axios';
 import AppLayout from '@/layouts/AppLayout.vue';
 import FilterCard from '@/components/FilterCard.vue';
@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import TablePagination from '@/components/tables/TablePagination.vue';
 import Icon from '@/components/Icon.vue';
 import type { BreadcrumbItem } from '@/types';
+import SearchableSelect from '@/components/ui/searchable-select/SearchableSelect.vue';
 
 interface Props {
     returns: {
@@ -46,6 +47,7 @@ const props = defineProps<Props>();
 
 const perPage = ref(10);
 const campusFilter = ref('');
+const campusOptions = computed(() => props.campuses.map((campus) => ({ value: campus.id, label: campus.name })));
 const returnsData = ref(props.returns.data || []);
 const pagination = ref(props.returns);
 
@@ -155,12 +157,13 @@ const viewReturn = (returnItem: any) => {
             </div>
 
             <FilterCard class="flex flex-wrap gap-3">
-                <select v-model="campusFilter" class="w-full sm:w-48 rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm min-h-11">
-                    <option value="">All Campuses</option>
-                    <option v-for="campus in props.campuses" :key="campus.id" :value="campus.id">
-                        {{ campus.name }}
-                    </option>
-                </select>
+                <SearchableSelect
+                    v-model="campusFilter"
+                    :options="campusOptions"
+                    placeholder="All Campuses"
+                    clearable
+                    class="w-full sm:w-48"
+                />
             </FilterCard>
 
             <div class="overflow-hidden rounded-lg border border-border bg-card shadow-sm">

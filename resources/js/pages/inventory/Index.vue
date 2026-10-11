@@ -16,6 +16,7 @@ import AdjustmentForm from '@/components/forms/inventory/AdjustmentForm.vue';
 import PurchaseReturnForm from '@/components/forms/inventory/PurchaseReturnForm.vue';
 import ReturnForm from '@/components/forms/inventory/ReturnForm.vue';
 import StudentInventoryAssignForm from '@/components/forms/inventory/StudentInventoryAssignForm.vue';
+import SearchableSelect from '@/components/ui/searchable-select/SearchableSelect.vue';
 
 // Types
 interface Stats {
@@ -157,6 +158,7 @@ const quickActions: QuickAction[] = [
 // State
 const loading = ref(true);
 const selectedCampusId = ref<number | null>(null);
+const campusOptions = computed(() => campuses.value.map((campus) => ({ value: campus.id, label: campus.name })));
 const stats = ref<Stats>({
     types: 0,
     items: 0,
@@ -481,10 +483,7 @@ const openModal = (key: string) => {
     }
 };
 
-const handleCampusChange = (event: Event) => {
-    const target = event.target as HTMLSelectElement;
-    selectedCampusId.value = target.value ? parseInt(target.value) : null;
-};
+
 </script>
 
 <template>
@@ -508,17 +507,13 @@ const handleCampusChange = (event: Event) => {
                         <label for="campus-select" class="text-sm font-medium text-muted-foreground">
                             Campus:
                         </label>
-                        <select
+                        <SearchableSelect
                             id="campus-select"
-                            :value="selectedCampusId || ''"
-                            @change="handleCampusChange"
-                            class="px-3 py-2 text-sm rounded-lg border border-border bg-card text-foreground focus:ring-2 focus:ring-primary/50 focus:border-primary"
-                        >
-                            <option value="">All Campuses</option>
-                            <option v-for="campus in campuses" :key="campus.id" :value="campus.id">
-                                {{ campus.name }}
-                            </option>
-                        </select>
+                            v-model="selectedCampusId"
+                            :options="campusOptions"
+                            placeholder="All Campuses"
+                            clearable
+                        />
                     </div>
                     <Button variant="outline" size="sm" @click="fetchAllData" class="gap-2">
                         <Icon icon="refresh" class="h-4 w-4" />

@@ -10,6 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { alert } from '@/utils';
 import StatusToggle from '@/components/tables/StatusToggle.vue';
+import SearchableSelect from '@/components/ui/searchable-select/SearchableSelect.vue';
 
 interface FineRule {
     id: number;
@@ -105,6 +106,12 @@ const filteredSections = computed(() => {
     if (!form.value.class_id) return [];
     return props.sections.filter(s => s.class_id === Number(form.value.class_id));
 });
+
+// Options for searchable selects
+const campusOptions = computed(() => props.campuses.map((c) => ({ value: c.id.toString(), label: c.name })));
+const classOptions = computed(() => props.classes.map((c) => ({ value: c.id.toString(), label: c.name })));
+const filteredSectionOptions = computed(() => filteredSections.value.map((s) => ({ value: s.id.toString(), label: s.name })));
+const feeHeadOptions = computed(() => props.feeHeads.map((f) => ({ value: f.id.toString(), label: f.name })));
 
 // Check if fine value should show percentage
 const showPercentage = computed(() => {
@@ -434,16 +441,13 @@ const fineTypeOptions = [
                 <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
                     <div class="space-y-2">
                         <Label for="filter-campus">Campus</Label>
-                        <select 
+                        <SearchableSelect
                             id="filter-campus"
                             v-model="filterCampus"
-                            class="w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground"
-                        >
-                            <option value="">All Campuses</option>
-                            <option v-for="campus in props.campuses" :key="campus.id" :value="campus.id.toString()">
-                                {{ campus.name }}
-                            </option>
-                        </select>
+                            :options="campusOptions"
+                            placeholder="All Campuses"
+                            clearable
+                        />
                     </div>
                     <div class="space-y-2">
                         <Label for="filter-session">Session</Label>
@@ -460,16 +464,13 @@ const fineTypeOptions = [
                     </div>
                     <div class="space-y-2">
                         <Label for="filter-class">Class</Label>
-                        <select 
+                        <SearchableSelect
                             id="filter-class"
                             v-model="filterClass"
-                            class="w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground"
-                        >
-                            <option value="">All Classes</option>
-                            <option v-for="cls in props.classes" :key="cls.id" :value="cls.id.toString()">
-                                {{ cls.name }}
-                            </option>
-                        </select>
+                            :options="classOptions"
+                            placeholder="All Classes"
+                            clearable
+                        />
                     </div>
                     <div class="space-y-2">
                         <Label for="filter-status">Status</Label>
@@ -590,17 +591,12 @@ const fineTypeOptions = [
                         <div class="grid gap-4 md:grid-cols-2">
                             <div class="space-y-2">
                                 <Label for="campus_id">Campus *</Label>
-                                <select 
+                                <SearchableSelect
                                     id="campus_id"
                                     v-model="form.campus_id"
-                                    required
-                                    :class="['w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground', formErrors.campus_id ? 'border-destructive' : '']"
-                                >
-                                    <option value="">Select Campus</option>
-                                    <option v-for="campus in props.campuses" :key="campus.id" :value="campus.id.toString()">
-                                        {{ campus.name }}
-                                    </option>
-                                </select>
+                                    :options="campusOptions"
+                                    placeholder="Select Campus"
+                                />
                                 <p v-if="formErrors.campus_id" class="text-xs text-destructive">{{ formErrors.campus_id }}</p>
                             </div>
                             <div class="space-y-2">
@@ -624,30 +620,24 @@ const fineTypeOptions = [
                         <div class="grid gap-4 md:grid-cols-2">
                             <div class="space-y-2">
                                 <Label for="class_id">Class (Optional)</Label>
-                                <select 
+                                <SearchableSelect
                                     id="class_id"
                                     v-model="form.class_id"
-                                    class="w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground"
-                                >
-                                    <option value="">All Classes</option>
-                                    <option v-for="cls in props.classes" :key="cls.id" :value="cls.id.toString()">
-                                        {{ cls.name }}
-                                    </option>
-                                </select>
+                                    :options="classOptions"
+                                    placeholder="All Classes"
+                                    clearable
+                                />
                             </div>
                             <div class="space-y-2">
                                 <Label for="section_id">Section (Optional)</Label>
-                                <select 
+                                <SearchableSelect
                                     id="section_id"
                                     v-model="form.section_id"
+                                    :options="filteredSectionOptions"
                                     :disabled="!form.class_id"
-                                    :class="['w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground', formErrors.section_id ? 'border-destructive' : '']"
-                                >
-                                    <option value="">All Sections</option>
-                                    <option v-for="section in filteredSections" :key="section.id" :value="section.id.toString()">
-                                        {{ section.name }}
-                                    </option>
-                                </select>
+                                    placeholder="All Sections"
+                                    clearable
+                                />
                                 <p v-if="formErrors.section_id" class="text-xs text-destructive">{{ formErrors.section_id }}</p>
                             </div>
                         </div>
@@ -655,16 +645,13 @@ const fineTypeOptions = [
                         <!-- Fee Head (Optional) -->
                         <div class="space-y-2">
                             <Label for="fee_head_id">Apply to Fee Head (Optional)</Label>
-                            <select 
+                            <SearchableSelect
                                 id="fee_head_id"
                                 v-model="form.fee_head_id"
-                                class="w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground"
-                            >
-                                <option value="">All Fee Heads</option>
-                                <option v-for="fh in props.feeHeads" :key="fh.id" :value="fh.id.toString()">
-                                    {{ fh.name }}
-                                </option>
-                            </select>
+                                :options="feeHeadOptions"
+                                placeholder="All Fee Heads"
+                                clearable
+                            />
                             <p class="text-xs text-muted-foreground">Leave empty to apply to all fee types</p>
                         </div>
 

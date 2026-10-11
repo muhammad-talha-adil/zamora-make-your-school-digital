@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Head, router } from '@inertiajs/vue3';
 import { alert, formatCurrency } from '@/utils';
-import { ref, watch } from 'vue';
+import { ref, watch, computed } from 'vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import FilterCard from '@/components/FilterCard.vue';
 import { Button } from '@/components/ui/button';
@@ -11,6 +11,7 @@ import { Badge } from '@/components/ui/badge';
 import type { BreadcrumbItem } from '@/types';
 import StatusToggle from '@/components/tables/StatusToggle.vue';
 import ItemForm from '@/components/forms/inventory/ItemForm.vue';
+import SearchableSelect from '@/components/ui/searchable-select/SearchableSelect.vue';
 
 interface InventoryItemData {
     id: number;
@@ -78,6 +79,9 @@ const pagination = ref(props.inventoryItems);
 
 // Page size options
 const perPageOptions = [25, 50, 75, 100];
+
+const campusOptions = computed(() => props.campuses.map((campus) => ({ value: campus.id, label: campus.name })));
+const typeOptions = computed(() => props.inventoryTypes.map((type) => ({ value: type.id, label: type.name })));
 
 const breadcrumbItems: BreadcrumbItem[] = [
     {
@@ -222,18 +226,20 @@ const getStockStatus = (quantity: number) => {
 
             <!-- Filters -->
             <FilterCard class="flex flex-wrap gap-2 items-center">
-                <select v-model="campusFilter" class="w-full sm:w-48 rounded-md border border-border bg-card text-foreground px-3 py-2.5 text-sm min-h-11">
-                    <option value="">All Campuses</option>
-                    <option v-for="campus in props.campuses" :key="campus.id" :value="campus.id">
-                        {{ campus.name }}
-                    </option>
-                </select>
-                <select v-model="typeFilter" class="w-full sm:w-48 rounded-md border border-border bg-card text-foreground px-3 py-2.5 text-sm min-h-11">
-                    <option value="">All Types</option>
-                    <option v-for="type in props.inventoryTypes" :key="type.id" :value="type.id">
-                        {{ type.name }}
-                    </option>
-                </select>
+                <SearchableSelect
+                    v-model="campusFilter"
+                    :options="campusOptions"
+                    placeholder="All Campuses"
+                    clearable
+                    class="w-full sm:w-48"
+                />
+                <SearchableSelect
+                    v-model="typeFilter"
+                    :options="typeOptions"
+                    placeholder="All Types"
+                    clearable
+                    class="w-full sm:w-48"
+                />
                 <div class="flex-1"></div>
                 <Button
                     :variant="showDeleted ? 'ghost' : 'default'"

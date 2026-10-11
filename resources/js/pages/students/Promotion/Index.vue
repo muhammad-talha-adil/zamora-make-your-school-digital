@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import Icon from '@/components/Icon.vue';
+import SearchableSelect from '@/components/ui/searchable-select/SearchableSelect.vue';
 import { alert } from '@/utils';
 
 interface Session {
@@ -188,6 +189,11 @@ const fetchPreview = async () => {
 
 const includedCount = computed(() => Object.values(included).filter(Boolean).length);
 
+const sessionOptions = computed(() => props.sessions.map((session) => ({ value: session.id, label: session.name })));
+const classOptions = computed(() => props.classes.map((cls) => ({ value: cls.id, label: cls.name })));
+const fromSectionOptions = computed(() => fromSections.value.map((section) => ({ value: section.id, label: section.name })));
+const toSectionOptions = computed(() => toSections.value.map((section) => ({ value: section.id, label: section.name })));
+
 const toggleAll = (value: boolean) => {
     students.value.forEach((student) => {
         included[student.student_id] = value;
@@ -309,48 +315,34 @@ const runRevert = () => {
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                     <div>
                         <Label for="session_id">Academic Session *</Label>
-                        <select
+                        <SearchableSelect
                             id="session_id"
                             v-model="filters.session_id"
-                            class="mt-1 block w-full rounded-md border border-border bg-card text-foreground px-3 py-2"
-                        >
-                            <option value="">Select Session</option>
-                            <option v-for="session in props.sessions" :key="session.id" :value="session.id">
-                                {{ session.name }}
-                            </option>
-                        </select>
+                            :options="sessionOptions"
+                            placeholder="Select Session"
+                        />
                     </div>
 
                     <div>
                         <Label for="class_id">Class *</Label>
-                        <select
+                        <SearchableSelect
                             id="class_id"
                             v-model="filters.class_id"
-                            class="mt-1 block w-full rounded-md border border-border bg-card text-foreground px-3 py-2"
-                        >
-                            <option value="">Select Class</option>
-                            <option v-for="cls in props.classes" :key="cls.id" :value="cls.id">
-                                {{ cls.name }}
-                            </option>
-                        </select>
+                            :options="classOptions"
+                            placeholder="Select Class"
+                        />
                     </div>
 
                     <div>
                         <Label for="section_id">Section</Label>
-                        <select
+                        <SearchableSelect
                             id="section_id"
                             v-model="filters.section_id"
+                            :options="fromSectionOptions"
                             :disabled="!filters.class_id || fromSectionsLoading || fromSections.length === 0"
-                            :class="[
-                                'mt-1 block w-full rounded-md border border-border bg-card text-foreground px-3 py-2',
-                                (!filters.class_id || fromSections.length === 0) ? 'cursor-not-allowed opacity-50' : '',
-                            ]"
-                        >
-                            <option value="">{{ fromSections.length > 0 ? 'All Sections' : 'No Sections' }}</option>
-                            <option v-for="section in fromSections" :key="section.id" :value="section.id">
-                                {{ section.name }}
-                            </option>
-                        </select>
+                            :placeholder="fromSections.length > 0 ? 'All Sections' : 'No Sections'"
+                            clearable
+                        />
                     </div>
                 </div>
 
@@ -370,30 +362,22 @@ const runRevert = () => {
                     <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
                         <div>
                             <Label for="to_session_id">Into Session *</Label>
-                            <select
+                            <SearchableSelect
                                 id="to_session_id"
                                 v-model="target.to_session_id"
-                                class="mt-1 block w-full rounded-md border border-border bg-card text-foreground px-3 py-2"
-                            >
-                                <option value="">Select Session</option>
-                                <option v-for="session in props.sessions" :key="session.id" :value="session.id">
-                                    {{ session.name }}
-                                </option>
-                            </select>
+                                :options="sessionOptions"
+                                placeholder="Select Session"
+                            />
                         </div>
 
                         <div>
                             <Label for="to_class_id">Into Class</Label>
-                            <select
+                            <SearchableSelect
                                 id="to_class_id"
                                 v-model="target.to_class_id"
-                                class="mt-1 block w-full rounded-md border border-border bg-card text-foreground px-3 py-2"
-                            >
-                                <option value="">{{ suggestedClass ? suggestedClass.name : 'Select Class' }}</option>
-                                <option v-for="cls in props.classes" :key="cls.id" :value="cls.id">
-                                    {{ cls.name }}
-                                </option>
-                            </select>
+                                :options="classOptions"
+                                :placeholder="suggestedClass ? suggestedClass.name : 'Select Class'"
+                            />
                             <p v-if="suggestedClass" class="mt-1 text-xs text-muted-foreground">
                                 Suggested: {{ suggestedClass.name }}
                             </p>
@@ -401,20 +385,14 @@ const runRevert = () => {
 
                         <div>
                             <Label for="to_section_id">Into Section</Label>
-                            <select
+                            <SearchableSelect
                                 id="to_section_id"
                                 v-model="target.to_section_id"
+                                :options="toSectionOptions"
                                 :disabled="!target.to_class_id || toSections.length === 0"
-                                :class="[
-                                    'mt-1 block w-full rounded-md border border-border bg-card text-foreground px-3 py-2',
-                                    (!target.to_class_id || toSections.length === 0) ? 'cursor-not-allowed opacity-50' : '',
-                                ]"
-                            >
-                                <option value="">{{ toSections.length > 0 ? 'Any Section' : 'No Sections' }}</option>
-                                <option v-for="section in toSections" :key="section.id" :value="section.id">
-                                    {{ section.name }}
-                                </option>
-                            </select>
+                                :placeholder="toSections.length > 0 ? 'Any Section' : 'No Sections'"
+                                clearable
+                            />
                         </div>
 
                         <div>
@@ -524,16 +502,12 @@ const runRevert = () => {
                 <div class="grid grid-cols-1 md:grid-cols-3 gap-6 items-end">
                     <div>
                         <Label for="revert_session_id">Session Promoted Into *</Label>
-                        <select
+                        <SearchableSelect
                             id="revert_session_id"
                             v-model="revertForm.session_id"
-                            class="mt-1 block w-full rounded-md border border-border bg-card text-foreground px-3 py-2"
-                        >
-                            <option value="">Select Session</option>
-                            <option v-for="session in props.sessions" :key="session.id" :value="session.id">
-                                {{ session.name }}
-                            </option>
-                        </select>
+                            :options="sessionOptions"
+                            placeholder="Select Session"
+                        />
                     </div>
 
                     <div class="md:col-span-2">

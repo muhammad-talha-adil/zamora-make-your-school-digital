@@ -22,29 +22,21 @@
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
                     <div>
                         <label class="block text-sm font-medium text-muted-foreground mb-1">Campus</label>
-                        <select
+                        <SearchableSelect
                             v-model="filters.campus_id"
-                            @change="router.visit(`/inventory/adjustments?campus_id=${filters.campus_id || ''}`)"
-                            class="w-full border border-border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary min-h-11"
-                        >
-                            <option value="">All Campuses</option>
-                            <option v-for="campus in props.campuses" :key="campus.id" :value="campus.id">
-                                {{ campus.name }}
-                            </option>
-                        </select>
+                            :options="campusOptions"
+                            placeholder="All Campuses"
+                            clearable
+                        />
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-muted-foreground mb-1">Item</label>
-                        <select
+                        <SearchableSelect
                             v-model="filters.item_id"
-                            @change="router.visit(`/inventory/adjustments?campus_id=${filters.campus_id || ''}&item_id=${filters.item_id || ''}`)"
-                            class="w-full border border-border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary min-h-11"
-                        >
-                            <option value="">All Items</option>
-                            <option v-for="item in props.inventoryItems" :key="item.id" :value="item.id">
-                                {{ item.name }}
-                            </option>
-                        </select>
+                            :options="itemOptions"
+                            placeholder="All Items"
+                            clearable
+                        />
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-muted-foreground mb-1">Type</label>
@@ -186,7 +178,8 @@
 <script setup lang="ts">
 import { Head, router, Link } from '@inertiajs/vue3';
 import TablePagination from '@/components/tables/TablePagination.vue';
-import { reactive } from 'vue';
+import { computed, reactive, watch } from 'vue';
+import SearchableSelect from '@/components/ui/searchable-select/SearchableSelect.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import FilterCard from '@/components/FilterCard.vue';
 import type { BreadcrumbItem } from '@/types';
@@ -257,5 +250,15 @@ const filters = reactive({
     type: props.filters?.type || '',
     from_date: props.filters?.from_date || '',
     to_date: props.filters?.to_date || '',
+});
+
+const campusOptions = computed(() => props.campuses.map((campus) => ({ value: campus.id, label: campus.name })));
+const itemOptions = computed(() => props.inventoryItems.map((item) => ({ value: item.id, label: item.name })));
+
+watch(() => filters.campus_id, () => {
+    router.visit(`/inventory/adjustments?campus_id=${filters.campus_id || ''}`);
+});
+watch(() => filters.item_id, () => {
+    router.visit(`/inventory/adjustments?campus_id=${filters.campus_id || ''}&item_id=${filters.item_id || ''}`);
 });
 </script>

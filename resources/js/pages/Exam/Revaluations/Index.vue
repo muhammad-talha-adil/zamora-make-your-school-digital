@@ -16,15 +16,12 @@
                 <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
                     <div>
                         <label class="block text-sm font-medium mb-1">Exam</label>
-                        <select
+                        <SearchableSelect
                             v-model="filters.exam_id"
-                            class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                        >
-                            <option value="">Select Exam</option>
-                            <option v-for="exam in exams" :key="exam.id" :value="exam.id">
-                                {{ exam.name }}
-                            </option>
-                        </select>
+                            :options="examOptions"
+                            placeholder="Select Exam"
+                            clearable
+                        />
                     </div>
                     <div>
                         <label class="block text-sm font-medium mb-1">Status</label>
@@ -126,21 +123,19 @@
                     <form @submit.prevent="submitRequest">
                         <div class="mb-4">
                             <label class="block text-sm font-medium mb-1">Exam</label>
-                            <select v-model="form.exam_id" class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2" required>
-                                <option value="">Select Exam</option>
-                                <option v-for="exam in exams" :key="exam.id" :value="exam.id">
-                                    {{ exam.name }}
-                                </option>
-                            </select>
+                            <SearchableSelect
+                                v-model="form.exam_id"
+                                :options="examOptions"
+                                placeholder="Select Exam"
+                            />
                         </div>
                         <div class="mb-4">
                             <label class="block text-sm font-medium mb-1">Student</label>
-                            <select v-model="form.student_id" class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2" required>
-                                <option value="">Select Student</option>
-                                <option v-for="student in students" :key="student.id" :value="student.id">
-                                    {{ student.name }}
-                                </option>
-                            </select>
+                            <SearchableSelect
+                                v-model="form.student_id"
+                                :options="studentOptions"
+                                placeholder="Select Student"
+                            />
                         </div>
                         <div class="mb-4">
                             <label class="block text-sm font-medium mb-1">Exam Paper ID</label>
@@ -272,7 +267,7 @@
 </template>
 
 <script setup lang="ts">
-import { reactive, ref } from 'vue'
+import { computed, reactive, ref } from 'vue'
 import { Head, usePage } from '@inertiajs/vue3'
 import axios from 'axios'
 import { route } from 'ziggy-js'
@@ -282,6 +277,7 @@ import InputError from '@/components/InputError.vue'
 import FilterCard from '@/components/FilterCard.vue'
 import { Button } from '@/components/ui/button'
 import { Label } from '@/components/ui/label'
+import SearchableSelect from '@/components/ui/searchable-select/SearchableSelect.vue'
 import {
     Dialog,
     DialogContent,
@@ -367,6 +363,9 @@ const form = reactive({
     exam_paper_id: '' as string | number,
     reason: '',
 })
+
+const examOptions = computed(() => props.exams.map((exam) => ({ value: exam.id, label: exam.name })))
+const studentOptions = computed(() => students.value.map((student) => ({ value: student.id, label: student.name })))
 
 function statusLabel(status: string): string {
     return status.replace('_', ' ').replace(/\b\w/g, (c) => c.toUpperCase())

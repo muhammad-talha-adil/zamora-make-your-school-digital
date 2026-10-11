@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, router } from '@inertiajs/vue3';
-import { ref, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 import axios from 'axios';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { Button } from '@/components/ui/button';
@@ -9,6 +9,7 @@ import { Badge } from '@/components/ui/badge';
 import type { BreadcrumbItem } from '@/types';
 import { formatDate } from '@/utils/date';
 import { formatCurrency } from '@/utils/currency';
+import SearchableSelect from '@/components/ui/searchable-select/SearchableSelect.vue';
 
 interface Props {
     studentInventories: any;
@@ -21,6 +22,12 @@ interface Props {
 const props = defineProps<Props>();
 const activeTab = ref('assigned');
 const campusFilter = ref(props.campuses[0]?.id || '');
+const campusOptions = computed(() => props.campuses.map((campus) => ({ value: campus.id, label: campus.name })));
+
+watch(campusFilter, () => {
+    if (activeTab.value === 'assigned') fetchStudentInventories();
+    if (activeTab.value === 'returns') fetchReturns();
+});
 
 // Pagination state
 const studentInventoriesPagination = ref({ current_page: 1, last_page: 1, per_page: 20, total: 0, from: 0, to: 0 });
@@ -184,15 +191,13 @@ fetchStudentInventories();
             <!-- Filters & Actions Bar -->
             <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
                 <div class="flex flex-wrap gap-3 flex-1">
-                    <select v-model="campusFilter" @change="() => {
-                        if (activeTab === 'assigned') fetchStudentInventories();
-                        if (activeTab === 'returns') fetchReturns();
-                    }" class="w-full sm:w-48 rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm">
-                        <option value="">All Campuses</option>
-                        <option v-for="campus in props.campuses" :key="campus.id" :value="campus.id">
-                            {{ campus.name }}
-                        </option>
-                    </select>
+                    <SearchableSelect
+                        v-model="campusFilter"
+                        :options="campusOptions"
+                        placeholder="All Campuses"
+                        clearable
+                        class="w-full sm:w-48"
+                    />
                 </div>
                 
                 <Button v-if="activeTab === 'assigned'" @click="router.get('/inventory/student-inventory/create')" class="min-h-11">
