@@ -382,6 +382,8 @@ const availableStops = computed(() => {
     return props.stops.filter((stop) => String(stop.campus_id ?? '') === routeForm.campus_id);
 });
 
+const stopOptions = computed(() => availableStops.value.map((stop) => ({ value: String(stop.id), label: stop.name })));
+
 const availableRouteStops = computed(() => {
     const selectedRoute = props.routes.find((routeRow) => String(routeRow.id) === assignmentForm.transport_route_id);
 
@@ -877,9 +879,13 @@ const generateDues = async () => {
                         </div>
                         <div>
                             <label class="mb-2 block text-sm font-medium text-muted-foreground">Stops</label>
-                            <select v-model="routeForm.stop_ids" :class="selectClass" multiple size="5">
-                                <option v-for="stop in availableStops" :key="stop.id" :value="String(stop.id)">{{ stop.name }}</option>
-                            </select>
+                            <SearchableSelect
+                                v-model="routeForm.stop_ids"
+                                :options="stopOptions"
+                                multiple
+                                clearable
+                                placeholder="Select stops"
+                            />
                         </div>
                         <div>
                             <label class="mb-2 block text-sm font-medium text-muted-foreground">Notes</label>
