@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Button } from '@/components/ui/button';
+import SearchableSelect from '@/components/ui/searchable-select/SearchableSelect.vue';
 import { Link } from '@inertiajs/vue3';
 import { computed } from 'vue';
 
@@ -79,9 +80,10 @@ const isVisible = computed(() => {
     return (props.pagination?.links?.length ?? 0) > 3;
 });
 
-const handlePerPageChange = (event: Event): void => {
-    const value = Number.parseInt((event.target as HTMLSelectElement).value, 10);
-    emit('update:perPage', value);
+const perPageSelectOptions = computed(() => props.perPageOptions.map((option) => ({ value: option.id, label: option.name })));
+
+const handlePerPageChange = (value: string | number | null): void => {
+    emit('update:perPage', Number(value));
 };
 
 const handlePageClick = (link: PaginationLink): void => {
@@ -102,16 +104,13 @@ const handlePageClick = (link: PaginationLink): void => {
             <div class="text-sm text-muted-foreground">
                 Showing {{ pagination.from }} to {{ pagination.to }} of {{ pagination.total }} entries
             </div>
-            <select
+            <SearchableSelect
                 v-if="showPerPageSelector"
-                :value="effectivePerPage"
-                class="rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm min-h-10 w-20"
-                @change="handlePerPageChange"
-            >
-                <option v-for="option in perPageOptions" :key="option.id" :value="option.id">
-                    {{ option.name }}
-                </option>
-            </select>
+                :model-value="effectivePerPage"
+                :options="perPageSelectOptions"
+                class="w-20"
+                @update:model-value="handlePerPageChange"
+            />
         </div>
         <div class="flex flex-wrap gap-1">
             <template v-if="useLinks">

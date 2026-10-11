@@ -10,6 +10,13 @@ import Icon from '@/components/Icon.vue';
 import { type BreadcrumbItem } from '@/types';
 import MenuModal from '@/components/forms/menus/MenuModal.vue';
 import MenuTable from '@/components/forms/menus/MenuTable.vue';
+import SearchableSelect from '@/components/ui/searchable-select/SearchableSelect.vue';
+
+const statusFilterOptions = [
+    { value: '', label: 'All' },
+    { value: 'active', label: 'Active' },
+    { value: 'inactive', label: 'Inactive' },
+];
 
 interface Props {
     tableMenus: {
@@ -228,11 +235,7 @@ onMounted(() => {
                         </p>
                     </div>
                     <div class="flex gap-2">
-                        <select v-model="statusFilter" class="w-32 rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm">
-                            <option value="">All</option>
-                            <option value="active">Active</option>
-                            <option value="inactive">Inactive</option>
-                        </select>
+                        <SearchableSelect v-model="statusFilter" :options="statusFilterOptions" placeholder="All" class="w-32" />
                         <Button v-if="hasManageMenusPermission" @click="openCreateModal">
                             <Icon icon="plus" class="mr-2" />
                             Add Menu

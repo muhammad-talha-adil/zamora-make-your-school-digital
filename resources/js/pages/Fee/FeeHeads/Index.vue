@@ -70,6 +70,10 @@ const filters = reactive({
 });
 
 const categoryOptions = computed(() => props.categories.map((cat) => ({ value: cat.value, label: cat.label })));
+const statusOptions = [
+    { value: 'true', label: 'Active' },
+    { value: 'false', label: 'Inactive' },
+];
 
 let searchDebounceTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -244,16 +248,14 @@ const getFrequencyLabel = (frequency: string) => {
                 </div>
                 <div class="w-full sm:w-44 md:w-48">
                     <Label for="filter-active" class="sr-only">Status</Label>
-                    <select
+                    <SearchableSelect
                         id="filter-active"
                         v-model="filters.is_active"
-                        @change="applyFilters"
-                        class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm min-h-10 md:min-h-11"
-                    >
-                        <option value="">All Status</option>
-                        <option value="true">Active</option>
-                        <option value="false">Inactive</option>
-                    </select>
+                        :options="statusOptions"
+                        placeholder="All Status"
+                        clearable
+                        @update:modelValue="applyFilters"
+                    />
                 </div>
             </div>
 

@@ -462,15 +462,12 @@ const runRevert = () => {
                                         {{ student.percentage !== null ? `${student.percentage}%` : '—' }}
                                     </td>
                                     <td class="px-3 py-2">
-                                        <select
+                                        <SearchableSelect
                                             v-model="outcomes[student.student_id]"
+                                            :options="outcomeOptions"
                                             :disabled="!included[student.student_id]"
-                                            class="rounded-md border border-border bg-card text-foreground px-2 py-1 text-sm disabled:opacity-50"
-                                        >
-                                            <option v-for="option in outcomeOptions" :key="option.value" :value="option.value">
-                                                {{ option.label }}
-                                            </option>
-                                        </select>
+                                            class="w-40"
+                                        />
                                         <p v-if="outcomes[student.student_id] !== student.suggested_outcome" class="mt-1 text-xs text-muted-foreground">
                                             Suggested: {{ outcomeLabel(student.suggested_outcome) }}
                                         </p>

@@ -5,8 +5,9 @@ import RowActions from '@/components/tables/RowActions.vue';
 import TablePagination from '@/components/tables/TablePagination.vue';
 import { alert } from '@/utils';
 import StatusToggle from '@/components/tables/StatusToggle.vue';
+import SearchableSelect from '@/components/ui/searchable-select/SearchableSelect.vue';
 import axios from 'axios';
-import { ref, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 
 interface Props {
     sections: any;
@@ -18,6 +19,15 @@ const EMPTY_VALUE = '-';
 
 const statusFilter = ref('');
 const classFilter = ref('');
+const classFilterOptions = computed(() => [
+    { value: '', label: 'All Classes' },
+    ...(props.schoolClasses ?? []).map((schoolClass) => ({ value: schoolClass.id, label: schoolClass.name })),
+]);
+const statusFilterOptions = [
+    { value: '', label: 'All' },
+    { value: 'active', label: 'Active' },
+    { value: 'inactive', label: 'Inactive' },
+];
 const perPage = ref(10);
 const sectionsData = ref(props.sections.data || []);
 const pagination = ref(props.sections);
@@ -126,17 +136,8 @@ const handleSaved = () => {
     <div class="space-y-4">
         <div class="flex flex-wrap gap-2 justify-between items-center">
             <div class="flex gap-2">
-                <select v-model="classFilter" class="rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm min-h-10 w-40">
-                    <option value="">All Classes</option>
-                    <option v-for="schoolClass in schoolClasses" :key="schoolClass.id" :value="schoolClass.id">
-                        {{ schoolClass.name }}
-                    </option>
-                </select>
-                <select v-model="statusFilter" class="rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm min-h-10 w-32">
-                    <option value="">All</option>
-                    <option value="active">Active</option>
-                    <option value="inactive">Inactive</option>
-                </select>
+                <SearchableSelect v-model="classFilter" :options="classFilterOptions" placeholder="All Classes" class="w-40" />
+                <SearchableSelect v-model="statusFilter" :options="statusFilterOptions" placeholder="All" class="w-32" />
             </div>
             <div class="flex gap-2">
                 <SectionForm :school-classes="schoolClasses" @saved="handleSaved" />

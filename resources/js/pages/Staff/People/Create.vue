@@ -44,12 +44,12 @@
                         </div>
                         <div class="space-y-2">
                             <Label for="employment_type">Employment Type</Label>
-                            <select id="employment_type" v-model="form.employment_type" :class="selectClass">
-                                <option value="permanent">Permanent</option>
-                                <option value="contract">Contract</option>
-                                <option value="part_time">Part Time</option>
-                                <option value="daily_wage">Daily Wage</option>
-                            </select>
+                            <SearchableSelect
+                                id="employment_type"
+                                v-model="form.employment_type"
+                                :options="employmentTypeOptions"
+                                placeholder="Select employment type"
+                            />
                         </div>
                         <div class="space-y-2">
                             <Label for="hire_date">Hire Date</Label>
@@ -75,11 +75,12 @@
                         </div>
                         <div class="space-y-2">
                             <Label for="payment_method">Payment Method</Label>
-                            <select id="payment_method" v-model="form.payment_method" :class="selectClass">
-                                <option value="bank">Bank</option>
-                                <option value="cash">Cash</option>
-                                <option value="cheque">Cheque</option>
-                            </select>
+                            <SearchableSelect
+                                id="payment_method"
+                                v-model="form.payment_method"
+                                :options="paymentMethodOptions"
+                                placeholder="Select payment method"
+                            />
                         </div>
                         <template v-if="form.payment_method === 'bank'">
                             <div class="space-y-2">
@@ -197,9 +198,20 @@ const breadcrumbItems: BreadcrumbItem[] = [
     { title: 'New Staff Member', href: route('staff.people.create') },
 ];
 
-const selectClass = 'h-11 w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground';
-
 const processing = ref(false);
+
+const employmentTypeOptions = [
+    { value: 'permanent', label: 'Permanent' },
+    { value: 'contract', label: 'Contract' },
+    { value: 'part_time', label: 'Part Time' },
+    { value: 'daily_wage', label: 'Daily Wage' },
+];
+
+const paymentMethodOptions = [
+    { value: 'bank', label: 'Bank' },
+    { value: 'cash', label: 'Cash' },
+    { value: 'cheque', label: 'Cheque' },
+];
 
 const form = reactive({
     name: '',

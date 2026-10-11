@@ -163,22 +163,12 @@
                                 >Gender
                                 <span class="text-destructive">*</span></Label
                             >
-                            <select
+                            <SearchableSelect
                                 id="gender_id"
                                 v-model="form.gender_id"
-                                class="h-11 w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground"
-                                :class="{ 'border-destructive': errors.gender_id }"
-                                required
-                            >
-                                <option value="">Select Gender</option>
-                                <option
-                                    v-for="gender in props.genders"
-                                    :key="gender.id"
-                                    :value="gender.id"
-                                >
-                                    {{ gender.name }}
-                                </option>
-                            </select>
+                                :options="genderOptions"
+                                placeholder="Select Gender"
+                            />
                             <InputError :message="errors.gender_id" />
                         </div>
 
@@ -204,23 +194,13 @@
                                 >Campus
                                 <span class="text-destructive">*</span></Label
                             >
-                            <select
+                            <SearchableSelect
                                 id="campus_id"
                                 v-model="form.campus_id"
                                 :disabled="isCampusLocked"
-                                class="h-11 w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground"
-                                :class="{ 'border-destructive': errors.campus_id, 'bg-muted opacity-50 cursor-not-allowed': isCampusLocked }"
-                                :required="campuses.length > 1"
-                            >
-                                <option v-if="campuses.length > 1" value="">Select Campus</option>
-                                <option
-                                    v-for="campus in campuses"
-                                    :key="campus.id"
-                                    :value="campus.id"
-                                >
-                                    {{ campus.name }}
-                                </option>
-                            </select>
+                                :options="campusSelectOptions"
+                                placeholder="Select Campus"
+                            />
                             <InputError :message="errors.campus_id" />
                         </div>
 
@@ -230,22 +210,12 @@
                                 >Academic Session
                                 <span class="text-destructive">*</span></Label
                             >
-                            <select
+                            <SearchableSelect
                                 id="session_id"
                                 v-model="form.session_id"
-                                class="h-11 w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground"
-                                :class="{ 'border-destructive': errors.session_id }"
-                                required
-                            >
-                                <option value="">Select Session</option>
-                                <option
-                                    v-for="session in props.sessions"
-                                    :key="session.id"
-                                    :value="session.id"
-                                >
-                                    {{ session.name }}
-                                </option>
-                            </select>
+                                :options="sessionSelectOptions"
+                                placeholder="Select Session"
+                            />
                             <InputError :message="errors.session_id" />
                         </div>
 
@@ -255,22 +225,12 @@
                                 >Class
                                 <span class="text-destructive">*</span></Label
                             >
-                            <select
+                            <SearchableSelect
                                 id="class_id"
                                 v-model="form.class_id"
-                                class="h-11 w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground"
-                                :class="{ 'border-destructive': errors.class_id }"
-                                required
-                            >
-                                <option value="">Select Class</option>
-                                <option
-                                    v-for="cls in availableClasses"
-                                    :key="cls.id"
-                                    :value="cls.id"
-                                >
-                                    {{ cls.name }}
-                                </option>
-                            </select>
+                                :options="classSelectOptions"
+                                placeholder="Select Class"
+                            />
                             <InputError :message="errors.class_id" />
                         </div>
 
@@ -280,22 +240,12 @@
                                 >Section
                                 <span v-if="filteredSections.length > 1" class="text-destructive">*</span></Label
                             >
-                            <select
+                            <SearchableSelect
                                 id="section_id"
                                 v-model="form.section_id"
-                                class="h-11 w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground"
-                                :class="{ 'border-destructive': errors.section_id }"
-                                :required="filteredSections.length > 1"
-                            >
-                                <option v-if="filteredSections.length > 1" value="">Select Section</option>
-                                <option
-                                    v-for="section in filteredSections"
-                                    :key="section.id"
-                                    :value="section.id"
-                                >
-                                    {{ section.name }}
-                                </option>
-                            </select>
+                                :options="sectionSelectOptions"
+                                placeholder="Select Section"
+                            />
                             <InputError :message="errors.section_id" />
                         </div>
 
@@ -321,25 +271,12 @@
                                 >Status
                                 <span class="text-destructive">*</span></Label
                             >
-                            <select
+                            <SearchableSelect
                                 id="student_status_id"
                                 v-model="form.student_status_id"
-                                class="h-11 w-full cursor-not-allowed rounded-md border border-border bg-muted px-3 py-2 text-sm text-foreground"
-                                :class="{
-                                    'border-destructive': errors.student_status_id,
-                                }"
-                                required
+                                :options="studentStatusSelectOptions"
                                 disabled
-                            >
-                                <option
-                                    v-for="status in props.studentStatuses"
-                                    :key="status.id"
-                                    :value="status.id"
-                                    :selected="status.name === 'Active'"
-                                >
-                                    {{ status.name }}
-                                </option>
-                            </select>
+                            />
                             <p class="text-xs text-muted-foreground">
                                 Default status (Active)
                             </p>
@@ -855,6 +792,13 @@ watch(() => form.value.session_id, (value) => { cascadeSessionId.value = value; 
 const otherRelationOptions = computed(() =>
     otherRelations.value.map((relation) => ({ value: relation.id, label: relation.name })),
 );
+
+const genderOptions = computed(() => props.genders.map((gender) => ({ value: gender.id, label: gender.name })));
+const campusSelectOptions = computed(() => campuses.map((campus) => ({ value: campus.id, label: campus.name })));
+const sessionSelectOptions = computed(() => props.sessions.map((session) => ({ value: session.id, label: session.name })));
+const classSelectOptions = computed(() => availableClasses.value.map((cls) => ({ value: cls.id, label: cls.name })));
+const sectionSelectOptions = computed(() => filteredSections.value.map((section) => ({ value: section.id, label: section.name })));
+const studentStatusSelectOptions = computed(() => props.studentStatuses.map((status) => ({ value: status.id, label: status.name })));
 
 // Generate live email preview based on student name and school initials
 const schoolName = computed(() => page.props.school?.name ?? page.props.name ?? '');

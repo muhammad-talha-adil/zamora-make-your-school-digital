@@ -86,6 +86,18 @@ const expandedRunId = ref<number | null>(null);
 const campusFilter = ref('');
 
 const yearOptions = useYearOptions();
+const yearSelectOptions = yearOptions.map((y: number) => ({ value: y, label: String(y) }));
+const payrollYearModel = computed({
+    get: () => payrollForm.payroll_year,
+    set: (value) => {
+        payrollForm.payroll_year = Number(value);
+    },
+});
+const paymentMethodOptions = [
+    { value: 'bank', label: 'Bank' },
+    { value: 'cash', label: 'Cash' },
+    { value: 'cheque', label: 'Cheque' },
+];
 
 const payrollForm = reactive({
     campus_id: '',
@@ -198,9 +210,7 @@ const onAdvanceGiven = () => {
                     </div>
                     <div>
                         <label class="mb-2 block text-sm font-medium text-muted-foreground">Year</label>
-                        <select v-model.number="payrollForm.payroll_year" class="h-10 w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground">
-                            <option v-for="y in yearOptions" :key="y" :value="y">{{ y }}</option>
-                        </select>
+                        <SearchableSelect v-model="payrollYearModel" :options="yearSelectOptions" placeholder="Select year" />
                     </div>
                     <div class="xl:col-span-2">
                         <label class="mb-2 block text-sm font-medium text-muted-foreground">Title</label>
@@ -332,15 +342,12 @@ const onAdvanceGiven = () => {
                 <div class="space-y-4 py-2">
                     <div class="space-y-2">
                         <Label for="pay-method">Payment Method</Label>
-                        <select
+                        <SearchableSelect
                             id="pay-method"
                             v-model="payDialog.payment_method"
-                            class="h-10 w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground"
-                        >
-                            <option value="bank">Bank</option>
-                            <option value="cash">Cash</option>
-                            <option value="cheque">Cheque</option>
-                        </select>
+                            :options="paymentMethodOptions"
+                            placeholder="Select payment method"
+                        />
                     </div>
                     <div class="space-y-2">
                         <Label for="pay-amount">Amount</Label>

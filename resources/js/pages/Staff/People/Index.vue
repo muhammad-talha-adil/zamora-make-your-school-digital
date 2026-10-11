@@ -84,7 +84,11 @@ const breadcrumbItems: BreadcrumbItem[] = [
     { title: 'Directory', href: route('staff.people.index') },
 ];
 
-const selectClass = 'w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground';
+const statusOptions = [
+    { value: 'active', label: 'Active' },
+    { value: 'inactive', label: 'Inactive' },
+    { value: 'all', label: 'All' },
+];
 const textareaClass = 'min-h-20 w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground';
 
 const filters = reactive({
@@ -289,11 +293,7 @@ const submitDesignation = async () => {
                     -->
                     <div>
                         <label class="mb-2 block text-sm font-medium text-muted-foreground">Status</label>
-                        <select v-model="filters.status" :class="selectClass">
-                            <option value="active">Active</option>
-                            <option value="inactive">Inactive</option>
-                            <option value="all">All</option>
-                        </select>
+                        <SearchableSelect v-model="filters.status" :options="statusOptions" placeholder="Select status" />
                     </div>
                 </div>
             </div>

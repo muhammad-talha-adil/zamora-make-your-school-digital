@@ -40,16 +40,12 @@
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-muted-foreground mb-1">Type</label>
-                        <select
+                        <SearchableSelect
                             v-model="filters.type"
-                            @change="router.visit(`/inventory/adjustments?campus_id=${filters.campus_id || ''}&type=${filters.type || ''}`)"
-                            class="w-full border border-border rounded-lg px-3 py-2 focus:outline-none focus:ring-2 focus:ring-primary min-h-11"
-                        >
-                            <option value="">All Types</option>
-                            <option value="add">Add Stock</option>
-                            <option value="subtract">Subtract Stock</option>
-                            <option value="set">Set Quantity</option>
-                        </select>
+                            :options="typeOptions"
+                            placeholder="All Types"
+                            clearable
+                        />
                     </div>
                     <div>
                         <label class="block text-sm font-medium text-muted-foreground mb-1">From Date</label>
@@ -254,11 +250,19 @@ const filters = reactive({
 
 const campusOptions = computed(() => props.campuses.map((campus) => ({ value: campus.id, label: campus.name })));
 const itemOptions = computed(() => props.inventoryItems.map((item) => ({ value: item.id, label: item.name })));
+const typeOptions = [
+    { value: 'add', label: 'Add Stock' },
+    { value: 'subtract', label: 'Subtract Stock' },
+    { value: 'set', label: 'Set Quantity' },
+];
 
 watch(() => filters.campus_id, () => {
     router.visit(`/inventory/adjustments?campus_id=${filters.campus_id || ''}`);
 });
 watch(() => filters.item_id, () => {
     router.visit(`/inventory/adjustments?campus_id=${filters.campus_id || ''}&item_id=${filters.item_id || ''}`);
+});
+watch(() => filters.type, () => {
+    router.visit(`/inventory/adjustments?campus_id=${filters.campus_id || ''}&type=${filters.type || ''}`);
 });
 </script>

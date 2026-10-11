@@ -114,6 +114,11 @@ const itemErrors = ref<Record<string, string>>({});
 const isItemSubmitting = ref(false);
 
 const sessionOptions = computed(() => props.sessions.map((session) => ({ value: String(session.id), label: session.name })));
+const statusOptions = [
+    { value: 'draft', label: 'Draft' },
+    { value: 'active', label: 'Active' },
+    { value: 'inactive', label: 'Inactive' },
+];
 const campusOptions = computed(() => props.campuses.map((campus) => ({ value: String(campus.id), label: campus.name })));
 const classOptions = computed(() => props.classes.map((cls) => ({ value: String(cls.id), label: cls.name })));
 const sectionOptions = computed(() => {
@@ -476,15 +481,12 @@ const getFrequencyLabel = (freq: string) => {
 
                         <div class="space-y-2">
                             <Label for="status">Status <span class="text-destructive">*</span></Label>
-                            <select
+                            <SearchableSelect
                                 id="status"
                                 v-model="form.status"
-                                :class="['w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm', { 'border-destructive': errors.status }]"
-                            >
-                                <option value="draft">Draft</option>
-                                <option value="active">Active</option>
-                                <option value="inactive">Inactive</option>
-                            </select>
+                                :options="statusOptions"
+                                :class="{ 'border-destructive': errors.status }"
+                            />
                             <p v-if="errors.status" class="text-sm text-destructive">{{ errors.status }}</p>
                         </div>
                     </div>

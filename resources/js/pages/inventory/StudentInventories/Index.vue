@@ -55,6 +55,11 @@ const perPage = ref(10);
 const campusFilter = ref('');
 const campusOptions = computed(() => props.campuses.map((campus) => ({ value: campus.id, label: campus.name })));
 const statusFilter = ref('');
+const statusOptions = [
+    { value: 'assigned', label: 'Assigned' },
+    { value: 'partial_return', label: 'Partial Return' },
+    { value: 'returned', label: 'Returned' },
+];
 const studentInventoriesData = ref(props.studentInventories.data || []);
 const pagination = ref(props.studentInventories);
 
@@ -192,12 +197,13 @@ const formatDate = (date: string) => {
                     clearable
                     class="w-full sm:w-48"
                 />
-                <select v-model="statusFilter" class="w-full sm:w-40 rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm min-h-11">
-                    <option value="">All Status</option>
-                    <option value="assigned">Assigned</option>
-                    <option value="partial_return">Partial Return</option>
-                    <option value="returned">Returned</option>
-                </select>
+                <SearchableSelect
+                    v-model="statusFilter"
+                    :options="statusOptions"
+                    placeholder="All Status"
+                    clearable
+                    class="w-full sm:w-40"
+                />
             </FilterCard>
 
             <!-- Table -->

@@ -139,20 +139,16 @@
                         >Relation
                         <span class="text-destructive">*</span></Label
                     >
-                    <select
+                    <SearchableSelect
                         id="father_relation_id"
                         v-model="form.father_relation_id"
-                        class="h-11 w-full cursor-not-allowed rounded-md border border-border bg-muted px-3 py-2 text-sm text-foreground"
+                        :options="fatherRelationOptions"
+                        disabled
+                        class="cursor-not-allowed"
                         :class="{
                             'border-destructive': errors.father_relation_id,
                         }"
-                        required
-                        disabled
-                    >
-                        <option :value="fatherRelationId">
-                            Father
-                        </option>
-                    </select>
+                    />
                     <p class="text-xs text-muted-foreground"></p>
                     <InputError :message="errors.father_relation_id" />
                 </div>
@@ -250,20 +246,13 @@
                 <!-- Other Guardian Relation -->
                 <div class="space-y-2">
                     <Label for="other_relation_id">Relation</Label>
-                    <select
+                    <SearchableSelect
                         id="other_relation_id"
                         v-model="form.other_relation_id"
-                        class="h-11 w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground"
-                    >
-                        <option value="">Select Relation</option>
-                        <option
-                            v-for="relation in otherRelations"
-                            :key="relation.id"
-                            :value="relation.id"
-                        >
-                            {{ relation.name }}
-                        </option>
-                    </select>
+                        :options="otherRelationOptions"
+                        placeholder="Select Relation"
+                        clearable
+                    />
                 </div>
             </div>
         </div>
@@ -276,6 +265,7 @@ import Icon from '@/components/Icon.vue';
 import InputError from '@/components/InputError.vue';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import SearchableSelect from '@/components/ui/searchable-select/SearchableSelect.vue';
 
 interface Props {
     form: {
@@ -320,6 +310,9 @@ const emit = defineEmits<{
     (e: 'otherPhoneInput', event: Event): void;
     (e: 'otherCnicInput', event: Event): void;
 }>();
+
+const fatherRelationOptions = computed(() => [{ value: props.fatherRelationId, label: 'Father' }]);
+const otherRelationOptions = computed(() => props.otherRelations.map((relation) => ({ value: relation.id, label: relation.name })));
 
 // Computed for v-model bindings
 const form = computed({

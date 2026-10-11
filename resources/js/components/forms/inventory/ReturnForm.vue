@@ -16,6 +16,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import SearchableSelect from '@/components/ui/searchable-select/SearchableSelect.vue';
 import Icon from '@/components/Icon.vue';
 
 // Types
@@ -84,6 +85,20 @@ const selectedInventory = computed(() => {
 const maxReturnable = computed(() => {
     return selectedInventory.value?.remaining || 0;
 });
+
+const campusOptions = computed(() =>
+    props.campuses.map((campus) => ({
+        value: campus.id,
+        label: campus.name,
+    })),
+);
+
+const inventoryOptions = computed(() =>
+    filteredInventories.value.map((inv) => ({
+        value: inv.id,
+        label: `${inv.student_name} (${inv.registration_number}) - ${inv.item_name} (${inv.remaining} remaining)`,
+    })),
+);
 
 const finalPrice = computed(() => {
     if (!selectedInventory.value) return '0.00';
@@ -178,18 +193,12 @@ const submitForm = () => {
                             </div>
                             Campus <span class="text-destructive">*</span>
                         </Label>
-                        <select
+                        <SearchableSelect
                             id="campus_id"
                             v-model="form.campus_id"
-                            class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm h-11"
-                            :class="{ 'border-destructive': errors.campus_id }"
-                            required
-                        >
-                            <option value="">Select Campus</option>
-                            <option v-for="campus in props.campuses" :key="campus.id" :value="campus.id">
-                                {{ campus.name }}
-                            </option>
-                        </select>
+                            :options="campusOptions"
+                            placeholder="Select Campus"
+                        />
                         <InputError :message="errors.campus_id" />
                     </div>
 
@@ -201,18 +210,12 @@ const submitForm = () => {
                             </div>
                             Student Assignment <span class="text-destructive">*</span>
                         </Label>
-                        <select
+                        <SearchableSelect
                             id="student_inventory_id"
                             v-model="form.student_inventory_id"
-                            class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm h-11"
-                            :class="{ 'border-destructive': errors.student_inventory_id }"
-                            required
-                        >
-                            <option value="">Select Assignment</option>
-                            <option v-for="inv in filteredInventories" :key="inv.id" :value="inv.id">
-                                {{ inv.student_name }} ({{ inv.registration_number }}) - {{ inv.item_name }} ({{ inv.remaining }} remaining)
-                            </option>
-                        </select>
+                            :options="inventoryOptions"
+                            placeholder="Select Assignment"
+                        />
                         <InputError :message="errors.student_inventory_id" />
                     </div>
 

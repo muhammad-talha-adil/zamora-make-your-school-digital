@@ -71,6 +71,7 @@ const pagination = ref(props.inventoryStocks);
 
 // Page size options
 const perPageOptions = [25, 50, 75, 100];
+const perPageSelectOptions = perPageOptions.map((option) => ({ value: option, label: String(option) }));
 
 // Default campus ID (first campus)
 const defaultCampusId = computed(() => props.campuses[0]?.id || '');
@@ -281,11 +282,11 @@ const summaryStats = computed(() => {
                 </label>
                 <div class="flex items-center gap-2 ml-auto">
                     <label class="text-sm text-muted-foreground">Show:</label>
-                    <select v-model="perPage" class="w-20 rounded-md border border-border bg-card text-foreground px-2 py-2 text-sm min-h-11">
-                        <option v-for="option in perPageOptions" :key="option" :value="option">
-                            {{ option }}
-                        </option>
-                    </select>
+                    <SearchableSelect
+                        v-model="perPage"
+                        :options="perPageSelectOptions"
+                        class="w-20"
+                    />
                 </div>
             </div>
 

@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '
 import Icon from '@/components/Icon.vue';
 import { alert } from '@/utils';
 import StatusToggle from '@/components/tables/StatusToggle.vue';
+import SearchableSelect from '@/components/ui/searchable-select/SearchableSelect.vue';
 
 interface FeeHead {
     id: number;
@@ -43,6 +44,32 @@ interface Props {
 }
 
 const props = defineProps<Props>();
+
+const categoryOptions = computed(() => props.categories.map((cat) => ({ value: cat.value, label: cat.label })));
+const categoryFilterOptions = computed(() => [{ value: '', label: 'All Categories' }, ...categoryOptions.value]);
+const statusFilterOptions = [
+    { value: '', label: 'All Status' },
+    { value: 'true', label: 'Active' },
+    { value: 'false', label: 'Inactive' },
+];
+const frequencyOptions = computed(() => props.frequencies.map((freq) => ({ value: freq.value, label: freq.label })));
+const activeOptions = [
+    { value: 'true', label: 'Active' },
+    { value: 'false', label: 'Inactive' },
+];
+const optionalOptions = [
+    { value: 'false', label: 'Required' },
+    { value: 'true', label: 'Optional' },
+];
+
+const formActiveModel = computed({
+    get: () => String(form.value.is_active),
+    set: (val: string) => { form.value.is_active = val === 'true'; },
+});
+const formOptionalModel = computed({
+    get: () => String(form.value.is_optional),
+    set: (val: string) => { form.value.is_optional = val === 'true'; },
+});
 
 const showCreateModal = ref(false);
 const editingFeeHead = ref<FeeHead | null>(null);
@@ -183,6 +210,10 @@ const filters = reactive({
     is_active: props.filters?.is_active !== undefined && props.filters?.is_active !== null
         ? String(props.filters.is_active)
         : '',
+});
+
+watch([() => filters.category, () => filters.is_active], () => {
+    fetchFeeHeads(1);
 });
 
 let searchDebounceTimer: ReturnType<typeof setTimeout> | null = null;
@@ -334,30 +365,23 @@ const getFrequencyLabel = (frequency: string) => {
             </div>
             <div class="w-full sm:w-44 md:w-48">
                 <Label for="fee-head-filter-category" class="sr-only">Category</Label>
-                <select
+                <SearchableSelect
                     id="fee-head-filter-category"
                     v-model="filters.category"
-                    @change="fetchFeeHeads(1)"
-                    class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm min-h-10 md:min-h-11"
-                >
-                    <option value="">All Categories</option>
-                    <option v-for="cat in props.categories" :key="cat.value" :value="cat.value">
-                        {{ cat.label }}
-                    </option>
-                </select>
+                    :options="categoryFilterOptions"
+                    placeholder="All Categories"
+                    clearable
+                />
             </div>
             <div class="w-full sm:w-44 md:w-48">
                 <Label for="fee-head-filter-active" class="sr-only">Status</Label>
-                <select
+                <SearchableSelect
                     id="fee-head-filter-active"
                     v-model="filters.is_active"
-                    @change="fetchFeeHeads(1)"
-                    class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm min-h-10 md:min-h-11"
-                >
-                    <option value="">All Status</option>
-                    <option value="true">Active</option>
-                    <option value="false">Inactive</option>
-                </select>
+                    :options="statusFilterOptions"
+                    placeholder="All Status"
+                    clearable
+                />
             </div>
         </div>
 
@@ -509,28 +533,24 @@ const getFrequencyLabel = (frequency: string) => {
                     <div class="grid gap-4 md:grid-cols-2">
                         <div class="space-y-2">
                             <Label for="fh-category">Category *</Label>
-                            <select
+                            <SearchableSelect
                                 id="fh-category"
                                 v-model="form.category"
-                                :class="['w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm', formErrors.category ? 'border-destructive' : '']"
-                            >
-                                <option v-for="cat in props.categories" :key="cat.value" :value="cat.value">
-                                    {{ cat.label }}
-                                </option>
-                            </select>
+                                :options="categoryOptions"
+                                placeholder="Select category"
+                                :class="formErrors.category ? 'border-destructive' : ''"
+                            />
                             <p v-if="formErrors.category" class="text-xs text-destructive">{{ formErrors.category }}</p>
                         </div>
                         <div class="space-y-2">
                             <Label for="fh-frequency">Frequency *</Label>
-                            <select
+                            <SearchableSelect
                                 id="fh-frequency"
                                 v-model="form.default_frequency"
-                                :class="['w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm', formErrors.default_frequency ? 'border-destructive' : '']"
-                            >
-                                <option v-for="freq in props.frequencies" :key="freq.value" :value="freq.value">
-                                    {{ freq.label }}
-                                </option>
-                            </select>
+                                :options="frequencyOptions"
+                                placeholder="Select frequency"
+                                :class="formErrors.default_frequency ? 'border-destructive' : ''"
+                            />
                             <p v-if="formErrors.default_frequency" class="text-xs text-destructive">{{ formErrors.default_frequency }}</p>
                         </div>
                     </div>
@@ -549,25 +569,19 @@ const getFrequencyLabel = (frequency: string) => {
                         </div>
                         <div class="space-y-2">
                             <Label for="fh-active">Status</Label>
-                            <select
+                            <SearchableSelect
                                 id="fh-active"
-                                v-model="form.is_active"
-                                class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm"
-                            >
-                                <option :value="true">Active</option>
-                                <option :value="false">Inactive</option>
-                            </select>
+                                v-model="formActiveModel"
+                                :options="activeOptions"
+                            />
                         </div>
                         <div class="space-y-2">
                             <Label for="fh-optional">Is Optional</Label>
-                            <select
+                            <SearchableSelect
                                 id="fh-optional"
-                                v-model="form.is_optional"
-                                class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm"
-                            >
-                                <option :value="false">Required</option>
-                                <option :value="true">Optional</option>
-                            </select>
+                                v-model="formOptionalModel"
+                                :options="optionalOptions"
+                            />
                         </div>
                     </div>
 

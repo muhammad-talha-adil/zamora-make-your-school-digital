@@ -106,6 +106,26 @@ const adjustmentTypeFilter = ref('');
 const adjustmentItemFilter = ref('');
 
 const perPageOptions = [25, 50, 75, 100];
+const perPageSelectOptions = computed(() => perPageOptions.map((option) => ({ value: option, label: String(option) })));
+const statusFilterOptions = [
+    { value: 'active', label: 'Active' },
+    { value: 'inactive', label: 'Inactive' },
+];
+const stockVisibilityOptions = [
+    { value: 'all', label: 'All Stock' },
+    { value: 'low', label: 'Low Stock Only' },
+];
+const stockVisibility = computed({
+    get: () => (lowStockOnly.value ? 'low' : 'all'),
+    set: (value: string | number | null) => {
+        lowStockOnly.value = value === 'low';
+    },
+});
+const adjustmentTypeOptions = [
+    { value: 'add', label: 'Add' },
+    { value: 'subtract', label: 'Subtract' },
+    { value: 'set', label: 'Set' },
+];
 const perPageTypes = ref(25);
 const perPageItems = ref(25);
 const perPageStocks = ref(25);
@@ -405,26 +425,20 @@ const loadStocksPage = (url: string) => fetchStocks(url);
 
                     <div v-if="['types', 'items'].includes(activeTab)" class="space-y-2">
                         <Label for="status-filter">Status</Label>
-                        <select
+                        <SearchableSelect
                             id="status-filter"
                             v-model="statusFilter"
-                            class="w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground"
-                        >
-                            <option value="active">Active</option>
-                            <option value="inactive">Inactive</option>
-                        </select>
+                            :options="statusFilterOptions"
+                        />
                     </div>
 
                     <div v-if="activeTab === 'stocks'" class="space-y-2">
                         <Label for="stock-visibility">Stock View</Label>
-                        <select
+                        <SearchableSelect
                             id="stock-visibility"
-                            v-model="lowStockOnly"
-                            class="w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground"
-                        >
-                            <option :value="false">All Stock</option>
-                            <option :value="true">Low Stock Only</option>
-                        </select>
+                            v-model="stockVisibility"
+                            :options="stockVisibilityOptions"
+                        />
                     </div>
 
                     <div v-if="activeTab === 'stocks'" class="space-y-2 md:col-span-2 xl:col-span-2">
@@ -438,16 +452,13 @@ const loadStocksPage = (url: string) => fetchStocks(url);
 
                     <div v-if="activeTab === 'adjustments'" class="space-y-2">
                         <Label for="adjustment-type-filter">Adjustment Type</Label>
-                        <select
+                        <SearchableSelect
                             id="adjustment-type-filter"
                             v-model="adjustmentTypeFilter"
-                            class="w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground"
-                        >
-                            <option value="">All Types</option>
-                            <option value="add">Add</option>
-                            <option value="subtract">Subtract</option>
-                            <option value="set">Set</option>
-                        </select>
+                            :options="adjustmentTypeOptions"
+                            placeholder="All Types"
+                            clearable
+                        />
                     </div>
 
                     <div v-if="activeTab === 'adjustments'" class="space-y-2 md:col-span-2">
@@ -478,33 +489,30 @@ const loadStocksPage = (url: string) => fetchStocks(url);
                             </Button>
                             <div v-if="activeTab === 'types'" class="flex items-center gap-2">
                                 <Label for="per-page-types" class="text-sm">Show</Label>
-                                <select
+                                <SearchableSelect
                                     id="per-page-types"
                                     v-model="perPageTypes"
-                                    class="w-20 rounded-md border border-border bg-card px-2 py-2 text-sm text-foreground"
-                                >
-                                    <option v-for="option in perPageOptions" :key="option" :value="option">{{ option }}</option>
-                                </select>
+                                    :options="perPageSelectOptions"
+                                    class="w-20"
+                                />
                             </div>
                             <div v-if="activeTab === 'items'" class="flex items-center gap-2">
                                 <Label for="per-page-items" class="text-sm">Show</Label>
-                                <select
+                                <SearchableSelect
                                     id="per-page-items"
                                     v-model="perPageItems"
-                                    class="w-20 rounded-md border border-border bg-card px-2 py-2 text-sm text-foreground"
-                                >
-                                    <option v-for="option in perPageOptions" :key="option" :value="option">{{ option }}</option>
-                                </select>
+                                    :options="perPageSelectOptions"
+                                    class="w-20"
+                                />
                             </div>
                             <div v-if="activeTab === 'stocks'" class="flex items-center gap-2">
                                 <Label for="per-page-stocks" class="text-sm">Show</Label>
-                                <select
+                                <SearchableSelect
                                     id="per-page-stocks"
                                     v-model="perPageStocks"
-                                    class="w-20 rounded-md border border-border bg-card px-2 py-2 text-sm text-foreground"
-                                >
-                                    <option v-for="option in perPageOptions" :key="option" :value="option">{{ option }}</option>
-                                </select>
+                                    :options="perPageSelectOptions"
+                                    class="w-20"
+                                />
                             </div>
                         </div>
 

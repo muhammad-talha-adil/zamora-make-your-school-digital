@@ -5,8 +5,9 @@ import RowAction from '@/components/tables/RowAction.vue';
 import RowActions from '@/components/tables/RowActions.vue';
 import { alert } from '@/utils';
 import StatusToggle from '@/components/tables/StatusToggle.vue';
+import SearchableSelect from '@/components/ui/searchable-select/SearchableSelect.vue';
 import axios from 'axios';
-import { ref, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { route } from 'ziggy-js';
 
 // Props
@@ -37,6 +38,7 @@ const statusOptions = [
     { id: 'active', name: 'Active' },
     { id: 'inactive', name: 'Inactive' },
 ];
+const statusSelectOptions = computed(() => statusOptions.map((option) => ({ value: option.id, label: option.name })));
 
 const perPageOptions = [
     { id: 10, name: '10' },
@@ -148,11 +150,7 @@ const inactivateCampus = (campus: any) => {
     <div class="space-y-4">
         <div class="flex flex-wrap gap-2 justify-between items-center">
             <div class="flex gap-2">
-                <select v-model="statusFilter" class="rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm min-h-10 w-32">
-                    <option v-for="option in statusOptions" :key="option.id" :value="option.id">
-                        {{ option.name }}
-                    </option>
-                </select>
+                <SearchableSelect v-model="statusFilter" :options="statusSelectOptions" placeholder="All" class="w-32" />
             </div>
             <div class="flex gap-2">
                 <CampusForm

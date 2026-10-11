@@ -16,6 +16,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import SearchableSelect from '@/components/ui/searchable-select/SearchableSelect.vue';
 import Icon from '@/components/Icon.vue';
 
 // Types
@@ -77,6 +78,20 @@ const selectedItem = computed(() => {
     if (!form.inventory_item_id) return undefined;
     return props.inventoryItems.find(item => item.id === Number(form.inventory_item_id));
 });
+
+const campusOptions = computed(() =>
+    props.campuses.map((campus) => ({
+        value: campus.id,
+        label: campus.name,
+    })),
+);
+
+const itemOptions = computed(() =>
+    filteredItems.value.map((item) => ({
+        value: item.id,
+        label: `${item.name} (Current Stock: ${item.current_stock})`,
+    })),
+);
 
 // Methods
 const onCampusChange = () => {
@@ -154,18 +169,13 @@ const submitForm = () => {
                             </div>
                             Campus <span class="text-destructive">*</span>
                         </Label>
-                        <select
+                        <SearchableSelect
                             id="campus_id"
                             v-model="form.campus_id"
-                            @change="onCampusChange"
-                            class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm h-11"
-                            required
-                        >
-                            <option value="">Select Campus</option>
-                            <option v-for="campus in props.campuses" :key="campus.id" :value="campus.id">
-                                {{ campus.name }}
-                            </option>
-                        </select>
+                            :options="campusOptions"
+                            placeholder="Select Campus"
+                            @update:model-value="onCampusChange"
+                        />
                         <InputError :message="errors.campus_id" />
                     </div>
 
@@ -177,17 +187,12 @@ const submitForm = () => {
                             </div>
                             Inventory Item <span class="text-destructive">*</span>
                         </Label>
-                        <select
+                        <SearchableSelect
                             id="inventory_item_id"
                             v-model="form.inventory_item_id"
-                            class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm h-11"
-                            required
-                        >
-                            <option value="">Select Item</option>
-                            <option v-for="item in filteredItems" :key="item.id" :value="item.id">
-                                {{ item.name }} (Current Stock: {{ item.current_stock }})
-                            </option>
-                        </select>
+                            :options="itemOptions"
+                            placeholder="Select Item"
+                        />
                         <InputError :message="errors.inventory_item_id" />
                     </div>
 

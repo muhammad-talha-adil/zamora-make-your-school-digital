@@ -2,6 +2,7 @@
 import { useForm } from '@inertiajs/vue3';
 import { CheckIcon, ExclamationCircleIcon } from '@heroicons/vue/24/outline';
 import { ref } from 'vue';
+import SearchableSelect from '@/components/ui/searchable-select/SearchableSelect.vue';
 
 interface FormData {
     name: string;
@@ -97,13 +98,9 @@ const submit = () => {
 
                     <div class="space-y-2">
                         <label for="role" class="block text-sm font-medium text-foreground">Your Role</label>
-                        <select id="role" v-model="form.role" required
-                                class="w-full h-10 rounded-[var(--radius-md)] border border-border bg-background px-4 text-foreground focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 transition-shadow appearance-none"
-                                :class="{ 'border-destructive': form.errors.role }"
-                                aria-describedby="role-error">
-                            <option value="">Select your role</option>
-                            <option v-for="r in roles" :key="r.value" :value="r.value">{{ r.label }}</option>
-                        </select>
+                        <SearchableSelect id="role" v-model="form.role" :options="roles" placeholder="Select your role"
+                                class="w-full"
+                                :class="{ 'border-destructive': form.errors.role }" />
                         <p v-if="form.errors.role" id="role-error" class="text-sm text-destructive flex items-center gap-1" role="alert">
                             <ExclamationCircleIcon class="w-4 h-4" />
                             {{ form.errors.role }}

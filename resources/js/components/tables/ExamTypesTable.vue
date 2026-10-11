@@ -4,6 +4,7 @@ import ExamTypeForm from '@/components/forms/ExamTypeForm.vue';
 import RowAction from '@/components/tables/RowAction.vue';
 import RowActions from '@/components/tables/RowActions.vue';
 import { Button } from '@/components/ui/button';
+import SearchableSelect from '@/components/ui/searchable-select/SearchableSelect.vue';
 import Icon from '@/components/Icon.vue';
 import { alert } from '@/utils';
 import StatusToggle from '@/components/tables/StatusToggle.vue';
@@ -21,6 +22,11 @@ const props = defineProps<Props>();
 // Emits
 const showInactive = ref(false);
 const statusFilter = ref('');
+const statusFilterOptions = [
+    { value: '', label: 'All' },
+    { value: 'active', label: 'Active' },
+    { value: 'inactive', label: 'Inactive' },
+];
 const perPage = ref(10);
 const examTypesData = ref(props.examTypes.data || []);
 const pagination = ref(props.examTypes);
@@ -124,11 +130,7 @@ const forceDeleteExamType = (examType: any) => {
     <div class="space-y-4">
         <div class="flex flex-wrap gap-2 justify-between items-center">
             <div class="flex gap-2">
-                <select v-model="statusFilter" class="w-32 rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm">
-                    <option value="">All</option>
-                    <option value="active">Active</option>
-                    <option value="inactive">Inactive</option>
-                </select>
+                <SearchableSelect v-model="statusFilter" :options="statusFilterOptions" placeholder="All" class="w-32" />
             </div>
             <div class="flex gap-2">
                 <ExamTypeForm @saved="fetchExamTypes" />

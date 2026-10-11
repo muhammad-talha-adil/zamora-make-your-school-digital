@@ -51,76 +51,56 @@
                     <!-- Exam Selection -->
                     <div class="space-y-2">
                         <Label for="exam_id">Exam *</Label>
-                        <select
+                        <SearchableSelect
                             id="exam_id"
                             v-model="filters.exam_id"
-                            @change="onSelectionChange"
+                            :options="examOptions"
+                            placeholder="Select Exam"
                             :disabled="isExamPreSelected"
-                            class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm"
-                            :class="{ 'border-destructive': validationErrors.exam_id, 'bg-muted': isExamPreSelected }"
-                        >
-                            <option value="">Select Exam</option>
-                            <option v-for="exam in props.exams" :key="exam.id" :value="exam.id">
-                                {{ exam.name }}
-                            </option>
-                        </select>
+                            :class="{ 'border-destructive': validationErrors.exam_id }"
+                        />
                         <p v-if="validationErrors.exam_id" class="text-xs text-destructive">{{ validationErrors.exam_id }}</p>
                     </div>
 
                     <!-- Campus Selection -->
                     <div class="space-y-2">
                         <Label for="campus_id">Campus *</Label>
-                        <select
+                        <SearchableSelect
                             id="campus_id"
-                            v-model="filters.campus_id"
-                            @change="onSelectionChange"
+                            v-model="cascadeCampusId"
+                            :options="campusOptions"
+                            placeholder="Select Campus"
                             :disabled="isCampusLocked"
-                            class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm"
-                            :class="{ 'border-destructive': validationErrors.campus_id, 'bg-muted opacity-50 cursor-not-allowed': isCampusLocked }"
-                        >
-                            <option value="">Select Campus</option>
-                            <option v-for="campus in props.campuses" :key="campus.id" :value="campus.id">
-                                {{ campus.name }}
-                            </option>
-                        </select>
+                            :class="{ 'border-destructive': validationErrors.campus_id }"
+                        />
                         <p v-if="validationErrors.campus_id" class="text-xs text-destructive">{{ validationErrors.campus_id }}</p>
                     </div>
 
                     <!-- Class Selection -->
                     <div class="space-y-2">
                         <Label for="class_id">Class *</Label>
-                        <select
+                        <SearchableSelect
                             id="class_id"
-                            v-model="filters.class_id"
-                            @change="onClassChange"
-                            class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm"
+                            v-model="cascadeClassId"
+                            :options="classOptions"
+                            placeholder="Select Class"
                             :class="{ 'border-destructive': validationErrors.class_id }"
-                        >
-                            <option value="">Select Class</option>
-                            <option v-for="cls in availableClasses" :key="cls.id" :value="cls.id">
-                                {{ cls.name }}
-                            </option>
-                        </select>
+                        />
                         <p v-if="validationErrors.class_id" class="text-xs text-destructive">{{ validationErrors.class_id }}</p>
                     </div>
 
                     <!-- Section Selection -->
                     <div class="space-y-2">
                         <Label for="section_id">Section</Label>
-                        <select
+                        <SearchableSelect
                             id="section_id"
                             v-model="filters.section_id"
-                            :disabled="!filters.class_id"
-                            @change="onSectionChange"
-                            class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm"
+                            :options="sectionOptions"
+                            :placeholder="hasNoSectionsForClass ? 'No section found' : 'Select Section'"
+                            :empty-text="hasNoSectionsForClass ? 'No section found' : 'No results found.'"
+                            :disabled="!isSectionSelectEnabled"
                             :class="{ 'border-destructive': validationErrors.section_id }"
-                        >
-                            <option value="">Select Section</option>
-                            <option value="all">All Sections</option>
-                            <option v-for="section in availableSections" :key="section.id" :value="section.id">
-                                {{ section.name }}
-                            </option>
-                        </select>
+                        />
                         <p v-if="filters.section_id === 'all'" class="text-xs text-primary">
                             Paper will apply to all sections in this class
                         </p>
@@ -242,14 +222,11 @@
                                     -->
                                     <td class="px-3 py-3 whitespace-nowrap text-sm">
                                         <template v-if="editingPaperId === paper.id">
-                                            <select
+                                            <SearchableSelect
                                                 v-model="editingPaper.subject_role"
-                                                class="h-7 rounded border border-input bg-background px-1 text-xs"
-                                            >
-                                                <option value="core">Compulsory</option>
-                                                <option value="elective">Elective</option>
-                                                <option value="additional">Additional</option>
-                                            </select>
+                                                :options="subjectRoleOptions"
+                                                class="h-7 text-xs"
+                                            />
                                         </template>
                                         <template v-else>
                                             <span
@@ -809,6 +786,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import Icon from '@/components/Icon.vue';
+import SearchableSelect from '@/components/ui/searchable-select/SearchableSelect.vue';
 import { useCascadingAcademicSelect } from '@/composables/useCascadingAcademicSelect';
 
 interface Exam {
@@ -875,7 +853,7 @@ const filters = reactive({
 // session list is passed through. `filters.campus_id`/`filters.class_id`
 // stay the source of truth the rest of the page already reads from; they're
 // kept in sync with the composable's own refs below.
-const { selectedCampusId: cascadeCampusId, selectedClassId: cascadeClassId, isCampusLocked, lockedCampusId, availableClasses, availableSections } = useCascadingAcademicSelect({
+const { selectedCampusId: cascadeCampusId, selectedClassId: cascadeClassId, isCampusLocked, lockedCampusId, availableClasses, availableSections, isSectionSelectEnabled, hasNoSectionsForClass } = useCascadingAcademicSelect({
     campuses: computed(() => props.campuses),
     classes: computed(() => props.classes),
     sections: computed(() => props.sections),
@@ -894,6 +872,19 @@ watch(() => filters.campus_id, (value) => { cascadeCampusId.value = value; });
 watch(cascadeCampusId, (value) => { filters.campus_id = String(value ?? ''); });
 watch(() => filters.class_id, (value) => { cascadeClassId.value = value; });
 watch(cascadeClassId, (value) => { filters.class_id = String(value ?? ''); });
+
+const examOptions = computed(() => props.exams.map((exam) => ({ value: exam.id, label: exam.name })));
+const campusOptions = computed(() => props.campuses.map((campus) => ({ value: campus.id, label: campus.name })));
+const classOptions = computed(() => availableClasses.value.map((cls: SchoolClass) => ({ value: cls.id, label: cls.name })));
+const sectionOptions = computed(() => [
+    { value: 'all', label: 'All Sections' },
+    ...availableSections.value.map((section: Section) => ({ value: section.id, label: section.name })),
+]);
+const subjectRoleOptions = [
+    { value: 'core', label: 'Compulsory' },
+    { value: 'elective', label: 'Elective' },
+    { value: 'additional', label: 'Additional' },
+];
 
 // UI State
 const classSections = ref<Section[]>([]);
@@ -1552,9 +1543,15 @@ watch(() => filters.class_id, () => {
     resetPapers();
 });
 
-// Also watch for campus changes
+// Also watch for campus and exam changes
 watch(() => filters.campus_id, () => {
-    resetPapers();
+    onSelectionChange();
+});
+watch(() => filters.exam_id, () => {
+    onSelectionChange();
+});
+watch(() => filters.section_id, () => {
+    onSectionChange();
 });
 
 // Auto-select exam if pre-selected from URL and load papers

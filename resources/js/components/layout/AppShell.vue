@@ -207,17 +207,14 @@
 
           <!-- Right Side: User Menu -->
           <div class="flex shrink-0 items-center gap-2 sm:gap-4">
-            <select
+            <SearchableSelect
               v-if="campusSwitcher && campusSwitcher.campuses.length > 0"
-              :value="campusSwitcher.activeCampusId ?? ''"
-              @change="switchCampus(($event.target as HTMLSelectElement).value)"
-              class="hidden sm:inline-block rounded-md border px-2 py-1.5 text-sm"
-              :style="{ backgroundColor: 'var(--header-bg)', color: 'var(--header-text)', borderColor: 'var(--sidebar-border)' }"
-            >
-              <option v-for="campus in campusSwitcher.campuses" :key="campus.id" :value="campus.id">
-                {{ campus.name }}
-              </option>
-            </select>
+              :model-value="campusSwitcher.activeCampusId"
+              :options="campusSwitcherOptions"
+              placeholder="Select Campus"
+              class="hidden sm:inline-block w-40"
+              @update:model-value="switchCampus"
+            />
             <span class="hidden lg:inline text-sm truncate max-w-56" :style="{ color: 'var(--header-text)' }">Welcome, {{ pageProps.auth?.user?.name || 'User' }}</span>
             <Link
               href="/logout"
@@ -273,6 +270,7 @@ import AppLogo from '../AppLogo.vue'
 import AppLogoIcon from '../AppLogoIcon.vue'
 import Icon from '../Icon.vue'
 import type { MenuItem } from '../../types'
+import SearchableSelect from '../ui/searchable-select/SearchableSelect.vue'
 
 const SIDEBAR_COLLAPSED_KEY = 'sidebar-collapsed'
 
@@ -364,9 +362,17 @@ const schoolName = computed(() => pageProps.value.name || 'School Management Sys
 
 const campusSwitcher = computed(() => pageProps.value.campusSwitcher as { campuses: { id: number; name: string }[]; activeCampusId: number | null } | null)
 
-const switchCampus = (campusId: string) => {
+const switchCampus = (campusId: string | number | null) => {
+  if (campusId === null) {
+    return
+  }
+
   router.post(route('switch-campus.update'), { campus_id: campusId }, { preserveScroll: true })
 }
+
+const campusSwitcherOptions = computed(() =>
+  (campusSwitcher.value?.campuses ?? []).map((campus) => ({ value: campus.id, label: campus.name })),
+)
 
 /*
   10-day-before-expiry warning, per the owner's explicit number. The server

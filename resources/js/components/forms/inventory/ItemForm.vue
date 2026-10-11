@@ -16,6 +16,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import SearchableSelect from '@/components/ui/searchable-select/SearchableSelect.vue';
 import Icon from '@/components/Icon.vue';
 
 // Types
@@ -94,6 +95,20 @@ const filteredInventoryTypes = computed(() => {
         return type.campus_id === form.value.campus_id || type.campus_id === null;
     });
 });
+
+const campusOptions = computed(() =>
+    props.campuses.map((campus) => ({
+        value: campus.id,
+        label: campus.name,
+    })),
+);
+
+const inventoryTypeOptions = computed(() =>
+    filteredInventoryTypes.value.map((type: any) => ({
+        value: type.id,
+        label: type.campus_id === null ? `${type.name} (All Campuses)` : type.name,
+    })),
+);
 
 // Watch for campus changes to reset inventory type
 watch(() => form.value.campus_id, () => {
@@ -226,18 +241,12 @@ const submitForm = () => {
                             </div>
                             Campus <span class="text-destructive">*</span>
                         </Label>
-                        <select
+                        <SearchableSelect
                             id="campus_id"
                             v-model="form.campus_id"
-                            class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm h-11"
-                            :class="{ 'border-destructive': errors.campus_id }"
-                            required
-                        >
-                            <option value="">Select Campus</option>
-                            <option v-for="campus in props.campuses" :key="campus.id" :value="campus.id">
-                                {{ campus.name }}
-                            </option>
-                        </select>
+                            :options="campusOptions"
+                            placeholder="Select Campus"
+                        />
                         <InputError :message="errors.campus_id" />
                     </div>
 
@@ -249,19 +258,13 @@ const submitForm = () => {
                             </div>
                             Inventory Type <span class="text-destructive">*</span>
                         </Label>
-                        <select
+                        <SearchableSelect
                             id="inventory_type_id"
                             v-model="form.inventory_type_id"
-                            class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm h-11"
-                            :class="{ 'border-destructive': errors.inventory_type_id }"
+                            :options="inventoryTypeOptions"
+                            :placeholder="form.campus_id ? 'Select Type' : 'Select Campus First'"
                             :disabled="!form.campus_id"
-                            required
-                        >
-                            <option value="">{{ form.campus_id ? 'Select Type' : 'Select Campus First' }}</option>
-                            <option v-for="type in filteredInventoryTypes" :key="type.id" :value="type.id">
-                                {{ type.name }}<span v-if="type.campus_id === null" class="text-xs text-muted-foreground"> (All Campuses)</span>
-                            </option>
-                        </select>
+                        />
                         <InputError :message="errors.inventory_type_id" />
                     </div>
 

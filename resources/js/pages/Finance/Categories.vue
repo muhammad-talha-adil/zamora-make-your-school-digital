@@ -11,6 +11,12 @@ import RowAction from '@/components/tables/RowAction.vue';
 import RowActions from '@/components/tables/RowActions.vue';
 import StatusToggle from '@/components/tables/StatusToggle.vue';
 import { alert } from '@/utils';
+import SearchableSelect from '@/components/ui/searchable-select/SearchableSelect.vue';
+
+const categoryTypeOptions = [
+    { value: 'INCOME', label: 'Income' },
+    { value: 'EXPENSE', label: 'Expense' },
+];
 
 interface Category {
     id: number;
@@ -184,10 +190,7 @@ const toggleCategoryActive = async (category: Category) => {
                         </div>
                         <div>
                             <Label>Type</Label>
-                            <select v-model="form.type" class="w-full mt-1 rounded-md border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary">
-                                <option value="INCOME">Income</option>
-                                <option value="EXPENSE">Expense</option>
-                            </select>
+                            <SearchableSelect v-model="form.type" :options="categoryTypeOptions" placeholder="Select Type" class="mt-1" />
                         </div>
                         <div class="flex gap-2">
                             <Button type="submit">Save</Button>

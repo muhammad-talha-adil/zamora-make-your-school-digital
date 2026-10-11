@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import type { BreadcrumbItem } from '@/types';
+import SearchableSelect from '@/components/ui/searchable-select/SearchableSelect.vue';
 
 interface Purchase {
     id: number;
@@ -41,6 +42,19 @@ const errors = ref<Record<string, string>>({});
 // Computed
 const categories = computed(() => props.categories || []);
 const paymentMethods = computed(() => props.paymentMethods || []);
+
+const purchaseOptions = computed(() => (props.purchases || []).map((purchase) => ({
+    value: purchase.id,
+    label: `${purchase.purchase_id} - ${purchase.supplier?.name} (Due: ${formatMoney(purchase.total_amount - purchase.paid_amount)})`,
+})));
+const paymentMethodOptions = computed(() => paymentMethods.value.map((method) => ({
+    value: method.code,
+    label: method.name,
+})));
+const categoryOptions = computed(() => categories.value.map((cat) => ({
+    value: cat.id,
+    label: cat.name,
+})));
 
 // Breadcrumbs
 const breadcrumbItems: BreadcrumbItem[] = [
@@ -101,17 +115,13 @@ const formatMoney = (amount: number) => {
                 <!-- Purchase -->
                 <div>
                     <Label for="purchase_id">Select Purchase</Label>
-                    <select 
-                        id="purchase_id" 
+                    <SearchableSelect
+                        id="purchase_id"
                         v-model="form.purchase_id"
-                        class="w-full mt-1 rounded-md border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-                        required
-                    >
-                        <option value="">Select Purchase</option>
-                        <option v-for="purchase in props.purchases" :key="purchase.id" :value="purchase.id">
-                            {{ purchase.purchase_id }} - {{ purchase.supplier?.name }} (Due: {{ formatMoney(purchase.total_amount - purchase.paid_amount) }})
-                        </option>
-                    </select>
+                        :options="purchaseOptions"
+                        placeholder="Select Purchase"
+                        class="mt-1"
+                    />
                     <p v-if="errors.purchase_id" class="mt-1 text-sm text-destructive">{{ errors.purchase_id[0] }}</p>
                 </div>
 
@@ -133,34 +143,26 @@ const formatMoney = (amount: number) => {
                 <!-- Payment Method -->
                 <div>
                     <Label for="payment_method">Payment Method</Label>
-                    <select 
-                        id="payment_method" 
+                    <SearchableSelect
+                        id="payment_method"
                         v-model="form.payment_method"
-                        class="w-full mt-1 rounded-md border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-                        required
-                    >
-                        <option value="">Select Payment Method</option>
-                        <option v-for="method in paymentMethods" :key="method.id" :value="method.code">
-                            {{ method.name }}
-                        </option>
-                    </select>
+                        :options="paymentMethodOptions"
+                        placeholder="Select Payment Method"
+                        class="mt-1"
+                    />
                     <p v-if="errors.payment_method" class="mt-1 text-sm text-destructive">{{ errors.payment_method[0] }}</p>
                 </div>
 
                 <!-- Category -->
                 <div>
                     <Label for="category_id">Category</Label>
-                    <select 
-                        id="category_id" 
+                    <SearchableSelect
+                        id="category_id"
                         v-model="form.category_id"
-                        class="w-full mt-1 rounded-md border border-border px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-primary"
-                        required
-                    >
-                        <option value="">Select Category</option>
-                        <option v-for="cat in categories" :key="cat.id" :value="cat.id">
-                            {{ cat.name }}
-                        </option>
-                    </select>
+                        :options="categoryOptions"
+                        placeholder="Select Category"
+                        class="mt-1"
+                    />
                     <p v-if="errors.category_id" class="mt-1 text-sm text-destructive">{{ errors.category_id[0] }}</p>
                 </div>
 

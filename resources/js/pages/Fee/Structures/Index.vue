@@ -98,6 +98,11 @@ const campusOptions = computed(() => props.campuses.map((campus) => ({ value: St
 const sessionOptions = computed(() => props.sessions.map((session) => ({ value: String(session.id), label: session.name })));
 const classOptions = computed(() => props.classes.map((cls) => ({ value: String(cls.id), label: cls.name })));
 const sectionOptions = computed(() => filteredSections.value.map((section) => ({ value: String(section.id), label: section.name })));
+const statusOptions = [
+    { value: 'active', label: 'Active' },
+    { value: 'inactive', label: 'Inactive' },
+    { value: 'draft', label: 'Draft' },
+];
 
 let searchDebounceTimer: ReturnType<typeof setTimeout> | null = null;
 
@@ -302,16 +307,13 @@ const deleteStructure = (structure: FeeStructure) => {
                     </div>
                     <div class="space-y-2">
                         <Label for="filter-status">Status</Label>
-                        <select
+                        <SearchableSelect
                             id="filter-status"
                             v-model="filterStatus"
-                            class="w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground"
-                        >
-                            <option value="">All Status</option>
-                            <option value="active">Active</option>
-                            <option value="inactive">Inactive</option>
-                            <option value="draft">Draft</option>
-                        </select>
+                            :options="statusOptions"
+                            placeholder="All Status"
+                            clearable
+                        />
                     </div>
                     <div class="space-y-2 md:col-span-5">
                         <Label for="search-structure">Search</Label>

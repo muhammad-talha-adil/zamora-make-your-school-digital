@@ -39,9 +39,7 @@
                     <!-- Year -->
                     <div v-if="reportMode === 'month'">
                         <label class="block text-sm font-medium text-muted-foreground mb-1">Year</label>
-                        <select v-model="selectedYear" class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm">
-                            <option v-for="year in yearRange" :key="year" :value="year">{{ year }}</option>
-                        </select>
+                        <SearchableSelect v-model="selectedYear" :options="yearOptions" placeholder="Select Year" />
                     </div>
 
                     <!-- Date range -->
@@ -219,6 +217,8 @@ const yearRange = computed(() => {
     }
     return years;
 });
+
+const yearOptions = computed(() => yearRange.value.map((year) => ({ value: year, label: String(year) })));
 
 const filteredSections = computed(() => {
     if (!selectedClassId.value) return [];

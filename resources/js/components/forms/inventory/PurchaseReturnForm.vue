@@ -18,6 +18,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import Icon from '@/components/Icon.vue';
 import ComboboxInput from '@/components/ui/combobox/ComboboxInput.vue';
+import SearchableSelect from '@/components/ui/searchable-select/SearchableSelect.vue';
 
 // Types
 interface Purchase {
@@ -203,6 +204,28 @@ const availableItems = computed(() => {
     
     return purchaseItems.value;
 });
+
+const campusOptions = computed(() =>
+    props.campuses.map((campus) => ({
+        value: campus.id,
+        label: campus.name,
+    })),
+);
+
+const itemSelectOptions = computed(() =>
+    availableItems.value.map((invItem) => ({
+        value: invItem.inventory_item_id,
+        label: invItem.item_name,
+    })),
+);
+
+const onItemSelect = (item: typeof form.items[number]) => {
+    const pi = purchaseItems.value.find(p => p.inventory_item_id === item.inventory_item_id);
+    if (pi) {
+        item.available_for_return = pi.available_for_return;
+        item.unit_price = pi.purchase_rate;
+    }
+};
 
 // Total amount
 const totalAmount = computed(() => {
@@ -562,19 +585,13 @@ watch(() => form.purchase_id, (newPurchaseId) => {
                                 </div>
                                 Campus <span class="text-destructive">*</span>
                             </Label>
-                            <select
+                            <SearchableSelect
                                 id="campus_id"
                                 v-model="form.campus_id"
-                                @change="onCampusChange"
-                                class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm h-11"
-                                :class="{ 'border-destructive': errors.campus_id }"
-                                required
-                            >
-                                <option value="">Select Campus</option>
-                                <option v-for="campus in props.campuses" :key="campus.id" :value="campus.id">
-                                    {{ campus.name }}
-                                </option>
-                            </select>
+                                :options="campusOptions"
+                                placeholder="Select Campus"
+                                @update:model-value="onCampusChange"
+                            />
                             <InputError :message="errors.campus_id" />
                         </div>
 
@@ -670,23 +687,12 @@ watch(() => form.purchase_id, (newPurchaseId) => {
                                                 {{ index + 1 }}
                                             </td>
                                             <td class="px-3 py-3">
-                                                <select
+                                                <SearchableSelect
                                                     v-model="item.inventory_item_id"
-                                                    @change="() => {
-                                                        const pi = purchaseItems.find(p => p.inventory_item_id === item.inventory_item_id);
-                                                        if (pi) {
-                                                            item.available_for_return = pi.available_for_return;
-                                                            item.unit_price = pi.purchase_rate;
-                                                        }
-                                                    }"
-                                                    class="w-full rounded-md border border-border bg-card text-foreground px-2 py-1.5 text-sm h-10"
-                                                    required
-                                                >
-                                                    <option :value="null">Select Item</option>
-                                                    <option v-for="invItem in availableItems" :key="invItem.inventory_item_id" :value="invItem.inventory_item_id">
-                                                        {{ invItem.item_name }}
-                                                    </option>
-                                                </select>
+                                                    :options="itemSelectOptions"
+                                                    placeholder="Select Item"
+                                                    @update:model-value="onItemSelect(item)"
+                                                />
                                             </td>
                                             <td class="px-3 py-3 text-sm">
                                                 <span :class="item.available_for_return > 0 ? 'text-success' : 'text-destructive'">

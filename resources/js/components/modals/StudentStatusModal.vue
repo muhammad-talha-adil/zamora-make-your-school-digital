@@ -12,18 +12,13 @@
                 <!-- Status Dropdown -->
                 <div class="space-y-2">
                     <Label for="status_id">Status <span class="text-destructive">*</span></Label>
-                    <select
+                    <SearchableSelect
                         id="status_id"
                         v-model="form.status_id"
-                        class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm h-11"
+                        :options="statusOptions"
+                        placeholder="Select Status"
                         :class="{ 'border-destructive': errors.status_id }"
-                        required
-                    >
-                        <option value="">Select Status</option>
-                        <option v-for="status in statuses" :key="status.id" :value="status.id">
-                            {{ status.name }}
-                        </option>
-                    </select>
+                    />
                     <InputError :message="errors.status_id" />
                 </div>
 
@@ -59,11 +54,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { router } from '@inertiajs/vue3';
 import { route } from 'ziggy-js';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
+import SearchableSelect from '@/components/ui/searchable-select/SearchableSelect.vue';
 import InputError from '@/components/InputError.vue';
 import Icon from '@/components/Icon.vue';
 import { alert } from '@/utils/alert';
@@ -92,6 +88,8 @@ const emit = defineEmits<{
     (e: 'update:open', value: boolean): void;
     (e: 'closed'): void;
 }>();
+
+const statusOptions = computed(() => props.statuses.map((status) => ({ value: status.id, label: status.name })));
 
 const processing = ref(false);
 const errors = ref<Record<string, string>>({});

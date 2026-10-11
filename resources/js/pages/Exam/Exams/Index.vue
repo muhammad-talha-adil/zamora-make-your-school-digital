@@ -69,17 +69,11 @@
                             <div class="text-xs text-muted-foreground">{{ exam.exam_type?.name }}</div>
                         </div>
                         <div class="flex items-center gap-1">
-                            <select
+                            <SearchableSelect
                                 v-model="exam.status"
-                                class="rounded-md border border-border bg-card text-foreground px-2 py-1 text-xs font-medium"
-                            >
-                                <option value="scheduled">Scheduled</option>
-                                <option value="active">Active</option>
-                                <option value="marking">Marking</option>
-                                <option value="published">Published</option>
-                                <option value="completed">Completed</option>
-                                <option value="cancelled">Cancelled</option>
-                            </select>
+                                :options="examStatusOptions"
+                                class="w-32 h-7 text-xs"
+                            />
                             <Button
                                 v-if="savingStatus === exam.id"
                                 variant="ghost"
@@ -210,17 +204,11 @@
                                 </td>
                                 <td class="px-4 py-3 whitespace-nowrap">
                                     <div class="flex items-center gap-2">
-                                        <select
+                                        <SearchableSelect
                                             v-model="exam.status"
-                                            class="rounded-md border border-border bg-card text-foreground px-2 py-1 text-xs font-medium"
-                                        >
-                                            <option value="scheduled">Scheduled</option>
-                                            <option value="active">Active</option>
-                                            <option value="marking">Marking</option>
-                                            <option value="published">Published</option>
-                                            <option value="completed">Completed</option>
-                                            <option value="cancelled">Cancelled</option>
-                                        </select>
+                                            :options="examStatusOptions"
+                                            class="w-32 h-7 text-xs"
+                                        />
                                         <Button
                                             v-if="savingStatus === exam.id"
                                             variant="ghost"
@@ -322,6 +310,15 @@ const sessionOptions = computed(() =>
 const examTypeOptions = computed(() =>
     props.examTypes.map((type) => ({ value: String(type.id), label: type.name }))
 );
+
+const examStatusOptions = [
+    { value: 'scheduled', label: 'Scheduled' },
+    { value: 'active', label: 'Active' },
+    { value: 'marking', label: 'Marking' },
+    { value: 'published', label: 'Published' },
+    { value: 'completed', label: 'Completed' },
+    { value: 'cancelled', label: 'Cancelled' },
+];
 
 // Local state for exams (real-time updates)
 const examsData = ref<Exam[]>(props.exams);

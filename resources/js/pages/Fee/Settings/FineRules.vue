@@ -414,6 +414,13 @@ const fineTypeOptions = [
     { value: 'fixed_once', label: 'Fixed Amount (One Time)' },
     { value: 'percent', label: 'Percentage of Amount' },
 ];
+
+const sessionSelectOptions = computed(() => props.sessions.map((session) => ({ value: session.id.toString(), label: session.name })));
+
+const activeStatusOptions = [
+    { value: 'true', label: 'Active' },
+    { value: 'false', label: 'Inactive' },
+];
 </script>
 
 <template>
@@ -451,16 +458,13 @@ const fineTypeOptions = [
                     </div>
                     <div class="space-y-2">
                         <Label for="filter-session">Session</Label>
-                        <select 
+                        <SearchableSelect
                             id="filter-session"
                             v-model="filterSession"
-                            class="w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground"
-                        >
-                            <option value="">All Sessions</option>
-                            <option v-for="session in props.sessions" :key="session.id" :value="session.id.toString()">
-                                {{ session.name }}
-                            </option>
-                        </select>
+                            :options="sessionSelectOptions"
+                            placeholder="All Sessions"
+                            clearable
+                        />
                     </div>
                     <div class="space-y-2">
                         <Label for="filter-class">Class</Label>
@@ -474,15 +478,13 @@ const fineTypeOptions = [
                     </div>
                     <div class="space-y-2">
                         <Label for="filter-status">Status</Label>
-                        <select 
+                        <SearchableSelect
                             id="filter-status"
                             v-model="filterActive"
-                            class="w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground"
-                        >
-                            <option value="">All Status</option>
-                            <option value="true">Active</option>
-                            <option value="false">Inactive</option>
-                        </select>
+                            :options="activeStatusOptions"
+                            placeholder="All Status"
+                            clearable
+                        />
                     </div>
                     <div class="space-y-2">
                         <Label for="search">Search</Label>
@@ -601,17 +603,12 @@ const fineTypeOptions = [
                             </div>
                             <div class="space-y-2">
                                 <Label for="session_id">Session *</Label>
-                                <select 
+                                <SearchableSelect
                                     id="session_id"
                                     v-model="form.session_id"
-                                    required
-                                    :class="['w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground', formErrors.session_id ? 'border-destructive' : '']"
-                                >
-                                    <option value="">Select Session</option>
-                                    <option v-for="session in props.sessions" :key="session.id" :value="session.id.toString()">
-                                        {{ session.name }}
-                                    </option>
-                                </select>
+                                    :options="sessionSelectOptions"
+                                    placeholder="Select Session"
+                                />
                                 <p v-if="formErrors.session_id" class="text-xs text-destructive">{{ formErrors.session_id }}</p>
                             </div>
                         </div>
@@ -672,16 +669,11 @@ const fineTypeOptions = [
                             </div>
                             <div class="space-y-2">
                                 <Label for="fine_type">Fine Type *</Label>
-                                <select 
+                                <SearchableSelect
                                     id="fine_type"
                                     v-model="form.fine_type"
-                                    required
-                                    class="w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground"
-                                >
-                                    <option v-for="opt in fineTypeOptions" :key="opt.value" :value="opt.value">
-                                        {{ opt.label }}
-                                    </option>
-                                </select>
+                                    :options="fineTypeOptions"
+                                />
                             </div>
                         </div>
 

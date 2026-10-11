@@ -76,6 +76,24 @@ const transactions = computed(() => props.transactions?.data ?? []);
 const paginationLinks = computed(() => props.transactions?.links ?? []);
 const campuses = computed(() => props.campuses ?? []);
 const campusOptions = computed(() => campuses.value.map((c) => ({ value: c.id, label: c.name })));
+const systemOptions = [
+    { value: 'journal', label: 'Journals' },
+    { value: 'ledger', label: 'Ledger' },
+];
+const moduleOptions = [
+    { value: 'fee', label: 'Fee' },
+    { value: 'inventory', label: 'Inventory' },
+    { value: 'transport', label: 'Transport' },
+    { value: 'staff', label: 'Staff' },
+    { value: 'finance', label: 'Finance' },
+];
+const kindOptions = [
+    { value: 'receivable', label: 'Receivable' },
+    { value: 'collection', label: 'Collection' },
+    { value: 'adjustment', label: 'Adjustment' },
+    { value: 'income', label: 'Income' },
+    { value: 'expense', label: 'Expense' },
+];
 
 const formatMoney = (amount: number | null | undefined) => {
     if (amount === null || amount === undefined) return 'Rs 0';
@@ -182,35 +200,32 @@ const openPage = (url: string | null) => {
 
                     <div>
                         <label class="mb-2 block text-sm font-medium text-muted-foreground">System</label>
-                        <select v-model="filters.system" class="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm">
-                            <option value="">All Systems</option>
-                            <option value="journal">Journals</option>
-                            <option value="ledger">Ledger</option>
-                        </select>
+                        <SearchableSelect
+                            v-model="filters.system"
+                            :options="systemOptions"
+                            placeholder="All Systems"
+                            clearable
+                        />
                     </div>
 
                     <div>
                         <label class="mb-2 block text-sm font-medium text-muted-foreground">Module</label>
-                        <select v-model="filters.module" class="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm">
-                            <option value="">All Modules</option>
-                            <option value="fee">Fee</option>
-                            <option value="inventory">Inventory</option>
-                            <option value="transport">Transport</option>
-                            <option value="staff">Staff</option>
-                            <option value="finance">Finance</option>
-                        </select>
+                        <SearchableSelect
+                            v-model="filters.module"
+                            :options="moduleOptions"
+                            placeholder="All Modules"
+                            clearable
+                        />
                     </div>
 
                     <div>
                         <label class="mb-2 block text-sm font-medium text-muted-foreground">Kind</label>
-                        <select v-model="filters.kind" class="w-full rounded-lg border border-border bg-card px-3 py-2 text-sm">
-                            <option value="">All Kinds</option>
-                            <option value="receivable">Receivable</option>
-                            <option value="collection">Collection</option>
-                            <option value="adjustment">Adjustment</option>
-                            <option value="income">Income</option>
-                            <option value="expense">Expense</option>
-                        </select>
+                        <SearchableSelect
+                            v-model="filters.kind"
+                            :options="kindOptions"
+                            placeholder="All Kinds"
+                            clearable
+                        />
                     </div>
 
                     <div>

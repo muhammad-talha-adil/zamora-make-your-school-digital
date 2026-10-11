@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import SearchableSelect from '@/components/ui/searchable-select/SearchableSelect.vue';
 import RowAction from '@/components/tables/RowAction.vue';
 import RowActions from '@/components/tables/RowActions.vue';
 import StatusToggle from '@/components/tables/StatusToggle.vue';
@@ -113,6 +114,7 @@ const documentTypesList = usePagedList(() => props.documentTypes);
 const showDesignationModal = ref(false);
 const editingDesignation = ref<Lookup | null>(null);
 const designationForm = ref({ name: '', description: '', role: '' as string | null, is_active: true });
+const designationRoleOptions = computed(() => props.roles.map((r) => ({ value: r.name, label: r.label || r.name })));
 const designationErrors = ref<Record<string, string>>({});
 
 const openCreateDesignation = () => {
@@ -183,6 +185,16 @@ const toggleDesignationStatus = async (designation: Lookup) => {
 const showDocumentTypeModal = ref(false);
 const editingDocumentType = ref<Lookup | null>(null);
 const documentTypeForm = ref({ name: '', is_required: false, is_active: true });
+const documentTypeRequiredOptions = [
+    { value: 'false', label: 'Optional' },
+    { value: 'true', label: 'Required' },
+];
+const documentTypeRequiredModel = computed({
+    get: () => String(documentTypeForm.value.is_required),
+    set: (value) => {
+        documentTypeForm.value.is_required = value === 'true';
+    },
+});
 const documentTypeErrors = ref<Record<string, string>>({});
 
 const openCreateDocumentType = () => {
@@ -495,10 +507,13 @@ const deactivateDocumentType = async (type: Lookup) => {
                     </div>
                     <div class="space-y-2">
                         <Label for="designation-role">System Role</Label>
-                        <select id="designation-role" v-model="designationForm.role" class="w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground">
-                            <option :value="''">— none —</option>
-                            <option v-for="r in props.roles" :key="r.id" :value="r.name">{{ r.label || r.name }}</option>
-                        </select>
+                        <SearchableSelect
+                            id="designation-role"
+                            v-model="designationForm.role"
+                            :options="designationRoleOptions"
+                            placeholder="— none —"
+                            clearable
+                        />
                     </div>
                     <DialogFooter>
                         <Button type="button" variant="outline" @click="closeDesignationModal">Cancel</Button>
@@ -522,10 +537,11 @@ const deactivateDocumentType = async (type: Lookup) => {
                     </div>
                     <div class="space-y-2">
                         <Label for="document-type-required">Required</Label>
-                        <select id="document-type-required" v-model="documentTypeForm.is_required" class="w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground">
-                            <option :value="false">Optional</option>
-                            <option :value="true">Required</option>
-                        </select>
+                        <SearchableSelect
+                            id="document-type-required"
+                            v-model="documentTypeRequiredModel"
+                            :options="documentTypeRequiredOptions"
+                        />
                     </div>
                     <DialogFooter>
                         <Button type="button" variant="outline" @click="closeDocumentTypeModal">Cancel</Button>

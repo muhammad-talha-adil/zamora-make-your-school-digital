@@ -79,6 +79,7 @@ const pagination = ref(props.inventoryItems);
 
 // Page size options
 const perPageOptions = [25, 50, 75, 100];
+const perPageSelectOptions = computed(() => perPageOptions.map((option) => ({ value: option, label: String(option) })));
 
 const campusOptions = computed(() => props.campuses.map((campus) => ({ value: campus.id, label: campus.name })));
 const typeOptions = computed(() => props.inventoryTypes.map((type) => ({ value: type.id, label: type.name })));
@@ -252,11 +253,11 @@ const getStockStatus = (quantity: number) => {
                 </Button>
                 <div class="flex items-center gap-2">
                     <label class="text-sm text-muted-foreground">Show:</label>
-                    <select v-model="perPage" class="w-20 rounded-md border border-border bg-card text-foreground px-2 py-2 text-sm min-h-11">
-                        <option v-for="option in perPageOptions" :key="option" :value="option">
-                            {{ option }}
-                        </option>
-                    </select>
+                    <SearchableSelect
+                        v-model="perPage"
+                        :options="perPageSelectOptions"
+                        class="w-20"
+                    />
                 </div>
             </FilterCard>
 

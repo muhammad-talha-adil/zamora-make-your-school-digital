@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
+import SearchableSelect from '@/components/ui/searchable-select/SearchableSelect.vue';
 import {
     Card,
     CardContent,
@@ -68,6 +69,7 @@ const defaultForm = () => ({
 });
 
 const form = ref(defaultForm());
+const campusOptions = computed(() => props.campuses.map((campus) => ({ value: campus.id, label: campus.name })));
 
 const { isValid } = useFormValidity(form, ['campus_id', 'name', 'starts_on', 'ends_on', 'day_starts_at', 'late_after']);
 
@@ -149,10 +151,7 @@ const submit = () => {
 
                         <div>
                             <Label for="campus_id">Campus *</Label>
-                            <select id="campus_id" v-model="form.campus_id" class="w-full rounded-md border border-border px-3 py-2 shadow-sm focus:border-primary focus:ring-primary focus:outline-none">
-                                <option value="">Select Campus</option>
-                                <option v-for="campus in campuses" :key="campus.id" :value="campus.id">{{ campus.name }}</option>
-                            </select>
+                            <SearchableSelect id="campus_id" v-model="form.campus_id" :options="campusOptions" placeholder="Select Campus" />
                             <InputError :message="(errors as any).campus_id" />
                         </div>
 

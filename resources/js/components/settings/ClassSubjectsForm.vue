@@ -10,35 +10,27 @@
                 <!-- Campus Filter -->
                 <div class="space-y-2">
                     <Label for="campus-filter">Campus</Label>
-                    <select
+                    <SearchableSelect
                         id="campus-filter"
                         v-model="filters.campus_id"
-                        @change="onCampusChange"
-                        class="w-full rounded-md border bg-card text-foreground px-3 py-2 text-sm"
+                        :options="campusOptions"
+                        placeholder="Select Campus"
+                        clearable
                         :class="filters.campus_id ? 'border-green-500 focus:ring-green-500' : 'border-border'"
-                    >
-                        <option value="">Select Campus</option>
-                        <option v-for="campus in campuses" :key="campus.id" :value="campus.id">
-                            {{ campus.name }}
-                        </option>
-                    </select>
+                    />
                 </div>
 
                 <!-- Class Filter -->
                 <div class="space-y-2">
                     <Label for="class-filter">Class</Label>
-                    <select
+                    <SearchableSelect
                         id="class-filter"
                         v-model="filters.class_id"
-                        @change="onClassChange"
-                        class="w-full rounded-md border bg-card text-foreground px-3 py-2 text-sm"
+                        :options="classOptions"
+                        placeholder="Select Class"
+                        clearable
                         :class="filters.class_id ? 'border-green-500 focus:ring-green-500' : 'border-border'"
-                    >
-                        <option value="">Select Class</option>
-                        <option v-for="cls in classes" :key="cls.id" :value="cls.id">
-                            {{ cls.name }}
-                        </option>
-                    </select>
+                    />
                 </div>
 
                 <!-- Section Filter -->
@@ -47,20 +39,15 @@
                         Section
                         <span v-if="filters.class_id && classHasSections" class="text-destructive">*</span>
                     </Label>
-                    <select
+                    <SearchableSelect
                         id="section-filter"
                         v-model="filters.section_id"
-                        @change="onSectionChange"
+                        :options="sectionOptions"
+                        :placeholder="classHasSections ? 'Select Section' : 'All Sections'"
                         :disabled="!filters.class_id"
-                        class="w-full rounded-md border bg-card text-foreground px-3 py-2 text-sm disabled:opacity-50"
+                        clearable
                         :class="filters.section_id ? 'border-green-500 focus:ring-green-500' : 'border-border'"
-                    >
-                        <option value="" v-if="!classHasSections">All Sections</option>
-                        <option value="" v-else>Select Section</option>
-                        <option v-for="section in filteredSections" :key="section.id" :value="section.id">
-                            {{ section.name }}
-                        </option>
-                    </select>
+                    />
                     <p v-if="filters.class_id && classHasSections && !filters.section_id" class="text-xs text-muted-foreground">
                         Select a section to load its subjects.
                     </p>
@@ -148,10 +135,11 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive, computed } from 'vue';
+import { ref, reactive, computed, watch } from 'vue';
 import { route } from 'ziggy-js';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
+import SearchableSelect from '@/components/ui/searchable-select/SearchableSelect.vue';
 import Icon from '@/components/Icon.vue';
 import { alert } from '@/utils';
 import axios from 'axios';
@@ -204,6 +192,10 @@ const filteredSections = computed(() => {
     return sections.value.filter(s => s.class_id === Number(filters.class_id));
 });
 
+const campusOptions = computed(() => campuses.value.map((campus) => ({ value: campus.id, label: campus.name })));
+const classOptions = computed(() => classes.value.map((cls) => ({ value: cls.id, label: cls.name })));
+const sectionOptions = computed(() => filteredSections.value.map((section) => ({ value: section.id, label: section.name })));
+
 // Whether the selected class has any sections at all. When it doesn't,
 // "Load Subjects" only needs the class (issue #26); when it does, a section
 // must be picked too, since subjects can be assigned per section.
@@ -249,26 +241,25 @@ const loadInitialData = async () => {
     }
 };
 
-const onCampusChange = () => {
-    // Campus filter doesn't directly affect sections in this implementation
-    // but kept for future use
-};
+// Campus filter doesn't directly affect sections in this implementation
+// but kept for future use
+watch(() => filters.campus_id, () => {});
 
-const onClassChange = () => {
+watch(() => filters.class_id, () => {
     filters.section_id = '';
     showSubjects.value = false;
     hasLoaded.value = false;
     selectedSubjects.value = [];
     originalSubjects.value = [];
-};
+});
 
-const onSectionChange = () => {
+watch(() => filters.section_id, () => {
     showSubjects.value = false;
     hasLoaded.value = false;
     selectedSubjects.value = [];
     originalSubjects.value = [];
     // When section_id is empty string, it means "All Sections"
-};
+});
 
 const loadAssignedSubjects = async () => {
     if (!filters.class_id) return;

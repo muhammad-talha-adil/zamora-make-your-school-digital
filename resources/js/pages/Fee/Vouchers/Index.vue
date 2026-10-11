@@ -113,6 +113,13 @@ const classOptions = computed(() => props.classes.map((cls) => ({ value: String(
 const sectionOptions = computed(() => filteredSections.value.map((section) => ({ value: String(section.id), label: section.name })));
 const monthOptions = computed(() => props.months.map((month) => ({ value: String(month.id), label: month.name })));
 const yearOptions = computed(() => years.map((year) => ({ value: String(year), label: String(year) })));
+const statusOptions = [
+    { value: 'unpaid', label: 'Unpaid' },
+    { value: 'partial', label: 'Partial' },
+    { value: 'paid', label: 'Paid' },
+    { value: 'overdue', label: 'Overdue' },
+    { value: 'cancelled', label: 'Cancelled' },
+];
 
 // Watch for campus changes to reset class and section
 watch(() => filters.campus_id, () => {
@@ -363,18 +370,13 @@ const isOverdueVoucher = (voucher: FeeVoucher) => {
                     </div>
                     <div class="space-y-2">
                     <Label for="filter-status">Status</Label>
-                    <select
+                    <SearchableSelect
                         id="filter-status"
                         v-model="filters.status"
-                        class="w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground"
-                    >
-                        <option value="">All Status</option>
-                        <option value="unpaid">Unpaid</option>
-                        <option value="partial">Partial</option>
-                        <option value="paid">Paid</option>
-                        <option value="overdue">Overdue</option>
-                        <option value="cancelled">Cancelled</option>
-                    </select>
+                        :options="statusOptions"
+                        placeholder="All Status"
+                        clearable
+                    />
                     </div>
                     <div class="space-y-2 md:col-span-4">
                     <Label for="search-voucher">Search</Label>

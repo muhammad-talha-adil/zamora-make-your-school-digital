@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { router } from '@inertiajs/vue3';
-import { ref, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { route } from 'ziggy-js';
 import { alert } from '@/utils';
 import { useFormValidity } from '@/composables/useFormValidity';
@@ -20,6 +20,7 @@ import {
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import Icon from '@/components/Icon.vue';
+import SearchableSelect from '@/components/ui/searchable-select/SearchableSelect.vue';
 import type { Exam, ExamType, Session } from '@/types/exam';
 
 // Props
@@ -66,6 +67,9 @@ const form = ref({
     start_date: formatDateForInput(props.exam?.start_date || ''),
     end_date: formatDateForInput(props.exam?.end_date || ''),
 });
+
+const examTypeOptions = computed(() => props.examTypes.map((type) => ({ value: type.id, label: type.name })));
+const sessionOptions = computed(() => props.sessions.map((session) => ({ value: String(session.id), label: session.name })));
 
 const errors = ref<Record<string, string>>({});
 const processing = ref(false);
@@ -191,33 +195,25 @@ const resetForm = () => {
 
                         <div class="grid gap-2">
                             <Label for="exam_type_id">Exam Type <span class="text-destructive">*</span></Label>
-                            <select
+                            <SearchableSelect
                                 id="exam_type_id"
                                 v-model="form.exam_type_id"
-                                class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm"
+                                :options="examTypeOptions"
+                                placeholder="Select Exam Type"
                                 :class="{ 'border-destructive': errors.exam_type_id }"
-                            >
-                                <option value="">Select Exam Type</option>
-                                <option v-for="type in props.examTypes" :key="type.id" :value="type.id">
-                                    {{ type.name }}
-                                </option>
-                            </select>
+                            />
                             <InputError :message="errors.exam_type_id" />
                         </div>
 
                         <div class="grid gap-2">
                             <Label for="session_id">Session <span class="text-destructive">*</span></Label>
-                            <select
+                            <SearchableSelect
                                 id="session_id"
                                 v-model="form.session_id"
-                                class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm"
+                                :options="sessionOptions"
+                                placeholder="Select Session"
                                 :class="{ 'border-destructive': errors.session_id }"
-                            >
-                                <option value="">Select Session</option>
-                                <option v-for="session in props.sessions" :key="session.id" :value="String(session.id)">
-                                    {{ session.name }}
-                                </option>
-                            </select>
+                            />
                             <InputError :message="errors.session_id" />
                         </div>
 

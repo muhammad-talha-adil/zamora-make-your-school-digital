@@ -16,6 +16,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import SearchableSelect from '@/components/ui/searchable-select/SearchableSelect.vue';
 import Icon from '@/components/Icon.vue';
 
 // Types
@@ -87,6 +88,27 @@ const filteredStudents = computed(() => {
 const filteredItems = computed(() => {
     return props.inventoryItems;
 });
+
+const campusOptions = computed(() =>
+    props.campuses.map((campus) => ({
+        value: campus.id,
+        label: campus.name,
+    })),
+);
+
+const studentOptions = computed(() =>
+    filteredStudents.value.map((student) => ({
+        value: student.id,
+        label: `${student.name} (${student.registration_number})`,
+    })),
+);
+
+const itemOptions = computed(() =>
+    filteredItems.value.map((item) => ({
+        value: item.id,
+        label: `${item.name} - ${formatCurrency(item.sale_rate || 0)} (${item.available_stock || 0} in stock)`,
+    })),
+);
 
 const selectedItem = computed(() => {
     return props.inventoryItems.find(item => item.id === parseInt(form.value.inventory_item_id));
@@ -214,18 +236,12 @@ const submitForm = () => {
                             </div>
                             Campus <span class="text-destructive">*</span>
                         </Label>
-                        <select
+                        <SearchableSelect
                             id="campus_id"
                             v-model="form.campus_id"
-                            class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm h-11"
-                            :class="{ 'border-destructive': errors.campus_id }"
-                            required
-                        >
-                            <option value="">Select Campus</option>
-                            <option v-for="campus in props.campuses" :key="campus.id" :value="campus.id">
-                                {{ campus.name }}
-                            </option>
-                        </select>
+                            :options="campusOptions"
+                            placeholder="Select Campus"
+                        />
                         <InputError :message="errors.campus_id" />
                     </div>
 
@@ -237,18 +253,12 @@ const submitForm = () => {
                             </div>
                             Student <span class="text-destructive">*</span>
                         </Label>
-                        <select
+                        <SearchableSelect
                             id="student_id"
                             v-model="form.student_id"
-                            class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm h-11"
-                            :class="{ 'border-destructive': errors.student_id }"
-                            required
-                        >
-                            <option value="">Select Student</option>
-                            <option v-for="student in filteredStudents" :key="student.id" :value="student.id">
-                                {{ student.name }} ({{ student.registration_number }})
-                            </option>
-                        </select>
+                            :options="studentOptions"
+                            placeholder="Select Student"
+                        />
                         <InputError :message="errors.student_id" />
                     </div>
 
@@ -260,18 +270,12 @@ const submitForm = () => {
                             </div>
                             Inventory Item <span class="text-destructive">*</span>
                         </Label>
-                        <select
+                        <SearchableSelect
                             id="inventory_item_id"
                             v-model="form.inventory_item_id"
-                            class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm h-11"
-                            :class="{ 'border-destructive': errors.inventory_item_id }"
-                            required
-                        >
-                            <option value="">Select Item</option>
-                            <option v-for="item in filteredItems" :key="item.id" :value="item.id">
-                                {{ item.name }} - {{ formatCurrency(item.sale_rate || 0) }} ({{ item.available_stock || 0 }} in stock)
-                            </option>
-                        </select>
+                            :options="itemOptions"
+                            placeholder="Select Item"
+                        />
                         <InputError :message="errors.inventory_item_id" />
 
                         <!-- Item Details -->

@@ -18,6 +18,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import SearchableSelect from '@/components/ui/searchable-select/SearchableSelect.vue';
 import Icon from '@/components/Icon.vue';
 import RowAction from '@/components/tables/RowAction.vue';
 
@@ -92,6 +93,8 @@ const endYearOptions = Array.from(
     { length: currentYear + 1 - 2000 + 1 },
     (_, i) => 2000 + i,
 );
+const startYearSelectOptions = startYearOptions.map((year) => ({ value: year, label: String(year) }));
+const endYearSelectOptions = endYearOptions.map((year) => ({ value: year, label: String(year) }));
 
 /**
  * The Session Name is derived from Start Year + End Year (issue #59) so the
@@ -226,31 +229,25 @@ const resetForm = () => {
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div class="grid gap-2">
                             <Label for="start_year">Start Year <span class="text-destructive">*</span></Label>
-                            <select
+                            <SearchableSelect
                                 id="start_year"
-                                v-model.number="form.start_year"
-                                class="h-10 w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground"
-                                :class="{ 'border-destructive': errors.start_year }"
-                            >
-                                <option v-for="year in startYearOptions" :key="year" :value="year">
-                                    {{ year }}
-                                </option>
-                            </select>
+                                v-model="form.start_year"
+                                :options="startYearSelectOptions"
+                                placeholder="Select start year"
+                                :class="errors.start_year ? 'border-destructive' : ''"
+                            />
                             <InputError :message="errors.start_year" />
                         </div>
 
                         <div class="grid gap-2">
                             <Label for="end_year">End Year <span class="text-destructive">*</span></Label>
-                            <select
+                            <SearchableSelect
                                 id="end_year"
-                                v-model.number="form.end_year"
-                                class="h-10 w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground"
-                                :class="{ 'border-destructive': errors.end_year }"
-                            >
-                                <option v-for="year in endYearOptions" :key="year" :value="year">
-                                    {{ year }}
-                                </option>
-                            </select>
+                                v-model="form.end_year"
+                                :options="endYearSelectOptions"
+                                placeholder="Select end year"
+                                :class="errors.end_year ? 'border-destructive' : ''"
+                            />
                             <InputError :message="errors.end_year" />
                         </div>
                     </div>

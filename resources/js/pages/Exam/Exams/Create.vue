@@ -31,46 +31,35 @@
 
                         <div class="space-y-2">
                             <Label for="exam_type_id">Exam Type *</Label>
-                            <select
+                            <SearchableSelect
                                 id="exam_type_id"
                                 v-model="form.exam_type_id"
-                                class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm"
+                                :options="examTypeOptions"
+                                placeholder="Select Exam Type"
                                 :class="{ 'border-destructive': form.errors.exam_type_id }"
-                            >
-                                <option value="">Select Exam Type</option>
-                                <option v-for="type in props.examTypes" :key="type.id" :value="type.id">
-                                    {{ type.name }}
-                                </option>
-                            </select>
+                            />
                             <InputError :message="form.errors.exam_type_id" />
                         </div>
 
                         <div class="space-y-2">
                             <Label for="session_id">Session *</Label>
-                            <select
+                            <SearchableSelect
                                 id="session_id"
                                 v-model="form.session_id"
-                                class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm"
+                                :options="sessionOptions"
+                                placeholder="Select Session"
                                 :class="{ 'border-destructive': form.errors.session_id }"
-                            >
-                                <option value="">Select Session</option>
-                                <option v-for="session in props.sessions" :key="session.id" :value="session.id">
-                                    {{ session.name }}
-                                </option>
-                            </select>
+                            />
                             <InputError :message="form.errors.session_id" />
                         </div>
 
                         <div class="space-y-2">
                             <Label for="status">Status</Label>
-                            <select
+                            <SearchableSelect
                                 id="status"
                                 v-model="form.status"
-                                class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm"
-                            >
-                                <option value="draft">Draft</option>
-                                <option value="active">Active</option>
-                            </select>
+                                :options="statusOptions"
+                            />
                         </div>
 
                         <div class="space-y-2">
@@ -113,6 +102,7 @@
 <script setup lang="ts">
 import { Head, router } from '@inertiajs/vue3';
 import { useForm } from '@inertiajs/vue3';
+import { computed } from 'vue';
 import { route } from 'ziggy-js';
 import AppLayout from '@/layouts/AppLayout.vue';
 import type { BreadcrumbItem } from '@/types';
@@ -120,10 +110,18 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import InputError from '@/components/InputError.vue';
+import SearchableSelect from '@/components/ui/searchable-select/SearchableSelect.vue';
 import { useFormValidity } from '@/composables/useFormValidity';
 import type { ExamCreateProps } from '@/types/exam';
 
 const props = defineProps<ExamCreateProps>();
+
+const examTypeOptions = computed(() => props.examTypes.map((type) => ({ value: type.id, label: type.name })));
+const sessionOptions = computed(() => props.sessions.map((session) => ({ value: session.id, label: session.name })));
+const statusOptions = [
+    { value: 'draft', label: 'Draft' },
+    { value: 'active', label: 'Active' },
+];
 
 const breadcrumbItems: BreadcrumbItem[] = [
     { title: 'Dashboard', href: '/dashboard' },

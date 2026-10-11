@@ -11,6 +11,7 @@ import { alert } from '@/utils';
 import RowAction from '@/components/tables/RowAction.vue';
 import RowActions from '@/components/tables/RowActions.vue';
 import type { BreadcrumbItem } from '@/types';
+import SearchableSelect from '@/components/ui/searchable-select/SearchableSelect.vue';
 
 interface Campus {
     id: number;
@@ -167,6 +168,33 @@ const textareaClass = 'min-h-24 w-full rounded-md border border-border bg-card p
 const activeTab = ref<'vehicles' | 'routes' | 'stops' | 'assignments' | 'expenses' | 'dues'>('vehicles');
 const searchQuery = ref('');
 const campusFilter = ref('');
+
+const vehicleTypeOptions = [
+    { value: 'van', label: 'Van' },
+    { value: 'bus', label: 'Bus' },
+    { value: 'coaster', label: 'Coaster' },
+];
+const vehicleStatusOptions = [
+    { value: 'active', label: 'Active' },
+    { value: 'maintenance', label: 'Maintenance' },
+    { value: 'retired', label: 'Retired' },
+];
+const assignmentStatusOptions = [
+    { value: 'active', label: 'Active' },
+    { value: 'paused', label: 'Paused' },
+    { value: 'ended', label: 'Ended' },
+];
+const expenseTypeOptions = [
+    { value: 'fuel', label: 'Fuel' },
+    { value: 'maintenance', label: 'Maintenance' },
+    { value: 'repair', label: 'Repair' },
+    { value: 'misc', label: 'Miscellaneous' },
+];
+const paymentMethodOptions = [
+    { value: 'cash', label: 'Cash' },
+    { value: 'bank', label: 'Bank' },
+    { value: 'cheque', label: 'Cheque' },
+];
 
 const vehicleForm = reactive({
     id: null as number | null,
@@ -359,6 +387,14 @@ const availableRouteStops = computed(() => {
 
     return selectedRoute?.stops ?? [];
 });
+
+const campusOptions = computed(() => props.campuses.map((campus) => ({ value: String(campus.id), label: campus.name })));
+const vehicleOptions = computed(() => props.vehicles.map((vehicle) => ({ value: String(vehicle.id), label: vehicle.vehicle_no })));
+const routeOptions = computed(() => props.routes.map((routeRow) => ({ value: String(routeRow.id), label: routeRow.name })));
+const monthOptions = computed(() => props.months.map((month) => ({ value: String(month.id), label: month.name })));
+const studentOptions = computed(() => filteredStudents.value.map((student) => ({ value: String(student.id), label: student.display })));
+const availableStopOptions = computed(() => availableStops.value.map((stop) => ({ value: String(stop.id), label: stop.name })));
+const availableRouteStopOptions = computed(() => availableRouteStops.value.map((stop) => ({ value: String(stop.id), label: stop.name })));
 
 const reloadPage = (only: string[] = ['vehicles', 'routes', 'stops', 'assignments', 'expenses', 'summary']) => {
     router.reload({
@@ -706,10 +742,7 @@ const generateDues = async () => {
                 <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-3">
                     <div>
                         <label class="mb-2 block text-sm font-medium text-muted-foreground">Campus</label>
-                        <select v-model="campusFilter" :class="selectClass">
-                            <option value="">All Campuses</option>
-                            <option v-for="campus in props.campuses" :key="campus.id" :value="String(campus.id)">{{ campus.name }}</option>
-                        </select>
+                        <SearchableSelect v-model="campusFilter" :options="campusOptions" placeholder="All Campuses" clearable />
                     </div>
                     <div class="xl:col-span-2">
                         <label class="mb-2 block text-sm font-medium text-muted-foreground">Search</label>
@@ -724,10 +757,7 @@ const generateDues = async () => {
                     <div class="space-y-4">
                         <div>
                             <label class="mb-2 block text-sm font-medium text-muted-foreground">Campus</label>
-                            <select v-model="vehicleForm.campus_id" :class="selectClass">
-                                <option value="">Select campus</option>
-                                <option v-for="campus in props.campuses" :key="campus.id" :value="String(campus.id)">{{ campus.name }}</option>
-                            </select>
+                            <SearchableSelect v-model="vehicleForm.campus_id" :options="campusOptions" placeholder="Select campus" />
                         </div>
                         <div>
                             <label class="mb-2 block text-sm font-medium text-muted-foreground">Vehicle No</label>
@@ -736,11 +766,7 @@ const generateDues = async () => {
                         <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-1">
                             <div>
                                 <label class="mb-2 block text-sm font-medium text-muted-foreground">Type</label>
-                                <select v-model="vehicleForm.vehicle_type" :class="selectClass">
-                                    <option value="van">Van</option>
-                                    <option value="bus">Bus</option>
-                                    <option value="coaster">Coaster</option>
-                                </select>
+                                <SearchableSelect v-model="vehicleForm.vehicle_type" :options="vehicleTypeOptions" placeholder="Select type" />
                             </div>
                             <div>
                                 <label class="mb-2 block text-sm font-medium text-muted-foreground">Capacity</label>
@@ -760,11 +786,7 @@ const generateDues = async () => {
                         <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-1">
                             <div>
                                 <label class="mb-2 block text-sm font-medium text-muted-foreground">Status</label>
-                                <select v-model="vehicleForm.status" :class="selectClass">
-                                    <option value="active">Active</option>
-                                    <option value="maintenance">Maintenance</option>
-                                    <option value="retired">Retired</option>
-                                </select>
+                                <SearchableSelect v-model="vehicleForm.status" :options="vehicleStatusOptions" placeholder="Select status" />
                             </div>
                             <div>
                                 <label class="mb-2 block text-sm font-medium text-muted-foreground">Purchase Date</label>
@@ -837,10 +859,7 @@ const generateDues = async () => {
                     <div class="space-y-4">
                         <div>
                             <label class="mb-2 block text-sm font-medium text-muted-foreground">Campus</label>
-                            <select v-model="routeForm.campus_id" :class="selectClass">
-                                <option value="">Select campus</option>
-                                <option v-for="campus in props.campuses" :key="campus.id" :value="String(campus.id)">{{ campus.name }}</option>
-                            </select>
+                            <SearchableSelect v-model="routeForm.campus_id" :options="campusOptions" placeholder="Select campus" />
                         </div>
                         <div>
                             <label class="mb-2 block text-sm font-medium text-muted-foreground">Route Name</label>
@@ -849,10 +868,7 @@ const generateDues = async () => {
                         <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-1">
                             <div>
                                 <label class="mb-2 block text-sm font-medium text-muted-foreground">Vehicle</label>
-                                <select v-model="routeForm.transport_vehicle_id" :class="selectClass">
-                                    <option value="">Select vehicle</option>
-                                    <option v-for="vehicle in props.vehicles" :key="vehicle.id" :value="String(vehicle.id)">{{ vehicle.vehicle_no }}</option>
-                                </select>
+                                <SearchableSelect v-model="routeForm.transport_vehicle_id" :options="vehicleOptions" placeholder="Select vehicle" />
                             </div>
                             <div>
                                 <label class="mb-2 block text-sm font-medium text-muted-foreground">Monthly Fee</label>
@@ -924,10 +940,7 @@ const generateDues = async () => {
                     <div class="space-y-4">
                         <div>
                             <label class="mb-2 block text-sm font-medium text-muted-foreground">Campus</label>
-                            <select v-model="stopForm.campus_id" :class="selectClass">
-                                <option value="">Select campus</option>
-                                <option v-for="campus in props.campuses" :key="campus.id" :value="String(campus.id)">{{ campus.name }}</option>
-                            </select>
+                            <SearchableSelect v-model="stopForm.campus_id" :options="campusOptions" placeholder="Select campus" />
                         </div>
                         <div>
                             <label class="mb-2 block text-sm font-medium text-muted-foreground">Stop Name</label>
@@ -992,34 +1005,22 @@ const generateDues = async () => {
                     <div class="space-y-4">
                         <div>
                             <label class="mb-2 block text-sm font-medium text-muted-foreground">Student</label>
-                            <select v-model="assignmentForm.student_id" :class="selectClass">
-                                <option value="">Select student</option>
-                                <option v-for="student in filteredStudents" :key="student.id" :value="String(student.id)">{{ student.display }}</option>
-                            </select>
+                            <SearchableSelect v-model="assignmentForm.student_id" :options="studentOptions" placeholder="Select student" />
                         </div>
                         <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-1">
                             <div>
                                 <label class="mb-2 block text-sm font-medium text-muted-foreground">Campus</label>
-                                <select v-model="assignmentForm.campus_id" :class="selectClass">
-                                    <option value="">Select campus</option>
-                                    <option v-for="campus in props.campuses" :key="campus.id" :value="String(campus.id)">{{ campus.name }}</option>
-                                </select>
+                                <SearchableSelect v-model="assignmentForm.campus_id" :options="campusOptions" placeholder="Select campus" />
                             </div>
                             <div>
                                 <label class="mb-2 block text-sm font-medium text-muted-foreground">Route</label>
-                                <select v-model="assignmentForm.transport_route_id" :class="selectClass">
-                                    <option value="">Select route</option>
-                                    <option v-for="routeRow in props.routes" :key="routeRow.id" :value="String(routeRow.id)">{{ routeRow.name }}</option>
-                                </select>
+                                <SearchableSelect v-model="assignmentForm.transport_route_id" :options="routeOptions" placeholder="Select route" />
                             </div>
                         </div>
                         <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-1">
                             <div>
                                 <label class="mb-2 block text-sm font-medium text-muted-foreground">Stop</label>
-                                <select v-model="assignmentForm.transport_stop_id" :class="selectClass">
-                                    <option value="">Select stop</option>
-                                    <option v-for="stop in availableRouteStops" :key="stop.id" :value="String(stop.id)">{{ stop.name }}</option>
-                                </select>
+                                <SearchableSelect v-model="assignmentForm.transport_stop_id" :options="availableRouteStopOptions" placeholder="Select stop" />
                             </div>
                             <div>
                                 <label class="mb-2 block text-sm font-medium text-muted-foreground">Monthly Fee</label>
@@ -1039,11 +1040,7 @@ const generateDues = async () => {
                         <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-1">
                             <div>
                                 <label class="mb-2 block text-sm font-medium text-muted-foreground">Status</label>
-                                <select v-model="assignmentForm.status" :class="selectClass">
-                                    <option value="active">Active</option>
-                                    <option value="paused">Paused</option>
-                                    <option value="ended">Ended</option>
-                                </select>
+                                <SearchableSelect v-model="assignmentForm.status" :options="assignmentStatusOptions" placeholder="Select status" />
                             </div>
                             <label class="flex items-center gap-2 self-end text-sm text-muted-foreground">
                                 <input v-model="assignmentForm.generate_dues" type="checkbox" class="h-4 w-4 rounded border-border text-primary" />
@@ -1108,28 +1105,17 @@ const generateDues = async () => {
                         <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-1">
                             <div>
                                 <label class="mb-2 block text-sm font-medium text-muted-foreground">Campus</label>
-                                <select v-model="expenseForm.campus_id" :class="selectClass">
-                                    <option value="">Select campus</option>
-                                    <option v-for="campus in props.campuses" :key="campus.id" :value="String(campus.id)">{{ campus.name }}</option>
-                                </select>
+                                <SearchableSelect v-model="expenseForm.campus_id" :options="campusOptions" placeholder="Select campus" />
                             </div>
                             <div>
                                 <label class="mb-2 block text-sm font-medium text-muted-foreground">Vehicle</label>
-                                <select v-model="expenseForm.transport_vehicle_id" :class="selectClass">
-                                    <option value="">Select vehicle</option>
-                                    <option v-for="vehicle in props.vehicles" :key="vehicle.id" :value="String(vehicle.id)">{{ vehicle.vehicle_no }}</option>
-                                </select>
+                                <SearchableSelect v-model="expenseForm.transport_vehicle_id" :options="vehicleOptions" placeholder="Select vehicle" />
                             </div>
                         </div>
                         <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-1">
                             <div>
                                 <label class="mb-2 block text-sm font-medium text-muted-foreground">Expense Type</label>
-                                <select v-model="expenseForm.expense_type" :class="selectClass">
-                                    <option value="fuel">Fuel</option>
-                                    <option value="maintenance">Maintenance</option>
-                                    <option value="repair">Repair</option>
-                                    <option value="misc">Miscellaneous</option>
-                                </select>
+                                <SearchableSelect v-model="expenseForm.expense_type" :options="expenseTypeOptions" placeholder="Select type" />
                             </div>
                             <div>
                                 <label class="mb-2 block text-sm font-medium text-muted-foreground">Expense Date</label>
@@ -1143,11 +1129,7 @@ const generateDues = async () => {
                             </div>
                             <div>
                                 <label class="mb-2 block text-sm font-medium text-muted-foreground">Payment Method</label>
-                                <select v-model="expenseForm.payment_method" :class="selectClass">
-                                    <option value="cash">Cash</option>
-                                    <option value="bank">Bank</option>
-                                    <option value="cheque">Cheque</option>
-                                </select>
+                                <SearchableSelect v-model="expenseForm.payment_method" :options="paymentMethodOptions" placeholder="Select method" />
                             </div>
                         </div>
                         <div>
@@ -1206,18 +1188,12 @@ const generateDues = async () => {
                     <div class="space-y-4">
                         <div>
                             <label class="mb-2 block text-sm font-medium text-muted-foreground">Campus</label>
-                            <select v-model="duesForm.campus_id" :class="selectClass">
-                                <option value="">All Campuses</option>
-                                <option v-for="campus in props.campuses" :key="campus.id" :value="String(campus.id)">{{ campus.name }}</option>
-                            </select>
+                            <SearchableSelect v-model="duesForm.campus_id" :options="campusOptions" placeholder="All Campuses" clearable />
                         </div>
                         <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-1">
                             <div>
                                 <label class="mb-2 block text-sm font-medium text-muted-foreground">Month</label>
-                                <select v-model="duesForm.month_id" :class="selectClass">
-                                    <option value="">Select month</option>
-                                    <option v-for="month in props.months" :key="month.id" :value="String(month.id)">{{ month.name }}</option>
-                                </select>
+                                <SearchableSelect v-model="duesForm.month_id" :options="monthOptions" placeholder="Select month" />
                             </div>
                             <div>
                                 <label class="mb-2 block text-sm font-medium text-muted-foreground">Year</label>

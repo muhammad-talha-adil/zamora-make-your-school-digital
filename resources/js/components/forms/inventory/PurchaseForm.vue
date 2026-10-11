@@ -19,6 +19,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import Icon from '@/components/Icon.vue';
 import ComboboxInput from '@/components/ui/combobox/ComboboxInput.vue';
+import SearchableSelect from '@/components/ui/searchable-select/SearchableSelect.vue';
 import SupplierForm from './SupplierForm.vue';
 
 // Types
@@ -351,6 +352,20 @@ const availableItems = computed(() => {
     return inventoryItems.value;
 });
 
+const campusOptions = computed(() =>
+    props.campuses.map((campus) => ({
+        value: campus.id,
+        label: campus.name,
+    })),
+);
+
+const itemSelectOptions = computed(() =>
+    availableItems.value.map((invItem) => ({
+        value: invItem.id,
+        label: `${invItem.name} (${invItem.available_stock} in stock)`,
+    })),
+);
+
 const calculateTotal = computed(() => {
     return form.purchase_items.reduce((sum, item) => {
         return sum + (item.quantity * item.purchase_rate);
@@ -512,18 +527,12 @@ watch(() => form.purchase_items.length, (len) => {
                                 </div>
                                 Campus <span class="text-destructive">*</span>
                             </Label>
-                            <select
+                            <SearchableSelect
                                 id="campus_id"
                                 v-model="form.campus_id"
-                                class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm h-11"
-                                :class="{ 'border-destructive': errors.campus_id }"
-                                required
-                            >
-                                <option value="">Select Campus</option>
-                                <option v-for="campus in props.campuses" :key="campus.id" :value="campus.id">
-                                    {{ campus.name }}
-                                </option>
-                            </select>
+                                :options="campusOptions"
+                                placeholder="Select Campus"
+                            />
                             <InputError :message="errors.campus_id" />
                         </div>
                         <div class="space-y-2">
@@ -601,27 +610,16 @@ watch(() => form.purchase_items.length, (len) => {
                                     <div class="space-y-2">
                                         <Label class="text-xs">Item <span class="text-destructive">*</span></Label>
                                         <div class="relative">
-                                            <select
+                                            <SearchableSelect
                                                 v-model="item.inventory_item_id"
-                                                class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm h-10"
-                                                :class="{ 'border-destructive': errors[`purchase_items.${index}.inventory_item_id`] }"
-                                                required
-                                            >
-                                                <option value="0">
-                                                    {{ loadingItems ? 'Loading...' : 'Select Item' }}
-                                                </option>
-                                                <option 
-                                                    v-for="invItem in availableItems" 
-                                                    :key="invItem.id" 
-                                                    :value="invItem.id"
-                                                >
-                                                    {{ invItem.name }} ({{ invItem.available_stock }} in stock)
-                                                </option>
-                                            </select>
-                                            <Icon 
-                                                v-if="loadingItems" 
-                                                icon="loader" 
-                                                class="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground" 
+                                                :options="itemSelectOptions"
+                                                :placeholder="loadingItems ? 'Loading...' : 'Select Item'"
+                                                :disabled="loadingItems"
+                                            />
+                                            <Icon
+                                                v-if="loadingItems"
+                                                icon="loader"
+                                                class="absolute right-8 top-1/2 -translate-y-1/2 h-4 w-4 animate-spin text-muted-foreground"
                                             />
                                         </div>
                                         <InputError :message="errors[`purchase_items.${index}.inventory_item_id`]" />

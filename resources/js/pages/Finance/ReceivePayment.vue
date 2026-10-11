@@ -67,6 +67,14 @@ const errors = ref<Record<string, string[]>>({});
 // Computed
 const categories = computed(() => props.categories || []);
 const paymentMethods = computed(() => props.paymentMethods || []);
+const studentVoucherOptions = computed(() =>
+    studentVouchers.value.map((voucher) => ({
+        value: voucher.id,
+        label: `${voucher.voucher_no} - ${voucher.voucher_month} ${voucher.voucher_year} (Balance: ${formatMoney(voucher.balance_amount)})`,
+    }))
+);
+const paymentMethodOptions = computed(() => paymentMethods.value.map((method) => ({ value: method.code, label: method.name })));
+const categoryOptions = computed(() => categories.value.map((cat) => ({ value: cat.id, label: cat.name })));
 const campusOptions = computed(() => (props.campuses || []).map((c) => ({ value: c.id, label: c.name })));
 const classOptions = computed(() => (props.classes || []).map((c) => ({ value: c.id, label: c.name })));
 const sectionOptions = computed(() => filteredSections.value.map((s) => ({ value: s.id, label: s.name })));
@@ -348,18 +356,12 @@ const formatMoney = (amount: number) => {
                     <!-- Voucher Selection -->
                     <div v-if="form.payment_type === 'student' && form.student_id && !isLoadingDetails && studentVouchers.length > 0">
                         <Label for="voucher_id">Select Voucher to Pay *</Label>
-                        <select 
-                            id="voucher_id" 
+                        <SearchableSelect
+                            id="voucher_id"
                             v-model="form.voucher_id"
-                            required
-                            class="mt-1 block w-full rounded-md border border-border bg-card text-foreground px-3 py-2"
-                        >
-                            <option value="">Select Voucher</option>
-                            <option v-for="voucher in studentVouchers" :key="voucher.id" :value="voucher.id">
-                                {{ voucher.voucher_no }} - {{ voucher.voucher_month }} {{ voucher.voucher_year }} 
-                                (Balance: {{ formatMoney(voucher.balance_amount) }})
-                            </option>
-                        </select>
+                            :options="studentVoucherOptions"
+                            placeholder="Select Voucher"
+                        />
                         <p v-if="errors.voucher_id && errors.voucher_id[0]" class="mt-1 text-sm text-destructive">{{ errors.voucher_id[0] }}</p>
                     </div>
 
@@ -395,34 +397,24 @@ const formatMoney = (amount: number) => {
                     <!-- Payment Method -->
                     <div>
                         <Label for="payment_method">Payment Method *</Label>
-                        <select 
-                            id="payment_method" 
+                        <SearchableSelect
+                            id="payment_method"
                             v-model="form.payment_method"
-                            required
-                            class="mt-1 block w-full rounded-md border border-border bg-card text-foreground px-3 py-2"
-                        >
-                            <option value="">Select Payment Method</option>
-                            <option v-for="method in paymentMethods" :key="method.id" :value="method.code">
-                                {{ method.name }}
-                            </option>
-                        </select>
+                            :options="paymentMethodOptions"
+                            placeholder="Select Payment Method"
+                        />
                         <p v-if="errors.payment_method && errors.payment_method[0]" class="mt-1 text-sm text-destructive">{{ errors.payment_method[0] }}</p>
                     </div>
 
                     <!-- Category (only for Other payment type) -->
                     <div v-if="form.payment_type === 'other'">
                         <Label for="category_id">Category *</Label>
-                        <select 
-                            id="category_id" 
+                        <SearchableSelect
+                            id="category_id"
                             v-model="form.category_id"
-                            required
-                            class="mt-1 block w-full rounded-md border border-border bg-card text-foreground px-3 py-2"
-                        >
-                            <option value="">Select Category</option>
-                            <option v-for="cat in categories" :key="cat.id" :value="cat.id">
-                                {{ cat.name }}
-                            </option>
-                        </select>
+                            :options="categoryOptions"
+                            placeholder="Select Category"
+                        />
                         <p v-if="errors.category_id && errors.category_id[0]" class="mt-1 text-sm text-destructive">{{ errors.category_id[0] }}</p>
                     </div>
 

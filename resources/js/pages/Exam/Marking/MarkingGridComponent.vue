@@ -62,16 +62,13 @@
                     </div>
                     <div v-if="gradeSystems.length > 0">
                         <span class="text-muted-foreground">Grade System:</span>
-                        <select
+                        <SearchableSelect
                             v-model="gradeSystemId"
-                            @change="onGradeSystemChange"
-                            class="ml-1 flex h-9 rounded-md border border-input bg-background px-2 text-sm text-foreground shadow-sm focus:border-primary focus:ring-primary"
-                        >
-                            <option :value="null">Select Grade System</option>
-                            <option v-for="gs in gradeSystems" :key="gs.id" :value="gs.id">
-                                {{ gs.name }}<span v-if="gs.is_default"> (Default)</span>
-                            </option>
-                        </select>
+                            :options="gradeSystemOptions"
+                            placeholder="Select Grade System"
+                            clearable
+                            class="ml-1 inline-flex w-56"
+                        />
                     </div>
                 </div>
 
@@ -265,6 +262,7 @@ import { ref, computed, watch } from 'vue';
 import { Button } from '@/components/ui/button';
 import Icon from '@/components/Icon.vue';
 import ComboboxInput from '@/components/ui/combobox/ComboboxInput.vue';
+import SearchableSelect from '@/components/ui/searchable-select/SearchableSelect.vue';
 import { alert } from '@/utils';
 
 interface Paper {
@@ -337,6 +335,10 @@ const isLocked = ref(false);
 const totalMaxMarks = ref(0);
 const fieldErrors = ref<Record<string, string>>({});
 const gradeSystemId = ref<number | null>(props.filters.grade_system_id ?? null);
+const gradeSystemOptions = computed(() =>
+    props.gradeSystems.map((gs) => ({ value: gs.id, label: gs.is_default ? `${gs.name} (Default)` : gs.name }))
+);
+watch(gradeSystemId, () => onGradeSystemChange());
 const searchQuery = ref<number | string | null>(null);
 
 const selectedExam = computed(() => 

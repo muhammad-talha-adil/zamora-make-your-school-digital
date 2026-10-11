@@ -17,6 +17,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import SearchableSelect from '@/components/ui/searchable-select/SearchableSelect.vue';
 
 // Props
 interface Props {
@@ -95,6 +96,13 @@ const campusesWithAll = computed(() => [
     { id: 'all', name: 'All Campuses' },
     ...props.campuses,
 ]);
+
+const campusOptions = computed(() =>
+    campusesWithAll.value.map((campus) => ({
+        value: campus.id.toString(),
+        label: campus.name,
+    })),
+);
 
 // Track if we're in edit mode
 // const isEditing = computed(() => !!props.supplier);
@@ -394,20 +402,12 @@ const resetForm = () => {
                             </div>
                             Campus <span class="text-destructive">*</span>
                         </Label>
-                        <select
+                        <SearchableSelect
                             id="campus"
                             v-model="form.campus_id"
-                            class="h-11 w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground"
-                            required
-                        >
-                            <option
-                                v-for="campus in campusesWithAll"
-                                :key="campus.id"
-                                :value="campus.id"
-                            >
-                                {{ campus.name }}
-                            </option>
-                        </select>
+                            :options="campusOptions"
+                            placeholder="Select campus"
+                        />
                         <InputError :message="errors.campus_id" />
                     </div>
 

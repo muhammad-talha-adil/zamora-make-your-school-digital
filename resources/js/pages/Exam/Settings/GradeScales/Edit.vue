@@ -1,6 +1,13 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { router } from '@inertiajs/vue3'
+import SearchableSelect from '@/components/ui/searchable-select/SearchableSelect.vue'
+
+const roundingModeOptions = [
+  { value: 'round', label: 'Round' },
+  { value: 'floor', label: 'Floor' },
+  { value: 'ceil', label: 'Ceil' },
+]
 
 interface GradeScale {
   id: number
@@ -62,11 +69,7 @@ const cancel = () => {
         <!-- Rounding Mode -->
         <div class="mb-4">
           <label class="block text-sm font-medium text-muted-foreground mb-1">Rounding Mode</label>
-          <select v-model="form.rounding_mode" class="w-full border-border rounded-md shadow-sm">
-            <option value="round">Round</option>
-            <option value="floor">Floor</option>
-            <option value="ceil">Ceil</option>
-          </select>
+          <SearchableSelect v-model="form.rounding_mode" :options="roundingModeOptions" />
         </div>
 
         <!-- Precision -->

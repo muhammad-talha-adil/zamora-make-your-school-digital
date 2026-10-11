@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { router } from '@inertiajs/vue3';
-import { ref } from 'vue';
+import { ref, computed } from 'vue';
 import { alert } from '@/utils';
 import { route } from 'ziggy-js';
 import { Button } from '@/components/ui/button';
@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '
 import Icon from '@/components/Icon.vue';
 import axios from 'axios';
 import StatusToggle from '@/components/tables/StatusToggle.vue';
+import SearchableSelect from '@/components/ui/searchable-select/SearchableSelect.vue';
 
 interface DiscountType {
     id: number;
@@ -82,6 +83,27 @@ const openEditModal = (discountType: DiscountType) => {
     editingDiscountType.value = discountType;
     showCreateModal.value = true;
 };
+
+const valueTypeOptions = [
+    { value: 'percent', label: 'Percentage (%)' },
+    { value: 'fixed', label: 'Fixed Amount (PKR)' },
+];
+const yesNoOptions = [
+    { value: 'false', label: 'No' },
+    { value: 'true', label: 'Yes' },
+];
+const activeOptions = [
+    { value: 'true', label: 'Active' },
+    { value: 'false', label: 'Inactive' },
+];
+const requiresApprovalModel = computed({
+    get: () => String(form.value.requires_approval),
+    set: (val: string) => { form.value.requires_approval = val === 'true'; },
+});
+const isActiveModel = computed({
+    get: () => String(form.value.is_active),
+    set: (val: string) => { form.value.is_active = val === 'true'; },
+});
 
 const closeModal = () => {
     showCreateModal.value = false;
@@ -354,14 +376,11 @@ const deleteDiscountType = (discountType: DiscountType) => {
                     <div class="grid gap-4 md:grid-cols-2">
                         <div class="space-y-2">
                             <Label for="dt-value-type">Value Type *</Label>
-                            <select
+                            <SearchableSelect
                                 id="dt-value-type"
                                 v-model="form.default_value_type"
-                                class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm"
-                            >
-                                <option value="percent">Percentage (%)</option>
-                                <option value="fixed">Fixed Amount (PKR)</option>
-                            </select>
+                                :options="valueTypeOptions"
+                            />
                         </div>
                         <div class="space-y-2">
                             <Label for="dt-value">Default Value *</Label>
@@ -382,25 +401,19 @@ const deleteDiscountType = (discountType: DiscountType) => {
                     <div class="grid gap-4 md:grid-cols-2">
                         <div class="space-y-2">
                             <Label for="dt-requires-approval">Requires Approval</Label>
-                            <select
+                            <SearchableSelect
                                 id="dt-requires-approval"
-                                v-model="form.requires_approval"
-                                class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm"
-                            >
-                                <option :value="false">No</option>
-                                <option :value="true">Yes</option>
-                            </select>
+                                v-model="requiresApprovalModel"
+                                :options="yesNoOptions"
+                            />
                         </div>
                         <div class="space-y-2">
                             <Label for="dt-active">Status</Label>
-                            <select
+                            <SearchableSelect
                                 id="dt-active"
-                                v-model="form.is_active"
-                                class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm"
-                            >
-                                <option :value="true">Active</option>
-                                <option :value="false">Inactive</option>
-                            </select>
+                                v-model="isActiveModel"
+                                :options="activeOptions"
+                            />
                         </div>
                     </div>
 

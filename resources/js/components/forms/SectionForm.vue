@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import axios from 'axios';
-import { ref, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { alert } from '@/utils';
 import { useFormValidity } from '@/composables/useFormValidity';
 
@@ -18,6 +18,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import SearchableSelect from '@/components/ui/searchable-select/SearchableSelect.vue';
 import Icon from '@/components/Icon.vue';
 import RowAction from '@/components/tables/RowAction.vue';
 
@@ -62,6 +63,7 @@ const form = ref(getInitialForm());
 const errors = ref<Record<string, string>>({});
 const processing = ref(false);
 const { isValid } = useFormValidity(form, ['name', 'class_id']);
+const schoolClassOptions = computed(() => props.schoolClasses.map((schoolClass) => ({ value: schoolClass.id, label: schoolClass.name })));
 
 // Dialog
 const open = ref(false);
@@ -167,19 +169,13 @@ const resetForm = () => {
 
                     <div class="grid gap-2">
                         <Label for="class_id">Class <span class="text-destructive">*</span></Label>
-                        <select
+                        <SearchableSelect
                             id="class_id"
                             v-model="form.class_id"
-                            :class="[
-                                'w-full rounded-md border border-border bg-card text-foreground px-3 py-2',
-                                errors.class_id ? 'border-destructive' : ''
-                            ]"
-                        >
-                            <option value="">Select a class</option>
-                            <option v-for="schoolClass in schoolClasses" :key="schoolClass.id" :value="schoolClass.id">
-                                {{ schoolClass.name }}
-                            </option>
-                        </select>
+                            :options="schoolClassOptions"
+                            placeholder="Select a class"
+                            :class="errors.class_id ? 'border-destructive' : ''"
+                        />
                         <InputError :message="errors.class_id" />
                     </div>
 

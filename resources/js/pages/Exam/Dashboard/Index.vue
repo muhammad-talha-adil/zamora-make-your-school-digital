@@ -313,15 +313,13 @@
                             <p class="text-sm text-muted-foreground">Marking progress and grade distribution</p>
                         </div>
                         <div class="flex items-center gap-3">
-                            <select 
+                            <SearchableSelect
                                 v-model="selectedExamId"
-                                class="w-full md:w-64 border-border rounded-lg shadow-sm"
-                            >
-                                <option :value="null">Select an exam</option>
-                                <option v-for="exam in exams" :key="exam.id" :value="exam.id">
-                                    {{ exam.name }}
-                                </option>
-                            </select>
+                                :options="examOptions"
+                                placeholder="Select an exam"
+                                clearable
+                                class="w-full md:w-64"
+                            />
                             <Link :href="route('exam.show-page', selectedExamId)" class="px-4 py-2 bg-primary text-primary-foreground rounded-lg hover:bg-primary/90 transition-colors">
                                 View Details
                             </Link>
@@ -405,15 +403,13 @@
                     </svg>
                     <h3 class="text-lg font-semibold text-foreground mb-2">View Exam Details</h3>
                     <p class="text-muted-foreground mb-4">Select an exam to view marking progress, grade distribution, and top performers</p>
-                    <select 
+                    <SearchableSelect
                         v-model="selectedExamId"
-                        class="w-full md:w-64 border-border rounded-lg shadow-sm"
-                    >
-                        <option :value="null">Select an exam</option>
-                        <option v-for="exam in exams" :key="exam.id" :value="exam.id">
-                            {{ exam.name }}
-                        </option>
-                    </select>
+                        :options="examOptions"
+                        placeholder="Select an exam"
+                        clearable
+                        class="w-full md:w-64 mx-auto"
+                    />
                 </div>
             </div>
         </div>
@@ -421,11 +417,12 @@
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue'
+import { ref, computed, onMounted, watch } from 'vue'
 import axios from 'axios'
 import { Link, Head } from '@inertiajs/vue3'
 import { route } from 'ziggy-js'
 import AppLayout from '@/layouts/AppLayout.vue'
+import SearchableSelect from '@/components/ui/searchable-select/SearchableSelect.vue'
 import type { BreadcrumbItem } from '@/types'
 
 interface Exam {
@@ -466,6 +463,7 @@ const stats = ref<Stats | null>(null)
 const loading = ref(false)
 const selectedExamId = ref<number | null>(null)
 const exams = ref<Exam[]>([])
+const examOptions = computed(() => exams.value.map((exam) => ({ value: exam.id, label: exam.name })))
 
 const loadStats = () => {
   loading.value = true

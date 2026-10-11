@@ -25,15 +25,12 @@
                     </div>
                     <div>
                         <label class="block text-sm font-medium mb-1">Status</label>
-                        <select
+                        <SearchableSelect
                             v-model="filters.status"
-                            class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm text-foreground ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
-                        >
-                            <option value="">All Statuses</option>
-                            <option v-for="option in statusOptions" :key="option" :value="option">
-                                {{ statusLabel(option) }}
-                            </option>
-                        </select>
+                            :options="statusSelectOptions"
+                            placeholder="All Statuses"
+                            clearable
+                        />
                     </div>
                     <div class="flex items-end">
                         <Button variant="outline" class="w-full" @click="fetchRevaluations">
@@ -365,6 +362,7 @@ const form = reactive({
 })
 
 const examOptions = computed(() => props.exams.map((exam) => ({ value: exam.id, label: exam.name })))
+const statusSelectOptions = computed(() => statusOptions.map((option) => ({ value: option, label: statusLabel(option) })))
 const studentOptions = computed(() => students.value.map((student) => ({ value: student.id, label: student.name })))
 
 function statusLabel(status: string): string {

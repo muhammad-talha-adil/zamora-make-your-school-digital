@@ -139,18 +139,12 @@
                         <!-- Gender -->
                         <div class="space-y-2">
                             <Label for="gender_id">Gender <span class="text-destructive">*</span></Label>
-                            <select
+                            <SearchableSelect
                                 id="gender_id"
                                 v-model="form.gender_id"
-                                class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm h-11"
-                                :class="{ 'border-destructive': errors.gender_id }"
-                                required
-                            >
-                                <option value="">Select Gender</option>
-                                <option v-for="gender in props.genders" :key="gender.id" :value="gender.id">
-                                    {{ gender.name }}
-                                </option>
-                            </select>
+                                :options="genderOptions"
+                                placeholder="Select Gender"
+                            />
                             <InputError :message="errors.gender_id" />
                         </div>
 
@@ -219,18 +213,12 @@
                         <!-- Status - EDITABLE IN EDIT FORM -->
                         <div class="space-y-2">
                             <Label for="student_status_id">Status <span class="text-destructive">*</span></Label>
-                            <select
+                            <SearchableSelect
                                 id="student_status_id"
                                 v-model="form.student_status_id"
-                                class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm h-11"
-                                :class="{ 'border-destructive': errors.student_status_id }"
-                                required
-                            >
-                                <option value="">Select Status</option>
-                                <option v-for="status in props.studentStatuses" :key="status.id" :value="status.id">
-                                    {{ status.name }}
-                                </option>
-                            </select>
+                                :options="studentStatusOptions"
+                                placeholder="Select Status"
+                            />
                             <InputError :message="errors.student_status_id" />
                         </div>
 
@@ -408,15 +396,12 @@
                         <!-- Father Relation -->
                         <div class="space-y-2">
                             <Label for="father_relation_id">Relation <span class="text-destructive">*</span></Label>
-                            <select
+                            <SearchableSelect
                                 id="father_relation_id"
                                 v-model="form.father_relation_id"
-                                class="w-full rounded-md border border-border bg-muted text-foreground px-3 py-2 text-sm h-11 cursor-not-allowed"
-                                required
+                                :options="fatherRelationOptions"
                                 disabled
-                            >
-                                <option :value="fatherRelationId">Father</option>
-                            </select>
+                            />
                             <InputError :message="errors.father_relation_id" />
                         </div>
                     </div>
@@ -665,6 +650,9 @@ const sessionOptions = computed(() => props.sessions.map((session) => ({ value: 
 const classOptions = computed(() => props.classes.map((cls) => ({ value: cls.id, label: cls.name })));
 const sectionOptions = computed(() => filteredSections.value.map((section) => ({ value: section.id, label: section.name })));
 const otherRelationOptions = computed(() => otherRelations.value.map((relation) => ({ value: relation.id, label: relation.name })));
+const genderOptions = computed(() => props.genders.map((gender) => ({ value: gender.id, label: gender.name })));
+const studentStatusOptions = computed(() => props.studentStatuses.map((status) => ({ value: status.id, label: status.name })));
+const fatherRelationOptions = computed(() => [{ value: fatherRelationId.value, label: 'Father' }]);
 
 const { isValid } = useFormValidity(form, [
     'name',

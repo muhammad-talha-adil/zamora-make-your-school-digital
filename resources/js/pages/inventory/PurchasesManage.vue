@@ -44,6 +44,12 @@ const returnsDateRange = ref<{ from: string | null; to: string | null }>({ from:
 
 // Pagination state
 const perPage = ref(25);
+const perPageOptions = [
+    { value: 25, label: '25' },
+    { value: 50, label: '50' },
+    { value: 75, label: '75' },
+    { value: 100, label: '100' },
+];
 
 // Data refs
 const purchasesData = ref<any[]>([]);
@@ -379,15 +385,11 @@ fetchPurchases();
                 <div class="flex flex-col sm:flex-row items-center justify-between gap-4 mt-4 px-2">
                     <div class="flex flex-wrap items-center gap-2 text-sm text-muted-foreground order-2 sm:order-1">
                         <span>Show</span>
-                        <select 
-                            v-model="perPage" 
-                            class="rounded-md border border-border bg-card px-2 py-1 text-sm"
-                        >
-                            <option :value="25">25</option>
-                            <option :value="50">50</option>
-                            <option :value="75">75</option>
-                            <option :value="100">100</option>
-                        </select>
+                        <SearchableSelect
+                            v-model="perPage"
+                            :options="perPageOptions"
+                            class="w-20"
+                        />
                         <span>entries</span>
                     </div>
                     <div class="flex flex-col sm:flex-row items-center gap-2 order-1 sm:order-2">
@@ -464,15 +466,11 @@ fetchPurchases();
                 <div class="flex flex-col sm:flex-row items-center justify-between gap-4 mt-4 px-2">
                     <div class="flex flex-wrap items-center gap-2 text-sm text-muted-foreground order-2 sm:order-1">
                         <span>Show</span>
-                        <select 
-                            v-model="perPage" 
-                            class="rounded-md border border-border bg-card px-2 py-1 text-sm"
-                        >
-                            <option :value="25">25</option>
-                            <option :value="50">50</option>
-                            <option :value="75">75</option>
-                            <option :value="100">100</option>
-                        </select>
+                        <SearchableSelect
+                            v-model="perPage"
+                            :options="perPageOptions"
+                            class="w-20"
+                        />
                         <span>entries</span>
                     </div>
                     <div class="flex flex-col sm:flex-row items-center gap-2 order-1 sm:order-2">
@@ -556,15 +554,11 @@ fetchPurchases();
                 <div class="flex flex-col sm:flex-row items-center justify-between gap-4 mt-4 px-2">
                     <div class="flex flex-wrap items-center gap-2 text-sm text-muted-foreground order-2 sm:order-1">
                         <span>Show</span>
-                        <select 
-                            v-model="perPage" 
-                            class="rounded-md border border-border bg-card px-2 py-1 text-sm"
-                        >
-                            <option :value="25">25</option>
-                            <option :value="50">50</option>
-                            <option :value="75">75</option>
-                            <option :value="100">100</option>
-                        </select>
+                        <SearchableSelect
+                            v-model="perPage"
+                            :options="perPageOptions"
+                            class="w-20"
+                        />
                         <span>entries</span>
                     </div>
                     <div class="flex flex-col sm:flex-row items-center gap-2 order-1 sm:order-2">

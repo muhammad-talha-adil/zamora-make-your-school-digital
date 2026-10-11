@@ -81,7 +81,6 @@ const breadcrumbItems: BreadcrumbItem[] = [
 ];
 
 const textareaClass = 'min-h-20 w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground placeholder:text-muted-foreground';
-const selectClass = 'h-11 w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground';
 
 const campusOptions = computed(() => props.campuses.map((campus) => ({ value: campus.id, label: campus.name })));
 const classOptions = computed(() => props.classes.map((cls) => ({ value: cls.id, label: cls.name })));
@@ -111,6 +110,10 @@ const statusOptions = [
     { value: 'admitted', label: 'Admitted' },
     { value: 'closed', label: 'Closed' },
 ];
+
+const filterStatusOptions = computed(() => statusOptions.map((option) => ({ value: option.value, label: option.label })));
+
+const genderOptions = computed(() => props.genders.map((gender) => ({ value: gender.id, label: gender.name })));
 
 const statusColor = (status: string): string => {
     const colors: Record<string, string> = {
@@ -366,12 +369,7 @@ const admitEnquiry = async (enquiry: EnquiryRow) => {
             <div class="flex flex-col sm:flex-row gap-2 md:gap-3 flex-wrap items-start sm:items-center" role="search" aria-label="Enquiry filters">
                 <div class="w-full sm:w-44">
                     <Label for="filter-status" class="sr-only">Filter by status</Label>
-                    <select id="filter-status" v-model="filters.status" :class="selectClass">
-                        <option value="">All Statuses</option>
-                        <option v-for="option in statusOptions" :key="option.value" :value="option.value">
-                            {{ option.label }}
-                        </option>
-                    </select>
+                    <SearchableSelect id="filter-status" v-model="filters.status" :options="filterStatusOptions" placeholder="All Statuses" clearable />
                 </div>
 
                 <div class="w-full sm:w-64">
@@ -551,12 +549,7 @@ const admitEnquiry = async (enquiry: EnquiryRow) => {
 
                         <div class="space-y-2">
                             <Label for="gender_id">Gender</Label>
-                            <select id="gender_id" v-model="enquiryForm.gender_id" :class="selectClass">
-                                <option value="">Select Gender</option>
-                                <option v-for="gender in props.genders" :key="gender.id" :value="gender.id">
-                                    {{ gender.name }}
-                                </option>
-                            </select>
+                            <SearchableSelect id="gender_id" v-model="enquiryForm.gender_id" :options="genderOptions" placeholder="Select Gender" clearable />
                             <InputError :message="formErrors.gender_id" />
                         </div>
 
@@ -598,11 +591,7 @@ const admitEnquiry = async (enquiry: EnquiryRow) => {
 
                         <div v-if="isEditing" class="space-y-2">
                             <Label for="status">Status</Label>
-                            <select id="status" v-model="enquiryForm.status" :class="selectClass">
-                                <option v-for="option in statusOptions" :key="option.value" :value="option.value">
-                                    {{ option.label }}
-                                </option>
-                            </select>
+                            <SearchableSelect id="status" v-model="enquiryForm.status" :options="filterStatusOptions" />
                             <InputError :message="formErrors.status" />
                         </div>
 

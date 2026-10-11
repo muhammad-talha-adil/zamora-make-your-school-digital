@@ -141,6 +141,9 @@ const breadcrumbs = computed(() => [
 
 const selectClass = 'w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground';
 
+const genderOptions = computed(() => props.genders.map((g) => ({ value: String(g.id), label: g.name })));
+const documentKindOptions = computed(() => props.documentTypes.map((type) => ({ value: type.name, label: type.name })));
+
 const campusOptions = computed(() => props.campuses.map((c) => ({ value: String(c.id), label: c.name })));
 const designationOptions = computed(() => props.designations.map((d) => ({ value: String(d.id), label: d.name })));
 const departmentOptions = computed(() => props.departments.map((d) => ({ value: String(d.id), label: d.name })));
@@ -277,6 +280,7 @@ const attendanceRows = ref<AttendanceRow[]>([]);
 const attendanceLoaded = ref(false);
 const attendanceSummary = ref<Record<string, number> | null>(null);
 const attendanceStatuses = ref<{ id: number; name: string; code: string }[]>([]);
+const attendanceStatusOptions = computed(() => attendanceStatuses.value.map((s) => ({ value: String(s.id), label: s.name })));
 const currentAttendanceMonth = ref(new Date());
 const attendanceCalendarDays = ref<(Date | null)[]>([]);
 const attendanceMap = ref<Map<string, AttendanceRow>>(new Map());
@@ -387,6 +391,7 @@ interface LeaveRow {
 const leaveRows = ref<LeaveRow[]>([]);
 const leaveLoaded = ref(false);
 const leaveTypes = ref<{ id: number; name: string; days_per_year: number | null }[]>([]);
+const leaveTypeOptions = computed(() => leaveTypes.value.map((t) => ({ value: String(t.id), label: t.name })));
 const leaveBalances = ref<{ leave_type: { id: number; name: string; code: string }; remaining: number | null }[]>([]);
 
 const leaveForm = reactive({ staff_leave_type_id: '', from_date: '', to_date: '', reason: '' });
@@ -460,6 +465,7 @@ interface SalaryComponent {
 
 const salaryComponents = ref<SalaryComponent[]>([]);
 const salaryHeads = ref<{ id: number; name: string; type: string }[]>([]);
+const salaryHeadOptions = computed(() => salaryHeads.value.map((h) => ({ value: String(h.id), label: `${h.name} (${h.type})` })));
 const salaryGross = ref<number | null>(null);
 const salaryDeductions = ref<number | null>(null);
 const salaryLoaded = ref(false);
@@ -693,10 +699,7 @@ const activeJobsCount = computed(() => props.jobs.length);
                             </div>
                             <div>
                                 <label class="mb-2 block text-sm font-medium text-muted-foreground">Gender</label>
-                                <select v-model="personalForm.gender_id" :class="selectClass" :disabled="!props.can.edit">
-                                    <option value="">Select</option>
-                                    <option v-for="g in props.genders" :key="g.id" :value="String(g.id)">{{ g.name }}</option>
-                                </select>
+                                <SearchableSelect v-model="personalForm.gender_id" :options="genderOptions" placeholder="Select" :disabled="!props.can.edit" clearable />
                             </div>
                         </div>
                         <div>
@@ -809,10 +812,7 @@ const activeJobsCount = computed(() => props.jobs.length);
                 <div v-if="props.can.edit" class="rounded-2xl border border-border bg-card p-5 shadow-sm">
                     <h2 class="mb-4 text-lg font-semibold text-foreground">File a Document</h2>
                     <div class="space-y-3">
-                        <select v-model="documentForm.kind" :class="selectClass">
-                            <option value="">Select kind</option>
-                            <option v-for="type in props.documentTypes" :key="type.id" :value="type.name">{{ type.name }}</option>
-                        </select>
+                        <SearchableSelect v-model="documentForm.kind" :options="documentKindOptions" placeholder="Select kind" clearable />
                         <Input v-model="documentForm.title" placeholder="Title" />
                         <Input v-model="documentForm.reference_no" placeholder="Reference no (optional)" />
                         <div>
@@ -936,10 +936,7 @@ const activeJobsCount = computed(() => props.jobs.length);
                         <h2 class="mb-4 text-lg font-semibold text-foreground">Mark Attendance</h2>
                         <div class="space-y-3">
                             <Input v-model="markForm.attendance_date" type="date" />
-                            <select v-model="markForm.attendance_status_id" :class="selectClass">
-                                <option value="">Select status</option>
-                                <option v-for="s in attendanceStatuses" :key="s.id" :value="String(s.id)">{{ s.name }}</option>
-                            </select>
+                            <SearchableSelect v-model="markForm.attendance_status_id" :options="attendanceStatusOptions" placeholder="Select status" clearable />
                             <Input v-model="markForm.check_in_at" type="time" placeholder="Check-in" />
                             <Input v-model="markForm.check_out_at" type="time" placeholder="Check-out" />
                             <Input v-model="markForm.remarks" placeholder="Remarks (optional)" />
@@ -989,10 +986,7 @@ const activeJobsCount = computed(() => props.jobs.length);
                     <div v-if="props.can.applyForLeave" class="rounded-2xl border border-border bg-card p-5 shadow-sm">
                         <h2 class="mb-4 text-lg font-semibold text-foreground">Apply for Leave</h2>
                         <div class="space-y-3">
-                            <select v-model="leaveForm.staff_leave_type_id" :class="selectClass">
-                                <option value="">Select leave type</option>
-                                <option v-for="t in leaveTypes" :key="t.id" :value="String(t.id)">{{ t.name }}</option>
-                            </select>
+                            <SearchableSelect v-model="leaveForm.staff_leave_type_id" :options="leaveTypeOptions" placeholder="Select leave type" clearable />
                             <Input v-model="leaveForm.from_date" type="date" />
                             <Input v-model="leaveForm.to_date" type="date" />
                             <Input v-model="leaveForm.reason" placeholder="Reason (optional)" />
@@ -1059,10 +1053,7 @@ const activeJobsCount = computed(() => props.jobs.length);
                         <h2 class="mb-4 text-lg font-semibold text-foreground">Set a Component</h2>
                         <p class="mb-3 text-xs text-muted-foreground">A raise closes the old figure rather than editing it.</p>
                         <div class="space-y-3">
-                            <select v-model="componentForm.salary_head_id" :class="selectClass">
-                                <option value="">Select salary head</option>
-                                <option v-for="h in salaryHeads" :key="h.id" :value="String(h.id)">{{ h.name }} ({{ h.type }})</option>
-                            </select>
+                            <SearchableSelect v-model="componentForm.salary_head_id" :options="salaryHeadOptions" placeholder="Select salary head" clearable />
                             <Input v-model="componentForm.amount" type="number" min="0" placeholder="Amount" />
                             <Input v-model="componentForm.effective_from" type="date" />
                             <Button @click="setComponent">Set Component</Button>

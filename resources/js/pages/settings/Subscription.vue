@@ -8,6 +8,22 @@ import { Label } from '@/components/ui/label';
 import AppLayout from '@/layouts/AppLayout.vue';
 import SettingsLayout from '@/layouts/settings/Layout.vue';
 import { type BreadcrumbItem } from '@/types';
+import SearchableSelect from '@/components/ui/searchable-select/SearchableSelect.vue';
+
+const statusOptions = [
+    { value: 'demo', label: 'Demo' },
+    { value: 'active', label: 'Active' },
+    { value: 'suspended', label: 'Suspended' },
+    { value: 'expired', label: 'Expired' },
+];
+
+const blockReasonOptions = [
+    { value: '', label: 'None' },
+    { value: 'subscription_expired', label: 'Subscription expired' },
+    { value: 'domain_expiring', label: 'Domain expiring' },
+    { value: 'hosting_expiring', label: 'Hosting expiring' },
+    { value: 'other', label: 'Other' },
+];
 
 interface Subscription {
     status: 'demo' | 'active' | 'suspended' | 'expired';
@@ -73,16 +89,12 @@ const submit = () => {
                 <form @submit.prevent="submit" class="max-w-2xl space-y-6">
                     <div class="grid gap-2">
                         <Label for="status">Status</Label>
-                        <select
+                        <SearchableSelect
                             id="status"
                             v-model="form.status"
-                            class="w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground shadow-sm focus:border-primary focus:outline-none focus:ring-primary"
-                        >
-                            <option value="demo">Demo</option>
-                            <option value="active">Active</option>
-                            <option value="suspended">Suspended</option>
-                            <option value="expired">Expired</option>
-                        </select>
+                            :options="statusOptions"
+                            placeholder="Select Status"
+                        />
                         <p v-if="form.errors.status" class="text-sm text-destructive">{{ form.errors.status }}</p>
                     </div>
 
@@ -112,17 +124,12 @@ const submit = () => {
 
                     <div class="grid gap-2">
                         <Label for="block_reason">Block reason</Label>
-                        <select
+                        <SearchableSelect
                             id="block_reason"
                             v-model="form.block_reason"
-                            class="w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground shadow-sm focus:border-primary focus:outline-none focus:ring-primary"
-                        >
-                            <option value="">None</option>
-                            <option value="subscription_expired">Subscription expired</option>
-                            <option value="domain_expiring">Domain expiring</option>
-                            <option value="hosting_expiring">Hosting expiring</option>
-                            <option value="other">Other</option>
-                        </select>
+                            :options="blockReasonOptions"
+                            placeholder="None"
+                        />
                         <p class="text-xs text-muted-foreground">Shown to blocked users on the locked-out page, explaining why access is paused.</p>
                         <p v-if="form.errors.block_reason" class="text-sm text-destructive">{{ form.errors.block_reason }}</p>
                     </div>

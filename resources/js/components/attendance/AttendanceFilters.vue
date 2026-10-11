@@ -2,49 +2,37 @@
     <FilterCard>
         <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 md:gap-3">
             <!-- Campus Filter -->
-            <select
+            <SearchableSelect
                 v-model="filters.campus_id"
-                class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm min-h-10 md:min-h-11"
-            >
-                <option value="">All Campuses</option>
-                <option v-for="campus in props.campuses" :key="campus.id" :value="campus.id">
-                    {{ campus.name }}
-                </option>
-            </select>
+                :options="campusOptions"
+                placeholder="All Campuses"
+                clearable
+            />
 
             <!-- Session Filter -->
-            <select
+            <SearchableSelect
                 v-model="filters.session_id"
-                class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm min-h-10 md:min-h-11"
-            >
-                <option value="">All Sessions</option>
-                <option v-for="session in props.sessions" :key="session.id" :value="session.id">
-                    {{ session.name }}
-                </option>
-            </select>
+                :options="sessionOptions"
+                placeholder="All Sessions"
+                clearable
+            />
 
             <!-- Class Filter -->
-            <select
+            <SearchableSelect
                 v-model="filters.class_id"
-                @change="onClassChange"
-                class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm min-h-10 md:min-h-11"
-            >
-                <option value="">All Classes</option>
-                <option v-for="cls in props.classes" :key="cls.id" :value="cls.id">
-                    {{ cls.name }}
-                </option>
-            </select>
+                :options="classOptions"
+                placeholder="All Classes"
+                clearable
+                @update:model-value="onClassChange"
+            />
 
             <!-- Section Filter -->
-            <select
+            <SearchableSelect
                 v-model="filters.section_id"
-                class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm min-h-10 md:min-h-11"
-            >
-                <option value="">All Sections</option>
-                <option v-for="section in filteredSections" :key="section.id" :value="section.id">
-                    {{ section.name }}
-                </option>
-            </select>
+                :options="sectionOptions"
+                placeholder="All Sections"
+                clearable
+            />
 
             <!-- Date Filter -->
             <input
@@ -54,14 +42,12 @@
             />
 
             <!-- Locked Filter -->
-            <select
+            <SearchableSelect
                 v-model="filters.locked"
-                class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm min-h-10 md:min-h-11"
-            >
-                <option value="">All Status</option>
-                <option value="1">Locked</option>
-                <option value="0">Unlocked</option>
-            </select>
+                :options="lockedOptions"
+                placeholder="All Status"
+                clearable
+            />
         </div>
 
         <div class="mt-3 flex flex-wrap gap-2">
@@ -87,6 +73,7 @@ import { route } from 'ziggy-js';
 import { Button } from '@/components/ui/button';
 import Icon from '@/components/Icon.vue';
 import FilterCard from '@/components/FilterCard.vue';
+import SearchableSelect from '@/components/ui/searchable-select/SearchableSelect.vue';
 import type { Campus, Session, SchoolClass, Section, AttendanceFilters } from '@/types/attendance';
 
 interface Props {
@@ -117,6 +104,15 @@ const filteredSections = computed(() => {
         (section: Section) => section.class_id === Number(filters.class_id)
     );
 });
+
+const campusOptions = computed(() => props.campuses.map((campus) => ({ value: campus.id, label: campus.name })));
+const sessionOptions = computed(() => props.sessions.map((session) => ({ value: session.id, label: session.name })));
+const classOptions = computed(() => props.classes.map((cls) => ({ value: cls.id, label: cls.name })));
+const sectionOptions = computed(() => filteredSections.value.map((section) => ({ value: section.id, label: section.name })));
+const lockedOptions = [
+    { value: '1', label: 'Locked' },
+    { value: '0', label: 'Unlocked' },
+];
 
 // Handle class change - reset section but don't apply filters
 const onClassChange = () => {

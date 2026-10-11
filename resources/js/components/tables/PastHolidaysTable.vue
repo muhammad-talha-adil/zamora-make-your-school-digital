@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import TablePagination from '@/components/tables/TablePagination.vue';
 import { Button } from '@/components/ui/button';
+import SearchableSelect from '@/components/ui/searchable-select/SearchableSelect.vue';
 import Icon from '@/components/Icon.vue';
 import axios from 'axios';
 import { ref, watch } from 'vue';
@@ -18,6 +19,12 @@ const emit = defineEmits<{
 }>();
 
 const perPage = ref(10);
+const perPageOptions = [
+    { value: 10, label: '10' },
+    { value: 25, label: '25' },
+    { value: 50, label: '50' },
+    { value: 100, label: '100' },
+];
 const holidaysData = ref(props.initialHolidays?.data || []);
 const pagination = ref(props.initialHolidays || { data: [], links: [], from: 0, to: 0, total: 0 });
 
@@ -75,12 +82,7 @@ const getDaysCount = (start: string, end: string) => {
             </div>
             <div class="flex items-center gap-2">
                 <span class="text-sm text-muted-foreground">Show:</span>
-                <select v-model="perPage" class="w-20 rounded-md border border-border bg-card text-foreground px-2 py-1 text-sm">
-                    <option value="10">10</option>
-                    <option value="25">25</option>
-                    <option value="50">50</option>
-                    <option value="100">100</option>
-                </select>
+                <SearchableSelect v-model="perPage" :options="perPageOptions" class="w-20" />
             </div>
         </div>
 

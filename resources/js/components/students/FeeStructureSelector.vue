@@ -116,21 +116,14 @@
                 <div class="mb-4 grid grid-cols-1 gap-4 md:grid-cols-2">
                     <div class="space-y-2">
                         <Label for="discount_type">Discount Type</Label>
-                        <select
+                        <SearchableSelect
                             id="discount_type"
                             v-model="selectedDiscountType"
-                            @change="onDiscountTypeChange"
-                            class="h-11 w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground"
-                        >
-                            <option value="">Select Discount Type</option>
-                            <option
-                                v-for="dtype in discountTypes"
-                                :key="dtype.id"
-                                :value="dtype.id"
-                            >
-                                {{ dtype.name }}
-                            </option>
-                        </select>
+                            :options="discountTypeOptions"
+                            placeholder="Select Discount Type"
+                            class="h-11"
+                            clearable
+                        />
                     </div>
                     <div class="space-y-2">
                         <Label for="discount_value">Discount Value</Label>
@@ -301,11 +294,12 @@
 </template>
 
 <script setup lang="ts">
-import { onMounted, reactive, watch } from 'vue';
+import { computed, onMounted, reactive, watch } from 'vue';
 import Icon from '@/components/Icon.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import SearchableSelect from '@/components/ui/searchable-select/SearchableSelect.vue';
 import { useFeeStructure } from '@/composables/useFeeStructure';
 
 interface Props {
@@ -370,6 +364,8 @@ const {
 // Instant per-keystroke display, decoupled from the (debounced) reactive
 // state that drives the discount/total recalculation, so typing never lags
 // even though the recalculation itself is deferred (issue #67).
+const discountTypeOptions = computed(() => discountTypes.value.map((dtype) => ({ value: dtype.id, label: dtype.name })));
+
 const localManualAmounts = reactive<Record<number, string>>({});
 
 function onManualAmountInput(feeHeadId: number, rawValue: string) {
@@ -430,6 +426,10 @@ const onDiscountTypeChange = () => {
         discountValue.value = 0;
     }
 };
+
+watch(selectedDiscountType, () => {
+    onDiscountTypeChange();
+});
 
 // Expose fee data for parent component access
 defineExpose({

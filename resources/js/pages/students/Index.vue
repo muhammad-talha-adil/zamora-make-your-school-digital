@@ -24,75 +24,56 @@
                 <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 md:gap-3" role="search" aria-label="Student filters">
                     <div>
                         <Label for="filter-campus" class="sr-only">Filter by Campus</Label>
-                        <select
+                        <SearchableSelect
                             id="filter-campus"
                             v-model="cascadeCampusId"
-                            @change="applyFilters"
+                            :options="campusOptions"
                             :disabled="isCampusLocked"
-                            class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm min-h-10 md:min-h-11 disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                            <option value="">All Campuses</option>
-                            <option v-for="campus in props.campuses" :key="campus.id" :value="campus.id">
-                                {{ campus.name }}
-                            </option>
-                        </select>
+                            placeholder="All Campuses"
+                            clearable
+                        />
                     </div>
                     <div>
                         <Label for="filter-class" class="sr-only">Filter by Class</Label>
-                        <select
+                        <SearchableSelect
                             id="filter-class"
                             v-model="cascadeClassId"
-                            @change="applyFilters"
-                            class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm min-h-10 md:min-h-11"
-                        >
-                            <option value="">All Classes</option>
-                            <option v-for="cls in availableClasses" :key="cls.id" :value="cls.id">
-                                {{ cls.name }}
-                            </option>
-                        </select>
+                            :options="classOptions"
+                            placeholder="All Classes"
+                            clearable
+                        />
                     </div>
                     <div>
                         <Label for="filter-section" class="sr-only">Filter by Section</Label>
-                        <select
+                        <SearchableSelect
                             id="filter-section"
                             v-model="cascadeSectionId"
-                            @change="applyFilters"
+                            :options="sectionOptions"
                             :disabled="!isSectionSelectEnabled"
-                            class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm min-h-10 md:min-h-11 disabled:opacity-50 disabled:cursor-not-allowed"
-                        >
-                            <option value="">{{ hasNoSectionsForClass ? 'No section found' : 'All Sections' }}</option>
-                            <option v-for="section in availableSections" :key="section.id" :value="section.id">
-                                {{ section.name }}
-                            </option>
-                        </select>
+                            :placeholder="hasNoSectionsForClass ? 'No section found' : 'All Sections'"
+                            :empty-text="hasNoSectionsForClass ? 'No section found' : 'No results found.'"
+                            clearable
+                        />
                     </div>
                     <div>
                         <Label for="filter-gender" class="sr-only">Filter by Gender</Label>
-                        <select
+                        <SearchableSelect
                             id="filter-gender"
                             v-model="filters.gender_id"
-                            @change="applyFilters"
-                            class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm min-h-10 md:min-h-11"
-                        >
-                            <option value="">All Genders</option>
-                            <option v-for="gender in props.genders" :key="gender.id" :value="gender.id">
-                                {{ gender.name }}
-                            </option>
-                        </select>
+                            :options="genderOptions"
+                            placeholder="All Genders"
+                            clearable
+                        />
                     </div>
                     <div>
                         <Label for="filter-status" class="sr-only">Filter by Status</Label>
-                        <select
+                        <SearchableSelect
                             id="filter-status"
                             v-model="filters.status"
-                            @change="applyFilters"
-                            class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm min-h-10 md:min-h-11"
-                        >
-                            <option value="">All Status</option>
-                            <option v-for="status in props.statuses" :key="status.id" :value="status.id">
-                                {{ status.name }}
-                            </option>
-                        </select>
+                            :options="statusOptions"
+                            placeholder="All Status"
+                            clearable
+                        />
                     </div>
                 </div>
                 <div class="mt-3 relative">
@@ -373,6 +354,7 @@ import RowActions from '@/components/tables/RowActions.vue';
 import TablePagination from '@/components/tables/TablePagination.vue';
 import StatusToggle from '@/components/tables/StatusToggle.vue';
 import StudentStatusModal from '@/components/modals/StudentStatusModal.vue';
+import SearchableSelect from '@/components/ui/searchable-select/SearchableSelect.vue';
 
 interface Props {
     tableStudents: {
@@ -512,6 +494,12 @@ const {
     sessionStorageKey: 'students-index-filters',
 });
 
+const campusOptions = computed(() => props.campuses.map((campus) => ({ value: campus.id, label: campus.name })));
+const classOptions = computed(() => availableClasses.value.map((cls) => ({ value: cls.id, label: cls.name })));
+const sectionOptions = computed(() => availableSections.value.map((section) => ({ value: section.id, label: section.name })));
+const genderOptions = computed(() => props.genders.map((gender) => ({ value: gender.id, label: gender.name })));
+const statusOptions = computed(() => props.statuses.map((status) => ({ value: status.id, label: status.name })));
+
 const buildQueryString = () => {
     const params = new URLSearchParams();
     if (cascadeCampusId.value) params.append('campus_id', String(cascadeCampusId.value));
@@ -528,6 +516,16 @@ const applyFilters = () => {
         preserveState: true,
     });
 };
+
+watch([cascadeCampusId, cascadeClassId, cascadeSectionId], () => {
+    applyFilters();
+});
+watch(() => filters.gender_id, () => {
+    applyFilters();
+});
+watch(() => filters.status, () => {
+    applyFilters();
+});
 
 // Create debounced search function
 const debouncedSearch = debounce(() => {

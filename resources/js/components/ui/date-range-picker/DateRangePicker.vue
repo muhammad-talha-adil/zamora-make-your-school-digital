@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { ref, computed, watch, onMounted, onUnmounted } from 'vue';
 import Icon from '@/components/Icon.vue';
+import SearchableSelect from '@/components/ui/searchable-select/SearchableSelect.vue';
 
 interface Props {
     modelValue?: {
@@ -51,6 +52,9 @@ const years = computed(() => {
     }
     return years;
 });
+
+const monthOptions = computed(() => months.map((month, idx) => ({ value: idx, label: month })));
+const yearOptions = computed(() => years.value.map((year) => ({ value: year, label: String(year) })));
 
 // Initialize from modelValue
 watch(
@@ -333,24 +337,20 @@ onUnmounted(() => {
                                     <Icon icon="chevron-left" class="w-4 h-4 text-muted-foreground" />
                                 </button>
                                 <div class="flex gap-1">
-                                    <select 
-                                        class="text-sm font-medium text-muted-foreground bg-transparent border border-border rounded px-1 py-0.5 cursor-pointer"
-                                        :value="leftMonthIndex"
-                                        @change="setLeftMonth(Number(($event.target as HTMLSelectElement).value), leftYear)"
-                                    >
-                                        <option v-for="(month, idx) in months" :key="month" :value="idx">
-                                            {{ month }}
-                                        </option>
-                                    </select>
-                                    <select 
-                                        class="text-sm font-medium text-muted-foreground bg-transparent border border-border rounded px-1 py-0.5 cursor-pointer"
-                                        :value="leftYear"
-                                        @change="setLeftMonth(leftMonthIndex, Number(($event.target as HTMLSelectElement).value))"
-                                    >
-                                        <option v-for="year in years" :key="year" :value="year">
-                                            {{ year }}
-                                        </option>
-                                    </select>
+                                    <SearchableSelect
+                                        class="w-24"
+                                        :model-value="leftMonthIndex"
+                                        :options="monthOptions"
+                                        placeholder="Month"
+                                        @update:model-value="(value) => setLeftMonth(Number(value), leftYear)"
+                                    />
+                                    <SearchableSelect
+                                        class="w-20"
+                                        :model-value="leftYear"
+                                        :options="yearOptions"
+                                        placeholder="Year"
+                                        @update:model-value="(value) => setLeftMonth(leftMonthIndex, Number(value))"
+                                    />
                                 </div>
                                 <div></div>
                             </div>
@@ -390,24 +390,20 @@ onUnmounted(() => {
                             <div class="flex flex-wrap gap-2 items-center justify-between mb-2">
                                 <div></div>
                                 <div class="flex gap-1">
-                                    <select 
-                                        class="text-sm font-medium text-muted-foreground bg-transparent border border-border rounded px-1 py-0.5 cursor-pointer"
-                                        :value="rightMonthIndex"
-                                        @change="setLeftMonth(Number(($event.target as HTMLSelectElement).value), rightYear)"
-                                    >
-                                        <option v-for="(month, idx) in months" :key="month" :value="idx">
-                                            {{ month }}
-                                        </option>
-                                    </select>
-                                    <select 
-                                        class="text-sm font-medium text-muted-foreground bg-transparent border border-border rounded px-1 py-0.5 cursor-pointer"
-                                        :value="rightYear"
-                                        @change="setLeftMonth(rightMonthIndex === 11 ? 0 : rightMonthIndex, Number(($event.target as HTMLSelectElement).value))"
-                                    >
-                                        <option v-for="year in years" :key="year" :value="year">
-                                            {{ year }}
-                                        </option>
-                                    </select>
+                                    <SearchableSelect
+                                        class="w-24"
+                                        :model-value="rightMonthIndex"
+                                        :options="monthOptions"
+                                        placeholder="Month"
+                                        @update:model-value="(value) => setLeftMonth(Number(value), rightYear)"
+                                    />
+                                    <SearchableSelect
+                                        class="w-20"
+                                        :model-value="rightYear"
+                                        :options="yearOptions"
+                                        placeholder="Year"
+                                        @update:model-value="(value) => setLeftMonth(rightMonthIndex === 11 ? 0 : rightMonthIndex, Number(value))"
+                                    />
                                 </div>
                                 <button
                                     class="p-1 hover:bg-accent rounded"

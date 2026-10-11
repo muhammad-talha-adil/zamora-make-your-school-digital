@@ -16,6 +16,15 @@ import {
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import Icon from '@/components/Icon.vue'
+import SearchableSelect from '@/components/ui/searchable-select/SearchableSelect.vue'
+
+const roundingModeOptions = [
+  { value: 'half_up', label: 'Half Up - rounds 0.5 up (e.g., 2.5 → 3)' },
+  { value: 'half_down', label: 'Half Down - rounds 0.5 down (e.g., 2.5 → 2)' },
+  { value: 'round', label: 'Round - Standard rounding (e.g., 2.5 → 3, 2.4 → 2)' },
+  { value: 'floor', label: 'Floor - Always round down (e.g., 2.9 → 2)' },
+  { value: 'ceil', label: 'Ceiling - Always round up (e.g., 2.1 → 3)' },
+]
 
 interface GradeSystemItem {
   id: number
@@ -353,17 +362,11 @@ const saveGradeItems = async () => {
 
               <div class="grid gap-2">
                 <Label for="rounding_mode">Rounding Mode</Label>
-                <select
+                <SearchableSelect
                   id="rounding_mode"
                   v-model="createForm.rounding_mode"
-                  class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  <option value="half_up">Half Up - rounds 0.5 up (e.g., 2.5 → 3)</option>
-                  <option value="half_down">Half Down - rounds 0.5 down (e.g., 2.5 → 2)</option>
-                  <option value="round">Round - Standard rounding (e.g., 2.5 → 3, 2.4 → 2)</option>
-                  <option value="floor">Floor - Always round down (e.g., 2.9 → 2)</option>
-                  <option value="ceil">Ceiling - Always round up (e.g., 2.1 → 3)</option>
-                </select>
+                  :options="roundingModeOptions"
+                />
               </div>
 
               <div class="grid gap-2">
@@ -499,16 +502,10 @@ const saveGradeItems = async () => {
               </div>
               <div class="grid gap-2">
                 <Label>Rounding Mode</Label>
-                <select
+                <SearchableSelect
                   v-model="editingSystem.rounding_mode"
-                  class="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
-                >
-                  <option value="half_up">Half Up - rounds 0.5 up (e.g., 2.5 → 3)</option>
-                  <option value="half_down">Half Down - rounds 0.5 down (e.g., 2.5 → 2)</option>
-                  <option value="round">Round - Standard rounding (e.g., 2.5 → 3, 2.4 → 2)</option>
-                  <option value="floor">Floor - Always round down (e.g., 2.9 → 2)</option>
-                  <option value="ceil">Ceiling - Always round up (e.g., 2.1 → 3)</option>
-                </select>
+                  :options="roundingModeOptions"
+                />
               </div>
               <div class="grid gap-2">
                 <Label>Precision</Label>

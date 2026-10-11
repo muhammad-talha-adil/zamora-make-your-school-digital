@@ -293,12 +293,12 @@
                         <div v-if="can?.manageDocuments" class="mb-6 grid gap-3 rounded-lg border border-border p-4 md:grid-cols-2">
                             <div>
                                 <label class="mb-1 block text-xs font-medium text-muted-foreground">Document Type</label>
-                                <select v-model="documentForm.student_document_type_id" class="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground">
-                                    <option :value="null">Select type</option>
-                                    <option v-for="type in documentTypes" :key="type.id" :value="type.id">
-                                        {{ type.name }}<span v-if="type.is_required"> (required)</span>
-                                    </option>
-                                </select>
+                                <SearchableSelect
+                                    v-model="documentForm.student_document_type_id"
+                                    :options="documentTypeOptions"
+                                    placeholder="Select type"
+                                    clearable
+                                />
                             </div>
                             <div>
                                 <label for="document_file" class="mb-1 block text-xs font-medium text-muted-foreground">File</label>
@@ -375,6 +375,7 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import type { BreadcrumbItem } from '@/types';
 import { Button } from '@/components/ui/button';
 import Icon from '@/components/Icon.vue';
+import SearchableSelect from '@/components/ui/searchable-select/SearchableSelect.vue';
 import { alert } from '@/utils';
 
 interface GuardianData {
@@ -455,6 +456,12 @@ interface Props {
 
 const props = defineProps<Props>();
 const documentTypes = computed(() => props.documentTypes ?? []);
+const documentTypeOptions = computed(() =>
+    documentTypes.value.map((type) => ({
+        value: type.id,
+        label: type.is_required ? `${type.name} (required)` : type.name,
+    }))
+);
 const can = computed(() => props.can);
 
 const breadcrumbItems: BreadcrumbItem[] = [

@@ -57,9 +57,7 @@
                                 <td class="px-2 md:px-4 py-2 md:py-3 text-sm text-muted-foreground hidden md:table-cell">{{ row.designation }}</td>
                                 <td class="px-2 md:px-4 py-2 md:py-3 text-sm text-muted-foreground hidden md:table-cell">{{ row.campus }}</td>
                                 <td class="px-2 md:px-4 py-2 md:py-3">
-                                    <select v-model="row.attendance_status_id" class="w-full min-w-32 rounded-md border border-border bg-card text-foreground px-2 py-1.5 text-sm">
-                                        <option v-for="status in props.statuses" :key="status.id" :value="status.id">{{ status.name }}</option>
-                                    </select>
+                                    <SearchableSelect v-model="row.attendance_status_id" :options="statusOptions" placeholder="Select status" class="min-w-32" />
                                 </td>
                                 <td class="px-2 md:px-4 py-2 md:py-3 hidden sm:table-cell">
                                     <input v-model="row.check_in_at" type="time" class="w-full rounded-md border border-border bg-card text-foreground px-2 py-1.5 text-sm" />
@@ -101,6 +99,7 @@ import { route } from 'ziggy-js';
 import AppLayout from '@/layouts/AppLayout.vue';
 import Icon from '@/components/Icon.vue';
 import { Button } from '@/components/ui/button';
+import SearchableSelect from '@/components/ui/searchable-select/SearchableSelect.vue';
 import { alert } from '@/utils';
 import type { BreadcrumbItem } from '@/types';
 
@@ -125,6 +124,8 @@ interface Props {
 }
 
 const props = defineProps<Props>();
+
+const statusOptions = props.statuses.map((status) => ({ value: status.id, label: status.name }));
 
 const breadcrumbItems: BreadcrumbItem[] = [
     { title: 'Dashboard', href: '/dashboard' },

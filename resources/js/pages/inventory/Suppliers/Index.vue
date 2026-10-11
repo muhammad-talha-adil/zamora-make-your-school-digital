@@ -35,15 +35,13 @@
                     @input="debouncedSearch"
                     class="w-full sm:w-64 rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm min-h-10 md:min-h-11"
                 />
-                <select 
+                <SearchableSelect
                     v-model="filters.active_only"
-                    @change="router.visit(route('inventory.suppliers.index') + `?campus_id=${filters.campus_id || ''}&active_only=${filters.active_only || ''}`)"
-                    class="w-full sm:w-40 rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm min-h-10 md:min-h-11"
-                >
-                    <option :value="undefined">All Status</option>
-                    <option :value="true">Active Only</option>
-                    <option :value="false">Inactive</option>
-                </select>
+                    :options="activeOnlyOptions"
+                    placeholder="All Status"
+                    clearable
+                    class="w-full sm:w-40"
+                />
             </div>
 
             <!-- Mobile Card View (visible only on small screens) -->
@@ -255,8 +253,17 @@ const filters = reactive({
 
 const campusOptions = computed(() => props.campuses.map((campus) => ({ value: campus.id, label: campus.name })));
 
+const activeOnlyOptions = [
+    { value: true, label: 'Active Only' },
+    { value: false, label: 'Inactive' },
+];
+
 watch(() => filters.campus_id, () => {
-    router.visit(route('inventory.suppliers.index') + `?campus_id=${filters.campus_id || ''}`);
+    router.visit(route('inventory.suppliers.index') + `?campus_id=${filters.campus_id || ''}&active_only=${filters.active_only ?? ''}`);
+});
+
+watch(() => filters.active_only, () => {
+    router.visit(route('inventory.suppliers.index') + `?campus_id=${filters.campus_id || ''}&active_only=${filters.active_only ?? ''}`);
 });
 
 const debouncedSearch = debounce(() => {

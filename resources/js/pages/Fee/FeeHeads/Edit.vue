@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, router } from '@inertiajs/vue3';
-import { reactive, ref, watch } from 'vue';
+import { reactive, ref, computed, watch } from 'vue';
 import { route } from 'ziggy-js';
 import { alert } from '@/utils';
 import { useFormValidity } from '@/composables/useFormValidity';
@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import Icon from '@/components/Icon.vue';
+import SearchableSelect from '@/components/ui/searchable-select/SearchableSelect.vue';
 
 interface FeeHead {
     id: number;
@@ -53,6 +54,25 @@ const form = reactive({
 
 const errors = ref<Record<string, string>>({});
 const isSubmitting = ref(false);
+
+const categoryOptions = computed(() => props.categories.map((cat) => ({ value: cat.value, label: cat.label })));
+const frequencyOptions = computed(() => props.frequencies.map((freq) => ({ value: freq.value, label: freq.label })));
+const activeOptions = [
+    { value: 'true', label: 'Active' },
+    { value: 'false', label: 'Inactive' },
+];
+const optionalOptions = [
+    { value: 'false', label: 'Required' },
+    { value: 'true', label: 'Optional' },
+];
+const formActiveModel = computed({
+    get: () => String(form.is_active),
+    set: (val: string) => { form.is_active = val === 'true'; },
+});
+const formOptionalModel = computed({
+    get: () => String(form.is_optional),
+    set: (val: string) => { form.is_optional = val === 'true'; },
+});
 
 const { isValid } = useFormValidity(form, ['name', 'category', 'default_frequency']);
 
@@ -178,29 +198,25 @@ const cancel = () => {
                     <div class="grid gap-4 md:grid-cols-2">
                         <div class="space-y-2">
                             <Label for="category">Category <span class="text-destructive">*</span></Label>
-                            <select
+                            <SearchableSelect
                                 id="category"
                                 v-model="form.category"
-                                :class="['w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm', { 'border-destructive': errors.category }]"
-                            >
-                                <option v-for="cat in props.categories" :key="cat.value" :value="cat.value">
-                                    {{ cat.label }}
-                                </option>
-                            </select>
+                                :options="categoryOptions"
+                                placeholder="Select category"
+                                :class="{ 'border-destructive': errors.category }"
+                            />
                             <p v-if="errors.category" class="text-sm text-destructive">{{ errors.category }}</p>
                         </div>
 
                         <div class="space-y-2">
                             <Label for="frequency">Frequency <span class="text-destructive">*</span></Label>
-                            <select
+                            <SearchableSelect
                                 id="frequency"
                                 v-model="form.default_frequency"
-                                :class="['w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm', { 'border-destructive': errors.default_frequency }]"
-                            >
-                                <option v-for="freq in props.frequencies" :key="freq.value" :value="freq.value">
-                                    {{ freq.label }}
-                                </option>
-                            </select>
+                                :options="frequencyOptions"
+                                placeholder="Select frequency"
+                                :class="{ 'border-destructive': errors.default_frequency }"
+                            />
                             <p v-if="errors.default_frequency" class="text-sm text-destructive">{{ errors.default_frequency }}</p>
                         </div>
                     </div>
@@ -221,26 +237,20 @@ const cancel = () => {
 
                         <div class="space-y-2">
                             <Label for="is_active">Status</Label>
-                            <select
+                            <SearchableSelect
                                 id="is_active"
-                                v-model="form.is_active"
-                                class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm"
-                            >
-                                <option :value="true">Active</option>
-                                <option :value="false">Inactive</option>
-                            </select>
+                                v-model="formActiveModel"
+                                :options="activeOptions"
+                            />
                         </div>
 
                         <div class="space-y-2">
                             <Label for="is_optional">Is Optional</Label>
-                            <select
+                            <SearchableSelect
                                 id="is_optional"
-                                v-model="form.is_optional"
-                                class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm"
-                            >
-                                <option :value="false">Required</option>
-                                <option :value="true">Optional</option>
-                            </select>
+                                v-model="formOptionalModel"
+                                :options="optionalOptions"
+                            />
                         </div>
                     </div>
 

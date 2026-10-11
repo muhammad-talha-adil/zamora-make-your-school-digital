@@ -35,17 +35,13 @@
 
         <!-- Status Selector -->
         <td class="px-2 md:px-4 py-3 whitespace-nowrap">
-            <select
+            <SearchableSelect
                 v-model="statusId"
+                :options="statusOptions"
                 :disabled="disabled"
-                class="w-full min-w-[100px] rounded-md border border-border bg-card text-foreground px-2 md:px-3 py-1.5 md:py-2 text-xs md:text-sm"
-                :class="{ 'opacity-50 cursor-not-allowed': disabled }"
-            >
-                <option value="">Select</option>
-                <option v-for="status in props.statuses" :key="status.id" :value="status.id">
-                    {{ status.name }} ({{ status.code }})
-                </option>
-            </select>
+                placeholder="Select"
+                class="min-w-[100px]"
+            />
         </td>
 
         <!-- Check In Time -->
@@ -76,17 +72,12 @@
         <!-- Leave Type (shown when status is Leave) -->
         <td class="px-2 md:px-4 py-3 whitespace-nowrap hidden lg:table-cell">
             <div v-if="isLeaveStatus" class="text-sm">
-                <select
+                <SearchableSelect
                     v-model="leaveTypeId"
+                    :options="leaveTypeOptions"
                     :disabled="disabled"
-                    class="w-full rounded-md border border-border bg-card text-foreground px-2 md:px-3 py-1.5 md:py-2 text-xs md:text-sm"
-                    :class="{ 'opacity-50 cursor-not-allowed': disabled }"
-                >
-                    <option value="">Select</option>
-                    <option v-for="leaveType in props.leaveTypes" :key="leaveType.id" :value="leaveType.id">
-                        {{ leaveType.name }}
-                    </option>
-                </select>
+                    placeholder="Select"
+                />
             </div>
             <div v-else-if="isOnLeave" class="text-sm">
                 <span class="px-2 py-1 text-xs font-medium rounded bg-warning/10 text-warning">
@@ -113,6 +104,7 @@
 
 <script setup lang="ts">
 import { computed } from 'vue';
+import SearchableSelect from '@/components/ui/searchable-select/SearchableSelect.vue';
 import type { Student, AttendanceStatus, StudentAttendanceFormData, StudentLeave, LeaveType } from '@/types/attendance';
 
 interface Props {
@@ -155,6 +147,9 @@ const statusId = computed<number | ''>({
     get: () => props.modelValue.attendance_status_id || '',
     set: (value) => emit('update:modelValue', { ...props.modelValue, attendance_status_id: Number(value) || 0 }),
 });
+
+const statusOptions = computed(() => props.statuses.map((status) => ({ value: status.id, label: `${status.name} (${status.code})` })));
+const leaveTypeOptions = computed(() => props.leaveTypes.map((leaveType) => ({ value: leaveType.id, label: leaveType.name })));
 
 const leaveTypeId = computed<number | ''>({
     get: () => props.modelValue.leave_type_id ?? '',

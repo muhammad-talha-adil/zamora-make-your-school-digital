@@ -16,6 +16,7 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import SearchableSelect from '@/components/ui/searchable-select/SearchableSelect.vue';
 import Icon from '@/components/Icon.vue';
 
 // Props
@@ -80,6 +81,13 @@ const campusesWithAll = computed(() => [
     { id: 'all', name: 'All Campuses' },
     ...props.campuses
 ]);
+
+const campusOptions = computed(() =>
+    campusesWithAll.value.map((campus) => ({
+        value: campus.id.toString(),
+        label: campus.name,
+    })),
+);
 
 // Track if name was actually changed by user
 const isEditing = computed(() => !!props.inventoryType);
@@ -292,16 +300,12 @@ const resetForm = () => {
                             </div>
                             Campus <span class="text-destructive">*</span>
                         </Label>
-                        <select
+                        <SearchableSelect
                             id="campus"
                             v-model="form.campus_id"
-                            class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm h-11"
-                            required
-                        >
-                            <option v-for="campus in campusesWithAll" :key="campus.id" :value="campus.id">
-                                {{ campus.name }}
-                            </option>
-                        </select>
+                            :options="campusOptions"
+                            placeholder="Select Campus"
+                        />
                         <InputError :message="errors.campus_id" />
                     </div>
                 </div>

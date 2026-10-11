@@ -193,6 +193,12 @@ const sectionOptions = computed(() => {
 });
 const feeHeadOptions = computed(() => feeHeadsList.value.map((fh) => ({ value: String(fh.id), label: fh.name })));
 const feeHeadCategoryOptions = computed(() => props.feeHeadCategories.map((cat) => ({ value: cat.value, label: cat.label })));
+const feeHeadFrequencyOptions = computed(() => props.feeHeadFrequencies.map((freq) => ({ value: freq.value, label: freq.label })));
+const statusOptions = [
+    { value: 'draft', label: 'Draft' },
+    { value: 'active', label: 'Active' },
+    { value: 'inactive', label: 'Inactive' },
+];
 
 // Filter sections based on selected class
 const filteredSections = computed(() => {
@@ -491,15 +497,12 @@ const cancel = () => {
 
                         <div class="space-y-2">
                             <Label for="status">Status <span class="text-destructive">*</span></Label>
-                            <select
+                            <SearchableSelect
                                 id="status"
                                 v-model="form.status"
-                                :class="['w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm', { 'border-destructive': errors.status }]"
-                            >
-                                <option value="draft">Draft</option>
-                                <option value="active">Active</option>
-                                <option value="inactive">Inactive</option>
-                            </select>
+                                :options="statusOptions"
+                                :class="{ 'border-destructive': errors.status }"
+                            />
                             <p v-if="errors.status" class="text-sm text-destructive">{{ errors.status }}</p>
                         </div>
                     </div>
@@ -766,9 +769,7 @@ const cancel = () => {
 
                         <div class="space-y-2">
                             <Label for="fh-frequency">Frequency <span class="text-destructive">*</span></Label>
-                            <select id="fh-frequency" v-model="feeHeadForm.default_frequency" class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm">
-                                <option v-for="freq in props.feeHeadFrequencies" :key="freq.value" :value="freq.value">{{ freq.label }}</option>
-                            </select>
+                            <SearchableSelect id="fh-frequency" v-model="feeHeadForm.default_frequency" :options="feeHeadFrequencyOptions" placeholder="Select Frequency" />
                         </div>
                     </div>
                 </div>

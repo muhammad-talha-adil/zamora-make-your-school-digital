@@ -30,17 +30,13 @@
                 <!-- Month -->
                 <div v-if="reportMode === 'month'">
                     <label class="block text-sm font-medium text-muted-foreground mb-1">Month</label>
-                    <select v-model="selectedMonth" class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm">
-                        <option v-for="(name, index) in monthNames" :key="index + 1" :value="index + 1">{{ name }}</option>
-                    </select>
+                    <SearchableSelect v-model="selectedMonth" :options="monthOptions" />
                 </div>
 
                 <!-- Year -->
                 <div v-if="reportMode === 'month'">
                     <label class="block text-sm font-medium text-muted-foreground mb-1">Year</label>
-                    <select v-model="selectedYear" class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm">
-                        <option v-for="year in yearRange" :key="year" :value="year">{{ year }}</option>
-                    </select>
+                    <SearchableSelect v-model="selectedYear" :options="yearOptions" />
                 </div>
 
                 <!-- Date range -->
@@ -209,6 +205,11 @@ const yearRange = computed(() => {
     }
     return years;
 });
+
+const monthOptions = computed(() =>
+    monthNames.slice(1).map((name, index) => ({ value: index + 1, label: name })),
+);
+const yearOptions = computed(() => yearRange.value.map((year) => ({ value: year, label: String(year) })));
 
 const filteredSections = computed(() => {
     if (!selectedClassId.value) return [];

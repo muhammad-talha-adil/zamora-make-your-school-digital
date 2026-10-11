@@ -155,15 +155,11 @@
                             <!-- Run Specific Seeder -->
                             <div class="space-y-2">
                                 <Label>Run Specific Seeder</Label>
-                                <select 
+                                <SearchableSelect
                                     v-model="selectedSeeder"
-                                    class="w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground"
-                                >
-                                    <option value="">Select a seeder...</option>
-                                    <option v-for="seeder in seeders" :key="seeder" :value="seeder">
-                                        {{ seeder }}
-                                    </option>
-                                </select>
+                                    :options="seederOptions"
+                                    placeholder="Select a seeder..."
+                                />
                                 <Button 
                                     variant="outline" 
                                     class="w-full" 
@@ -199,15 +195,11 @@
                             <!-- Run Specific Migration -->
                             <div class="space-y-2 pt-2">
                                 <Label>Run Specific Migration</Label>
-                                <select 
+                                <SearchableSelect
                                     v-model="selectedMigration"
-                                    class="w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground"
-                                >
-                                    <option value="">Select a migration...</option>
-                                    <option v-for="migration in pendingMigrations" :key="migration" :value="migration">
-                                        {{ migration }}
-                                    </option>
-                                </select>
+                                    :options="pendingMigrationOptions"
+                                    placeholder="Select a migration..."
+                                />
                                 <Button 
                                     variant="warning" 
                                     class="w-full" 
@@ -356,7 +348,7 @@
 
 <script setup lang="ts">
 import { Head, router } from '@inertiajs/vue3';
-import { ref, onMounted } from 'vue';
+import { ref, computed, onMounted } from 'vue';
 import { route } from 'ziggy-js';
 import AppLayout from '@/layouts/AppLayout.vue';
 import Icon from '@/components/Icon.vue';
@@ -364,6 +356,7 @@ import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import type { BreadcrumbItem } from '@/types';
+import SearchableSelect from '@/components/ui/searchable-select/SearchableSelect.vue';
 
 interface Props {
     seeders?: string[];
@@ -400,6 +393,7 @@ const processingRunMigration = ref(false);
 
 const seeders = ref<string[]>(props.seeders || []);
 const selectedSeeder = ref('');
+const seederOptions = computed(() => seeders.value.map((seeder) => ({ value: seeder, label: seeder })));
 const customCommand = ref('');
 const successMessage = ref('');
 const errorMessage = ref('');
@@ -408,6 +402,7 @@ const commandOutput = ref('');
 // Pending migrations from backend
 const pendingMigrations = ref<string[]>(props.pendingMigrations || []);
 const selectedMigration = ref('');
+const pendingMigrationOptions = computed(() => pendingMigrations.value.map((migration) => ({ value: migration, label: migration })));
 
 // Load seeders on mount
 onMounted(async () => {

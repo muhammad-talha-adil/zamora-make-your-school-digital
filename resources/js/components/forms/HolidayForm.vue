@@ -10,6 +10,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Checkbox } from '@/components/ui/checkbox';
+import SearchableSelect from '@/components/ui/searchable-select/SearchableSelect.vue';
 import {
     Card,
     CardContent,
@@ -80,6 +81,7 @@ const recurrenceOptions = [
     { value: 'monthly', label: 'Monthly' },
     { value: 'weekly', label: 'Weekly' },
 ];
+const campusOptions = computed(() => props.campuses.map((campus) => ({ value: campus.id, label: campus.name })));
 
 // Watch for national checkbox changes to reset campus
 watch(() => form.value.is_national, (newVal) => {
@@ -248,17 +250,14 @@ const submit = () => {
                                 <Icon icon="building" class="mr-1 h-4 w-4" />
                                 Campus
                             </Label>
-                            <select
+                            <SearchableSelect
                                 id="campus_id"
                                 v-model="form.campus_id"
-                                class="w-full rounded-md border border-border px-3 py-2 shadow-sm focus:border-primary focus:ring-primary focus:outline-none"
-                                :class="{ 'border-destructive': (errors as any).campus_id }"
-                            >
-                                <option value="">All Campuses</option>
-                                <option v-for="campus in campuses" :key="campus.id" :value="campus.id">
-                                    {{ campus.name }}
-                                </option>
-                            </select>
+                                :options="campusOptions"
+                                placeholder="All Campuses"
+                                clearable
+                                :class="(errors as any).campus_id ? 'border-destructive' : ''"
+                            />
                             <p class="text-xs text-muted-foreground mt-1">Select a specific campus or "All Campuses"</p>
                             <InputError :message="(errors as any).campus_id" />
                         </div>
@@ -268,15 +267,12 @@ const submit = () => {
                                 <Icon icon="repeat" class="mr-1 h-4 w-4" />
                                 Recurrence
                             </Label>
-                            <select
+                            <SearchableSelect
                                 id="recurrence_type"
                                 v-model="form.recurrence_type"
-                                class="w-full rounded-md border border-border px-3 py-2 shadow-sm focus:border-primary focus:ring-primary focus:outline-none"
-                            >
-                                <option v-for="option in recurrenceOptions" :key="option.value" :value="option.value">
-                                    {{ option.label }}
-                                </option>
-                            </select>
+                                :options="recurrenceOptions"
+                                placeholder="Select recurrence"
+                            />
                         </div>
 
                         <div v-if="form.recurrence_type && form.recurrence_type !== 'none'">

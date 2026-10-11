@@ -10,7 +10,8 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import SettingsLayout from '@/layouts/settings/Layout.vue';
 import { type BreadcrumbItem } from '@/types';
 import { formatCurrencyNumber } from '@/utils/currency';
-import { ref } from 'vue';
+import { ref, watch, computed } from 'vue';
+import SearchableSelect from '@/components/ui/searchable-select/SearchableSelect.vue';
 
 interface ActivityRow {
     id: number;
@@ -82,6 +83,19 @@ const resetFilters = () => {
     to.value = '';
     router.get(route('activity-log.index'), {}, { preserveState: true, preserveScroll: true });
 };
+
+const subjectTypeOptions = computed(() => [
+    { value: '', label: 'All' },
+    ...Object.entries(props.subjectTypes).map(([value, label]) => ({ value, label })),
+]);
+
+const causerOptions = computed(() => [
+    { value: '', label: 'All' },
+    ...props.users.map((user) => ({ value: user.id, label: user.name })),
+]);
+
+watch(subjectType, () => applyFilters());
+watch(causerId, () => applyFilters());
 
 const formatDate = (value: string | null): string => (value ? new Date(value).toLocaleString() : '-');
 
@@ -169,26 +183,22 @@ const changeLines = (changes: Record<string, unknown> | null): Array<{ field: st
                     <form @submit.prevent="applyFilters" class="grid gap-4 sm:grid-cols-2 lg:grid-cols-5">
                         <div class="grid gap-2">
                             <Label for="subject_type">Model</Label>
-                            <select
+                            <SearchableSelect
                                 id="subject_type"
                                 v-model="subjectType"
-                                class="w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground shadow-sm focus:border-primary focus:outline-none focus:ring-primary"
-                            >
-                                <option value="">All</option>
-                                <option v-for="(label, value) in props.subjectTypes" :key="value" :value="value">{{ label }}</option>
-                            </select>
+                                :options="subjectTypeOptions"
+                                placeholder="All"
+                            />
                         </div>
 
                         <div class="grid gap-2">
                             <Label for="causer_id">User</Label>
-                            <select
+                            <SearchableSelect
                                 id="causer_id"
                                 v-model="causerId"
-                                class="w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground shadow-sm focus:border-primary focus:outline-none focus:ring-primary"
-                            >
-                                <option value="">All</option>
-                                <option v-for="user in props.users" :key="user.id" :value="user.id">{{ user.name }}</option>
-                            </select>
+                                :options="causerOptions"
+                                placeholder="All"
+                            />
                         </div>
 
                         <div class="grid gap-2">
