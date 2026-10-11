@@ -72,11 +72,19 @@ class HandleInertiaRequests extends Middleware
         // granted outside a role entirely (Staff Permissions page) - a menu
         // row shows if EITHER side matches, so a one-off grant surfaces its
         // own sidebar link without needing a role to carry it.
+        //
+        // The permission side is skipped for a school-wide user (owner/
+        // developer): their role is seeded with a near-total permission
+        // wildcard, which would otherwise leak role-gated rows they were
+        // never meant to see - "My Portal" (role: student,guardian) matching
+        // via its children's `portal.student.access` tag being the case that
+        // surfaced this. Their `role` list is already comprehensive, so
+        // nothing is actually lost by not also checking `permission` for them.
         $activeMenus = Menu::active()->orderBy('type')->orderBy('order')->get();
 
         $allMenus = $activeMenus
             ->filter(fn (Menu $menu) => ($menu->role === null || $user?->hasAnyRole(explode(',', $menu->role)))
-                || ($menu->permission !== null && $user?->hasPermission($menu->permission)))
+                || (! ($user?->isSuperAdmin() ?? false) && $menu->permission !== null && $user?->hasPermission($menu->permission)))
             ->values();
 
         // A parent's own `role`/`permission` only governs whether IT shows a
