@@ -33,6 +33,7 @@ beforeEach(function () {
     // This year's class, and the one after it.
     $this->world->class->update(['level' => 5]);
     $this->nextClass = SchoolClass::create([
+        'campus_id' => $this->world->campus->id,
         'name' => 'Class 6',
         'level' => 6,
         'is_active' => true,
@@ -94,7 +95,7 @@ it('records the decision on the period', function () {
 });
 
 it('takes the class it is told, over the one it would guess', function () {
-    $other = SchoolClass::create(['name' => 'Class 6 Boys', 'level' => 6, 'is_active' => true]);
+    $other = SchoolClass::create(['campus_id' => $this->world->campus->id, 'name' => 'Class 6 Boys', 'level' => 6, 'is_active' => true]);
 
     $this->service->promote($this->student, $this->nextSession->id, $other->id);
 

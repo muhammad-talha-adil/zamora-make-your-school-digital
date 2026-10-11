@@ -248,8 +248,8 @@ class AdmissionWorld
             'end_year' => 2025,
         ]);
 
-        $this->class = SchoolClass::create(['name' => 'Class 5', 'code' => 'C5', 'is_active' => true]);
-        $this->classWithoutSections = SchoolClass::create(['name' => 'Class 9', 'code' => 'C9', 'is_active' => true]);
+        $this->class = SchoolClass::create(['campus_id' => $this->campus->id, 'name' => 'Class 5', 'code' => 'C5', 'is_active' => true]);
+        $this->classWithoutSections = SchoolClass::create(['campus_id' => $this->campus->id, 'name' => 'Class 9', 'code' => 'C9', 'is_active' => true]);
 
         $this->section = Section::create([
             'name' => 'A',

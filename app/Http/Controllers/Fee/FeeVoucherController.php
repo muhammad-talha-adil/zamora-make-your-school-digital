@@ -201,7 +201,7 @@ class FeeVoucherController extends Controller
             'vouchers' => $vouchers,
             'months' => Month::select('id', 'name')->orderBy('month_number')->get(),
             'campuses' => Campus::select('id', 'name')->where('is_active', true)->orderBy('name')->get(),
-            'classes' => SchoolClass::select('id', 'name')->orderBy('name')->get(),
+            'classes' => SchoolClass::visibleTo($request->user())->select('id', 'name')->orderBy('name')->get(),
             'sections' => Section::select('id', 'name', 'class_id')->orderBy('name')->get(),
             'filters' => $request->only(['campus_id', 'class_id', 'section_id', 'month_id', 'year', 'status', 'search']),
         ]);
@@ -227,7 +227,7 @@ class FeeVoucherController extends Controller
             'sessions' => Session::select('id', 'name', 'start_date', 'end_date')->orderBy('start_date', 'desc')->get(),
             'months' => Month::select('id', 'name', 'month_number')->orderBy('month_number')->get(),
             'campuses' => Campus::select('id', 'name')->where('is_active', true)->orderBy('name')->get(),
-            'classes' => SchoolClass::select('id', 'name')->orderBy('id')->get(),
+            'classes' => SchoolClass::visibleTo(auth()->user())->select('id', 'name')->orderBy('id')->get(),
             'sections' => Section::select('id', 'name', 'class_id')->orderBy('name')->get(),
             'feeHeads' => FeeHead::active()->select('id', 'name', 'code', 'category')->ordered()->get(),
         ]);
@@ -421,7 +421,7 @@ class FeeVoucherController extends Controller
         $months = Month::whereIn('id', $validated['month_ids'])->get();
         $monthNumbers = $months->pluck('month_number')->sort()->values()->all();
 
-        $classIds = SchoolClass::where('is_active', true)->pluck('id');
+        $classIds = SchoolClass::where('is_active', true)->where('campus_id', $validated['campus_id'])->pluck('id');
 
         $totalGenerated = 0;
         $totalSkipped = 0;

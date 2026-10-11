@@ -23,7 +23,7 @@ class UpdateSchoolClassRequest extends FormRequest
      */
     public function rules(): array
     {
-        $schoolClassId = $this->route('schoolClass')->id;
+        $schoolClass = $this->route('schoolClass');
 
         return [
             'name' => [
@@ -31,7 +31,8 @@ class UpdateSchoolClassRequest extends FormRequest
                 'string',
                 'max:255',
                 Rule::unique('school_classes', 'name')
-                    ->ignore($schoolClassId)
+                    ->ignore($schoolClass->id)
+                    ->where('campus_id', $schoolClass->campus_id)
                     ->whereNull('deleted_at'),
             ],
             'description' => 'nullable|string',

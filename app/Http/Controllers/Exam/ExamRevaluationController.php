@@ -35,7 +35,7 @@ class ExamRevaluationController extends Controller
         return Inertia::render('Exam/Revaluations/Index', [
             'exams' => Exam::all(),
             'campuses' => Campus::all(),
-            'classes' => SchoolClass::all(),
+            'classes' => SchoolClass::visibleTo($request->user())->get(),
             'can' => [
                 'manage' => $request->user()?->can('exam.revaluation.manage') ?? false,
             ],

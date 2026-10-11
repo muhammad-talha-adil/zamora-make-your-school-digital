@@ -34,7 +34,7 @@ class FineRuleController extends Controller
             'fineRules' => $transformedRules,
             'campuses' => Campus::select('id', 'name')->orderBy('name')->get(),
             'sessions' => Session::select('id', 'name')->orderBy('start_date', 'desc')->get(),
-            'classes' => SchoolClass::select('id', 'name')->orderBy('name')->get(),
+            'classes' => SchoolClass::visibleTo($request->user())->select('id', 'name')->orderBy('name')->get(),
             'sections' => Section::select('id', 'name', 'class_id')->orderBy('name')->get(),
             'feeHeads' => FeeHead::active()->select('id', 'name')->orderBy('name')->get(),
             'filters' => $request->only(['campus_id', 'session_id', 'class_id', 'is_active', 'search']),

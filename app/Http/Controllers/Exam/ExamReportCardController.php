@@ -133,7 +133,7 @@ class ExamReportCardController extends Controller
 
         return Inertia::render('Exam/Results/Annual', [
             'sessions' => Session::where('is_active', true)->get(['id', 'name']),
-            'classes' => SchoolClass::where('is_active', true)
+            'classes' => SchoolClass::visibleTo($request->user())->where('is_active', true)
                 ->orderBy('level')->orderBy('name')->get(['id', 'name']),
         ]);
     }

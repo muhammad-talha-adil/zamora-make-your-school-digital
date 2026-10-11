@@ -45,7 +45,7 @@ class ExamPaperController extends Controller
             'papers' => $papers,
             'exams' => Exam::all(),
             'campuses' => Campus::all(),
-            'classes' => SchoolClass::all(),
+            'classes' => SchoolClass::visibleTo($request->user())->get(),
             'subjects' => Subject::all(),
             'filters' => [
                 'exam_id' => $examId,
@@ -62,7 +62,7 @@ class ExamPaperController extends Controller
         return Inertia::render('Exam/Papers/Create', [
             'exams' => Exam::all(),
             'campuses' => Campus::all(),
-            'classes' => SchoolClass::all(),
+            'classes' => SchoolClass::visibleTo($request->user())->get(),
             'sections' => Section::all(),
             'subjects' => Subject::all(),
             'preSelectedExamId' => $request->get('exam_id'),
@@ -72,7 +72,7 @@ class ExamPaperController extends Controller
     /**
      * Show the form for editing the specified paper (Page).
      */
-    public function editPage($id): Response
+    public function editPage(Request $request, $id): Response
     {
         $paper = ExamPaper::with(['exam', 'subject', 'class', 'section', 'campus'])->findOrFail($id);
 
@@ -80,7 +80,7 @@ class ExamPaperController extends Controller
             'paper' => $paper,
             'exams' => Exam::all(),
             'campuses' => Campus::all(),
-            'classes' => SchoolClass::all(),
+            'classes' => SchoolClass::visibleTo($request->user())->get(),
             'sections' => Section::all(),
             'subjects' => Subject::all(),
         ]);

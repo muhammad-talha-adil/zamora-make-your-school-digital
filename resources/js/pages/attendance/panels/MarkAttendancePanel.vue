@@ -227,6 +227,7 @@ const {
     selectedClassId,
     selectedSessionId,
     isCampusLocked,
+    availableClasses,
 } = useCascadingAcademicSelect({
     campuses: props.campuses,
     classes: props.classes,
@@ -307,7 +308,7 @@ const filteredSections = computed(() => {
 
 const campusOptions = computed(() => props.campuses.map((campus) => ({ value: campus.id, label: campus.name })));
 const sessionOptions = computed(() => props.sessions.map((session) => ({ value: session.id, label: session.name })));
-const classOptions = computed(() => props.classes.map((cls) => ({ value: cls.id, label: cls.name })));
+const classOptions = computed(() => availableClasses.value.map((cls) => ({ value: cls.id, label: cls.name })));
 const sectionOptions = computed(() => {
     if (!selectedClassId.value) return [];
     return [

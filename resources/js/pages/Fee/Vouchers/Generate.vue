@@ -139,9 +139,12 @@ const {
     selectedCampusId: cascadeCampusId,
     selectedClassId: cascadeClassId,
     selectedSessionId: cascadeSessionId,
+    availableClasses,
     availableSections,
     isCampusLocked,
     lockedCampusId,
+    isSectionSelectEnabled,
+    hasNoSectionsForClass,
 } = useCascadingAcademicSelect({
     campuses: computed(() => props.campuses),
     classes: computed(() => props.classes),
@@ -173,7 +176,7 @@ const filteredSections = availableSections;
 
 const sessionOptions = computed(() => props.sessions.map((session) => ({ value: String(session.id), label: session.name })));
 const campusOptions = computed(() => props.campuses.map((campus) => ({ value: String(campus.id), label: campus.name })));
-const classOptions = computed(() => props.classes.map((cls) => ({ value: String(cls.id), label: cls.name })));
+const classOptions = computed(() => availableClasses.value.map((cls) => ({ value: String(cls.id), label: cls.name })));
 const sectionOptions = computed(() => filteredSections.value.map((section) => ({ value: String(section.id), label: section.name })));
 const yearOptions = computed(() => years.map((year) => ({ value: year, label: String(year) })));
 const feeHeadOptions = computed(() => props.feeHeads.map((feeHead) => ({ value: feeHead.id, label: feeHead.name })));

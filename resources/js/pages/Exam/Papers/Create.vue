@@ -97,7 +97,7 @@
                             :class="{ 'border-destructive': validationErrors.class_id }"
                         >
                             <option value="">Select Class</option>
-                            <option v-for="cls in props.classes" :key="cls.id" :value="cls.id">
+                            <option v-for="cls in availableClasses" :key="cls.id" :value="cls.id">
                                 {{ cls.name }}
                             </option>
                         </select>
@@ -875,7 +875,7 @@ const filters = reactive({
 // session list is passed through. `filters.campus_id`/`filters.class_id`
 // stay the source of truth the rest of the page already reads from; they're
 // kept in sync with the composable's own refs below.
-const { selectedCampusId: cascadeCampusId, selectedClassId: cascadeClassId, isCampusLocked, lockedCampusId, availableSections } = useCascadingAcademicSelect({
+const { selectedCampusId: cascadeCampusId, selectedClassId: cascadeClassId, isCampusLocked, lockedCampusId, availableClasses, availableSections } = useCascadingAcademicSelect({
     campuses: computed(() => props.campuses),
     classes: computed(() => props.classes),
     sections: computed(() => props.sections),

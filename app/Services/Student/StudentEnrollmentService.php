@@ -371,6 +371,7 @@ class StudentEnrollmentService
         }
 
         return SchoolClass::where('is_active', true)
+            ->where('campus_id', $current->campus_id)
             ->whereNotNull('level')
             ->where('level', '>', $current->level)
             ->orderBy('level')

@@ -10,8 +10,8 @@ use Illuminate\Auth\Access\HandlesAuthorization;
 /**
  * Who may see and change the school's classes.
  *
- * A class is a school-wide structural lookup, no campus reach to check —
- * only the `academics.class.manage` ability, which also covers sections.
+ * A class now belongs to one campus, so the usual campus reach applies on
+ * top of the `academics.class.manage` ability, which also covers sections.
  */
 class SchoolClassPolicy
 {
@@ -30,11 +30,11 @@ class SchoolClassPolicy
 
     public function update(User $user, SchoolClass $schoolClass): bool
     {
-        return $this->may($user, 'academics.class.manage');
+        return $this->may($user, 'academics.class.manage') && $this->reaches($user, $schoolClass->campus_id);
     }
 
     public function delete(User $user, SchoolClass $schoolClass): bool
     {
-        return $this->may($user, 'academics.class.manage');
+        return $this->may($user, 'academics.class.manage') && $this->reaches($user, $schoolClass->campus_id);
     }
 }

@@ -17,6 +17,7 @@ class SchoolClass extends Model
      * @var array<int, string>
      */
     protected $fillable = [
+        'campus_id',
         'name',
         'code',
         'level',
@@ -66,11 +67,34 @@ class SchoolClass extends Model
     }
 
     /**
+     * The campus this class belongs to. A section inherits its campus
+     * transitively through this — sections carry no campus_id of their own.
+     */
+    public function campus()
+    {
+        return $this->belongsTo(Campus::class);
+    }
+
+    /**
      * Get the sections that belong to this class.
      */
     public function sections()
     {
         return $this->hasMany(Section::class, 'class_id');
+    }
+
+    /**
+     * A campus-restricted user sees only their own campus's classes; a
+     * school-wide user (owner/developer) sees whichever campus they're
+     * currently viewing via the header switcher — `User::campusId()` already
+     * resolves both. A null campusId (should not happen once seeded data is
+     * campus-tagged, but covers legacy/untagged rows) is left unfiltered.
+     */
+    public function scopeVisibleTo($query, User $user)
+    {
+        $campusId = $user->campusId();
+
+        return $campusId !== null ? $query->where('campus_id', $campusId) : $query;
     }
 
     /**

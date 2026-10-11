@@ -44,7 +44,8 @@ class ReceivePaymentController extends Controller
             ->get();
 
         // Get all classes
-        $classes = SchoolClass::select('id', 'name')
+        $classes = SchoolClass::visibleTo($request->user())
+            ->select('id', 'name')
             ->orderBy('name')
             ->get();
 

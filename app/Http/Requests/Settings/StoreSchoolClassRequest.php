@@ -28,7 +28,11 @@ class StoreSchoolClassRequest extends FormRequest
                 'required',
                 'string',
                 'max:255',
-                Rule::unique('school_classes', 'name')->whereNull('deleted_at'),
+                // Unique per campus, not school-wide — "Class 9" exists once
+                // per campus now, so two campuses can each have their own.
+                Rule::unique('school_classes', 'name')
+                    ->where('campus_id', $this->user()->campusId())
+                    ->whereNull('deleted_at'),
             ],
             'description' => 'nullable|string',
         ];

@@ -182,6 +182,7 @@ class StaffProfileController extends Controller
             'genders' => Gender::orderBy('id')->get(['id', 'name']),
             'subjectOptions' => Subject::where('is_active', true)->orderBy('name')->get(['id', 'name']),
             'classOptions' => SchoolClass::where('is_active', true)
+                ->visibleTo($request->user())
                 ->orderBy('level')->orderBy('name')->get(['id', 'name']),
             'sessions' => Session::where('is_active', true)->get(['id', 'name']),
 

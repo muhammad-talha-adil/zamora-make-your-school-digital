@@ -13,6 +13,7 @@ use App\Models\StudentStatus;
 use App\Repositories\StudentRepository;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Validator;
 
@@ -316,7 +317,7 @@ class StudentImportService
         );
 
         return [
-            'classes' => $byName(SchoolClass::all(['id', 'name'])),
+            'classes' => $byName(SchoolClass::visibleTo(Auth::user())->get(['id', 'name'])),
             'sections' => $byName(Section::all(['id', 'name'])),
             'campuses' => $byName(Campus::all(['id', 'name'])),
             'sessions' => $byName(Session::all(['id', 'name'])),

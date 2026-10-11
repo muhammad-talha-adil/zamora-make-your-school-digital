@@ -19,7 +19,9 @@ class SchoolClassController extends Controller
     {
         Gate::authorize('viewAny', SchoolClass::class);
 
-        $schoolClasses = SchoolClass::orderBy('id', 'desc')
+        $schoolClasses = SchoolClass::with('campus:id,name')
+            ->visibleTo(request()->user())
+            ->orderBy('id', 'desc')
             ->paginate(10);
 
         return Inertia::render('settings/SchoolClasses/Index', [
@@ -34,7 +36,7 @@ class SchoolClassController extends Controller
     {
         Gate::authorize('viewAny', SchoolClass::class);
 
-        $query = SchoolClass::query();
+        $query = SchoolClass::query()->visibleTo(request()->user());
 
         // Handle status filter
         $status = request()->get('status');
@@ -77,6 +79,11 @@ class SchoolClassController extends Controller
 
         $validated = $request->validated();
         $validated['is_active'] = true; // New classes are always active
+        // The class belongs to whichever campus the creator is currently
+        // scoped to (their own campus, or the header switcher's pick for an
+        // owner/developer) — not a client-supplied value, so a class can't
+        // be filed under a campus the creator doesn't actually administer.
+        $validated['campus_id'] = $request->user()->campusId();
 
         SchoolClass::create($validated);
 

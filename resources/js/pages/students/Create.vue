@@ -264,7 +264,7 @@
                             >
                                 <option value="">Select Class</option>
                                 <option
-                                    v-for="cls in props.classes"
+                                    v-for="cls in availableClasses"
                                     :key="cls.id"
                                     :value="cls.id"
                                 >
@@ -850,6 +850,16 @@ const { isCampusLocked, lockedCampusId, selectedSessionId: cascadeSessionId } = 
 if (isCampusLocked.value && lockedCampusId.value) {
     form.value.campus_id = String(lockedCampusId.value);
 }
+
+// A class now belongs to one campus — this page keeps its own
+// `form.campus_id` as the source of truth (not the composable's internal
+// ref), so the class list is filtered against it directly here.
+const availableClasses = computed(() => {
+    if (!form.value.campus_id) {
+        return props.classes;
+    }
+    return props.classes.filter((cls) => cls.campus_id == null || cls.campus_id === Number(form.value.campus_id));
+});
 if (!form.value.session_id && cascadeSessionId.value) {
     form.value.session_id = cascadeSessionId.value;
 }

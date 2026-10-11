@@ -39,7 +39,7 @@ class StudentPromotionController extends Controller
 
         return Inertia::render('students/Promotion/Index', [
             'sessions' => Session::where('is_active', true)->get(),
-            'classes' => SchoolClass::where('is_active', true)->orderBy('level')->orderBy('name')->get(),
+            'classes' => SchoolClass::where('is_active', true)->visibleTo($request->user())->orderBy('level')->orderBy('name')->get(),
             'filters' => $request->only(['session_id', 'class_id', 'section_id']),
         ]);
     }

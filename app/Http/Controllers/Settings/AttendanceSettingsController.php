@@ -39,7 +39,7 @@ class AttendanceSettingsController extends Controller
         });
 
         $campuses = Campus::orderBy('name', 'asc')->get(['id', 'name']);
-        $classes = SchoolClass::orderBy('id', 'asc')->get(['id', 'name']);
+        $classes = SchoolClass::visibleTo($request->user())->orderBy('id', 'asc')->get(['id', 'name']);
         $shiftTimings = AttendanceTiming::with('campus')->orderBy('id', 'desc')->get();
 
         return Inertia::render('attendance/Settings', [

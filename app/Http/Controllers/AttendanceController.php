@@ -136,7 +136,7 @@ class AttendanceController extends Controller
 
         $campuses = Campus::orderBy('name')->get(['id', 'name']);
         $sessions = Session::where('is_active', true)->orderBy('name')->get(['id', 'name']);
-        $classes = SchoolClass::orderBy('id', 'asc')->get(['id', 'name']);
+        $classes = SchoolClass::visibleTo($request->user())->orderBy('id', 'asc')->get(['id', 'name']);
         $sections = Section::orderBy('name')->get(['id', 'name', 'class_id']);
         $attendanceStatuses = AttendanceStatus::orderBy('name')->get(['id', 'name', 'code']);
 
@@ -228,7 +228,7 @@ class AttendanceController extends Controller
             ->get();
 
         // Get quick stats - attendance taken vs total classes
-        $totalClasses = SchoolClass::count();
+        $totalClasses = SchoolClass::visibleTo($request->user())->count();
         $classesWithAttendance = $todayAttendances->pluck('class_id')->unique()->count();
 
         $campuses = Campus::orderBy('name')->get(['id', 'name']);
@@ -343,7 +343,7 @@ class AttendanceController extends Controller
     {
         $campuses = Campus::orderBy('name')->get(['id', 'name']);
         $sessions = Session::where('is_active', true)->orderBy('name')->get(['id', 'name']);
-        $classes = SchoolClass::orderBy('id', 'asc')->get(['id', 'name']);
+        $classes = SchoolClass::visibleTo($request->user())->orderBy('id', 'asc')->get(['id', 'name']);
         $sections = Section::orderBy('name')->get(['id', 'name', 'class_id']);
         $attendanceStatuses = AttendanceStatus::all();
         $leaveTypes = LeaveType::where('is_active', true)->orderBy('name')->get(['id', 'name']);
@@ -1118,7 +1118,7 @@ class AttendanceController extends Controller
             'date_to' => 'nullable|date|after_or_equal:date_from',
         ]);
 
-        $class = SchoolClass::with('sections')->findOrFail($request->class_id);
+        $class = SchoolClass::visibleTo($request->user())->with('sections')->findOrFail($request->class_id);
 
         if ($usingRange) {
             $startDate = now()->parse($request->date_from)->startOfDay();
@@ -1261,7 +1261,7 @@ class AttendanceController extends Controller
      */
     private function reportableClasses(?User $user)
     {
-        $classes = SchoolClass::orderBy('name');
+        $classes = SchoolClass::visibleTo($user)->orderBy('name');
 
         if ($user && $user->isClassRestricted()) {
             $classes->whereIn(

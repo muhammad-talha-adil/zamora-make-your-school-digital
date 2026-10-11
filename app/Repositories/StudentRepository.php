@@ -23,6 +23,7 @@ use App\Services\StudentUserService;
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\UploadedFile;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
@@ -1013,7 +1014,7 @@ class StudentRepository
             return [
                 'campuses' => Campus::orderBy('name')->get(['id', 'name']),
                 'sessions' => Session::where('is_active', true)->orderBy('name')->get(['id', 'name']),
-                'classes' => SchoolClass::orderBy('id', 'ASC')->get(['id', 'name']),
+                'classes' => SchoolClass::visibleTo(Auth::user())->orderBy('id', 'ASC')->get(['id', 'name']),
                 'sections' => Section::orderBy('name')->get(['id', 'name', 'class_id']),
                 'genders' => Gender::orderBy('name')->get(['id', 'name']),
                 'relations' => Relation::orderBy('name')->get(['id', 'name']),

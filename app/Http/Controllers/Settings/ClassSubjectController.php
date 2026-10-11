@@ -41,8 +41,8 @@ class ClassSubjectController extends Controller
         // Get all campuses
         $campuses = Campus::orderBy('name', 'asc')->get(['id', 'name']);
 
-        // Get classes (optionally filtered by campus)
-        $classes = SchoolClass::orderBy('id', 'asc')->get(['id', 'name']);
+        // Get classes (now actually campus-scoped — SchoolClass belongs to one campus)
+        $classes = SchoolClass::visibleTo($request->user())->orderBy('id', 'asc')->get(['id', 'name']);
 
         // Get sections (optionally filtered by class)
         $sections = Section::when($classId, function ($query) use ($classId) {

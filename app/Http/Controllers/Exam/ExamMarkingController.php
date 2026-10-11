@@ -40,7 +40,7 @@ class ExamMarkingController extends Controller
         return Inertia::render('Exam/Marking/Select', [
             'exams' => Exam::all(),
             'campuses' => Campus::all(),
-            'classes' => SchoolClass::all(),
+            'classes' => SchoolClass::visibleTo($request->user())->get(),
             'sections' => Section::all(),
             'gradeSystems' => $gradeSystems,
             'preSelectedExamId' => $request->get('exam_id'),
@@ -76,7 +76,7 @@ class ExamMarkingController extends Controller
         return Inertia::render('Exam/Marking/Grid', [
             'exams' => Exam::all()->toArray(),
             'campuses' => Campus::all()->toArray(),
-            'classes' => SchoolClass::all()->toArray(),
+            'classes' => SchoolClass::visibleTo($request->user())->get()->toArray(),
             'sections' => Section::all()->toArray(),
             'gradeSystems' => $gradeSystems->toArray(),
             'selectedGradeSystemId' => $selectedGradeSystemId,
@@ -389,7 +389,7 @@ class ExamMarkingController extends Controller
 
         return Inertia::render('Exam/Marking/Grace', [
             'exams' => Exam::orderByDesc('start_date')->get(['id', 'name']),
-            'classes' => SchoolClass::where('is_active', true)
+            'classes' => SchoolClass::visibleTo($request->user())->where('is_active', true)
                 ->orderBy('level')->orderBy('name')->get(['id', 'name']),
         ]);
     }

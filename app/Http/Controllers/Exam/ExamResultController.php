@@ -25,7 +25,7 @@ class ExamResultController extends Controller
         return Inertia::render('Exam/Results/Index', [
             'exams' => Exam::all(),
             'campuses' => Campus::all(),
-            'classes' => SchoolClass::all(),
+            'classes' => SchoolClass::visibleTo($request->user())->get(),
             'sections' => Section::all(),
             'preSelectedExamId' => $request->get('exam_id'),
         ]);
@@ -41,7 +41,7 @@ class ExamResultController extends Controller
         if (! $examId) {
             return response()->json([
                 'campuses' => Campus::all(),
-                'classes' => SchoolClass::all(),
+                'classes' => SchoolClass::visibleTo($request->user())->get(),
                 'sections' => Section::all(),
             ]);
         }

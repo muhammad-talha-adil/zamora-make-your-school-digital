@@ -28,7 +28,8 @@
                             id="filter-campus"
                             v-model="cascadeCampusId"
                             @change="applyFilters"
-                            class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm min-h-10 md:min-h-11"
+                            :disabled="isCampusLocked"
+                            class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm min-h-10 md:min-h-11 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
                             <option value="">All Campuses</option>
                             <option v-for="campus in props.campuses" :key="campus.id" :value="campus.id">
@@ -56,10 +57,10 @@
                             id="filter-section"
                             v-model="cascadeSectionId"
                             @change="applyFilters"
-                            :disabled="!cascadeClassId"
+                            :disabled="!isSectionSelectEnabled"
                             class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm min-h-10 md:min-h-11 disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                            <option value="">All Sections</option>
+                            <option value="">{{ hasNoSectionsForClass ? 'No section found' : 'All Sections' }}</option>
                             <option v-for="section in availableSections" :key="section.id" :value="section.id">
                                 {{ section.name }}
                             </option>
@@ -497,6 +498,9 @@ const {
     selectedSectionId: cascadeSectionId,
     availableClasses,
     availableSections,
+    isCampusLocked,
+    isSectionSelectEnabled,
+    hasNoSectionsForClass,
 } = useCascadingAcademicSelect({
     campuses: computed(() => props.campuses),
     classes: computed(() => props.classes),

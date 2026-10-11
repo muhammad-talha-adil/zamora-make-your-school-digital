@@ -11,6 +11,7 @@ export interface AcademicCampus {
 export interface AcademicClass {
     id: number;
     name: string;
+    campus_id?: number | null;
     [key: string]: unknown;
 }
 
@@ -126,7 +127,20 @@ export function useCascadingAcademicSelect(options: UseCascadingAcademicSelectOp
 
     watch(selectedSessionId, (value) => storeSessionId(value));
 
-    const availableClasses = computed(() => classes.value);
+    /**
+     * A class now belongs to one campus (campus_id), so once a campus is
+     * picked (or locked), only that campus's classes are offered — the
+     * controller is also expected to already send a campus-scoped list, this
+     * is belt-and-braces for pages that pass the full list unfiltered.
+     */
+    const availableClasses = computed(() => {
+        if (!selectedCampusId.value) {
+            return classes.value;
+        }
+        return classes.value.filter(
+            (schoolClass) => schoolClass.campus_id == null || schoolClass.campus_id === Number(selectedCampusId.value),
+        );
+    });
 
     const availableSections = computed(() => {
         if (!selectedClassId.value) {
@@ -134,6 +148,14 @@ export function useCascadingAcademicSelect(options: UseCascadingAcademicSelectOp
         }
         return sections.value.filter((section) => section.class_id === Number(selectedClassId.value));
     });
+
+    /** The Section select only makes sense once a Class is picked. */
+    const isSectionSelectEnabled = computed(() => !!selectedClassId.value);
+
+    /** True once a class is picked but it has no sections to offer. */
+    const hasNoSectionsForClass = computed(
+        () => isSectionSelectEnabled.value && availableSections.value.length === 0,
+    );
 
     watch(selectedCampusId, () => {
         selectedClassId.value = '';
@@ -157,5 +179,7 @@ export function useCascadingAcademicSelect(options: UseCascadingAcademicSelectOp
         availableSections,
         isCampusLocked,
         lockedCampusId,
+        isSectionSelectEnabled,
+        hasNoSectionsForClass,
     };
 }

@@ -39,6 +39,7 @@ class TeacherAssignmentController extends Controller
         return Inertia::render('Staff/Teaching/Index', [
             'sessions' => Session::where('is_active', true)->get(['id', 'name']),
             'classes' => SchoolClass::where('is_active', true)
+                ->visibleTo($request->user())
                 ->orderBy('level')->orderBy('name')->get(['id', 'name']),
             'subjects' => Subject::where('is_active', true)->orderBy('name')->get(['id', 'name']),
             'filters' => $request->only(['session_id', 'class_id', 'section_id']),

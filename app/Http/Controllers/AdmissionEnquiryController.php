@@ -30,7 +30,7 @@ class AdmissionEnquiryController extends Controller
 
         return Inertia::render('students/Enquiries/Index', [
             'campuses' => Campus::all(),
-            'classes' => SchoolClass::where('is_active', true)->orderBy('level')->orderBy('name')->get(),
+            'classes' => SchoolClass::where('is_active', true)->visibleTo($request->user())->orderBy('level')->orderBy('name')->get(),
             'sessions' => Session::where('is_active', true)->get(),
             'genders' => Gender::all(),
             'filters' => $request->only(['status', 'due']),

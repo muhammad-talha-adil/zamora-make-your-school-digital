@@ -30,11 +30,11 @@ class SectionPolicy
 
     public function update(User $user, Section $section): bool
     {
-        return $this->may($user, 'academics.class.manage');
+        return $this->may($user, 'academics.class.manage') && $this->reaches($user, $section->schoolClass?->campus_id);
     }
 
     public function delete(User $user, Section $section): bool
     {
-        return $this->may($user, 'academics.class.manage');
+        return $this->may($user, 'academics.class.manage') && $this->reaches($user, $section->schoolClass?->campus_id);
     }
 }

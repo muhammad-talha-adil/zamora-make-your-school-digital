@@ -21,10 +21,11 @@ class SectionController extends Controller
         Gate::authorize('viewAny', Section::class);
 
         $sections = Section::with('schoolClass')
+            ->whereHas('schoolClass', fn ($q) => $q->visibleTo(request()->user()))
             ->orderBy('id', 'desc')
             ->paginate(10);
 
-        $schoolClasses = SchoolClass::orderBy('name', 'asc')->get(['id', 'name']);
+        $schoolClasses = SchoolClass::visibleTo(request()->user())->orderBy('name', 'asc')->get(['id', 'name']);
 
         return Inertia::render('settings/Sections/Index', [
             'tableSections' => $sections,
@@ -39,7 +40,8 @@ class SectionController extends Controller
     {
         Gate::authorize('viewAny', Section::class);
 
-        $query = Section::with('schoolClass');
+        $query = Section::with('schoolClass')
+            ->whereHas('schoolClass', fn ($q) => $q->visibleTo(request()->user()));
 
         // Handle status filter
         $status = request()->get('status');
@@ -76,7 +78,7 @@ class SectionController extends Controller
     {
         Gate::authorize('create', Section::class);
 
-        $schoolClasses = SchoolClass::orderBy('name', 'asc')->get(['id', 'name']);
+        $schoolClasses = SchoolClass::visibleTo(request()->user())->orderBy('name', 'asc')->get(['id', 'name']);
 
         return Inertia::render('settings/Sections/Create', [
             'schoolClasses' => $schoolClasses,
@@ -215,7 +217,7 @@ class SectionController extends Controller
     {
         Gate::authorize('update', $section);
 
-        $schoolClasses = SchoolClass::orderBy('name', 'asc')->get(['id', 'name']);
+        $schoolClasses = SchoolClass::visibleTo(request()->user())->orderBy('name', 'asc')->get(['id', 'name']);
 
         return Inertia::render('settings/Sections/Edit', [
             'section' => $section->load('schoolClass'),

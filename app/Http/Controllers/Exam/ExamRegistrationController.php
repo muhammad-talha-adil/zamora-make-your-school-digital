@@ -39,7 +39,7 @@ class ExamRegistrationController extends Controller
         return Inertia::render('Exam/Registrations/Index', [
             'registrations' => $registrations,
             'exams' => Exam::all(),
-            'classes' => SchoolClass::all(),
+            'classes' => SchoolClass::visibleTo($request->user())->get(),
             'sections' => Section::all(),
             'filters' => [
                 'exam_id' => $examId,
