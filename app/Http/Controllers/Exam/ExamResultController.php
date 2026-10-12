@@ -46,9 +46,18 @@ class ExamResultController extends Controller
             ]);
         }
 
-        // Get unique campuses, classes, sections that have results for this exam
-        $resultHeaders = ExamResultHeader::where('exam_id', $examId);
+        // If no results have been generated for this exam yet, there is
+        // nothing to derive campus/class/section options from — fall back to
+        // the full lists so the filters stay usable instead of going empty.
+        if (! ExamResultHeader::where('exam_id', $examId)->exists()) {
+            return response()->json([
+                'campuses' => Campus::all(),
+                'classes' => SchoolClass::visibleTo($request->user())->get(),
+                'sections' => Section::all(),
+            ]);
+        }
 
+        // Get unique campuses, classes, sections that have results for this exam
         $campuses = ExamResultHeader::where('exam_id', $examId)
             ->whereNotNull('campus_id')
             ->with('campus')
