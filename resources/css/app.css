@@ -2,6 +2,20 @@
 
 @import 'tw-animate-css';
 
+/*
+ * daisyUI component classes (card, badge, alert, etc.) only — themes
+ * disabled and classes prefixed, so nothing here collides with this app's
+ * own `.btn-primary`/`.btn-outline` utilities or its admin-configurable
+ * palette/.dark-class theme system (see the @theme block below and
+ * useAppearance.ts). Reach for `daisy-*` classes for components this app
+ * doesn't already have one for; keep using the existing ones otherwise.
+ */
+@plugin "daisyui" {
+    themes: light --default;
+    exclude: rootcolor, rootscrollgutter;
+    prefix: daisy-;
+}
+
 @source '../../vendor/laravel/framework/src/Illuminate/Pagination/resources/views/*.blade.php';
 @source '../../storage/framework/views/*.php';
 
