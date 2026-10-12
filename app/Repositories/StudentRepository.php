@@ -1010,11 +1010,13 @@ class StudentRepository
      */
     public function getLookupData(): array
     {
-        return Cache::remember('students.lookup_data', 1800, function () {
+        $cacheKey = 'students.lookup_data.'.(Auth::user()?->campusId() ?? 'all');
+
+        return Cache::remember($cacheKey, 1800, function () {
             return [
                 'campuses' => Campus::orderBy('name')->get(['id', 'name']),
                 'sessions' => Session::where('is_active', true)->orderBy('name')->get(['id', 'name']),
-                'classes' => SchoolClass::visibleTo(Auth::user())->orderBy('id', 'ASC')->get(['id', 'name']),
+                'classes' => SchoolClass::visibleTo(Auth::user())->orderBy('id', 'ASC')->get(['id', 'name', 'campus_id']),
                 'sections' => Section::orderBy('name')->get(['id', 'name', 'class_id']),
                 'genders' => Gender::orderBy('name')->get(['id', 'name']),
                 'relations' => Relation::orderBy('name')->get(['id', 'name']),
