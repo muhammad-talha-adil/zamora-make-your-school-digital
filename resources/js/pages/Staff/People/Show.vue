@@ -135,7 +135,7 @@ interface Props {
 const props = defineProps<Props>();
 
 const breadcrumbs = computed(() => [
-    { title: 'Staff Portal', href: route('staff.dashboard') },
+    { title: 'Staff Portal', href: route('staff.index') },
     { title: 'My Profile', href: route('staff.me') },
 ]);
 

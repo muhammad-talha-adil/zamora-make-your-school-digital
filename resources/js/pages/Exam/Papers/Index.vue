@@ -83,7 +83,7 @@
                                     <div class="text-sm text-muted-foreground">{{ paperIndex + 1 }}</div>
                                 </td>
                                 <td class="px-4 py-3 whitespace-nowrap">
-                                    <div class="text-sm text-foreground">{{ paper.paper_date }}</div>
+                                    <div class="text-sm text-foreground">{{ formatDate(paper.paper_date) }}</div>
                                 </td>
                                 <td class="px-4 py-3 whitespace-nowrap">
                                     <div class="text-sm font-medium text-foreground">{{ paper.subject?.name }}</div>
@@ -158,6 +158,7 @@ import { Label } from '@/components/ui/label';
 import Icon from '@/components/Icon.vue';
 import FilterCard from '@/components/FilterCard.vue';
 import SearchableSelect from '@/components/ui/searchable-select/SearchableSelect.vue';
+import { formatDate } from '@/utils';
 
 interface Exam {
     id: number;
