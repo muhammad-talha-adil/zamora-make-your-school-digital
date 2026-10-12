@@ -356,9 +356,20 @@ class ExamPaperController extends Controller
         }
 
         // No existing papers (or exclude_existing=true), return subjects for the campus/class/section
-        // Get subjects assigned to this class, optionally filtered by section
-        $subjectQuery = Subject::whereHas('schoolClasses', function ($query) use ($classId) {
-            $query->where('class_id', $classId);
+        // Get subjects assigned to this class, optionally filtered by section. A
+        // section-level assignment (class_subject.section_id = $sectionId) and a
+        // class-level assignment (section_id NULL, e.g. for a class with no
+        // sections at all) both count — otherwise a class-level-only assignment
+        // never surfaces once a section is picked.
+        $subjectQuery = Subject::whereHas('schoolClasses', function ($query) use ($classId, $sectionId) {
+            $query->where('class_subject.class_id', $classId);
+
+            if ($sectionId) {
+                $query->where(function ($q) use ($sectionId) {
+                    $q->where('class_subject.section_id', $sectionId)
+                        ->orWhereNull('class_subject.section_id');
+                });
+            }
         });
 
         // If exclude_existing is true, exclude subjects that already have papers

@@ -170,15 +170,29 @@ class ClassSubjectController extends Controller
                 $now = now();
                 $insertData = [];
 
-                foreach ($sections as $section) {
+                if ($sections->isEmpty()) {
+                    // Class has no sections at all — assign at the class level
+                    // (section_id = null) instead of silently inserting nothing.
                     foreach ($subjectIds as $subjectId) {
                         $insertData[] = [
                             'class_id' => $classId,
-                            'section_id' => $section->id,
+                            'section_id' => null,
                             'subject_id' => $subjectId,
                             'created_at' => $now,
                             'updated_at' => $now,
                         ];
+                    }
+                } else {
+                    foreach ($sections as $section) {
+                        foreach ($subjectIds as $subjectId) {
+                            $insertData[] = [
+                                'class_id' => $classId,
+                                'section_id' => $section->id,
+                                'subject_id' => $subjectId,
+                                'created_at' => $now,
+                                'updated_at' => $now,
+                            ];
+                        }
                     }
                 }
 
