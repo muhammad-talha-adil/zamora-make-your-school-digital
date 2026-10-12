@@ -29,9 +29,21 @@ trait ScopesCampusForUser
     {
         $user = $request->user();
 
-        // Campus-restricted staff: their own campus. School-wide user
-        // (owner/developer): whichever campus they picked from the header
-        // switcher — `User::campusId()` is the single source of truth for both.
+        // A school-wide user (owner/developer) may still pass an explicit
+        // campus_id to filter an in-page list (e.g. Inventory Settings'
+        // campus dropdown) to a campus other than the header switcher's
+        // current pick — this is a free in-page filter choice for them, not
+        // a security boundary, since they can already reach every campus.
+        // Campus-restricted staff always get forced to their own campus
+        // regardless of what the request asks for.
+        if ($user?->isSuperAdmin()) {
+            $requested = $request->get('campus_id');
+
+            if ($requested !== null && $requested !== '') {
+                return (int) $requested;
+            }
+        }
+
         $campusId = $user?->campusId();
 
         if ($campusId !== null) {
