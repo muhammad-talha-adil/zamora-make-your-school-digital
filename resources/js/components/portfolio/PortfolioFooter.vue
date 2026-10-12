@@ -1,113 +1,108 @@
 <script setup lang="ts">
-import { Link } from '@inertiajs/vue3';
-import { usePage } from '@inertiajs/vue3';
+import { Link, usePage } from '@inertiajs/vue3';
 import { computed } from 'vue';
-import { route } from 'ziggy-js';
-import { TwitterIcon, FacebookIcon, LinkedinIcon, InstagramIcon, YoutubeIcon } from 'lucide-vue-next';
+import Icon from '@/components/Icon.vue';
 
-interface School {
-    name?: string;
-    slogan?: string | null;
-    logo_path?: string | null;
-    social_links?: Array<{ platform: string; url: string }>;
-    contact_address?: string | null;
-    contact_phone?: string | null;
-    contact_email?: string | null;
+interface SchoolProps {
+    name: string;
+    contact_address: string | null;
+    contact_phone: string | null;
+    contact_email: string | null;
+    social_links: Record<string, string> | null;
 }
 
-const socialIcons: Record<string, any> = {
-    facebook: FacebookIcon,
-    twitter: TwitterIcon,
-    instagram: InstagramIcon,
-    linkedin: LinkedinIcon,
-    youtube: YoutubeIcon,
+const page = usePage<{ school: SchoolProps | null; name: string }>();
+const school = computed(() => page.props.school);
+const schoolName = computed(() => school.value?.name ?? page.props.name);
+const year = new Date().getFullYear();
+
+const socialIcon: Record<string, string> = {
+    facebook: 'facebook',
+    instagram: 'instagram',
+    twitter: 'twitter',
+    youtube: 'youtube',
+    linkedin: 'linkedin',
 };
 
-const page = usePage();
-const school = computed(() => page.props.school as School | null);
-const schoolName = computed(() => school.value?.name ?? (page.props.name as string));
+const socialLinks = computed(() => Object.entries(school.value?.social_links ?? {}).filter(([, url]) => !!url));
 
-const footerLinks = {
-    school: [
-        { name: 'About Us', href: route('about') },
-        { name: 'Academics', href: route('academics') },
-        { name: 'Admissions', href: route('admissions') },
-        { name: 'Contact', href: route('contact') },
-    ],
-    legal: [
-        { name: 'Privacy', href: route('privacy') },
-        { name: 'Terms', href: route('terms') },
-    ],
+const quickLinks = [
+    { label: 'About', href: '#about' },
+    { label: 'Academics', href: '#academics' },
+    { label: 'Admissions', href: '#admissions' },
+    { label: 'Contact', href: '#contact' },
+];
+
+const scrollTo = (hash: string) => {
+    document.querySelector(hash)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 };
-
-const socialLinks = computed(() =>
-    (school.value?.social_links ?? [])
-        .filter((link) => socialIcons[link.platform])
-        .map((link) => ({ name: link.platform, icon: socialIcons[link.platform], href: link.url })),
-);
 </script>
 
 <template>
-    <footer class="bg-muted/30 border-t border-border" role="contentinfo">
-        <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8 py-12 md:py-16">
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
-                <!-- Brand -->
-                <div class="md:col-span-1 space-y-4">
-                    <div class="flex items-center">
-                        <img :src="page.props.school?.logo_path || '/sample-logo.png'" alt="" class="h-8 w-8 mr-2" aria-hidden="true" />
-                        <span class="text-xl font-bold text-foreground">{{ schoolName }}</span>
-                    </div>
-                    <p class="text-sm text-muted-foreground max-w-xs leading-relaxed">
-                        {{ school?.slogan ?? 'Nurturing students with strong academics, character, and community.' }}
+    <footer class="border-t border-border bg-background">
+        <div class="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+            <div class="grid gap-10 md:grid-cols-[1.4fr_1fr_1fr]">
+                <div>
+                    <h3 class="text-lg font-semibold text-foreground">{{ schoolName }}</h3>
+                    <p class="mt-3 max-w-sm text-sm leading-relaxed text-muted-foreground">
+                        A nurturing learning community preparing students for every stage ahead, from first lessons to lifelong goals.
                     </p>
-                    <div v-if="socialLinks.length" class="flex space-x-6">
-                        <a v-for="social in socialLinks" :key="social.name" :href="social.href" target="_blank" rel="noopener noreferrer"
-                           class="text-muted-foreground hover:text-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 rounded"
-                           :aria-label="social.name">
-                            <component :is="social.icon" class="h-5 w-5" aria-hidden="true" />
+                    <div v-if="socialLinks.length" class="mt-5 flex gap-3">
+                        <a
+                            v-for="[platform, url] in socialLinks"
+                            :key="platform"
+                            :href="url"
+                            target="_blank"
+                            rel="noopener"
+                            class="flex h-9 w-9 items-center justify-center rounded-md border border-border text-muted-foreground transition-colors hover:border-primary hover:text-primary"
+                        >
+                            <Icon :icon="socialIcon[platform] ?? 'link'" class="h-4 w-4" />
                         </a>
                     </div>
                 </div>
 
-                <!-- School Links -->
-                <nav aria-label="School links">
-                    <h3 class="text-sm font-semibold text-foreground mb-4">School</h3>
-                    <ul class="space-y-3">
-                        <li v-for="link in footerLinks.school" :key="link.name">
-                            <Link :href="link.href" class="text-sm text-muted-foreground hover:text-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 rounded">
-                                {{ link.name }}
-                            </Link>
+                <div>
+                    <h4 class="text-sm font-semibold text-foreground">Quick Links</h4>
+                    <ul class="mt-4 space-y-2.5">
+                        <li v-for="link in quickLinks" :key="link.href">
+                            <button
+                                type="button"
+                                class="text-sm text-muted-foreground transition-colors hover:text-foreground"
+                                @click="scrollTo(link.href)"
+                            >
+                                {{ link.label }}
+                            </button>
+                        </li>
+                        <li>
+                            <Link href="/terms" class="text-sm text-muted-foreground transition-colors hover:text-foreground">Terms of Service</Link>
+                        </li>
+                        <li>
+                            <Link href="/privacy" class="text-sm text-muted-foreground transition-colors hover:text-foreground">Privacy Policy</Link>
                         </li>
                     </ul>
-                </nav>
+                </div>
 
-                <!-- Contact -->
-                <div v-if="school?.contact_address || school?.contact_phone || school?.contact_email">
-                    <h3 class="text-sm font-semibold text-foreground mb-4">Contact</h3>
-                    <ul class="space-y-3 text-sm text-muted-foreground">
-                        <li v-if="school?.contact_address">{{ school.contact_address }}</li>
-                        <li v-if="school?.contact_phone">
-                            <a :href="`tel:${school.contact_phone.replace(/[^+\d]/g, '')}`" class="hover:text-primary transition-colors">{{ school.contact_phone }}</a>
+                <div>
+                    <h4 class="text-sm font-semibold text-foreground">Get in Touch</h4>
+                    <ul class="mt-4 space-y-2.5 text-sm text-muted-foreground">
+                        <li v-if="school?.contact_address" class="flex gap-2">
+                            <Icon icon="map-pin" class="mt-0.5 h-4 w-4 shrink-0" />
+                            <span>{{ school.contact_address }}</span>
                         </li>
-                        <li v-if="school?.contact_email">
-                            <a :href="`mailto:${school.contact_email}`" class="hover:text-primary transition-colors">{{ school.contact_email }}</a>
+                        <li v-if="school?.contact_phone" class="flex gap-2">
+                            <Icon icon="phone" class="mt-0.5 h-4 w-4 shrink-0" />
+                            <span>{{ school.contact_phone }}</span>
+                        </li>
+                        <li v-if="school?.contact_email" class="flex gap-2">
+                            <Icon icon="mail" class="mt-0.5 h-4 w-4 shrink-0" />
+                            <span>{{ school.contact_email }}</span>
                         </li>
                     </ul>
                 </div>
             </div>
 
-            <!-- Bottom Bar -->
-            <div class="border-t border-border pt-8 flex flex-col md:flex-row items-center justify-between gap-4">
-                <p class="text-sm text-muted-foreground">
-                    &copy; {{ new Date().getFullYear() }} {{ schoolName }}. All rights reserved.
-                </p>
-
-                <nav aria-label="Legal links" class="flex flex-wrap items-center justify-center md:justify-end gap-6">
-                    <Link v-for="link in footerLinks.legal" :key="link.name" :href="link.href"
-                          class="text-sm text-muted-foreground hover:text-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 rounded">
-                        {{ link.name }}
-                    </Link>
-                </nav>
+            <div class="mt-12 border-t border-border pt-6 text-center text-xs text-muted-foreground">
+                Copyright {{ year }} {{ schoolName }}. All rights reserved.
             </div>
         </div>
     </footer>

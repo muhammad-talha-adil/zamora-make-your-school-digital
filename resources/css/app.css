@@ -329,6 +329,24 @@
         from { transform: scale(1); opacity: 1; }
         to { transform: scale(0.95); opacity: 0; }
     }
+
+    /*
+      Scroll-reveal utilities for the public marketing page (useScrollReveal.ts).
+      `.reveal` starts hidden/offset; `.reveal-visible` (added once the element
+      enters the viewport) transitions it into place.
+    */
+    .reveal {
+        opacity: 0;
+        transform: translateY(24px);
+        transition:
+            opacity var(--duration-slow, 500ms) var(--ease-out),
+            transform var(--duration-slow, 500ms) var(--ease-out);
+    }
+
+    .reveal-visible {
+        opacity: 1;
+        transform: translateY(0);
+    }
 }
 
 /* Reduced motion support */

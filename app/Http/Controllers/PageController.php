@@ -3,6 +3,9 @@
 namespace App\Http\Controllers;
 
 use App\Enums\AttendanceStatusCode;
+use App\Http\Requests\Public\SubmitAdmissionEnquiryRequest;
+use App\Http\Requests\Public\SubmitContactRequest;
+use App\Models\AdmissionEnquiry;
 use App\Models\Attendance;
 use App\Models\Exam\ExamPaper;
 use App\Models\Fee\FeePayment;
@@ -12,8 +15,10 @@ use App\Models\Student;
 use App\Models\User;
 use App\Services\Finance\UnifiedAccountingService;
 use App\Services\FinanceService;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Log;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -40,28 +45,28 @@ class PageController extends Controller
     }
 
     /**
-     * Student/teacher counts on the About page are live counts, not the
-     * admin-entered `school.stats` numbers — those two rows would drift out
-     * of date the moment someone is admitted or leaves.
+     * The site is a single scrolling page now — these are just the old
+     * bookmarked/linked-to URLs landing on the matching section instead of
+     * 404ing or rendering a page that no longer exists.
      */
-    public function about(): Response
+    public function about(): RedirectResponse
     {
-        return Inertia::render('About', [
-            'live_stats' => [
-                'students' => Student::query()->whereHas('currentEnrollment')->count(),
-                'teachers' => StaffProfile::query()->where('is_active', true)->count(),
-            ],
-        ]);
+        return redirect()->to(route('home').'#about');
     }
 
-    public function academics(): Response
+    public function academics(): RedirectResponse
     {
-        return Inertia::render('Academics');
+        return redirect()->to(route('home').'#academics');
     }
 
-    public function admissions(): Response
+    public function admissions(): RedirectResponse
     {
-        return Inertia::render('Admissions');
+        return redirect()->to(route('home').'#admissions');
+    }
+
+    public function contact(): RedirectResponse
+    {
+        return redirect()->to(route('home').'#contact');
     }
 
     public function privacy(): Response
@@ -74,9 +79,32 @@ class PageController extends Controller
         return Inertia::render('Terms');
     }
 
-    public function contact(): Response
+    /**
+     * No email infrastructure exists yet, so the submission is just logged —
+     * this keeps the public form from 404ing without pretending the school
+     * is actually notified.
+     */
+    public function submitContact(SubmitContactRequest $request): RedirectResponse
     {
-        return Inertia::render('Contact');
+        $validated = $request->safe()->except('honeypot');
+
+        Log::info('Contact form submission', $validated);
+
+        return back()->with('success', "Thank you for your message! We'll get back to you within 24 hours.");
+    }
+
+    /**
+     * The public counterpart to `AdmissionEnquiryController::store()` — no
+     * authenticated handler, so it is recorded directly rather than through
+     * `Gate::authorize()`, which has nobody to check here.
+     */
+    public function submitEnquiry(SubmitAdmissionEnquiryRequest $request): RedirectResponse
+    {
+        AdmissionEnquiry::create($request->validated() + [
+            'status' => AdmissionEnquiry::STATUS_OPEN,
+        ]);
+
+        return back()->with('success', "Thank you for your enquiry! We'll be in touch soon.");
     }
 
     /**

@@ -19,6 +19,10 @@ Route::middleware('public.website')->group(function (): void {
     Route::get('/terms', [PageController::class, 'terms'])->name('terms');
 
     Route::get('/contact', [PageController::class, 'contact'])->name('contact');
+
+    Route::post('/contact', [PageController::class, 'submitContact'])->name('contact.submit');
+
+    Route::post('/admissions/enquire', [PageController::class, 'submitEnquiry'])->name('admissions.enquire');
 });
 
 // Subscription lock screen - reachable by anyone the EnsureSubscriptionActive
