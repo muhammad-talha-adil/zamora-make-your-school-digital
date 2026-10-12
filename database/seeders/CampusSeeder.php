@@ -17,16 +17,12 @@ class CampusSeeder extends Seeder
      */
     public function run(): void
     {
-        // Get or create campus types if they don't exist
-        $mainType = CampusType::firstOrCreate(
-            ['name' => 'Main'],
-            ['is_active' => true]
-        );
+        // Get or create campus types if they don't exist. campus_types has no
+        // is_active column (it's not a field this model supports anywhere in
+        // the app), so only `name` is passed here.
+        $mainType = CampusType::firstOrCreate(['name' => 'Main']);
 
-        $branchType = CampusType::firstOrCreate(
-            ['name' => 'Branch'],
-            ['is_active' => true]
-        );
+        $branchType = CampusType::firstOrCreate(['name' => 'Branch']);
 
         $campuses = [
             [
