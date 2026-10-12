@@ -45,7 +45,6 @@ const getFirstErrorMessage = (value: unknown) => {
 
 const form = ref({
     name: '',
-    code: '',
     default_value_type: 'percent',
     default_value: '',
     requires_approval: false,
@@ -55,7 +54,6 @@ const form = ref({
 const resetForm = () => {
     form.value = {
         name: '',
-        code: '',
         default_value_type: 'percent',
         default_value: '',
         requires_approval: false,
@@ -73,7 +71,6 @@ const openCreateModal = () => {
 const openEditModal = (discountType: DiscountType) => {
     form.value = {
         name: discountType.name,
-        code: discountType.code,
         default_value_type: discountType.value_type,
         default_value: String(discountType.default_value),
         requires_approval: discountType.requires_approval,
@@ -117,11 +114,6 @@ const validateForm = (): boolean => {
 
     if (!form.value.name.trim()) {
         formErrors.value.name = 'Name is required';
-        isValid = false;
-    }
-
-    if (!form.value.code.trim()) {
-        formErrors.value.code = 'Code is required';
         isValid = false;
     }
 
@@ -348,28 +340,16 @@ const deleteDiscountType = (discountType: DiscountType) => {
                     <DialogTitle>{{ editingDiscountType ? 'Edit Discount Type' : 'Create Discount Type' }}</DialogTitle>
                 </DialogHeader>
                 <form @submit.prevent="submitForm" class="space-y-4">
-                    <!-- Name & Code -->
-                    <div class="grid gap-4 md:grid-cols-2">
-                        <div class="space-y-2">
-                            <Label for="dt-name">Name *</Label>
-                            <Input
-                                id="dt-name"
-                                v-model="form.name"
-                                placeholder="e.g., Sibling Discount"
-                                :class="formErrors.name ? 'border-destructive' : ''"
-                            />
-                            <p v-if="formErrors.name" class="text-xs text-destructive">{{ formErrors.name }}</p>
-                        </div>
-                        <div class="space-y-2">
-                            <Label for="dt-code">Code *</Label>
-                            <Input
-                                id="dt-code"
-                                v-model="form.code"
-                                placeholder="e.g., SIB_DISC"
-                                :class="formErrors.code ? 'border-destructive' : ''"
-                            />
-                            <p v-if="formErrors.code" class="text-xs text-destructive">{{ formErrors.code }}</p>
-                        </div>
+                    <!-- Name -->
+                    <div class="space-y-2">
+                        <Label for="dt-name">Name *</Label>
+                        <Input
+                            id="dt-name"
+                            v-model="form.name"
+                            placeholder="e.g., Sibling Discount"
+                            :class="formErrors.name ? 'border-destructive' : ''"
+                        />
+                        <p v-if="formErrors.name" class="text-xs text-destructive">{{ formErrors.name }}</p>
                     </div>
 
                     <!-- Default Value -->

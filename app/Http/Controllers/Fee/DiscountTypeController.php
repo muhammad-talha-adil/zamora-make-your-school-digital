@@ -38,7 +38,6 @@ class DiscountTypeController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:100',
-            'code' => 'required|string|max:50|unique:discount_types,code',
             'default_value_type' => 'required|in:fixed,percent',
             'default_value' => 'required|numeric|min:0',
             'requires_approval' => 'boolean',
@@ -49,6 +48,7 @@ class DiscountTypeController extends Controller
         $data = $validated;
         $data['value_type'] = $data['default_value_type'];
         unset($data['default_value_type']);
+        $data['code'] = $this->generateCode($data['name']);
 
         DiscountType::create($data);
 
@@ -73,14 +73,15 @@ class DiscountTypeController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:100',
-            'code' => 'required|string|max:50|unique:discount_types,code,'.$discountType->id,
             'default_value_type' => 'required|in:fixed,percent',
             'default_value' => 'required|numeric|min:0',
             'requires_approval' => 'boolean',
             'is_active' => 'boolean',
         ]);
 
-        // Map default_value_type to value_type for the database
+        // Map default_value_type to value_type for the database. Code is set
+        // once at creation and never re-derived on edit, since it may already
+        // be referenced elsewhere (vouchers, reports).
         $data = $validated;
         $data['value_type'] = $data['default_value_type'];
         unset($data['default_value_type']);
@@ -136,6 +137,28 @@ class DiscountTypeController extends Controller
             'data' => $discountType,
             'message' => $discountType->is_active ? 'Discount type activated successfully.' : 'Discount type deactivated successfully.',
         ]);
+    }
+
+    /**
+     * Derive a unique uppercase code from the discount type's name
+     * (e.g. "Sibling Discount" -> "SIBLING_DISCOUNT"), since the user never
+     * needs to type a code by hand.
+     */
+    private function generateCode(string $name): string
+    {
+        $base = strtoupper(preg_replace('/[^A-Za-z0-9]+/', '_', trim($name)));
+        $base = trim($base, '_');
+        $base = $base !== '' ? substr($base, 0, 50) : 'DISCOUNT';
+
+        $code = $base;
+        $suffix = 1;
+
+        while (DiscountType::where('code', $code)->exists()) {
+            $suffix++;
+            $code = substr($base, 0, 50 - strlen('_'.$suffix)).'_'.$suffix;
+        }
+
+        return $code;
     }
 
     /**
