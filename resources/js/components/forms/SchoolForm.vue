@@ -21,6 +21,7 @@ interface Props {
         slogan?: string;
         address?: string;
         phone?: string;
+        contact_email?: string;
         logo_path?: string;
         is_active: boolean;
         website_enabled?: boolean;
@@ -40,6 +41,7 @@ const form = ref({
     slogan: props.school?.slogan || '',
     address: props.school?.address || '',
     phone: props.school?.phone || '',
+    contact_email: props.school?.contact_email || '',
     logo: null as File | null,
     is_active: props.school?.is_active ?? true,
     website_enabled: props.school?.website_enabled ?? true,
@@ -186,8 +188,17 @@ const submit = () => {
                         <Icon icon="phone" class="mr-1 h-4 w-4" />
                         Phone
                     </Label>
-                    <Input id="phone" v-model="form.phone" maxlength="11" :class="{ 'border-destructive': (errors as any).phone }" />
+                    <Input id="phone" v-model="form.phone" maxlength="20" placeholder="0300-1234567" :class="{ 'border-destructive': (errors as any).phone }" />
                     <InputError :message="(errors as any).phone" />
+                </div>
+
+                <div class="space-y-2">
+                    <Label for="contact_email" class="flex items-center">
+                        <Icon icon="mail" class="mr-1 h-4 w-4" />
+                        Official Email
+                    </Label>
+                    <Input id="contact_email" v-model="form.contact_email" type="email" placeholder="school@example.com" :class="{ 'border-destructive': (errors as any).contact_email }" />
+                    <InputError :message="(errors as any).contact_email" />
                 </div>
             </CardContent>
         </Card>

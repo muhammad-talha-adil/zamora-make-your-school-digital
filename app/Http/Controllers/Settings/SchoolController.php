@@ -38,6 +38,7 @@ class SchoolController extends Controller
             'slogan' => 'nullable|string|max:255',
             'address' => 'nullable|string',
             'phone' => 'nullable|string|max:20',
+            'contact_email' => 'nullable|email|max:255',
             'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'is_active' => 'boolean',
             'website_enabled' => 'boolean',
