@@ -328,6 +328,14 @@ class Purchase extends Model
     }
 
     /**
+     * Scope for purchases by campus.
+     */
+    public function scopeForCampus($query, int $campusId)
+    {
+        return $query->where('campus_id', $campusId);
+    }
+
+    /**
      * Scope for purchases by supplier.
      */
     public function scopeForSupplier($query, int $supplierId)
