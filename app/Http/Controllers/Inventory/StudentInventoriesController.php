@@ -492,8 +492,15 @@ class StudentInventoriesController extends Controller
 
                     $item = InventoryItem::findOrFail($inventoryItemId);
 
-                    // Get the latest sale_rate from purchase items
-                    $purchaseItem = PurchaseItem::where('inventory_item_id', $inventoryItemId)
+                    // Get the latest sale_rate from this campus's purchase
+                    // items — an item bought at multiple campuses at
+                    // different rates must price off its own campus's
+                    // purchase, not whichever campus purchased it most
+                    // recently. No purchase at all still falls back to 0
+                    // (an intentionally supported state — see
+                    // Case_03_StudentIssuanceTest).
+                    $purchaseItem = PurchaseItem::whereHas('purchase', fn ($q) => $q->where('campus_id', $validated['campus_id']))
+                        ->where('inventory_item_id', $inventoryItemId)
                         ->orderBy('id', 'desc')
                         ->first();
 
@@ -537,8 +544,9 @@ class StudentInventoriesController extends Controller
 
                     $item = InventoryItem::findOrFail($inventoryItemId);
 
-                    // Get the latest rates from purchase items
-                    $purchaseItem = PurchaseItem::where('inventory_item_id', $inventoryItemId)
+                    // Same campus-scoped lookup as the first pass.
+                    $purchaseItem = PurchaseItem::whereHas('purchase', fn ($q) => $q->where('campus_id', $validated['campus_id']))
+                        ->where('inventory_item_id', $inventoryItemId)
                         ->orderBy('id', 'desc')
                         ->first();
 
