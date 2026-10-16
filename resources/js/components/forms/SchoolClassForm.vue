@@ -53,6 +53,32 @@ const getInitialForm = () => ({
 
 const form = ref(getInitialForm());
 
+/**
+ * A convenience only, not a real field: typing "Class" here once and "9" in
+ * Name auto-combines them into "Class 9" so the office doesn't retype the
+ * same prefix for every class. Remembered per-browser so it carries over
+ * to the next "Add Class" without retyping it either.
+ */
+const namePrefix = ref(localStorage.getItem('schoolClassForm.prefix') ?? '');
+watch(namePrefix, (value) => {
+    try {
+        localStorage.setItem('schoolClassForm.prefix', value);
+    } catch {
+        // Ignore — private browsing / storage disabled. Not critical.
+    }
+});
+
+const applyPrefix = () => {
+    if (!namePrefix.value.trim() || !form.value.name.trim()) {
+        return;
+    }
+
+    const alreadyPrefixed = form.value.name.trim().toLowerCase().startsWith(namePrefix.value.trim().toLowerCase());
+    if (!alreadyPrefixed) {
+        form.value.name = `${namePrefix.value.trim()} ${form.value.name.trim()}`;
+    }
+};
+
 const errors = ref<Record<string, string>>({});
 const processing = ref(false);
 const { isValid } = useFormValidity(form, ['name']);
@@ -169,13 +195,24 @@ const resetForm = () => {
                 </DialogHeader>
 
                 <div class="grid gap-4 py-4">
+                    <div v-if="!props.schoolClass" class="grid gap-2">
+                        <Label for="name-prefix">Prefix <span class="text-xs font-normal text-muted-foreground">(optional)</span></Label>
+                        <Input
+                            id="name-prefix"
+                            v-model="namePrefix"
+                            placeholder='e.g., "Class", "Grade", "Level"'
+                        />
+                        <p class="text-xs text-muted-foreground">Attached to whatever you type in Name below — set it once, it's remembered next time.</p>
+                    </div>
+
                     <div class="grid gap-2">
                         <Label for="name">Name <span class="text-destructive">*</span></Label>
                         <Input
                             id="name"
                             v-model="form.name"
-                            placeholder='e.g., "Class 10", "Grade 11"'
+                            placeholder='e.g., "10", "11" (or the full name, like "Class 10")'
                             :class="{ 'border-destructive': errors.name }"
+                            @blur="applyPrefix"
                         />
                         <InputError :message="errors.name" />
                     </div>
