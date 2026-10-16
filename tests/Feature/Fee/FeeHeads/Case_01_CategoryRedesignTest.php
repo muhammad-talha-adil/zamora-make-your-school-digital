@@ -12,7 +12,6 @@
 
 use App\Enums\Fee\FeeFrequency;
 use App\Enums\Fee\FeeHeadCategory;
-use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\DB;
 use Tests\Support\FeeWorld;
 
@@ -71,11 +70,15 @@ it('maps each category to its expected default frequency', function (string $cat
 ]);
 
 it('remaps fee heads saved under the old category values when the migration runs', function () {
-    // Roll the redesign migration back to restore the old enum column and
-    // value set, insert rows the old way (bypassing the model cast, straight
-    // against the raw column), then re-run the migration and confirm every
-    // row lands on the documented new value.
-    Artisan::call('migrate:rollback', ['--step' => 1, '--force' => true]);
+    // Roll just the redesign migration back to restore the old enum column
+    // and value set, insert rows the old way (bypassing the model cast,
+    // straight against the raw column), then re-run it and confirm every
+    // row lands on the documented new value. Targeted by instantiating the
+    // migration file directly rather than `migrate:rollback --step=1` —
+    // that assumed this was always the newest migration in the project,
+    // which broke the moment a later, unrelated migration was added.
+    $migration = require database_path('migrations/2026_09_22_100000_remap_fee_head_categories.php');
+    $migration->down();
 
     $oldToNew = [
         'monthly' => 'tuition',
@@ -104,7 +107,7 @@ it('remaps fee heads saved under the old category values when the migration runs
         ]);
     }
 
-    Artisan::call('migrate', ['--force' => true]);
+    $migration->up();
 
     foreach ($oldToNew as $old => $expectedNew) {
         expect(DB::table('fee_heads')->where('id', $ids[$old])->value('category'))->toBe($expectedNew);

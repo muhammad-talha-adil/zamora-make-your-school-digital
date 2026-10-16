@@ -9,6 +9,7 @@
  * filtered or not.
  */
 
+use App\Models\Fee\FeePayment;
 use App\Models\Fee\FeeVoucherItem;
 use Tests\Support\FeeWorld;
 
@@ -40,8 +41,27 @@ it('loads without a SQL error', function () {
 });
 
 it('reports the excess amount under total_wallet, not the old wallet_amount column', function () {
-    $item = $this->items->first();
-    recordFeePayment($this->world, $item, (float) $item->net_amount + 300);
+    // Overpayment through the actual store() endpoint is disallowed outright
+    // (Issue #121 — see FeePaymentService::recordPayment()), so a payment
+    // carrying an excess_amount can no longer be produced through the HTTP
+    // flow. This test's job is narrower than that: confirm the report sums
+    // the renamed `excess_amount` column, not the old `wallet_amount` one —
+    // so the row is created directly, as a stand-in for the legacy/reversed
+    // payments the column still exists for.
+    FeePayment::create([
+        'receipt_no' => 'TEST-WALLET-1',
+        'student_id' => $this->world->student->id,
+        'student_enrollment_record_id' => $this->world->enrollment->id,
+        'campus_id' => $this->world->school->campus->id,
+        'payment_date' => '2026-04-10',
+        'payment_method' => 'cash',
+        'received_amount' => 300,
+        'allocated_amount' => 0,
+        'excess_amount' => 300,
+        'remaining_unallocated_amount' => 300,
+        'status' => 'posted',
+        'received_by' => $this->world->school->actor->id,
+    ]);
 
     $response = $this->get(route('fee.reports.collection'));
 
