@@ -88,11 +88,15 @@ class CampusController extends Controller
 
         $validated = $request->validated();
 
-        Campus::create($validated);
+        if (empty($validated['campus_type_id'])) {
+            $validated['campus_type_id'] = CampusType::firstOrCreate(['name' => 'Main'])->id;
+        }
+
+        $campus = Campus::create($validated);
 
         // Check if request expects JSON (axios) or redirect (Inertia)
         if (request()->expectsJson()) {
-            return response()->json(['success' => true, 'message' => 'Campus created successfully.']);
+            return response()->json(['success' => true, 'message' => 'Campus created successfully.', 'campus' => $campus]);
         }
 
         return redirect()->back()->with('success', 'Campus created successfully.');

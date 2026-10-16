@@ -33,6 +33,11 @@ const props = defineProps<Props>();
 // dropdown immediately without a full page reload.
 const feeHeadsList = ref([...props.feeHeads]);
 
+// Same reasoning for a campus: a school setting up for the first time has
+// none yet, and had no way to add one without losing everything already
+// typed on this form.
+const campusesList = ref([...props.campuses]);
+
 const breadcrumbItems: BreadcrumbItem[] = [
     { title: 'Dashboard', href: '/dashboard' },
     { title: 'Fee Management', href: '/fee/dashboard' },
@@ -181,8 +186,52 @@ const saveFeeHead = async () => {
     }
 };
 
+// Inline "Add Campus" modal — same reasoning as the Fee Head one above.
+const showCampusModal = ref(false);
+const isSavingCampus = ref(false);
+const campusForm = reactive({ name: '', address: '' });
+const campusFormErrors = ref<Record<string, string>>({});
+
+const openAddCampusModal = () => {
+    campusForm.name = '';
+    campusForm.address = '';
+    campusFormErrors.value = {};
+    showCampusModal.value = true;
+};
+
+const saveCampus = async () => {
+    campusFormErrors.value = {};
+    isSavingCampus.value = true;
+
+    try {
+        const response = await axios.post(route('campuses.store'), {
+            name: campusForm.name,
+            address: campusForm.address || null,
+            is_active: true,
+        }, { headers: { Accept: 'application/json' } });
+
+        const newCampus = response.data.campus;
+        campusesList.value.push({ id: newCampus.id, name: newCampus.name });
+        form.campus_id = String(newCampus.id);
+
+        showCampusModal.value = false;
+        alert.success('Campus created successfully!');
+    } catch (err: unknown) {
+        const response = (err as { response?: { data?: { errors?: Record<string, string[]>; message?: string } } }).response;
+        if (response?.data?.errors) {
+            campusFormErrors.value = Object.fromEntries(
+                Object.entries(response.data.errors).map(([key, value]) => [key, value[0]])
+            );
+        } else {
+            alert.error(response?.data?.message || 'Failed to create campus.');
+        }
+    } finally {
+        isSavingCampus.value = false;
+    }
+};
+
 const sessionOptions = computed(() => props.sessions.map((session) => ({ value: String(session.id), label: session.name })));
-const campusOptions = computed(() => props.campuses.map((campus) => ({ value: String(campus.id), label: campus.name })));
+const campusOptions = computed(() => campusesList.value.map((campus) => ({ value: String(campus.id), label: campus.name })));
 const classOptions = computed(() => props.classes.map((cls) => ({ value: String(cls.id), label: cls.name })));
 const sectionOptions = computed(() => {
     const options = filteredSections.value.map((section) => ({ value: String(section.id), label: section.name }));
@@ -522,7 +571,12 @@ const cancel = () => {
                         </div>
 
                         <div class="space-y-2">
-                            <Label for="campus">Campus <span class="text-destructive">*</span></Label>
+                            <div class="flex items-center justify-between">
+                                <Label for="campus">Campus <span class="text-destructive">*</span></Label>
+                                <button type="button" class="text-xs text-primary hover:underline" @click="openAddCampusModal">
+                                    + Add Campus
+                                </button>
+                            </div>
                             <SearchableSelect
                                 id="campus"
                                 v-model="form.campus_id"
@@ -778,6 +832,35 @@ const cancel = () => {
                     <Button variant="outline" @click="showFeeHeadModal = false">Cancel</Button>
                     <Button @click="saveFeeHead" :disabled="isSavingFeeHead || !feeHeadForm.name">
                         {{ isSavingFeeHead ? 'Saving...' : 'Save Fee Head' }}
+                    </Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+
+        <!-- Add Campus Modal -->
+        <Dialog v-model:open="showCampusModal">
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Add Campus</DialogTitle>
+                </DialogHeader>
+
+                <div class="space-y-4">
+                    <div class="space-y-2">
+                        <Label for="cam-name">Name <span class="text-destructive">*</span></Label>
+                        <Input id="cam-name" v-model="campusForm.name" placeholder="e.g. Main Branch" :class="{ 'border-destructive': campusFormErrors.name }" />
+                        <p v-if="campusFormErrors.name" class="text-sm text-destructive">{{ campusFormErrors.name }}</p>
+                    </div>
+
+                    <div class="space-y-2">
+                        <Label for="cam-address">Address (optional)</Label>
+                        <Input id="cam-address" v-model="campusForm.address" placeholder="e.g. 123 Main Road" />
+                    </div>
+                </div>
+
+                <DialogFooter>
+                    <Button variant="outline" @click="showCampusModal = false">Cancel</Button>
+                    <Button @click="saveCampus" :disabled="isSavingCampus || !campusForm.name">
+                        {{ isSavingCampus ? 'Saving...' : 'Save Campus' }}
                     </Button>
                 </DialogFooter>
             </DialogContent>

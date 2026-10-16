@@ -32,7 +32,11 @@ class StoreCampusRequest extends FormRequest
             ],
             'address' => 'nullable|string',
             'is_active' => 'boolean',
-            'campus_type_id' => 'required|exists:campus_types,id',
+            // Nullable: a quick "add campus" modal elsewhere in the app (the
+            // fee structure form) only asks for a name — the controller
+            // defaults this to the first campus type rather than making
+            // every quick-add flow carry a type picker too.
+            'campus_type_id' => 'nullable|exists:campus_types,id',
         ];
     }
 }
