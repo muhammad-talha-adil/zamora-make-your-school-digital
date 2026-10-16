@@ -59,7 +59,11 @@ const form = ref(getInitialForm());
  * same prefix for every class. Remembered per-browser so it carries over
  * to the next "Add Class" without retyping it either.
  */
-const namePrefix = ref(localStorage.getItem('schoolClassForm.prefix') ?? '');
+const prefixPresets = ['Class', 'Grade', 'Level'];
+const namePrefix = ref(localStorage.getItem('schoolClassForm.prefix') ?? prefixPresets[0]);
+// "Other" is active whenever the remembered/current prefix isn't one of the presets.
+const isOtherPrefix = ref(!prefixPresets.includes(namePrefix.value));
+
 watch(namePrefix, (value) => {
     try {
         localStorage.setItem('schoolClassForm.prefix', value);
@@ -67,6 +71,18 @@ watch(namePrefix, (value) => {
         // Ignore — private browsing / storage disabled. Not critical.
     }
 });
+
+const selectPrefixPreset = (preset: string) => {
+    isOtherPrefix.value = false;
+    namePrefix.value = preset;
+};
+
+const selectOtherPrefix = () => {
+    isOtherPrefix.value = true;
+    if (prefixPresets.includes(namePrefix.value)) {
+        namePrefix.value = '';
+    }
+};
 
 const applyPrefix = () => {
     if (!namePrefix.value.trim() || !form.value.name.trim()) {
@@ -197,10 +213,31 @@ const resetForm = () => {
                 <div class="grid gap-4 py-4">
                     <div v-if="!props.schoolClass" class="grid gap-2">
                         <Label for="name-prefix">Prefix <span class="text-xs font-normal text-muted-foreground">(optional)</span></Label>
+                        <div class="flex flex-wrap gap-2">
+                            <Button
+                                v-for="preset in prefixPresets"
+                                :key="preset"
+                                type="button"
+                                size="sm"
+                                :variant="!isOtherPrefix && namePrefix === preset ? 'default' : 'outline'"
+                                @click="selectPrefixPreset(preset)"
+                            >
+                                {{ preset }}
+                            </Button>
+                            <Button
+                                type="button"
+                                size="sm"
+                                :variant="isOtherPrefix ? 'default' : 'outline'"
+                                @click="selectOtherPrefix"
+                            >
+                                Other
+                            </Button>
+                        </div>
                         <Input
+                            v-if="isOtherPrefix"
                             id="name-prefix"
                             v-model="namePrefix"
-                            placeholder='e.g., "Class", "Grade", "Level"'
+                            placeholder='e.g., "Section", "Standard"'
                         />
                         <p class="text-xs text-muted-foreground">Attached to whatever you type in Name below — set it once, it's remembered next time.</p>
                     </div>
