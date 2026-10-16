@@ -651,10 +651,6 @@ const returnAdvance = async (advance: Advance, status: 'returned' | 'waived') =>
     }
 };
 
-const downloadPayslip = () => {
-    window.open(route('staff.salary.payslip', props.staff.id), '_blank');
-};
-
 const switchTab = (tab: TabKey) => {
     activeTab.value = tab;
 
