@@ -126,7 +126,7 @@ const isSelected = (optionValue: string | number): boolean =>
         v-slot="{ open }"
     >
         <ComboboxAnchor
-            class="flex h-10 w-full items-center justify-between gap-2 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+            class="flex h-10 items-center justify-between gap-2 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
             :class="props.class"
         >
             <ComboboxTrigger class="flex min-w-0 flex-1 items-center overflow-hidden text-left">
@@ -197,7 +197,7 @@ const isSelected = (optionValue: string | number): boolean =>
         v-slot="{ open }"
     >
         <ComboboxAnchor
-            class="flex h-10 w-full items-center justify-between gap-2 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
+            class="flex h-10 items-center justify-between gap-2 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
             :class="props.class"
         >
             <ComboboxTrigger class="flex min-w-0 flex-1 items-center overflow-hidden text-left">
