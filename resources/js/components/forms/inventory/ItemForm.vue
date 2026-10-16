@@ -10,6 +10,7 @@ import { Button, type ButtonVariants } from '@/components/ui/button';
 import {
     Dialog,
     DialogContent,
+    DialogDescription,
     DialogHeader,
     DialogTitle,
     DialogTrigger,
@@ -91,8 +92,11 @@ const filteredInventoryTypes = computed(() => {
         return props.inventoryTypes;
     }
     return props.inventoryTypes.filter((type: any) => {
-        // Show types that are for the selected campus or for all campuses (null)
-        return type.campus_id === form.value.campus_id || type.campus_id === null;
+        // Show types that are for the selected campus or for all campuses
+        // (null). Loose-compared since the campus select's v-model can hand
+        // back a string while `type.campus_id` comes from the API as a
+        // number — a strict `===` silently excluded every real type.
+        return type.campus_id === null || String(type.campus_id) === String(form.value.campus_id);
     });
 });
 
@@ -228,6 +232,9 @@ const submitForm = () => {
                     </div>
                     {{ isEditing ? 'Edit Inventory Item' : 'Add New Inventory Item' }}
                 </DialogTitle>
+                <DialogDescription>
+                    {{ isEditing ? 'Update this item\'s details below.' : 'Enter the details for the new inventory item.' }}
+                </DialogDescription>
             </DialogHeader>
 
             <form @submit.prevent="submitForm" class="space-y-5">
