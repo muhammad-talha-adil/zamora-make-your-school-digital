@@ -361,6 +361,10 @@ const generateVouchers = () => {
             custom_fee_heads: form.custom_fee_heads.length > 0 ? form.custom_fee_heads : null,
         },
         {
+            onError: (errors) => {
+                const firstError = Object.values(errors)[0];
+                alert.error(typeof firstError === 'string' ? firstError : 'Failed to generate vouchers. Please check your selections and try again.');
+            },
             onFinish: () => {
                 isGenerating.value = false;
             },
