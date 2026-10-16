@@ -504,7 +504,14 @@ class FeeVoucherController extends Controller
             'voucher' => [
                 'id' => $voucher->id,
                 'voucher_no' => $voucher->voucher_no,
-                'student' => $voucher->student,
+                // The voucher's own name/registration are what's frozen at
+                // generation — a later correction must not rewrite a
+                // voucher already printed. Older vouchers recorded before
+                // this snapshot existed fall back to the live value.
+                'student' => array_merge($voucher->student?->toArray() ?? [], [
+                    'name' => $voucher->student_name_snapshot ?? $voucher->student?->name,
+                    'registration_number' => $voucher->registration_no_snapshot ?? $voucher->student?->registration_number,
+                ]),
                 'voucher_month' => $voucher->voucherMonth,
                 'voucher_year' => $voucher->voucher_year,
                 'issue_date' => $voucher->issue_date?->format('Y-m-d'),

@@ -45,6 +45,8 @@ class FeeVoucher extends Model
         'voucher_no',
         'student_id',
         'student_enrollment_record_id',
+        'student_name_snapshot',
+        'registration_no_snapshot',
         'session_id',
         'campus_id',
         'class_id',

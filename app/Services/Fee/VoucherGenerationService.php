@@ -169,6 +169,11 @@ class VoucherGenerationService
             'voucher_no' => $voucherNo,
             'student_id' => $enrollment->student_id,
             'student_enrollment_record_id' => $enrollment->id,
+            // Frozen at generation — a later name correction must not
+            // rewrite a voucher/challan already printed and handed to a
+            // parent (same reasoning as new_fee_payments).
+            'student_name_snapshot' => $enrollment->student?->name,
+            'registration_no_snapshot' => $enrollment->student?->registration_no,
             'session_id' => $enrollment->session_id,
             'campus_id' => $enrollment->campus_id,
             'class_id' => $enrollment->class_id,

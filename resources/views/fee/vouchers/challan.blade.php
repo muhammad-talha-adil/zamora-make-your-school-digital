@@ -180,7 +180,7 @@
 
             <div class="meta">
                 <div><dt>Challan No</dt><dd>{{ $voucher->voucher_no }}</dd></div>
-                <div><dt>Student</dt><dd>{{ $voucher->student->name ?? '—' }}</dd></div>
+                <div><dt>Student</dt><dd>{{ $voucher->student_name_snapshot ?? $voucher->student->name ?? '—' }}</dd></div>
                 <div><dt>Father</dt><dd>{{ $voucher->student->father_name ?? '—' }}</dd></div>
                 <div>
                     <dt>Class</dt>
