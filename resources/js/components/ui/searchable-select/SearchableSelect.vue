@@ -51,12 +51,18 @@ const emit = defineEmits<{
 
 const modelValueAsArray = computed(() => (Array.isArray(props.modelValue) ? props.modelValue : []));
 
+// Loosely compared: a model value can arrive as a string (e.g. straight off
+// a session value or a route param) while option values come from freshly
+// cast model ids — a strict `===` here silently fails to match and falls
+// back to the placeholder/empty state even though the right option exists.
 const selectedOption = computed(() =>
-    props.multiple ? null : props.options.find((option) => option.value === props.modelValue) ?? null
+    props.multiple ? null : props.options.find((option) => String(option.value) === String(props.modelValue)) ?? null
 );
 
 const selectedOptions = computed(() =>
-    props.multiple ? props.options.filter((option) => modelValueAsArray.value.includes(option.value)) : []
+    props.multiple
+        ? props.options.filter((option) => modelValueAsArray.value.some((v) => String(v) === String(option.value)))
+        : []
 );
 
 const triggerLabel = computed(() => {

@@ -212,7 +212,7 @@
               :model-value="campusSwitcher.activeCampusId"
               :options="campusSwitcherOptions"
               placeholder="Select Campus"
-              class="hidden sm:inline-block w-40"
+              class="inline-block w-28 sm:w-44"
               @update:model-value="switchCampus"
             />
             <span class="hidden lg:inline text-sm truncate max-w-56" :style="{ color: 'var(--header-text)' }">Welcome, {{ pageProps.auth?.user?.name || 'User' }}</span>
