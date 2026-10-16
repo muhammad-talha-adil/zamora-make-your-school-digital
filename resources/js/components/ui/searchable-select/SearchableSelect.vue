@@ -122,6 +122,7 @@ const isSelected = (optionValue: string | number): boolean =>
         :multiple="true"
         :disabled="props.disabled"
         class="relative"
+        :class="props.class"
         v-slot="{ open }"
     >
         <ComboboxAnchor
@@ -192,6 +193,7 @@ const isSelected = (optionValue: string | number): boolean =>
         v-model="modelValueAsString"
         :disabled="props.disabled"
         class="relative"
+        :class="props.class"
         v-slot="{ open }"
     >
         <ComboboxAnchor
