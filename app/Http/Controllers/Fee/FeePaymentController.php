@@ -274,8 +274,19 @@ class FeePaymentController extends Controller
 
         $payment->student?->append(['name', 'registration_number']);
 
+        // A receipt must show the student's name/registration as they were
+        // at the moment of payment, not whatever they are today — a later
+        // name correction or re-enrollment must never rewrite a receipt
+        // already handed to a parent. Older payments recorded before this
+        // snapshot existed fall back to the live value.
+        $paymentData = $payment->toArray();
+        if (isset($paymentData['student'])) {
+            $paymentData['student']['name'] = $payment->student_name_snapshot ?? $payment->student?->name;
+            $paymentData['student']['registration_number'] = $payment->registration_no_snapshot ?? $payment->student?->registration_number;
+        }
+
         return Inertia::render('Fee/Payments/Receipt', [
-            'payment' => $payment,
+            'payment' => $paymentData,
         ]);
     }
 

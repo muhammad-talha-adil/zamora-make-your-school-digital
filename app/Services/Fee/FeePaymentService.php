@@ -128,7 +128,7 @@ class FeePaymentService
         }
 
         return DB::transaction(function () use ($data, $totalAllocated) {
-            $student = Student::with('currentEnrollment')->findOrFail($data['student_id']);
+            $student = Student::with(['currentEnrollment.class', 'currentEnrollment.section'])->findOrFail($data['student_id']);
             $enrollment = $student->currentEnrollment;
 
             if (! $enrollment) {
@@ -142,6 +142,13 @@ class FeePaymentService
                 'receipt_no' => $receiptNo,
                 'student_id' => $data['student_id'],
                 'student_enrollment_record_id' => $enrollment->id,
+                // Frozen at the moment of payment — a later name correction
+                // or class change must never rewrite a receipt already
+                // handed to a parent.
+                'student_name_snapshot' => $student->name,
+                'registration_no_snapshot' => $student->registration_no,
+                'class_name_snapshot' => $enrollment->class?->name,
+                'section_name_snapshot' => $enrollment->section?->name,
                 'campus_id' => $enrollment->campus_id,
                 'payment_date' => $data['payment_date'],
                 'payment_method' => $data['payment_method'],
