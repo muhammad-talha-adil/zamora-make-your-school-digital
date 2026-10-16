@@ -794,7 +794,7 @@ const otherRelationOptions = computed(() =>
 );
 
 const genderOptions = computed(() => props.genders.map((gender) => ({ value: gender.id, label: gender.name })));
-const campusSelectOptions = computed(() => campuses.map((campus) => ({ value: campus.id, label: campus.name })));
+const campusSelectOptions = computed(() => campuses.value.map((campus) => ({ value: campus.id, label: campus.name })));
 const sessionSelectOptions = computed(() => props.sessions.map((session) => ({ value: session.id, label: session.name })));
 const classSelectOptions = computed(() => availableClasses.value.map((cls) => ({ value: cls.id, label: cls.name })));
 const sectionSelectOptions = computed(() => filteredSections.value.map((section) => ({ value: section.id, label: section.name })));
