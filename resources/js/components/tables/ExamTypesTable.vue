@@ -69,6 +69,7 @@ const inactivateExamType = (examType: any) => {
         .confirm(
             `Are you sure you want to deactivate "${examType.name}"?`,
             'Deactivate Exam Type',
+            'Yes, deactivate it!',
         )
         .then((result) => {
             if (result.isConfirmed) {
