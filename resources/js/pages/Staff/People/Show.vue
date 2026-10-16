@@ -228,6 +228,108 @@ const savePersonal = async () => {
     }
 };
 
+/* ------------------------------------------------------------------- jobs */
+
+const jobForm = reactive({
+    designation_id: '',
+    department_id: '',
+    campus_id: '',
+    started_on: new Date().toISOString().slice(0, 10),
+    is_primary: false,
+});
+
+const resetJobForm = () => {
+    jobForm.designation_id = '';
+    jobForm.department_id = '';
+    jobForm.campus_id = '';
+    jobForm.started_on = new Date().toISOString().slice(0, 10);
+    jobForm.is_primary = false;
+};
+
+const addJob = async () => {
+    if (!jobForm.designation_id) {
+        alert.error('Please select a designation.');
+        return;
+    }
+
+    try {
+        await axios.post(route('staff.people.jobs.add', props.staff.id), jobForm);
+        alert.success('Job added.');
+        resetJobForm();
+        router.reload({ only: ['jobs'] });
+    } catch (error: any) {
+        alert.error(error?.response?.data?.message || 'Failed to add job.');
+    }
+};
+
+const makePrimary = async (job: { id: number }) => {
+    try {
+        await axios.patch(route('staff.jobs.primary', job.id));
+        alert.success('Primary job changed.');
+        router.reload({ only: ['jobs'] });
+    } catch (error: any) {
+        alert.error(error?.response?.data?.message || 'Failed to change primary job.');
+    }
+};
+
+const endJob = async (job: { id: number }) => {
+    const result = await alert.confirm('End this job assignment?', 'End Job', 'Yes, end it!');
+    if (!result.isConfirmed) {
+        return;
+    }
+
+    try {
+        await axios.patch(route('staff.jobs.end', job.id));
+        alert.success('Job ended.');
+        router.reload({ only: ['jobs'] });
+    } catch (error: any) {
+        alert.error(error?.response?.data?.message || 'Failed to end job.');
+    }
+};
+
+/* ----------------------------------------------------------- qualifications */
+
+const qualificationForm = reactive({
+    title: '',
+    institution: '',
+    year_completed: '',
+    grade: '',
+});
+
+const addQualification = async () => {
+    if (!qualificationForm.title.trim()) {
+        alert.error('Please enter a title.');
+        return;
+    }
+
+    try {
+        await axios.post(route('staff.people.qualifications.add', props.staff.id), qualificationForm);
+        alert.success('Qualification added.');
+        qualificationForm.title = '';
+        qualificationForm.institution = '';
+        qualificationForm.year_completed = '';
+        qualificationForm.grade = '';
+        router.reload({ only: ['staff'] });
+    } catch (error: any) {
+        alert.error(error?.response?.data?.message || 'Failed to add qualification.');
+    }
+};
+
+const removeQualification = async (qualificationId: number) => {
+    const result = await alert.confirm('Remove this qualification?', 'Remove Qualification', 'Yes, remove it!');
+    if (!result.isConfirmed) {
+        return;
+    }
+
+    try {
+        await axios.delete(route('staff.qualifications.remove', qualificationId));
+        alert.success('Qualification removed.');
+        router.reload({ only: ['staff'] });
+    } catch (error: any) {
+        alert.error(error?.response?.data?.message || 'Failed to remove qualification.');
+    }
+};
+
 /* ------------------------------------------------------------ leave/rejoin */
 
 const showLeaveDialog = ref(false);
@@ -572,7 +674,7 @@ const activeJobsCount = computed(() => props.jobs.length);
 </script>
 
 <template>
-    <AppLayout :breadcrumbs="breadcrumbItems">
+    <PortalLayout :breadcrumbs="breadcrumbs">
         <Head :title="props.staff.user?.name ?? 'Staff Profile'" />
 
         <div class="space-y-6 p-4 md:p-6">
@@ -1141,5 +1243,5 @@ const activeJobsCount = computed(() => props.jobs.length);
             :staff-profile-id="props.staff.id"
             @given="loadAdvances"
         />
-    </AppLayout>
+    </PortalLayout>
 </template>
