@@ -161,6 +161,7 @@ const isSelected = (optionValue: string | number): boolean =>
                 <div class="sticky top-0 border-b border-border bg-card p-1.5">
                     <ComboboxInput
                         auto-focus
+                        :display-value="() => ''"
                         :placeholder="props.searchPlaceholder"
                         class="flex h-8 w-full rounded-sm border-0 bg-transparent px-2 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none"
                     />
@@ -230,6 +231,7 @@ const isSelected = (optionValue: string | number): boolean =>
                 <div class="sticky top-0 border-b border-border bg-card p-1.5">
                     <ComboboxInput
                         auto-focus
+                        :display-value="() => ''"
                         :placeholder="props.searchPlaceholder"
                         class="flex h-8 w-full rounded-sm border-0 bg-transparent px-2 text-sm text-foreground placeholder:text-muted-foreground focus-visible:outline-none"
                     />
