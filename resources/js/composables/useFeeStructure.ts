@@ -212,6 +212,7 @@ export function useFeeStructure() {
             if (response.data.success) {
                 feeStructure.value = response.data.data;
                 resetSelections();
+                prefillFromStructure();
             } else {
                 feeStructure.value = null;
             }
@@ -241,7 +242,27 @@ export function useFeeStructure() {
         discountValue.value = 0;
         selectedDiscountType.value = '';
         manualReason.value = '';
-        feeMode.value = 'structure';
+        feeMode.value = 'manual';
+    }
+
+    /**
+     * The fee-heads table shown once a class/session/campus is picked is
+     * the structure's own items, pre-filled so the office doesn't have to
+     * manually tick every mandatory head and retype its amount: every
+     * mandatory item starts checked with its structure amount ready to go,
+     * every optional item is listed but starts unchecked (and its amount
+     * field inactive) until ticked on.
+     */
+    function prefillFromStructure() {
+        if (!feeStructure.value) return;
+
+        manualSelectedFeeHeads.value = feeStructure.value.items
+            .filter((item) => !item.is_optional)
+            .map((item) => item.fee_head_id);
+
+        feeStructure.value.items.forEach((item) => {
+            manualFeeAmounts.value[item.fee_head_id] = item.amount;
+        });
     }
 
     // Navigate to create fee structure page
@@ -419,6 +440,7 @@ export function useFeeStructure() {
         setManualFeeAmountDebounced,
         calculateDiscountPercentage,
         resetSelections,
+        prefillFromStructure,
         createFeeStructure,
         loadEnrollmentData,
         validateActiveMode,

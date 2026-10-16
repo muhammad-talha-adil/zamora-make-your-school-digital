@@ -76,7 +76,7 @@
                         ]"
                     >
                         <Icon icon="edit" class="mr-1 inline h-4 w-4" />
-                        Manual Entry
+                        Fee Heads
                     </button>
                 </nav>
             </div>
@@ -195,8 +195,8 @@
             <!-- OPTION C: Manual Entry -->
             <div v-else-if="feeMode === 'manual'">
                 <p class="mb-4 text-sm text-muted-foreground">
-                    Enter custom fee amounts for each fee head. You must select fee heads from the structure.
-                    For mandatory fee heads, selection is required. Optional fee heads can be skipped.
+                    Every mandatory fee head from this class's structure is ticked with its default amount —
+                    edit the amount for any student-specific adjustment. Tick an optional fee head to include it.
                 </p>
 
                 <!-- Manual Fee Entries -->
