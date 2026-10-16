@@ -16,7 +16,6 @@ use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Support\Facades\Storage;
 use Spatie\Activitylog\Models\Concerns\LogsActivity;
 use Spatie\Activitylog\Support\LogOptions;
 
@@ -68,16 +67,16 @@ class Student extends Model
     ];
 
     /**
-     * The photograph's public URL, resolved from the `public` disk path
-     * stored in `image`. Null when no photo has been uploaded.
+     * `image` is stored as a root-relative URL (e.g. "/uploads/students/
+     * foo.jpg") written straight into the public webroot — not the
+     * `storage` disk, which needs `php artisan storage:link` to be
+     * reachable at all and silently breaks on any host where that symlink
+     * was never created (the same reasoning the school logo upload already
+     * follows). Null when no photo has been uploaded.
      */
     public function getImageUrlAttribute(): ?string
     {
-        if (! $this->image) {
-            return null;
-        }
-
-        return Storage::disk('public')->url($this->image);
+        return $this->image ?: null;
     }
 
     /**

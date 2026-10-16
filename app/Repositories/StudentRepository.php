@@ -26,8 +26,8 @@ use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\File;
 use Illuminate\Support\Facades\Log;
-use Illuminate\Support\Facades\Storage;
 
 class StudentRepository
 {
@@ -318,16 +318,19 @@ class StudentRepository
         // Create filename: studentname_studentcode.extension
         $filename = $sanitizedName.'_'.$studentCode.'.'.$extension;
 
-        // Ensure the students directory exists
-        $directory = 'students';
-        if (! Storage::disk('public')->exists($directory)) {
-            Storage::disk('public')->makeDirectory($directory);
+        // Written straight into the public webroot (public/uploads/students)
+        // rather than the `storage` disk — that needs `php artisan
+        // storage:link` to be reachable at all, which silently never
+        // happens on some hosts. Same convention the school logo upload
+        // already uses.
+        $directory = public_path('uploads/students');
+        if (! File::isDirectory($directory)) {
+            File::makeDirectory($directory, 0755, true);
         }
 
-        // Store in public/students directory
-        $path = $imageFile->storeAs($directory, $filename, 'public');
+        $imageFile->move($directory, $filename);
 
-        return $path;
+        return '/uploads/students/'.$filename;
     }
 
     /**
@@ -335,8 +338,14 @@ class StudentRepository
      */
     private function deleteImage(?string $imagePath): void
     {
-        if ($imagePath && Storage::disk('public')->exists($imagePath)) {
-            Storage::disk('public')->delete($imagePath);
+        if (! $imagePath) {
+            return;
+        }
+
+        $fullPath = public_path(ltrim($imagePath, '/'));
+
+        if (File::exists($fullPath)) {
+            File::delete($fullPath);
         }
     }
 

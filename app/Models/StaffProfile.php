@@ -15,7 +15,6 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Support\Facades\Storage;
 use Spatie\Activitylog\Models\Concerns\LogsActivity;
 use Spatie\Activitylog\Support\LogOptions;
 
@@ -111,16 +110,14 @@ class StaffProfile extends Model
     ];
 
     /**
-     * The photograph's public URL, resolved from the `public` disk path
-     * stored in `photo`. Null when no photo has been uploaded.
+     * `photo` is a root-relative URL written straight into the public
+     * webroot, the same convention `Student::image_url` uses — avoids
+     * depending on the `storage` disk symlink. Null when no photo has been
+     * uploaded (there is no upload path for this field yet).
      */
     public function getPhotoUrlAttribute(): ?string
     {
-        if (! $this->photo) {
-            return null;
-        }
-
-        return Storage::disk('public')->url($this->photo);
+        return $this->photo ?: null;
     }
 
     /**
