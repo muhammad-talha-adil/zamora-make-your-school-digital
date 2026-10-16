@@ -8,6 +8,7 @@ use App\Http\Requests\Inventory\StorePurchaseRequest;
 use App\Models\Campus;
 use App\Models\InventoryItem;
 use App\Models\InventoryStock;
+use App\Models\InventoryValuation;
 use App\Models\Purchase;
 use App\Models\PurchaseItem;
 use App\Models\Supplier;
@@ -218,7 +219,7 @@ class PurchasesController extends Controller
                     $totalAmount += $total;
 
                     // Create purchase item with snapshot fields for audit
-                    PurchaseItem::create([
+                    $purchaseItem = PurchaseItem::create([
                         'purchase_id' => $purchase->id,
                         'inventory_item_id' => $item['inventory_item_id'],
                         'quantity' => $quantity,
@@ -227,6 +228,11 @@ class PurchasesController extends Controller
                         'total' => $total,
                         'item_snapshot' => $this->getItemSnapshot($item['inventory_item_id'], $rate, $saleRate),
                     ]);
+
+                    // Record the weighted-average cost so the Finance/Inventory
+                    // dashboard's valuation total reflects real stock value
+                    // instead of always reading 0 (nothing wrote this table).
+                    InventoryValuation::createAfterPurchase($purchaseItem);
 
                     // Update or create stock atomically
                     $stock = InventoryStock::firstOrCreate(
@@ -351,7 +357,7 @@ class PurchasesController extends Controller
                     $totalAmount += $total;
 
                     // Create new purchase item
-                    PurchaseItem::create([
+                    $purchaseItem = PurchaseItem::create([
                         'purchase_id' => $purchase->id,
                         'inventory_item_id' => $item['inventory_item_id'],
                         'quantity' => $quantity,
@@ -360,6 +366,8 @@ class PurchasesController extends Controller
                         'total' => $total,
                         'item_snapshot' => $this->getItemSnapshot($item['inventory_item_id'], $rate, $saleRate),
                     ]);
+
+                    InventoryValuation::createAfterPurchase($purchaseItem);
 
                     // Add new stock
                     $stock = InventoryStock::firstOrCreate(
