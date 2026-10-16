@@ -156,7 +156,7 @@ const isSelected = (optionValue: string | number): boolean =>
 
         <ComboboxPortal>
             <ComboboxContent
-                class="z-[100] mt-1 max-h-60 w-[--reka-combobox-trigger-width] overflow-hidden rounded-md border border-border bg-card shadow-lg"
+                class="z-[100] mt-1 max-h-60 w-[var(--reka-combobox-trigger-width)] overflow-hidden rounded-md border border-border bg-card shadow-lg"
                 position="popper"
             >
                 <div class="sticky top-0 border-b border-border bg-card p-1.5">
@@ -227,7 +227,7 @@ const isSelected = (optionValue: string | number): boolean =>
 
         <ComboboxPortal>
             <ComboboxContent
-                class="z-[100] mt-1 max-h-60 w-[--reka-combobox-trigger-width] overflow-hidden rounded-md border border-border bg-card shadow-lg"
+                class="z-[100] mt-1 max-h-60 w-[var(--reka-combobox-trigger-width)] overflow-hidden rounded-md border border-border bg-card shadow-lg"
                 position="popper"
             >
                 <div class="sticky top-0 border-b border-border bg-card p-1.5">
