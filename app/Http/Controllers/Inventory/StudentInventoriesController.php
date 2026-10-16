@@ -492,13 +492,22 @@ class StudentInventoriesController extends Controller
 
                     $item = InventoryItem::findOrFail($inventoryItemId);
 
-                    // Get the latest sale_rate from purchase items
-                    $purchaseItem = PurchaseItem::where('inventory_item_id', $inventoryItemId)
+                    // Get the latest sale_rate from this campus's purchase items.
+                    // An item with stock but no purchase history on this campus
+                    // has no priced source to charge the student from — fail
+                    // loudly instead of silently charging 0 (a real item for
+                    // free, with no visible error anywhere).
+                    $purchaseItem = PurchaseItem::whereHas('purchase', fn ($q) => $q->where('campus_id', $validated['campus_id']))
+                        ->where('inventory_item_id', $inventoryItemId)
                         ->orderBy('id', 'desc')
                         ->first();
 
-                    $unitPrice = $purchaseItem?->sale_rate ?? 0;
-                    $purchaseRate = $purchaseItem?->purchase_rate ?? 0;
+                    if (! $purchaseItem) {
+                        throw new \Exception("\"{$item->name}\" has no purchase record on this campus, so it has no price to charge. Record a purchase for it first.");
+                    }
+
+                    $unitPrice = $purchaseItem->sale_rate;
+                    $purchaseRate = $purchaseItem->purchase_rate;
 
                     $lineTotal = $quantity * $unitPrice;
                     $lineDiscount = $discountAmount + ($lineTotal * $discountPercentage / 100);
@@ -537,13 +546,20 @@ class StudentInventoriesController extends Controller
 
                     $item = InventoryItem::findOrFail($inventoryItemId);
 
-                    // Get the latest rates from purchase items
-                    $purchaseItem = PurchaseItem::where('inventory_item_id', $inventoryItemId)
+                    // Same campus-scoped lookup as the first pass — see the
+                    // comment there for why a missing purchase record throws
+                    // rather than silently pricing the item at 0.
+                    $purchaseItem = PurchaseItem::whereHas('purchase', fn ($q) => $q->where('campus_id', $validated['campus_id']))
+                        ->where('inventory_item_id', $inventoryItemId)
                         ->orderBy('id', 'desc')
                         ->first();
 
-                    $unitPrice = $purchaseItem?->sale_rate ?? 0;
-                    $purchaseRate = $purchaseItem?->purchase_rate ?? 0;
+                    if (! $purchaseItem) {
+                        throw new \Exception("\"{$item->name}\" has no purchase record on this campus, so it has no price to charge. Record a purchase for it first.");
+                    }
+
+                    $unitPrice = $purchaseItem->sale_rate;
+                    $purchaseRate = $purchaseItem->purchase_rate;
 
                     // Create student inventory item
                     StudentInventoryItem::create([
