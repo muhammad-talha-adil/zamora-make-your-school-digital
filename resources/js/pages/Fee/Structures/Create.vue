@@ -38,6 +38,9 @@ const feeHeadsList = ref([...props.feeHeads]);
 // typed on this form.
 const campusesList = ref([...props.campuses]);
 
+// Same reasoning for a class.
+const classesList = ref([...props.classes]);
+
 const breadcrumbItems: BreadcrumbItem[] = [
     { title: 'Dashboard', href: '/dashboard' },
     { title: 'Fee Management', href: '/fee/dashboard' },
@@ -230,9 +233,53 @@ const saveCampus = async () => {
     }
 };
 
+// Inline "Add Class" modal — same reasoning as the Fee Head/Campus ones above.
+const showClassModal = ref(false);
+const isSavingClass = ref(false);
+const classForm = reactive({ name: '', description: '' });
+const classFormErrors = ref<Record<string, string>>({});
+
+const openAddClassModal = () => {
+    classForm.name = '';
+    classForm.description = '';
+    classFormErrors.value = {};
+    showClassModal.value = true;
+};
+
+const saveClass = async () => {
+    classFormErrors.value = {};
+    isSavingClass.value = true;
+
+    try {
+        const response = await axios.post('/settings/school-classes', {
+            name: classForm.name,
+            description: classForm.description || null,
+        }, { headers: { Accept: 'application/json' } });
+
+        const newClass = response.data.schoolClass ?? response.data.class;
+        classesList.value.push({ id: newClass.id, name: newClass.name });
+        form.class_id = String(newClass.id);
+        onClassChange();
+
+        showClassModal.value = false;
+        alert.success('Class created successfully!');
+    } catch (err: unknown) {
+        const response = (err as { response?: { data?: { errors?: Record<string, string[]>; message?: string } } }).response;
+        if (response?.data?.errors) {
+            classFormErrors.value = Object.fromEntries(
+                Object.entries(response.data.errors).map(([key, value]) => [key, value[0]])
+            );
+        } else {
+            alert.error(response?.data?.message || 'Failed to create class.');
+        }
+    } finally {
+        isSavingClass.value = false;
+    }
+};
+
 const sessionOptions = computed(() => props.sessions.map((session) => ({ value: String(session.id), label: session.name })));
 const campusOptions = computed(() => campusesList.value.map((campus) => ({ value: String(campus.id), label: campus.name })));
-const classOptions = computed(() => props.classes.map((cls) => ({ value: String(cls.id), label: cls.name })));
+const classOptions = computed(() => classesList.value.map((cls) => ({ value: String(cls.id), label: cls.name })));
 const sectionOptions = computed(() => {
     const options = filteredSections.value.map((section) => ({ value: String(section.id), label: section.name }));
     if (form.class_id && filteredSections.value.length > 0) {
@@ -591,7 +638,12 @@ const cancel = () => {
                     <!-- Class & Section -->
                     <div class="grid gap-4 md:grid-cols-2">
                         <div class="space-y-2">
-                            <Label for="class">Class (Optional)</Label>
+                            <div class="flex items-center justify-between">
+                                <Label for="class">Class (Optional)</Label>
+                                <button type="button" class="text-xs text-primary hover:underline" @click="openAddClassModal">
+                                    + Add Class
+                                </button>
+                            </div>
                             <SearchableSelect
                                 id="class"
                                 v-model="form.class_id"
@@ -861,6 +913,35 @@ const cancel = () => {
                     <Button variant="outline" @click="showCampusModal = false">Cancel</Button>
                     <Button @click="saveCampus" :disabled="isSavingCampus || !campusForm.name">
                         {{ isSavingCampus ? 'Saving...' : 'Save Campus' }}
+                    </Button>
+                </DialogFooter>
+            </DialogContent>
+        </Dialog>
+
+        <!-- Add Class Modal -->
+        <Dialog v-model:open="showClassModal">
+            <DialogContent>
+                <DialogHeader>
+                    <DialogTitle>Add Class</DialogTitle>
+                </DialogHeader>
+
+                <div class="space-y-4">
+                    <div class="space-y-2">
+                        <Label for="cls-name">Name <span class="text-destructive">*</span></Label>
+                        <Input id="cls-name" v-model="classForm.name" placeholder='e.g. "10", "Class 10"' :class="{ 'border-destructive': classFormErrors.name }" />
+                        <p v-if="classFormErrors.name" class="text-sm text-destructive">{{ classFormErrors.name }}</p>
+                    </div>
+
+                    <div class="space-y-2">
+                        <Label for="cls-description">Description (optional)</Label>
+                        <Input id="cls-description" v-model="classForm.description" placeholder="Enter class description" />
+                    </div>
+                </div>
+
+                <DialogFooter>
+                    <Button variant="outline" @click="showClassModal = false">Cancel</Button>
+                    <Button @click="saveClass" :disabled="isSavingClass || !classForm.name">
+                        {{ isSavingClass ? 'Saving...' : 'Save Class' }}
                     </Button>
                 </DialogFooter>
             </DialogContent>

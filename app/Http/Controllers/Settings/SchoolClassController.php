@@ -85,10 +85,10 @@ class SchoolClassController extends Controller
         // be filed under a campus the creator doesn't actually administer.
         $validated['campus_id'] = $request->user()->campusId();
 
-        SchoolClass::create($validated);
+        $schoolClass = SchoolClass::create($validated);
 
         if (request()->expectsJson()) {
-            return response()->json(['success' => true, 'message' => 'Class created successfully.']);
+            return response()->json(['success' => true, 'message' => 'Class created successfully.', 'schoolClass' => $schoolClass]);
         }
 
         return redirect()->route('school-classes.index')->with('success', 'School class created successfully.');
