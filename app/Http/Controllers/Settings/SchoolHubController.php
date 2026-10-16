@@ -106,7 +106,7 @@ class SchoolHubController extends Controller
             [
                 'key' => 'staff',
                 'title' => 'Staff',
-                'description' => 'Departments, designations and salary components.',
+                'description' => 'Designations and salary components.',
                 'route' => 'staff.settings.page',
                 'visible' => Gate::check('manageStructure', StaffProfile::class),
             ],
