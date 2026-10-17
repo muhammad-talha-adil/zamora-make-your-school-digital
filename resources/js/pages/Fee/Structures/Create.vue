@@ -112,7 +112,6 @@ const showFeeHeadModal = ref(false);
 const isSavingFeeHead = ref(false);
 const feeHeadForm = reactive({
     name: '',
-    code: '',
     category: 'tuition',
     default_frequency: 'monthly',
 });
@@ -139,7 +138,6 @@ watch(
 
 const openAddFeeHeadModal = () => {
     feeHeadForm.name = '';
-    feeHeadForm.code = '';
     feeHeadForm.category = 'tuition';
     feeHeadForm.default_frequency = 'monthly';
     lastSuggestedFeeHeadFrequency.value = null;
@@ -154,7 +152,6 @@ const saveFeeHead = async () => {
     try {
         const response = await axios.post(route('fee.heads.store'), {
             name: feeHeadForm.name,
-            code: feeHeadForm.code || feeHeadForm.name.toUpperCase().replace(/[^A-Z0-9]+/g, '_').slice(0, 50),
             category: feeHeadForm.category,
             default_frequency: feeHeadForm.default_frequency,
             is_recurring: feeHeadForm.default_frequency !== 'once',
@@ -859,12 +856,6 @@ const cancel = () => {
                         <Label for="fh-name">Name <span class="text-destructive">*</span></Label>
                         <Input id="fh-name" v-model="feeHeadForm.name" placeholder="e.g. Tuition Fee" :class="{ 'border-destructive': feeHeadFormErrors.name }" />
                         <p v-if="feeHeadFormErrors.name" class="text-sm text-destructive">{{ feeHeadFormErrors.name }}</p>
-                    </div>
-
-                    <div class="space-y-2">
-                        <Label for="fh-code">Code (optional, auto-generated if left blank)</Label>
-                        <Input id="fh-code" v-model="feeHeadForm.code" placeholder="e.g. TUITION" :class="{ 'border-destructive': feeHeadFormErrors.code }" />
-                        <p v-if="feeHeadFormErrors.code" class="text-sm text-destructive">{{ feeHeadFormErrors.code }}</p>
                     </div>
 
                     <div class="grid gap-4 sm:grid-cols-2">
