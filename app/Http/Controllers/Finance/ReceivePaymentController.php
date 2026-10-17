@@ -125,7 +125,6 @@ class ReceivePaymentController extends Controller
         $campusId = $this->resolveCampusId($request);
 
         $request->validate([
-            'campus_id' => 'required|exists:campuses,id',
             'class_id' => 'required|exists:school_classes,id',
             'section_id' => 'nullable|exists:sections,id',
             'q' => 'nullable|string',
@@ -270,7 +269,6 @@ class ReceivePaymentController extends Controller
         if ($request->payment_type === 'other') {
             $validated = $request->validate([
                 'payment_type' => 'required|in:student,other',
-                'campus_id' => 'required|exists:campuses,id',
                 'amount' => 'required|numeric|min:1',
                 'payment_method' => 'required',
                 'category_id' => 'required|exists:ledger_categories,id',
@@ -291,7 +289,7 @@ class ReceivePaymentController extends Controller
                 'reference_id' => null,
                 'transaction_date' => $validated['transaction_date'],
                 'description' => $validated['description'] ?? 'Manual payment received: '.($validated['payer_name'] ?? 'Other'),
-                'campus_id' => $validated['campus_id'],
+                'campus_id' => $this->resolveCampusId($request),
             ]);
 
             return redirect()->route('finance.transactions.index')

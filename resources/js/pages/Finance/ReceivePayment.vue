@@ -1,5 +1,5 @@
 Fee<script setup lang="ts">
-import { Head, router } from '@inertiajs/vue3';
+import { Head, router, usePage } from '@inertiajs/vue3';
 import { ref, computed, watch } from 'vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import type { BreadcrumbItem } from '@/types';
@@ -38,6 +38,15 @@ interface Props {
 
 const props = defineProps<Props>();
 
+// A campus-restricted clerk only ever sees their own campus's students, so
+// the Campus field is only shown to a school-wide user (owner/developer) who
+// may be receiving payment for a student at a campus other than whichever
+// one the header switcher currently has selected — both start from the
+// same resolved value the backend uses (see ScopesCampusForUser).
+const page = usePage();
+const academicScope = computed(() => (page.props as any).academicScope as { campusId: number | null; isCampusRestricted: boolean });
+const showCampusField = computed(() => !academicScope.value?.isCampusRestricted);
+
 // Reactive state
 const selectedStudent = ref<Student | null>(null);
 const studentVouchers = ref<Voucher[]>([]);
@@ -48,7 +57,7 @@ const isLoadingDetails = ref(false);
 // Form data
 const form = ref({
     payment_type: 'student',
-    campus_id: '' as string | number,
+    campus_id: (academicScope.value?.campusId ?? '') as string | number,
     class_id: '' as string | number,
     section_id: '' as string | number,
     student_id: '' as string | number,
@@ -268,7 +277,7 @@ const formatMoney = (amount: number) => {
 
                     <!-- Campus, Class, Section Filters -->
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-                        <div>
+                        <div v-if="showCampusField">
                             <Label for="campus_id">Campus *</Label>
                             <SearchableSelect
                                 id="campus_id"

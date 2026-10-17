@@ -62,6 +62,12 @@ class AttendanceSettingsController extends Controller
 
         $validated = $this->validateShiftTiming($request);
 
+        // Filed under whichever campus the creator is currently scoped to
+        // (their own campus, or the header switcher's pick for an
+        // owner/developer) — not a client-supplied value, matching the
+        // same convention as SchoolClassController::store().
+        $validated['campus_id'] = $request->user()->campusId();
+
         AttendanceTiming::create($validated);
 
         return back()->with('success', 'Shift timing created successfully.');
@@ -76,6 +82,8 @@ class AttendanceSettingsController extends Controller
 
         $validated = $this->validateShiftTiming($request);
 
+        // campus_id is deliberately not editable here — a shift timing
+        // stays filed under the campus it was created for.
         $shiftTiming->update($validated);
 
         return back()->with('success', 'Shift timing updated successfully.');
@@ -111,7 +119,6 @@ class AttendanceSettingsController extends Controller
     private function validateShiftTiming(Request $request): array
     {
         $validated = $request->validate([
-            'campus_id' => ['required', 'integer', Rule::exists('campuses', 'id')],
             'session_id' => ['nullable', 'integer', Rule::exists('academic_sessions', 'id')],
             'class_ids' => ['nullable', 'array'],
             'class_ids.*' => ['integer', Rule::exists('school_classes', 'id')],

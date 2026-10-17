@@ -53,7 +53,6 @@ const errors = ref({});
 const processing = ref(false);
 
 const defaultForm = () => ({
-    campus_id: props.shiftTiming?.campus_id ?? '',
     session_id: props.shiftTiming?.session_id ?? '',
     class_ids: (props.shiftTiming?.class_ids ?? []) as number[],
     name: props.shiftTiming?.name || '',
@@ -69,9 +68,8 @@ const defaultForm = () => ({
 });
 
 const form = ref(defaultForm());
-const campusOptions = computed(() => props.campuses.map((campus) => ({ value: campus.id, label: campus.name })));
 
-const { isValid } = useFormValidity(form, ['campus_id', 'name', 'starts_on', 'ends_on', 'day_starts_at', 'late_after']);
+const { isValid } = useFormValidity(form, ['name', 'starts_on', 'ends_on', 'day_starts_at', 'late_after']);
 
 const isEditing = computed(() => !!props.shiftTiming?.id);
 
@@ -147,12 +145,6 @@ const submit = () => {
                             <Label for="name">Name *</Label>
                             <Input id="name" v-model="form.name" placeholder="e.g., Junior Classes" :class="{ 'border-destructive': (errors as any).name }" />
                             <InputError :message="(errors as any).name" />
-                        </div>
-
-                        <div>
-                            <Label for="campus_id">Campus *</Label>
-                            <SearchableSelect id="campus_id" v-model="form.campus_id" :options="campusOptions" placeholder="Select Campus" />
-                            <InputError :message="(errors as any).campus_id" />
                         </div>
 
                         <div>
