@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import axios from 'axios';
 import { ref, computed, reactive, watch, nextTick } from 'vue';
+import { usePage } from '@inertiajs/vue3';
 import { useFormValidity } from '@/composables/useFormValidity';
 import { alert, formatCurrency, themeToken } from '@/utils';
 import Swal from 'sweetalert2';
@@ -85,6 +86,14 @@ const props = withDefaults(defineProps<Props>(), {
 // Check if we're in edit mode
 const isEditMode = computed(() => !!props.purchase);
 
+// A campus-restricted user never sees this field — the backend already
+// forces their own campus regardless of what's submitted. A school-wide
+// user (owner/developer) still gets to pick, since purchasing is often
+// done centrally for a campus other than the header switcher's current one.
+const page = usePage();
+const academicScope = computed(() => (page.props as any).academicScope as { campusId: number | null; isCampusRestricted: boolean });
+const showCampusField = computed(() => !academicScope.value?.isCampusRestricted);
+
 // Emits
 const emit = defineEmits<{
     saved: [];
@@ -93,7 +102,7 @@ const emit = defineEmits<{
 
 // Form data
 const form = reactive({
-    campus_id: '' as string | number,
+    campus_id: (academicScope.value?.campusId ?? '') as string | number,
     supplier_id: null as number | null,
     purchase_date: new Date().toISOString().split('T')[0],
     note: '',
@@ -300,7 +309,7 @@ const initializeForm = () => {
         fetchInventoryItems();
     } else {
         // Create mode - reset to defaults
-        form.campus_id = props.campuses[0]?.id || '';
+        form.campus_id = academicScope.value?.campusId || props.campuses[0]?.id || '';
         form.supplier_id = null;
         form.purchase_date = new Date().toISOString().split('T')[0];
         form.note = '';
@@ -395,7 +404,7 @@ const removeItem = (index: number) => {
 };
 
 const resetForm = () => {
-    form.campus_id = '';
+    form.campus_id = academicScope.value?.campusId ?? '';
     form.supplier_id = null;
     form.purchase_date = new Date().toISOString().split('T')[0];
     form.note = '';
@@ -520,7 +529,7 @@ watch(() => form.purchase_items.length, (len) => {
                 <div class="bg-card rounded-lg border p-5 space-y-4">
                     <!-- Basic Info -->
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div class="space-y-2">
+                        <div v-if="showCampusField" class="space-y-2">
                             <Label for="campus_id" class="flex items-center gap-2">
                                 <div class="p-1 bg-muted rounded">
                                     <Icon icon="building" class="h-3.5 w-3.5 text-muted-foreground" />
