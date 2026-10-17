@@ -1,12 +1,12 @@
 <script setup lang="ts">
 import Icon from '@/components/Icon.vue';
 import { useScrollReveal } from '@/composables/useScrollReveal';
+import { useLenis } from '@/composables/useLenis';
 
 const { target, revealed } = useScrollReveal();
+const { scrollTo } = useLenis();
 
-const scrollToAdmissions = () => {
-    document.querySelector('#admissions')?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-};
+const scrollToAdmissions = () => scrollTo('#admissions');
 </script>
 
 <template>

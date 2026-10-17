@@ -4,6 +4,7 @@ import { ref, onMounted, onBeforeUnmount, computed } from 'vue';
 import { route } from 'ziggy-js';
 import Icon from '@/components/Icon.vue';
 import { useAppearance } from '@/composables/useAppearance';
+import { useLenis } from '@/composables/useLenis';
 
 const { resolvedAppearance, updateAppearance } = useAppearance();
 const toggleTheme = () => updateAppearance(resolvedAppearance.value === 'dark' ? 'light' : 'dark');
@@ -27,18 +28,45 @@ const navItems = [
 
 const scrolled = ref(false);
 const mobileOpen = ref(false);
+/** Which nav section is currently in view, driven by IntersectionObserver below (never a scroll listener). */
+const activeHref = ref<string | null>(null);
 
 const onScroll = () => {
     scrolled.value = window.scrollY > 16;
 };
 
-onMounted(() => window.addEventListener('scroll', onScroll, { passive: true }));
-onBeforeUnmount(() => window.removeEventListener('scroll', onScroll));
+let sectionObserver: IntersectionObserver | null = null;
+
+onMounted(() => {
+    window.addEventListener('scroll', onScroll, { passive: true });
+
+    const sections = navItems
+        .map((item) => document.querySelector<HTMLElement>(item.href))
+        .filter((el): el is HTMLElement => el !== null);
+
+    sectionObserver = new IntersectionObserver(
+        (entries) => {
+            const visible = entries.filter((entry) => entry.isIntersecting);
+            if (visible.length) {
+                activeHref.value = `#${visible[0].target.id}`;
+            }
+        },
+        { rootMargin: '-40% 0px -55% 0px' },
+    );
+
+    sections.forEach((section) => sectionObserver?.observe(section));
+});
+
+onBeforeUnmount(() => {
+    window.removeEventListener('scroll', onScroll);
+    sectionObserver?.disconnect();
+});
+
+const { scrollTo: lenisScrollTo } = useLenis();
 
 const scrollTo = (hash: string) => {
     mobileOpen.value = false;
-    const el = document.querySelector(hash);
-    el?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    lenisScrollTo(hash);
 };
 </script>
 
@@ -61,10 +89,15 @@ const scrollTo = (hash: string) => {
                     v-for="item in navItems"
                     :key="item.href"
                     type="button"
-                    class="rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                    class="nav-jump relative rounded-md px-3 py-2 text-sm font-medium transition-colors hover:text-foreground"
+                    :class="activeHref === item.href ? 'text-foreground' : 'text-muted-foreground'"
                     @click="scrollTo(item.href)"
                 >
                     {{ item.label }}
+                    <span
+                        class="absolute inset-x-3 -bottom-px h-0.5 scale-x-0 rounded-full bg-primary transition-transform duration-300"
+                        :class="activeHref === item.href ? 'scale-x-100' : ''"
+                    />
                 </button>
             </nav>
 
@@ -116,7 +149,8 @@ const scrollTo = (hash: string) => {
                         v-for="item in navItems"
                         :key="item.href"
                         type="button"
-                        class="rounded-md px-3 py-2.5 text-left text-sm font-medium text-muted-foreground hover:bg-accent hover:text-foreground"
+                        class="rounded-md px-3 py-2.5 text-left text-sm font-medium transition-colors hover:bg-accent hover:text-foreground"
+                        :class="activeHref === item.href ? 'bg-accent text-foreground' : 'text-muted-foreground'"
                         @click="scrollTo(item.href)"
                     >
                         {{ item.label }}
@@ -130,3 +164,29 @@ const scrollTo = (hash: string) => {
         </div>
     </header>
 </template>
+
+<style scoped>
+/* Small playful bounce on hover, feedback that the label is clickable. Transform/opacity only (GPU-cheap). */
+.nav-jump:hover {
+    animation: nav-jump 0.4s ease-in-out;
+}
+
+@keyframes nav-jump {
+    0%,
+    100% {
+        transform: translateY(0);
+    }
+    30% {
+        transform: translateY(-3px);
+    }
+    60% {
+        transform: translateY(0.5px);
+    }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .nav-jump:hover {
+        animation: none;
+    }
+}
+</style>

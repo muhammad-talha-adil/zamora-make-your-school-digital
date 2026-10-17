@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Link } from '@inertiajs/vue3';
 import Icon from '@/components/Icon.vue';
+import { useLenis } from '@/composables/useLenis';
 
 interface HeroStat {
     icon: string;
@@ -33,9 +34,7 @@ defineProps<Props>();
 /** A `#section` CTA scrolls within the page; anything else is a real route. */
 const isAnchor = (href: string) => href.startsWith('#');
 
-const scrollTo = (href: string) => {
-    document.querySelector(href)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-};
+const { scrollTo } = useLenis();
 </script>
 
 <template>

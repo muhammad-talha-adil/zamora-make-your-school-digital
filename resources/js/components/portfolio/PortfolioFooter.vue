@@ -2,6 +2,7 @@
 import { Link, usePage } from '@inertiajs/vue3';
 import { computed } from 'vue';
 import Icon from '@/components/Icon.vue';
+import { useLenis } from '@/composables/useLenis';
 
 interface SchoolProps {
     name: string;
@@ -34,9 +35,7 @@ const quickLinks = [
     { label: 'Contact', href: '#contact' },
 ];
 
-const scrollTo = (hash: string) => {
-    document.querySelector(hash)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-};
+const { scrollTo } = useLenis();
 </script>
 
 <template>
