@@ -108,18 +108,6 @@
                             />
                         </div>
 
-                        <!-- Student Code (Read-only) -->
-                        <div class="space-y-2">
-                            <Label for="student_code">Student Code</Label>
-                            <Input
-                                id="student_code"
-                                :model-value="studentData?.student_code || ''"
-                                type="text"
-                                readonly
-                                class="bg-muted"
-                            />
-                        </div>
-
                         <!-- Date of Birth with Age Calculation -->
                         <div class="space-y-2">
                             <Label for="dob">Date of Birth <span class="text-destructive">*</span></Label>

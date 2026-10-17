@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { router } from '@inertiajs/vue3';
+import { router, usePage } from '@inertiajs/vue3';
 import { ref, computed, watch } from 'vue';
 import { alert } from '@/utils';
 import { useFormValidity } from '@/composables/useFormValidity';
@@ -59,13 +59,20 @@ const isOpen = ref(false);
 const errors = ref({});
 const processing = ref(false);
 
+// A campus-restricted user can't declare a school-wide national holiday or
+// pick another campus — both are school-wide decisions outside their
+// scope — so neither control is shown to them; their own campus is implied.
+const page = usePage();
+const academicScope = computed(() => (page.props as any).academicScope as { campusId: number | null; isCampusRestricted: boolean });
+const showCampusControls = computed(() => !academicScope.value?.isCampusRestricted);
+
 // Form data
 const form = ref({
     title: props.holiday?.title || '',
     start_date: props.holiday?.start_date || '',
     end_date: props.holiday?.end_date || '',
-    campus_id: props.holiday?.campus_id ?? '',
-    is_national: props.holiday?.is_national ?? true,
+    campus_id: props.holiday?.campus_id ?? (academicScope.value?.isCampusRestricted ? academicScope.value.campusId ?? '' : ''),
+    is_national: props.holiday?.is_national ?? !academicScope.value?.isCampusRestricted,
     description: props.holiday?.description || '',
     recurrence_type: props.holiday?.recurrence_type || 'none',
     recurrence_end_date: props.holiday?.recurrence_end_date || '',
@@ -110,8 +117,8 @@ const openModal = () => {
             title: '',
             start_date: '',
             end_date: '',
-            campus_id: '',
-            is_national: true,
+            campus_id: academicScope.value?.isCampusRestricted ? academicScope.value.campusId ?? '' : '',
+            is_national: !academicScope.value?.isCampusRestricted,
             description: '',
             recurrence_type: 'none',
             recurrence_end_date: '',
@@ -234,7 +241,7 @@ const submit = () => {
                             </div>
                         </div>
 
-                        <div class="flex items-center space-x-2">
+                        <div v-if="showCampusControls" class="flex items-center space-x-2">
                             <Checkbox
                                 id="is_national"
                                 v-model:checked="form.is_national"
@@ -245,7 +252,7 @@ const submit = () => {
                             </Label>
                         </div>
 
-                        <div v-if="!form.is_national">
+                        <div v-if="showCampusControls && !form.is_national">
                             <Label for="campus_id" class="flex items-center">
                                 <Icon icon="building" class="mr-1 h-4 w-4" />
                                 Campus

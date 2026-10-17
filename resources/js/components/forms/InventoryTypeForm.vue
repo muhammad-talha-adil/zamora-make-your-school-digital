@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { ref, watch, computed } from 'vue';
+import { usePage } from '@inertiajs/vue3';
 import { alert } from '@/utils';
 import axios from 'axios';
 import { useFormValidity } from '@/composables/useFormValidity';
@@ -49,6 +50,13 @@ const emit = defineEmits<{
     saved: [];
     'update:open': [value: boolean];
 }>();
+
+// A campus-restricted user can't create an "All Campuses" type or pick
+// another campus — both are school-wide decisions — so the Campus field
+// is hidden and their own campus is implied.
+const page = usePage();
+const academicScope = computed(() => (page.props as any).academicScope as { campusId: number | null; isCampusRestricted: boolean });
+const showCampusField = computed(() => !academicScope.value?.isCampusRestricted);
 
 // Form data
 const form = ref({
@@ -109,8 +117,11 @@ watch(() => props.inventoryType, (newType) => {
 // Watch for campuses prop changes
 watch(() => props.campuses, (newCampuses) => {
     if (newCampuses.length > 0 && !props.inventoryType && form.value.campus_id === null) {
-        // Default to 'all' for new inventory types
-        form.value.campus_id = 'all';
+        // Default to 'all' for new inventory types — or, for a
+        // campus-restricted user, to their own (only) campus.
+        form.value.campus_id = academicScope.value?.isCampusRestricted
+            ? String(academicScope.value.campusId ?? '')
+            : 'all';
     }
 }, { immediate: true });
 
@@ -234,7 +245,9 @@ const closeModal = () => {
 const resetForm = () => {
     form.value = {
         name: '',
-        campus_id: 'all', // Default to 'all campuses' for new types
+        // Default to 'all campuses' for new types — or, for a
+        // campus-restricted user, to their own (only) campus.
+        campus_id: academicScope.value?.isCampusRestricted ? String(academicScope.value.campusId ?? '') : 'all',
         original_name: '',
     };
     errors.value = {};
@@ -293,7 +306,7 @@ const resetForm = () => {
                     </div>
 
                     <!-- Campus -->
-                    <div class="space-y-2">
+                    <div v-if="showCampusField" class="space-y-2">
                         <Label for="campus" class="flex items-center gap-2">
                             <div class="p-1 bg-muted rounded">
                                 <Icon icon="building" class="h-3.5 w-3.5 text-muted-foreground" />

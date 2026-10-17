@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Head, router } from '@inertiajs/vue3';
+import { Head, router, usePage } from '@inertiajs/vue3';
 import { reactive, ref, computed, watch, onMounted, nextTick } from 'vue';
 import { route } from 'ziggy-js';
 import axios from 'axios';
@@ -28,6 +28,14 @@ interface Props {
 }
 
 const props = defineProps<Props>();
+
+// A campus-restricted user never sees the Campus field — their own campus
+// is implicit. A school-wide user (owner/developer) still gets to pick,
+// since fee structures are often set up centrally for a campus other than
+// the header switcher's current pick; it defaults to that pick either way.
+const page = usePage();
+const academicScope = computed(() => (page.props as any).academicScope as { campusId: number | null; isCampusRestricted: boolean });
+const showCampusField = computed(() => !academicScope.value?.isCampusRestricted);
 
 // Local, mutable copy so a fee head added inline via the modal shows up in the
 // dropdown immediately without a full page reload.
@@ -77,7 +85,7 @@ const form: {
 } = reactive({
     title: null,
     session_id: queryParams.get('session_id') || String(props.active_session_id || ''), // Auto-select active session
-    campus_id: queryParams.get('campus_id') || '',
+    campus_id: queryParams.get('campus_id') || (academicScope.value?.campusId ? String(academicScope.value.campusId) : ''),
     class_id: queryParams.get('class_id') || '',
     section_id: queryParams.get('section_id') || '',
     effective_from: '',
@@ -614,7 +622,7 @@ const cancel = () => {
                             <p v-if="errors.session_id" class="text-sm text-destructive">{{ errors.session_id }}</p>
                         </div>
 
-                        <div class="space-y-2">
+                        <div v-if="showCampusField" class="space-y-2">
                             <div class="flex items-center justify-between">
                                 <Label for="campus">Campus <span class="text-destructive">*</span></Label>
                                 <button type="button" class="text-xs text-primary hover:underline" @click="openAddCampusModal">

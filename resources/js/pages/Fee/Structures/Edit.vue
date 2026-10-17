@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Head, router } from '@inertiajs/vue3';
+import { Head, router, usePage } from '@inertiajs/vue3';
 import { reactive, ref, computed, watch, onMounted, nextTick } from 'vue';
 import { route } from 'ziggy-js';
 import { alert } from '@/utils';
@@ -62,6 +62,13 @@ const breadcrumbItems: BreadcrumbItem[] = [
     { title: props.structure.title, href: `/fee/structures/${props.structure.id}` },
     { title: 'Edit', href: `/fee/structures/${props.structure.id}/edit` },
 ];
+
+// Same visibility rule as Create: a campus-restricted user never sees this
+// field — their own campus is implicit. A school-wide user still gets to
+// move a structure to a different campus.
+const page = usePage();
+const academicScope = computed(() => (page.props as any).academicScope as { campusId: number | null; isCampusRestricted: boolean });
+const showCampusField = computed(() => !academicScope.value?.isCampusRestricted);
 
     // Determine initial section_id value
     const getInitialSectionId = () => {
@@ -505,7 +512,7 @@ const getFrequencyLabel = (freq: string) => {
                             <p v-if="errors.session_id" class="text-sm text-destructive">{{ errors.session_id }}</p>
                         </div>
 
-                        <div class="space-y-2">
+                        <div v-if="showCampusField" class="space-y-2">
                             <Label for="campus">Campus <span class="text-destructive">*</span></Label>
                             <SearchableSelect
                                 id="campus"

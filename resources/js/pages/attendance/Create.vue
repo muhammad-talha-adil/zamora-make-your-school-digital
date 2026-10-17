@@ -22,7 +22,7 @@
                     <!-- Row 1: Campus, Session, Class -->
                     <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                         <!-- Campus -->
-                        <div>
+                        <div v-if="showCampusField">
                             <label class="block text-sm font-medium text-muted-foreground mb-1">Campus</label>
                             <SearchableSelect v-model="selectedCampusId" :options="campusOptions" placeholder="Select Campus" clearable />
                         </div>
@@ -232,7 +232,11 @@ const breadcrumbItems: BreadcrumbItem[] = [
 
 const isSubmitting = computed(() => (usePage().props as any).processing || false);
 
-const selectedCampusId = ref<number | ''>(props.selectedCampusId || '');
+const page = usePage();
+const academicScope = computed(() => (page.props as any).academicScope as { campusId: number | null; isCampusRestricted: boolean });
+const showCampusField = computed(() => !academicScope.value?.isCampusRestricted);
+
+const selectedCampusId = ref<number | ''>(props.selectedCampusId || academicScope.value?.campusId || '');
 const selectedSessionId = ref<number | ''>(props.selectedSessionId || '');
 const selectedClassId = ref<number | ''>(props.selectedClassId || '');
 const selectedSectionId = ref<string | number>(props.selectedSectionId || 'all');
@@ -290,7 +294,7 @@ watch(() => props.shiftTiming, (timing) => {
 
 const formData = reactive({
     attendance_date: props.selectedDate || '',
-    campus_id: props.selectedCampusId || 0,
+    campus_id: props.selectedCampusId || academicScope.value?.campusId || 0,
     session_id: props.selectedSessionId || 0,
     class_id: props.selectedClassId || 0,
     section_id: props.selectedSectionId || 0,
