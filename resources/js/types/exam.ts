@@ -107,6 +107,7 @@ export interface ExamPaper {
     end_time: string;
     total_marks: number;
     passing_marks: number;
+    subject_role?: 'core' | 'elective' | 'additional' | null;
     is_cancelled?: boolean;
     exam_group?: ExamGroup;
     subject?: Subject;

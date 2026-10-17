@@ -49,6 +49,16 @@
                             <Label for="passing_marks">Passing Marks *</Label>
                             <Input id="passing_marks" v-model="form.passing_marks" type="number" />
                         </div>
+
+                        <div class="space-y-2">
+                            <Label for="subject_role">Subject Role</Label>
+                            <SearchableSelect
+                                id="subject_role"
+                                v-model="form.subject_role"
+                                :options="subjectRoleOptions"
+                                placeholder="Select role"
+                            />
+                        </div>
                     </div>
                 </div>
 
@@ -85,6 +95,12 @@ const subjectOptions = computed(() =>
     props.subjects.map((subject) => ({ value: subject.id, label: subject.name })),
 );
 
+const subjectRoleOptions = [
+    { value: 'core', label: 'Compulsory' },
+    { value: 'elective', label: 'Elective' },
+    { value: 'additional', label: 'Additional' },
+];
+
 const breadcrumbItems: BreadcrumbItem[] = [
     { title: 'Dashboard', href: '/dashboard' },
     { title: 'Exams', href: '/exams' },
@@ -94,6 +110,7 @@ const breadcrumbItems: BreadcrumbItem[] = [
 
 const form = useForm({
     subject_id: props.paper.subject_id,
+    subject_role: props.paper.subject_role ?? 'core',
     paper_date: props.paper.paper_date,
     start_time: props.paper.start_time,
     end_time: props.paper.end_time,
