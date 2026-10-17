@@ -378,10 +378,15 @@ class PurchaseReturnsController extends Controller
 
         $request->validate([
             'supplier_id' => 'nullable|exists:suppliers,id',
-            'purchase_id' => 'nullable|exists:inventory_purchases,id',
             'return_date' => 'required|date',
             'note' => 'nullable|string|max:1000',
         ]);
+
+        // purchase_id is deliberately not editable here — the return's
+        // items and stock-reversal math are tied to the purchase it was
+        // created against, matching the same "not editable on edit"
+        // convention used for campus_id elsewhere. The form only ever
+        // shows it as a read-only display once a return exists.
 
         try {
             DB::transaction(function () use ($request, $purchaseReturn) {
