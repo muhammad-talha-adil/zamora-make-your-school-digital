@@ -189,7 +189,7 @@
                         </div>
 
                         <!-- Campus -->
-                        <div class="space-y-2">
+                        <div v-if="!isCampusLocked" class="space-y-2">
                             <Label for="campus_id"
                                 >Campus
                                 <span class="text-destructive">*</span></Label
@@ -197,7 +197,6 @@
                             <SearchableSelect
                                 id="campus_id"
                                 v-model="form.campus_id"
-                                :disabled="isCampusLocked"
                                 :options="campusSelectOptions"
                                 placeholder="Select Campus"
                             />

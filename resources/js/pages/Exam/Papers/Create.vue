@@ -63,14 +63,13 @@
                     </div>
 
                     <!-- Campus Selection -->
-                    <div class="space-y-2">
+                    <div v-if="!isCampusLocked" class="space-y-2">
                         <Label for="campus_id">Campus *</Label>
                         <SearchableSelect
                             id="campus_id"
                             v-model="cascadeCampusId"
                             :options="campusOptions"
                             placeholder="Select Campus"
-                            :disabled="isCampusLocked"
                             :class="{ 'border-destructive': validationErrors.campus_id }"
                         />
                         <p v-if="validationErrors.campus_id" class="text-xs text-destructive">{{ validationErrors.campus_id }}</p>

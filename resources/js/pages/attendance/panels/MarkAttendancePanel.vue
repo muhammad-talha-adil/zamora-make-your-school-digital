@@ -19,9 +19,9 @@
                 <!-- Row 1: Campus, Session, Class -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
                     <!-- Campus -->
-                    <div>
+                    <div v-if="!isCampusLocked">
                         <label class="block text-sm font-medium text-muted-foreground mb-1">Campus</label>
-                        <SearchableSelect v-model="selectedCampusId" :options="campusOptions" placeholder="Select Campus" :clearable="!isCampusLocked" :disabled="isCampusLocked" />
+                        <SearchableSelect v-model="selectedCampusId" :options="campusOptions" placeholder="Select Campus" clearable />
                     </div>
 
                     <!-- Session -->
