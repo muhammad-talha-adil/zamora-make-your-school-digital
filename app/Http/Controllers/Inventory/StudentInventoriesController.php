@@ -620,7 +620,6 @@ class StudentInventoriesController extends Controller
     {
         $validated = $request->validate([
             'student_inventory_record_id' => 'required|exists:student_inventory_records,id',
-            'campus_id' => 'required|exists:campuses,id',
             'items' => 'required|array|min:1',
             'items.*.student_inventory_item_id' => 'required|exists:student_inventory_items,id',
             'items.*.quantity' => 'required|integer|min:1',
@@ -635,6 +634,9 @@ class StudentInventoriesController extends Controller
             DB::transaction(function () use ($validated) {
                 // Get the student inventory record
                 $record = StudentInventory::findOrFail($validated['student_inventory_record_id']);
+                // A return is always filed against the same campus the
+                // original issuance was for — never a client-supplied value.
+                $campusId = $record->campus_id;
 
                 // Calculate totals
                 $totalQuantity = 0;
@@ -664,7 +666,7 @@ class StudentInventoriesController extends Controller
                     // Restore stock
                     $stock = InventoryStock::firstOrCreate(
                         [
-                            'campus_id' => $validated['campus_id'],
+                            'campus_id' => $campusId,
                             'inventory_item_id' => $studentInventoryItem->inventory_item_id,
                         ],
                         [
@@ -705,7 +707,7 @@ class StudentInventoriesController extends Controller
                 // Create parent return record
                 $returnRecord = StudentInventoryReturn::create([
                     'return_id' => StudentInventoryReturn::generateReturnId(),
-                    'campus_id' => $validated['campus_id'],
+                    'campus_id' => $campusId,
                     'student_id' => $record->student_id,
                     'record_id' => $record->id,
                     'total_quantity' => $totalQuantity,

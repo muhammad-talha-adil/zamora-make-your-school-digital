@@ -2,6 +2,7 @@
 import axios from 'axios';
 import { alert } from '@/utils';
 import { ref, computed, reactive } from 'vue';
+import { usePage } from '@inertiajs/vue3';
 import { useFormValidity } from '@/composables/useFormValidity';
 
 // Components
@@ -50,9 +51,17 @@ const emit = defineEmits<{
     saved: [];
 }>();
 
+// A campus-restricted user never sees this field — the backend already
+// forces/derives their own campus regardless of what's submitted. A
+// school-wide user (owner/developer) still gets to pick, since they may be
+// adjusting stock for a campus other than the header switcher's current one.
+const page = usePage();
+const academicScope = computed(() => (page.props as any).academicScope as { campusId: number | null; isCampusRestricted: boolean });
+const showCampusField = computed(() => !academicScope.value?.isCampusRestricted);
+
 // Form data
 const form = reactive({
-    campus_id: props.campuses[0]?.id || '',
+    campus_id: academicScope.value?.campusId || props.campuses[0]?.id || '',
     inventory_item_id: '',
     type: 'add' as 'add' | 'subtract' | 'set',
     quantity: 0,
@@ -99,7 +108,7 @@ const onCampusChange = () => {
 };
 
 const resetForm = () => {
-    form.campus_id = props.campuses[0]?.id || '';
+    form.campus_id = academicScope.value?.campusId || props.campuses[0]?.id || '';
     form.inventory_item_id = '';
     form.type = 'add';
     form.quantity = 0;
@@ -161,8 +170,9 @@ const submitForm = () => {
             <form @submit.prevent="submitForm" class="space-y-5">
                 <!-- Form Card -->
                 <div class="bg-card rounded-lg border p-5 space-y-4">
-                    <!-- Campus -->
-                    <div class="space-y-2">
+                    <!-- Campus (school-wide users only; a campus-restricted
+                         user's own campus is forced server-side anyway) -->
+                    <div v-if="showCampusField" class="space-y-2">
                         <Label for="campus_id" class="flex items-center gap-2">
                             <div class="p-1 bg-muted rounded">
                                 <Icon icon="building" class="h-3.5 w-3.5 text-muted-foreground" />
