@@ -115,6 +115,31 @@ const aboutHighlights = computed(() => [
 
 const admissionSteps = computed(() => (school.value?.admission_steps?.length ? school.value.admission_steps : defaultSteps));
 
+const STAT_ICONS: Record<string, string> = {
+    Students: 'users',
+    Teachers: 'graduation-cap',
+    'Years of Excellence': 'award',
+    Classrooms: 'school',
+};
+
+/**
+ * Floating hero cards prefer whichever real numbers are actually non-zero.
+ * A freshly-set-up school has 0 enrolled students/teachers, and a "0
+ * Students enrolled" card reads as broken, not as "real data" - so this
+ * falls through to the still-real admin-entered stats (years of excellence,
+ * classroom count) rather than forcing the live counts specifically.
+ */
+const heroFloatingStats = computed(() =>
+    stats.value
+        .filter((stat) => stat.value > 0)
+        .slice(0, 2)
+        .map((stat) => ({
+            icon: STAT_ICONS[stat.label] ?? 'sparkles',
+            label: stat.label,
+            value: `${stat.value}${stat.suffix ?? ''}`,
+        })),
+);
+
 /** Authority cue, built from the real "Years of Excellence" stat rather than an invented number. */
 const heroEyebrow = computed(() => {
     const years = stats.value.find((stat) => stat.label === 'Years of Excellence');
@@ -177,10 +202,7 @@ const otherStaff = computed(() => (page.props.public_staff ?? []).filter((member
                 :eyebrow="heroEyebrow"
                 :social-proof="heroSocialProof"
                 :session-note="heroSessionNote"
-                :stats="[
-                    { icon: 'users', label: 'Students enrolled', value: String(page.props.live_stats?.students ?? 0) },
-                    { icon: 'graduation-cap', label: 'Teaching staff', value: String(page.props.live_stats?.teachers ?? 0) },
-                ]"
+                :stats="heroFloatingStats"
             />
 
             <StatsBandSection :stats="stats" />
