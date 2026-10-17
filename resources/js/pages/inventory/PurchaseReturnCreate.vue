@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Head } from '@inertiajs/vue3';
+import { Head, usePage } from '@inertiajs/vue3';
 import { router } from '@inertiajs/vue3';
 import { alert } from '@/utils';
 import axios from 'axios';
@@ -93,6 +93,12 @@ interface Props {
 
 const props = defineProps<Props>();
 
+// Derived from the header campus switcher (shared on every Inertia page),
+// the same campus the backend silently uses for store()/update() — no
+// Campus field is shown here anymore.
+const page = usePage();
+const resolvedCampusId = computed(() => (page.props as any).academicScope?.campusId ?? null);
+
 // Breadcrumb
 const breadcrumbItems: BreadcrumbItem[] = [
     { title: 'Dashboard', href: '/dashboard' },
@@ -103,7 +109,9 @@ const breadcrumbItems: BreadcrumbItem[] = [
 
 // Form data
 const form = reactive({
-    campus_id: props.campuses[0]?.id || '',
+    // Fixed to the return's own campus when editing, otherwise to whichever
+    // campus the creator is currently scoped to — no Campus field shown.
+    campus_id: props.return?.campus_id ?? resolvedCampusId.value ?? '',
     supplier_id: null as number | null,
     purchase_id: null as number | null,
     return_date: new Date().toISOString().split('T')[0],
@@ -179,7 +187,6 @@ const availableItems = computed(() => {
     return purchaseItems.value;
 });
 
-const campusOptions = computed(() => props.campuses.map((campus) => ({ value: campus.id, label: campus.name })));
 const availableItemOptions = computed(() => availableItems.value.map((invItem: any) => ({
     value: invItem.inventory_item_id,
     label: invItem.item_name,
@@ -538,23 +545,6 @@ onMounted(async () => {
                     <h2 class="text-lg font-semibold">Return Information</h2>
                     
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <!-- Campus -->
-                        <div class="space-y-2">
-                            <Label for="campus_id" class="flex items-center gap-2">
-                                <Icon icon="building" class="h-4 w-4" />
-                                Campus <span class="text-destructive">*</span>
-                            </Label>
-                            <SearchableSelect
-                                id="campus_id"
-                                v-model="form.campus_id"
-                                :options="campusOptions"
-                                placeholder="Select Campus"
-                                class="h-11"
-                                @update:model-value="onCampusChange"
-                            />
-                            <InputError :message="errors.campus_id" />
-                        </div>
-
                         <!-- Supplier -->
                         <div class="space-y-2">
                             <Label for="supplier_id" class="flex items-center gap-2">

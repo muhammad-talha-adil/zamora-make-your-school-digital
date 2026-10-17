@@ -78,7 +78,6 @@ const searchQuery = ref(props.filters?.search || '');
 
 const form = ref({
     name: '',
-    campus_id: '',
     session_id: '',
     class_id: '',
     section_id: '',
@@ -114,11 +113,6 @@ const validateForm = (): boolean => {
         isValid = false;
     } else if (form.value.name.length > 100) {
         formErrors.value.name = 'Rule name must not exceed 100 characters';
-        isValid = false;
-    }
-
-    if (!form.value.campus_id) {
-        formErrors.value.campus_id = 'Campus is required';
         isValid = false;
     }
 
@@ -206,7 +200,6 @@ watch(searchQuery, () => {
 const resetForm = () => {
     form.value = {
         name: '',
-        campus_id: props.campuses[0]?.id?.toString() || '',
         session_id: props.sessions[0]?.id?.toString() || '',
         class_id: '',
         section_id: '',
@@ -230,7 +223,6 @@ const openCreateModal = () => {
 const openEditModal = (rule: FineRule) => {
     form.value = {
         name: rule.name,
-        campus_id: rule.campus_id?.toString() || '',
         session_id: rule.session_id?.toString() || '',
         class_id: rule.class_id?.toString() || '',
         section_id: rule.section_id?.toString() || '',
@@ -266,7 +258,6 @@ const submitForm = () => {
 
     const data = {
         name: form.value.name,
-        campus_id: form.value.campus_id ? Number(form.value.campus_id) : null,
         session_id: form.value.session_id ? Number(form.value.session_id) : null,
         class_id: form.value.class_id ? Number(form.value.class_id) : null,
         section_id: form.value.section_id ? Number(form.value.section_id) : null,
@@ -527,28 +518,16 @@ const activeStatusOptions = [
                         <p v-if="formErrors.name" class="text-xs text-destructive">{{ formErrors.name }}</p>
                     </div>
 
-                    <!-- Campus & Session -->
-                    <div class="grid gap-4 md:grid-cols-2">
-                        <div class="space-y-2">
-                            <Label for="campus_id">Campus *</Label>
-                            <SearchableSelect
-                                id="campus_id"
-                                v-model="form.campus_id"
-                                :options="campusOptions"
-                                placeholder="Select Campus"
-                            />
-                            <p v-if="formErrors.campus_id" class="text-xs text-destructive">{{ formErrors.campus_id }}</p>
-                        </div>
-                        <div class="space-y-2">
-                            <Label for="session_id">Session *</Label>
-                            <SearchableSelect
-                                id="session_id"
-                                v-model="form.session_id"
-                                :options="sessionSelectOptions"
-                                placeholder="Select Session"
-                            />
-                            <p v-if="formErrors.session_id" class="text-xs text-destructive">{{ formErrors.session_id }}</p>
-                        </div>
+                    <!-- Session -->
+                    <div class="space-y-2">
+                        <Label for="session_id">Session *</Label>
+                        <SearchableSelect
+                            id="session_id"
+                            v-model="form.session_id"
+                            :options="sessionSelectOptions"
+                            placeholder="Select Session"
+                        />
+                        <p v-if="formErrors.session_id" class="text-xs text-destructive">{{ formErrors.session_id }}</p>
                     </div>
 
                     <!-- Class & Section (Optional) -->

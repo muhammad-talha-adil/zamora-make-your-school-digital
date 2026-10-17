@@ -79,12 +79,13 @@ const form = ref<{
 
 const errors = ref<Record<string, string>>({});
 const processing = ref(false);
-const { isValid } = useFormValidity(form, ['campus_id', 'inventory_type_id', 'name']);
 
 // Computed
 const isEditing = computed(() => {
     return props.inventoryItem && props.inventoryItem.id !== undefined;
 });
+
+const { isValid } = useFormValidity(form, ['inventory_type_id', 'name']);
 
 // Filter inventory types based on selected campus
 const filteredInventoryTypes = computed(() => {
@@ -99,13 +100,6 @@ const filteredInventoryTypes = computed(() => {
         return type.campus_id === null || String(type.campus_id) === String(form.value.campus_id);
     });
 });
-
-const campusOptions = computed(() =>
-    props.campuses.map((campus) => ({
-        value: campus.id,
-        label: campus.name,
-    })),
-);
 
 const inventoryTypeOptions = computed(() =>
     filteredInventoryTypes.value.map((type: any) => ({
@@ -159,8 +153,9 @@ const submitForm = () => {
     processing.value = true;
     errors.value = {};
 
-    const formData = {
-        campus_id: form.value.campus_id,
+    // campus_id is never sent — it's derived server-side on create, and
+    // stays fixed to the item's existing campus on update.
+    const formData: Record<string, unknown> = {
         inventory_type_id: form.value.inventory_type_id,
         name: form.value.name,
         description: form.value.description,
@@ -240,22 +235,10 @@ const submitForm = () => {
             <form @submit.prevent="submitForm" class="space-y-5">
                 <!-- Form Card -->
                 <div class="bg-card rounded-lg border p-5 space-y-4">
-                    <!-- Campus -->
-                    <div class="space-y-2">
-                        <Label for="campus_id" class="flex items-center gap-2">
-                            <div class="p-1 bg-muted rounded">
-                                <Icon icon="building" class="h-3.5 w-3.5 text-muted-foreground" />
-                            </div>
-                            Campus <span class="text-destructive">*</span>
-                        </Label>
-                        <SearchableSelect
-                            id="campus_id"
-                            v-model="form.campus_id"
-                            :options="campusOptions"
-                            placeholder="Select Campus"
-                        />
-                        <InputError :message="errors.campus_id" />
-                    </div>
+                    <!-- No Campus field: an item's campus is derived
+                         silently (header-selected campus on create, and it
+                         stays fixed to that campus afterwards — same as
+                         every other campus-scoped create/edit form). -->
 
                     <!-- Inventory Type -->
                     <div class="space-y-2">

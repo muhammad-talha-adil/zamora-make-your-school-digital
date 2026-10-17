@@ -102,7 +102,6 @@ class FineRuleController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:100',
-            'campus_id' => 'required|exists:campuses,id',
             'session_id' => 'required|exists:academic_sessions,id',
             'class_id' => 'nullable|exists:school_classes,id',
             'section_id' => 'nullable|exists:sections,id',
@@ -114,6 +113,12 @@ class FineRuleController extends Controller
             'effective_to' => 'nullable|date|after:effective_from',
             'is_active' => 'boolean',
         ]);
+
+        // Filed under whichever campus the creator is currently scoped to
+        // (their own campus, or the header switcher's pick for an
+        // owner/developer) — not a client-supplied value, matching the
+        // same convention as SchoolClassController::store().
+        $validated['campus_id'] = $request->user()->campusId();
 
         $rule = FeeFineRule::create($validated);
 
@@ -135,7 +140,6 @@ class FineRuleController extends Controller
     {
         $validated = $request->validate([
             'name' => 'required|string|max:100',
-            'campus_id' => 'required|exists:campuses,id',
             'session_id' => 'required|exists:academic_sessions,id',
             'class_id' => 'nullable|exists:school_classes,id',
             'section_id' => 'nullable|exists:sections,id',
@@ -148,6 +152,9 @@ class FineRuleController extends Controller
             'is_active' => 'boolean',
         ]);
 
+        // campus_id is deliberately not editable here — a fine rule stays
+        // filed under the campus it was created for, matching the rest of
+        // the app's "no Campus field on edit forms" convention.
         $fineRule->update($validated);
 
         if ($request->expectsJson()) {

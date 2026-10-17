@@ -18,6 +18,19 @@ class UpdateInventoryItemRequest extends FormRequest
     }
 
     /**
+     * campus_id isn't an editable field — an item stays filed under the
+     * campus it was created for, matching the app-wide convention of not
+     * exposing a Campus picker on edit forms. It's merged in here purely so
+     * the unique-name check below stays scoped to the item's own campus.
+     */
+    protected function prepareForValidation(): void
+    {
+        $inventoryItem = Route::current()->parameter('inventoryItem');
+
+        $this->merge(['campus_id' => $inventoryItem?->campus_id]);
+    }
+
+    /**
      * Get the validation rules that apply to the request.
      *
      * @return array<string, ValidationRule|array<mixed>|string>
@@ -27,7 +40,6 @@ class UpdateInventoryItemRequest extends FormRequest
         $inventoryItem = Route::current()->parameter('inventoryItem');
 
         return [
-            'campus_id' => 'required|exists:campuses,id',
             'inventory_type_id' => 'required|exists:inventory_types,id',
             'name' => [
                 'required',

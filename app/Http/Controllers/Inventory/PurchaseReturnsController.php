@@ -255,7 +255,6 @@ class PurchaseReturnsController extends Controller
     public function store(Request $request)
     {
         $request->validate([
-            'campus_id' => 'required|exists:campuses,id',
             'supplier_id' => 'nullable|exists:suppliers,id',
             'purchase_id' => 'nullable|exists:inventory_purchases,id',
             'return_date' => 'required|date',
@@ -268,13 +267,17 @@ class PurchaseReturnsController extends Controller
             'note' => 'nullable|string|max:1000',
         ]);
 
+        // Derived silently from the header-selected campus, same as
+        // SchoolClassController, instead of asking the user to pick one.
+        $campusId = $request->user()->campusId();
+
         try {
-            DB::transaction(function () use ($request) {
-                $campus = Campus::findOrFail($request->campus_id);
+            DB::transaction(function () use ($request, $campusId) {
+                $campus = Campus::findOrFail($campusId);
 
                 // Create purchase return
                 $return = PurchaseReturn::create([
-                    'campus_id' => $request->campus_id,
+                    'campus_id' => $campusId,
                     'supplier_id' => $request->supplier_id,
                     'purchase_id' => $request->purchase_id,
                     'user_id' => auth()->id(),
@@ -331,7 +334,7 @@ class PurchaseReturnsController extends Controller
                     // Update stock (reverse the purchase)
                     $stock = InventoryStock::firstOrCreate(
                         [
-                            'campus_id' => $request->campus_id,
+                            'campus_id' => $campusId,
                             'inventory_item_id' => $item['inventory_item_id'],
                         ],
                         [

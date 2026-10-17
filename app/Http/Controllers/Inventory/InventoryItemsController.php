@@ -75,8 +75,15 @@ class InventoryItemsController extends Controller
     {
         // IMPROVEMENT: Use DB transaction for atomic operation
         try {
-            DB::transaction(function () use ($request, &$inventoryItem) {
-                $inventoryItem = InventoryItem::create($request->validated());
+            $validated = $request->validated();
+            // The item belongs to whichever campus the creator is currently
+            // scoped to (their own campus, or the header switcher's pick for an
+            // owner/developer) — not a client-supplied value, so an item can't
+            // be filed under a campus the creator doesn't actually administer.
+            $validated['campus_id'] = $request->user()->campusId();
+
+            DB::transaction(function () use ($request, $validated, &$inventoryItem) {
+                $inventoryItem = InventoryItem::create($validated);
 
                 // IMPROVEMENT: Optionally create initial stock record atomically
                 // This supports future snapshot/stock assignment integration

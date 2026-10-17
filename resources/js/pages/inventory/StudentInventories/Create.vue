@@ -51,6 +51,7 @@ interface Props {
         id: number;
         name: string;
     }>;
+    active_campus_id: number | null;
 }
 
 const props = defineProps<Props>();
@@ -65,7 +66,9 @@ const breadcrumbItems: BreadcrumbItem[] = [
 
 // Form data
 const form = ref({
-    campus_id: '',
+    // The office no longer picks a campus here — it's whichever campus
+    // the issuer is currently scoped to (see Create() in the controller).
+    campus_id: props.active_campus_id ?? '',
     student_id: null as number | null,
     assigned_date: new Date().toISOString().split('T')[0],
     items: [] as Array<{
@@ -217,7 +220,6 @@ const getItemsForRow = (item: typeof form.value.items[0]): InventoryItem[] => {
     return inventoryItems.value;
 };
 
-const campusOptions = computed(() => props.campuses.map((campus) => ({ value: campus.id, label: campus.name })));
 const inventoryTypeOptions = computed(() => inventoryTypes.value.map((type) => ({ value: type.id, label: type.name })));
 
 const getItemOptionsForRow = (item: typeof form.value.items[0]) => {
@@ -348,7 +350,7 @@ const getItemDetails = (item: typeof form.value.items[0]) => {
 
 const resetForm = () => {
     form.value = {
-        campus_id: '',
+        campus_id: props.active_campus_id ?? '',
         student_id: null,
         assigned_date: new Date().toISOString().split('T')[0],
         items: [{ inventory_type_id: null, inventory_item_id: null, quantity: 1, discount_amount: 0, discount_percentage: 0 }],
@@ -456,23 +458,6 @@ const submitForm = () => {
                 <h2 class="text-lg font-semibold mb-4">Assignment Details</h2>
                 
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                    <!-- Campus -->
-                    <div class="space-y-2">
-                        <Label for="campus_id" class="flex items-center gap-2">
-                            <div class="p-1 bg-muted rounded">
-                                <Icon icon="building" class="h-3.5 w-3.5 text-muted-foreground" />
-                            </div>
-                            Campus <span class="text-destructive">*</span>
-                        </Label>
-                        <SearchableSelect
-                            id="campus_id"
-                            v-model="form.campus_id"
-                            :options="campusOptions"
-                            placeholder="Select Campus"
-                            class="h-11"
-                        />
-                        <InputError :message="errors.campus_id" />
-                    </div>
 
                     <!-- Student -->
                     <div class="space-y-2">

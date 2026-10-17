@@ -359,6 +359,11 @@ class StudentInventoriesController extends Controller
     {
         return inertia('inventory/StudentInventories/Create', [
             'campuses' => Campus::orderBy('name')->get(),
+            // The issuer's current campus (their own, or the header
+            // switcher's pick for an owner/developer) — the form no longer
+            // lets them pick a different one, matching the app-wide
+            // convention of deriving campus_id server-side on create.
+            'active_campus_id' => $request->user()->campusId(),
         ]);
     }
 

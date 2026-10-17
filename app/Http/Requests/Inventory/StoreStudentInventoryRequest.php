@@ -25,7 +25,7 @@ class StoreStudentInventoryRequest extends FormRequest
     public function rules(): array
     {
         $rules = [
-            'campus_id' => 'required|exists:campuses,id',
+            'campus_id' => 'nullable|exists:campuses,id',
             'student_id' => [
                 'required',
                 function ($attribute, $value, $fail) {
@@ -100,5 +100,15 @@ class StoreStudentInventoryRequest extends FormRequest
                 'discount_amount' => null,
             ]);
         }
+
+        // The campus is derived from whichever campus the issuer is
+        // currently scoped to (their own campus, or the header switcher's
+        // pick for an owner/developer) — not a client-supplied value — so
+        // it's merged here, before rules()/custom validators run, rather
+        // than in the controller. That keeps the campus-scoped
+        // student/item lookups above consistent with the final value.
+        $this->merge([
+            'campus_id' => $this->user()->campusId(),
+        ]);
     }
 }

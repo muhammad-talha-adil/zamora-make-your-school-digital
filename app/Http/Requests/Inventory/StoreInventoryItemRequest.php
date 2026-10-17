@@ -23,7 +23,6 @@ class StoreInventoryItemRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'campus_id' => 'required|exists:campuses,id',
             'inventory_type_id' => 'required|exists:inventory_types,id',
             'name' => 'required|string|max:255',
             'description' => 'nullable|string|max:1000',
