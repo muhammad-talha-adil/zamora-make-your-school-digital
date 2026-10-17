@@ -31,7 +31,7 @@ const submit = () => {
 </script>
 
 <template>
-    <section id="admissions" ref="target" class="bg-muted/30 py-20 md:py-28">
+    <section id="admissions" ref="target" class="bg-background py-20 md:py-28">
         <div class="mx-auto max-w-7xl px-4 text-center sm:px-6 lg:px-8" :class="revealed ? 'reveal-visible' : 'reveal'">
             <h2 class="text-3xl font-bold tracking-tight text-foreground md:text-4xl">
                 Your Journey With Us

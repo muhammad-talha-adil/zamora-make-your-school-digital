@@ -21,7 +21,7 @@ const cardColors = ['bg-chart-1', 'bg-chart-2', 'bg-chart-4', 'bg-chart-5'];
 </script>
 
 <template>
-    <section id="academics" ref="target" class="bg-muted/30 py-20 md:py-28">
+    <section id="academics" ref="target" class="bg-muted py-20 md:py-28">
         <div class="mx-auto max-w-7xl px-4 text-center sm:px-6 lg:px-8">
             <h2 class="text-3xl font-bold tracking-tight text-foreground md:text-4xl" :class="revealed ? 'reveal-visible' : 'reveal'">
                 Academic Excellence

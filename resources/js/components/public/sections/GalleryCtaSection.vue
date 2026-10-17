@@ -10,7 +10,7 @@ const scrollToAdmissions = () => {
 </script>
 
 <template>
-    <section ref="target" class="bg-muted/30 py-16 md:py-20">
+    <section ref="target" class="bg-muted py-16 md:py-20">
         <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8" :class="revealed ? 'reveal-visible' : 'reveal'">
             <div class="flex flex-col items-center justify-between gap-6 rounded-2xl bg-primary p-8 text-center text-primary-foreground md:flex-row md:text-left">
                 <div class="flex items-center gap-4">

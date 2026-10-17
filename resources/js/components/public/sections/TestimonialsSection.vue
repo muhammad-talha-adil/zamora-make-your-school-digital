@@ -26,7 +26,7 @@ const initials = (name: string) => name.split(' ').map((part) => part[0]).join('
 </script>
 
 <template>
-    <section ref="target" class="bg-background py-20 md:py-28">
+    <section ref="target" class="bg-primary/5 py-20 md:py-28">
         <div class="mx-auto max-w-7xl px-4 text-center sm:px-6 lg:px-8">
             <h2 class="text-3xl font-bold tracking-tight text-foreground md:text-4xl" :class="revealed ? 'reveal-visible' : 'reveal'">
                 Hear From Our Community

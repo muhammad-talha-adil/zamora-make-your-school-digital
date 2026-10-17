@@ -16,7 +16,7 @@ const { target, revealed } = useScrollReveal();
 </script>
 
 <template>
-    <section id="contact" ref="target" class="bg-muted/30 py-20 md:py-28">
+    <section id="contact" ref="target" class="bg-background py-20 md:py-28">
         <div class="mx-auto grid max-w-7xl gap-12 px-4 sm:px-6 lg:grid-cols-2 lg:gap-16 lg:px-8">
             <div :class="revealed ? 'reveal-visible' : 'reveal'">
                 <h2 class="text-3xl font-bold tracking-tight text-foreground md:text-4xl">Visit or get in touch</h2>
