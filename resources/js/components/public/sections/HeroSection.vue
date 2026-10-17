@@ -67,7 +67,7 @@ const scrollTo = (href: string) => {
                 </div>
             </div>
 
-            <div class="relative aspect-[5/4] w-full overflow-hidden rounded-2xl lg:aspect-4/3">
+            <div class="relative aspect-5/4 w-full overflow-hidden rounded-2xl lg:aspect-4/3">
                 <img
                     :src="`https://picsum.photos/seed/${imageSeed}/1200/900`"
                     :alt="headline"
