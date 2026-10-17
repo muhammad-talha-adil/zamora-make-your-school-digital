@@ -9,6 +9,7 @@ import AboutSection from '@/components/public/sections/AboutSection.vue';
 import ProgramsSection from '@/components/public/sections/ProgramsSection.vue';
 import CampusLifeSection from '@/components/public/sections/CampusLifeSection.vue';
 import TestimonialsSection from '@/components/public/sections/TestimonialsSection.vue';
+import GalleryCtaSection from '@/components/public/sections/GalleryCtaSection.vue';
 import AdmissionsSection from '@/components/public/sections/AdmissionsSection.vue';
 import FaqSection from '@/components/public/sections/FaqSection.vue';
 import ContactSection from '@/components/public/sections/ContactSection.vue';
@@ -140,6 +141,8 @@ const faqItems = computed(() => {
             <ProgramsSection :programs="programs" />
 
             <CampusLifeSection :facilities="facilities" />
+
+            <GalleryCtaSection />
 
             <TestimonialsSection />
 
