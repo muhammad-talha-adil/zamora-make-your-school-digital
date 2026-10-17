@@ -3,6 +3,10 @@ import { Link, usePage } from '@inertiajs/vue3';
 import { ref, onMounted, onBeforeUnmount, computed } from 'vue';
 import { route } from 'ziggy-js';
 import Icon from '@/components/Icon.vue';
+import { useAppearance } from '@/composables/useAppearance';
+
+const { resolvedAppearance, updateAppearance } = useAppearance();
+const toggleTheme = () => updateAppearance(resolvedAppearance.value === 'dark' ? 'light' : 'dark');
 
 interface SchoolProps {
     name: string;
@@ -65,6 +69,14 @@ const scrollTo = (hash: string) => {
             </nav>
 
             <div class="hidden items-center gap-2 lg:flex">
+                <button
+                    type="button"
+                    class="inline-flex h-9 w-9 items-center justify-center rounded-md text-muted-foreground transition-colors hover:bg-accent hover:text-foreground"
+                    :aria-label="resolvedAppearance === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'"
+                    @click="toggleTheme"
+                >
+                    <Icon :icon="resolvedAppearance === 'dark' ? 'sun' : 'moon'" class="h-4.5 w-4.5" />
+                </button>
                 <Link :href="route('login')" class="rounded-md px-3 py-2 text-sm font-medium text-muted-foreground transition-colors hover:bg-accent hover:text-foreground">
                     Login
                 </Link>
@@ -73,15 +85,25 @@ const scrollTo = (hash: string) => {
                 </button>
             </div>
 
-            <button
-                type="button"
-                class="inline-flex h-10 w-10 items-center justify-center rounded-md text-foreground lg:hidden"
-                :aria-expanded="mobileOpen"
-                aria-label="Toggle menu"
-                @click="mobileOpen = !mobileOpen"
-            >
-                <Icon :icon="mobileOpen ? 'x' : 'menu'" class="h-5 w-5" />
-            </button>
+            <div class="flex items-center gap-1 lg:hidden">
+                <button
+                    type="button"
+                    class="inline-flex h-10 w-10 items-center justify-center rounded-md text-muted-foreground"
+                    :aria-label="resolvedAppearance === 'dark' ? 'Switch to light mode' : 'Switch to dark mode'"
+                    @click="toggleTheme"
+                >
+                    <Icon :icon="resolvedAppearance === 'dark' ? 'sun' : 'moon'" class="h-4.5 w-4.5" />
+                </button>
+                <button
+                    type="button"
+                    class="inline-flex h-10 w-10 items-center justify-center rounded-md text-foreground"
+                    :aria-expanded="mobileOpen"
+                    aria-label="Toggle menu"
+                    @click="mobileOpen = !mobileOpen"
+                >
+                    <Icon :icon="mobileOpen ? 'x' : 'menu'" class="h-5 w-5" />
+                </button>
+            </div>
         </div>
 
         <div
