@@ -14,6 +14,11 @@ interface SocialProof {
     line: string;
 }
 
+interface Highlight {
+    icon: string;
+    text: string;
+}
+
 interface Props {
     headline: string;
     subtext: string;
@@ -21,6 +26,7 @@ interface Props {
     secondaryCta?: { label: string; href: string };
     imageSeed: string;
     stats?: HeroStat[];
+    highlights?: Highlight[];
     /** Authority cue, e.g. "25+ Years of Excellence" - the hero's one allowed eyebrow slot. */
     eyebrow?: string;
     /** Real staff faces + a live count, not generated avatars - see Section 9.D of the design skill. */
@@ -133,7 +139,18 @@ const { scrollTo } = useLenis();
 
             <!-- Glass stat cards over the open right side of the background photo (desktop only; the left
                  panel already fills this role on mobile where there's no spare width for them). -->
-            <div v-if="stats?.length" class="pointer-events-none absolute inset-y-0 right-4 hidden w-56 flex-col justify-center gap-5 lg:right-8 lg:flex xl:right-12">
+            <div v-if="stats?.length || highlights?.length" class="pointer-events-none absolute inset-y-0 right-4 hidden w-64 flex-col justify-center gap-5 lg:right-8 lg:flex xl:right-12">
+                <!-- "Why choose us" card fills the column's top space instead of leaving it empty above the stat cards. -->
+                <div v-if="highlights?.length" class="pointer-events-auto rounded-2xl border border-white/15 bg-sidebar/40 p-5 shadow-xl backdrop-blur-xl">
+                    <p class="text-xs font-semibold tracking-wide text-sidebar-foreground uppercase">Why Families Choose Us</p>
+                    <ul class="mt-3 space-y-2.5">
+                        <li v-for="highlight in highlights" :key="highlight.text" class="flex items-center gap-2.5">
+                            <Icon :icon="highlight.icon" class="h-4 w-4 shrink-0 text-primary" />
+                            <span class="text-sm text-sidebar-foreground/85">{{ highlight.text }}</span>
+                        </li>
+                    </ul>
+                </div>
+
                 <div
                     v-for="(stat, index) in stats"
                     :key="stat.label"

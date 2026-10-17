@@ -203,6 +203,11 @@ const otherStaff = computed(() => (page.props.public_staff ?? []).filter((member
                 :social-proof="heroSocialProof"
                 :session-note="heroSessionNote"
                 :stats="heroFloatingStats"
+                :highlights="[
+                    { icon: 'users', text: 'Small class sizes' },
+                    { icon: 'shield-check', text: 'Safe, modern campus' },
+                    { icon: 'heart-handshake', text: 'Caring, qualified teachers' },
+                ]"
             />
 
             <StatsBandSection :stats="stats" />
