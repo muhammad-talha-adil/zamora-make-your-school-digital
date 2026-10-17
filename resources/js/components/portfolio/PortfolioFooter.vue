@@ -9,7 +9,7 @@ interface SchoolProps {
     contact_address: string | null;
     contact_phone: string | null;
     contact_email: string | null;
-    social_links: Record<string, string> | null;
+    social_links: Array<{ platform: string; url: string }> | null;
 }
 
 const page = usePage<{ school: SchoolProps | null; name: string }>();
@@ -20,12 +20,12 @@ const year = new Date().getFullYear();
 const socialIcon: Record<string, string> = {
     facebook: 'facebook',
     instagram: 'instagram',
-    twitter: 'twitter',
-    youtube: 'youtube',
-    linkedin: 'linkedin',
+    threads: 'threads',
+    x: 'x',
 };
 
-const socialLinks = computed(() => Object.entries(school.value?.social_links ?? {}).filter(([, url]) => !!url));
+/** social_links is stored as an array of {platform, url} (School::casts()), not a plain object map. */
+const socialLinks = computed(() => (school.value?.social_links ?? []).filter((link) => link.url));
 
 const quickLinks = [
     { label: 'About', href: '#about' },
@@ -39,52 +39,57 @@ const { scrollTo } = useLenis();
 </script>
 
 <template>
-    <footer class="bg-primary">
-        <div class="mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
-            <div class="grid gap-10 md:grid-cols-[1.4fr_1fr_1fr]">
-                <div>
-                    <h3 class="text-lg font-semibold text-primary-foreground">{{ schoolName }}</h3>
-                    <p class="mt-3 max-w-sm text-sm leading-relaxed text-primary-foreground/70">
+    <!-- Always a dark surface (bg-sidebar), never bg-primary directly: an admin-chosen light/bright
+         primary color would otherwise leave the hardcoded white text below unreadable. The primary
+         color still shows through as a brand-tinted gradient wash. -->
+    <footer class="relative overflow-hidden bg-linear-to-br from-sidebar via-sidebar to-primary/30">
+        <div class="pointer-events-none absolute inset-0 bg-linear-to-t from-black/20 via-transparent to-transparent" aria-hidden="true" />
+
+        <div class="relative mx-auto max-w-7xl px-4 py-16 sm:px-6 lg:px-8">
+            <div class="grid gap-10 divide-y divide-white/10 md:grid-cols-[1.4fr_1fr_1fr] md:divide-x md:divide-y-0">
+                <div class="md:pr-10">
+                    <h3 class="text-lg font-semibold text-white">{{ schoolName }}</h3>
+                    <p class="mt-3 max-w-sm text-sm leading-relaxed text-white/70">
                         A nurturing learning community preparing students for every stage ahead, from first lessons to lifelong goals.
                     </p>
                     <div v-if="socialLinks.length" class="mt-5 flex gap-3">
                         <a
-                            v-for="[platform, url] in socialLinks"
-                            :key="platform"
-                            :href="url"
+                            v-for="link in socialLinks"
+                            :key="link.platform"
+                            :href="link.url"
                             target="_blank"
                             rel="noopener"
-                            class="flex h-9 w-9 items-center justify-center rounded-full border border-primary-foreground/20 bg-primary-foreground/5 text-primary-foreground/70 backdrop-blur-sm transition-colors hover:border-primary-foreground hover:text-primary-foreground"
+                            class="flex h-9 w-9 items-center justify-center rounded-full border border-white/20 bg-white/5 text-white/70 backdrop-blur-sm transition-colors hover:border-white hover:text-white"
                         >
-                            <Icon :icon="socialIcon[platform] ?? 'link'" class="h-4 w-4" />
+                            <Icon :icon="socialIcon[link.platform] ?? 'link'" class="h-4 w-4" />
                         </a>
                     </div>
                 </div>
 
-                <div>
-                    <h4 class="text-sm font-semibold text-primary-foreground">Quick Links</h4>
+                <div class="pt-10 md:pt-0 md:px-10">
+                    <h4 class="text-sm font-semibold text-white">Quick Links</h4>
                     <ul class="mt-4 space-y-2.5">
                         <li v-for="link in quickLinks" :key="link.href">
                             <button
                                 type="button"
-                                class="text-sm text-primary-foreground/70 transition-colors hover:text-primary-foreground"
+                                class="text-sm text-white/70 transition-colors hover:text-white"
                                 @click="scrollTo(link.href)"
                             >
                                 {{ link.label }}
                             </button>
                         </li>
                         <li>
-                            <Link href="/terms" class="text-sm text-primary-foreground/70 transition-colors hover:text-primary-foreground">Terms of Service</Link>
+                            <Link href="/terms" class="text-sm text-white/70 transition-colors hover:text-white">Terms of Service</Link>
                         </li>
                         <li>
-                            <Link href="/privacy" class="text-sm text-primary-foreground/70 transition-colors hover:text-primary-foreground">Privacy Policy</Link>
+                            <Link href="/privacy" class="text-sm text-white/70 transition-colors hover:text-white">Privacy Policy</Link>
                         </li>
                     </ul>
                 </div>
 
-                <div>
-                    <h4 class="text-sm font-semibold text-primary-foreground">Get in Touch</h4>
-                    <ul class="mt-4 space-y-2.5 text-sm text-primary-foreground/70">
+                <div class="pt-10 md:pt-0 md:pl-10">
+                    <h4 class="text-sm font-semibold text-white">Get in Touch</h4>
+                    <ul class="mt-4 space-y-2.5 text-sm text-white/70">
                         <li v-if="school?.contact_address" class="flex gap-2">
                             <Icon icon="map-pin" class="mt-0.5 h-4 w-4 shrink-0" />
                             <span>{{ school.contact_address }}</span>
@@ -101,7 +106,7 @@ const { scrollTo } = useLenis();
                 </div>
             </div>
 
-            <div class="mt-12 border-t border-primary-foreground/15 pt-6 text-center text-xs text-primary-foreground/60">
+            <div class="mt-12 border-t border-white/15 pt-6 text-center text-xs text-white/60">
                 Copyright {{ year }} {{ schoolName }}. All rights reserved.
             </div>
         </div>

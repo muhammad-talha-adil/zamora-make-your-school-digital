@@ -11,6 +11,14 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import Icon from '@/components/Icon.vue';
 import RepeaterList from '@/components/forms/RepeaterList.vue';
 
+/** Fixed platforms shown as their own labeled field (not the free-text repeater), so the footer's icon lookup never depends on how an admin spelled "facebook". */
+const SOCIAL_PLATFORMS = [
+    { key: 'facebook', label: 'Facebook', icon: 'facebook', placeholder: 'https://facebook.com/yourschool' },
+    { key: 'instagram', label: 'Instagram', icon: 'instagram', placeholder: 'https://instagram.com/yourschool' },
+    { key: 'threads', label: 'Threads', icon: 'threads', placeholder: 'https://threads.net/@yourschool' },
+    { key: 'x', label: 'X (Twitter)', icon: 'x', placeholder: 'https://x.com/yourschool' },
+] as const;
+
 interface SchoolWebsiteContent {
     hero_headline?: string | null;
     hero_subtext?: string | null;
@@ -85,9 +93,24 @@ const form = ref(defaultForm());
 const errors = ref<Record<string, string>>({});
 const processing = ref(false);
 
+/** Per-platform URL, seeded from whatever's already saved under that platform key. */
+const socialUrls = ref<Record<string, string>>(
+    Object.fromEntries(
+        SOCIAL_PLATFORMS.map((platform) => [
+            platform.key,
+            form.value.social_links.find((link) => link.platform === platform.key)?.url ?? '',
+        ]),
+    ),
+);
+
 const submit = () => {
     processing.value = true;
     errors.value = {};
+
+    form.value.social_links = SOCIAL_PLATFORMS.filter((platform) => socialUrls.value[platform.key]?.trim()).map((platform) => ({
+        platform: platform.key,
+        url: socialUrls.value[platform.key].trim(),
+    }));
 
     router.post('/settings/school-profile/website-content', form.value, {
         preserveScroll: true,
@@ -384,25 +407,18 @@ const submit = () => {
 
                 <div>
                     <Label class="mb-2 block">Social links</Label>
-                    <RepeaterList
-                        v-model="form.social_links"
-                        add-label="Add social link"
-                        empty-text="No social links yet."
-                        :make-row="() => ({ platform: '', url: '' })"
-                    >
-                        <template #default="{ row }">
-                            <div class="grid grid-cols-1 gap-3 md:grid-cols-2">
-                                <div class="space-y-1">
-                                    <Label>Platform *</Label>
-                                    <Input v-model="row.platform" placeholder="facebook" />
-                                </div>
-                                <div class="space-y-1">
-                                    <Label>URL</Label>
-                                    <Input v-model="row.url" />
-                                </div>
-                            </div>
-                        </template>
-                    </RepeaterList>
+                    <p class="mb-3 text-sm text-muted-foreground">
+                        Leave a field blank to hide that platform's icon in the footer.
+                    </p>
+                    <div class="grid grid-cols-1 gap-4 md:grid-cols-2">
+                        <div v-for="platform in SOCIAL_PLATFORMS" :key="platform.key" class="space-y-1.5">
+                            <Label :for="`social_${platform.key}`" class="flex items-center gap-1.5">
+                                <Icon :icon="platform.icon" class="h-4 w-4" />
+                                {{ platform.label }}
+                            </Label>
+                            <Input :id="`social_${platform.key}`" v-model="socialUrls[platform.key]" :placeholder="platform.placeholder" />
+                        </div>
+                    </div>
                 </div>
             </CardContent>
         </Card>
