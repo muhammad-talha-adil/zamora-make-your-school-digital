@@ -14,6 +14,7 @@ import GalleryCtaSection from '@/components/public/sections/GalleryCtaSection.vu
 import AdmissionsSection from '@/components/public/sections/AdmissionsSection.vue';
 import FaqSection from '@/components/public/sections/FaqSection.vue';
 import ContactSection from '@/components/public/sections/ContactSection.vue';
+import SectionDivider from '@/components/public/SectionDivider.vue';
 
 interface SchoolProps {
     id: number;
@@ -217,20 +218,28 @@ const otherStaff = computed(() => (page.props.public_staff ?? []).filter((member
                 :highlights="aboutHighlights"
             />
 
+            <SectionDivider backdrop="bg-background" fill="text-background" />
             <DirectorSection v-if="director" :director="director" />
 
+            <SectionDivider backdrop="bg-background" fill="text-muted" />
             <StaffSection v-if="otherStaff.length" :staff="otherStaff" />
 
+            <SectionDivider backdrop="bg-muted" fill="text-background" />
             <CampusesSection :campuses="page.props.public_campuses ?? []" />
 
+            <SectionDivider backdrop="bg-background" fill="text-muted" />
             <GalleryCtaSection />
 
+            <SectionDivider backdrop="bg-muted" fill="text-primary/5" />
             <TestimonialsSection />
 
+            <SectionDivider backdrop="bg-primary/5" fill="text-background" />
             <AdmissionsSection :steps="admissionSteps" />
 
+            <SectionDivider backdrop="bg-background" fill="text-muted" />
             <FaqSection :items="faqItems" />
 
+            <SectionDivider backdrop="bg-muted" fill="text-background" />
             <ContactSection
                 :address="school?.contact_address ?? null"
                 :phone="school?.contact_phone ?? null"
@@ -238,6 +247,8 @@ const otherStaff = computed(() => (page.props.public_staff ?? []).filter((member
                 :hours="school?.contact_hours ?? null"
                 :map-embed-url="school?.map_embed_url ?? null"
             />
+
+            <SectionDivider backdrop="bg-background" fill="text-primary" />
         </main>
 
         <PortfolioFooter />
