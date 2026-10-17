@@ -21,20 +21,20 @@ const scrollTo = (href: string) => {
 </script>
 
 <template>
-    <section class="relative overflow-hidden bg-primary pt-16 pb-28 md:pt-24 md:pb-36">
+    <section class="relative overflow-hidden bg-sidebar pt-16 pb-28 md:pt-24 md:pb-36">
         <div class="mx-auto grid max-w-7xl items-center gap-10 px-4 sm:px-6 lg:grid-cols-[1.1fr_1fr] lg:gap-16 lg:px-8">
             <div class="max-w-xl">
-                <h1 class="text-4xl font-extrabold uppercase leading-[1.05] tracking-tight text-primary-foreground md:text-5xl lg:text-6xl">
+                <h1 class="text-4xl font-extrabold uppercase leading-[1.05] tracking-tight text-sidebar-foreground md:text-5xl lg:text-6xl">
                     {{ headline }}
                 </h1>
-                <p class="mt-5 max-w-md text-base leading-relaxed text-primary-foreground/75 md:text-lg">
+                <p class="mt-5 max-w-md text-base leading-relaxed text-sidebar-foreground/70 md:text-lg">
                     {{ subtext }}
                 </p>
                 <div class="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
                     <button
                         v-if="isAnchor(primaryCta.href)"
                         type="button"
-                        class="group inline-flex h-11 items-center justify-center gap-2 rounded-full bg-background px-6 text-sm font-semibold text-primary shadow-lg shadow-black/20 transition-opacity hover:opacity-90"
+                        class="group inline-flex h-11 items-center justify-center gap-2 rounded-full bg-primary px-6 text-sm font-semibold text-primary-foreground shadow-lg shadow-black/20 transition-opacity hover:opacity-90"
                         @click="scrollTo(primaryCta.href)"
                     >
                         {{ primaryCta.label }}
@@ -43,21 +43,19 @@ const scrollTo = (href: string) => {
                     <Link
                         v-else
                         :href="primaryCta.href"
-                        class="group inline-flex h-11 items-center justify-center gap-2 rounded-full bg-background px-6 text-sm font-semibold text-primary shadow-lg shadow-black/20 transition-opacity hover:opacity-90"
+                        class="group inline-flex h-11 items-center justify-center gap-2 rounded-full bg-primary px-6 text-sm font-semibold text-primary-foreground shadow-lg shadow-black/20 transition-opacity hover:opacity-90"
                     >
                         {{ primaryCta.label }}
                         <Icon icon="arrow-right" class="h-4 w-4 transition-transform group-hover:translate-x-1" />
                     </Link>
 
-                    <!-- Outline style: bg-secondary/bg-accent resolve to near-background gray in this
-                         app's default palette (same value as each other), so a solid fill here would be
-                         indistinguishable from the primary button and could fail contrast depending on
-                         the admin's chosen theme. An outline against primary-foreground is contrast-safe
-                         under any palette. -->
+                    <!-- Outline style against the sidebar surface (not another filled color): keeps the
+                         second button visually distinct from the primary one under any admin-chosen
+                         primary color, without guessing a second brand hue that might clash or wash out. -->
                     <button
                         v-if="secondaryCta && isAnchor(secondaryCta.href)"
                         type="button"
-                        class="inline-flex h-11 items-center justify-center rounded-full border-2 border-primary-foreground/50 px-6 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary-foreground/10"
+                        class="inline-flex h-11 items-center justify-center rounded-full border-2 border-sidebar-foreground/40 px-6 text-sm font-semibold text-sidebar-foreground transition-colors hover:bg-sidebar-foreground/10"
                         @click="scrollTo(secondaryCta.href)"
                     >
                         {{ secondaryCta.label }}
@@ -65,7 +63,7 @@ const scrollTo = (href: string) => {
                     <Link
                         v-else-if="secondaryCta"
                         :href="secondaryCta.href"
-                        class="inline-flex h-11 items-center justify-center rounded-full border-2 border-primary-foreground/50 px-6 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary-foreground/10"
+                        class="inline-flex h-11 items-center justify-center rounded-full border-2 border-sidebar-foreground/40 px-6 text-sm font-semibold text-sidebar-foreground transition-colors hover:bg-sidebar-foreground/10"
                     >
                         {{ secondaryCta.label }}
                     </Link>
