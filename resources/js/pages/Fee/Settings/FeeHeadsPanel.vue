@@ -498,23 +498,16 @@ const getFrequencyLabel = (frequency: string) => {
                     <DialogTitle>{{ editingFeeHead ? 'Edit Fee Head' : 'Create Fee Head' }}</DialogTitle>
                 </DialogHeader>
                 <form @submit.prevent="submitForm" class="space-y-4">
-                    <!-- Name & Code -->
-                    <div class="grid gap-4 md:grid-cols-2">
-                        <div class="space-y-2">
-                            <Label for="fh-name">Name *</Label>
-                            <Input
-                                id="fh-name"
-                                v-model="form.name"
-                                placeholder="e.g., Tuition Fee"
-                                :class="formErrors.name ? 'border-destructive' : ''"
-                            />
-                            <p v-if="formErrors.name" class="text-xs text-destructive">{{ formErrors.name }}</p>
-                        </div>
-                        <div v-if="editingFeeHead" class="space-y-2">
-                            <Label for="fh-code">Code</Label>
-                            <Input id="fh-code" :model-value="editingFeeHead.code" disabled class="bg-muted" />
-                            <p class="text-xs text-muted-foreground">System-generated reference, cannot be changed.</p>
-                        </div>
+                    <!-- Name -->
+                    <div class="space-y-2">
+                        <Label for="fh-name">Name *</Label>
+                        <Input
+                            id="fh-name"
+                            v-model="form.name"
+                            placeholder="e.g., Tuition Fee"
+                            :class="formErrors.name ? 'border-destructive' : ''"
+                        />
+                        <p v-if="formErrors.name" class="text-xs text-destructive">{{ formErrors.name }}</p>
                     </div>
 
                     <!-- Description -->

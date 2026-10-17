@@ -29,7 +29,6 @@ const showForm = ref(false);
 const editingMethod = ref<PaymentMethod | null>(null);
 const form = ref({
     name: '',
-    code: '',
     is_active: true,
 });
 
@@ -44,17 +43,16 @@ const breadcrumbItems: BreadcrumbItem[] = [
 // Open form for new method
 const openForm = () => {
     editingMethod.value = null;
-    form.value = { name: '', code: '', is_active: true };
+    form.value = { name: '', is_active: true };
     showForm.value = true;
 };
 
 // Open form for editing
 const editMethod = (method: PaymentMethod) => {
     editingMethod.value = method;
-    form.value = { 
-        name: method.name, 
-        code: method.code, 
-        is_active: method.is_active 
+    form.value = {
+        name: method.name,
+        is_active: method.is_active,
     };
     showForm.value = true;
 };
@@ -130,10 +128,6 @@ const toggleMethodActive = async (method: PaymentMethod) => {
                         <div>
                             <Label>Name</Label>
                             <Input v-model="form.name" required />
-                        </div>
-                        <div>
-                            <Label>Code</Label>
-                            <Input v-model="form.code" required placeholder="e.g., cash, bank_transfer" />
                         </div>
                         <div class="flex gap-2">
                             <Button type="submit">Save</Button>

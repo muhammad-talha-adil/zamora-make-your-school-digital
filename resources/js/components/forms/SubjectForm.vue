@@ -166,12 +166,6 @@ const resetForm = () => {
 
                     <template v-if="props.subject">
                         <div class="grid gap-2">
-                            <Label for="code">Code</Label>
-                            <Input id="code" v-model="form.code" disabled class="bg-muted" />
-                            <p class="text-xs text-muted-foreground">System-generated, cannot be changed.</p>
-                        </div>
-
-                        <div class="grid gap-2">
                             <Label for="short_name">Short Name</Label>
                             <Input id="short_name" v-model="form.short_name" disabled class="bg-muted" />
                             <p class="text-xs text-muted-foreground">System-generated, cannot be changed.</p>

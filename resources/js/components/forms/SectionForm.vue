@@ -179,12 +179,6 @@ const resetForm = () => {
                         <InputError :message="errors.class_id" />
                     </div>
 
-                    <div v-if="props.section" class="grid gap-2">
-                        <Label for="code">Code</Label>
-                        <Input id="code" v-model="form.code" disabled class="bg-muted" />
-                        <p class="text-xs text-muted-foreground">System-generated, cannot be changed.</p>
-                    </div>
-
                     <div class="grid gap-2">
                         <Label for="description">Description</Label>
                         <Input
