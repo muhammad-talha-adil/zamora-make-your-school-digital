@@ -135,6 +135,10 @@ const otherStaff = computed(() => (page.props.public_staff ?? []).filter((member
                 :primary-cta="{ label: school?.hero_cta_primary_text ?? 'Apply for Admission', href: school?.hero_cta_primary_url ?? '#admissions' }"
                 :secondary-cta="{ label: school?.hero_cta_secondary_text ?? 'Meet Our Staff', href: school?.hero_cta_secondary_url ?? '#staff' }"
                 :image-seed="school?.hero_illustration_seed ?? 'school-classroom-main'"
+                :stats="[
+                    { icon: 'users', label: 'Students enrolled', value: String(page.props.live_stats?.students ?? 0) },
+                    { icon: 'graduation-cap', label: 'Teaching staff', value: String(page.props.live_stats?.teachers ?? 0) },
+                ]"
             />
 
             <StatsBandSection :stats="stats" />

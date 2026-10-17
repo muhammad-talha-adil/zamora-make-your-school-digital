@@ -2,12 +2,19 @@
 import { Link } from '@inertiajs/vue3';
 import Icon from '@/components/Icon.vue';
 
+interface HeroStat {
+    icon: string;
+    label: string;
+    value: string;
+}
+
 interface Props {
     headline: string;
     subtext: string;
     primaryCta: { label: string; href: string };
     secondaryCta?: { label: string; href: string };
     imageSeed: string;
+    stats?: HeroStat[];
 }
 
 defineProps<Props>();
@@ -22,9 +29,11 @@ const scrollTo = (href: string) => {
 
 <template>
     <section class="relative isolate overflow-hidden pt-16 pb-28 md:pt-24 md:pb-36">
-        <!-- Full-bleed background photo, dark-tinted so light text and the glass panels read clearly over it. -->
+        <!-- Full-bleed background photo, dark-tinted so light text and the glass panels read clearly over it.
+             Direct Unsplash CDN URL (free license, verified), not picsum.photos: picsum's "seed" only
+             guarantees a *consistent* random photo, never a *school-themed* one. -->
         <img
-            :src="`https://picsum.photos/seed/${imageSeed}/1920/1080`"
+            src="https://images.unsplash.com/photo-1509062522246-3755977927d7?auto=format&fit=crop&w=1920&q=75"
             :alt="headline"
             class="absolute inset-0 -z-20 h-full w-full object-cover"
             loading="eager"
@@ -90,6 +99,27 @@ const scrollTo = (href: string) => {
                     <p class="text-xs font-semibold text-sidebar-foreground">Admissions Open</p>
                 </div>
                 <p class="mt-1 text-xs text-sidebar-foreground/70">Apply for the upcoming session today.</p>
+            </div>
+
+            <!-- Glass stat cards over the open right side of the background photo (desktop only; the left
+                 panel already fills this role on mobile where there's no spare width for them). -->
+            <div v-if="stats?.length" class="pointer-events-none absolute inset-y-0 right-4 hidden w-56 flex-col justify-center gap-5 lg:right-8 lg:flex xl:right-12">
+                <div
+                    v-for="(stat, index) in stats"
+                    :key="stat.label"
+                    class="pointer-events-auto rounded-2xl border border-white/15 bg-sidebar/40 p-4 shadow-xl backdrop-blur-xl"
+                    :class="index % 2 === 1 ? 'ml-10' : ''"
+                >
+                    <div class="flex items-center gap-3">
+                        <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-primary/20">
+                            <Icon :icon="stat.icon" class="h-4.5 w-4.5 text-primary" />
+                        </div>
+                        <div>
+                            <p class="text-lg font-bold text-sidebar-foreground">{{ stat.value }}</p>
+                            <p class="text-xs text-sidebar-foreground/70">{{ stat.label }}</p>
+                        </div>
+                    </div>
+                </div>
             </div>
         </div>
 
