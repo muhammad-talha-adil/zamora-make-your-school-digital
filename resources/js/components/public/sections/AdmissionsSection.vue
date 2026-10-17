@@ -32,29 +32,30 @@ const submit = () => {
 
 <template>
     <section id="admissions" ref="target" class="bg-muted/30 py-20 md:py-28">
-        <div class="mx-auto grid max-w-7xl gap-12 px-4 sm:px-6 lg:grid-cols-2 lg:gap-16 lg:px-8">
-            <div :class="revealed ? 'reveal-visible' : 'reveal'">
-                <h2 class="text-3xl font-bold tracking-tight text-foreground md:text-4xl">
-                    Begin your child's journey with us
-                </h2>
-                <p class="mt-4 max-w-md text-base leading-relaxed text-muted-foreground">
-                    Submit an enquiry and our admissions team will reach out within two working days to arrange a campus visit.
-                </p>
+        <div class="mx-auto max-w-7xl px-4 text-center sm:px-6 lg:px-8" :class="revealed ? 'reveal-visible' : 'reveal'">
+            <h2 class="text-3xl font-bold tracking-tight text-foreground md:text-4xl">
+                Your Journey With Us
+            </h2>
+            <p class="mx-auto mt-4 max-w-md text-base leading-relaxed text-muted-foreground">
+                Submit an enquiry and our admissions team will reach out within two working days to arrange a campus visit.
+            </p>
 
-                <ol class="mt-10 space-y-6">
-                    <li v-for="step in steps" :key="step.title" class="flex gap-4">
-                        <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border border-border bg-card">
-                            <Icon :icon="step.icon" class="h-5 w-5 text-primary" />
-                        </div>
-                        <div>
-                            <p class="font-semibold text-foreground">{{ step.title }}</p>
-                            <p class="mt-1 text-sm text-muted-foreground">{{ step.description }}</p>
-                        </div>
-                    </li>
-                </ol>
-            </div>
+            <ol class="mt-12 grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
+                <li v-for="(step, index) in steps" :key="step.title" class="flex flex-col items-center text-center">
+                    <div class="relative flex h-16 w-16 items-center justify-center rounded-xl bg-primary/10">
+                        <Icon :icon="step.icon" class="h-7 w-7 text-primary" />
+                        <span class="absolute -top-2 -right-2 flex h-6 w-6 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
+                            {{ index + 1 }}
+                        </span>
+                    </div>
+                    <p class="mt-4 font-semibold text-foreground">{{ step.title }}</p>
+                    <p class="mt-1 max-w-[16rem] text-sm text-muted-foreground">{{ step.description }}</p>
+                </li>
+            </ol>
+        </div>
 
-            <div class="rounded-2xl border border-border bg-card p-6 md:p-8" :class="revealed ? 'reveal-visible' : 'reveal'">
+        <div class="mx-auto mt-16 max-w-7xl px-4 sm:px-6 lg:px-8">
+            <div class="mx-auto max-w-xl rounded-2xl border border-border bg-card p-6 md:p-8" :class="revealed ? 'reveal-visible' : 'reveal'">
                 <form class="space-y-4" @submit.prevent="submit">
                     <div>
                         <label for="student_name" class="mb-1.5 block text-sm font-medium text-foreground">Child's name *</label>

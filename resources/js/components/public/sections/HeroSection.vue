@@ -21,44 +21,66 @@ const scrollTo = (href: string) => {
 </script>
 
 <template>
-    <section class="relative overflow-hidden bg-background pt-20 pb-16 md:pt-24 md:pb-24">
+    <section class="relative overflow-hidden bg-primary pt-16 pb-28 md:pt-24 md:pb-36">
         <div class="mx-auto grid max-w-7xl items-center gap-10 px-4 sm:px-6 lg:grid-cols-[1.1fr_1fr] lg:gap-16 lg:px-8">
             <div class="max-w-xl">
-                <h1 class="text-4xl font-bold leading-[1.05] tracking-tight text-foreground md:text-5xl lg:text-6xl">
+                <h1 class="text-4xl font-extrabold uppercase leading-[1.05] tracking-tight text-primary-foreground md:text-5xl lg:text-6xl">
                     {{ headline }}
                 </h1>
-                <p class="mt-5 max-w-md text-base leading-relaxed text-muted-foreground md:text-lg">
+                <p class="mt-5 max-w-md text-base leading-relaxed text-primary-foreground/75 md:text-lg">
                     {{ subtext }}
                 </p>
                 <div class="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
-                    <button v-if="isAnchor(primaryCta.href)" type="button" class="btn-primary group h-11 px-6" @click="scrollTo(primaryCta.href)">
+                    <button
+                        v-if="isAnchor(primaryCta.href)"
+                        type="button"
+                        class="group inline-flex h-11 items-center justify-center gap-2 rounded-full bg-secondary px-6 text-sm font-semibold text-secondary-foreground shadow-lg shadow-black/20 transition-opacity hover:opacity-90"
+                        @click="scrollTo(primaryCta.href)"
+                    >
                         {{ primaryCta.label }}
                         <Icon icon="arrow-right" class="h-4 w-4 transition-transform group-hover:translate-x-1" />
                     </button>
-                    <Link v-else :href="primaryCta.href" class="btn-primary group h-11 px-6">
+                    <Link
+                        v-else
+                        :href="primaryCta.href"
+                        class="group inline-flex h-11 items-center justify-center gap-2 rounded-full bg-secondary px-6 text-sm font-semibold text-secondary-foreground shadow-lg shadow-black/20 transition-opacity hover:opacity-90"
+                    >
                         {{ primaryCta.label }}
                         <Icon icon="arrow-right" class="h-4 w-4 transition-transform group-hover:translate-x-1" />
                     </Link>
 
-                    <button v-if="secondaryCta && isAnchor(secondaryCta.href)" type="button" class="btn-outline h-11 px-6" @click="scrollTo(secondaryCta.href)">
+                    <button
+                        v-if="secondaryCta && isAnchor(secondaryCta.href)"
+                        type="button"
+                        class="inline-flex h-11 items-center justify-center rounded-full bg-accent px-6 text-sm font-semibold text-accent-foreground shadow-lg shadow-black/20 transition-opacity hover:opacity-90"
+                        @click="scrollTo(secondaryCta.href)"
+                    >
                         {{ secondaryCta.label }}
                     </button>
-                    <Link v-else-if="secondaryCta" :href="secondaryCta.href" class="btn-outline h-11 px-6">
+                    <Link
+                        v-else-if="secondaryCta"
+                        :href="secondaryCta.href"
+                        class="inline-flex h-11 items-center justify-center rounded-full bg-accent px-6 text-sm font-semibold text-accent-foreground shadow-lg shadow-black/20 transition-opacity hover:opacity-90"
+                    >
                         {{ secondaryCta.label }}
                     </Link>
                 </div>
             </div>
 
-            <div class="relative aspect-[5/4] w-full overflow-hidden rounded-2xl border border-border lg:aspect-[4/3]">
+            <div class="relative aspect-[5/4] w-full overflow-hidden rounded-2xl lg:aspect-4/3">
                 <img
                     :src="`https://picsum.photos/seed/${imageSeed}/1200/900`"
                     :alt="headline"
-                    class="h-full w-full scale-105 object-cover opacity-0 transition-[opacity,transform] duration-700 ease-out"
+                    class="h-full w-full scale-105 rounded-2xl object-cover opacity-0 shadow-2xl transition-[opacity,transform] duration-700 ease-out"
                     style="animation: hero-image-in 0.8s ease-out 0.15s forwards"
                 />
-                <div class="pointer-events-none absolute inset-0 bg-gradient-to-t from-background/30 via-transparent to-transparent" />
             </div>
         </div>
+
+        <!-- Wave divider -->
+        <svg class="absolute bottom-0 left-0 w-full text-background" viewBox="0 0 1440 120" preserveAspectRatio="none" aria-hidden="true">
+            <path fill="currentColor" d="M0,64 C240,120 480,0 720,32 C960,64 1200,120 1440,64 L1440,120 L0,120 Z" />
+        </svg>
     </section>
 </template>
 
