@@ -48,19 +48,19 @@ const submit = () => {
                 <!-- Connecting line behind the circles, desktop only (mobile stacks, a line serves no purpose there). -->
                 <div class="absolute top-8 right-[12.5%] left-[12.5%] hidden h-0.5 bg-linear-to-r from-primary/40 via-primary/20 to-primary/40 lg:block" aria-hidden="true" />
 
-                <li
-                    v-for="(step, index) in steps"
-                    :key="step.title"
-                    class="group relative flex flex-col items-center text-center"
-                >
-                    <div class="relative flex h-16 w-16 items-center justify-center rounded-2xl border border-white/20 bg-card shadow-md ring-4 ring-background transition-transform duration-300 group-hover:-translate-y-1">
+                <li v-for="(step, index) in steps" :key="step.title" class="group relative flex flex-col items-center">
+                    <div class="relative z-10 flex h-16 w-16 shrink-0 items-center justify-center rounded-2xl border border-white/20 bg-card shadow-md ring-4 ring-background transition-transform duration-300 group-hover:-translate-y-1">
                         <Icon :icon="stepIcon(step, index)" class="h-7 w-7 text-primary" />
                         <span class="absolute -top-3 -right-3 flex h-7 w-7 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground shadow-sm">
                             {{ index + 1 }}
                         </span>
                     </div>
-                    <p class="mt-5 font-semibold text-foreground">{{ step.title }}</p>
-                    <p class="mt-1.5 max-w-56 text-sm leading-relaxed text-muted-foreground">{{ step.description }}</p>
+                    <!-- Equal-height card (flex-1) so a long description doesn't leave neighboring cards
+                         misaligned - the previous plain centered text had no shared baseline across steps. -->
+                    <div class="mt-5 flex w-full flex-1 flex-col rounded-2xl border border-border bg-card p-5 text-left shadow-sm">
+                        <p class="font-semibold text-foreground">{{ step.title }}</p>
+                        <p class="mt-1.5 text-sm leading-relaxed text-muted-foreground">{{ step.description }}</p>
+                    </div>
                 </li>
             </ol>
         </div>
