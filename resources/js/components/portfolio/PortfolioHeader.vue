@@ -19,8 +19,8 @@ const logoPath = computed(() => page.props.school?.logo_path);
 
 const navItems = [
     { label: 'About', href: '#about' },
-    { label: 'Academics', href: '#academics' },
-    { label: 'Campus Life', href: '#campus-life' },
+    { label: 'Staff', href: '#staff' },
+    { label: 'Campuses', href: '#campuses' },
     { label: 'Admissions', href: '#admissions' },
     { label: 'Contact', href: '#contact' },
 ];

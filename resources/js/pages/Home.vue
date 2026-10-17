@@ -6,8 +6,9 @@ import PortfolioFooter from '@/components/portfolio/PortfolioFooter.vue';
 import HeroSection from '@/components/public/sections/HeroSection.vue';
 import StatsBandSection from '@/components/public/sections/StatsBandSection.vue';
 import AboutSection from '@/components/public/sections/AboutSection.vue';
-import ProgramsSection from '@/components/public/sections/ProgramsSection.vue';
-import CampusLifeSection from '@/components/public/sections/CampusLifeSection.vue';
+import DirectorSection from '@/components/public/sections/DirectorSection.vue';
+import StaffSection from '@/components/public/sections/StaffSection.vue';
+import CampusesSection from '@/components/public/sections/CampusesSection.vue';
 import TestimonialsSection from '@/components/public/sections/TestimonialsSection.vue';
 import GalleryCtaSection from '@/components/public/sections/GalleryCtaSection.vue';
 import AdmissionsSection from '@/components/public/sections/AdmissionsSection.vue';
@@ -26,8 +27,6 @@ interface SchoolProps {
     hero_illustration_seed: string | null;
     mission_statement: string | null;
     stats?: Array<{ label: string; value: number; suffix?: string }>;
-    home_features?: Array<{ icon: string; title: string; description: string }>;
-    academics_programs?: Array<{ icon: string; title: string; description: string }>;
     admission_steps?: Array<{ icon: string; title: string; description: string }>;
     academics_faq?: Array<{ question: string; answer: string }>;
     admissions_faq?: Array<{ question: string; answer: string }>;
@@ -43,16 +42,30 @@ interface LiveStats {
     teachers: number;
 }
 
-const page = usePage<{ school: SchoolProps | null; live_stats: LiveStats }>();
+interface PublicStaff {
+    id: number;
+    name: string;
+    designation: string | null;
+    department: string | null;
+    campus: string | null;
+    photo_url: string | null;
+}
+
+interface PublicCampus {
+    id: number;
+    name: string;
+    address: string | null;
+    type: string | null;
+}
+
+const page = usePage<{
+    school: SchoolProps | null;
+    live_stats: LiveStats;
+    public_staff: PublicStaff[];
+    public_campuses: PublicCampus[];
+}>();
 const school = computed(() => page.props.school);
 const schoolName = computed(() => school.value?.name ?? (page.props.name as string));
-
-const defaultPrograms = [
-    { icon: 'sprout', title: 'Early Years', description: 'Play-based learning that builds curiosity, language, and social confidence from the start.' },
-    { icon: 'book-open', title: 'Primary School', description: 'Strong foundations in literacy and numeracy, with regular check-ins on every child\'s progress.' },
-    { icon: 'flask-conical', title: 'Middle School', description: 'Subject-specialist teaching that encourages independent thinking across every core subject.' },
-    { icon: 'graduation-cap', title: 'Secondary', description: 'Exam-focused preparation paired with mentoring that keeps every student on track.' },
-];
 
 const defaultSteps = [
     { icon: 'send', title: 'Submit an enquiry', description: 'Tell us about your child and the admissions team will reach out within two working days.' },
@@ -62,17 +75,9 @@ const defaultSteps = [
 
 const defaultFaq = [
     { question: 'How do I apply for admission?', answer: 'Submit an enquiry through the Admissions section above. Our team will contact you within two business days to guide you through the next steps.' },
-    { question: 'What grade levels does the school offer?', answer: 'We offer classes from Early Years through Secondary. See the Academics section for details on each stage.' },
+    { question: 'What grade levels does the school offer?', answer: 'We offer classes from Early Years through Secondary.' },
     { question: 'What are the school timings?', answer: 'Classes run Monday to Saturday, morning to early afternoon. Exact timings vary slightly by grade level.' },
     { question: 'Can I visit the campus before applying?', answer: 'Absolutely. Campus visits are part of our admissions process and can also be arranged separately through the Contact section.' },
-];
-
-const facilities = [
-    { icon: 'trophy', label: 'Sports & Athletics' },
-    { icon: 'palette', label: 'Art & Music' },
-    { icon: 'mic', label: 'Debate Club' },
-    { icon: 'flask-conical', label: 'Science Lab' },
-    { icon: 'heart-handshake', label: 'Community Service' },
 ];
 
 /** Students/Teachers rows use live DB counts, not admin-entered numbers, so they never drift stale. */
@@ -102,18 +107,19 @@ const aboutHighlights = computed(() => [
     { label: 'Awards Won', value: '40+' },
 ]);
 
-// Neither home_features nor academics_programs are used here: both hold
-// data seeded for the old design (home_features uses heroicons-style names
-// like "UserGroupIcon"; academics_programs has no `icon` key at all, just
-// title/features/description). Until an admin re-enters content in this
-// section's actual shape (icon/title/description, lucide icon names), the
-// hardcoded default is the only source guaranteed to render correctly.
-const programs = computed(() => defaultPrograms);
 const admissionSteps = computed(() => (school.value?.admission_steps?.length ? school.value.admission_steps : defaultSteps));
 const faqItems = computed(() => {
     const merged = [...(school.value?.academics_faq ?? []), ...(school.value?.admissions_faq ?? [])];
     return merged.length ? merged : defaultFaq;
 });
+
+const DIRECTOR_TITLES = ['principal', 'director', 'headmaster', 'headmistress', 'head teacher'];
+
+/** The one staff member whose designation reads as school leadership gets the standalone intro; everyone else goes in the staff slider. */
+const director = computed(() =>
+    page.props.public_staff?.find((member) => DIRECTOR_TITLES.some((title) => member.designation?.toLowerCase().includes(title))),
+);
+const otherStaff = computed(() => (page.props.public_staff ?? []).filter((member) => member.id !== director.value?.id));
 </script>
 
 <template>
@@ -127,7 +133,7 @@ const faqItems = computed(() => {
                 :headline="school?.hero_headline ?? `Where every student is known, challenged, and supported`"
                 :subtext="school?.hero_subtext ?? 'A caring learning community that helps every child grow into a confident, capable learner.'"
                 :primary-cta="{ label: school?.hero_cta_primary_text ?? 'Apply for Admission', href: school?.hero_cta_primary_url ?? '#admissions' }"
-                :secondary-cta="{ label: school?.hero_cta_secondary_text ?? 'Explore Academics', href: school?.hero_cta_secondary_url ?? '#academics' }"
+                :secondary-cta="{ label: school?.hero_cta_secondary_text ?? 'Meet Our Staff', href: school?.hero_cta_secondary_url ?? '#staff' }"
                 :image-seed="school?.hero_illustration_seed ?? 'school-classroom-main'"
             />
 
@@ -138,9 +144,11 @@ const faqItems = computed(() => {
                 :highlights="aboutHighlights"
             />
 
-            <ProgramsSection :programs="programs" />
+            <DirectorSection v-if="director" :director="director" />
 
-            <CampusLifeSection :facilities="facilities" />
+            <StaffSection v-if="otherStaff.length" :staff="otherStaff" />
+
+            <CampusesSection :campuses="page.props.public_campuses ?? []" />
 
             <GalleryCtaSection />
 

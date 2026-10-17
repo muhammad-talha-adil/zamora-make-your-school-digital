@@ -7,6 +7,7 @@ use App\Http\Requests\Public\SubmitAdmissionEnquiryRequest;
 use App\Http\Requests\Public\SubmitContactRequest;
 use App\Models\AdmissionEnquiry;
 use App\Models\Attendance;
+use App\Models\Campus;
 use App\Models\Exam\ExamPaper;
 use App\Models\Fee\FeePayment;
 use App\Models\InventoryStock;
@@ -41,6 +42,33 @@ class PageController extends Controller
                 'students' => Student::query()->whereHas('currentEnrollment')->count(),
                 'teachers' => StaffProfile::query()->where('is_active', true)->count(),
             ],
+            // Public staff directory: only the fields a visitor should ever
+            // see (name, role, photo). No CNIC, salary, bank details, or
+            // other personal-file data from staff_profiles leaves this query.
+            'public_staff' => StaffProfile::query()
+                ->where('is_active', true)
+                ->with(['user:id,name', 'designation:id,name', 'department:id,name', 'campus:id,name'])
+                ->get()
+                ->map(fn (StaffProfile $staff) => [
+                    'id' => $staff->id,
+                    'name' => $staff->user?->name,
+                    'designation' => $staff->designation?->name,
+                    'department' => $staff->department?->name,
+                    'campus' => $staff->campus?->name,
+                    'photo_url' => $staff->photo_url,
+                ])
+                ->filter(fn (array $staff) => filled($staff['name']))
+                ->values(),
+            'public_campuses' => Campus::query()
+                ->where('is_active', true)
+                ->with('campusType:id,name')
+                ->get(['id', 'name', 'address', 'campus_type_id'])
+                ->map(fn (Campus $campus) => [
+                    'id' => $campus->id,
+                    'name' => $campus->name,
+                    'address' => $campus->address,
+                    'type' => $campus->campusType?->name,
+                ]),
         ]);
     }
 

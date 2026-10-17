@@ -28,7 +28,8 @@ const socialLinks = computed(() => Object.entries(school.value?.social_links ?? 
 
 const quickLinks = [
     { label: 'About', href: '#about' },
-    { label: 'Academics', href: '#academics' },
+    { label: 'Staff', href: '#staff' },
+    { label: 'Campuses', href: '#campuses' },
     { label: 'Admissions', href: '#admissions' },
     { label: 'Contact', href: '#contact' },
 ];
