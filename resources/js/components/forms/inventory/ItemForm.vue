@@ -299,7 +299,7 @@ const submitForm = () => {
                     </div>
 
                     <!-- Active Checkbox -->
-                    <div v-if="isEditing" class="flex items-center space-x-2">
+                    <div class="flex items-center space-x-2">
                         <input
                             id="is_active"
                             v-model="form.is_active"
