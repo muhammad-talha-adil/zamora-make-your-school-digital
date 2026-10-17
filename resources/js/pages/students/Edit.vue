@@ -393,6 +393,40 @@
                             <InputError :message="errors.father_cnic" />
                         </div>
 
+                        <!-- Father Occupation -->
+                        <div class="space-y-2">
+                            <Label for="father_occupation">Father's Occupation</Label>
+                            <Input
+                                id="father_occupation"
+                                v-model="form.father_occupation"
+                                type="text"
+                                placeholder="Enter occupation"
+                                :disabled="!!linkedGuardianId"
+                                :class="{
+                                    'border-destructive': errors.father_occupation,
+                                    'cursor-not-allowed opacity-50': !!linkedGuardianId,
+                                }"
+                            />
+                            <InputError :message="errors.father_occupation" />
+                        </div>
+
+                        <!-- Father Address -->
+                        <div class="space-y-2">
+                            <Label for="father_address">Father's Address</Label>
+                            <Input
+                                id="father_address"
+                                v-model="form.father_address"
+                                type="text"
+                                placeholder="Enter address"
+                                :disabled="!!linkedGuardianId"
+                                :class="{
+                                    'border-destructive': errors.father_address,
+                                    'cursor-not-allowed opacity-50': !!linkedGuardianId,
+                                }"
+                            />
+                            <InputError :message="errors.father_address" />
+                        </div>
+
                         <!-- Father Relation -->
                         <div class="space-y-2">
                             <Label for="father_relation_id">Relation <span class="text-destructive">*</span></Label>
