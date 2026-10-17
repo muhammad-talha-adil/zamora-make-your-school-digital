@@ -33,13 +33,24 @@ const { target, revealed } = useScrollReveal();
                 </dl>
             </div>
 
-            <div class="order-1 overflow-hidden rounded-2xl border border-border lg:order-2" :class="revealed ? 'reveal-visible' : 'reveal'">
-                <img
-                    src="https://picsum.photos/seed/school-building-facade/900/700"
-                    alt="School campus building"
-                    class="aspect-[4/3] w-full object-cover"
-                    loading="lazy"
-                />
+            <div class="order-1 relative lg:order-2" :class="revealed ? 'reveal-visible' : 'reveal'">
+                <div class="absolute -inset-6 -z-10 rounded-[2.5rem] bg-primary/10 blur-3xl" aria-hidden="true" />
+                <div class="overflow-hidden rounded-2xl border border-border shadow-lg">
+                    <img
+                        src="https://picsum.photos/seed/school-building-facade/900/700"
+                        alt="School campus building"
+                        class="aspect-4/3 w-full object-cover"
+                        loading="lazy"
+                    />
+                </div>
+                <div class="absolute -bottom-8 -left-8 hidden w-40 overflow-hidden rounded-2xl border border-white/20 shadow-xl sm:block">
+                    <img
+                        src="https://picsum.photos/seed/school-students-walking/400/400"
+                        alt="Students at school"
+                        class="aspect-square w-full object-cover"
+                        loading="lazy"
+                    />
+                </div>
             </div>
         </div>
     </section>

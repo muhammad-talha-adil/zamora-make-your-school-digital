@@ -18,7 +18,7 @@ const { target, revealed } = useScrollReveal();
             <h2 class="text-center text-3xl font-bold tracking-tight text-foreground md:text-4xl">
                 Frequently asked questions
             </h2>
-            <div class="mt-10">
+            <div class="mt-10 rounded-2xl border border-white/20 bg-card/70 p-2 shadow-lg backdrop-blur-md sm:p-4">
                 <Accordion :items="items" />
             </div>
         </div>

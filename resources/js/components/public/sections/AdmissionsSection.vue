@@ -42,7 +42,7 @@ const submit = () => {
 
             <ol class="mt-12 grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
                 <li v-for="(step, index) in steps" :key="step.title" class="flex flex-col items-center text-center">
-                    <div class="relative flex h-16 w-16 items-center justify-center rounded-xl bg-primary/10">
+                    <div class="relative flex h-16 w-16 items-center justify-center rounded-xl border border-white/20 bg-primary/10 shadow-sm backdrop-blur-sm">
                         <Icon :icon="step.icon" class="h-7 w-7 text-primary" />
                         <span class="absolute -top-2 -right-2 flex h-6 w-6 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
                             {{ index + 1 }}
@@ -55,7 +55,7 @@ const submit = () => {
         </div>
 
         <div class="mx-auto mt-16 max-w-7xl px-4 sm:px-6 lg:px-8">
-            <div class="mx-auto max-w-xl rounded-2xl border border-border bg-card p-6 md:p-8" :class="revealed ? 'reveal-visible' : 'reveal'">
+            <div class="mx-auto max-w-xl rounded-2xl border border-white/20 bg-card/80 p-6 shadow-lg backdrop-blur-md md:p-8" :class="revealed ? 'reveal-visible' : 'reveal'">
                 <form class="space-y-4" @submit.prevent="submit">
                     <div>
                         <label for="student_name" class="mb-1.5 block text-sm font-medium text-foreground">Child's name *</label>

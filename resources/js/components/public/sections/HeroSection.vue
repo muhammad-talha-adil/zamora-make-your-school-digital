@@ -70,13 +70,25 @@ const scrollTo = (href: string) => {
                 </div>
             </div>
 
-            <div class="relative aspect-5/4 w-full overflow-hidden rounded-2xl lg:aspect-4/3">
-                <img
-                    :src="`https://picsum.photos/seed/${imageSeed}/1200/900`"
-                    :alt="headline"
-                    class="h-full w-full scale-105 rounded-2xl object-cover opacity-0 shadow-2xl transition-[opacity,transform] duration-700 ease-out"
-                    style="animation: hero-image-in 0.8s ease-out 0.15s forwards"
-                />
+            <div class="relative">
+                <div class="absolute -inset-6 -z-10 rounded-[3rem] bg-primary/20 blur-3xl" aria-hidden="true" />
+                <div class="relative aspect-5/4 w-full overflow-hidden rounded-[2.5rem] lg:aspect-4/3">
+                    <img
+                        :src="`https://picsum.photos/seed/${imageSeed}/1200/900`"
+                        :alt="headline"
+                        class="h-full w-full scale-105 object-cover opacity-0 shadow-2xl transition-[opacity,transform] duration-700 ease-out"
+                        style="animation: hero-image-in 0.8s ease-out 0.15s forwards"
+                    />
+                </div>
+
+                <!-- Glass info card, approximating a frosted-glass overlay (backdrop-filter, not Apple's native Liquid Glass) -->
+                <div class="absolute -bottom-6 -left-6 w-44 rounded-2xl border border-white/20 bg-card/80 p-4 shadow-xl backdrop-blur-md sm:w-52">
+                    <div class="flex items-center gap-2">
+                        <Icon icon="shield-check" class="h-5 w-5 text-primary" />
+                        <p class="text-xs font-semibold text-foreground">Admissions Open</p>
+                    </div>
+                    <p class="mt-1 text-xs text-muted-foreground">Apply for the upcoming session today.</p>
+                </div>
             </div>
         </div>
 

@@ -55,7 +55,7 @@ const scrollTo = (hash: string) => {
                             :href="url"
                             target="_blank"
                             rel="noopener"
-                            class="flex h-9 w-9 items-center justify-center rounded-md border border-primary-foreground/20 text-primary-foreground/70 transition-colors hover:border-primary-foreground hover:text-primary-foreground"
+                            class="flex h-9 w-9 items-center justify-center rounded-full border border-primary-foreground/20 bg-primary-foreground/5 text-primary-foreground/70 backdrop-blur-sm transition-colors hover:border-primary-foreground hover:text-primary-foreground"
                         >
                             <Icon :icon="socialIcon[platform] ?? 'link'" class="h-4 w-4" />
                         </a>
