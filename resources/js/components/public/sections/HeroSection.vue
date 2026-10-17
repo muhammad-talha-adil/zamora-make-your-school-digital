@@ -21,13 +21,24 @@ const scrollTo = (href: string) => {
 </script>
 
 <template>
-    <section class="relative overflow-hidden bg-sidebar pt-16 pb-28 md:pt-24 md:pb-36">
-        <div class="mx-auto grid max-w-7xl items-center gap-10 px-4 sm:px-6 lg:grid-cols-[1.1fr_1fr] lg:gap-16 lg:px-8">
-            <div class="max-w-xl">
+    <section class="relative isolate overflow-hidden pt-16 pb-28 md:pt-24 md:pb-36">
+        <!-- Full-bleed background photo, dark-tinted so light text and the glass panels read clearly over it. -->
+        <img
+            :src="`https://picsum.photos/seed/${imageSeed}/1920/1080`"
+            :alt="headline"
+            class="absolute inset-0 -z-20 h-full w-full object-cover"
+            loading="eager"
+        />
+        <div class="absolute inset-0 -z-10 bg-sidebar/85" aria-hidden="true" />
+        <div class="absolute inset-0 -z-10 bg-linear-to-t from-sidebar via-sidebar/40 to-sidebar/70" aria-hidden="true" />
+
+        <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
+            <!-- Glass panel holding the message, approximating frosted glass (backdrop-filter), not Apple's native Liquid Glass -->
+            <div class="max-w-xl rounded-4xl border border-white/15 bg-sidebar/40 p-6 shadow-2xl backdrop-blur-xl sm:p-8">
                 <h1 class="text-4xl font-extrabold uppercase leading-[1.05] tracking-tight text-sidebar-foreground md:text-5xl lg:text-6xl">
                     {{ headline }}
                 </h1>
-                <p class="mt-5 max-w-md text-base leading-relaxed text-sidebar-foreground/70 md:text-lg">
+                <p class="mt-5 max-w-md text-base leading-relaxed text-sidebar-foreground/75 md:text-lg">
                     {{ subtext }}
                 </p>
                 <div class="mt-8 flex flex-col gap-3 sm:flex-row sm:items-center">
@@ -70,25 +81,13 @@ const scrollTo = (href: string) => {
                 </div>
             </div>
 
-            <div class="relative">
-                <div class="absolute -inset-6 -z-10 rounded-[3rem] bg-primary/20 blur-3xl" aria-hidden="true" />
-                <div class="relative aspect-5/4 w-full overflow-hidden rounded-[2.5rem] lg:aspect-4/3">
-                    <img
-                        :src="`https://picsum.photos/seed/${imageSeed}/1200/900`"
-                        :alt="headline"
-                        class="h-full w-full scale-105 object-cover opacity-0 shadow-2xl transition-[opacity,transform] duration-700 ease-out"
-                        style="animation: hero-image-in 0.8s ease-out 0.15s forwards"
-                    />
+            <!-- Floating glass stat card, anchored to the background photo rather than a boxed-in side image. -->
+            <div class="mt-10 w-fit rounded-2xl border border-white/15 bg-sidebar/40 p-4 shadow-xl backdrop-blur-xl sm:w-64">
+                <div class="flex items-center gap-2">
+                    <Icon icon="shield-check" class="h-5 w-5 text-primary" />
+                    <p class="text-xs font-semibold text-sidebar-foreground">Admissions Open</p>
                 </div>
-
-                <!-- Glass info card, approximating a frosted-glass overlay (backdrop-filter, not Apple's native Liquid Glass) -->
-                <div class="absolute -bottom-6 -left-6 w-44 rounded-2xl border border-white/20 bg-card/80 p-4 shadow-xl backdrop-blur-md sm:w-52">
-                    <div class="flex items-center gap-2">
-                        <Icon icon="shield-check" class="h-5 w-5 text-primary" />
-                        <p class="text-xs font-semibold text-foreground">Admissions Open</p>
-                    </div>
-                    <p class="mt-1 text-xs text-muted-foreground">Apply for the upcoming session today.</p>
-                </div>
+                <p class="mt-1 text-xs text-sidebar-foreground/70">Apply for the upcoming session today.</p>
             </div>
         </div>
 
@@ -98,24 +97,3 @@ const scrollTo = (href: string) => {
         </svg>
     </section>
 </template>
-
-<style>
-@keyframes hero-image-in {
-    from {
-        opacity: 0;
-        transform: scale(1.05);
-    }
-    to {
-        opacity: 1;
-        transform: scale(1);
-    }
-}
-
-@media (prefers-reduced-motion: reduce) {
-    [style*='hero-image-in'] {
-        animation: none !important;
-        opacity: 1 !important;
-        transform: none !important;
-    }
-}
-</style>
