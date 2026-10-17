@@ -16,13 +16,8 @@
                 <div class="bg-card rounded-lg border border-border p-6 space-y-4">
                     <div class="grid gap-4 md:grid-cols-2">
                         <div class="space-y-2">
-                            <Label for="subject_id">Subject *</Label>
-                            <SearchableSelect
-                                id="subject_id"
-                                v-model="form.subject_id"
-                                :options="subjectOptions"
-                                placeholder="Select Subject"
-                            />
+                            <Label>Subject</Label>
+                            <p class="text-sm text-foreground py-2">{{ props.paper.subject?.name }}</p>
                         </div>
 
                         <div class="space-y-2">
@@ -91,10 +86,6 @@ import type { PaperEditProps } from '@/types/exam';
 
 const props = defineProps<PaperEditProps>();
 
-const subjectOptions = computed(() =>
-    props.subjects.map((subject) => ({ value: subject.id, label: subject.name })),
-);
-
 const subjectRoleOptions = [
     { value: 'core', label: 'Compulsory' },
     { value: 'elective', label: 'Elective' },
@@ -109,7 +100,6 @@ const breadcrumbItems: BreadcrumbItem[] = [
 ];
 
 const form = useForm({
-    subject_id: props.paper.subject_id,
     subject_role: props.paper.subject_role ?? 'core',
     paper_date: props.paper.paper_date,
     start_time: props.paper.start_time,
@@ -118,7 +108,7 @@ const form = useForm({
     passing_marks: props.paper.passing_marks,
 });
 
-const { isValid } = useFormValidity(form, ['subject_id', 'paper_date', 'start_time', 'end_time', 'total_marks', 'passing_marks']);
+const { isValid } = useFormValidity(form, ['paper_date', 'start_time', 'end_time', 'total_marks', 'passing_marks']);
 
 const submitForm = () => {
     form.put(route('exam.papers.update', props.paper.id), {

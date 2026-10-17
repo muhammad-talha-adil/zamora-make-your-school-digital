@@ -21,7 +21,10 @@ class UpdateExamPaperRequest extends FormRequest
             'campus_id' => 'nullable|exists:campuses,id',
             'class_id' => 'nullable|exists:school_classes,id',
             'section_id' => 'nullable|exists:sections,id',
-            'subject_id' => 'sometimes|required|exists:subjects,id',
+            // subject_id is intentionally not editable: exam result lines are
+            // keyed to exam_paper_id and reference the subject only through
+            // this paper, so changing it after results exist would silently
+            // re-label already-recorded marks under a different subject.
             'paper_date' => 'sometimes|required|date',
             'start_time' => 'sometimes|required',
             'end_time' => 'sometimes|required|after:start_time',
