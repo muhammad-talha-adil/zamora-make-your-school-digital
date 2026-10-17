@@ -14,6 +14,10 @@ defineProps<{ steps: Step[] }>();
 
 const { target, revealed } = useScrollReveal();
 
+/** Falls back to a sane default when a DB-entered step has no icon, or one that doesn't match any known icon name (would otherwise render as an empty box). */
+const FALLBACK_ICONS = ['send', 'calendar-check', 'file-check', 'badge-check'];
+const stepIcon = (step: Step, index: number) => step.icon || FALLBACK_ICONS[index % FALLBACK_ICONS.length];
+
 const form = useForm({
     student_name: '',
     guardian_name: '',
@@ -40,22 +44,38 @@ const submit = () => {
                 Submit an enquiry and our admissions team will reach out within two working days to arrange a campus visit.
             </p>
 
-            <ol class="mt-12 grid gap-8 sm:grid-cols-2 lg:grid-cols-4">
-                <li v-for="(step, index) in steps" :key="step.title" class="flex flex-col items-center text-center">
-                    <div class="relative flex h-16 w-16 items-center justify-center rounded-xl border border-white/20 bg-primary/10 shadow-sm backdrop-blur-sm">
-                        <Icon :icon="step.icon" class="h-7 w-7 text-primary" />
-                        <span class="absolute -top-2 -right-2 flex h-6 w-6 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground">
+            <ol class="relative mt-16 grid gap-10 sm:grid-cols-2 lg:grid-cols-4 lg:gap-6">
+                <!-- Connecting line behind the circles, desktop only (mobile stacks, a line serves no purpose there). -->
+                <div class="absolute top-8 right-[12.5%] left-[12.5%] hidden h-0.5 bg-linear-to-r from-primary/40 via-primary/20 to-primary/40 lg:block" aria-hidden="true" />
+
+                <li
+                    v-for="(step, index) in steps"
+                    :key="step.title"
+                    class="group relative flex flex-col items-center text-center"
+                >
+                    <div class="relative flex h-16 w-16 items-center justify-center rounded-2xl border border-white/20 bg-card shadow-md ring-4 ring-background transition-transform duration-300 group-hover:-translate-y-1">
+                        <Icon :icon="stepIcon(step, index)" class="h-7 w-7 text-primary" />
+                        <span class="absolute -top-3 -right-3 flex h-7 w-7 items-center justify-center rounded-full bg-primary text-xs font-bold text-primary-foreground shadow-sm">
                             {{ index + 1 }}
                         </span>
                     </div>
-                    <p class="mt-4 font-semibold text-foreground">{{ step.title }}</p>
-                    <p class="mt-1 max-w-[16rem] text-sm text-muted-foreground">{{ step.description }}</p>
+                    <p class="mt-5 font-semibold text-foreground">{{ step.title }}</p>
+                    <p class="mt-1.5 max-w-56 text-sm leading-relaxed text-muted-foreground">{{ step.description }}</p>
                 </li>
             </ol>
         </div>
 
         <div class="mx-auto mt-16 max-w-7xl px-4 sm:px-6 lg:px-8">
             <div class="mx-auto max-w-xl rounded-2xl border border-white/20 bg-card/80 p-6 shadow-lg backdrop-blur-md md:p-8" :class="revealed ? 'reveal-visible' : 'reveal'">
+                <div class="mb-6 flex items-center gap-3">
+                    <div class="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-primary/10">
+                        <Icon icon="send" class="h-5 w-5 text-primary" />
+                    </div>
+                    <div>
+                        <p class="font-semibold text-foreground">Start Your Enquiry</p>
+                        <p class="text-xs text-muted-foreground">Step 1 of your journey begins here</p>
+                    </div>
+                </div>
                 <form class="space-y-4" @submit.prevent="submit">
                     <div>
                         <label for="student_name" class="mb-1.5 block text-sm font-medium text-foreground">Child's name *</label>
