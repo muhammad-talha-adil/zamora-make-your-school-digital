@@ -11,6 +11,7 @@ use App\Models\Campus;
 use App\Models\Exam\ExamPaper;
 use App\Models\Fee\FeePayment;
 use App\Models\InventoryStock;
+use App\Models\Session;
 use App\Models\StaffProfile;
 use App\Models\Student;
 use App\Models\User;
@@ -69,6 +70,11 @@ class PageController extends Controller
                     'address' => $campus->address,
                     'type' => $campus->campusType?->name,
                 ]),
+            // The real active session's start date, for an honest "new session
+            // begins" hero cue instead of a fabricated countdown/scarcity claim.
+            'active_session' => Session::query()
+                ->where('is_active', true)
+                ->first(['name', 'start_date']),
         ]);
     }
 

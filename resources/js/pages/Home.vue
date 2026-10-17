@@ -58,11 +58,17 @@ interface PublicCampus {
     type: string | null;
 }
 
+interface ActiveSession {
+    name: string;
+    start_date: string | null;
+}
+
 const page = usePage<{
     school: SchoolProps | null;
     live_stats: LiveStats;
     public_staff: PublicStaff[];
     public_campuses: PublicCampus[];
+    active_session: ActiveSession | null;
 }>();
 const school = computed(() => page.props.school);
 const schoolName = computed(() => school.value?.name ?? (page.props.name as string));
@@ -108,6 +114,39 @@ const aboutHighlights = computed(() => [
 ]);
 
 const admissionSteps = computed(() => (school.value?.admission_steps?.length ? school.value.admission_steps : defaultSteps));
+
+/** Authority cue, built from the real "Years of Excellence" stat rather than an invented number. */
+const heroEyebrow = computed(() => {
+    const years = stats.value.find((stat) => stat.label === 'Years of Excellence');
+    return years ? `${years.value}${years.suffix ?? ''} Years of Excellence` : undefined;
+});
+
+/** Social proof from real staff photos (max 3) plus the live enrolled-student count. */
+const heroSocialProof = computed(() => {
+    const avatarUrls = (page.props.public_staff ?? [])
+        .map((member) => member.photo_url)
+        .filter((url): url is string => Boolean(url))
+        .slice(0, 3);
+
+    if (!avatarUrls.length) {
+        return undefined;
+    }
+
+    return {
+        avatarUrls,
+        line: `Join ${page.props.live_stats?.students ?? 0}+ students here`,
+    };
+});
+
+/** Honest time-anchor from the real active session, not a fabricated countdown. */
+const heroSessionNote = computed(() => {
+    const startDate = page.props.active_session?.start_date;
+    if (!startDate) {
+        return undefined;
+    }
+    const formatted = new Date(startDate).toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+    return `New session begins ${formatted}.`;
+});
 const faqItems = computed(() => {
     const merged = [...(school.value?.academics_faq ?? []), ...(school.value?.admissions_faq ?? [])];
     return merged.length ? merged : defaultFaq;
@@ -132,9 +171,12 @@ const otherStaff = computed(() => (page.props.public_staff ?? []).filter((member
             <HeroSection
                 :headline="school?.hero_headline ?? `Where every student is known, challenged, and supported`"
                 :subtext="school?.hero_subtext ?? 'A caring learning community that helps every child grow into a confident, capable learner.'"
-                :primary-cta="{ label: school?.hero_cta_primary_text ?? 'Apply for Admission', href: school?.hero_cta_primary_url ?? '#admissions' }"
-                :secondary-cta="{ label: school?.hero_cta_secondary_text ?? 'Meet Our Staff', href: school?.hero_cta_secondary_url ?? '#staff' }"
+                :primary-cta="{ label: school?.hero_cta_primary_text ?? 'Secure Your Child\'s Seat', href: school?.hero_cta_primary_url ?? '#admissions' }"
+                :secondary-cta="{ label: school?.hero_cta_secondary_text ?? 'Book a Campus Tour', href: school?.hero_cta_secondary_url ?? '#contact' }"
                 :image-seed="school?.hero_illustration_seed ?? 'school-classroom-main'"
+                :eyebrow="heroEyebrow"
+                :social-proof="heroSocialProof"
+                :session-note="heroSessionNote"
                 :stats="[
                     { icon: 'users', label: 'Students enrolled', value: String(page.props.live_stats?.students ?? 0) },
                     { icon: 'graduation-cap', label: 'Teaching staff', value: String(page.props.live_stats?.teachers ?? 0) },

@@ -8,6 +8,11 @@ interface HeroStat {
     value: string;
 }
 
+interface SocialProof {
+    avatarUrls: string[];
+    line: string;
+}
+
 interface Props {
     headline: string;
     subtext: string;
@@ -15,6 +20,12 @@ interface Props {
     secondaryCta?: { label: string; href: string };
     imageSeed: string;
     stats?: HeroStat[];
+    /** Authority cue, e.g. "25+ Years of Excellence" - the hero's one allowed eyebrow slot. */
+    eyebrow?: string;
+    /** Real staff faces + a live count, not generated avatars - see Section 9.D of the design skill. */
+    socialProof?: SocialProof;
+    /** Honest time-anchor from the real active session, e.g. "New session begins 1 Apr 2026." */
+    sessionNote?: string;
 }
 
 defineProps<Props>();
@@ -46,6 +57,10 @@ const scrollTo = (href: string) => {
         <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <!-- Glass panel holding the message, approximating frosted glass (backdrop-filter), not Apple's native Liquid Glass -->
             <div class="max-w-xl rounded-4xl border border-white/15 bg-sidebar/40 p-6 shadow-2xl backdrop-blur-xl sm:p-8">
+                <p v-if="eyebrow" class="mb-3 inline-flex items-center gap-1.5 text-sm font-semibold text-sidebar-foreground">
+                    <Icon icon="award" class="h-4 w-4 text-primary" />
+                    {{ eyebrow }}
+                </p>
                 <h1 class="text-4xl font-extrabold uppercase leading-[1.05] tracking-tight text-sidebar-foreground md:text-5xl lg:text-6xl">
                     {{ headline }}
                 </h1>
@@ -92,13 +107,29 @@ const scrollTo = (href: string) => {
                 </div>
             </div>
 
-            <!-- Floating glass stat card, anchored to the background photo rather than a boxed-in side image. -->
-            <div class="mt-10 w-fit rounded-2xl border border-white/15 bg-sidebar/40 p-4 shadow-xl backdrop-blur-xl sm:w-64">
-                <div class="flex items-center gap-2">
-                    <Icon icon="shield-check" class="h-5 w-5 text-primary" />
-                    <p class="text-xs font-semibold text-sidebar-foreground">Admissions Open</p>
+            <!-- Floating glass cards, anchored to the background photo rather than a boxed-in side image. -->
+            <div class="mt-10 flex flex-wrap items-start gap-4">
+                <div class="w-fit rounded-2xl border border-white/15 bg-sidebar/40 p-4 shadow-xl backdrop-blur-xl sm:w-64">
+                    <div class="flex items-center gap-2">
+                        <Icon icon="shield-check" class="h-5 w-5 text-primary" />
+                        <p class="text-xs font-semibold text-sidebar-foreground">Admissions Open</p>
+                    </div>
+                    <p class="mt-1 text-xs text-sidebar-foreground/70">{{ sessionNote ?? 'Apply for the upcoming session today.' }}</p>
                 </div>
-                <p class="mt-1 text-xs text-sidebar-foreground/70">Apply for the upcoming session today.</p>
+
+                <!-- Social proof: real staff faces (not generated avatars) plus a live, real count. -->
+                <div v-if="socialProof" class="flex w-fit items-center gap-3 rounded-2xl border border-white/15 bg-sidebar/40 p-4 shadow-xl backdrop-blur-xl">
+                    <div class="flex -space-x-3">
+                        <img
+                            v-for="url in socialProof.avatarUrls"
+                            :key="url"
+                            :src="url"
+                            alt=""
+                            class="h-9 w-9 rounded-full border-2 border-sidebar object-cover"
+                        />
+                    </div>
+                    <p class="max-w-36 text-xs font-medium text-sidebar-foreground">{{ socialProof.line }}</p>
+                </div>
             </div>
 
             <!-- Glass stat cards over the open right side of the background photo (desktop only; the left
