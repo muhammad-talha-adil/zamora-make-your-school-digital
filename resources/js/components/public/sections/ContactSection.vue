@@ -28,7 +28,7 @@ const { target, revealed } = useScrollReveal();
             <div class="mt-10 grid gap-8 lg:grid-cols-2 lg:gap-12">
                 <div class="relative overflow-hidden rounded-2xl" :class="revealed ? 'reveal-visible' : 'reveal'">
                     <img
-                        src="https://picsum.photos/seed/school-reception-desk/900/900"
+                        src="https://images.unsplash.com/photo-1543325042-c67825847491?auto=format&fit=crop&w=900&q=75"
                         alt="School reception"
                         class="aspect-square w-full object-cover"
                         loading="lazy"

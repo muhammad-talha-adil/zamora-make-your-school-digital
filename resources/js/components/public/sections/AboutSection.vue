@@ -37,7 +37,7 @@ const { target, revealed } = useScrollReveal();
                 <div class="absolute -inset-6 -z-10 rounded-[2.5rem] bg-primary/10 blur-3xl" aria-hidden="true" />
                 <div class="overflow-hidden rounded-2xl border border-border shadow-lg">
                     <img
-                        src="https://picsum.photos/seed/school-building-facade/900/700"
+                        src="https://images.unsplash.com/photo-1770172410691-acea3d3bfef0?auto=format&fit=crop&w=900&q=75"
                         alt="School campus building"
                         class="aspect-4/3 w-full object-cover"
                         loading="lazy"
@@ -45,7 +45,7 @@ const { target, revealed } = useScrollReveal();
                 </div>
                 <div class="absolute -bottom-8 -left-8 hidden w-40 overflow-hidden rounded-2xl border border-white/20 shadow-xl sm:block">
                     <img
-                        src="https://picsum.photos/seed/school-students-walking/400/400"
+                        src="https://images.unsplash.com/photo-1741637335289-c99652d3155f?auto=format&fit=crop&w=400&q=75"
                         alt="Students at school"
                         class="aspect-square w-full object-cover"
                         loading="lazy"
