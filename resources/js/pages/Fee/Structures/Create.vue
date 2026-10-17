@@ -671,6 +671,37 @@ const cancel = () => {
                         </div>
                     </div>
 
+                    <!-- Effective Dates -->
+                    <div class="grid gap-4 md:grid-cols-2">
+                        <div class="space-y-2">
+                            <Label for="effective_from">Effective From <span class="text-destructive">*</span></Label>
+                            <Input
+                                id="effective_from"
+                                v-model="form.effective_from"
+                                type="date"
+                                disabled
+                                :class="{ 'border-destructive': errors.effective_from }"
+                            />
+                            <!-- Hidden input to ensure value is submitted -->
+                            <input type="hidden" name="effective_from" :value="form.effective_from" />
+                            <p class="text-xs text-muted-foreground">Set from the selected session's start date.</p>
+                            <p v-if="errors.effective_from" class="text-sm text-destructive">{{ errors.effective_from }}</p>
+                        </div>
+
+                        <div class="space-y-2">
+                            <Label for="effective_to">Effective To</Label>
+                            <Input
+                                id="effective_to"
+                                v-model="form.effective_to"
+                                type="date"
+                                disabled
+                            />
+                            <!-- Hidden input to ensure value is submitted -->
+                            <input type="hidden" name="effective_to" :value="form.effective_to" />
+                            <p class="text-xs text-muted-foreground">Set from the selected session's end date. Leave empty for indefinite.</p>
+                        </div>
+                    </div>
+
                     <!-- Notes -->
                     <div class="space-y-2">
                         <Label for="notes">Notes (Optional)</Label>
