@@ -29,8 +29,10 @@ const scrollTo = (href: string) => {
             class="absolute inset-0 -z-20 h-full w-full object-cover"
             loading="eager"
         />
-        <div class="absolute inset-0 -z-10 bg-sidebar/85" aria-hidden="true" />
-        <div class="absolute inset-0 -z-10 bg-linear-to-t from-sidebar via-sidebar/40 to-sidebar/70" aria-hidden="true" />
+        <!-- Light overall tint plus a stronger fade behind the text panel's corner, so the photo stays
+             visible on the right while the left side (text panel) still has enough contrast underneath. -->
+        <div class="absolute inset-0 -z-10 bg-sidebar/30" aria-hidden="true" />
+        <div class="absolute inset-0 -z-10 bg-linear-to-r from-sidebar/70 via-sidebar/20 to-transparent" aria-hidden="true" />
 
         <div class="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
             <!-- Glass panel holding the message, approximating frosted glass (backdrop-filter), not Apple's native Liquid Glass -->
