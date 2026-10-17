@@ -111,6 +111,13 @@ export interface ExamPaper {
     exam_group?: ExamGroup;
     subject?: Subject;
     exam_result_lines?: ExamResultLine[];
+    // Only present on the single-paper edit page, which eager-loads these
+    // directly on the paper for a read-only context line (the paper's
+    // exam/campus/class/section can't be changed once it exists).
+    exam?: Exam;
+    campus?: Campus;
+    class?: SchoolClass;
+    section?: Section;
 }
 
 // ─── Exam Result ─────────────────────────────────────────────────────────────

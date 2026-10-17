@@ -8,7 +8,7 @@
                     Edit Exam Paper
                 </h1>
                 <p class="mt-1 text-xs md:text-sm text-muted-foreground">
-                    Update exam paper details
+                    {{ props.paper.exam?.name }} - {{ props.paper.campus?.name }} - {{ props.paper.class?.name }} {{ props.paper.section?.name }}
                 </p>
             </div>
 

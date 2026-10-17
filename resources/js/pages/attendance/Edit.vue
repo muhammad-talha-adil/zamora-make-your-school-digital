@@ -10,7 +10,7 @@
                         Edit Attendance
                     </h1>
                     <p class="mt-1 text-xs md:text-sm text-muted-foreground">
-                        {{ formatDate(props.attendance.attendance_date) }} - {{ props.attendance.class?.name }} {{ props.attendance.section?.name }}
+                        {{ formatDate(props.attendance.attendance_date) }} - {{ props.attendance.campus?.name }} - {{ props.attendance.session?.name }} - {{ props.attendance.class?.name }} {{ props.attendance.section?.name }}
                     </p>
                 </div>
                 <Button variant="outline" @click="router.visit(route('attendance.show', { attendance_date: props.attendance.attendance_date, class_id: props.attendance.class_id, section_id: props.attendance.section_id }))">
