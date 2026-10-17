@@ -12,8 +12,12 @@ defineProps<{ programs: Program[] }>();
 
 const { target, revealed } = useScrollReveal();
 
-/** Theme-driven palette (chart tokens come from the admin's color settings, not hardcoded hex). */
-const cardColors = ['bg-chart-1', 'bg-chart-2', 'bg-chart-3', 'bg-chart-4'];
+/**
+ * Theme-driven palette (chart tokens, not hardcoded hex). chart-3 (amber) is
+ * skipped here: white card text on it falls below readable contrast in this
+ * app's default palette, unlike chart-1/2/4/5.
+ */
+const cardColors = ['bg-chart-1', 'bg-chart-2', 'bg-chart-4', 'bg-chart-5'];
 </script>
 
 <template>

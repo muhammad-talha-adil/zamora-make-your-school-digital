@@ -43,7 +43,7 @@ const gallerySeeds = ['school-life-1', 'school-life-2', 'school-life-3', 'school
                 </p>
                 <button
                     type="button"
-                    class="mt-6 inline-flex h-10 w-fit items-center justify-center rounded-full bg-accent px-5 text-sm font-semibold text-accent-foreground transition-opacity hover:opacity-90"
+                    class="mt-6 inline-flex h-10 w-fit items-center justify-center rounded-full bg-background px-5 text-sm font-semibold text-primary transition-opacity hover:opacity-90"
                     @click="scrollToAdmissions"
                 >
                     Apply Now

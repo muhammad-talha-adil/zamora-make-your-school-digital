@@ -38,7 +38,7 @@ const initials = (name: string) => name.split(' ').map((part) => part[0]).join('
                     :key="testimonial.name"
                     class="flex flex-col rounded-2xl border border-border bg-card p-6 text-left shadow-sm"
                 >
-                    <div class="flex gap-0.5 text-accent">
+                    <div class="flex gap-0.5 text-warning">
                         <Icon v-for="n in 5" :key="n" icon="star" class="h-4 w-4 fill-current" />
                     </div>
                     <blockquote class="mt-3 flex-1 text-sm leading-relaxed text-foreground">

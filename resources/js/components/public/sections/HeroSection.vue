@@ -34,7 +34,7 @@ const scrollTo = (href: string) => {
                     <button
                         v-if="isAnchor(primaryCta.href)"
                         type="button"
-                        class="group inline-flex h-11 items-center justify-center gap-2 rounded-full bg-secondary px-6 text-sm font-semibold text-secondary-foreground shadow-lg shadow-black/20 transition-opacity hover:opacity-90"
+                        class="group inline-flex h-11 items-center justify-center gap-2 rounded-full bg-background px-6 text-sm font-semibold text-primary shadow-lg shadow-black/20 transition-opacity hover:opacity-90"
                         @click="scrollTo(primaryCta.href)"
                     >
                         {{ primaryCta.label }}
@@ -43,16 +43,21 @@ const scrollTo = (href: string) => {
                     <Link
                         v-else
                         :href="primaryCta.href"
-                        class="group inline-flex h-11 items-center justify-center gap-2 rounded-full bg-secondary px-6 text-sm font-semibold text-secondary-foreground shadow-lg shadow-black/20 transition-opacity hover:opacity-90"
+                        class="group inline-flex h-11 items-center justify-center gap-2 rounded-full bg-background px-6 text-sm font-semibold text-primary shadow-lg shadow-black/20 transition-opacity hover:opacity-90"
                     >
                         {{ primaryCta.label }}
                         <Icon icon="arrow-right" class="h-4 w-4 transition-transform group-hover:translate-x-1" />
                     </Link>
 
+                    <!-- Outline style: bg-secondary/bg-accent resolve to near-background gray in this
+                         app's default palette (same value as each other), so a solid fill here would be
+                         indistinguishable from the primary button and could fail contrast depending on
+                         the admin's chosen theme. An outline against primary-foreground is contrast-safe
+                         under any palette. -->
                     <button
                         v-if="secondaryCta && isAnchor(secondaryCta.href)"
                         type="button"
-                        class="inline-flex h-11 items-center justify-center rounded-full bg-accent px-6 text-sm font-semibold text-accent-foreground shadow-lg shadow-black/20 transition-opacity hover:opacity-90"
+                        class="inline-flex h-11 items-center justify-center rounded-full border-2 border-primary-foreground/50 px-6 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary-foreground/10"
                         @click="scrollTo(secondaryCta.href)"
                     >
                         {{ secondaryCta.label }}
@@ -60,7 +65,7 @@ const scrollTo = (href: string) => {
                     <Link
                         v-else-if="secondaryCta"
                         :href="secondaryCta.href"
-                        class="inline-flex h-11 items-center justify-center rounded-full bg-accent px-6 text-sm font-semibold text-accent-foreground shadow-lg shadow-black/20 transition-opacity hover:opacity-90"
+                        class="inline-flex h-11 items-center justify-center rounded-full border-2 border-primary-foreground/50 px-6 text-sm font-semibold text-primary-foreground transition-colors hover:bg-primary-foreground/10"
                     >
                         {{ secondaryCta.label }}
                     </Link>
