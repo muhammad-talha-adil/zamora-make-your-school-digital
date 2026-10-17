@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Head, router } from '@inertiajs/vue3';
+import { Head, router, usePage } from '@inertiajs/vue3';
 import axios from 'axios';
 import { computed, reactive, ref, onMounted } from 'vue';
 import { route } from 'ziggy-js';
@@ -93,6 +93,8 @@ interface StaffDetail {
     allowance_amount?: number | string;
     deduction_amount?: number | string;
     payment_method: string;
+    bank_name?: string | null;
+    account_no?: string | null;
     is_active: boolean;
     user?: { id: number; name: string; email?: string | null; username?: string | null; is_active?: boolean } | null;
     campus?: Lookup | null;
@@ -225,6 +227,64 @@ const savePersonal = async () => {
         router.reload({ only: ['staff'] });
     } catch (error: any) {
         alert.error(error?.response?.data?.message || 'Failed to save details.');
+    }
+};
+
+/* -------------------------------------------------------- employment/salary */
+
+// A campus-restricted user never sees the Campus field — their own campus
+// is implicit. A school-wide user still gets to pick, same rule used
+// everywhere else a Campus field appears.
+const page = usePage();
+const academicScope = computed(() => (page.props as any).academicScope as { campusId: number | null; isCampusRestricted: boolean });
+const showCampusField = computed(() => !academicScope.value?.isCampusRestricted);
+
+const employmentTypeOptions = [
+    { value: 'permanent', label: 'Permanent' },
+    { value: 'contract', label: 'Contract' },
+    { value: 'part_time', label: 'Part Time' },
+    { value: 'daily_wage', label: 'Daily Wage' },
+];
+
+const paymentMethodOptions = [
+    { value: 'bank', label: 'Bank' },
+    { value: 'cash', label: 'Cash' },
+    { value: 'cheque', label: 'Cheque' },
+];
+
+// Mirrors Staff/People/Create.vue's field set exactly, via the same
+// staff.members.update endpoint that already backs staff creation — this
+// was previously the only way to change these fields once a staff member
+// existed (there was no form for it at all).
+const employmentForm = reactive({
+    name: props.staff.user?.name || '',
+    email: props.staff.user?.email || '',
+    employee_no: props.staff.employee_no || '',
+    campus_id: props.staff.campus?.id ? String(props.staff.campus.id) : '',
+    department_id: props.staff.department?.id ? String(props.staff.department.id) : '',
+    designation_id: props.staff.designation?.id ? String(props.staff.designation.id) : '',
+    employment_type: props.staff.employment_type || 'permanent',
+    hire_date: props.staff.hire_date || '',
+    basic_salary: String(props.staff.basic_salary ?? ''),
+    allowance_amount: String(props.staff.allowance_amount ?? '0'),
+    payment_method: props.staff.payment_method || 'bank',
+    bank_name: props.staff.bank_name || '',
+    account_no: props.staff.account_no || '',
+    is_active: props.staff.is_active,
+});
+
+const savingEmployment = ref(false);
+
+const saveEmployment = async () => {
+    savingEmployment.value = true;
+    try {
+        await axios.put(route('staff.members.update', props.staff.id), employmentForm);
+        alert.success('Employment details saved.');
+        router.reload({ only: ['staff'] });
+    } catch (error: any) {
+        alert.error(error?.response?.data?.message || 'Failed to save employment details.');
+    } finally {
+        savingEmployment.value = false;
     }
 };
 
@@ -847,6 +907,84 @@ const activeJobsCount = computed(() => props.jobs.length);
                         <Input v-model="qualificationForm.year_completed" type="number" placeholder="Year" />
                         <Input v-model="qualificationForm.grade" placeholder="Grade" />
                         <Button size="sm" class="md:col-span-2" @click="addQualification">Add Qualification</Button>
+                    </div>
+                </div>
+
+                <!-- Employment & Salary — mirrors Staff/People/Create.vue's
+                     field set, since this was the only way to change these
+                     once a staff member already existed. -->
+                <div v-if="props.can.edit" class="rounded-2xl border border-border bg-card p-5 shadow-sm xl:col-span-2">
+                    <h2 class="mb-4 text-lg font-semibold text-foreground">Employment &amp; Salary</h2>
+                    <div class="space-y-4">
+                        <div class="grid gap-4 md:grid-cols-2">
+                            <div>
+                                <label class="mb-2 block text-sm font-medium text-muted-foreground">Name</label>
+                                <Input v-model="employmentForm.name" />
+                            </div>
+                            <div>
+                                <label class="mb-2 block text-sm font-medium text-muted-foreground">Email</label>
+                                <Input v-model="employmentForm.email" type="email" />
+                            </div>
+                            <div>
+                                <label class="mb-2 block text-sm font-medium text-muted-foreground">Employee No</label>
+                                <Input v-model="employmentForm.employee_no" />
+                            </div>
+                            <div v-if="showCampusField">
+                                <label class="mb-2 block text-sm font-medium text-muted-foreground">Campus</label>
+                                <SearchableSelect v-model="employmentForm.campus_id" :options="campusOptions" placeholder="Select campus" clearable />
+                            </div>
+                            <div>
+                                <label class="mb-2 block text-sm font-medium text-muted-foreground">Department</label>
+                                <SearchableSelect v-model="employmentForm.department_id" :options="departmentOptions" placeholder="Select department" clearable />
+                            </div>
+                            <div>
+                                <label class="mb-2 block text-sm font-medium text-muted-foreground">Designation</label>
+                                <SearchableSelect v-model="employmentForm.designation_id" :options="designationOptions" placeholder="Select designation" clearable />
+                            </div>
+                            <div>
+                                <label class="mb-2 block text-sm font-medium text-muted-foreground">Employment Type</label>
+                                <SearchableSelect v-model="employmentForm.employment_type" :options="employmentTypeOptions" placeholder="Select employment type" />
+                            </div>
+                            <div>
+                                <label class="mb-2 block text-sm font-medium text-muted-foreground">Hire Date</label>
+                                <Input v-model="employmentForm.hire_date" type="date" />
+                            </div>
+                        </div>
+
+                        <div class="grid gap-4 md:grid-cols-3">
+                            <div>
+                                <label class="mb-2 block text-sm font-medium text-muted-foreground">Basic Salary</label>
+                                <Input v-model="employmentForm.basic_salary" type="number" min="0" />
+                            </div>
+                            <div>
+                                <label class="mb-2 block text-sm font-medium text-muted-foreground">Allowance</label>
+                                <Input v-model="employmentForm.allowance_amount" type="number" min="0" />
+                            </div>
+                            <div>
+                                <label class="mb-2 block text-sm font-medium text-muted-foreground">Payment Method</label>
+                                <SearchableSelect v-model="employmentForm.payment_method" :options="paymentMethodOptions" placeholder="Select payment method" />
+                            </div>
+                            <template v-if="employmentForm.payment_method === 'bank'">
+                                <div>
+                                    <label class="mb-2 block text-sm font-medium text-muted-foreground">Bank Name</label>
+                                    <Input v-model="employmentForm.bank_name" placeholder="Bank name" />
+                                </div>
+                                <div>
+                                    <label class="mb-2 block text-sm font-medium text-muted-foreground">Account No</label>
+                                    <Input v-model="employmentForm.account_no" placeholder="Account number" />
+                                </div>
+                            </template>
+                        </div>
+
+                        <label class="flex items-center gap-2 text-sm text-muted-foreground">
+                            <input v-model="employmentForm.is_active" type="checkbox" class="h-4 w-4 rounded border-border text-primary" />
+                            Staff member is active
+                        </label>
+
+                        <Button :disabled="savingEmployment" @click="saveEmployment">
+                            <Icon icon="save" class="h-4 w-4" />
+                            Save Employment Details
+                        </Button>
                     </div>
                 </div>
             </div>
