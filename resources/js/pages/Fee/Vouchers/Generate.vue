@@ -404,15 +404,16 @@ const generateVouchers = () => {
                             />
                         </div>
 
-                        <!-- Campus -->
-                        <div>
+                        <!-- Campus: hidden (not just disabled) for a
+                             campus-restricted user, matching the rule used
+                             everywhere else a Campus field appears. -->
+                        <div v-if="!isCampusLocked">
                             <Label for="campus_id">Campus *</Label>
                             <SearchableSelect
                                 id="campus_id"
                                 v-model="form.campus_id"
                                 :options="campusOptions"
                                 placeholder="Select Campus"
-                                :disabled="isCampusLocked"
                             />
                         </div>
 
