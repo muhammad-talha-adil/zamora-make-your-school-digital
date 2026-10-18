@@ -29,8 +29,6 @@ const socialLinks = computed(() => (school.value?.social_links ?? []).filter((li
 
 const quickLinks = [
     { label: 'About', href: '#about' },
-    { label: 'Staff', href: '#staff' },
-    { label: 'Campuses', href: '#campuses' },
     { label: 'Admissions', href: '#admissions' },
     { label: 'Contact', href: '#contact' },
 ];
