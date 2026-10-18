@@ -96,6 +96,7 @@ class PermissionsSeeder extends Seeder
             'attendance' => [
                 'attendance.view' => 'View attendance',
                 'attendance.view.own' => 'View own attendance',
+                'attendance.view.campus-wide' => 'View attendance/students campus-wide, not just own class',
                 'attendance.mark' => 'Mark attendance',
                 'attendance.edit' => 'Edit attendance',
                 'attendance.delete' => 'Delete attendance',

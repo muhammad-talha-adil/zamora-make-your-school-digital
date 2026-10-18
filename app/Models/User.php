@@ -313,16 +313,18 @@ class User extends Authenticatable
     /**
      * Whether this user only sees the classes they have been given.
      *
-     * A teacher does. A campus admin does not — they see their whole campus —
-     * and a head teacher is treated as campus-wide until wings are modelled,
-     * which is deliberately the more restrictive of the two readings we can
-     * support today.
+     * A teacher does. A campus admin does not — they see their whole campus.
+     * A teacher can be lifted to the same campus-wide view without a second
+     * role for it, by granting them the `attendance.view.campus-wide`
+     * permission directly (Staff > People > a teacher > Permissions) — the
+     * same path that used to require making them a "head_teacher".
      */
     public function isClassRestricted(): bool
     {
         return $this->hasRole('teacher')
             && ! $this->isSuperAdmin()
-            && ! $this->hasAnyRole(['campus_admin', 'head_teacher']);
+            && ! $this->hasRole('campus_admin')
+            && ! $this->hasPermissionTo('attendance.view.campus-wide');
     }
 
     /**

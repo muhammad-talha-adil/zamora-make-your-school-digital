@@ -19,8 +19,10 @@ use Spatie\Permission\PermissionRegistrar;
  *   campus_admin  the same operational reach as owner, limited to their own
  *                 campus — one per campus (enforced at role-assignment, not
  *                 here)
- *   teacher       their own classes: attendance, marks, papers, timetable
- *   head_teacher  a teacher, plus verifying marks and seeing the whole class
+ *   teacher       their own classes: attendance, marks, papers, timetable.
+ *                 Individual teachers can be granted extra permissions
+ *                 directly (e.g. `attendance.view.campus-wide`,
+ *                 `exam.marks.verify`) without a second "head teacher" role.
  *   accountant    everything financial
  *   student       their own record only
  *   guardian      the same view as the student they belong to
@@ -178,19 +180,6 @@ class RolesSeeder extends Seeder
                     '-students.delete', '-exam.delete', '-fee.voucher.delete',
                     '-inventory.purchase.delete',
                 ],
-            ],
-
-            'head_teacher' => [
-                'label' => 'Head Teacher',
-                'scope' => Role::SCOPE_CAMPUS,
-                // A teacher who also signs off marks and sees the full class.
-                'permissions' => array_merge($teacher, [
-                    'exam.marks.verify',
-                    'exam.registration.manage',
-                    'attendance.lock',
-                    'students.view',
-                    'academics.timetable.manage',
-                ]),
             ],
 
             'teacher' => [

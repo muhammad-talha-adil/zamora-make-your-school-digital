@@ -152,8 +152,11 @@ it('does not let a plain teacher close a register', function () {
         ->assertForbidden();
 });
 
-it('lets a head teacher close a register but not reopen it', function () {
-    $head = $this->world->staffUser('head_teacher', 'head@test.local');
+it('lets a teacher granted attendance.lock close a register but not reopen it', function () {
+    // A "head teacher" is a teacher with this permission granted directly
+    // (Staff > People > a teacher > Permissions), not a separate role.
+    $head = $this->world->staffUser('teacher', 'head@test.local');
+    $head->givePermissionTo(['attendance.lock', 'attendance.view.campus-wide']);
 
     $this->actingAs($head)
         ->post(route('attendance.lock', $this->mine))

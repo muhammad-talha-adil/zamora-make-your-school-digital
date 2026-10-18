@@ -33,7 +33,7 @@ class MenuSeeder extends Seeder
             'is_active' => true,
             // Union of every child's viewers below - keeps driver/maid/etc.
             // from seeing an empty "Students" heading with no visible child.
-            'role' => 'developer,owner,campus_admin,teacher,head_teacher,accountant,clerk,receptionist',
+            'role' => 'developer,owner,campus_admin,teacher,accountant,clerk,receptionist',
         ]);
 
         // Student child menus
@@ -57,9 +57,9 @@ class MenuSeeder extends Seeder
             'parent_id' => $students->id,
             'is_active' => true,
             'url' => '/students',
-            // students.view: campus_admin, teacher, head_teacher, accountant,
+            // students.view: campus_admin, teacher, accountant,
             // clerk, receptionist - not driver/maid.
-            'role' => 'developer,owner,campus_admin,teacher,head_teacher,accountant,clerk,receptionist',
+            'role' => 'developer,owner,campus_admin,teacher,accountant,clerk,receptionist',
         ]);
 
         Menu::create([
@@ -71,7 +71,7 @@ class MenuSeeder extends Seeder
             'is_active' => true,
             'url' => '/students/promotion',
             // students.promote|students.view - same viewers as Student List.
-            'role' => 'developer,owner,campus_admin,teacher,head_teacher,accountant,clerk,receptionist',
+            'role' => 'developer,owner,campus_admin,teacher,accountant,clerk,receptionist',
         ]);
 
         Menu::create([
@@ -83,7 +83,7 @@ class MenuSeeder extends Seeder
             'is_active' => true,
             'url' => '/students/enquiries',
             // students.view - same viewers as Student List.
-            'role' => 'developer,owner,campus_admin,teacher,head_teacher,accountant,clerk,receptionist',
+            'role' => 'developer,owner,campus_admin,teacher,accountant,clerk,receptionist',
         ]);
 
         // ==================== EXAM MENU ====================
@@ -214,7 +214,7 @@ class MenuSeeder extends Seeder
             'parent_id' => $students->id,
             'is_active' => true,
             'url' => '/attendance/hub',
-            'role' => 'developer,owner,campus_admin,teacher,head_teacher,accountant,clerk,receptionist',
+            'role' => 'developer,owner,campus_admin,teacher,accountant,clerk,receptionist',
         ]);
 
         // ==================== FEE MENU ====================
@@ -394,7 +394,7 @@ class MenuSeeder extends Seeder
             // Only accounts that actually have a staff record -- Developer/
             // Owner/Super Admin/Campus Admin are management logins with no
             // StaffProfile of their own, so "My Profile" makes no sense for them.
-            'role' => 'head_teacher,teacher,accountant,driver,clerk,receptionist,maid',
+            'role' => 'teacher,accountant,driver,clerk,receptionist,maid',
         ]);
 
         Menu::create([

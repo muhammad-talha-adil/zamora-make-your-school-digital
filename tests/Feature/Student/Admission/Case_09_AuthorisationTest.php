@@ -42,7 +42,7 @@ it('refuses a role without students.create', function (string $role) {
         ->assertForbidden();
 
     expect(Student::count())->toBe(0);
-})->with(['teacher', 'head_teacher', 'accountant', 'driver', 'receptionist', 'maid', 'student', 'guardian']);
+})->with(['teacher', 'accountant', 'driver', 'receptionist', 'maid', 'student', 'guardian']);
 
 it('lets the developer admit a student without an explicit permission row', function () {
     $this->actingAs($this->world->actor)

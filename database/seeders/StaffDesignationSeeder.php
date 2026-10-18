@@ -18,7 +18,7 @@ class StaffDesignationSeeder extends Seeder
             ['name' => 'Driver', 'description' => 'Assigned school vehicle driver', 'role' => 'driver'],
             ['name' => 'Receptionist', 'description' => 'Front desk and visitor coordination', 'role' => 'receptionist'],
             ['name' => 'Clerk', 'description' => 'Office and records support', 'role' => 'clerk'],
-            ['name' => 'Head Teacher', 'description' => 'Senior teacher who also verifies marks and manages the timetable', 'role' => 'head_teacher'],
+            ['name' => 'Head Teacher', 'description' => 'Senior teacher who also verifies marks and manages the timetable - grant attendance.view.campus-wide, exam.marks.verify etc. directly on the person', 'role' => 'teacher'],
             ['name' => 'Support Staff', 'description' => 'General facility and cleaning support', 'role' => 'maid'],
             ['name' => 'Discontinued Role', 'description' => 'No longer hired for', 'role' => null, 'is_active' => false],
         ];

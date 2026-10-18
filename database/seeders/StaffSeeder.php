@@ -140,7 +140,7 @@ class StaffSeeder extends Seeder
                 'campus_index' => 0,
                 'department' => 'Academics',
                 'designation' => 'Head Teacher',
-                'role' => 'head_teacher',
+                'role' => 'teacher',
                 'employment_type' => 'permanent',
                 'basic_salary' => 85000,
                 'allowance_amount' => 10000,
