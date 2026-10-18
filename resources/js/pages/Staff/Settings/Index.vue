@@ -33,7 +33,6 @@ interface RoleOption {
 }
 
 interface Props {
-    departments: Lookup[];
     designations: Lookup[];
     documentTypes: Lookup[];
     roles: RoleOption[];

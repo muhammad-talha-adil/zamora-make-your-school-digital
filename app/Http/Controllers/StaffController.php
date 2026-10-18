@@ -117,7 +117,6 @@ class StaffController extends Controller
         Gate::authorize('manageStructure', StaffProfile::class);
 
         return Inertia::render('Staff/Settings/Index', [
-            'departments' => StaffDepartment::orderBy('name')->get(),
             'designations' => StaffDesignation::orderBy('name')->get(),
             'documentTypes' => StaffDocumentType::orderBy('name')->get(),
             // Self-scoped roles (student, guardian) are never valid for a
@@ -231,8 +230,6 @@ class StaffController extends Controller
             'name' => 'required|string|max:150',
             'email' => 'nullable|email|max:150|unique:users,email',
             'employee_no' => 'nullable|string|max:50|unique:staff_profiles,employee_no',
-            'campus_id' => 'nullable|exists:campuses,id',
-            'department_id' => 'nullable|exists:staff_departments,id',
             'designation_id' => 'nullable|exists:staff_designations,id',
             'employment_type' => 'required|string|max:50',
             'hire_date' => 'nullable|date',
@@ -262,11 +259,13 @@ class StaffController extends Controller
                 'is_active' => $data['is_active'] ?? true,
             ]);
 
+            // Filed under whichever campus the creator is currently scoped to
+            // (their own campus, or the header switcher's pick for an
+            // owner/developer) - not a client-supplied value.
             $profile = StaffProfile::create([
                 'user_id' => $user->id,
                 'employee_no' => $employeeNo,
-                'campus_id' => $data['campus_id'] ?? null,
-                'department_id' => $data['department_id'] ?? null,
+                'campus_id' => $request->user()->campusId(),
                 'designation_id' => $data['designation_id'] ?? null,
                 'employment_type' => $data['employment_type'],
                 'hire_date' => $data['hire_date'] ?? null,

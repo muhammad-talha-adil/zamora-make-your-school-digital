@@ -15,7 +15,6 @@ use App\Models\Staff\StaffAssignment;
 use App\Models\Staff\StaffDocument;
 use App\Models\Staff\StaffDocumentType;
 use App\Models\Staff\StaffQualification;
-use App\Models\StaffDepartment;
 use App\Models\StaffDesignation;
 use App\Models\StaffProfile;
 use App\Models\Subject;
@@ -67,13 +66,12 @@ class StaffProfileController extends Controller
         Gate::authorize('viewAny', StaffProfile::class);
 
         return Inertia::render('Staff/People/Index', [
-            'departments' => StaffDepartment::orderBy('name')->get(['id', 'name']),
             'designations' => StaffDesignation::orderBy('name')->get(['id', 'name', 'description', 'role', 'is_active']),
             'campuses' => Campus::orderBy('name')->get(['id', 'name']),
             // Self-scoped roles (student, guardian) are never valid for a
             // staff designation — only staff-facing roles belong here.
             'roles' => Role::where('scope_level', '!=', Role::SCOPE_SELF)->orderBy('name')->get(['id', 'name', 'label']),
-            'filters' => $request->only(['search', 'campus_id', 'department_id', 'designation_id', 'status']),
+            'filters' => $request->only(['search', 'campus_id', 'designation_id', 'status']),
         ]);
     }
 
@@ -85,9 +83,7 @@ class StaffProfileController extends Controller
         Gate::authorize('create', StaffProfile::class);
 
         return Inertia::render('Staff/People/Create', [
-            'departments' => StaffDepartment::orderBy('name')->get(['id', 'name']),
             'designations' => StaffDesignation::orderBy('name')->get(['id', 'name', 'description', 'role', 'is_active']),
-            'campuses' => Campus::orderBy('name')->get(['id', 'name']),
             'documentTypes' => StaffDocumentType::where('is_active', true)->orderBy('name')->get(['id', 'name', 'is_required']),
         ]);
     }
@@ -175,7 +171,6 @@ class StaffProfileController extends Controller
             'serviceMonths' => $this->employment->serviceMonths($staffProfile),
 
             // For the forms on the tabs.
-            'departments' => StaffDepartment::orderBy('name')->get(['id', 'name']),
             'designations' => StaffDesignation::orderBy('name')->get(['id', 'name']),
             'documentTypes' => StaffDocumentType::where('is_active', true)->orderBy('name')->get(['id', 'name']),
             'campuses' => Campus::orderBy('name')->get(['id', 'name']),

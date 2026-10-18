@@ -114,7 +114,6 @@ interface Props {
     jobHistory: Job[];
     classes: ClassAssignment[];
     serviceMonths: number;
-    departments: Lookup[];
     designations: Lookup[];
     documentTypes: Lookup[];
     campuses: Lookup[];
@@ -148,7 +147,6 @@ const documentKindOptions = computed(() => props.documentTypes.map((type) => ({ 
 
 const campusOptions = computed(() => props.campuses.map((c) => ({ value: String(c.id), label: c.name })));
 const designationOptions = computed(() => props.designations.map((d) => ({ value: String(d.id), label: d.name })));
-const departmentOptions = computed(() => props.departments.map((d) => ({ value: String(d.id), label: d.name })));
 const sessionOptions = computed(() => props.sessions.map((s) => ({ value: String(s.id), label: s.name })));
 const classSelectOptions = computed(() => props.classOptions.map((c) => ({ value: String(c.id), label: c.name })));
 const subjectSelectOptions = computed(() => props.subjectOptions.map((s) => ({ value: String(s.id), label: s.name })));
@@ -261,7 +259,6 @@ const employmentForm = reactive({
     email: props.staff.user?.email || '',
     employee_no: props.staff.employee_no || '',
     campus_id: props.staff.campus?.id ? String(props.staff.campus.id) : '',
-    department_id: props.staff.department?.id ? String(props.staff.department.id) : '',
     designation_id: props.staff.designation?.id ? String(props.staff.designation.id) : '',
     employment_type: props.staff.employment_type || 'permanent',
     hire_date: props.staff.hire_date || '',
@@ -292,7 +289,6 @@ const saveEmployment = async () => {
 
 const jobForm = reactive({
     designation_id: '',
-    department_id: '',
     campus_id: '',
     started_on: new Date().toISOString().slice(0, 10),
     is_primary: false,
@@ -300,7 +296,6 @@ const jobForm = reactive({
 
 const resetJobForm = () => {
     jobForm.designation_id = '';
-    jobForm.department_id = '';
     jobForm.campus_id = '';
     jobForm.started_on = new Date().toISOString().slice(0, 10);
     jobForm.is_primary = false;
@@ -934,10 +929,6 @@ const activeJobsCount = computed(() => props.jobs.length);
                                 <SearchableSelect v-model="employmentForm.campus_id" :options="campusOptions" placeholder="Select campus" clearable />
                             </div>
                             <div>
-                                <label class="mb-2 block text-sm font-medium text-muted-foreground">Department</label>
-                                <SearchableSelect v-model="employmentForm.department_id" :options="departmentOptions" placeholder="Select department" clearable />
-                            </div>
-                            <div>
                                 <label class="mb-2 block text-sm font-medium text-muted-foreground">Designation</label>
                                 <SearchableSelect v-model="employmentForm.designation_id" :options="designationOptions" placeholder="Select designation" clearable />
                             </div>
@@ -995,7 +986,6 @@ const activeJobsCount = computed(() => props.jobs.length);
                     <h2 class="mb-4 text-lg font-semibold text-foreground">Give a Job</h2>
                     <div class="space-y-3">
                         <SearchableSelect v-model="jobForm.designation_id" :options="designationOptions" placeholder="Select designation" clearable />
-                        <SearchableSelect v-model="jobForm.department_id" :options="departmentOptions" placeholder="Select department" clearable />
                         <SearchableSelect v-model="jobForm.campus_id" :options="campusOptions" placeholder="School-wide" clearable />
                         <Input v-model="jobForm.started_on" type="date" />
                         <label class="flex items-center gap-2 text-sm text-muted-foreground">
@@ -1016,7 +1006,7 @@ const activeJobsCount = computed(() => props.jobs.length);
                                         <div class="font-medium text-foreground">{{ job.designation?.name || '-' }}
                                             <span v-if="job.is_primary" class="ml-2 rounded-full bg-primary/10 px-2 py-0.5 text-xs text-primary">Primary</span>
                                         </div>
-                                        <div class="text-xs text-muted-foreground">{{ job.department?.name || '-' }} · {{ job.campus?.name || 'School-wide' }} · since {{ formatDate(job.started_on) }}</div>
+                                        <div class="text-xs text-muted-foreground">{{ job.campus?.name || 'School-wide' }} · since {{ formatDate(job.started_on) }}</div>
                                     </td>
                                     <td v-if="props.can.edit" class="px-4 py-3 text-right">
                                         <Button v-if="!job.is_primary" variant="outline" size="sm" @click="makePrimary(job)">Make Primary</Button>

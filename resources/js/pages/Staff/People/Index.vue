@@ -38,7 +38,6 @@ interface StaffRow {
     id: number;
     employee_no: string;
     campus_id?: number | null;
-    department_id?: number | null;
     designation_id?: number | null;
     employment_type: string;
     hire_date?: string | null;
@@ -50,7 +49,6 @@ interface StaffRow {
     jobs_count: number;
     user?: { id: number; name: string; email?: string | null } | null;
     campus?: { id: number; name: string } | null;
-    department?: { id: number; name: string } | null;
     designation?: { id: number; name: string } | null;
 }
 
@@ -63,14 +61,12 @@ interface Paginated<T> {
 }
 
 interface Props {
-    departments: Lookup[];
     designations: Lookup[];
     campuses: Campus[];
     roles: RoleOption[];
     filters: {
         search?: string;
         campus_id?: string;
-        department_id?: string;
         designation_id?: string;
         status?: string;
     };
@@ -94,7 +90,6 @@ const textareaClass = 'min-h-20 w-full rounded-md border border-border bg-card p
 const filters = reactive({
     search: props.filters.search ?? '',
     campus_id: props.filters.campus_id ?? '',
-    department_id: props.filters.department_id ?? '',
     designation_id: props.filters.designation_id ?? '',
     status: props.filters.status ?? 'active',
 });
@@ -103,11 +98,9 @@ const staff = ref<Paginated<StaffRow>>({ data: [], current_page: 1, last_page: 1
 const loading = ref(false);
 const showLookups = ref(false);
 
-const departmentForm = reactive({ id: null as number | null, name: '', description: '', is_active: true });
 const designationForm = reactive({ id: null as number | null, name: '', description: '', role: '' as string | null, is_active: true });
 
 const campusOptions = computed(() => props.campuses.map((campus) => ({ value: String(campus.id), label: campus.name })));
-const departmentOptions = computed(() => props.departments.map((d) => ({ value: String(d.id), label: d.name })));
 const designationOptions = computed(() => props.designations.map((d) => ({ value: String(d.id), label: d.name })));
 const roleOptions = computed(() => props.roles.map((r) => ({ value: r.name, label: r.label || r.name })));
 
@@ -164,24 +157,6 @@ const toggleStaff = async (member: StaffRow) => {
     }
 };
 
-const submitDepartment = async () => {
-    try {
-        if (departmentForm.id) {
-            await axios.put(route('staff.departments.update', departmentForm.id), departmentForm);
-        } else {
-            await axios.post(route('staff.departments.store'), departmentForm);
-        }
-        alert.success('Department saved.');
-        departmentForm.id = null;
-        departmentForm.name = '';
-        departmentForm.description = '';
-        departmentForm.is_active = true;
-        router.reload({ only: ['departments'] });
-    } catch (error: any) {
-        alert.error(error?.response?.data?.message || 'Failed to save department.');
-    }
-};
-
 const submitDesignation = async () => {
     try {
         const payload = { ...designationForm, role: designationForm.role || null };
@@ -211,7 +186,7 @@ const submitDesignation = async () => {
             <div class="flex flex-col gap-3 md:flex-row md:items-center md:justify-between">
                 <div>
                     <h1 class="text-2xl font-bold text-foreground">Staff Directory</h1>
-                    <p class="mt-1 text-sm text-muted-foreground">Every record, jobs, campus and department.</p>
+                    <p class="mt-1 text-sm text-muted-foreground">Every record, jobs and campus.</p>
                 </div>
                 <div class="flex flex-wrap gap-2">
                     <Link :href="route('staff.settings.page')" class="inline-flex">
@@ -219,48 +194,28 @@ const submitDesignation = async () => {
                     </Link>
                     <Dialog v-model:open="showLookups">
                         <DialogTrigger as-child>
-                            <Button variant="outline"><Icon icon="settings" class="h-4 w-4" />Departments &amp; Designations</Button>
+                            <Button variant="outline"><Icon icon="settings" class="h-4 w-4" />Designations</Button>
                         </DialogTrigger>
-                        <DialogContent class="sm:max-w-[640px]">
+                        <DialogContent class="sm:max-w-105">
                             <DialogHeader>
-                                <DialogTitle>Departments &amp; Designations</DialogTitle>
+                                <DialogTitle>Designations</DialogTitle>
                             </DialogHeader>
-                            <div class="grid gap-6 md:grid-cols-2">
-                                <div>
-                                    <h3 class="mb-2 text-sm font-semibold text-foreground">Departments</h3>
-                                    <div class="mb-3 space-y-2">
-                                        <Input v-model="departmentForm.name" placeholder="Department name" />
-                                        <textarea v-model="departmentForm.description" :class="textareaClass" placeholder="Description" />
-                                        <div class="flex gap-2">
-                                            <Button size="sm" @click="submitDepartment">{{ departmentForm.id ? 'Update' : 'Add' }}</Button>
-                                            <Button v-if="departmentForm.id" size="sm" variant="outline" @click="departmentForm.id = null; departmentForm.name = ''; departmentForm.description = ''">Cancel</Button>
-                                        </div>
+                            <div>
+                                <div class="mb-3 space-y-2">
+                                    <Input v-model="designationForm.name" placeholder="Designation name" />
+                                    <textarea v-model="designationForm.description" :class="textareaClass" placeholder="Description" />
+                                    <SearchableSelect v-model="designationForm.role" :options="roleOptions" placeholder="System Role — none —" clearable />
+                                    <div class="flex gap-2">
+                                        <Button size="sm" @click="submitDesignation">{{ designationForm.id ? 'Update' : 'Add' }}</Button>
+                                        <Button v-if="designationForm.id" size="sm" variant="outline" @click="designationForm.id = null; designationForm.name = ''; designationForm.description = ''; designationForm.role = ''">Cancel</Button>
                                     </div>
-                                    <ul class="max-h-48 space-y-1 overflow-y-auto text-sm">
-                                        <li v-for="d in props.departments" :key="d.id" class="flex items-center justify-between rounded border border-border px-2 py-1.5">
-                                            <span>{{ d.name }}</span>
-                                            <button type="button" class="text-xs text-primary hover:underline" @click="departmentForm.id = d.id; departmentForm.name = d.name; departmentForm.description = d.description ?? ''; departmentForm.is_active = d.is_active">Edit</button>
-                                        </li>
-                                    </ul>
                                 </div>
-                                <div>
-                                    <h3 class="mb-2 text-sm font-semibold text-foreground">Designations</h3>
-                                    <div class="mb-3 space-y-2">
-                                        <Input v-model="designationForm.name" placeholder="Designation name" />
-                                        <textarea v-model="designationForm.description" :class="textareaClass" placeholder="Description" />
-                                        <SearchableSelect v-model="designationForm.role" :options="roleOptions" placeholder="System Role — none —" clearable />
-                                        <div class="flex gap-2">
-                                            <Button size="sm" @click="submitDesignation">{{ designationForm.id ? 'Update' : 'Add' }}</Button>
-                                            <Button v-if="designationForm.id" size="sm" variant="outline" @click="designationForm.id = null; designationForm.name = ''; designationForm.description = ''; designationForm.role = ''">Cancel</Button>
-                                        </div>
-                                    </div>
-                                    <ul class="max-h-48 space-y-1 overflow-y-auto text-sm">
-                                        <li v-for="d in props.designations" :key="d.id" class="flex items-center justify-between rounded border border-border px-2 py-1.5">
-                                            <span>{{ d.name }}<span v-if="d.role" class="ml-1 text-xs text-muted-foreground">→ {{ d.role }}</span></span>
-                                            <button type="button" class="text-xs text-primary hover:underline" @click="designationForm.id = d.id; designationForm.name = d.name; designationForm.description = d.description ?? ''; designationForm.role = d.role ?? ''; designationForm.is_active = d.is_active">Edit</button>
-                                        </li>
-                                    </ul>
-                                </div>
+                                <ul class="max-h-48 space-y-1 overflow-y-auto text-sm">
+                                    <li v-for="d in props.designations" :key="d.id" class="flex items-center justify-between rounded border border-border px-2 py-1.5">
+                                        <span>{{ d.name }}<span v-if="d.role" class="ml-1 text-xs text-muted-foreground">→ {{ d.role }}</span></span>
+                                        <button type="button" class="text-xs text-primary hover:underline" @click="designationForm.id = d.id; designationForm.name = d.name; designationForm.description = d.description ?? ''; designationForm.role = d.role ?? ''; designationForm.is_active = d.is_active">Edit</button>
+                                    </li>
+                                </ul>
                             </div>
                         </DialogContent>
                     </Dialog>
@@ -274,7 +229,7 @@ const submitDesignation = async () => {
             </div>
 
             <div class="rounded-2xl border border-border bg-card p-4 shadow-sm">
-                <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
+                <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
                     <div class="xl:col-span-2">
                         <label class="mb-2 block text-sm font-medium text-muted-foreground">Search</label>
                         <Input v-model="filters.search" placeholder="Name, employee no, CNIC, phone..." />
@@ -282,10 +237,6 @@ const submitDesignation = async () => {
                     <div>
                         <label class="mb-2 block text-sm font-medium text-muted-foreground">Campus</label>
                         <SearchableSelect v-model="filters.campus_id" :options="campusOptions" placeholder="All Campuses" clearable />
-                    </div>
-                    <div>
-                        <label class="mb-2 block text-sm font-medium text-muted-foreground">Department</label>
-                        <SearchableSelect v-model="filters.department_id" :options="departmentOptions" placeholder="All Departments" clearable />
                     </div>
                     <div>
                         <label class="mb-2 block text-sm font-medium text-muted-foreground">Status</label>
@@ -322,10 +273,7 @@ const submitDesignation = async () => {
                                         {{ member.employee_no }}<span v-if="member.user?.email"> | {{ member.user?.email }}</span>
                                     </div>
                                 </td>
-                                <td class="px-4 py-3 text-sm text-muted-foreground">
-                                    <div>{{ member.department?.name || '-' }}</div>
-                                    <div class="text-xs text-muted-foreground">{{ member.designation?.name || '-' }}</div>
-                                </td>
+                                <td class="px-4 py-3 text-sm text-muted-foreground">{{ member.designation?.name || '-' }}</td>
                                 <td class="px-4 py-3 text-sm text-muted-foreground">{{ member.campus?.name || '-' }}</td>
                                 <td class="px-4 py-3 text-sm text-muted-foreground">{{ member.jobs_count }}</td>
                                 <td class="px-4 py-3">

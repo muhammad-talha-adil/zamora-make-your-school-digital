@@ -21,16 +21,12 @@ beforeEach(function () {
 });
 
 it('creates a staff member with every field Create.vue submits', function () {
-    $campus = $this->world->school->campus;
-    $department = StaffDepartment::create(['name' => 'Admin Office', 'is_active' => true]);
     $designation = StaffDesignation::create(['name' => 'Accountant', 'is_active' => true]);
 
     $response = $this->postJson(route('staff.members.store'), [
         'name' => 'Hira Baig',
         'email' => 'hira.baig@example.test',
         'employee_no' => 'EMP-HIRA-1',
-        'campus_id' => $campus->id,
-        'department_id' => $department->id,
         'designation_id' => $designation->id,
         'employment_type' => 'contract',
         'hire_date' => '2026-01-15',
@@ -48,8 +44,10 @@ it('creates a staff member with every field Create.vue submits', function () {
 
     expect($profile->user->name)->toBe('Hira Baig')
         ->and($profile->user->email)->toBe('hira.baig@example.test')
-        ->and($profile->campus_id)->toBe($campus->id)
-        ->and($profile->department_id)->toBe($department->id)
+        // campus_id is never client-supplied on create - it's always the
+        // creator's own header-derived campus (Create.vue no longer shows
+        // a Campus field at all, matching the SchoolClass/FineRule pattern).
+        ->and($profile->campus_id)->toBe($this->world->school->actor->campusId())
         ->and($profile->designation_id)->toBe($designation->id)
         ->and($profile->employment_type)->toBe('contract')
         ->and($profile->hire_date->toDateString())->toBe('2026-01-15')

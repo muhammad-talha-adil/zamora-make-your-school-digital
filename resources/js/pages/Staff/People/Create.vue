@@ -34,14 +34,6 @@
                             <Label for="employee_no">Employee No</Label>
                             <Input id="employee_no" v-model="form.employee_no" placeholder="Auto-generate if empty" />
                         </div>
-                        <div v-if="showCampusField" class="space-y-2">
-                            <Label for="campus_id">Campus</Label>
-                            <SearchableSelect id="campus_id" v-model="form.campus_id" :options="campusOptions" placeholder="Select campus" clearable />
-                        </div>
-                        <div class="space-y-2">
-                            <Label for="department_id">Department</Label>
-                            <SearchableSelect id="department_id" v-model="form.department_id" :options="departmentOptions" placeholder="Select department" clearable />
-                        </div>
                         <div class="space-y-2">
                             <Label for="designation_id">Designation</Label>
                             <SearchableSelect id="designation_id" v-model="form.designation_id" :options="designationOptions" placeholder="Select designation" clearable />
@@ -165,17 +157,12 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import type { BreadcrumbItem } from '@/types';
 import { useFormValidity } from '@/composables/useFormValidity';
 import { alert } from '@/utils';
-import { Head, router, usePage } from '@inertiajs/vue3';
+import { Head, router } from '@inertiajs/vue3';
 import axios from 'axios';
 import { computed, reactive, ref } from 'vue';
 import { route } from 'ziggy-js';
 
 interface Lookup {
-    id: number;
-    name: string;
-}
-
-interface Campus {
     id: number;
     name: string;
 }
@@ -187,9 +174,7 @@ interface DocumentType {
 }
 
 interface Props {
-    departments: Lookup[];
     designations: Lookup[];
-    campuses: Campus[];
     documentTypes?: DocumentType[];
 }
 
@@ -203,13 +188,6 @@ const breadcrumbItems: BreadcrumbItem[] = [
 ];
 
 const processing = ref(false);
-
-// A campus-restricted user never sees this field — their own campus is
-// implicit. A school-wide user still gets to pick, defaulting to the
-// header switcher's current pick.
-const page = usePage();
-const academicScope = computed(() => (page.props as any).academicScope as { campusId: number | null; isCampusRestricted: boolean });
-const showCampusField = computed(() => !academicScope.value?.isCampusRestricted);
 
 const employmentTypeOptions = [
     { value: 'permanent', label: 'Permanent' },
@@ -228,8 +206,6 @@ const form = reactive({
     name: '',
     email: '',
     employee_no: '',
-    campus_id: academicScope.value?.campusId ? String(academicScope.value.campusId) : '',
-    department_id: '',
     designation_id: '',
     employment_type: 'permanent',
     hire_date: '',
@@ -241,8 +217,6 @@ const form = reactive({
     is_active: true,
 });
 
-const campusOptions = computed(() => props.campuses.map((campus) => ({ value: String(campus.id), label: campus.name })));
-const departmentOptions = computed(() => props.departments.map((d) => ({ value: String(d.id), label: d.name })));
 const designationOptions = computed(() => props.designations.map((d) => ({ value: String(d.id), label: d.name })));
 const documentTypes = computed(() => props.documentTypes ?? []);
 
@@ -272,8 +246,6 @@ const submitStaff = async () => {
 
         Object.entries({
             ...form,
-            campus_id: form.campus_id || '',
-            department_id: form.department_id || '',
             designation_id: form.designation_id || '',
             email: form.email || '',
             employee_no: form.employee_no || '',
