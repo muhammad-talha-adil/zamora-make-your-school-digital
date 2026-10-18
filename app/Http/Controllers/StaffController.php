@@ -116,12 +116,18 @@ class StaffController extends Controller
     {
         Gate::authorize('manageStructure', StaffProfile::class);
 
+        // Self-scoped roles (student, guardian) are never valid for a staff
+        // designation. developer/owner never are either. campus_admin only
+        // shows for whoever is themselves allowed to hand it out — the same
+        // restriction User::assignRole() already enforces when the role is
+        // actually applied, surfaced here so the dropdown doesn't offer an
+        // option that would just abort on save.
+        $excludedRoles = auth()->user()?->isSuperAdmin() ? ['developer', 'owner'] : ['developer', 'owner', 'campus_admin'];
+
         return Inertia::render('Staff/Settings/Index', [
             'designations' => StaffDesignation::orderBy('name')->get(),
             'documentTypes' => StaffDocumentType::orderBy('name')->get(),
-            // Self-scoped roles (student, guardian) are never valid for a
-            // staff designation — only staff-facing roles belong here.
-            'roles' => Role::where('scope_level', '!=', Role::SCOPE_SELF)->whereNotIn('name', ['developer', 'owner'])->orderBy('name')->get(['id', 'name', 'label']),
+            'roles' => Role::where('scope_level', '!=', Role::SCOPE_SELF)->whereNotIn('name', $excludedRoles)->orderBy('name')->get(['id', 'name', 'label']),
         ]);
     }
 
@@ -185,15 +191,27 @@ class StaffController extends Controller
         ]);
     }
 
+    /**
+     * Self-scoped roles (student, guardian) are never valid for a staff
+     * designation, developer/owner are platform-level roles no designation
+     * should be able to grant, and campus_admin is excluded for anyone who
+     * isn't themselves allowed to hand it out (User::assignRole() aborts on
+     * it anyway when the designation is actually assigned to someone, but
+     * failing here gives a clear validation error instead of a 403 later).
+     */
+    private function excludedDesignationRoles(): array
+    {
+        return auth()->user()?->isSuperAdmin() ? ['developer', 'owner'] : ['developer', 'owner', 'campus_admin'];
+    }
+
     public function storeDesignation(Request $request)
     {
+        $excluded = $this->excludedDesignationRoles();
+
         $data = $request->validate([
             'name' => 'required|string|max:100|unique:staff_designations,name',
             'description' => 'nullable|string|max:255',
-            // Self-scoped roles (student, guardian) are never valid for a
-            // staff designation, and developer/owner are platform-level
-            // roles no designation should be able to grant.
-            'role' => ['nullable', 'string', Rule::exists('roles', 'name')->where(fn ($q) => $q->where('scope_level', '!=', Role::SCOPE_SELF)->whereNotIn('name', ['developer', 'owner']))],
+            'role' => ['nullable', 'string', Rule::exists('roles', 'name')->where(fn ($q) => $q->where('scope_level', '!=', Role::SCOPE_SELF)->whereNotIn('name', $excluded))],
         ]);
 
         $designation = StaffDesignation::create($data + ['is_active' => true]);
@@ -207,10 +225,12 @@ class StaffController extends Controller
 
     public function updateDesignation(Request $request, StaffDesignation $designation)
     {
+        $excluded = $this->excludedDesignationRoles();
+
         $data = $request->validate([
             'name' => 'required|string|max:100|unique:staff_designations,name,'.$designation->id,
             'description' => 'nullable|string|max:255',
-            'role' => ['nullable', 'string', Rule::exists('roles', 'name')->where(fn ($q) => $q->where('scope_level', '!=', Role::SCOPE_SELF)->whereNotIn('name', ['developer', 'owner']))],
+            'role' => ['nullable', 'string', Rule::exists('roles', 'name')->where(fn ($q) => $q->where('scope_level', '!=', Role::SCOPE_SELF)->whereNotIn('name', $excluded))],
             'is_active' => 'boolean',
         ]);
 
