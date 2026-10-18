@@ -8,6 +8,7 @@ interface Highlight {
 
 defineProps<{
     missionStatement: string;
+    /** Real admin-managed stats (Settings > Website Content), not fixed copy - same source StatsBandSection/Hero use. */
     highlights: Highlight[];
 }>();
 
@@ -25,10 +26,14 @@ const { target, revealed } = useScrollReveal();
                     {{ missionStatement }}
                 </p>
 
-                <dl class="mt-10 grid grid-cols-3 gap-6 border-t border-border pt-8">
-                    <div v-for="highlight in highlights" :key="highlight.label">
-                        <dt class="text-2xl font-bold text-foreground md:text-3xl">{{ highlight.value }}</dt>
-                        <dd class="mt-1 text-sm text-muted-foreground">{{ highlight.label }}</dd>
+                <dl class="mt-10 grid gap-3" :class="highlights.length >= 3 ? 'grid-cols-3' : 'grid-cols-2'">
+                    <div
+                        v-for="highlight in highlights"
+                        :key="highlight.label"
+                        class="rounded-xl border border-border bg-card p-4 text-center shadow-sm"
+                    >
+                        <dt class="text-2xl font-bold text-primary md:text-3xl">{{ highlight.value }}</dt>
+                        <dd class="mt-1 text-xs text-muted-foreground md:text-sm">{{ highlight.label }}</dd>
                     </div>
                 </dl>
             </div>

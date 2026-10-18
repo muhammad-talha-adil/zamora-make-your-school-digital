@@ -108,11 +108,17 @@ const stats = computed(() => {
     });
 });
 
-const aboutHighlights = computed(() => [
-    { label: 'Years of Excellence', value: '25+' },
-    { label: 'Happy Students', value: `${(page.props.live_stats?.students ?? 0) || '1200'}+` },
-    { label: 'Awards Won', value: '40+' },
-]);
+/**
+ * StatsBandSection just below the hero already shows every entry in `stats`,
+ * Students/Teachers included - so About's cards pick the non-count entries
+ * (Years of Excellence, Classrooms, ...) instead of repeating the same two
+ * numbers a second time on the same page.
+ */
+const aboutHighlights = computed(() =>
+    stats.value
+        .filter((stat) => stat.label !== 'Students' && stat.label !== 'Teachers')
+        .map((stat) => ({ label: stat.label, value: `${stat.value}${stat.suffix ?? ''}` })),
+);
 
 const admissionSteps = computed(() => (school.value?.admission_steps?.length ? school.value.admission_steps : defaultSteps));
 
@@ -124,15 +130,15 @@ const STAT_ICONS: Record<string, string> = {
 };
 
 /**
- * Floating hero cards prefer whichever real numbers are actually non-zero.
- * A freshly-set-up school has 0 enrolled students/teachers, and a "0
- * Students enrolled" card reads as broken, not as "real data" - so this
- * falls through to the still-real admin-entered stats (years of excellence,
- * classroom count) rather than forcing the live counts specifically.
+ * Floating hero cards skip Students/Teachers entirely - the social-proof
+ * card right below already says "Join N+ students here" and StatsBandSection
+ * shows the same two counts again right under the hero, so a third repeat up
+ * here added nothing. Picks from the remaining non-zero stats instead (years
+ * of excellence, classroom count, ...).
  */
 const heroFloatingStats = computed(() =>
     stats.value
-        .filter((stat) => stat.value > 0)
+        .filter((stat) => stat.value > 0 && stat.label !== 'Students' && stat.label !== 'Teachers')
         .slice(0, 2)
         .map((stat) => ({
             icon: STAT_ICONS[stat.label] ?? 'sparkles',
