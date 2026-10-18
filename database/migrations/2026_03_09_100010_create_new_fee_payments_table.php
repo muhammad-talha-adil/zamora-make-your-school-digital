@@ -39,6 +39,13 @@ return new class extends Migration
                 ->constrained('student_enrollment_records')
                 ->onDelete('restrict');
 
+            // Frozen details for the receipt so a later name correction or
+            // class change does not silently rewrite past receipts.
+            $table->string('student_name_snapshot')->nullable();
+            $table->string('registration_no_snapshot')->nullable();
+            $table->string('class_name_snapshot')->nullable();
+            $table->string('section_name_snapshot')->nullable();
+
             // Campus reference (for multi-campus support)
             $table->foreignId('campus_id')
                 ->constrained('campuses')

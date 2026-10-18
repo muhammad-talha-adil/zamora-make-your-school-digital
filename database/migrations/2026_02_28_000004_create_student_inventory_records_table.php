@@ -31,7 +31,13 @@ return new class extends Migration
             $table->decimal('final_amount', 12, 2)->default(0);
             $table->date('assigned_date');
             $table->enum('status', ['assigned', 'partial_return', 'returned'])->default('assigned');
-            $table->foreignId('invoice_id')->nullable()->constrained('invoices')->onDelete('set null');
+            $table->enum('billing_status', ['unbilled', 'billed', 'partially_billed'])->default('unbilled');
+            $table->boolean('is_billable')->default(true);
+            $table->date('billing_date')->nullable();
+            // FK to student_account_charges added later (see
+            // 2026_05_08_000005_add_student_account_charge_fk_to_student_inventory.php):
+            // that table isn't created until 2026_05_08_000001, after this migration.
+            $table->unsignedBigInteger('student_account_charge_id')->nullable();
             $table->foreignId('student_class_id')->nullable()->constrained('school_classes')->onDelete('set null');
             $table->foreignId('student_section_id')->nullable()->constrained('sections')->onDelete('set null');
             $table->text('note')->nullable();
@@ -43,6 +49,8 @@ return new class extends Migration
             $table->index(['campus_id', 'status']);
             $table->index(['assigned_date']);
             $table->index(['status', 'assigned_date']);
+            $table->index(['billing_status', 'is_billable'], 'idx_student_inventory_billing');
+            $table->index('student_account_charge_id', 'idx_student_inventory_charge');
         });
 
         // Step 2: Create student_inventory_items table (child)
@@ -65,7 +73,11 @@ return new class extends Migration
             $table->decimal('discount_percentage', 5, 2)->default(0);
             $table->date('assigned_date');
             $table->enum('status', ['assigned', 'partial_return', 'returned']);
-            $table->foreignId('invoice_id')->nullable()->constrained('invoices')->onDelete('set null');
+            // FK to student_account_charges added later, same reason as above.
+            $table->unsignedBigInteger('student_account_charge_id')->nullable();
+            $table->boolean('is_billed')->default(false);
+            $table->integer('billed_quantity')->default(0);
+            $table->integer('credited_quantity')->default(0);
             $table->timestamp('created_at')->useCurrent();
             $table->timestamp('updated_at')->useCurrent()->useCurrentOnUpdate();
             $table->softDeletes();
@@ -73,6 +85,8 @@ return new class extends Migration
             $table->index(['student_inventory_record_id']);
             $table->index(['campus_id', 'student_id']);
             $table->index(['assigned_date']);
+            $table->index(['is_billed', 'billed_quantity'], 'idx_student_inventory_item_billed');
+            $table->index('student_account_charge_id', 'idx_student_inventory_item_charge');
         });
 
         // Step 3: Migrate data from old student_inventory table to new structure
@@ -132,7 +146,6 @@ return new class extends Migration
                         'final_amount' => $finalAmount,
                         'assigned_date' => $firstItem->assigned_date,
                         'status' => $status,
-                        'invoice_id' => $firstItem->invoice_id ?? null,
                         'created_at' => $firstItem->created_at ?? now(),
                         'updated_at' => $firstItem->updated_at ?? now(),
                     ]);
@@ -154,7 +167,6 @@ return new class extends Migration
                             'discount_percentage' => $item->discount_percentage ?? 0,
                             'assigned_date' => $item->assigned_date,
                             'status' => $item->status ?? 'assigned',
-                            'invoice_id' => $item->invoice_id ?? null,
                             'created_at' => $item->created_at ?? now(),
                             'updated_at' => $item->updated_at ?? now(),
                         ]);

@@ -28,7 +28,15 @@ return new class extends Migration
             $table->unsignedSmallInteger('absent_count')->default(0);
             $table->unsignedSmallInteger('leave_count')->default(0);
             $table->unsignedSmallInteger('late_count')->default(0);
+            $table->unsignedSmallInteger('half_day_count')->default(0);
             $table->unsignedSmallInteger('total_days')->default(0);
+            $table->unsignedSmallInteger('expected_days')->default(0);
+            $table->decimal('present_equivalent', 6, 2)->default(0);
+
+            // The register a summary was last built from, so a stale row is
+            // recognisable without recomputing it.
+            $table->timestamp('computed_at')->nullable();
+
             $table->timestamps();
 
             // Indexes
@@ -37,8 +45,8 @@ return new class extends Migration
             $table->index('month');
             $table->index('year');
 
-            // Composite indexes
-            $table->index(['student_id', 'session_id', 'month', 'year'], 'unique_monthly_summary');
+            // Composite unique constraint: one summary row per student per month.
+            $table->unique(['student_id', 'session_id', 'month', 'year'], 'unique_monthly_summary');
         });
     }
 

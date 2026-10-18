@@ -13,6 +13,9 @@ return new class extends Migration
     {
         Schema::create('school_classes', function (Blueprint $table) {
             $table->id();
+            // Classes are campus-specific: "Class 9" at Campus A is a different
+            // row from "Class 9" at Campus B, each with its own sections.
+            $table->foreignId('campus_id')->nullable()->constrained('campuses')->nullOnDelete();
             $table->string('name');
             $table->string('code')->nullable();
             $table->unsignedSmallInteger('level')->nullable();

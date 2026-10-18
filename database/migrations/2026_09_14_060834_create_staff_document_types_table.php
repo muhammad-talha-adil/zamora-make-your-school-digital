@@ -24,8 +24,10 @@ return new class extends Migration
     {
         Schema::create('staff_document_types', function (Blueprint $table) {
             $table->id();
-            $table->string('name')->unique();
+            $table->string('name');
+            $table->boolean('is_required')->default(false);
             $table->boolean('is_active')->default(true);
+            $table->index('name');
             $table->timestamps();
             $table->softDeletes();
         });

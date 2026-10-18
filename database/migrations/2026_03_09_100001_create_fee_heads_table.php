@@ -27,14 +27,19 @@ return new class extends Migration
 
             // Basic information
             $table->string('name', 100); // e.g., "Tuition Fee", "Transport Fee"
-            $table->string('code', 50)->unique(); // e.g., "TUITION", "TRANSPORT"
+            $table->string('code', 50); // e.g., "TUITION", "TRANSPORT"
 
             // Category classification
             $table->enum('category', [
-                'monthly',
-                'annual',
-                'one_time',
+                'tuition',
+                'admission',
+                'annual_charges',
+                'examination',
                 'transport',
+                'library',
+                'laboratory',
+                'sports',
+                'security',
                 'fine',
                 'discount',
                 'misc',
@@ -56,6 +61,7 @@ return new class extends Migration
             // Indexes for performance
             $table->index(['is_active', 'category']);
             $table->index('sort_order');
+            $table->index('code');
         });
     }
 

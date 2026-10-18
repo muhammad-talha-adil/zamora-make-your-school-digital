@@ -28,6 +28,9 @@ return new class extends Migration
             $table->unsignedBigInteger('locked_by')->nullable();
             $table->datetime('locked_at')->nullable();
             $table->enum('status', ['scheduled', 'active', 'marking', 'published', 'completed', 'cancelled'])->default('scheduled');
+            $table->decimal('result_weight', 5, 2)->nullable();
+            $table->decimal('aggregate_pass_percentage', 5, 2)->nullable();
+            $table->decimal('grace_marks_limit', 5, 2)->nullable();
             $table->timestamps();
             $table->softDeletes();
 

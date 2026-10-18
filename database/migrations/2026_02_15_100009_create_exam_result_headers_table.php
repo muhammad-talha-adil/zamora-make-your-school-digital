@@ -25,9 +25,15 @@ return new class extends Migration
             $table->unsignedBigInteger('section_id')->nullable()->index();
             $table->bigInteger('student_id')->unsigned()->index();
             $table->string('status')->default('draft'); // draft|submitted|verified|published|locked
+            $table->string('result_status')->nullable(); // pass|fail|pending
+            $table->unsignedSmallInteger('failed_subject_count')->default(0);
             $table->decimal('total_obtained_cache', 7, 2)->nullable();
             $table->decimal('overall_percentage_cache', 5, 2)->nullable();
             $table->bigInteger('overall_grade_item_id_cache')->unsigned()->nullable()->index();
+            $table->unsignedInteger('position_in_section')->nullable();
+            $table->unsignedInteger('position_in_class')->nullable();
+            $table->unsignedInteger('ranked_out_of')->nullable();
+            $table->text('remarks')->nullable();
             $table->timestamps();
             $table->softDeletes();
 

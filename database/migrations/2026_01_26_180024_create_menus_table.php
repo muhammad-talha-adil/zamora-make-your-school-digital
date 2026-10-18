@@ -28,6 +28,8 @@ return new class extends Migration
             $table->foreignId('parent_id')->nullable()->constrained('menus')->onDelete('cascade');
             $table->integer('order')->default(0);
             $table->enum('type', ['main', 'footer'])->default('main');
+            $table->string('role')->nullable();
+            $table->string('permission')->nullable();
             $table->timestamps();
             $table->softDeletes();
         });

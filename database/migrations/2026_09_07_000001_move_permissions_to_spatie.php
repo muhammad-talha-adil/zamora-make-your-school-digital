@@ -70,55 +70,16 @@ return new class extends Migration
         $this->forgetPermissionCache();
     }
 
+    /**
+     * Not reversible: rebuilding role_permissions/user_roles here would keep
+     * a second Schema::create('<table>') around for both tables solely to
+     * support rolling back a one-way move to spatie/laravel-permission. Their
+     * schema already lives, once, in their original create migrations
+     * (2026_01_13_181129 / 2026_01_13_181154).
+     */
     public function down(): void
     {
-        Schema::table('roles', function (Blueprint $table) {
-            $table->string('slug')->nullable();
-            $table->softDeletes();
-        });
-
-        Schema::table('permissions', function (Blueprint $table) {
-            $table->string('key')->nullable();
-            $table->softDeletes();
-        });
-
-        DB::statement('UPDATE roles SET slug = name');
-        DB::statement('UPDATE permissions SET "key" = name');
-
-        Schema::create('role_permissions', function (Blueprint $table) {
-            $table->id();
-            $table->unsignedBigInteger('role_id');
-            $table->unsignedBigInteger('permission_id');
-            $table->timestamps();
-            $table->unique(['role_id', 'permission_id']);
-        });
-
-        Schema::create('user_roles', function (Blueprint $table) {
-            $table->id();
-            $table->unsignedBigInteger('user_id');
-            $table->unsignedBigInteger('role_id');
-            $table->unsignedBigInteger('campus_id')->nullable();
-            $table->boolean('is_active')->default(true);
-            $table->timestamps();
-            $table->softDeletes();
-        });
-
-        foreach (DB::table('role_has_permissions')->get() as $row) {
-            DB::table('role_permissions')->insertOrIgnore([
-                'role_id' => $row->role_id,
-                'permission_id' => $row->permission_id,
-            ]);
-        }
-
-        foreach (DB::table('model_has_roles')->where('model_type', User::class)->get() as $row) {
-            DB::table('user_roles')->insertOrIgnore([
-                'user_id' => $row->model_id,
-                'role_id' => $row->role_id,
-                'is_active' => true,
-            ]);
-        }
-
-        $this->forgetPermissionCache();
+        // Intentionally empty.
     }
 
     /**

@@ -31,6 +31,10 @@ return new class extends Migration
                 ->constrained('academic_sessions')
                 ->cascadeOnDelete();
 
+            // JSON list of class ids this timing covers; null or empty means
+            // the campus/session's general timing.
+            $table->json('class_ids')->nullable();
+
             // "Regular", "Ramzan", "Winter" — the school's own words.
             $table->string('name', 60);
 
@@ -46,6 +50,9 @@ return new class extends Migration
             // A child arriving after this is late. Usually a few minutes after
             // the start, because the gate does not close on the bell.
             $table->time('late_after');
+
+            $table->time('break_starts_at')->nullable();
+            $table->time('break_ends_at')->nullable();
 
             $table->time('day_ends_at')->nullable();
 

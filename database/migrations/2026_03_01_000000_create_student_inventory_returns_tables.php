@@ -22,9 +22,13 @@ return new class extends Migration
             $table->foreignId('campus_id')->constrained('campuses')->onDelete('cascade');
             $table->foreignId('student_id')->constrained('students')->onDelete('cascade');
             $table->foreignId('record_id')->constrained('student_inventory_records')->onDelete('cascade');
+            // FK added later (see 2026_05_08_000005_add_..._fk_to_student_inventory.php):
+            // student_account_adjustments isn't created until 2026_05_08_000001.
+            $table->unsignedBigInteger('student_account_adjustment_id')->nullable();
             $table->decimal('total_quantity', 10, 2)->default(0);
             $table->decimal('total_amount', 12, 2)->default(0);
             $table->string('status')->default('returned'); // returned, partial
+            $table->enum('financial_effect', ['none', 'credit', 'refund'])->default('none');
             $table->date('return_date');
             $table->text('note')->nullable();
             $table->timestamps();
@@ -33,6 +37,7 @@ return new class extends Migration
             $table->index('return_id');
             $table->index(['campus_id', 'return_date']);
             $table->index(['student_id', 'return_date']);
+            $table->index(['financial_effect', 'student_id'], 'idx_student_inventory_return_financial');
         });
 
         // Child table: student_inventory_return_items

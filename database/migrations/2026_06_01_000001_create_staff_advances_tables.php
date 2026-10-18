@@ -38,24 +38,11 @@ return new class extends Migration
                 $table->softDeletes();
             });
         }
-
-        if (Schema::hasTable('payroll_run_items') && ! Schema::hasColumn('payroll_run_items', 'amount_paid')) {
-            Schema::table('payroll_run_items', function (Blueprint $table) {
-                $table->decimal('amount_paid', 12, 2)->default(0)->after('net_salary');
-                $table->decimal('advance_deduction_amount', 12, 2)->default(0)->after('amount_paid');
-            });
-        }
     }
 
     public function down(): void
     {
         Schema::dropIfExists('staff_advance_deductions');
         Schema::dropIfExists('staff_advances');
-
-        if (Schema::hasTable('payroll_run_items') && Schema::hasColumn('payroll_run_items', 'amount_paid')) {
-            Schema::table('payroll_run_items', function (Blueprint $table) {
-                $table->dropColumn(['amount_paid', 'advance_deduction_amount']);
-            });
-        }
     }
 };

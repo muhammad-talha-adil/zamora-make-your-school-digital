@@ -41,6 +41,11 @@ return new class extends Migration
                 ->nullable()
                 ->constrained('sections')
                 ->onDelete('restrict');
+
+            // Scoped to the class+section+session of this enrollment, since a
+            // child's roll number changes when they move class or section.
+            $table->unsignedInteger('roll_number')->nullable();
+
             $table->foreignId('campus_id')
                 ->nullable()
                 ->constrained('campuses')
@@ -107,6 +112,9 @@ return new class extends Migration
             // Composite indexes for efficient querying
             $table->index(['student_id', 'leave_date']); // For finding active enrollments
             $table->index(['session_id', 'class_id', 'section_id']); // For class-wise queries
+
+            // Same roll number cannot repeat within the same open class/section/session.
+            $table->index(['session_id', 'class_id', 'section_id', 'roll_number'], 'enrollment_roll_number_scope_index');
         });
     }
 

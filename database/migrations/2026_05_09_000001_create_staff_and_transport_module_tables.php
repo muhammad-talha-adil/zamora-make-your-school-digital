@@ -23,6 +23,10 @@ return new class extends Migration
                 $table->id();
                 $table->string('name')->unique();
                 $table->string('description')->nullable();
+                // Optionally names the Spatie role (by name — Spatie resolves
+                // roles by name via syncRoles()/assignRole()) that hiring
+                // somebody into this designation should grant automatically.
+                $table->string('role')->nullable();
                 $table->boolean('is_active')->default(true);
                 $table->timestamps();
             });
@@ -33,6 +37,20 @@ return new class extends Migration
                 $table->id();
                 $table->foreignId('user_id')->constrained()->cascadeOnDelete();
                 $table->string('employee_no')->unique();
+                $table->string('cnic', 15)->nullable();
+                $table->string('phone', 20)->nullable();
+                $table->date('dob')->nullable();
+                $table->foreignId('gender_id')->nullable()->constrained('genders')->nullOnDelete();
+                $table->string('blood_group', 5)->nullable();
+                $table->text('address')->nullable();
+
+                // The number somebody rings when a member of staff is taken
+                // ill at work, which is the only reason this is on the record.
+                $table->string('emergency_contact_name')->nullable();
+                $table->string('emergency_contact_phone', 20)->nullable();
+                $table->string('emergency_contact_relation', 50)->nullable();
+
+                $table->string('photo')->nullable();
                 $table->foreignId('campus_id')->nullable()->constrained('campuses')->nullOnDelete();
                 $table->foreignId('department_id')->nullable()->constrained('staff_departments')->nullOnDelete();
                 $table->foreignId('designation_id')->nullable()->constrained('staff_designations')->nullOnDelete();
@@ -48,6 +66,9 @@ return new class extends Migration
                 $table->boolean('is_active')->default(true);
                 $table->timestamps();
                 $table->softDeletes();
+
+                $table->index('cnic');
+                $table->index('phone');
             });
         } else {
             Schema::table('staff_profiles', function (Blueprint $table) {
@@ -128,6 +149,8 @@ return new class extends Migration
                 $table->decimal('allowance_amount', 12, 2)->default(0);
                 $table->decimal('deduction_amount', 12, 2)->default(0);
                 $table->decimal('net_salary', 12, 2)->default(0);
+                $table->decimal('amount_paid', 12, 2)->default(0);
+                $table->decimal('advance_deduction_amount', 12, 2)->default(0);
                 $table->string('status')->default('pending');
                 $table->string('payment_method')->nullable();
                 $table->string('reference_no')->nullable();

@@ -36,44 +36,11 @@ return new class extends Migration
 {
     public function up(): void
     {
-        $this->personalFile();
         $this->jobs();
         $this->salary();
         $this->file();
         $this->attendanceAndLeave();
         $this->employmentPeriods();
-    }
-
-    /**
-     * What a school keeps about a person.
-     *
-     * The CNIC is the identity here — it is on every form a school files, and
-     * it is what tells two people called Muhammad Ali apart. Nullable, because
-     * the records already in the table do not have one and a school should not
-     * be locked out of its own system until it goes and finds forty of them.
-     */
-    private function personalFile(): void
-    {
-        Schema::table('staff_profiles', function (Blueprint $table) {
-            $table->string('cnic', 15)->nullable()->after('employee_no');
-            $table->string('phone', 20)->nullable()->after('cnic');
-            $table->date('dob')->nullable()->after('phone');
-            $table->foreignId('gender_id')->nullable()->after('dob')
-                ->constrained('genders')->nullOnDelete();
-            $table->string('blood_group', 5)->nullable()->after('gender_id');
-            $table->text('address')->nullable()->after('blood_group');
-
-            // The number somebody rings when a member of staff is taken ill at
-            // work, which is the only reason this is on the record at all.
-            $table->string('emergency_contact_name')->nullable()->after('address');
-            $table->string('emergency_contact_phone', 20)->nullable()->after('emergency_contact_name');
-            $table->string('emergency_contact_relation', 50)->nullable()->after('emergency_contact_phone');
-
-            $table->string('photo')->nullable()->after('emergency_contact_relation');
-
-            $table->index('cnic');
-            $table->index('phone');
-        });
     }
 
     /**
@@ -397,14 +364,5 @@ return new class extends Migration
         Schema::dropIfExists('salary_heads');
         Schema::dropIfExists('staff_assignments');
         Schema::dropIfExists('staff_employment_periods');
-
-        Schema::table('staff_profiles', function (Blueprint $table) {
-            $table->dropConstrainedForeignId('gender_id');
-            $table->dropColumn([
-                'cnic', 'phone', 'dob', 'blood_group', 'address',
-                'emergency_contact_name', 'emergency_contact_phone',
-                'emergency_contact_relation', 'photo',
-            ]);
-        });
     }
 };

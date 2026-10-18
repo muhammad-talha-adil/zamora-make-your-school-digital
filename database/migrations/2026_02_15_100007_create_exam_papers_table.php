@@ -25,6 +25,7 @@ return new class extends Migration
             $table->unsignedBigInteger('section_id')->nullable()->index();
             $table->enum('scope_type', ['SCHOOL', 'CLASS', 'SECTION'])->default('SCHOOL');
             $table->bigInteger('subject_id')->unsigned()->index();
+            $table->string('subject_role')->default('core');
             $table->date('paper_date');
             $table->time('start_time');
             $table->time('end_time');

@@ -38,6 +38,12 @@ return new class extends Migration
                 ->constrained('student_enrollment_records')
                 ->onDelete('restrict');
 
+            // Snapshot of the student's identity at generation time, so a
+            // later name/registration-number correction never rewrites a
+            // voucher already printed and handed to a parent.
+            $table->string('student_name_snapshot')->nullable();
+            $table->string('registration_no_snapshot')->nullable();
+
             // Scope (cached from enrollment for performance)
             $table->foreignId('session_id')
                 ->constrained('academic_sessions')
