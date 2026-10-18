@@ -177,6 +177,7 @@ const isSelected = (optionValue: string | number): boolean =>
                         v-for="option in props.options"
                         :key="option.value"
                         :value="String(option.value)"
+                        :text-value="option.label"
                         :disabled="option.disabled"
                         class="relative flex cursor-pointer select-none items-center justify-between rounded-sm px-3 py-2 text-sm text-foreground outline-none data-[highlighted]:bg-accent data-[disabled]:pointer-events-none data-[disabled]:opacity-50"
                     >
@@ -248,6 +249,7 @@ const isSelected = (optionValue: string | number): boolean =>
                         v-for="option in props.options"
                         :key="option.value"
                         :value="String(option.value)"
+                        :text-value="option.label"
                         :disabled="option.disabled"
                         class="relative flex cursor-pointer select-none items-center justify-between rounded-sm px-3 py-2 text-sm text-foreground outline-none data-[highlighted]:bg-accent data-[disabled]:pointer-events-none data-[disabled]:opacity-50"
                     >
