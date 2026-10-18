@@ -14,17 +14,23 @@ interface SchoolProps {
     logo_path: string | null;
 }
 
-const page = usePage<{ school: SchoolProps | null; name: string }>();
+const page = usePage<{
+    school: SchoolProps | null;
+    name: string;
+    public_staff?: unknown[];
+    public_campuses?: unknown[];
+}>();
 const schoolName = computed(() => page.props.school?.name ?? page.props.name);
 const logoPath = computed(() => page.props.school?.logo_path);
 
-const navItems = [
+/** Staff/Campuses only appear in the nav when their homepage section actually renders (StaffSection/CampusesSection each skip themselves when there's no data), so the link never points at a missing anchor. */
+const navItems = computed(() => [
     { label: 'About', href: '#about' },
-    { label: 'Staff', href: '#staff' },
-    { label: 'Campuses', href: '#campuses' },
+    ...(page.props.public_staff?.length ? [{ label: 'Staff', href: '#staff' }] : []),
+    ...(page.props.public_campuses?.length ? [{ label: 'Campuses', href: '#campuses' }] : []),
     { label: 'Admissions', href: '#admissions' },
     { label: 'Contact', href: '#contact' },
-];
+]);
 
 const scrolled = ref(false);
 const mobileOpen = ref(false);
@@ -40,7 +46,7 @@ let sectionObserver: IntersectionObserver | null = null;
 onMounted(() => {
     window.addEventListener('scroll', onScroll, { passive: true });
 
-    const sections = navItems
+    const sections = navItems.value
         .map((item) => document.querySelector<HTMLElement>(item.href))
         .filter((el): el is HTMLElement => el !== null);
 
