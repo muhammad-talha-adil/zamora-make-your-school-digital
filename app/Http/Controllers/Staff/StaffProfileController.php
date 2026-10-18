@@ -70,7 +70,7 @@ class StaffProfileController extends Controller
             'campuses' => Campus::orderBy('name')->get(['id', 'name']),
             // Self-scoped roles (student, guardian) are never valid for a
             // staff designation — only staff-facing roles belong here.
-            'roles' => Role::where('scope_level', '!=', Role::SCOPE_SELF)->orderBy('name')->get(['id', 'name', 'label']),
+            'roles' => Role::where('scope_level', '!=', Role::SCOPE_SELF)->whereNotIn('name', ['developer', 'owner'])->orderBy('name')->get(['id', 'name', 'label']),
             'filters' => $request->only(['search', 'campus_id', 'designation_id', 'status']),
         ]);
     }

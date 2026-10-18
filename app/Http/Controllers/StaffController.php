@@ -121,7 +121,7 @@ class StaffController extends Controller
             'documentTypes' => StaffDocumentType::orderBy('name')->get(),
             // Self-scoped roles (student, guardian) are never valid for a
             // staff designation — only staff-facing roles belong here.
-            'roles' => Role::where('scope_level', '!=', Role::SCOPE_SELF)->orderBy('name')->get(['id', 'name', 'label']),
+            'roles' => Role::where('scope_level', '!=', Role::SCOPE_SELF)->whereNotIn('name', ['developer', 'owner'])->orderBy('name')->get(['id', 'name', 'label']),
         ]);
     }
 
@@ -191,8 +191,9 @@ class StaffController extends Controller
             'name' => 'required|string|max:100|unique:staff_designations,name',
             'description' => 'nullable|string|max:255',
             // Self-scoped roles (student, guardian) are never valid for a
-            // staff designation.
-            'role' => ['nullable', 'string', Rule::exists('roles', 'name')->where(fn ($q) => $q->where('scope_level', '!=', Role::SCOPE_SELF))],
+            // staff designation, and developer/owner are platform-level
+            // roles no designation should be able to grant.
+            'role' => ['nullable', 'string', Rule::exists('roles', 'name')->where(fn ($q) => $q->where('scope_level', '!=', Role::SCOPE_SELF)->whereNotIn('name', ['developer', 'owner']))],
         ]);
 
         $designation = StaffDesignation::create($data + ['is_active' => true]);
@@ -209,7 +210,7 @@ class StaffController extends Controller
         $data = $request->validate([
             'name' => 'required|string|max:100|unique:staff_designations,name,'.$designation->id,
             'description' => 'nullable|string|max:255',
-            'role' => ['nullable', 'string', Rule::exists('roles', 'name')->where(fn ($q) => $q->where('scope_level', '!=', Role::SCOPE_SELF))],
+            'role' => ['nullable', 'string', Rule::exists('roles', 'name')->where(fn ($q) => $q->where('scope_level', '!=', Role::SCOPE_SELF)->whereNotIn('name', ['developer', 'owner']))],
             'is_active' => 'boolean',
         ]);
 
