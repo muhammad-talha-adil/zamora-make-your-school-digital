@@ -842,7 +842,7 @@ const activeJobsCount = computed(() => props.jobs.length);
                             </div>
                             <div>
                                 <label class="mb-2 block text-sm font-medium text-muted-foreground">Phone</label>
-                                <Input v-model="personalForm.phone" maxlength="11" :disabled="!props.can.edit" />
+                                <Input v-model="personalForm.phone" maxlength="20" :disabled="!props.can.edit" />
                             </div>
                         </div>
                         <div class="grid gap-4 md:grid-cols-2">
@@ -870,7 +870,7 @@ const activeJobsCount = computed(() => props.jobs.length);
                             </div>
                             <div>
                                 <label class="mb-2 block text-sm font-medium text-muted-foreground">Phone</label>
-                                <Input v-model="personalForm.emergency_contact_phone" :disabled="!props.can.edit" />
+                                <Input v-model="personalForm.emergency_contact_phone" maxlength="20" :disabled="!props.can.edit" />
                             </div>
                             <div>
                                 <label class="mb-2 block text-sm font-medium text-muted-foreground">Relation</label>
