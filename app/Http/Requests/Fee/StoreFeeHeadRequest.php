@@ -3,7 +3,6 @@
 namespace App\Http\Requests\Fee;
 
 use App\Enums\Fee\FeeFrequency;
-use App\Enums\Fee\FeeHeadCategory;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 
@@ -18,7 +17,6 @@ class StoreFeeHeadRequest extends FormRequest
     {
         return [
             'name' => ['required', 'string', 'max:100'],
-            'category' => ['required', Rule::enum(FeeHeadCategory::class)],
             'is_recurring' => ['boolean'],
             'default_frequency' => ['required', Rule::enum(FeeFrequency::class)],
             'is_optional' => ['boolean'],
@@ -32,7 +30,6 @@ class StoreFeeHeadRequest extends FormRequest
     {
         return [
             'name.required' => 'Fee head name is required.',
-            'category.required' => 'Please select a category.',
             'default_frequency.required' => 'Please select a frequency.',
         ];
     }

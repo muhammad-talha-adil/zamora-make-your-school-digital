@@ -37,7 +37,6 @@ class FeeHeadService
     public function getCreateData(): array
     {
         return [
-            'categories' => $this->getCategories(),
             'frequencies' => $this->getFrequencies(),
             'nextOrder' => $this->repository->getNextAvailableOrder(),
         ];
@@ -50,7 +49,6 @@ class FeeHeadService
     {
         return [
             'feeHead' => $feeHead,
-            'categories' => $this->getCategories(),
             'frequencies' => $this->getFrequencies(),
         ];
     }

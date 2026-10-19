@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, router } from '@inertiajs/vue3';
-import { reactive, ref, computed, watch } from 'vue';
+import { reactive, ref, computed } from 'vue';
 import { route } from 'ziggy-js';
 import { alert } from '@/utils';
 import { useFormValidity } from '@/composables/useFormValidity';
@@ -13,7 +13,6 @@ import Icon from '@/components/Icon.vue';
 import SearchableSelect from '@/components/ui/searchable-select/SearchableSelect.vue';
 
 interface Props {
-    categories: Array<{ value: string; label: string; default_frequency: string }>;
     frequencies: Array<{ value: string; label: string }>;
     nextOrder: number;
 }
@@ -30,7 +29,6 @@ const breadcrumbItems: BreadcrumbItem[] = [
 const form = reactive({
     name: '',
     description: '',
-    category: 'tuition',
     default_frequency: 'monthly',
     is_recurring: true,
     is_active: true,
@@ -41,7 +39,6 @@ const form = reactive({
 const errors = ref<Record<string, string>>({});
 const isSubmitting = ref(false);
 
-const categoryOptions = computed(() => props.categories.map((cat) => ({ value: cat.value, label: cat.label })));
 const frequencyOptions = computed(() => props.frequencies.map((freq) => ({ value: freq.value, label: freq.label })));
 const activeOptions = [
     { value: 'true', label: 'Active' },
@@ -60,41 +57,18 @@ const formOptionalModel = computed({
     set: (val: string) => { form.is_optional = val === 'true'; },
 });
 
-const { isValid } = useFormValidity(form, ['name', 'category', 'default_frequency']);
-
-// Pre-fill frequency from the category's default whenever the category
-// changes, but only while the frequency still matches the previous
-// suggestion — so the office can still override it manually afterward.
-const lastSuggestedFrequency = ref<string | null>(null);
-
-watch(
-    () => form.category,
-    (category) => {
-        const suggested = props.categories.find((cat) => cat.value === category)?.default_frequency;
-        if (!suggested) return;
-
-        if (form.default_frequency === '' || form.default_frequency === lastSuggestedFrequency.value) {
-            form.default_frequency = suggested;
-        }
-
-        lastSuggestedFrequency.value = suggested;
-    },
-    { immediate: true },
-);
+const { isValid } = useFormValidity(form, ['name', 'default_frequency']);
 
 const validateForm = () => {
     errors.value = {};
-    
+
     if (!form.name.trim()) {
         errors.value.name = 'Name is required';
-    }
-    if (!form.category) {
-        errors.value.category = 'Category is required';
     }
     if (!form.default_frequency) {
         errors.value.default_frequency = 'Frequency is required';
     }
-    
+
     return Object.keys(errors.value).length === 0;
 };
 
@@ -169,31 +143,17 @@ const cancel = () => {
                         ></textarea>
                     </div>
 
-                    <!-- Category & Frequency -->
-                    <div class="grid gap-4 md:grid-cols-2">
-                        <div class="space-y-2">
-                            <Label for="category">Category <span class="text-destructive">*</span></Label>
-                            <SearchableSelect
-                                id="category"
-                                v-model="form.category"
-                                :options="categoryOptions"
-                                placeholder="Select category"
-                                :class="{ 'border-destructive': errors.category }"
-                            />
-                            <p v-if="errors.category" class="text-sm text-destructive">{{ errors.category }}</p>
-                        </div>
-
-                        <div class="space-y-2">
-                            <Label for="frequency">Frequency <span class="text-destructive">*</span></Label>
-                            <SearchableSelect
-                                id="frequency"
-                                v-model="form.default_frequency"
-                                :options="frequencyOptions"
-                                placeholder="Select frequency"
-                                :class="{ 'border-destructive': errors.default_frequency }"
-                            />
-                            <p v-if="errors.default_frequency" class="text-sm text-destructive">{{ errors.default_frequency }}</p>
-                        </div>
+                    <!-- Frequency -->
+                    <div class="space-y-2">
+                        <Label for="frequency">Frequency <span class="text-destructive">*</span></Label>
+                        <SearchableSelect
+                            id="frequency"
+                            v-model="form.default_frequency"
+                            :options="frequencyOptions"
+                            placeholder="Select frequency"
+                            :class="{ 'border-destructive': errors.default_frequency }"
+                        />
+                        <p v-if="errors.default_frequency" class="text-sm text-destructive">{{ errors.default_frequency }}</p>
                     </div>
 
                     <!-- Order & Status -->

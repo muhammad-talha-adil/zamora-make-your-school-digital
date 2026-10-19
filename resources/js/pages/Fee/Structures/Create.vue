@@ -21,8 +21,7 @@ interface Props {
     classes: Array<{ id: number; name: string }>;
     sections: Array<{ id: number; name: string; class_id: number }>;
     months: Array<{ id: number; name: string; month_number: number }>;
-    feeHeads: Array<{ id: number; name: string; category: string; default_frequency: string }>;
-    feeHeadCategories: Array<{ value: string; label: string; default_frequency: string }>;
+    feeHeads: Array<{ id: number; name: string; default_frequency: string }>;
     feeHeadFrequencies: Array<{ value: string; label: string }>;
 }
 
@@ -110,35 +109,13 @@ const showFeeHeadModal = ref(false);
 const isSavingFeeHead = ref(false);
 const feeHeadForm = reactive({
     name: '',
-    category: 'tuition',
     default_frequency: 'monthly',
 });
 const feeHeadFormErrors = ref<Record<string, string>>({});
 
-// Pre-fill frequency from the category's default whenever the category
-// changes, but only while the frequency still matches the previous
-// suggestion — so it can still be overridden manually.
-const lastSuggestedFeeHeadFrequency = ref<string | null>(null);
-
-watch(
-    () => feeHeadForm.category,
-    (category) => {
-        const suggested = props.feeHeadCategories.find((cat) => cat.value === category)?.default_frequency;
-        if (!suggested) return;
-
-        if (feeHeadForm.default_frequency === '' || feeHeadForm.default_frequency === lastSuggestedFeeHeadFrequency.value) {
-            feeHeadForm.default_frequency = suggested;
-        }
-
-        lastSuggestedFeeHeadFrequency.value = suggested;
-    },
-);
-
 const openAddFeeHeadModal = () => {
     feeHeadForm.name = '';
-    feeHeadForm.category = 'tuition';
     feeHeadForm.default_frequency = 'monthly';
-    lastSuggestedFeeHeadFrequency.value = null;
     feeHeadFormErrors.value = {};
     showFeeHeadModal.value = true;
 };
@@ -150,7 +127,6 @@ const saveFeeHead = async () => {
     try {
         const response = await axios.post(route('fee.heads.store'), {
             name: feeHeadForm.name,
-            category: feeHeadForm.category,
             default_frequency: feeHeadForm.default_frequency,
             is_recurring: feeHeadForm.default_frequency !== 'once',
             is_optional: false,
@@ -161,7 +137,6 @@ const saveFeeHead = async () => {
         feeHeadsList.value.push({
             id: newFeeHead.id,
             name: newFeeHead.name,
-            category: newFeeHead.category,
             default_frequency: newFeeHead.default_frequency,
         });
 
@@ -232,7 +207,6 @@ const sessionOptions = computed(() => props.sessions.map((session) => ({ value: 
 const classOptions = computed(() => classesList.value.map((cls) => ({ value: String(cls.id), label: cls.name })));
 const sectionOptions = computed(() => filteredSections.value.map((section) => ({ value: String(section.id), label: section.name })));
 const feeHeadOptions = computed(() => feeHeadsList.value.map((fh) => ({ value: String(fh.id), label: fh.name })));
-const feeHeadCategoryOptions = computed(() => props.feeHeadCategories.map((cat) => ({ value: cat.value, label: cat.label })));
 const feeHeadFrequencyOptions = computed(() => props.feeHeadFrequencies.map((freq) => ({ value: freq.value, label: freq.label })));
 const statusOptions = [
     { value: 'draft', label: 'Draft' },
@@ -739,16 +713,9 @@ const cancel = () => {
                         <p v-if="feeHeadFormErrors.name" class="text-sm text-destructive">{{ feeHeadFormErrors.name }}</p>
                     </div>
 
-                    <div class="grid gap-4 sm:grid-cols-2">
-                        <div class="space-y-2">
-                            <Label for="fh-category">Category <span class="text-destructive">*</span></Label>
-                            <SearchableSelect id="fh-category" v-model="feeHeadForm.category" :options="feeHeadCategoryOptions" placeholder="Select Category" />
-                        </div>
-
-                        <div class="space-y-2">
-                            <Label for="fh-frequency">Frequency <span class="text-destructive">*</span></Label>
-                            <SearchableSelect id="fh-frequency" v-model="feeHeadForm.default_frequency" :options="feeHeadFrequencyOptions" placeholder="Select Frequency" />
-                        </div>
+                    <div class="space-y-2">
+                        <Label for="fh-frequency">Frequency <span class="text-destructive">*</span></Label>
+                        <SearchableSelect id="fh-frequency" v-model="feeHeadForm.default_frequency" :options="feeHeadFrequencyOptions" placeholder="Select Frequency" />
                     </div>
                 </div>
 
