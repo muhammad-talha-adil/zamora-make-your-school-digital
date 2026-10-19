@@ -25,6 +25,19 @@ class StoreFeeStructureRequest extends FormRequest
     }
 
     /**
+     * The campus is derived from whichever campus the creator is currently
+     * scoped to (their own campus, or the header switcher's pick for an
+     * owner/developer) — not a client-supplied value — matching the same
+     * convention used for staff and inventory records.
+     */
+    protected function prepareForValidation(): void
+    {
+        $this->merge([
+            'campus_id' => $this->user()->campusId(),
+        ]);
+    }
+
+    /**
      * @return array<string, ValidationRule|array<mixed>|string>
      */
     public function rules(): array

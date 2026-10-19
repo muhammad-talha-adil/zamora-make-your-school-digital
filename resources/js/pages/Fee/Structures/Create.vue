@@ -18,7 +18,6 @@ import SearchableSelect from '@/components/ui/searchable-select/SearchableSelect
 interface Props {
     active_session_id?: number;
     sessions: Array<{ id: number; name: string; start_date: string; end_date: string }>;
-    campuses: Array<{ id: number; name: string }>;
     classes: Array<{ id: number; name: string }>;
     sections: Array<{ id: number; name: string; class_id: number }>;
     months: Array<{ id: number; name: string; month_number: number }>;
@@ -29,22 +28,17 @@ interface Props {
 
 const props = defineProps<Props>();
 
-// A campus-restricted user never sees the Campus field — their own campus
-// is implicit. A school-wide user (owner/developer) still gets to pick,
-// since fee structures are often set up centrally for a campus other than
-// the header switcher's current pick; it defaults to that pick either way.
+// The campus is never a field on this form — it's always whichever campus
+// the creator is currently scoped to (their own campus, or the header
+// switcher's pick for an owner/developer), matching the Staff module's
+// header-derived campus convention. The backend derives the real value
+// server-side regardless of what's sent; this is just the display default.
 const page = usePage();
 const academicScope = computed(() => (page.props as any).academicScope as { campusId: number | null; isCampusRestricted: boolean });
-const showCampusField = computed(() => !academicScope.value?.isCampusRestricted);
 
 // Local, mutable copy so a fee head added inline via the modal shows up in the
 // dropdown immediately without a full page reload.
 const feeHeadsList = ref([...props.feeHeads]);
-
-// Same reasoning for a campus: a school setting up for the first time has
-// none yet, and had no way to add one without losing everything already
-// typed on this form.
-const campusesList = ref([...props.campuses]);
 
 // Same reasoning for a class.
 const classesList = ref([...props.classes]);
@@ -194,51 +188,7 @@ const saveFeeHead = async () => {
     }
 };
 
-// Inline "Add Campus" modal — same reasoning as the Fee Head one above.
-const showCampusModal = ref(false);
-const isSavingCampus = ref(false);
-const campusForm = reactive({ name: '', address: '' });
-const campusFormErrors = ref<Record<string, string>>({});
-
-const openAddCampusModal = () => {
-    campusForm.name = '';
-    campusForm.address = '';
-    campusFormErrors.value = {};
-    showCampusModal.value = true;
-};
-
-const saveCampus = async () => {
-    campusFormErrors.value = {};
-    isSavingCampus.value = true;
-
-    try {
-        const response = await axios.post(route('campuses.store'), {
-            name: campusForm.name,
-            address: campusForm.address || null,
-            is_active: true,
-        }, { headers: { Accept: 'application/json' } });
-
-        const newCampus = response.data.campus;
-        campusesList.value.push({ id: newCampus.id, name: newCampus.name });
-        form.campus_id = String(newCampus.id);
-
-        showCampusModal.value = false;
-        alert.success('Campus created successfully!');
-    } catch (err: unknown) {
-        const response = (err as { response?: { data?: { errors?: Record<string, string[]>; message?: string } } }).response;
-        if (response?.data?.errors) {
-            campusFormErrors.value = Object.fromEntries(
-                Object.entries(response.data.errors).map(([key, value]) => [key, value[0]])
-            );
-        } else {
-            alert.error(response?.data?.message || 'Failed to create campus.');
-        }
-    } finally {
-        isSavingCampus.value = false;
-    }
-};
-
-// Inline "Add Class" modal — same reasoning as the Fee Head/Campus ones above.
+// Inline "Add Class" modal — same reasoning as the Fee Head one above.
 const showClassModal = ref(false);
 const isSavingClass = ref(false);
 const classForm = reactive({ name: '', description: '' });
@@ -283,7 +233,6 @@ const saveClass = async () => {
 };
 
 const sessionOptions = computed(() => props.sessions.map((session) => ({ value: String(session.id), label: session.name })));
-const campusOptions = computed(() => campusesList.value.map((campus) => ({ value: String(campus.id), label: campus.name })));
 const classOptions = computed(() => classesList.value.map((cls) => ({ value: String(cls.id), label: cls.name })));
 const sectionOptions = computed(() => {
     const options = filteredSections.value.map((section) => ({ value: String(section.id), label: section.name }));
@@ -621,23 +570,6 @@ const cancel = () => {
                             />
                             <p v-if="errors.session_id" class="text-sm text-destructive">{{ errors.session_id }}</p>
                         </div>
-
-                        <div v-if="showCampusField" class="space-y-2">
-                            <div class="flex items-center justify-between">
-                                <Label for="campus">Campus <span class="text-destructive">*</span></Label>
-                                <button type="button" class="text-xs text-primary hover:underline" @click="openAddCampusModal">
-                                    + Add Campus
-                                </button>
-                            </div>
-                            <SearchableSelect
-                                id="campus"
-                                v-model="form.campus_id"
-                                :options="campusOptions"
-                                placeholder="Select Campus"
-                                :class="errors.campus_id ? 'border-destructive' : ''"
-                            />
-                            <p v-if="errors.campus_id" class="text-sm text-destructive">{{ errors.campus_id }}</p>
-                        </div>
                     </div>
 
                     <!-- Class & Section -->
@@ -914,35 +846,6 @@ const cancel = () => {
                     <Button variant="outline" @click="showFeeHeadModal = false">Cancel</Button>
                     <Button @click="saveFeeHead" :disabled="isSavingFeeHead || !feeHeadForm.name">
                         {{ isSavingFeeHead ? 'Saving...' : 'Save Fee Head' }}
-                    </Button>
-                </DialogFooter>
-            </DialogContent>
-        </Dialog>
-
-        <!-- Add Campus Modal -->
-        <Dialog v-model:open="showCampusModal">
-            <DialogContent>
-                <DialogHeader>
-                    <DialogTitle>Add Campus</DialogTitle>
-                </DialogHeader>
-
-                <div class="space-y-4">
-                    <div class="space-y-2">
-                        <Label for="cam-name">Name <span class="text-destructive">*</span></Label>
-                        <Input id="cam-name" v-model="campusForm.name" placeholder="e.g. Main Branch" :class="{ 'border-destructive': campusFormErrors.name }" />
-                        <p v-if="campusFormErrors.name" class="text-sm text-destructive">{{ campusFormErrors.name }}</p>
-                    </div>
-
-                    <div class="space-y-2">
-                        <Label for="cam-address">Address (optional)</Label>
-                        <Input id="cam-address" v-model="campusForm.address" placeholder="e.g. 123 Main Road" />
-                    </div>
-                </div>
-
-                <DialogFooter>
-                    <Button variant="outline" @click="showCampusModal = false">Cancel</Button>
-                    <Button @click="saveCampus" :disabled="isSavingCampus || !campusForm.name">
-                        {{ isSavingCampus ? 'Saving...' : 'Save Campus' }}
                     </Button>
                 </DialogFooter>
             </DialogContent>

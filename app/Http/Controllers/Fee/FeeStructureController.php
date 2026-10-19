@@ -87,7 +87,6 @@ class FeeStructureController extends Controller
         return Inertia::render('Fee/Structures/Create', [
             'sessions' => Session::select('id', 'name', 'start_date', 'end_date')->get(),
             'active_session_id' => $activeSession?->id,
-            'campuses' => Campus::select('id', 'name')->get(),
             'classes' => SchoolClass::visibleTo(auth()->user())->select('id', 'name')->get(),
             'sections' => Section::select('id', 'name', 'class_id')->get(),
             'months' => Month::select('id', 'name', 'month_number')->orderBy('month_number')->get(),

@@ -48,9 +48,25 @@ it('requires a title', function () {
     postStructure($this->world, ['title' => ''])->assertSessionHasErrors('title');
 });
 
-it('requires a session and a campus', function () {
-    postStructure($this->world, ['session_id' => null, 'campus_id' => null])
-        ->assertSessionHasErrors(['session_id', 'campus_id']);
+it('requires a session', function () {
+    postStructure($this->world, ['session_id' => null])
+        ->assertSessionHasErrors('session_id');
+});
+
+/**
+ * The campus is never a client-supplied field - it's always derived from
+ * whichever campus the creator is currently scoped to, so a client-sent
+ * `campus_id` (even null, even someone else's campus) is silently replaced
+ * rather than validated.
+ */
+it('ignores a client-supplied campus_id and derives it from the actor\'s scope', function () {
+    test()->withSession(['viewing_campus_id' => $this->world->campus->id]);
+
+    postStructure($this->world, ['campus_id' => null])
+        ->assertRedirect(route('fee.structures.index'));
+
+    expect(FeeStructure::where('title', 'Class 5 Standard')->first()->campus_id)
+        ->toBe($this->world->campus->id);
 });
 
 it('rejects a status outside the allowed set', function () {
