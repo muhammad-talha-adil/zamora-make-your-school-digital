@@ -133,6 +133,7 @@ const toggleActive = (menu: any) => {
         .confirm(
             `Are you sure you want to ${action} "${menu.title}"?`,
             `${action.charAt(0).toUpperCase() + action.slice(1)} Menu`,
+            `Yes, ${action} it!`,
         )
         .then((result) => {
             if (result.isConfirmed) {
