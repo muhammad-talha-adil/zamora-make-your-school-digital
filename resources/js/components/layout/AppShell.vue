@@ -206,21 +206,21 @@
           >{{ schoolName }}</h1>
 
           <!-- Right Side: User Menu -->
-          <div class="flex shrink-0 items-center gap-2 sm:gap-4">
+          <div class="flex shrink-0 items-center gap-3 sm:gap-5">
             <SearchableSelect
               v-if="campusSwitcher && campusSwitcher.campuses.length > 0"
               :model-value="campusSwitcher.activeCampusId"
               :options="campusSwitcherOptions"
               placeholder="Select Campus"
-              class="inline-block w-28 sm:w-44"
+              class="inline-block w-28 shrink-0 sm:w-44"
               @update:model-value="switchCampus"
             />
-            <span class="hidden lg:inline text-sm truncate max-w-56" :style="{ color: 'var(--header-text)' }">Welcome, {{ pageProps.auth?.user?.name || 'User' }}</span>
+            <span class="hidden shrink-0 truncate text-sm lg:inline lg:max-w-40 xl:max-w-56" :style="{ color: 'var(--header-text)' }">Welcome, {{ pageProps.auth?.user?.name || 'User' }}</span>
             <Link
               href="/logout"
               method="post"
               as="button"
-              class="hidden sm:inline-flex px-3 sm:px-4 py-2 text-sm font-medium rounded-md transition-colors"
+              class="hidden shrink-0 rounded-md px-3 py-2 text-sm font-medium transition-colors sm:inline-flex sm:px-4"
               :style="{ backgroundColor: 'var(--sidebar-text)', color: 'var(--sidebar-bg)' }"
             >
               Logout
