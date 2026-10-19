@@ -32,8 +32,10 @@ const BRAND_ICON_SLUGS: Record<string, string> = {
     facebook: 'facebook',
     instagram: 'instagram',
     threads: 'threads',
+    // Only the unambiguous "twitter" name maps to the X brand mark - a bare
+    // "x" is used app-wide as the generic Lucide close/clear cross (dialogs,
+    // SearchableSelect's clear button, etc.) and must keep resolving there.
     twitter: 'x',
-    x: 'x',
     youtube: 'youtube',
     tiktok: 'tiktok',
     whatsapp: 'whatsapp',

@@ -188,7 +188,7 @@
     <div class="flex-1 min-w-0 flex flex-col">
       <!-- Header -->
       <header class="shadow-sm border-b" :style="{ backgroundColor: 'var(--header-bg)', color: 'var(--header-text)', borderColor: 'var(--sidebar-border)' }">
-        <div class="flex items-center gap-2 sm:gap-4 px-3 sm:px-4 py-3">
+        <div class="flex items-center gap-2 overflow-hidden px-3 py-3 sm:gap-4 sm:px-4">
           <!-- Hamburger Menu -->
           <button
             @click="toggleSidebar"
@@ -201,7 +201,7 @@
 
           <!-- Title -->
           <h1
-            class="min-w-0 flex-1 truncate text-base sm:text-lg md:text-xl font-semibold"
+            class="min-w-0 flex-1 basis-0 truncate text-base sm:text-lg md:text-xl font-semibold"
             :style="{ color: 'var(--header-text)' }"
           >{{ schoolName }}</h1>
 
