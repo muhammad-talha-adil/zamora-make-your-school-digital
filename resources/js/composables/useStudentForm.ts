@@ -47,6 +47,8 @@ export interface StudentData {
     student_status_id: number;
     admission_date: string;
     description: string;
+    previous_dues: string;
+    previous_dues_description: string;
     image?: string | null;
     user?: {
         name: string;
@@ -178,6 +180,8 @@ export function useStudentForm(
         student_status_id: activeStatusId,
         admission_date: todayDate,
         description: '',
+        previous_dues: '',
+        previous_dues_description: '',
         image: null as File | null,
         monthly_fee: 0,
         annual_fee: 0,

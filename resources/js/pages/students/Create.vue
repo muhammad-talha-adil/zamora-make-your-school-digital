@@ -304,6 +304,34 @@
                             ></textarea>
                         </div>
 
+                        <!-- Previous Dues -->
+                        <div class="space-y-2">
+                            <Label for="previous_dues">Previous Dues</Label>
+                            <Input
+                                id="previous_dues"
+                                v-model="form.previous_dues"
+                                type="number"
+                                min="0"
+                                step="0.01"
+                                placeholder="e.g. 15000"
+                            />
+                            <p class="text-xs text-muted-foreground">
+                                Any dues carried forward from before this admission (optional). Added to the student's first fee voucher.
+                            </p>
+                            <InputError :message="errors.previous_dues" />
+                        </div>
+
+                        <!-- Previous Dues Description -->
+                        <div class="space-y-2">
+                            <Label for="previous_dues_description">Previous Dues Description</Label>
+                            <Input
+                                id="previous_dues_description"
+                                v-model="form.previous_dues_description"
+                                placeholder="e.g. Outstanding dues from previous school"
+                            />
+                            <InputError :message="errors.previous_dues_description" />
+                        </div>
+
                         <!-- Student Image Upload -->
                         <div class="col-span-full space-y-2">
                             <Label for="image">Student Photo</Label>

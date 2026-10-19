@@ -254,6 +254,21 @@ class StoreStudentRequest extends FormRequest
                 'max:2048',
             ],
 
+            // Carried-forward dues from before this admission (e.g. a student
+            // who studied elsewhere/privately for years) — optional, charged
+            // onto the student's first fee voucher once enrolled.
+            'previous_dues' => [
+                'nullable',
+                'numeric',
+                'min:0',
+                'decimal:0,2',
+            ],
+            'previous_dues_description' => [
+                'nullable',
+                'string',
+                'max:500',
+            ],
+
             // Admission fee info
             'admission_fee' => [
                 'nullable',
@@ -612,6 +627,8 @@ class StoreStudentRequest extends FormRequest
             'discounts.*.value_type' => 'discount value type',
             'manual_discount_percentage' => 'discount percentage',
             'manual_discount_reason' => 'discount reason',
+            'previous_dues' => 'previous dues',
+            'previous_dues_description' => 'previous dues description',
             'admission_fee' => 'admission fee',
             'payment_status' => 'payment status',
             'fee_notes' => 'fee notes',

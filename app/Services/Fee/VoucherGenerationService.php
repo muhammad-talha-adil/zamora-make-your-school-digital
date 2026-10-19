@@ -197,6 +197,8 @@ class VoucherGenerationService
             $this->attachOpenTransportCharges($voucher, $enrollment);
         }
 
+        $this->attachOpenPreviousDuesCharges($voucher, $enrollment);
+
         $this->attachLateArrivalFines($voucher, $enrollment, $monthNumber, $year);
 
         // Include previous unpaid balance if requested
@@ -1226,6 +1228,41 @@ class VoucherGenerationService
                 'net_amount' => (float) $charge->net_amount,
                 'source_type' => VoucherItemSource::MANUAL,
                 'source_module' => 'transport',
+                'reference_id' => $charge->source_id,
+                'reference_item_id' => $charge->source_item_id,
+            ]);
+
+            $charge->update([
+                'billing_status' => 'billed',
+                'voucher_id' => $voucher->id,
+                'voucher_item_id' => $item->id,
+            ]);
+        }
+    }
+
+    protected function attachOpenPreviousDuesCharges(FeeVoucher $voucher, StudentEnrollmentRecord $enrollment): void
+    {
+        $previousDuesCharges = $enrollment->student
+            ->accountCharges()
+            ->where('source_module', 'admission')
+            ->where('charge_category', 'previous_dues')
+            ->whereIn('status', ['open', 'partial'])
+            ->where('billing_status', 'unbilled')
+            ->whereNull('voucher_id')
+            ->orderBy('charge_date')
+            ->get();
+
+        foreach ($previousDuesCharges as $charge) {
+            $item = $voucher->items()->create([
+                'student_account_charge_id' => $charge->id,
+                'fee_head_id' => null,
+                'description' => $charge->description ?: $charge->title,
+                'amount' => (float) $charge->amount,
+                'discount_amount' => (float) $charge->discount_amount,
+                'fine_amount' => (float) $charge->fine_amount,
+                'net_amount' => (float) $charge->net_amount,
+                'source_type' => VoucherItemSource::MANUAL,
+                'source_module' => 'admission',
                 'reference_id' => $charge->source_id,
                 'reference_item_id' => $charge->source_item_id,
             ]);

@@ -17,6 +17,7 @@ use App\Models\StudentEnrollmentRecord;
 use App\Models\StudentGuardian;
 use App\Models\StudentStatus;
 use App\Models\User;
+use App\Services\Finance\StudentBillingService;
 use App\Services\GuardianService;
 use App\Services\Student\StudentEnrollmentService;
 use App\Services\StudentUserService;
@@ -61,7 +62,8 @@ class StudentRepository
     public function __construct(
         protected StudentUserService $studentUserService,
         protected GuardianService $guardianService,
-        protected StudentEnrollmentService $enrollments
+        protected StudentEnrollmentService $enrollments,
+        protected StudentBillingService $billing
     ) {}
 
     /**
@@ -411,6 +413,17 @@ class StudentRepository
             // which left the same figure in two places with nothing saying
             // which one billing should trust. That table is now reserved for
             // deliberate mid-session overrides.
+
+            // Carry forward dues from before this admission (e.g. a student
+            // who studied elsewhere/privately for years), so they land on
+            // the student's first fee voucher alongside the regular fee.
+            if (! empty($data['previous_dues'])) {
+                $this->billing->createPreviousDuesCharge(
+                    $enrollment,
+                    (float) $data['previous_dues'],
+                    $data['previous_dues_description'] ?? null
+                );
+            }
 
             // 8. Create student discounts if fee_mode is 'discount' or 'manual'
             if (($data['fee_mode'] ?? null) === 'discount' && ! empty($data['discounts'])) {

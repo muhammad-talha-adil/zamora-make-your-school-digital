@@ -111,6 +111,33 @@ class StudentBillingService
         return $charge;
     }
 
+    public function createPreviousDuesCharge(StudentEnrollmentRecord $enrollment, float $amount, ?string $description): StudentAccountCharge
+    {
+        return StudentAccountCharge::create([
+            'student_id' => $enrollment->student_id,
+            'student_enrollment_record_id' => $enrollment->id,
+            'campus_id' => $enrollment->campus_id,
+            'session_id' => $enrollment->session_id,
+            'class_id' => $enrollment->class_id,
+            'section_id' => $enrollment->section_id,
+            'source_module' => 'admission',
+            'source_type' => 'previous_dues',
+            'charge_category' => 'previous_dues',
+            'title' => 'Previous Dues',
+            'description' => $description,
+            'charge_date' => $enrollment->admission_date ?? now()->toDateString(),
+            'amount' => $amount,
+            'discount_amount' => 0,
+            'fine_amount' => 0,
+            'net_amount' => $amount,
+            'status' => 'open',
+            'billing_status' => 'unbilled',
+            'is_recurring' => false,
+            'created_by' => auth()->id(),
+            'approved_by' => auth()->id(),
+        ]);
+    }
+
     public function createTransportCharge(TransportStudentAssignment $assignment, int $monthId, int $year, ?string $dueDate = null): StudentAccountCharge
     {
         $assignment->loadMissing(['student', 'enrollmentRecord', 'route', 'stop']);
