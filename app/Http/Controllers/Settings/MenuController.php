@@ -84,7 +84,7 @@ class MenuController extends Controller
 
     public function create(Request $request): Response
     {
-        $this->authorize('school.menu.manage');
+        $this->assertDeveloper();
 
         $parentMenus = $this->getParentMenuOptions();
 
@@ -95,7 +95,7 @@ class MenuController extends Controller
 
     public function store(StoreMenuRequest $request): RedirectResponse
     {
-        $this->authorize('school.menu.manage');
+        $this->assertDeveloper();
 
         $validated = $request->validated();
 
@@ -115,14 +115,18 @@ class MenuController extends Controller
             order: $validated['order'],
         );
 
-        Menu::create($validated);
+        $menu = Menu::create($validated);
+
+        if ($menu->is_active) {
+            $this->activateAncestors($menu);
+        }
 
         return redirect()->route('menus.index')->with('success', 'Menu created successfully.');
     }
 
     public function show($id): Response
     {
-        $this->authorize('school.menu.manage');
+        $this->assertDeveloper();
 
         $menu = Menu::with(['parent', 'children'])->findOrFail($id);
 
@@ -133,7 +137,7 @@ class MenuController extends Controller
 
     public function edit($id): Response
     {
-        $this->authorize('school.menu.manage');
+        $this->assertDeveloper();
 
         $menu = Menu::findOrFail($id);
         $parentMenus = $this->getParentMenuOptions()
@@ -148,7 +152,7 @@ class MenuController extends Controller
 
     public function update(UpdateMenuRequest $request, $id): RedirectResponse
     {
-        $this->authorize('school.menu.manage');
+        $this->assertDeveloper();
 
         $menu = Menu::findOrFail($id);
 
@@ -158,6 +162,10 @@ class MenuController extends Controller
 
         $menu->update($validated);
 
+        if ($menu->is_active) {
+            $this->activateAncestors($menu);
+        }
+
         return redirect()->route('menus.index')->with('success', 'Menu updated successfully.');
     }
 
@@ -166,7 +174,7 @@ class MenuController extends Controller
      */
     public function restore(int $id): RedirectResponse
     {
-        $this->authorize('school.menu.manage');
+        $this->assertDeveloper();
 
         $menu = Menu::onlyTrashed()->findOrFail($id);
         $menu->restore();
@@ -182,7 +190,7 @@ class MenuController extends Controller
      */
     public function forceDelete(int $id): RedirectResponse
     {
-        $this->authorize('school.menu.manage');
+        $this->assertDeveloper();
 
         $menu = Menu::onlyTrashed()->findOrFail($id);
         $menu->forceDelete();
@@ -195,7 +203,7 @@ class MenuController extends Controller
      */
     public function destroy($id): RedirectResponse
     {
-        $this->authorize('school.menu.manage');
+        $this->assertDeveloper();
 
         $menu = Menu::findOrFail($id);
 
@@ -214,7 +222,7 @@ class MenuController extends Controller
      */
     public function inactivate($id): RedirectResponse
     {
-        $this->authorize('school.menu.manage');
+        $this->assertDeveloper();
 
         $menu = Menu::findOrFail($id);
         $menu->update(['is_active' => false]);
@@ -224,12 +232,46 @@ class MenuController extends Controller
 
     public function activate($id): RedirectResponse
     {
-        $this->authorize('school.menu.manage');
+        $this->assertDeveloper();
 
         $menu = Menu::findOrFail($id);
         $menu->update(['is_active' => true]);
+        $this->activateAncestors($menu);
 
         return redirect()->route('menus.index')->with('success', 'Menu activated successfully.');
+    }
+
+    /**
+     * Sidebar menu show/hide is developer-only - it is a system-level
+     * control over navigation structure, not a school-management ability,
+     * so it is kept out of `school.menu.manage` (which owner also holds).
+     */
+    private function assertDeveloper(): void
+    {
+        abort_unless(auth()->user()?->isDeveloper(), 403, 'Only the developer can manage sidebar menus.');
+    }
+
+    /**
+     * Turning a sub-menu on is pointless if its parent is hidden - walk the
+     * `parent_id` chain and switch every inactive ancestor back on too.
+     */
+    private function activateAncestors(Menu $menu): void
+    {
+        $parentId = $menu->parent_id;
+
+        while ($parentId !== null) {
+            $parent = Menu::find($parentId);
+
+            if (! $parent) {
+                break;
+            }
+
+            if (! $parent->is_active) {
+                $parent->update(['is_active' => true]);
+            }
+
+            $parentId = $parent->parent_id;
+        }
     }
 
     private function transformMenuPaginator(LengthAwarePaginator $menus): LengthAwarePaginator
