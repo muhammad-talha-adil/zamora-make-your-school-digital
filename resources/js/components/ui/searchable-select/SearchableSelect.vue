@@ -24,6 +24,13 @@ interface Props {
     /** Single mode: string | number | null. Multiple mode (`multiple: true`): an array of values. */
     modelValue?: string | number | null | (string | number)[];
     options: SearchableSelectOption[];
+    /**
+     * Applied to the actual focusable trigger, not the component root, so a
+     * `<Label for="...">` pointing at it focuses/opens the real control
+     * instead of landing on nothing (the root renders no DOM node of its
+     * own without this - the id would otherwise fall through unattached).
+     */
+    id?: string;
     placeholder?: string;
     searchPlaceholder?: string;
     emptyText?: string;
@@ -33,6 +40,8 @@ interface Props {
     /** Picks more than one option — modelValue becomes an array, the trigger shows a count/list instead of one label. */
     multiple?: boolean;
 }
+
+defineOptions({ inheritAttrs: false });
 
 const props = withDefaults(defineProps<Props>(), {
     modelValue: null,
@@ -129,7 +138,7 @@ const isSelected = (optionValue: string | number): boolean =>
             class="flex h-10 items-center justify-between gap-2 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
             :class="props.class"
         >
-            <ComboboxTrigger class="flex min-w-0 flex-1 items-center overflow-hidden text-left">
+            <ComboboxTrigger :id="id" class="flex min-w-0 flex-1 items-center overflow-hidden text-left">
                 <span
                     class="truncate"
                     :class="selectedOptions.length ? 'text-foreground' : 'text-muted-foreground'"
@@ -201,7 +210,7 @@ const isSelected = (optionValue: string | number): boolean =>
             class="flex h-10 items-center justify-between gap-2 rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-within:ring-2 focus-within:ring-ring focus-within:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
             :class="props.class"
         >
-            <ComboboxTrigger class="flex min-w-0 flex-1 items-center overflow-hidden text-left">
+            <ComboboxTrigger :id="id" class="flex min-w-0 flex-1 items-center overflow-hidden text-left">
                 <span
                     class="truncate"
                     :class="selectedOption ? 'text-foreground' : 'text-muted-foreground'"
