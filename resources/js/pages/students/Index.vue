@@ -14,10 +14,6 @@
                     </p>
                 </div>
                 <div class="flex gap-2">
-                    <Button variant="outline" @click="openDocumentTypesModal">
-                        <Icon icon="settings" class="mr-1 h-4 w-4" />
-                        Document Types
-                    </Button>
                     <Button @click="router.visit(route('students.create'))">
                         <Icon icon="plus" class="mr-1" />
                         New Admission
@@ -27,18 +23,7 @@
 
             <!-- Filters -->
             <FilterCard>
-                <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 md:gap-3" role="search" aria-label="Student filters">
-                    <div>
-                        <Label for="filter-campus" class="sr-only">Filter by Campus</Label>
-                        <SearchableSelect
-                            id="filter-campus"
-                            v-model="cascadeCampusId"
-                            :options="campusOptions"
-                            :disabled="isCampusLocked"
-                            placeholder="All Campuses"
-                            clearable
-                        />
-                    </div>
+                <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-2 md:gap-3" role="search" aria-label="Student filters">
                     <div>
                         <Label for="filter-class" class="sr-only">Filter by Class</Label>
                         <SearchableSelect
@@ -340,43 +325,6 @@
             @closed="handleStatusModalClosed"
         />
 
-        <!-- Document Types Modal -->
-        <Dialog v-model:open="showDocumentTypesModal">
-            <DialogContent class="sm:max-w-[520px]">
-                <DialogHeader>
-                    <DialogTitle>Document Types</DialogTitle>
-                </DialogHeader>
-
-                <form class="space-y-4" @submit.prevent="submitDocumentType">
-                    <div class="space-y-2">
-                        <Label for="student-document-type-name">Name <span class="text-destructive">*</span></Label>
-                        <Input
-                            id="student-document-type-name"
-                            v-model="documentTypeForm.name"
-                            placeholder="e.g. Birth Certificate"
-                            :class="documentTypeErrors.name ? 'border-destructive' : ''"
-                        />
-                        <p v-if="documentTypeErrors.name" class="text-xs text-destructive">{{ documentTypeErrors.name }}</p>
-                    </div>
-                    <label class="flex items-center gap-2 text-sm text-muted-foreground">
-                        <input v-model="documentTypeForm.is_required" type="checkbox" class="h-4 w-4 rounded border-border text-primary" />
-                        Required at admission
-                    </label>
-                    <DialogFooter>
-                        <Button v-if="editingDocumentType" type="button" variant="outline" @click="resetDocumentTypeForm">Cancel</Button>
-                        <Button type="submit" :disabled="!documentTypeForm.name.trim()">{{ editingDocumentType ? 'Save Changes' : 'Add' }}</Button>
-                    </DialogFooter>
-                </form>
-
-                <ul class="max-h-56 space-y-1 overflow-y-auto border-t border-border pt-3 text-sm">
-                    <li v-for="type in documentTypes" :key="type.id" class="flex items-center justify-between rounded border border-border px-2 py-1.5">
-                        <span>{{ type.name }}<span v-if="type.is_required" class="ml-1 text-xs text-muted-foreground">(required)</span></span>
-                        <button type="button" class="text-xs text-primary hover:underline" @click="editDocumentType(type)">Edit</button>
-                    </li>
-                    <li v-if="documentTypes.length === 0" class="py-2 text-center text-muted-foreground">No document types yet.</li>
-                </ul>
-            </DialogContent>
-        </Dialog>
     </AppLayout>
 </template>
 
@@ -493,69 +441,6 @@ interface Props {
 }
 
 const props = defineProps<Props>();
-
-/* ----------------------------------------------------- document types */
-
-interface StudentDocumentType {
-    id: number;
-    name: string;
-    is_required: boolean;
-    is_active: boolean;
-}
-
-const documentTypes = ref<StudentDocumentType[]>([]);
-const showDocumentTypesModal = ref(false);
-const editingDocumentType = ref<StudentDocumentType | null>(null);
-const documentTypeForm = reactive({ name: '', is_required: false });
-const documentTypeErrors = ref<Record<string, string>>({});
-
-const fetchDocumentTypes = async () => {
-    const response = await axios.get(route('students.document-types.index'));
-    documentTypes.value = response.data.data;
-};
-
-const openDocumentTypesModal = () => {
-    fetchDocumentTypes();
-    showDocumentTypesModal.value = true;
-};
-
-const resetDocumentTypeForm = () => {
-    editingDocumentType.value = null;
-    documentTypeForm.name = '';
-    documentTypeForm.is_required = false;
-    documentTypeErrors.value = {};
-};
-
-const editDocumentType = (type: StudentDocumentType) => {
-    editingDocumentType.value = type;
-    documentTypeForm.name = type.name;
-    documentTypeForm.is_required = type.is_required;
-    documentTypeErrors.value = {};
-};
-
-const submitDocumentType = async () => {
-    documentTypeErrors.value = {};
-    try {
-        if (editingDocumentType.value) {
-            await axios.put(route('students.document-types.update', editingDocumentType.value.id), documentTypeForm);
-            alert.success('Document type updated.');
-        } else {
-            await axios.post(route('students.document-types.store'), documentTypeForm);
-            alert.success('Document type created.');
-        }
-        resetDocumentTypeForm();
-        await fetchDocumentTypes();
-    } catch (err: unknown) {
-        const response = (err as { response?: { data?: { errors?: Record<string, string[]>; message?: string } } }).response;
-        if (response?.data?.errors) {
-            documentTypeErrors.value = Object.fromEntries(
-                Object.entries(response.data.errors).map(([key, value]) => [key, value[0]])
-            );
-        } else {
-            alert.error(response?.data?.message || 'Failed to save document type.');
-        }
-    }
-};
 
 const breadcrumbItems: BreadcrumbItem[] = [
     {

@@ -59,14 +59,14 @@ class StoreStudentRequest extends FormRequest
             'class_id.exists' => 'The selected class is invalid.',
             'section_id.exists' => 'The selected section is invalid.',
             'guardian_id.exists' => 'The selected guardian is invalid.',
-            'father_name.required' => 'The father/guardian name is required.',
-            'father_name.max' => 'The father/guardian name may not be greater than 255 characters.',
-            'father_email.email' => 'The father email must be a valid email address.',
-            'father_email.max' => 'The father email may not be greater than 255 characters.',
-            'father_phone.max' => 'The father phone may not be greater than 20 characters.',
-            'father_cnic.max' => 'The father CNIC may not be greater than 15 characters.',
-            'father_cnic.regex' => 'The father CNIC format is invalid.',
-            'father_occupation.max' => 'The father occupation may not be greater than 255 characters.',
+            'father_name.required' => 'The guardian name is required.',
+            'father_name.max' => 'The guardian name may not be greater than 255 characters.',
+            'father_email.email' => 'The guardian email must be a valid email address.',
+            'father_email.max' => 'The guardian email may not be greater than 255 characters.',
+            'father_phone.max' => 'The guardian phone may not be greater than 20 characters.',
+            'father_cnic.max' => 'The guardian CNIC may not be greater than 15 characters.',
+            'father_cnic.regex' => 'The guardian CNIC format is invalid.',
+            'father_occupation.max' => 'The guardian occupation may not be greater than 255 characters.',
             'father_relation_id.required' => 'Please select the relationship to father/guardian.',
             'father_relation_id.exists' => 'The selected relationship is invalid.',
             'other_name.max' => 'The other guardian name may not be greater than 255 characters.',
@@ -492,7 +492,7 @@ class StoreStudentRequest extends FormRequest
             if ($fatherPhone && $otherPhone && $fatherPhone === $otherPhone) {
                 $validator->errors()->add(
                     'other_phone',
-                    "Other guardian's phone number cannot be the same as Father's phone number."
+                    "Other guardian's phone number cannot be the same as the primary guardian's phone number."
                 );
             }
 
@@ -641,13 +641,13 @@ class StoreStudentRequest extends FormRequest
             'section_id' => 'section',
             'roll_number' => 'roll number',
             'guardian_id' => 'guardian',
-            'father_name' => "father's/guardian's name",
-            'father_email' => "father's email",
-            'father_phone' => "father's phone",
-            'father_cnic' => "father's CNIC",
-            'father_occupation' => "father's occupation",
-            'father_address' => "father's address",
-            'father_relation_id' => 'relationship to father/guardian',
+            'father_name' => "guardian's name",
+            'father_email' => "guardian's email",
+            'father_phone' => "guardian's phone",
+            'father_cnic' => "guardian's CNIC",
+            'father_occupation' => "guardian's occupation",
+            'father_address' => "guardian's address",
+            'father_relation_id' => "guardian's relation",
             'other_name' => "other guardian's name",
             'other_email' => "other guardian's email",
             'other_phone' => "other guardian's phone",

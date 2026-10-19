@@ -304,22 +304,22 @@
                     </div>
                 </div>
 
-                <!-- Father Information Card -->
+                <!-- Primary Guardian Information -->
                 <div class="bg-card rounded-lg border border-border p-6">
                     <h2 class="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
                         <Icon icon="user-check" class="h-5 w-5 text-primary" />
-                        Father Information (Primary Guardian)
+                        Primary Guardian Information
                     </h2>
 
                     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                         <!-- Father Name -->
                         <div class="space-y-2">
-                            <Label for="father_name">Father's Name <span class="text-destructive">*</span></Label>
+                            <Label for="father_name">Name <span class="text-destructive">*</span></Label>
                             <Input
                                 id="father_name"
                                 v-model="form.father_name"
                                 type="text"
-                                placeholder="Enter father's name"
+                                placeholder="Enter guardian's name"
                                 :class="{ 'border-destructive': errors.father_name }"
                                 required
                             />
@@ -328,7 +328,7 @@
 
                         <!-- Father Phone -->
                         <div class="space-y-2 relative">
-                            <Label for="father_phone">Father's Phone <span class="text-destructive">*</span></Label>
+                            <Label for="father_phone">Phone <span class="text-destructive">*</span></Label>
                             <div class="relative">
                                 <Input
                                     id="father_phone"
@@ -354,7 +354,7 @@
 
                         <!-- Father Email -->
                         <div class="space-y-2">
-                            <Label for="father_email">Father's Email</Label>
+                            <Label for="father_email">Email</Label>
                             <Input
                                 id="father_email"
                                 v-model="form.father_email"
@@ -367,7 +367,7 @@
 
                         <!-- Father CNIC -->
                         <div class="space-y-2">
-                            <Label for="father_cnic">Father's CNIC</Label>
+                            <Label for="father_cnic">CNIC</Label>
                             <Input
                                 id="father_cnic"
                                 v-model="form.father_cnic"
@@ -383,7 +383,7 @@
 
                         <!-- Father Occupation -->
                         <div class="space-y-2">
-                            <Label for="father_occupation">Father's Occupation</Label>
+                            <Label for="father_occupation">Occupation</Label>
                             <Input
                                 id="father_occupation"
                                 v-model="form.father_occupation"
@@ -400,7 +400,7 @@
 
                         <!-- Father Address -->
                         <div class="space-y-2">
-                            <Label for="father_address">Father's Address</Label>
+                            <Label for="father_address">Address</Label>
                             <Input
                                 id="father_address"
                                 v-model="form.father_address"
@@ -415,14 +415,14 @@
                             <InputError :message="errors.father_address" />
                         </div>
 
-                        <!-- Father Relation -->
+                        <!-- Primary Guardian Relation -->
                         <div class="space-y-2">
                             <Label for="father_relation_id">Relation <span class="text-destructive">*</span></Label>
                             <SearchableSelect
                                 id="father_relation_id"
                                 v-model="form.father_relation_id"
-                                :options="fatherRelationOptions"
-                                disabled
+                                :options="relationOptions"
+                                placeholder="Select Relation"
                             />
                             <InputError :message="errors.father_relation_id" />
                         </div>
@@ -674,7 +674,7 @@ const sectionOptions = computed(() => filteredSections.value.map((section) => ({
 const otherRelationOptions = computed(() => otherRelations.value.map((relation) => ({ value: relation.id, label: relation.name })));
 const genderOptions = computed(() => props.genders.map((gender) => ({ value: gender.id, label: gender.name })));
 const studentStatusOptions = computed(() => props.studentStatuses.map((status) => ({ value: status.id, label: status.name })));
-const fatherRelationOptions = computed(() => [{ value: fatherRelationId.value, label: 'Father' }]);
+const relationOptions = computed(() => props.relations.map((relation) => ({ value: relation.id, label: relation.name })));
 
 const { isValid } = useFormValidity(form, [
     'name',
@@ -841,10 +841,10 @@ const submitForm = () => {
         validationErrors.student_status_id = 'Status is required';
     }
     if (!form.value.father_name?.trim()) {
-        validationErrors.father_name = "Father's name is required";
+        validationErrors.father_name = "Guardian's name is required";
     }
     if (!form.value.father_phone?.trim()) {
-        validationErrors.father_phone = "Father's phone is required";
+        validationErrors.father_phone = "Guardian's phone is required";
     } else if (!/^\d{4}-\d{7}$/.test(form.value.father_phone)) {
         validationErrors.father_phone = 'Invalid phone format. Use 0300-1234567';
     }
@@ -907,7 +907,7 @@ const submitForm = () => {
         formData.set('section_id', String(parseInt(form.value.section_id.toString()) || 0));
     }
     formData.set('student_status_id', String(parseInt(form.value.student_status_id.toString()) || 0));
-    formData.set('father_relation_id', String(fatherRelationId.value));
+    formData.set('father_relation_id', String(parseInt(form.value.father_relation_id.toString()) || fatherRelationId.value));
 
     // Handle other guardian data (only if checkbox is checked and name provided)
     if (includeOtherGuardian.value && form.value.other_name && form.value.other_name.trim()) {

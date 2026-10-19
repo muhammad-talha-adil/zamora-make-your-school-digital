@@ -19,12 +19,18 @@ beforeEach(function () {
     $this->actingAs($this->world->actor);
 });
 
-it('admits a student and redirects to the list', function () {
+it('admits a student and stays on the form to let the clerk file documents', function () {
     $payload = $this->world->payload(['admission_no' => 'ADM-1001']);
 
     $response = $this->post(route('students.store'), $payload);
 
-    $response->assertRedirect(route('students.index'));
+    // Re-renders the same admission page (not a redirect) so the newly
+    // created student's id is available for the optional "file documents"
+    // step, instead of sending the clerk straight to the list.
+    $response->assertOk();
+    $response->assertInertia(fn ($page) => $page
+        ->component('students/Create')
+        ->where('createdStudent.id', Student::where('admission_no', 'ADM-1001')->firstOrFail()->id));
     $response->assertSessionHas('success');
     $response->assertSessionHasNoErrors();
 

@@ -571,7 +571,7 @@ class UpdateStudentRequest extends FormRequest
         if ($fatherPhone && $otherPhone && $fatherPhone === $otherPhone) {
             $validator->errors()->add(
                 'other_phone',
-                "Other guardian's phone number cannot be the same as Father's phone number."
+                "Other guardian's phone number cannot be the same as the primary guardian's phone number."
             );
         }
 
@@ -673,13 +673,13 @@ class UpdateStudentRequest extends FormRequest
             'description' => 'description',
             'admission_date' => 'admission date',
             'image' => 'student photo',
-            'father_name' => "father's/guardian's name",
-            'father_email' => "father's email",
-            'father_phone' => "father's phone",
-            'father_cnic' => "father's CNIC",
-            'father_occupation' => "father's occupation",
-            'father_address' => "father's address",
-            'father_relation_id' => 'relationship to father/guardian',
+            'father_name' => "guardian's name",
+            'father_email' => "guardian's email",
+            'father_phone' => "guardian's phone",
+            'father_cnic' => "guardian's CNIC",
+            'father_occupation' => "guardian's occupation",
+            'father_address' => "guardian's address",
+            'father_relation_id' => "guardian's relation",
             'other_name' => "other guardian's name",
             'other_email' => "other guardian's email",
             'other_phone' => "other guardian's phone",

@@ -45,7 +45,7 @@
                         <p class="text-sm text-primary">
                             A guardian with this phone number already exists ({{
                                 siblingMatch.name
-                            }}). Father information has been auto-populated from
+                            }}). Guardian information has been auto-populated from
                             existing record.
                         </p>
                     </div>
@@ -59,7 +59,71 @@
                 </div>
             </div>
 
+            <!-- Step 2: Admission done - file documents (optional) before leaving -->
+            <div v-if="props.createdStudent" class="space-y-6">
+                <div class="rounded-lg border border-success/40 bg-success/10 p-4">
+                    <div class="flex items-center gap-3">
+                        <Icon icon="check-circle" class="h-5 w-5 text-success" />
+                        <p class="font-medium text-success">
+                            {{ props.createdStudent.name || 'Student' }} admitted successfully.
+                        </p>
+                    </div>
+                </div>
+
+                <div class="rounded-lg border border-border bg-card p-6">
+                    <div class="mb-4 flex items-center justify-between">
+                        <h2 class="flex items-center gap-2 text-lg font-semibold text-foreground">
+                            <Icon icon="file-text" class="h-5 w-5 text-primary" />
+                            Documents (Optional)
+                        </h2>
+                        <button type="button" class="text-xs text-primary hover:underline" @click="openDocumentTypesModal">
+                            Manage Document Types
+                        </button>
+                    </div>
+
+                    <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-4">
+                        <div class="space-y-2">
+                            <Label>Document Type</Label>
+                            <SearchableSelect
+                                v-model="documentForm.student_document_type_id"
+                                :options="documentTypeOptions"
+                                placeholder="Select type"
+                                clearable
+                            />
+                        </div>
+                        <div class="space-y-2">
+                            <Label for="document_file">File</Label>
+                            <input id="document_file" type="file" accept=".pdf,.jpg,.jpeg,.png" class="w-full text-sm" @change="onDocumentFile" />
+                        </div>
+                        <div class="space-y-2">
+                            <Label for="document_issue_date">Issue Date</Label>
+                            <Input id="document_issue_date" v-model="documentForm.issue_date" type="date" />
+                        </div>
+                        <div class="space-y-2">
+                            <Label for="document_expiry_date">Expiry Date</Label>
+                            <Input id="document_expiry_date" v-model="documentForm.expiry_date" type="date" />
+                        </div>
+                    </div>
+                    <Button class="mt-4" size="sm" :disabled="!documentForm.student_document_type_id" @click="addDocument">
+                        File Document
+                    </Button>
+
+                    <ul v-if="filedDocuments.length > 0" class="mt-4 space-y-1 text-sm">
+                        <li v-for="doc in filedDocuments" :key="doc.id" class="flex items-center justify-between rounded border border-border px-3 py-2">
+                            <span>{{ doc.documentType?.name || 'Document' }}</span>
+                            <span class="text-xs text-muted-foreground">Filed</span>
+                        </li>
+                    </ul>
+                </div>
+
+                <div class="flex justify-end gap-2">
+                    <Button variant="outline" @click="router.visit(route('students.index'))">Skip</Button>
+                    <Button @click="router.visit(route('students.index'))">Finish</Button>
+                </div>
+            </div>
+
             <form
+                v-else
                 @submit.prevent="submitForm"
                 class="space-y-6"
                 enctype="multipart/form-data"
@@ -186,21 +250,6 @@
                             />
                             <p class="text-xs text-muted-foreground"></p>
                             <InputError :message="errors.b_form" />
-                        </div>
-
-                        <!-- Campus -->
-                        <div v-if="!isCampusLocked" class="space-y-2">
-                            <Label for="campus_id"
-                                >Campus
-                                <span class="text-destructive">*</span></Label
-                            >
-                            <SearchableSelect
-                                id="campus_id"
-                                v-model="form.campus_id"
-                                :options="campusSelectOptions"
-                                placeholder="Select Campus"
-                            />
-                            <InputError :message="errors.campus_id" />
                         </div>
 
                         <!-- Session -->
@@ -408,14 +457,14 @@
                         <!-- Father Name -->
                         <div class="space-y-2">
                             <Label for="father_name"
-                                >Father's Name
+                                >Name
                                 <span class="text-destructive">*</span></Label
                             >
                             <Input
                                 id="father_name"
                                 v-model="form.father_name"
                                 type="text"
-                                placeholder="Enter father's name"
+                                placeholder="Enter guardian's name"
                                 :class="{
                                     'border-destructive': errors.father_name,
                                 }"
@@ -427,7 +476,7 @@
                         <!-- Father Phone with Auto-formatting -->
                         <div class="space-y-2 relative">
                             <Label for="father_phone"
-                                >Father's Phone
+                                >Phone
                                 <span class="text-destructive">*</span></Label
                             >
                             <div class="relative">
@@ -456,7 +505,7 @@
 
                         <!-- Father Email -->
                         <div class="space-y-2">
-                            <Label for="father_email">Father's Email</Label>
+                            <Label for="father_email">Email</Label>
                             <Input
                                 id="father_email"
                                 v-model="form.father_email"
@@ -471,7 +520,7 @@
 
                         <!-- Father CNIC with Auto-formatting -->
                         <div class="space-y-2">
-                            <Label for="father_cnic">Father's CNIC</Label>
+                            <Label for="father_cnic">CNIC</Label>
                             <Input
                                 id="father_cnic"
                                 v-model="form.father_cnic"
@@ -491,7 +540,7 @@
 
                         <!-- Father Occupation -->
                         <div class="space-y-2">
-                            <Label for="father_occupation">Father's Occupation</Label>
+                            <Label for="father_occupation">Occupation</Label>
                             <Input
                                 id="father_occupation"
                                 v-model="form.father_occupation"
@@ -508,7 +557,7 @@
 
                         <!-- Father Address -->
                         <div class="space-y-2">
-                            <Label for="father_address">Father's Address</Label>
+                            <Label for="father_address">Address</Label>
                             <Input
                                 id="father_address"
                                 v-model="form.father_address"
@@ -664,6 +713,44 @@
                 </div>
             </form>
         </div>
+
+        <!-- Document Types Modal -->
+        <Dialog v-model:open="showDocumentTypesModal">
+            <DialogContent class="sm:max-w-[520px]">
+                <DialogHeader>
+                    <DialogTitle>Document Types</DialogTitle>
+                </DialogHeader>
+
+                <form class="space-y-4" @submit.prevent="submitDocumentType">
+                    <div class="space-y-2">
+                        <Label for="student-document-type-name">Name <span class="text-destructive">*</span></Label>
+                        <Input
+                            id="student-document-type-name"
+                            v-model="documentTypeForm.name"
+                            placeholder="e.g. Birth Certificate"
+                            :class="documentTypeErrors.name ? 'border-destructive' : ''"
+                        />
+                        <p v-if="documentTypeErrors.name" class="text-xs text-destructive">{{ documentTypeErrors.name }}</p>
+                    </div>
+                    <label class="flex items-center gap-2 text-sm text-muted-foreground">
+                        <input v-model="documentTypeForm.is_required" type="checkbox" class="h-4 w-4 rounded border-border text-primary" />
+                        Required at admission
+                    </label>
+                    <DialogFooter>
+                        <Button v-if="editingDocumentType" type="button" variant="outline" @click="resetDocumentTypeForm">Cancel</Button>
+                        <Button type="submit" :disabled="!documentTypeForm.name.trim()">{{ editingDocumentType ? 'Save Changes' : 'Add' }}</Button>
+                    </DialogFooter>
+                </form>
+
+                <ul class="max-h-56 space-y-1 overflow-y-auto border-t border-border pt-3 text-sm">
+                    <li v-for="type in documentTypesList" :key="type.id" class="flex items-center justify-between rounded border border-border px-2 py-1.5">
+                        <span>{{ type.name }}<span v-if="type.is_required" class="ml-1 text-xs text-muted-foreground">(required)</span></span>
+                        <button type="button" class="text-xs text-primary hover:underline" @click="editDocumentType(type)">Edit</button>
+                    </li>
+                    <li v-if="documentTypesList.length === 0" class="py-2 text-center text-muted-foreground">No document types yet.</li>
+                </ul>
+            </DialogContent>
+        </Dialog>
     </AppLayout>
 </template>
 
@@ -677,7 +764,8 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import type { AppPageProps, BreadcrumbItem } from '@/types';
 import { Head, router, usePage } from '@inertiajs/vue3';
 import axios from 'axios';
-import { computed, onMounted, ref, watch } from 'vue';
+import { computed, onMounted, reactive, ref, watch } from 'vue';
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { route } from 'ziggy-js';
 import { useStudentForm } from '@/composables/useStudentForm';
 import { useCascadingAcademicSelect } from '@/composables/useCascadingAcademicSelect';
@@ -710,6 +798,14 @@ interface Props {
      * the query string. Empty for an ordinary admission.
      */
     prefill?: Record<string, string | number | undefined>;
+    documentTypes?: Array<{ id: number; name: string; is_required: boolean }>;
+    /**
+     * Present only on the response to a successful submit - the store()
+     * action re-renders this same page (instead of redirecting away) so the
+     * clerk can immediately file the new student's documents before moving
+     * on, which needs the freshly created student's id.
+     */
+    createdStudent?: { id: number; name: string | null } | null;
 }
 
 const props = defineProps<Props>();
@@ -784,11 +880,11 @@ const {
     todayDate: todayDate.value,
 });
 
-// Campus lock + session default/persist (#47/#64/#82/#99/#100). Class/section
-// cascading here stays on `useStudentForm`'s own `filteredSections` (it also
-// drives the fee-structure lookup), so only the campus-lock and session
-// pieces are sourced from the shared composable.
-const { isCampusLocked, lockedCampusId, selectedSessionId: cascadeSessionId } = useCascadingAcademicSelect({
+// Session default/persist (#47/#64/#82/#99/#100). Class/section cascading
+// here stays on `useStudentForm`'s own `filteredSections` (it also drives
+// the fee-structure lookup), so only the session piece is sourced from the
+// shared composable.
+const { lockedCampusId, selectedSessionId: cascadeSessionId } = useCascadingAcademicSelect({
     campuses: campuses,
     classes: computed(() => props.classes),
     sections: computed(() => props.sections),
@@ -798,7 +894,11 @@ const { isCampusLocked, lockedCampusId, selectedSessionId: cascadeSessionId } = 
     sessionStorageKey: 'students-create',
 });
 
-if (isCampusLocked.value && lockedCampusId.value) {
+// Campus is never a field on this form - it's always whichever campus the
+// admitting user is currently scoped to (their own campus, or the header
+// switcher's pick for an owner/developer), matching the Staff module's
+// header-derived campus convention.
+if (lockedCampusId.value) {
     form.value.campus_id = String(lockedCampusId.value);
 }
 
@@ -821,7 +921,6 @@ const otherRelationOptions = computed(() =>
 );
 
 const genderOptions = computed(() => props.genders.map((gender) => ({ value: gender.id, label: gender.name })));
-const campusSelectOptions = computed(() => campuses.value.map((campus) => ({ value: campus.id, label: campus.name })));
 const sessionSelectOptions = computed(() => props.sessions.map((session) => ({ value: session.id, label: session.name })));
 const classSelectOptions = computed(() => availableClasses.value.map((cls) => ({ value: cls.id, label: cls.name })));
 const sectionSelectOptions = computed(() => filteredSections.value.map((section) => ({ value: section.id, label: section.name })));
@@ -1095,10 +1194,10 @@ const submitForm = () => {
         validationErrors.section_id = 'Section is required';
     }
     if (!form.value.father_name?.trim()) {
-        validationErrors.father_name = "Father's name is required";
+        validationErrors.father_name = "Guardian's name is required";
     }
     if (!form.value.father_phone?.trim()) {
-        validationErrors.father_phone = "Father's phone is required";
+        validationErrors.father_phone = "Guardian's phone is required";
     } else if (!/^\d{4}-\d{7}$/.test(form.value.father_phone)) {
         validationErrors.father_phone = 'Invalid phone format. Use 0300-1234567';
     }
@@ -1290,5 +1389,126 @@ const submitForm = () => {
             }
         },
     });
+};
+
+/* ----------------------------------------------------- post-admission: file documents */
+
+interface FiledDocument {
+    id: number;
+    documentType?: { name: string } | null;
+}
+
+const filedDocuments = ref<FiledDocument[]>([]);
+const documentTypeOptions = computed(() =>
+    documentTypesList.value.map((type) => ({
+        value: type.id,
+        label: type.is_required ? `${type.name} (required)` : type.name,
+    })),
+);
+
+const documentForm = reactive({
+    student_document_type_id: null as number | null,
+    issue_date: '',
+    expiry_date: '',
+    file: null as File | null,
+});
+
+const onDocumentFile = (event: Event) => {
+    const target = event.target as HTMLInputElement;
+    documentForm.file = target.files?.[0] ?? null;
+};
+
+const resetDocumentForm = () => {
+    documentForm.student_document_type_id = null;
+    documentForm.issue_date = '';
+    documentForm.expiry_date = '';
+    documentForm.file = null;
+};
+
+const addDocument = async () => {
+    if (!props.createdStudent?.id || !documentForm.student_document_type_id) {
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append('student_document_type_id', String(documentForm.student_document_type_id));
+    if (documentForm.issue_date) formData.append('issue_date', documentForm.issue_date);
+    if (documentForm.expiry_date) formData.append('expiry_date', documentForm.expiry_date);
+    if (documentForm.file) formData.append('file', documentForm.file);
+
+    try {
+        const response = await axios.post(route('students.documents.store', props.createdStudent.id), formData, {
+            headers: { 'Content-Type': 'multipart/form-data' },
+        });
+        filedDocuments.value.push(response.data.data);
+        resetDocumentForm();
+        alert.success('Document filed successfully.');
+    } catch (err: unknown) {
+        const response = (err as { response?: { data?: { message?: string } } }).response;
+        alert.error(response?.data?.message || 'Failed to file document.');
+    }
+};
+
+/* ----------------------------------------------------- document types */
+
+interface StudentDocumentType {
+    id: number;
+    name: string;
+    is_required: boolean;
+    is_active: boolean;
+}
+
+const documentTypesList = ref<StudentDocumentType[]>(props.documentTypes ?? []);
+const showDocumentTypesModal = ref(false);
+const editingDocumentType = ref<StudentDocumentType | null>(null);
+const documentTypeForm = reactive({ name: '', is_required: false });
+const documentTypeErrors = ref<Record<string, string>>({});
+
+const fetchDocumentTypes = async () => {
+    const response = await axios.get(route('students.document-types.index'));
+    documentTypesList.value = response.data.data;
+};
+
+const openDocumentTypesModal = () => {
+    fetchDocumentTypes();
+    showDocumentTypesModal.value = true;
+};
+
+const resetDocumentTypeForm = () => {
+    editingDocumentType.value = null;
+    documentTypeForm.name = '';
+    documentTypeForm.is_required = false;
+    documentTypeErrors.value = {};
+};
+
+const editDocumentType = (type: StudentDocumentType) => {
+    editingDocumentType.value = type;
+    documentTypeForm.name = type.name;
+    documentTypeForm.is_required = type.is_required;
+    documentTypeErrors.value = {};
+};
+
+const submitDocumentType = async () => {
+    documentTypeErrors.value = {};
+    try {
+        if (editingDocumentType.value) {
+            await axios.put(route('students.document-types.update', editingDocumentType.value.id), documentTypeForm);
+            alert.success('Document type updated.');
+        } else {
+            await axios.post(route('students.document-types.store'), documentTypeForm);
+            alert.success('Document type created.');
+        }
+        resetDocumentTypeForm();
+        await fetchDocumentTypes();
+    } catch (err: unknown) {
+        const response = (err as { response?: { data?: { errors?: Record<string, string[]>; message?: string } } }).response;
+        if (response?.data?.errors) {
+            documentTypeErrors.value = Object.fromEntries(
+                Object.entries(response.data.errors).map(([key, value]) => [key, value[0]])
+            );
+        } else {
+            alert.error(response?.data?.message || 'Failed to save document type.');
+        }
+    }
 };
 </script>

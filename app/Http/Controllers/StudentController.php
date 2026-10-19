@@ -113,7 +113,7 @@ class StudentController extends Controller
      *
      * @throws AuthorizationException
      */
-    public function store(StoreStudentRequest $request, AdmissionCredentials $credentials): RedirectResponse
+    public function store(StoreStudentRequest $request, AdmissionCredentials $credentials): RedirectResponse|InertiaResponse
     {
         Gate::authorize('create', Student::class);
 
@@ -146,9 +146,20 @@ class StudentController extends Controller
              * so every account this system made was one nobody could sign in
              * to — including the student portal's.
              */
-            return redirect()->route('students.index')
-                ->with('success', 'Student admitted successfully with guardian details.')
-                ->with('new_logins', $credentials->take());
+            session()->flash('success', 'Student admitted successfully with guardian details.');
+            session()->flash('new_logins', $credentials->take());
+
+            /*
+             * Stays on the admission form instead of redirecting to the list,
+             * so the clerk can immediately file the new student's documents
+             * (optional - see `createdStudent` below) while the admission is
+             * still fresh in mind. `getCreateData()` is re-fetched so the
+             * dropdowns are still populated after this non-redirect response.
+             */
+            return Inertia::render('students/Create', array_merge(
+                $this->service->getCreateData(),
+                ['createdStudent' => ['id' => $student->id, 'name' => $student->user?->name]]
+            ));
             // Throwable, not Exception: a bad enum value raises a ValueError,
             // which slipped past the narrower catch and returned a bare 500
             // instead of the message below.

@@ -116,6 +116,7 @@ class StudentService
             'relations' => $lookupData['relations'],
             'studentStatuses' => $lookupData['studentStatuses'],
             'admissionNo' => $this->repository->generateAdmissionNumber(),
+            'documentTypes' => StudentDocumentType::where('is_active', true)->orderBy('name')->get(['id', 'name', 'is_required']),
         ];
     }
 
