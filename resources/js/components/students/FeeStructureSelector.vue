@@ -9,7 +9,7 @@
         <!-- No Class Selected Yet -->
         <div v-if="!classId || !sessionId || !campusId" class="text-center py-8 text-muted-foreground">
             <Icon icon="info" class="mx-auto mb-2 h-12 w-12 text-muted-foreground" />
-            <p>Please select Branch, Session, Class, and Section if required to view the fee structure.</p>
+            <p>Please select Session, Class, and Section if required to view the fee structure.</p>
         </div>
 
         <!-- Fee Structure Loading -->
@@ -24,7 +24,7 @@
                 <Icon icon="alert-triangle" class="mx-auto mb-2 h-8 w-8 text-warning" />
                 <p class="font-medium text-warning">No Fee Structure Found</p>
                 <p class="mt-1 text-sm text-warning">
-                    No active fee structure exists for the selected branch, session, class, and section combination.
+                    No active fee structure exists for the selected session, class, and section combination.
                     Please create the matching fee structure first.
                 </p>
                 <Button type="button" variant="outline" size="sm" class="mt-3" @click="handleCreateFeeStructure">

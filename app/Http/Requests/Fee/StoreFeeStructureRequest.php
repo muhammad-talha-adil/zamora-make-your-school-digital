@@ -46,10 +46,13 @@ class StoreFeeStructureRequest extends FormRequest
             'title' => ['required', 'string', 'max:200'],
             'session_id' => ['required', 'integer', Rule::exists('academic_sessions', 'id')],
             'campus_id' => ['required', 'integer', Rule::exists('campuses', 'id')],
-            'class_id' => ['nullable', 'integer', Rule::exists('school_classes', 'id')],
+            'class_id' => ['required', 'integer', Rule::exists('school_classes', 'id')],
 
-            // One structure can be created for several sections at once.
-            'section_ids' => ['nullable', 'array'],
+            // A structure is scoped to exactly one class and, when that class
+            // has sections, exactly one of them - never "all classes" or "all
+            // sections" any more (see withValidator() below for the
+            // has-sections-but-none-picked case).
+            'section_ids' => ['nullable', 'array', 'max:1'],
             'section_ids.*' => ['integer', Rule::exists('sections', 'id')],
 
             'status' => ['required', Rule::enum(FeeStructureStatus::class)],
@@ -86,6 +89,7 @@ class StoreFeeStructureRequest extends FormRequest
             'title.required' => 'Please give the fee structure a title.',
             'session_id.required' => 'Please select an academic session.',
             'campus_id.required' => 'Please select a campus.',
+            'class_id.required' => 'Please select a class.',
             'items.*.fee_head_id.required_with' => 'Each charge needs a fee head.',
             'items.*.amount.required_with' => 'Each charge needs an amount.',
             'items.*.amount.min' => 'A charge cannot be negative.',

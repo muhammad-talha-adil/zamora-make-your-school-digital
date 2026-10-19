@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, router, usePage } from '@inertiajs/vue3';
-import { reactive, ref, computed, watch, onMounted, nextTick } from 'vue';
+import { reactive, ref, computed, watch } from 'vue';
 import { route } from 'ziggy-js';
 import axios from 'axios';
 import { alert } from '@/utils';
@@ -72,8 +72,6 @@ const form: {
     campus_id: string;
     class_id: string;
     section_id: string;
-    effective_from: string;
-    effective_to: string;
     status: string;
     notes: string;
 } = reactive({
@@ -82,8 +80,6 @@ const form: {
     campus_id: queryParams.get('campus_id') || (academicScope.value?.campusId ? String(academicScope.value.campusId) : ''),
     class_id: queryParams.get('class_id') || '',
     section_id: queryParams.get('section_id') || '',
-    effective_from: '',
-    effective_to: '',
     status: 'active',
     notes: '',
 });
@@ -91,7 +87,7 @@ const form: {
 const errors = ref<Record<string, string>>({});
 const isSubmitting = ref(false);
 
-const { isValid } = useFormValidity(form, ['title', 'session_id', 'campus_id', 'status']);
+const { isValid } = useFormValidity(form, ['title', 'session_id', 'campus_id', 'status', 'class_id']);
 
 // Fee Items - Local state for new items to be created with structure
 const feeItems = ref<Array<{
@@ -234,13 +230,7 @@ const saveClass = async () => {
 
 const sessionOptions = computed(() => props.sessions.map((session) => ({ value: String(session.id), label: session.name })));
 const classOptions = computed(() => classesList.value.map((cls) => ({ value: String(cls.id), label: cls.name })));
-const sectionOptions = computed(() => {
-    const options = filteredSections.value.map((section) => ({ value: String(section.id), label: section.name }));
-    if (form.class_id && filteredSections.value.length > 0) {
-        options.unshift({ value: 'all', label: `All Sections (${filteredSections.value.length})` });
-    }
-    return options;
-});
+const sectionOptions = computed(() => filteredSections.value.map((section) => ({ value: String(section.id), label: section.name })));
 const feeHeadOptions = computed(() => feeHeadsList.value.map((fh) => ({ value: String(fh.id), label: fh.name })));
 const feeHeadCategoryOptions = computed(() => props.feeHeadCategories.map((cat) => ({ value: cat.value, label: cat.label })));
 const feeHeadFrequencyOptions = computed(() => props.feeHeadFrequencies.map((freq) => ({ value: freq.value, label: freq.label })));
@@ -256,12 +246,6 @@ const filteredSections = computed(() => {
     return props.sections.filter(s => s.class_id === Number(form.class_id));
 });
 
-// Get all sections for selected class (for "All Sections" feature)
-const allClassSections = computed(() => {
-    if (!form.class_id) return [];
-    return props.sections.filter(s => s.class_id === Number(form.class_id));
-});
-
 // Generate search URL for title combobox based on selected scope
 const titleSearchUrl = computed(() => {
     if (!form.session_id || !form.campus_id) return '';
@@ -271,47 +255,11 @@ const titleSearchUrl = computed(() => {
     if (form.class_id) {
         url += `&class_id=${form.class_id}`;
     }
-    if (form.section_id && form.section_id !== 'all') {
+    if (form.section_id) {
         url += `&section_id=${form.section_id}`;
     }
     
     return url;
-});
-
-// Get selected session's start and end dates
-const selectedSession = computed(() => {
-    if (!form.session_id) return null;
-    return props.sessions.find(s => s.id === Number(form.session_id));
-});
-
-// Auto-fill effective dates when session changes or on mount
-const autoFillDates = () => {
-    if (selectedSession.value) {
-        form.effective_from = selectedSession.value.start_date;
-        form.effective_to = selectedSession.value.end_date;
-    }
-};
-
-// Watch for session changes
-watch(() => form.session_id, (newSessionId) => {
-    if (newSessionId && selectedSession.value) {
-        form.effective_from = selectedSession.value.start_date;
-        form.effective_to = selectedSession.value.end_date;
-    }
-});
-
-// Auto-fill on page load
-onMounted(() => {
-    // Use nextTick to ensure the form is fully initialized
-    nextTick(() => {
-        autoFillDates();
-    });
-    // Fallback to setTimeout if nextTick doesn't work
-    setTimeout(() => {
-        if (!form.effective_from && selectedSession.value) {
-            autoFillDates();
-        }
-    }, 100);
 });
 
 // Watch for scope changes and clear title when session/campus/class changes
@@ -369,7 +317,10 @@ const validateForm = () => {
     if (!form.status) {
         errors.value.status = 'Status is required';
     }
-    
+    if (!form.class_id) {
+        errors.value.class_id = 'Class is required';
+    }
+
     return Object.keys(errors.value).length === 0;
 };
 
@@ -450,28 +401,17 @@ const submitForm = () => {
     
     isSubmitting.value = true;
     
-    // Determine section_ids based on selection
-    let sectionIds: number[] = [];
-    
-    if (form.section_id === 'all') {
-        // User selected "All Sections" from dropdown - apply to all sections of the class
-        if (form.class_id && allClassSections.value.length > 0) {
-            sectionIds = allClassSections.value.map(s => s.id);
-        }
-    } else if (form.section_id) {
-        // Apply to single section
-        sectionIds = [Number(form.section_id)];
-    }
-    // If no class selected or no section selected, sectionIds remains empty (applies to all)
-    
+    // A structure applies to exactly one section - or to the whole class, for
+    // a class that has no sections set up at all.
+    const sectionIds: number[] = form.section_id ? [Number(form.section_id)] : [];
+
+
     router.post(route('fee.structures.store'), {
         title: String(form.title),
         session_id: form.session_id ? Number(form.session_id) : null,
         campus_id: form.campus_id ? Number(form.campus_id) : null,
         class_id: form.class_id ? Number(form.class_id) : null,
         section_ids: sectionIds,
-        effective_from: form.effective_from,
-        effective_to: form.effective_to || null,
         status: form.status,
         notes: form.notes,
         items: feeItems.value,
@@ -576,7 +516,7 @@ const cancel = () => {
                     <div class="grid gap-4 md:grid-cols-2">
                         <div class="space-y-2">
                             <div class="flex items-center justify-between">
-                                <Label for="class">Class (Optional)</Label>
+                                <Label for="class">Class <span class="text-destructive">*</span></Label>
                                 <button type="button" class="text-xs text-primary hover:underline" @click="openAddClassModal">
                                     + Add Class
                                 </button>
@@ -586,10 +526,10 @@ const cancel = () => {
                                 v-model="form.class_id"
                                 :options="classOptions"
                                 placeholder="Select Class"
-                                clearable
+                                :class="errors.class_id ? 'border-destructive' : ''"
                                 @update:modelValue="onClassChange"
                             />
-                            <p class="text-xs text-muted-foreground">Leave empty to apply to all classes</p>
+                            <p v-if="errors.class_id" class="text-sm text-destructive">{{ errors.class_id }}</p>
                         </div>
 
                         <div class="space-y-2">
@@ -599,46 +539,16 @@ const cancel = () => {
                                 v-model="form.section_id"
                                 :options="sectionOptions"
                                 placeholder="Select Section"
-                                :disabled="!form.class_id"
+                                :disabled="!form.class_id || filteredSections.length === 0"
                                 clearable
                                 :class="errors.section_id ? 'border-destructive' : ''"
                             />
-                            <p class="text-xs text-muted-foreground">
-                                <span v-if="form.section_id === 'all'">Applied to all sections of this class</span>
-                                <span v-else-if="form.section_id">Applied to single section</span>
-                                <span v-else>Select a section or "All Sections" to apply to all</span>
+                            <p v-if="errors.section_id" class="text-sm text-destructive">{{ errors.section_id }}</p>
+                            <p v-else class="text-xs text-muted-foreground">
+                                <span v-if="!form.class_id">Select a class first</span>
+                                <span v-else-if="filteredSections.length === 0">This class has no sections</span>
+                                <span v-else>Leave empty to apply to the whole class</span>
                             </p>
-                        </div>
-                    </div>
-
-                    <!-- Effective Dates -->
-                    <div class="grid gap-4 md:grid-cols-2">
-                        <div class="space-y-2">
-                            <Label for="effective_from">Effective From <span class="text-destructive">*</span></Label>
-                            <Input
-                                id="effective_from"
-                                v-model="form.effective_from"
-                                type="date"
-                                disabled
-                                :class="{ 'border-destructive': errors.effective_from }"
-                            />
-                            <!-- Hidden input to ensure value is submitted -->
-                            <input type="hidden" name="effective_from" :value="form.effective_from" />
-                            <p class="text-xs text-muted-foreground">Set from the selected session's start date.</p>
-                            <p v-if="errors.effective_from" class="text-sm text-destructive">{{ errors.effective_from }}</p>
-                        </div>
-
-                        <div class="space-y-2">
-                            <Label for="effective_to">Effective To</Label>
-                            <Input
-                                id="effective_to"
-                                v-model="form.effective_to"
-                                type="date"
-                                disabled
-                            />
-                            <!-- Hidden input to ensure value is submitted -->
-                            <input type="hidden" name="effective_to" :value="form.effective_to" />
-                            <p class="text-xs text-muted-foreground">Set from the selected session's end date. Leave empty for indefinite.</p>
                         </div>
                     </div>
 
