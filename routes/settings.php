@@ -124,31 +124,34 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::patch('settings/sessions/{id}/restore', [SessionController::class, 'restore'])->name('sessions.restore');
     Route::delete('settings/sessions/{id}/force-delete', [SessionController::class, 'forceDelete'])->name('sessions.force-delete');
 
-    // School Classes Routes
-    Route::get('settings/school-classes', [SchoolClassController::class, 'index'])->name('school-classes.index');
-    Route::get('settings/school-classes/all', [SchoolClassController::class, 'apiIndex'])->name('school-classes.all');
-    Route::get('settings/school-classes/create', [SchoolClassController::class, 'create'])->name('school-classes.create');
-    Route::post('settings/school-classes', [SchoolClassController::class, 'store'])->name('school-classes.store');
-    Route::get('settings/school-classes/{schoolClass}/edit', [SchoolClassController::class, 'edit'])->name('school-classes.edit');
-    Route::patch('settings/school-classes/{schoolClass}', [SchoolClassController::class, 'update'])->name('school-classes.update');
-    Route::delete('settings/school-classes/{schoolClass}', [SchoolClassController::class, 'destroy'])->name('school-classes.destroy');
-    Route::patch('settings/school-classes/{schoolClass}/inactivate', [SchoolClassController::class, 'inactivate'])->name('school-classes.inactivate');
-    Route::patch('settings/school-classes/{schoolClass}/activate', [SchoolClassController::class, 'activate'])->name('school-classes.activate');
-    Route::patch('settings/school-classes/{id}/restore', [SchoolClassController::class, 'restore'])->name('school-classes.restore');
-    Route::delete('settings/school-classes/{id}/force-delete', [SchoolClassController::class, 'forceDelete'])->name('school-classes.force-delete');
+    // School Classes Routes - every class is filed under a campus, so none
+    // of its write actions make sense before at least one campus exists.
+    Route::middleware('campus.exists')->group(function (): void {
+        Route::get('settings/school-classes', [SchoolClassController::class, 'index'])->name('school-classes.index');
+        Route::get('settings/school-classes/all', [SchoolClassController::class, 'apiIndex'])->name('school-classes.all');
+        Route::get('settings/school-classes/create', [SchoolClassController::class, 'create'])->name('school-classes.create');
+        Route::post('settings/school-classes', [SchoolClassController::class, 'store'])->name('school-classes.store');
+        Route::get('settings/school-classes/{schoolClass}/edit', [SchoolClassController::class, 'edit'])->name('school-classes.edit');
+        Route::patch('settings/school-classes/{schoolClass}', [SchoolClassController::class, 'update'])->name('school-classes.update');
+        Route::delete('settings/school-classes/{schoolClass}', [SchoolClassController::class, 'destroy'])->name('school-classes.destroy');
+        Route::patch('settings/school-classes/{schoolClass}/inactivate', [SchoolClassController::class, 'inactivate'])->name('school-classes.inactivate');
+        Route::patch('settings/school-classes/{schoolClass}/activate', [SchoolClassController::class, 'activate'])->name('school-classes.activate');
+        Route::patch('settings/school-classes/{id}/restore', [SchoolClassController::class, 'restore'])->name('school-classes.restore');
+        Route::delete('settings/school-classes/{id}/force-delete', [SchoolClassController::class, 'forceDelete'])->name('school-classes.force-delete');
 
-    // Sections Routes
-    Route::get('settings/sections', [SectionController::class, 'index'])->name('sections.index');
-    Route::get('settings/sections/all', [SectionController::class, 'apiIndex'])->name('sections.all');
-    Route::get('settings/sections/create', [SectionController::class, 'create'])->name('sections.create');
-    Route::post('settings/sections', [SectionController::class, 'store'])->name('sections.store');
-    Route::get('settings/sections/{section}/edit', [SectionController::class, 'edit'])->name('sections.edit');
-    Route::patch('settings/sections/{section}', [SectionController::class, 'update'])->name('sections.update');
-    Route::delete('settings/sections/{section}', [SectionController::class, 'destroy'])->name('sections.destroy');
-    Route::patch('settings/sections/{section}/inactivate', [SectionController::class, 'inactivate'])->name('sections.inactivate');
-    Route::patch('settings/sections/{section}/activate', [SectionController::class, 'activate'])->name('sections.activate');
-    Route::patch('settings/sections/{id}/restore', [SectionController::class, 'restore'])->name('sections.restore');
-    Route::delete('settings/sections/{id}/force-delete', [SectionController::class, 'forceDelete'])->name('sections.force-delete');
+        // Sections Routes
+        Route::get('settings/sections', [SectionController::class, 'index'])->name('sections.index');
+        Route::get('settings/sections/all', [SectionController::class, 'apiIndex'])->name('sections.all');
+        Route::get('settings/sections/create', [SectionController::class, 'create'])->name('sections.create');
+        Route::post('settings/sections', [SectionController::class, 'store'])->name('sections.store');
+        Route::get('settings/sections/{section}/edit', [SectionController::class, 'edit'])->name('sections.edit');
+        Route::patch('settings/sections/{section}', [SectionController::class, 'update'])->name('sections.update');
+        Route::delete('settings/sections/{section}', [SectionController::class, 'destroy'])->name('sections.destroy');
+        Route::patch('settings/sections/{section}/inactivate', [SectionController::class, 'inactivate'])->name('sections.inactivate');
+        Route::patch('settings/sections/{section}/activate', [SectionController::class, 'activate'])->name('sections.activate');
+        Route::patch('settings/sections/{id}/restore', [SectionController::class, 'restore'])->name('sections.restore');
+        Route::delete('settings/sections/{id}/force-delete', [SectionController::class, 'forceDelete'])->name('sections.force-delete');
+    });
 
     // Subjects Routes
     Route::get('settings/subjects', [SubjectController::class, 'index'])->name('subjects.index');

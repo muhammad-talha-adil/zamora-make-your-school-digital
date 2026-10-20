@@ -232,6 +232,23 @@
       <!-- Main Content -->
       <main class="flex-1 min-w-0 p-4 sm:p-6 overflow-y-auto overflow-x-hidden" :style="{ backgroundColor: 'var(--content-bg)', color: 'var(--content-text)' }">
         <div
+          v-if="pageProps.hasCampuses === false"
+          class="mb-4 flex items-start gap-3 rounded-lg border border-warning/40 bg-warning/10 p-4"
+        >
+          <Icon icon="alert-triangle" class="h-5 w-5 mt-0.5 shrink-0 text-warning" />
+          <div class="flex-1 text-sm">
+            <p class="font-medium text-warning">No campus has been created yet.</p>
+            <p class="text-muted-foreground">Every record in the system is filed under a campus - create one before adding students, staff, classes or anything else.</p>
+          </div>
+          <Link
+            :href="route('campuses.create')"
+            class="shrink-0 rounded-md bg-warning px-3 py-1.5 text-sm font-medium text-warning-foreground hover:opacity-90"
+          >
+            Create Campus
+          </Link>
+        </div>
+
+        <div
           v-if="subscriptionWarning && !subscriptionWarningDismissed"
           class="mb-4 flex items-start gap-3 rounded-lg border border-warning/40 bg-warning/10 p-4"
         >

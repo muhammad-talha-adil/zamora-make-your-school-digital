@@ -30,7 +30,7 @@ use Illuminate\Support\Facades\Route;
 
 $middleware = ['web', 'auth'];
 
-Route::prefix('fee')->name('fee.')->middleware($middleware)->group(function () {
+Route::prefix('fee')->name('fee.')->middleware([...$middleware, 'campus.exists'])->group(function () {
 
     // ==================== FEE HEADS ====================
     Route::prefix('heads')->name('heads.')->group(function () {

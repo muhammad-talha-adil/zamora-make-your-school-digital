@@ -126,6 +126,11 @@ class HandleInertiaRequests extends Middleware
             'subscriptionWarning' => $this->buildSubscriptionWarning($user),
             'academicScope' => $this->buildAcademicScope($user),
             'campusSwitcher' => $this->buildCampusSwitcher($user),
+            // Drives a "create your first campus" banner - almost every other
+            // record in the app is filed under a campus (see
+            // EnsureCampusExists), so a brand-new school needs to be pointed
+            // there before anything else.
+            'hasCampuses' => fn () => Campus::query()->exists(),
         ];
     }
 

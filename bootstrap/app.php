@@ -2,6 +2,7 @@
 
 use App\Http\Middleware\CheckPermission;
 use App\Http\Middleware\EnsureArtisanUiAccess;
+use App\Http\Middleware\EnsureCampusExists;
 use App\Http\Middleware\EnsurePublicWebsiteEnabled;
 use App\Http\Middleware\EnsureRole;
 use App\Http\Middleware\EnsureSchoolActive;
@@ -36,6 +37,7 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
 
         $middleware->alias([
+            'campus.exists' => EnsureCampusExists::class,
             // `permission` keeps this project's own middleware so an
             // unauthorised request lands on the styled 403 page rather than
             // Spatie's bare exception.

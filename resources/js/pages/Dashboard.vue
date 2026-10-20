@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { Head } from '@inertiajs/vue3';
 import { computed, ref, onMounted } from 'vue';
+import { route } from 'ziggy-js';
 import AppLayout from '@/layouts/AppLayout.vue';
 import Icon from '@/components/Icon.vue';
 import LineChart from '@/components/charts/LineChart.vue';
@@ -144,13 +145,24 @@ const groupedActivity = computed(() => {
         <div class="space-y-6 p-4 md:p-6 lg:p-8">
             <!-- Welcome Section -->
             <div class="bg-gradient-to-r from-primary to-primary/80 rounded-xl p-6 md:p-8 text-primary-foreground shadow-sm animate-fade-in">
-                <div class="max-w-4xl">
-                    <h1 class="text-2xl md:text-3xl font-bold tracking-tight mb-2">
-                        Welcome back, {{ $page.props.auth.user?.name || 'User' }}!
-                    </h1>
-                    <p class="text-sm md:text-base text-primary-foreground/80">
-                        Here's what's happening with your school today.
-                    </p>
+                <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+                    <div class="max-w-4xl">
+                        <h1 class="text-2xl md:text-3xl font-bold tracking-tight mb-2">
+                            Welcome back, {{ $page.props.auth.user?.name || 'User' }}!
+                        </h1>
+                        <p class="text-sm md:text-base text-primary-foreground/80">
+                            Here's what's happening with your school today.
+                        </p>
+                    </div>
+                    <a
+                        :href="route('home')"
+                        target="_blank"
+                        rel="noopener"
+                        class="inline-flex shrink-0 items-center gap-2 rounded-md bg-primary-foreground px-4 py-2 text-sm font-medium text-primary transition-colors hover:bg-primary-foreground/90"
+                    >
+                        <Icon icon="globe" class="h-4 w-4" />
+                        Visit Website
+                    </a>
                 </div>
             </div>
 

@@ -98,6 +98,10 @@ test('a newly created class appears on the school-classes page', function () {
     // school-classes.index page instead of SchoolProfile's old `classes` prop.
     $user = userWithPermission('academics.class.manage');
     School::create(['name' => 'Original School']);
+    // Every class is filed under a campus - the `campus.exists` middleware
+    // turns away the write actions this test exercises without one.
+    $type = CampusType::create(['name' => 'Main']);
+    Campus::create(['name' => 'Main Campus', 'campus_type_id' => $type->id, 'is_active' => true]);
 
     $this->actingAs($user)
         ->postJson(route('school-classes.store'), ['name' => 'Class 9', 'code' => 'C9'])
@@ -160,6 +164,8 @@ test('a user without academics.class.manage cannot assign subjects to a class', 
 
 test('the same section name is allowed in two different classes but not twice in one class', function () {
     $user = userWithPermission('academics.class.manage');
+    $type = CampusType::create(['name' => 'Main']);
+    Campus::create(['name' => 'Main Campus', 'campus_type_id' => $type->id, 'is_active' => true]);
     $classOne = SchoolClass::create(['name' => 'Class 1', 'code' => 'C1', 'is_active' => true]);
     $classTwo = SchoolClass::create(['name' => 'Class 2', 'code' => 'C2', 'is_active' => true]);
     Section::create(['name' => 'A', 'class_id' => $classOne->id, 'is_active' => true]);

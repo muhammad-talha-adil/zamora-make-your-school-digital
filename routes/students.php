@@ -39,7 +39,7 @@ $middleware = app()->environment('local') ? ['auth'] : ['auth', 'verified'];
 Route::model('student', Student::class);
 
 // Main student routes
-Route::prefix('students')->name('students.')->middleware($middleware)->group(function () {
+Route::prefix('students')->name('students.')->middleware([...$middleware, 'campus.exists'])->group(function () {
     /*
     |--------------------------------------------------------------------------
     | API Routes (Rate Limited)

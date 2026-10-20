@@ -30,7 +30,7 @@ use Illuminate\Support\Facades\Route;
 
 $middleware = ['web', 'auth'];
 
-Route::prefix('staff')->name('staff.')->middleware($middleware)->group(function () {
+Route::prefix('staff')->name('staff.')->middleware([...$middleware, 'campus.exists'])->group(function () {
 
     // ---------------------------------------------------------------- today
     Route::get('/', [StaffController::class, 'index'])
