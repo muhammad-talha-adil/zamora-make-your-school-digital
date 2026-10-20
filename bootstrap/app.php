@@ -19,7 +19,21 @@ use Inertia\Inertia;
 use Spatie\Permission\Middleware\RoleMiddleware;
 use Spatie\Permission\Middleware\RoleOrPermissionMiddleware;
 
-return Application::configure(basePath: dirname(__DIR__))
+$basePath = dirname(__DIR__);
+
+/*
+|--------------------------------------------------------------------------
+| hPanel split-folder deployment
+|--------------------------------------------------------------------------
+|
+| Locally (and on any normal single-folder deploy) "public" lives inside
+| this app's own base path, so Laravel's default public_path() is already
+| correct. On hPanel this folder (the "backend" one) has no public/ of its
+| own - it was uploaded split, with "public" as a SIBLING folder instead -
+| so public_path(), and anything built on it (storage:link, public_path()
+| uploads, asset()), must be told to look there instead.
+*/
+$app = Application::configure(basePath: $basePath)
     ->withRouting(
         web: __DIR__.'/../routes/web.php',
         commands: __DIR__.'/../routes/console.php',
@@ -87,3 +101,9 @@ return Application::configure(basePath: dirname(__DIR__))
             ])->toResponse($request)->setStatusCode($status);
         });
     })->create();
+
+if (! is_dir($basePath.'/public')) {
+    $app->usePublicPath(dirname($basePath).'/public');
+}
+
+return $app;
