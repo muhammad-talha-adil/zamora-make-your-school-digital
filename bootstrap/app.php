@@ -102,8 +102,18 @@ $app = Application::configure(basePath: $basePath)
         });
     })->create();
 
+// Only matters for CLI (artisan) here - a real web request already gets the
+// exact right folder from public/index.php's own __DIR__ (see there), which
+// doesn't need to guess a name at all. This is just a reasonable default for
+// `php artisan ...` run by hand from the backend folder over SSH.
 if (! is_dir($basePath.'/public')) {
-    $app->usePublicPath(dirname($basePath).'/public');
+    foreach (['public_html', 'public'] as $siblingName) {
+        $sibling = dirname($basePath).'/'.$siblingName;
+        if (is_dir($sibling)) {
+            $app->usePublicPath($sibling);
+            break;
+        }
+    }
 }
 
 return $app;

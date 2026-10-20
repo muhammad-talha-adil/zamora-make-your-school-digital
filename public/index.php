@@ -36,4 +36,12 @@ require $basePath.'/vendor/autoload.php';
 /** @var Application $app */
 $app = require_once $basePath.'/bootstrap/app.php';
 
+// This file's own directory IS the real, currently-serving public folder,
+// whatever it's actually named on this host (hPanel's is "public_html", not
+// "public") - so it's the one source of truth for the public path, rather
+// than bootstrap/app.php guessing a folder name that may not match.
+if ($basePath !== __DIR__.'/..') {
+    $app->usePublicPath(__DIR__);
+}
+
 $app->handleRequest(Request::capture());
