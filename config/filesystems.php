@@ -38,10 +38,15 @@ return [
             'report' => false,
         ],
 
+        // Writes straight into the real public/uploads folder (same place
+        // SchoolController's logo upload and StudentRepository's student
+        // photos already land via public_path('uploads/...')), so every
+        // upload in the app is reachable with a plain file, no storage:link
+        // symlink to create or keep working across a split deploy.
         'public' => [
             'driver' => 'local',
-            'root' => storage_path('app/public'),
-            'url' => rtrim(env('APP_URL'), '/').'/storage',
+            'root' => public_path('uploads'),
+            'url' => rtrim(env('APP_URL'), '/').'/uploads',
             'visibility' => 'public',
             'throw' => false,
             'report' => false,
@@ -62,19 +67,8 @@ return [
 
     ],
 
-    /*
-    |--------------------------------------------------------------------------
-    | Symbolic Links
-    |--------------------------------------------------------------------------
-    |
-    | Here you may configure the symbolic links that will be created when the
-    | `storage:link` Artisan command is executed. The array keys should be
-    | the locations of the links and the values should be their targets.
-    |
-    */
-
-    'links' => [
-        public_path('storage') => storage_path('app/public'),
-    ],
+    // No `links` entry - the public disk already writes directly into
+    // public/uploads (see above), so there is nothing for `storage:link`
+    // to do and it's never run.
 
 ];

@@ -43,7 +43,11 @@ class StudentResource extends JsonResource
             'admission_date_formatted' => $this->admission_date?->format('Y-m-d'),
             'description' => $this->description,
             'image' => $this->image,
-            'image_url' => $this->image ? asset('storage/'.$this->image) : null,
+            // $this->image is already a public-webroot-relative path (e.g.
+            // "/uploads/students/x.jpg" - see StudentRepository::
+            // handleImageUpload()), not a storage-disk path, so it needs no
+            // "storage/" prefix.
+            'image_url' => $this->image ? asset(ltrim($this->image, '/')) : null,
 
             // Current enrollment information
             'current_enrollment' => $this->whenLoaded('currentEnrollment', fn () => new StudentEnrollmentResource($this->currentEnrollment)),

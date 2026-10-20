@@ -177,7 +177,7 @@ it('shows the uploaded photo on the ID card', function () {
     $student = Student::where('admission_no', 'ADM-PHOTO')->firstOrFail();
 
     expect($student->image)->not->toBeNull()
-        ->and($student->image_url)->toContain('/storage/')
+        ->and($student->image_url)->toContain('/uploads/')
         ->and($student->image_url)->toContain($student->image);
 
     $this->get(route('students.id-cards', ['student_ids' => [$student->id]]))
