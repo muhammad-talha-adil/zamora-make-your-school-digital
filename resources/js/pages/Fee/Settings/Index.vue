@@ -89,7 +89,6 @@ const activeTab = ref(tabs.value[0]?.id ?? 'fee-heads');
                 <FeeHeadsPanel
                     :fee-heads="feeHeadsData.feeHeads"
                     :filters="feeHeadsData.filters"
-                    :categories="feeHeadsData.categories"
                     :frequencies="feeHeadsData.frequencies"
                     :next-order="feeHeadsData.nextOrder"
                 />

@@ -17,7 +17,6 @@ interface FeeHead {
     name: string;
     code: string;
     description?: string;
-    category: string;
     default_frequency: string;
     is_recurring?: boolean;
     is_active: boolean;
@@ -35,18 +34,14 @@ interface Props {
     };
     filters?: {
         search?: string;
-        category?: string;
         is_active?: string;
     };
-    categories: Array<{ value: string; label: string }>;
     frequencies: Array<{ value: string; label: string }>;
     nextOrder: number;
 }
 
 const props = defineProps<Props>();
 
-const categoryOptions = computed(() => props.categories.map((cat) => ({ value: cat.value, label: cat.label })));
-const categoryFilterOptions = computed(() => [{ value: '', label: 'All Categories' }, ...categoryOptions.value]);
 const statusFilterOptions = [
     { value: '', label: 'All Status' },
     { value: 'true', label: 'Active' },
@@ -88,7 +83,6 @@ const normalizeErrors = (errors: Record<string, string | string[]>) => {
 const form = ref({
     name: '',
     description: '',
-    category: props.categories[0]?.value || 'tuition',
     default_frequency: props.frequencies[0]?.value || 'monthly',
     is_recurring: true,
     is_active: true,
@@ -100,7 +94,6 @@ const resetForm = () => {
     form.value = {
         name: '',
         description: '',
-        category: props.categories[0]?.value || 'tuition',
         default_frequency: props.frequencies[0]?.value || 'monthly',
         is_recurring: true,
         is_active: true,
@@ -120,7 +113,6 @@ const openEditModal = (feeHead: FeeHead) => {
     form.value = {
         name: feeHead.name,
         description: feeHead.description || '',
-        category: feeHead.category,
         default_frequency: feeHead.default_frequency,
         is_recurring: feeHead.is_recurring ?? true,
         is_active: feeHead.is_active,
@@ -144,11 +136,6 @@ const validateForm = (): boolean => {
 
     if (!form.value.name.trim()) {
         formErrors.value.name = 'Name is required';
-        isValid = false;
-    }
-
-    if (!form.value.category) {
-        formErrors.value.category = 'Category is required';
         isValid = false;
     }
 
@@ -206,13 +193,12 @@ const sortedFeeHeads = computed(() => {
 
 const filters = reactive({
     search: props.filters?.search || '',
-    category: props.filters?.category || '',
     is_active: props.filters?.is_active !== undefined && props.filters?.is_active !== null
         ? String(props.filters.is_active)
         : '',
 });
 
-watch([() => filters.category, () => filters.is_active], () => {
+watch(() => filters.is_active, () => {
     fetchFeeHeads(1);
 });
 
@@ -240,7 +226,6 @@ const fetchFeeHeads = (page = 1) => {
         page: page.toString(),
     });
     if (filters.search) params.append('search', filters.search);
-    if (filters.category) params.append('category', filters.category);
     if (filters.is_active !== '') params.append('is_active', filters.is_active);
 
     axios.get(route('fee.heads.all') + `?${params}`).then((response) => {
@@ -301,30 +286,6 @@ const deleteFeeHead = (feeHead: FeeHead) => {
         });
 };
 
-const getCategoryColor = (category: string) => {
-    const colors: Record<string, string> = {
-        tuition: 'bg-primary/10 text-primary',
-        transport: 'bg-warning/10 text-warning',
-        hostel: 'bg-primary/10 text-primary',
-        library: 'bg-success/10 text-success',
-        examination: 'bg-destructive/10 text-destructive',
-        other: 'bg-muted text-foreground',
-    };
-    return colors[category] || colors.other;
-};
-
-const getCategoryLabel = (category: string) => {
-    const labels: Record<string, string> = {
-        tuition: 'Tuition',
-        transport: 'Transport',
-        hostel: 'Hostel',
-        library: 'Library',
-        examination: 'Examination',
-        other: 'Other',
-    };
-    return labels[category] || category;
-};
-
 const getFrequencyLabel = (frequency: string) => {
     const labels: Record<string, string> = {
         monthly: 'Monthly',
@@ -364,16 +325,6 @@ const getFrequencyLabel = (frequency: string) => {
                 />
             </div>
             <div class="w-full sm:w-44 md:w-48">
-                <Label for="fee-head-filter-category" class="sr-only">Category</Label>
-                <SearchableSelect
-                    id="fee-head-filter-category"
-                    v-model="filters.category"
-                    :options="categoryFilterOptions"
-                    placeholder="All Categories"
-                    clearable
-                />
-            </div>
-            <div class="w-full sm:w-44 md:w-48">
                 <Label for="fee-head-filter-active" class="sr-only">Status</Label>
                 <SearchableSelect
                     id="fee-head-filter-active"
@@ -398,9 +349,6 @@ const getFrequencyLabel = (frequency: string) => {
                         <div class="font-medium text-foreground">{{ feeHead.name }}</div>
                         <div class="text-xs text-muted-foreground">Code: {{ feeHead.code }}</div>
                     </div>
-                    <span :class="['px-2 py-1 text-xs font-medium rounded-full', getCategoryColor(feeHead.category)]">
-                        {{ getCategoryLabel(feeHead.category) }}
-                    </span>
                 </div>
                 <div class="text-sm text-muted-foreground space-y-1 pt-2 border-t border-border">
                     <div>Frequency: {{ getFrequencyLabel(feeHead.default_frequency) }}</div>
@@ -433,7 +381,6 @@ const getFrequencyLabel = (frequency: string) => {
                             <th scope="col" class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Order</th>
                             <th scope="col" class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Code</th>
                             <th scope="col" class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Name</th>
-                            <th scope="col" class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Category</th>
                             <th scope="col" class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Frequency</th>
                             <th scope="col" class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Status</th>
                             <th scope="col" class="px-4 py-3 text-right text-xs font-semibold text-muted-foreground uppercase">Actions</th>
@@ -453,11 +400,6 @@ const getFrequencyLabel = (frequency: string) => {
                             <td class="px-4 py-3">
                                 <div class="text-sm font-medium text-foreground">{{ feeHead.name }}</div>
                                 <div v-if="feeHead.description" class="text-xs text-muted-foreground">{{ feeHead.description }}</div>
-                            </td>
-                            <td class="px-4 py-3">
-                                <span :class="['px-2 py-1 text-xs font-medium rounded-full', getCategoryColor(feeHead.category)]">
-                                    {{ getCategoryLabel(feeHead.category) }}
-                                </span>
                             </td>
                             <td class="px-4 py-3">
                                 <div class="text-sm text-muted-foreground">{{ getFrequencyLabel(feeHead.default_frequency) }}</div>
@@ -522,30 +464,17 @@ const getFrequencyLabel = (frequency: string) => {
                         ></textarea>
                     </div>
 
-                    <!-- Category & Frequency -->
-                    <div class="grid gap-4 md:grid-cols-2">
-                        <div class="space-y-2">
-                            <Label for="fh-category">Category *</Label>
-                            <SearchableSelect
-                                id="fh-category"
-                                v-model="form.category"
-                                :options="categoryOptions"
-                                placeholder="Select category"
-                                :class="formErrors.category ? 'border-destructive' : ''"
-                            />
-                            <p v-if="formErrors.category" class="text-xs text-destructive">{{ formErrors.category }}</p>
-                        </div>
-                        <div class="space-y-2">
-                            <Label for="fh-frequency">Frequency *</Label>
-                            <SearchableSelect
-                                id="fh-frequency"
-                                v-model="form.default_frequency"
-                                :options="frequencyOptions"
-                                placeholder="Select frequency"
-                                :class="formErrors.default_frequency ? 'border-destructive' : ''"
-                            />
-                            <p v-if="formErrors.default_frequency" class="text-xs text-destructive">{{ formErrors.default_frequency }}</p>
-                        </div>
+                    <!-- Frequency -->
+                    <div class="space-y-2">
+                        <Label for="fh-frequency">Frequency *</Label>
+                        <SearchableSelect
+                            id="fh-frequency"
+                            v-model="form.default_frequency"
+                            :options="frequencyOptions"
+                            placeholder="Select frequency"
+                            :class="formErrors.default_frequency ? 'border-destructive' : ''"
+                        />
+                        <p v-if="formErrors.default_frequency" class="text-xs text-destructive">{{ formErrors.default_frequency }}</p>
                     </div>
 
                     <!-- Order, Status & Optional -->

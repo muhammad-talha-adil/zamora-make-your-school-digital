@@ -145,6 +145,16 @@ const breadcrumbs = computed(() => [
 const selectClass = 'w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground';
 
 const genderOptions = computed(() => props.genders.map((g) => ({ value: String(g.id), label: g.name })));
+const bloodGroupOptions = [
+    { value: 'A+', label: 'A+' },
+    { value: 'A-', label: 'A-' },
+    { value: 'B+', label: 'B+' },
+    { value: 'B-', label: 'B-' },
+    { value: 'AB+', label: 'AB+' },
+    { value: 'AB-', label: 'AB-' },
+    { value: 'O+', label: 'O+' },
+    { value: 'O-', label: 'O-' },
+];
 const documentKindOptions = computed(() => props.documentTypes.map((type) => ({ value: type.name, label: type.name })));
 
 const campusOptions = computed(() => props.campuses.map((c) => ({ value: String(c.id), label: c.name })));
@@ -613,7 +623,7 @@ const activeJobsCount = computed(() => props.jobs.length);
 </script>
 
 <template>
-    <PortalLayout :breadcrumbs="breadcrumbs">
+    <AppLayout :breadcrumbs="breadcrumbs">
         <Head :title="props.staff.user?.name ?? 'Staff Profile'" />
 
         <div class="space-y-6 p-4 md:p-6">
@@ -745,7 +755,7 @@ const activeJobsCount = computed(() => props.jobs.length);
                         </div>
                         <div>
                             <label class="mb-2 block text-sm font-medium text-muted-foreground">Blood Group</label>
-                            <Input v-model="personalForm.blood_group" placeholder="e.g. O+" :disabled="!props.can.edit" />
+                            <SearchableSelect v-model="personalForm.blood_group" :options="bloodGroupOptions" placeholder="Select blood group" :disabled="!props.can.edit" clearable />
                         </div>
                         <div>
                             <label class="mb-2 block text-sm font-medium text-muted-foreground">Address</label>
@@ -761,8 +771,8 @@ const activeJobsCount = computed(() => props.jobs.length);
                                 <Input v-model="personalForm.emergency_contact_phone" maxlength="20" :disabled="!props.can.edit" />
                             </div>
                             <div>
-                                <label class="mb-2 block text-sm font-medium text-muted-foreground">Relation</label>
-                                <Input v-model="personalForm.emergency_contact_relation" :disabled="!props.can.edit" />
+                                <label class="mb-2 block text-sm font-medium text-muted-foreground">Relationship to Staff Member</label>
+                                <Input v-model="personalForm.emergency_contact_relation" placeholder="e.g. Father, Spouse, Sibling" :disabled="!props.can.edit" />
                             </div>
                         </div>
                         <Button v-if="props.can.edit" @click="savePersonal">
@@ -1024,66 +1034,6 @@ const activeJobsCount = computed(() => props.jobs.length);
                 </div>
             </div>
 
-            <!-- Attendance -->
-            <div v-if="activeTab === 'attendance'" class="grid gap-6 xl:grid-cols-[380px_minmax(0,1fr)]">
-                <div class="space-y-6">
-                    <div v-if="attendanceSummary" class="grid grid-cols-2 gap-3">
-                        <div class="rounded-xl border border-border bg-card p-4 text-center">
-                            <p class="text-xs text-muted-foreground">Present</p>
-                            <p class="text-xl font-bold text-success">{{ attendanceSummary.present }}</p>
-                        </div>
-                        <div class="rounded-xl border border-border bg-card p-4 text-center">
-                            <p class="text-xs text-muted-foreground">Absent</p>
-                            <p class="text-xl font-bold text-destructive">{{ attendanceSummary.absent }}</p>
-                        </div>
-                        <div class="rounded-xl border border-border bg-card p-4 text-center">
-                            <p class="text-xs text-muted-foreground">Late</p>
-                            <p class="text-xl font-bold text-warning">{{ attendanceSummary.late }}</p>
-                        </div>
-                        <div class="rounded-xl border border-border bg-card p-4 text-center">
-                            <p class="text-xs text-muted-foreground">Expected Days</p>
-                            <p class="text-xl font-bold text-foreground">{{ attendanceSummary.expected_days }}</p>
-                        </div>
-                    </div>
-
-                    <div v-if="props.can.markAttendance" class="rounded-2xl border border-border bg-card p-5 shadow-sm">
-                        <h2 class="mb-4 text-lg font-semibold text-foreground">Mark Attendance</h2>
-                        <div class="space-y-3">
-                            <Input v-model="markForm.attendance_date" type="date" />
-                            <SearchableSelect v-model="markForm.attendance_status_id" :options="attendanceStatusOptions" placeholder="Select status" clearable />
-                            <Input v-model="markForm.check_in_at" type="time" placeholder="Check-in" />
-                            <Input v-model="markForm.check_out_at" type="time" placeholder="Check-out" />
-                            <Input v-model="markForm.remarks" placeholder="Remarks (optional)" />
-                            <Button @click="markAttendance">Save</Button>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
-                    <table class="min-w-full divide-y divide-border">
-                        <thead class="bg-muted">
-                            <tr>
-                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase text-muted-foreground">#</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase text-muted-foreground">Date</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase text-muted-foreground">Status</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase text-muted-foreground">Check-in / out</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase text-muted-foreground">Late (min)</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-border">
-                            <tr v-for="(row, rowIndex) in attendanceRows" :key="row.id">
-                                <td class="px-4 py-3 text-sm text-muted-foreground">{{ rowIndex + 1 }}</td>
-                                <td class="px-4 py-3 text-sm text-foreground">{{ formatDate(row.attendance_date) }}</td>
-                                <td class="px-4 py-3 text-sm text-muted-foreground">{{ row.status?.name || '-' }}</td>
-                                <td class="px-4 py-3 text-sm text-muted-foreground">{{ row.check_in_at || '-' }} / {{ row.check_out_at || '-' }}</td>
-                                <td class="px-4 py-3 text-sm text-muted-foreground">{{ row.minutes_late }}</td>
-                            </tr>
-                            <tr v-if="attendanceRows.length === 0"><td colspan="5" class="px-4 py-6 text-center text-sm text-muted-foreground">No attendance recorded yet.</td></tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
             <!-- Leave -->
             <div v-if="activeTab === 'leave'" class="grid gap-6 xl:grid-cols-[380px_minmax(0,1fr)]">
                 <div class="space-y-6">
@@ -1255,5 +1205,5 @@ const activeJobsCount = computed(() => props.jobs.length);
             :staff-profile-id="props.staff.id"
             @given="loadAdvances"
         />
-    </PortalLayout>
+    </AppLayout>
 </template>

@@ -453,14 +453,52 @@ class FeePaymentController extends Controller
         return response()->json($payments);
     }
 
-    protected function getUnpaidVouchersForStudent(int $studentId)
+    /**
+     * @return array<int, array<string, mixed>>
+     */
+    protected function getUnpaidVouchersForStudent(int $studentId): array
     {
         return FeeVoucher::query()
             ->where('student_id', $studentId)
             ->whereIn('status', ['unpaid', 'partial', 'overdue'])
-            ->with(['voucherMonth', 'items.feeHead'])
+            ->with(['voucherMonth', 'items.feeHead', 'items.studentAccountCharge'])
             ->orderBy('voucher_year')
             ->orderBy('voucher_month_id')
-            ->get();
+            ->get()
+            ->map(function (FeeVoucher $voucher) {
+                $items = $voucher->items->map(function ($item) {
+                    $charge = $item->studentAccountCharge;
+                    $balance = $this->studentBillingService->getVoucherItemBalance($item);
+
+                    return [
+                        'id' => $item->id,
+                        'student_account_charge_id' => $charge?->id,
+                        'fee_head_id' => $item->fee_head_id,
+                        'fee_head_name' => $item->feeHead?->name,
+                        'description' => $item->description,
+                        'source_module' => $item->source_module ?? 'fee',
+                        'source_type' => $item->source_type instanceof \BackedEnum ? $item->source_type->value : (string) $item->source_type,
+                        'amount' => (float) $item->amount,
+                        'net_amount' => (float) $item->net_amount,
+                        'balance_amount' => $balance,
+                        'status' => $charge?->status ?? 'open',
+                    ];
+                })->filter(fn (array $item) => $item['balance_amount'] > 0)->values()->all();
+
+                return [
+                    'id' => $voucher->id,
+                    'voucher_no' => $voucher->voucher_no,
+                    'voucher_month' => $voucher->voucherMonth ? [
+                        'name' => $voucher->voucherMonth->name,
+                    ] : null,
+                    'voucher_year' => $voucher->voucher_year,
+                    'net_amount' => (float) $voucher->net_amount,
+                    'balance_amount' => (float) $voucher->balance_amount,
+                    'items' => $items,
+                ];
+            })
+            ->filter(fn (array $voucher) => ! empty($voucher['items']))
+            ->values()
+            ->all();
     }
 }
