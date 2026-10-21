@@ -220,7 +220,15 @@ const perPageOptions = [
     { id: 100, name: '100' },
 ];
 
+// Guards against out-of-order responses: creating/editing fee heads in quick
+// succession fires overlapping fetchFeeHeads() requests, and without this a
+// slower, now-stale response could land after a newer one and silently wipe
+// out the just-created row from the list.
+let fetchRequestId = 0;
+
 const fetchFeeHeads = (page = 1) => {
+    const requestId = ++fetchRequestId;
+
     const params = new URLSearchParams({
         per_page: perPage.value.toString(),
         page: page.toString(),
@@ -229,9 +237,15 @@ const fetchFeeHeads = (page = 1) => {
     if (filters.is_active !== '') params.append('is_active', filters.is_active);
 
     axios.get(route('fee.heads.all') + `?${params}`).then((response) => {
+        if (requestId !== fetchRequestId) {
+            return;
+        }
         feeHeadsData.value = response.data?.data || [];
         pagination.value = response.data || { data: [], links: [], from: 0, to: 0, total: 0 };
     }).catch((error) => {
+        if (requestId !== fetchRequestId) {
+            return;
+        }
         console.error('Failed to fetch fee heads:', error);
         alert.error('Failed to load fee heads. Please try again.');
     });
