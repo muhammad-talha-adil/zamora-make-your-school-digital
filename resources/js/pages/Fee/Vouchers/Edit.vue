@@ -514,17 +514,6 @@ const removeItem = async (item: FeeVoucherItem) => {
                             :disabled="isVoucherPaid"
                         ></textarea>
                     </div>
-
-                    <!-- Submit -->
-                    <div class="flex flex-wrap justify-end gap-3 pt-4 border-t border-border">
-                        <Button type="button" variant="outline" @click="cancel">
-                            Cancel
-                        </Button>
-                        <Button type="submit" :disabled="isSubmitting || isVoucherPaid">
-                            <Icon icon="check" class="mr-2 h-4 w-4" />
-                            {{ isSubmitting ? 'Saving...' : 'Save Changes' }}
-                        </Button>
-                    </div>
                 </form>
             </div>
 

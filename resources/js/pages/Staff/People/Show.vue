@@ -1,9 +1,9 @@
 <script setup lang="ts">
 import { Head, router, usePage } from '@inertiajs/vue3';
 import axios from 'axios';
-import { computed, reactive, ref, onMounted } from 'vue';
+import { computed, reactive, ref } from 'vue';
 import { route } from 'ziggy-js';
-import PortalLayout from '@/layouts/PortalLayout.vue';
+import AppLayout from '@/layouts/AppLayout.vue';
 import Icon from '@/components/Icon.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -136,8 +136,10 @@ interface Props {
 const props = defineProps<Props>();
 
 const breadcrumbs = computed(() => [
-    { title: 'Staff Portal', href: route('staff.index') },
-    { title: 'My Profile', href: route('staff.me') },
+    { title: 'Dashboard', href: '/dashboard' },
+    { title: 'Staff', href: route('staff.index') },
+    { title: 'Directory', href: route('staff.people.index') },
+    { title: props.staff.user?.name ?? 'Profile', href: route('staff.people.show', props.staff.id) },
 ]);
 
 const selectClass = 'w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground';
@@ -151,12 +153,12 @@ const sessionOptions = computed(() => props.sessions.map((s) => ({ value: String
 const classSelectOptions = computed(() => props.classOptions.map((c) => ({ value: String(c.id), label: c.name })));
 const subjectSelectOptions = computed(() => props.subjectOptions.map((s) => ({ value: String(s.id), label: s.name })));
 
-type TabKey = 'personal' | 'attendance' | 'leave' | 'salary' | 'advances';
+type TabKey = 'personal' | 'jobs' | 'leave' | 'salary' | 'advances';
 const activeTab = ref<TabKey>('personal');
 
 const tabs: { key: TabKey; label: string; icon: any; show: boolean }[] = [
     { key: 'personal', label: 'Personal', icon: 'user', show: true },
-    { key: 'attendance', label: 'Attendance', icon: 'calendar-check', show: props.can.viewAttendance },
+    { key: 'jobs', label: 'Jobs', icon: 'briefcase', show: props.can.edit },
     { key: 'leave', label: 'Leave', icon: 'calendar-x', show: props.can.viewAttendance || props.can.applyForLeave },
     { key: 'salary', label: 'Salary', icon: 'wallet', show: props.can.viewSalary },
     { key: 'advances', label: 'Advances', icon: 'banknote', show: props.can.viewSalary },
@@ -422,117 +424,6 @@ const rejoinStaff = async () => {
     }
 };
 
-/* -------------------------------------------------------------------- attendance */
-
-interface AttendanceRow {
-    id: number;
-    attendance_date: string;
-    check_in_at?: string | null;
-    check_out_at?: string | null;
-    minutes_late: number;
-    status?: { name: string; code: string } | null;
-}
-
-const attendanceRows = ref<AttendanceRow[]>([]);
-const attendanceLoaded = ref(false);
-const attendanceSummary = ref<Record<string, number> | null>(null);
-const attendanceStatuses = ref<{ id: number; name: string; code: string }[]>([]);
-const attendanceStatusOptions = computed(() => attendanceStatuses.value.map((s) => ({ value: String(s.id), label: s.name })));
-const currentAttendanceMonth = ref(new Date());
-const attendanceCalendarDays = ref<(Date | null)[]>([]);
-const attendanceMap = ref<Map<string, AttendanceRow>>(new Map());
-
-const markForm = reactive({
-    attendance_date: new Date().toISOString().slice(0, 10),
-    attendance_status_id: '',
-    check_in_at: '',
-    check_out_at: '',
-    remarks: '',
-});
-
-const loadAttendance = async () => {
-    const [rows, statuses] = await Promise.all([
-        axios.get(route('staff.attendance.index', props.staff.id)),
-        attendanceStatuses.value.length ? Promise.resolve(null) : axios.get(route('staff.attendance.statuses')),
-    ]);
-
-    attendanceRows.value = rows.data.data;
-    if (statuses) attendanceStatuses.value = statuses.data.data;
-    attendanceLoaded.value = true;
-    buildAttendanceCalendar();
-};
-
-const loadAttendanceSummary = async () => {
-    const now = new Date();
-    const response = await axios.get(route('staff.attendance.summary', props.staff.id), {
-        params: { from_month: now.getMonth() + 1, to_month: now.getMonth() + 1, year: now.getFullYear() },
-    });
-    attendanceSummary.value = response.data.data;
-};
-
-const buildAttendanceCalendar = () => {
-    const year = currentAttendanceMonth.value.getFullYear();
-    const month = currentAttendanceMonth.value.getMonth();
-    const firstDay = new Date(year, month, 1).getDay();
-    const daysInMonth = new Date(year, month + 1, 0).getDate();
-    const days: (Date | null)[] = [];
-
-    for (let i = 0; i < firstDay; i++) days.push(null);
-    for (let day = 1; day <= daysInMonth; day++) days.push(new Date(year, month, day));
-
-    attendanceCalendarDays.value = days;
-
-    attendanceMap.value.clear();
-    attendanceRows.value.forEach(record => {
-        if (record.attendance_date) {
-            attendanceMap.value.set(record.attendance_date, record);
-        }
-    });
-};
-
-const getDayAttendanceStatus = (date: Date | null) => {
-    if (!date) return null;
-    const key = date.toISOString().split('T')[0];
-    return attendanceMap.value.get(key)?.status?.code ?? null;
-};
-
-const isToday = (date: Date | null) => {
-    if (!date) return false;
-    const today = new Date();
-    return date.getDate() === today.getDate() &&
-           date.getMonth() === today.getMonth() &&
-           date.getFullYear() === today.getFullYear();
-};
-
-const prevAttendanceMonth = () => {
-    currentAttendanceMonth.value = new Date(currentAttendanceMonth.value.getFullYear(), currentAttendanceMonth.value.getMonth() - 1, 1);
-    buildAttendanceCalendar();
-};
-
-const nextAttendanceMonth = () => {
-    currentAttendanceMonth.value = new Date(currentAttendanceMonth.value.getFullYear(), currentAttendanceMonth.value.getMonth() + 1, 1);
-    buildAttendanceCalendar();
-};
-
-const goToTodayAttendance = () => {
-    currentAttendanceMonth.value = new Date();
-    buildAttendanceCalendar();
-};
-
-const markAttendance = async () => {
-    try {
-        await axios.post(route('staff.attendance.store', props.staff.id), markForm);
-        alert.success('Attendance marked.');
-        loadAttendance();
-    } catch (error: any) {
-        alert.error(error?.response?.data?.message || 'Failed to mark attendance.');
-    }
-};
-
-const attendanceMonthLabel = computed(() => {
-    return currentAttendanceMonth.value.toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
-});
-
 /* ------------------------------------------------------------------ leave */
 
 interface LeaveRow {
@@ -709,10 +600,7 @@ const returnAdvance = async (advance: Advance, status: 'returned' | 'waived') =>
 const switchTab = (tab: TabKey) => {
     activeTab.value = tab;
 
-    if (tab === 'attendance' && !attendanceLoaded.value) {
-        loadAttendance();
-        loadAttendanceSummary();
-    } else if (tab === 'leave' && !leaveLoaded.value) {
+    if (tab === 'leave' && !leaveLoaded.value) {
         loadLeave();
     } else if (tab === 'salary' && !salaryLoaded.value && props.can.viewSalary) {
         loadSalary();

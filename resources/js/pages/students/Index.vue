@@ -533,13 +533,14 @@ const clearSearch = () => {
 const selectedStudents = ref<number[]>([]);
 const selectAll = ref(false);
 
-// Toggle select all
-const toggleSelectAll = () => {
-    if (selectAll.value) {
-        selectedStudents.value = props.tableStudents.data.map((student) => student.id);
-    } else {
-        selectedStudents.value = [];
-    }
+// Toggle select all - reads the actual checkbox state from the change
+// event rather than `selectAll.value`, which `:checked="selectAll"` (a
+// one-way binding, not v-model) never updates on click; reading the stale
+// ref meant this always acted on the state before the click.
+const toggleSelectAll = (event: Event) => {
+    const checked = (event.target as HTMLInputElement).checked;
+    selectAll.value = checked;
+    selectedStudents.value = checked ? props.tableStudents.data.map((student) => student.id) : [];
 };
 
 // Toggle single student
