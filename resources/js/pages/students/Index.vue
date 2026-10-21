@@ -209,7 +209,7 @@
                                     Admission No
                                 </th>
                                 <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">
-                                    Campus / Class / Section
+                                    Class / Section
                                 </th>
                                 <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">
                                     Gender
@@ -253,8 +253,7 @@
                                     <div class="text-sm text-muted-foreground">{{ student.admission_no }}</div>
                                 </td>
                                 <td class="px-4 py-3 whitespace-nowrap">
-                                    <div class="text-sm text-muted-foreground">{{ getEnrollment(student).campus?.name || 'N/A' }}</div>
-                                    <div class="text-xs text-muted-foreground">{{ getEnrollment(student).class?.name || 'N/A' }} - {{ getEnrollment(student).section?.name || 'N/A' }}</div>
+                                    <div class="text-sm text-muted-foreground">{{ getEnrollment(student).class?.name || 'N/A' }} - {{ getEnrollment(student).section?.name || 'N/A' }}</div>
                                 </td>
                                 <td class="px-4 py-3 whitespace-nowrap">
                                     <div class="text-sm text-muted-foreground">{{ student.gender?.name || '-' }}</div>
@@ -463,19 +462,16 @@ const filters = reactive({
     search: props.filters?.search || '',
 });
 
-// Campus → Class → Section cascade (#47/#64/#82/#99/#100): narrows the
-// Section options to the selected Class's sections, and clears a lower
-// filter whenever the one above it changes, matching the pattern already
-// used on other pages (e.g. Fee/Vouchers/Generate.vue, students/Create.vue).
-// The cascade refs below are bound directly to the Campus/Class/Section
-// filter selects and are the source of truth for `filters.*`.
+// Class → Section cascade (#47/#64/#82/#99/#100): narrows the Section
+// options to the selected Class's sections, and clears Section whenever
+// Class changes. Campus is never part of this - the list is always scoped
+// to the viewer's current campus server-side (see StudentService::
+// getIndexData()), matching the convention used everywhere else in the app.
 const {
-    selectedCampusId: cascadeCampusId,
     selectedClassId: cascadeClassId,
     selectedSectionId: cascadeSectionId,
     availableClasses,
     availableSections,
-    isCampusLocked,
     isSectionSelectEnabled,
     hasNoSectionsForClass,
 } = useCascadingAcademicSelect({
@@ -483,13 +479,11 @@ const {
     classes: computed(() => props.classes),
     sections: computed(() => props.sections),
     sessions: computed(() => []),
-    initialCampusId: props.filters?.campus_id,
     initialClassId: props.filters?.class_id,
     initialSectionId: props.filters?.section_id,
     sessionStorageKey: 'students-index-filters',
 });
 
-const campusOptions = computed(() => props.campuses.map((campus) => ({ value: campus.id, label: campus.name })));
 const classOptions = computed(() => availableClasses.value.map((cls) => ({ value: cls.id, label: cls.name })));
 const sectionOptions = computed(() => availableSections.value.map((section) => ({ value: section.id, label: section.name })));
 const genderOptions = computed(() => props.genders.map((gender) => ({ value: gender.id, label: gender.name })));
@@ -497,41 +491,36 @@ const statusOptions = computed(() => props.statuses.map((status) => ({ value: st
 
 const buildQueryString = () => {
     const params = new URLSearchParams();
-    if (cascadeCampusId.value) params.append('campus_id', String(cascadeCampusId.value));
     if (cascadeClassId.value) params.append('class_id', String(cascadeClassId.value));
     if (cascadeSectionId.value) params.append('section_id', String(cascadeSectionId.value));
-    if (filters.gender_id) params.append('gender_id', filters.gender_id);
-    if (filters.status) params.append('status', filters.status);
+    if (filters.gender_id) params.append('gender_id', String(filters.gender_id));
+    if (filters.status) params.append('status', String(filters.status));
     if (filters.search) params.append('search', filters.search);
     return params.toString();
 };
 
+// Every filter (the cascade refs and the plain `filters` fields alike) goes
+// through this one function, so there is exactly one in-flight navigation
+// at a time - picking a filter while an earlier one's request is still
+// resolving used to race, leaving the UI showing a selection the server
+// never actually received until a manual refresh forced a fresh request.
 const applyFilters = () => {
     router.visit(route('students.index') + `?${buildQueryString()}`, {
         preserveState: true,
+        preserveScroll: true,
+        replace: true,
     });
 };
 
-watch([cascadeCampusId, cascadeClassId, cascadeSectionId], () => {
-    applyFilters();
-});
-watch(() => filters.gender_id, () => {
-    applyFilters();
-});
-watch(() => filters.status, () => {
-    applyFilters();
-});
+const debouncedApplyFilters = debounce(applyFilters, 300);
 
-// Create debounced search function
-const debouncedSearch = debounce(() => {
-    router.visit(route('students.index') + `?${buildQueryString()}`, {
-        preserveState: true,
-    });
-}, 300);
+watch([cascadeClassId, cascadeSectionId, () => filters.gender_id, () => filters.status], () => {
+    applyFilters();
+});
 
 // Handler for search input
 const handleSearch = () => {
-    debouncedSearch();
+    debouncedApplyFilters();
 };
 
 // Clear search and reset
