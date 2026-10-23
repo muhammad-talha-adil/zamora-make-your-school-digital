@@ -55,15 +55,6 @@ const fetchSessions = (page = pagination.value?.current_page || 1) => {
 const getRowNumber = (index: number) =>
     ((pagination.value?.from || 1) - 1) + index + 1;
 
-const getPageFromUrl = (url: string | null) => {
-    if (!url) {
-        return null;
-    }
-
-    const page = new URL(url, window.location.origin).searchParams.get('page');
-    return page ? Number.parseInt(page, 10) : 1;
-};
-
 const getYearsLabel = (session: any) => {
     if (session.start_year && session.end_year) {
         return `${session.start_year}-${session.end_year}`;

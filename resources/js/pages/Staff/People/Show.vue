@@ -8,15 +8,9 @@ import Icon from '@/components/Icon.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
 import { alert } from '@/utils';
 import GiveAdvanceDialog from '@/components/Staff/GiveAdvanceDialog.vue';
 import SearchableSelect from '@/components/ui/searchable-select/SearchableSelect.vue';
-import type { BreadcrumbItem } from '@/types';
 
 interface Lookup {
     id: number;
@@ -142,7 +136,6 @@ const breadcrumbs = computed(() => [
     { title: props.staff.user?.name ?? 'Profile', href: route('staff.people.show', props.staff.id) },
 ]);
 
-const selectClass = 'w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground';
 
 const genderOptions = computed(() => props.genders.map((g) => ({ value: String(g.id), label: g.name })));
 const bloodGroupOptions = [
@@ -200,35 +193,6 @@ const personalForm = reactive({
     emergency_contact_relation: props.staff.emergency_contact_relation ?? '',
 });
 
-const avatarFile = ref<File | null>(null);
-const avatarPreview = ref<string | null>(props.staff.avatar ?? null);
-const savingAvatar = ref(false);
-
-const onAvatarChange = (event: Event) => {
-    const file = (event.target as HTMLInputElement).files?.[0];
-    if (file) {
-        avatarFile.value = file;
-        avatarPreview.value = URL.createObjectURL(file);
-    }
-};
-
-const uploadAvatar = async () => {
-    if (!avatarFile.value) return;
-    savingAvatar.value = true;
-    try {
-        const formData = new FormData();
-        formData.append('avatar', avatarFile.value);
-        await axios.post(route('staff.people.avatar', props.staff.id), formData, {
-            headers: { 'Content-Type': 'multipart/form-data' },
-        });
-        alert.success('Avatar updated.');
-        router.reload({ only: ['staff'] });
-    } catch (error: any) {
-        alert.error(error?.response?.data?.message || 'Failed to upload avatar.');
-    } finally {
-        savingAvatar.value = false;
-    }
-};
 
 const savePersonal = async () => {
     try {
@@ -501,16 +465,6 @@ const cancelLeave = async (leave: LeaveRow) => {
     loadLeave();
 };
 
-const getLeaveStatusConfig = (status: string) => {
-    const configs: Record<string, { label: string; variant: 'success' | 'destructive' | 'warning' | 'secondary' | 'default'; color: string }> = {
-        pending: { label: 'Pending', variant: 'warning', color: 'text-warning' },
-        approved: { label: 'Approved', variant: 'success', color: 'text-success' },
-        rejected: { label: 'Rejected', variant: 'destructive', color: 'text-destructive' },
-        cancelled: { label: 'Cancelled', variant: 'secondary', color: 'text-muted-foreground' },
-    };
-    return configs[status] ?? { label: status, variant: 'default', color: 'text-muted-foreground' };
-};
-
 /* ----------------------------------------------------------------- salary */
 
 interface SalaryComponent {
@@ -527,7 +481,6 @@ const salaryHeadOptions = computed(() => salaryHeads.value.map((h) => ({ value: 
 const salaryGross = ref<number | null>(null);
 const salaryDeductions = ref<number | null>(null);
 const salaryLoaded = ref(false);
-const showPayslipDialog = ref(false);
 
 const componentForm = reactive({ salary_head_id: '', amount: '', effective_from: new Date().toISOString().slice(0, 10) });
 

@@ -7,10 +7,6 @@ import { Button } from '@/components/ui/button';
 import {
     DropdownMenu,
     DropdownMenuContent,
-    DropdownMenuGroup,
-    DropdownMenuItem,
-    DropdownMenuLabel,
-    DropdownMenuSeparator,
     DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import {
@@ -33,7 +29,7 @@ import { toUrl } from '@/lib/utils';
 import type { BreadcrumbItem, NavItem } from '@/types';
 import type { InertiaLinkProps } from '@inertiajs/vue3';
 import { Link, usePage, router } from '@inertiajs/vue3';
-import { BookOpen, Folder, LayoutGrid, Menu, Search, Sun, Moon, Bell, X, Command, Loader2 } from 'lucide-vue-next';
+import { BookOpen, Folder, LayoutGrid, Menu, Search, Sun, Moon, Bell, Command, Loader2 } from 'lucide-vue-next';
 import { computed, ref, onMounted, onUnmounted, watch } from 'vue';
 import { useAppearance } from '@/composables/useAppearance';
 
@@ -53,7 +49,6 @@ const { resolvedAppearance, updateAppearance } = useAppearance();
 const isSearchOpen = ref(false);
 const searchQuery = ref('');
 const searchResults = ref<NavItem[]>([]);
-const showNotifications = ref(false);
 const notifications = ref<Array<{id: number, title: string, message: string, time: string, read: boolean}>>([
     { id: 1, title: 'New fee payment', message: 'John Doe paid $500 for Term 1', time: '2 min ago', read: false },
     { id: 2, title: 'Low stock alert', message: 'A4 Paper Reams below threshold', time: '1 hour ago', read: false },

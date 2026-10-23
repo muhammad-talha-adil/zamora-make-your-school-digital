@@ -15,7 +15,11 @@ jobs:
     runs-on: ubuntu-latest
     strategy:
       matrix:
-        php-version: ['8.4', '8.5']
+        # 8.5 is excluded for now - `composer install` fails against it almost
+        # instantly (a dependency's own composer.json doesn't yet declare
+        # 8.5 support, PHP 8.5 being very new), and production/composer.json
+        # both target 8.4 anyway. Re-add once the dependency tree catches up.
+        php-version: ['8.4']
 
     steps:
       - name: Checkout

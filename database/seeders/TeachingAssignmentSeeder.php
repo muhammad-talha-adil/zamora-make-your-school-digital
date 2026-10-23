@@ -2,6 +2,8 @@
 
 namespace Database\Seeders;
 
+use App\Models\SchoolClass;
+use App\Models\Section;
 use App\Models\Session;
 use App\Models\Staff\StaffSubject;
 use App\Models\StaffProfile;
@@ -25,9 +27,9 @@ class TeachingAssignmentSeeder extends Seeder
     public function run(): void
     {
         $session = Session::where('name', '2025-2026')->first();
-        $classFive = \App\Models\SchoolClass::where('name', 'Five')->first();
+        $classFive = SchoolClass::where('name', 'Five')->first();
         $sectionA = $classFive
-            ? \App\Models\Section::where('class_id', $classFive->id)->where('name', 'A')->first()
+            ? Section::where('class_id', $classFive->id)->where('name', 'A')->first()
             : null;
 
         if (! $session || ! $classFive || ! $sectionA) {
@@ -65,8 +67,8 @@ class TeachingAssignmentSeeder extends Seeder
      */
     private function seedClassFiveAAssignments(
         Session $session,
-        \App\Models\SchoolClass $classFive,
-        \App\Models\Section $sectionA,
+        SchoolClass $classFive,
+        Section $sectionA,
         Collection $subjects,
         Collection $teachers
     ): void {

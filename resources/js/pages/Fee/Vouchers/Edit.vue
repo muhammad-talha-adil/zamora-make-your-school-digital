@@ -176,10 +176,6 @@ const submitForm = () => {
     });
 };
 
-const cancel = () => {
-    router.visit(route('fee.vouchers.show', props.voucher.id));
-};
-
 const formatCurrency = (amount: number): string => {
     return new Intl.NumberFormat('en-PK', {
         style: 'currency',

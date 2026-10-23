@@ -171,16 +171,6 @@ watch(() => props.structures, (newStructures) => {
     pagination.value = newStructures || { data: [], links: [], from: 0, to: 0, total: 0, current_page: 1, last_page: 1, per_page: 10 };
 }, { deep: true });
 
-const getStatusColor = (status: string) => {
-    const colors: Record<string, string> = {
-        active: 'bg-success/10 text-success',
-        inactive: 'bg-muted text-foreground',
-        draft: 'bg-warning/10 text-warning',
-    };
-
-    return colors[status] || colors.inactive;
-};
-
 const toggleStatus = (structure: FeeStructure) => {
     const actionText = structure.status === 'active' ? 'deactivate' : 'activate';
     const confirmButtonText = structure.status === 'active' ? 'Yes, deactivate it!' : 'Yes, activate it!';

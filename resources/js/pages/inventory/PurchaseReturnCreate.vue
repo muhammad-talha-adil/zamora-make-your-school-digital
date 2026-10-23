@@ -286,16 +286,6 @@ const fetchPurchaseItems = async () => {
     }
 };
 
-const onCampusChange = () => {
-    form.supplier_id = null;
-    form.purchase_id = null;
-    purchaseItems.value = [];
-    form.items = [];
-    suppliers.value = [];
-    purchases.value = [];
-    fetchSuppliers();
-};
-
 const onSupplierChange = () => {
     form.purchase_id = null;
     purchaseItems.value = [];

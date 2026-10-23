@@ -96,14 +96,6 @@ const loading = ref(false);
 
 const campusOptions = computed(() => props.campuses.map((campus) => ({ value: String(campus.id), label: campus.name })));
 
-const formatMoney = (amount: number | string | null | undefined) => {
-    if (amount === null || amount === undefined) {
-        return '—';
-    }
-
-    return new Intl.NumberFormat('en-PK', { style: 'currency', currency: 'PKR', minimumFractionDigits: 0 }).format(Number(amount));
-};
-
 const loadStaff = async (page = 1) => {
     loading.value = true;
 

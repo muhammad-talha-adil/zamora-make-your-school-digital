@@ -80,7 +80,6 @@ const breadcrumbItems: BreadcrumbItem[] = [
     { title: 'Payroll', href: route('staff.payroll.page') },
 ];
 
-const selectClass = 'w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground';
 
 const expandedRunId = ref<number | null>(null);
 const campusFilter = ref('');
