@@ -32,8 +32,12 @@ class GuardianService
      */
     public function createGuardianUser(Guardian $guardian, string $guardianName, ?string $guardianEmail): User
     {
-        // Generate role-prefixed username based on phone number
-        $username = $this->generateGuardianUsername($guardian->phone);
+        // Generate role-prefixed username based on phone number - two real,
+        // unrelated phone numbers sharing the same last 6 digits is rare but
+        // not impossible, and generateGuardianUsername() alone has no way to
+        // know that; left unchecked it hits the DB's unique constraint and
+        // fails the whole admission with no student actually saved.
+        $username = $this->ensureUniqueUsername($this->generateGuardianUsername($guardian->phone));
 
         // Generate email based on processed name or use provided email
         $email = $this->generateUniqueEmail($guardianName, $guardianEmail);
@@ -140,6 +144,24 @@ class GuardianService
         }
 
         return 'GRD-'.$last6Digits;
+    }
+
+    /**
+     * Appends -2, -3, ... until the username is actually free, instead of
+     * letting the base candidate hit the DB's unique constraint.
+     */
+    protected function ensureUniqueUsername(string $base): string
+    {
+        if (! User::where('username', $base)->exists()) {
+            return $base;
+        }
+
+        $suffix = 2;
+        while (User::where('username', "{$base}-{$suffix}")->exists()) {
+            $suffix++;
+        }
+
+        return "{$base}-{$suffix}";
     }
 
     /**
