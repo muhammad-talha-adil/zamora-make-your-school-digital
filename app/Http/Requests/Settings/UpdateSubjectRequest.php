@@ -34,6 +34,8 @@ class UpdateSubjectRequest extends FormRequest
             ],
             'description' => 'nullable|string',
             'is_active' => 'boolean',
+            'campus_ids' => 'nullable|array',
+            'campus_ids.*' => 'integer|exists:campuses,id',
         ];
     }
 }

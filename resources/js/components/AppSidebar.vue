@@ -15,7 +15,7 @@ import { Link, usePage } from '@inertiajs/vue3';
 import { route } from 'ziggy-js';
 import AppLogo from './AppLogo.vue';
 import type { AppPageProps } from '@/types';
-import { onMounted, ref, nextTick } from 'vue';
+import { onMounted, ref } from 'vue';
 
 const page = usePage<AppPageProps>();
 const sidebarRef = ref<HTMLElement | null>(null);

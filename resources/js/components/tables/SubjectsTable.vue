@@ -12,9 +12,14 @@ import { route } from 'ziggy-js';
 
 interface Props {
     subjects: any;
+    isSuperAdmin?: boolean;
+    campuses?: Array<{ id: number; name: string }>;
 }
 
-const props = defineProps<Props>();
+const props = withDefaults(defineProps<Props>(), {
+    isSuperAdmin: false,
+    campuses: () => [],
+});
 const EMPTY_VALUE = '-';
 
 const statusFilter = ref('');
@@ -56,14 +61,6 @@ const fetchSubjects = (page = pagination.value?.current_page || 1) => {
 const getRowNumber = (index: number) =>
     ((pagination.value?.from || 1) - 1) + index + 1;
 
-const getPageFromUrl = (url: string | null) => {
-    if (!url) {
-        return null;
-    }
-
-    const page = new URL(url, window.location.origin).searchParams.get('page');
-    return page ? Number.parseInt(page, 10) : 1;
-};
 
 watch([statusFilter, perPage], () => {
     fetchSubjects(1);
@@ -138,7 +135,7 @@ const inactivateSubject = (subject: any) => {
                 <SearchableSelect v-model="statusFilter" :options="statusSelectOptions" placeholder="All" class="w-32" />
             </div>
             <div class="flex gap-2">
-                <SubjectForm @saved="handleSaved" />
+                <SubjectForm :is-super-admin="isSuperAdmin" :campuses="campuses" @saved="handleSaved" />
             </div>
         </div>
         <div class="overflow-hidden rounded-lg border border-border bg-card shadow-sm">
@@ -202,6 +199,8 @@ const inactivateSubject = (subject: any) => {
                                 <RowActions>
                                     <SubjectForm
                                         :subject="subject"
+                                        :is-super-admin="isSuperAdmin"
+                                        :campuses="campuses"
                                         trigger="Edit"
                                         class="contents"
                                         @saved="handleSaved"
@@ -209,6 +208,9 @@ const inactivateSubject = (subject: any) => {
                                     <RowAction kind="delete" @click="deleteSubject(subject)" />
                                 </RowActions>
                             </td>
+                        </tr>
+                        <tr v-if="subjectsData.length === 0">
+                            <td colspan="6" class="px-6 py-8 text-center text-sm text-muted-foreground">No subjects found.</td>
                         </tr>
                     </tbody>
                 </table>

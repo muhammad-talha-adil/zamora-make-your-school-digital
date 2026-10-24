@@ -8,7 +8,6 @@ import axios from 'axios';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { Button } from '@/components/ui/button';
 import Icon from '@/components/Icon.vue';
-import { Badge } from '@/components/ui/badge';
 import type { BreadcrumbItem } from '@/types';
 import SupplierForm from '@/components/forms/inventory/SupplierForm.vue';
 import DateRangePicker from '@/components/ui/date-range-picker/DateRangePicker.vue';

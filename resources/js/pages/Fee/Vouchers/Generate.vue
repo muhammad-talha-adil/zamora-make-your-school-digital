@@ -143,8 +143,6 @@ const {
     availableSections,
     isCampusLocked,
     lockedCampusId,
-    isSectionSelectEnabled,
-    hasNoSectionsForClass,
 } = useCascadingAcademicSelect({
     campuses: computed(() => props.campuses),
     classes: computed(() => props.classes),

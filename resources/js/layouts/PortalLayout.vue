@@ -1,9 +1,8 @@
 <script setup lang="ts">
 import { Link, router, usePage } from '@inertiajs/vue3';
-import { computed, ref, watch, onMounted } from 'vue';
-import { Menu, X, User, LogOut, Sun, Moon, ChevronDown, Home, BookOpen, Calendar, Wallet, Settings } from 'lucide-vue-next';
+import { computed, ref, onMounted } from 'vue';
+import { Menu, LogOut, Sun, Moon, ChevronDown, Home, BookOpen, Calendar, Wallet } from 'lucide-vue-next';
 import AppShell from '@/components/layout/AppShell.vue';
-import { Button } from '@/components/ui/button';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuTrigger, DropdownMenuSeparator } from '@/components/ui/dropdown-menu';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';

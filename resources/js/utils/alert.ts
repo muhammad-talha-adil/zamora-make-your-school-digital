@@ -50,7 +50,6 @@ export const alert = {
             confirmButtonText: 'OK',
             allowOutsideClick: true,
             allowEscapeKey: true,
-            backdrop: false,
             customClass: {
                 popup: 'swal2-popup',
                 confirmButton: 'swal2-confirm',

@@ -6,15 +6,21 @@ import TablePagination from '@/components/tables/TablePagination.vue';
 import { alert, formatDate } from '@/utils';
 import StatusToggle from '@/components/tables/StatusToggle.vue';
 import SearchableSelect from '@/components/ui/searchable-select/SearchableSelect.vue';
+import { router } from '@inertiajs/vue3';
 import axios from 'axios';
 import { computed, ref, watch } from 'vue';
 import { route } from 'ziggy-js';
 
 interface Props {
     sessions: any;
+    isSuperAdmin?: boolean;
+    campuses?: Array<{ id: number; name: string }>;
 }
 
-const props = defineProps<Props>();
+const props = withDefaults(defineProps<Props>(), {
+    isSuperAdmin: false,
+    campuses: () => [],
+});
 const EMPTY_VALUE = '-';
 
 const statusFilter = ref('');
@@ -55,15 +61,6 @@ const fetchSessions = (page = pagination.value?.current_page || 1) => {
 const getRowNumber = (index: number) =>
     ((pagination.value?.from || 1) - 1) + index + 1;
 
-const getPageFromUrl = (url: string | null) => {
-    if (!url) {
-        return null;
-    }
-
-    const page = new URL(url, window.location.origin).searchParams.get('page');
-    return page ? Number.parseInt(page, 10) : 1;
-};
-
 const getYearsLabel = (session: any) => {
     if (session.start_year && session.end_year) {
         return `${session.start_year}-${session.end_year}`;
@@ -99,6 +96,7 @@ watch(
 
 const handleSaved = () => {
     fetchSessions(pagination.value?.current_page || 1);
+    router.reload({ only: ['hasActiveSession'] });
 };
 
 const deleteSession = (session: any) => {
@@ -112,6 +110,7 @@ const deleteSession = (session: any) => {
             }).then(() => {
                 alert.success('Session deleted successfully!');
                 fetchSessions(pagination.value?.current_page || 1);
+                router.reload({ only: ['hasActiveSession'] });
             }).catch((error) => {
                 alert.error(error.response?.data?.message || 'Failed to delete session. Please try again.');
             });
@@ -125,6 +124,7 @@ const activateSession = (session: any) => {
     }).then(() => {
         alert.success('Session activated successfully!');
         fetchSessions(pagination.value?.current_page || 1);
+        router.reload({ only: ['hasActiveSession'] });
     }).catch((error) => {
         alert.error(error.response?.data?.message || 'Failed to activate session. Please try again.');
     });
@@ -142,6 +142,7 @@ const inactivateSession = (session: any) => {
             }).then(() => {
                 alert.success('Session deactivated successfully!');
                 fetchSessions(pagination.value?.current_page || 1);
+                router.reload({ only: ['hasActiveSession'] });
             }).catch((error) => {
                 alert.error(error.response?.data?.message || 'Failed to deactivate session. Please try again.');
             });
@@ -157,7 +158,7 @@ const inactivateSession = (session: any) => {
                 <SearchableSelect v-model="statusFilter" :options="statusSelectOptions" placeholder="All" class="w-32" />
             </div>
             <div class="flex gap-2">
-                <AcademicSessionForm @saved="handleSaved" />
+                <AcademicSessionForm :is-super-admin="isSuperAdmin" :campuses="campuses" @saved="handleSaved" />
             </div>
         </div>
         <div class="overflow-hidden rounded-lg border border-border bg-card shadow-sm">
@@ -221,6 +222,8 @@ const inactivateSession = (session: any) => {
                                 <RowActions>
                                     <AcademicSessionForm
                                         :session="session"
+                                        :is-super-admin="isSuperAdmin"
+                                        :campuses="campuses"
                                         trigger="Edit"
                                         class="contents"
                                         @saved="handleSaved"
@@ -228,6 +231,9 @@ const inactivateSession = (session: any) => {
                                     <RowAction kind="delete" @click="deleteSession(session)" />
                                 </RowActions>
                             </td>
+                        </tr>
+                        <tr v-if="sessionsData.length === 0">
+                            <td colspan="6" class="px-6 py-8 text-center text-sm text-muted-foreground">No sessions found.</td>
                         </tr>
                     </tbody>
                 </table>

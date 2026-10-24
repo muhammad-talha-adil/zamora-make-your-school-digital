@@ -10,6 +10,7 @@ import { Button, type ButtonVariants } from '@/components/ui/button';
 import {
     Dialog,
     DialogContent,
+    DialogDescription,
     DialogHeader,
     DialogTitle,
     DialogTrigger,
@@ -221,6 +222,9 @@ const handleCampusTypeSaved = (campusType: { id: number; name: string } | undefi
                     </div>
                     {{ campus ? 'Edit Campus' : 'Add New Campus' }}
                 </DialogTitle>
+                <DialogDescription>
+                    {{ campus ? 'Update this campus\'s details.' : 'Add a new campus to the school.' }}
+                </DialogDescription>
             </DialogHeader>
 
             <form @submit.prevent="submit" class="space-y-5">

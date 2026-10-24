@@ -55,14 +55,6 @@ const fetchSections = (page = pagination.value?.current_page || 1) => {
 const getRowNumber = (index: number) =>
     ((pagination.value?.from || 1) - 1) + index + 1;
 
-const getPageFromUrl = (url: string | null) => {
-    if (!url) {
-        return null;
-    }
-
-    const page = new URL(url, window.location.origin).searchParams.get('page');
-    return page ? Number.parseInt(page, 10) : 1;
-};
 
 watch([statusFilter, classFilter, perPage], () => {
     fetchSections(1);
@@ -220,6 +212,9 @@ const handleSaved = () => {
                                     <RowAction kind="delete" @click="deleteSection(section)" />
                                 </RowActions>
                             </td>
+                        </tr>
+                        <tr v-if="sectionsData.length === 0">
+                            <td colspan="7" class="px-6 py-8 text-center text-sm text-muted-foreground">No sections found.</td>
                         </tr>
                     </tbody>
                 </table>
