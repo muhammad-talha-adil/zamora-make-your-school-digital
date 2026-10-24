@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Settings;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Settings\UpdateSchoolWebsiteContentRequest;
 use App\Models\School;
+use App\Models\ThemeSetting;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -41,7 +42,13 @@ class SchoolController extends Controller
             'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
             'is_active' => 'boolean',
             'website_enabled' => 'boolean',
+            'theme_colors' => 'nullable|string',
         ]);
+
+        // Not a School column - handled separately below, and must not reach
+        // School::update()/create() or it fails as an unknown attribute.
+        $themeColors = $validated['theme_colors'] ?? null;
+        unset($validated['theme_colors']);
 
         $school = School::first();
 
@@ -58,7 +65,45 @@ class SchoolController extends Controller
             School::create($validated);
         }
 
+        if ($themeColors !== null) {
+            $this->saveAutoTheme($themeColors, $request->user());
+        }
+
         return back()->with('success', 'School information updated successfully.');
+    }
+
+    /**
+     * The client extracts a light/dark palette from the uploaded logo and
+     * posts it as a `theme_colors` JSON string alongside the profile form.
+     * Persisted into the same `theme_settings` rows the Appearance screen
+     * manages, so it applies app-wide through the existing theming pipeline.
+     *
+     * Silently skipped (not a validation failure) for malformed JSON or a
+     * caller without `school.theme.manage` - this is a convenience on top
+     * of the profile save, not a required part of it.
+     */
+    private function saveAutoTheme(string $themeColors, $user): void
+    {
+        if (! $user?->hasPermission('school.theme.manage')) {
+            return;
+        }
+
+        $decoded = json_decode($themeColors, true);
+
+        if (! is_array($decoded)) {
+            return;
+        }
+
+        foreach (['light', 'dark'] as $mode) {
+            if (! isset($decoded[$mode]) || ! is_array($decoded[$mode])) {
+                continue;
+            }
+
+            ThemeSetting::updateOrCreate(
+                ['mode' => $mode],
+                ['colors_json' => $decoded[$mode], 'updated_by' => $user->id]
+            );
+        }
     }
 
     /**

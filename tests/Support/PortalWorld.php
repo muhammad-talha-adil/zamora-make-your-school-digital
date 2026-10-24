@@ -215,8 +215,13 @@ class PortalWorld
     /**
      * A paper on the timetable, for the shared class and section.
      */
-    public function paperFor(string $subjectName = 'English', string $paperDate = '2026-09-25'): ExamPaper
+    public function paperFor(string $subjectName = 'English', ?string $paperDate = null): ExamPaper
     {
+        // Relative to "today" rather than a fixed calendar date, so this
+        // fixture (and the "upcoming papers" queries that read it) never
+        // goes stale as real time passes the hardcoded date it used to be.
+        $paperDate ??= now()->addDays(10)->toDateString();
+
         $examType = ExamType::firstOrCreate(
             ['name' => 'Portal Term'],
             ['short_name' => 'PT', 'is_active' => true]
@@ -227,8 +232,8 @@ class PortalWorld
             [
                 'session_id' => $this->fee->school->session->id,
                 'exam_type_id' => $examType->id,
-                'start_date' => '2026-09-01',
-                'end_date' => '2026-10-10',
+                'start_date' => now()->toDateString(),
+                'end_date' => now()->addDays(30)->toDateString(),
                 'status' => 'scheduled',
                 'is_locked' => false,
             ]
