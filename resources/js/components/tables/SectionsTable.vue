@@ -213,6 +213,9 @@ const handleSaved = () => {
                                 </RowActions>
                             </td>
                         </tr>
+                        <tr v-if="sectionsData.length === 0">
+                            <td colspan="7" class="px-6 py-8 text-center text-sm text-muted-foreground">No sections found.</td>
+                        </tr>
                     </tbody>
                 </table>
             </div>

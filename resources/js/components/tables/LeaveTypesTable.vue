@@ -209,6 +209,9 @@ const deleteLeaveType = (leaveType: any) => {
                                 </RowActions>
                             </td>
                         </tr>
+                        <tr v-if="leaveTypesData.length === 0">
+                            <td colspan="6" class="px-6 py-8 text-center text-sm text-muted-foreground">No leave types found.</td>
+                        </tr>
                     </tbody>
                 </table>
             </div>

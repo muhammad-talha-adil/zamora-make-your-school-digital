@@ -218,6 +218,9 @@ const forceDeleteExamType = (examType: any) => {
                                 </RowActions>
                             </td>
                         </tr>
+                        <tr v-if="examTypesData.length === 0">
+                            <td colspan="6" class="px-6 py-8 text-center text-sm text-muted-foreground">No exam types found.</td>
+                        </tr>
                     </tbody>
                 </table>
             </div>
