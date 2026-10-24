@@ -30,16 +30,22 @@ interface Props {
         short_name?: string;
         description?: string;
         is_active: boolean;
+        campuses?: Array<{ id: number; name: string }>;
     };
     trigger?: string;
     variant?: ButtonVariants['variant'];
     size?: ButtonVariants['size'];
+    /** Owner/developer only - everyone else is auto-scoped to their own campus server-side. */
+    isSuperAdmin?: boolean;
+    campuses?: Array<{ id: number; name: string }>;
 }
 
 const props = withDefaults(defineProps<Props>(), {
     trigger: 'Add Subject',
     variant: 'default',
     size: 'default',
+    isSuperAdmin: false,
+    campuses: () => [],
 });
 
 // Emits
@@ -54,6 +60,9 @@ const getInitialForm = () => ({
     short_name: props.subject?.short_name || '',
     description: props.subject?.description || '',
     is_active: props.subject?.is_active ?? true,
+    campus_ids: props.subject
+        ? (props.subject.campuses ?? []).map((c) => c.id)
+        : props.campuses.map((c) => c.id),
 });
 
 const form = ref(getInitialForm());
@@ -76,11 +85,15 @@ const submit = () => {
     processing.value = true;
     errors.value = {};
 
-    const formData = {
+    const formData: Record<string, unknown> = {
         name: form.value.name,
         description: form.value.description,
         is_active: form.value.is_active ? 1 : 0,
     };
+
+    if (props.isSuperAdmin) {
+        formData.campus_ids = form.value.campus_ids;
+    }
 
     if (props.subject) {
         // Update
@@ -173,6 +186,33 @@ const resetForm = () => {
                             :class="{ 'border-destructive': errors.description }"
                         />
                         <InputError :message="errors.description" />
+                    </div>
+
+                    <div v-if="isSuperAdmin" class="grid gap-2">
+                        <Label>Campuses <span class="text-destructive">*</span></Label>
+                        <div class="flex items-center gap-2 border-b border-border pb-2">
+                            <input
+                                id="subject_campus_ids_all"
+                                type="checkbox"
+                                :checked="form.campus_ids.length === campuses.length && campuses.length > 0"
+                                class="rounded border-border text-primary shadow-sm focus:ring-primary"
+                                @change="form.campus_ids = ($event.target as HTMLInputElement).checked ? campuses.map((c) => c.id) : []"
+                            />
+                            <Label for="subject_campus_ids_all" class="font-normal">All Campuses</Label>
+                        </div>
+                        <div class="grid max-h-40 grid-cols-2 gap-2 overflow-y-auto">
+                            <div v-for="campus in campuses" :key="campus.id" class="flex items-center gap-2">
+                                <input
+                                    :id="`subject_campus_ids_${campus.id}`"
+                                    v-model="form.campus_ids"
+                                    type="checkbox"
+                                    :value="campus.id"
+                                    class="rounded border-border text-primary shadow-sm focus:ring-primary"
+                                />
+                                <Label :for="`subject_campus_ids_${campus.id}`" class="font-normal">{{ campus.name }}</Label>
+                            </div>
+                        </div>
+                        <InputError :message="errors.campus_ids" />
                     </div>
 
                     <div class="flex items-center space-x-2">

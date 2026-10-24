@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Settings;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Settings\StoreSchoolClassRequest;
 use App\Http\Requests\Settings\UpdateSchoolClassRequest;
+use App\Models\Campus;
 use App\Models\SchoolClass;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
@@ -24,8 +25,14 @@ class SchoolClassController extends Controller
             ->orderBy('id', 'desc')
             ->paginate(10);
 
+        $user = request()->user();
+
         return Inertia::render('settings/SchoolClasses/Index', [
             'tableSchoolClasses' => $schoolClasses,
+            'isSuperAdmin' => $user?->isSuperAdmin() ?? false,
+            'campuses' => $user?->isSuperAdmin()
+                ? Campus::query()->orderBy('name')->get(['id', 'name'])
+                : [],
         ]);
     }
 
@@ -78,17 +85,48 @@ class SchoolClassController extends Controller
         Gate::authorize('create', SchoolClass::class);
 
         $validated = $request->validated();
-        $validated['is_active'] = true; // New classes are always active
-        // The class belongs to whichever campus the creator is currently
-        // scoped to (their own campus, or the header switcher's pick for an
-        // owner/developer) — not a client-supplied value, so a class can't
-        // be filed under a campus the creator doesn't actually administer.
-        $validated['campus_id'] = $request->user()->campusId();
+        $user = $request->user();
 
-        $schoolClass = SchoolClass::create($validated);
+        // A class is one row per campus (Sections, enrollment, fee and
+        // attendance all key off a class's single campus_id) - an
+        // owner/developer picking several campuses gets one identical class
+        // created in each, rather than one row shared across them.
+        $campusIds = ($user->isSuperAdmin() && ! empty($validated['campus_ids']))
+            ? $validated['campus_ids']
+            : [$user->campusId()];
+
+        $conflictingCampusIds = SchoolClass::query()
+            ->whereIn('campus_id', $campusIds)
+            ->where('name', $validated['name'])
+            ->pluck('campus_id');
+
+        $duplicateCampusNames = Campus::query()->whereIn('id', $conflictingCampusIds)->pluck('name');
+
+        if ($duplicateCampusNames->isNotEmpty()) {
+            $message = 'A class named "'.$validated['name'].'" already exists in: '.$duplicateCampusNames->implode(', ').'.';
+
+            if ($request->expectsJson()) {
+                return response()->json(['success' => false, 'message' => $message, 'errors' => ['name' => [$message]]], 422);
+            }
+
+            return redirect()->back()->withErrors(['name' => $message]);
+        }
+
+        $schoolClasses = collect($campusIds)->map(fn ($campusId) => SchoolClass::create([
+            'name' => $validated['name'],
+            'description' => $validated['description'] ?? null,
+            'is_active' => true,
+            'campus_id' => $campusId,
+        ]));
 
         if (request()->expectsJson()) {
-            return response()->json(['success' => true, 'message' => 'Class created successfully.', 'schoolClass' => $schoolClass]);
+            return response()->json([
+                'success' => true,
+                'message' => $schoolClasses->count() > 1
+                    ? 'Class created in '.$schoolClasses->count().' campuses.'
+                    : 'Class created successfully.',
+                'schoolClass' => $schoolClasses->first(),
+            ]);
         }
 
         return redirect()->route('school-classes.index')->with('success', 'School class created successfully.');
@@ -101,8 +139,14 @@ class SchoolClassController extends Controller
     {
         Gate::authorize('update', $schoolClass);
 
+        $user = request()->user();
+
         return Inertia::render('settings/SchoolClasses/Edit', [
             'schoolClass' => $schoolClass,
+            'isSuperAdmin' => $user?->isSuperAdmin() ?? false,
+            'campuses' => $user?->isSuperAdmin()
+                ? Campus::query()->orderBy('name')->get(['id', 'name'])
+                : [],
         ]);
     }
 
@@ -117,6 +161,13 @@ class SchoolClassController extends Controller
         // is_active should not be changed through form; preserve existing value
         // (if somehow sent, ignore it)
         unset($validated['is_active']);
+
+        // Only an owner/developer may move a class to a different campus -
+        // everyone else keeps it where it already is regardless of what was
+        // sent (they never see the control to begin with).
+        if (! $request->user()->isSuperAdmin() || empty($validated['campus_id'])) {
+            unset($validated['campus_id']);
+        }
 
         $schoolClass->update($validated);
 
