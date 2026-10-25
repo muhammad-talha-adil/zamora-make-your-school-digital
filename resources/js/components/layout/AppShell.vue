@@ -241,10 +241,27 @@
             <p class="text-muted-foreground">Every record in the system is filed under a campus - create one before adding students, staff, classes or anything else.</p>
           </div>
           <Link
-            :href="route('campuses.create')"
+            :href="route('campuses.index')"
             class="shrink-0 rounded-md bg-warning px-3 py-1.5 text-sm font-medium text-warning-foreground hover:opacity-90"
           >
             Create Campus
+          </Link>
+        </div>
+
+        <div
+          v-if="pageProps.hasCampuses !== false && pageProps.hasActiveSession === false"
+          class="mb-4 flex items-start gap-3 rounded-lg border border-warning/40 bg-warning/10 p-4"
+        >
+          <Icon icon="alert-triangle" class="h-5 w-5 mt-0.5 shrink-0 text-warning" />
+          <div class="flex-1 text-sm">
+            <p class="font-medium text-warning">No active academic session.</p>
+            <p class="text-muted-foreground">Attendance, fees, enrollments and more are all filed under a session - create or activate one before adding anything else.</p>
+          </div>
+          <Link
+            :href="route('sessions.index')"
+            class="shrink-0 rounded-md bg-warning px-3 py-1.5 text-sm font-medium text-warning-foreground hover:opacity-90"
+          >
+            Manage Sessions
           </Link>
         </div>
 

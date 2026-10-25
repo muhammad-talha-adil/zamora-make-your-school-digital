@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import BulkSectionForm from '@/components/forms/BulkSectionForm.vue';
 import SectionForm from '@/components/forms/SectionForm.vue';
 import RowAction from '@/components/tables/RowAction.vue';
 import RowActions from '@/components/tables/RowActions.vue';
@@ -55,14 +56,6 @@ const fetchSections = (page = pagination.value?.current_page || 1) => {
 const getRowNumber = (index: number) =>
     ((pagination.value?.from || 1) - 1) + index + 1;
 
-const getPageFromUrl = (url: string | null) => {
-    if (!url) {
-        return null;
-    }
-
-    const page = new URL(url, window.location.origin).searchParams.get('page');
-    return page ? Number.parseInt(page, 10) : 1;
-};
 
 watch([statusFilter, classFilter, perPage], () => {
     fetchSections(1);
@@ -140,6 +133,7 @@ const handleSaved = () => {
                 <SearchableSelect v-model="statusFilter" :options="statusFilterOptions" placeholder="All" class="w-32" />
             </div>
             <div class="flex gap-2">
+                <BulkSectionForm :school-classes="schoolClasses" @saved="handleSaved" />
                 <SectionForm :school-classes="schoolClasses" @saved="handleSaved" />
             </div>
         </div>
@@ -220,6 +214,9 @@ const handleSaved = () => {
                                     <RowAction kind="delete" @click="deleteSection(section)" />
                                 </RowActions>
                             </td>
+                        </tr>
+                        <tr v-if="sectionsData.length === 0">
+                            <td colspan="7" class="px-6 py-8 text-center text-sm text-muted-foreground">No sections found.</td>
                         </tr>
                     </tbody>
                 </table>

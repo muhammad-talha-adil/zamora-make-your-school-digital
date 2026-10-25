@@ -36,7 +36,7 @@ function itemsAfterCreate(AdmissionWorld $world, array $items, string $title = '
         'items' => $items,
     ])->assertSessionHasNoErrors();
 
-    $structure = FeeStructure::where('title', $title)->firstOrFail();
+    $structure = FeeStructure::where('title', 'like', "%{$title}")->firstOrFail();
 
     return $structure->items()->get()->keyBy('fee_head_id');
 }

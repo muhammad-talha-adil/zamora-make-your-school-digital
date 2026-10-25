@@ -31,7 +31,17 @@ class StudentService
      */
     public function getIndexData(Request $request): array
     {
-        $filters = $request->only(['campus_id', 'class_id', 'section_id', 'gender_id', 'status', 'search']);
+        $filters = $request->only(['class_id', 'section_id', 'gender_id', 'status', 'search']);
+
+        // Campus is never a client-chosen filter here - the list always
+        // scopes to whichever campus the viewer is currently scoped to
+        // (their own campus, or the header switcher's pick for an
+        // owner/developer), matching the convention used everywhere else
+        // records are created or listed. `Student::scopeVisibleTo()` leaves
+        // a super-admin unscoped by design (for the rare case code elsewhere
+        // relies on seeing every campus), so it's applied here explicitly.
+        $filters['campus_id'] = $request->user()?->campusId();
+
         $students = $this->repository->getPaginatedWithFilters($filters, 10);
 
         // Add serial numbers and current enrollment data

@@ -73,7 +73,6 @@ const filters = ref<Filters>({
 });
 
 const transactions = computed(() => props.transactions?.data ?? []);
-const paginationLinks = computed(() => props.transactions?.links ?? []);
 const campuses = computed(() => props.campuses ?? []);
 const campusOptions = computed(() => campuses.value.map((c) => ({ value: c.id, label: c.name })));
 const systemOptions = [

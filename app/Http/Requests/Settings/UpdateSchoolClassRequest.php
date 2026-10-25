@@ -36,6 +36,11 @@ class UpdateSchoolClassRequest extends FormRequest
                     ->whereNull('deleted_at'),
             ],
             'description' => 'nullable|string',
+            // Owner/developer only - checking an extra campus here adds this
+            // class to it too (see SchoolClassController::update()); a
+            // campus-restricted editor never submits this.
+            'campus_ids' => 'nullable|array',
+            'campus_ids.*' => 'integer|exists:campuses,id',
         ];
     }
 }

@@ -1,11 +1,10 @@
 <script setup lang="ts">
-import { Head, Link, router } from '@inertiajs/vue3';
+import { Head, Link } from '@inertiajs/vue3';
 import PortalLayout from '@/layouts/PortalLayout.vue';
 import Icon from '@/components/Icon.vue';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Separator } from '@/components/ui/separator';
 import { formatCurrency, formatDate } from '@/utils/format';
 import { ref, computed, onMounted } from 'vue';
 
@@ -221,7 +220,7 @@ onMounted(() => {
                     <div v-if="props.voucher.payments && props.voucher.payments.length > 0" class="relative pl-4">
                         <div class="absolute left-3 top-0 bottom-0 w-0.5 bg-border" aria-hidden="true" />
                         <div class="space-y-6">
-                            <div v-for="(payment, index) in props.voucher.payments" :key="payment.id" class="relative">
+                            <div v-for="payment in props.voucher.payments" :key="payment.id" class="relative">
                                 <div class="absolute left-[-34px] top-1 w-8 h-8 rounded-full bg-primary border-4 border-background flex items-center justify-center z-10">
                                     <Icon icon="check" class="w-4 h-4 text-primary-foreground" />
                                 </div>

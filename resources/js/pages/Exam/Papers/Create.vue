@@ -1077,11 +1077,6 @@ const deletePaper = async (paperId: number) => {
 };
 
 // Methods
-const onClassChange = () => {
-    loadSections();
-    resetPapers();
-};
-
 const onSelectionChange = () => {
     resetPapers();
     loadExamDateRange();

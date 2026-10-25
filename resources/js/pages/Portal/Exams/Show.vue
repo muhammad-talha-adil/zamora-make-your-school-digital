@@ -2,12 +2,11 @@
 import { Head, Link } from '@inertiajs/vue3';
 import PortalLayout from '@/layouts/PortalLayout.vue';
 import Icon from '@/components/Icon.vue';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Separator } from '@/components/ui/separator';
 import { Collapsible, CollapsibleTrigger, CollapsibleContent } from '@/components/ui/collapsible';
-import { formatCurrency, formatDate } from '@/utils/format';
 import { ref, computed, onMounted } from 'vue';
 
 interface ChildOption {

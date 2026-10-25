@@ -93,17 +93,6 @@ const openCreateModal = () => {
   showCreateModal.value = true
 }
 
-// Reset create form
-const resetCreateForm = () => {
-  createForm.value = {
-    name: '',
-    rounding_mode: 'round',
-    precision: 2,
-    is_default: false
-  }
-  createErrors.value = {}
-}
-
 // Save new grade system
 const saveNewSystem = () => {
   if (!createForm.value.name.trim()) return

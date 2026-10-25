@@ -7,7 +7,6 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import Icon from '@/components/Icon.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import SearchableSelect from '@/components/ui/searchable-select/SearchableSelect.vue';
 import { alert } from '@/utils';
 import type { BreadcrumbItem } from '@/types';
@@ -85,8 +84,6 @@ const statusOptions = [
     { value: 'inactive', label: 'Inactive' },
     { value: 'all', label: 'All' },
 ];
-const textareaClass = 'min-h-20 w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground';
-
 const filters = reactive({
     search: props.filters.search ?? '',
     campus_id: props.filters.campus_id ?? '',
@@ -96,21 +93,8 @@ const filters = reactive({
 
 const staff = ref<Paginated<StaffRow>>({ data: [], current_page: 1, last_page: 1, total: 0 });
 const loading = ref(false);
-const showLookups = ref(false);
-
-const designationForm = reactive({ id: null as number | null, name: '', description: '', role: '' as string | null, is_active: true });
 
 const campusOptions = computed(() => props.campuses.map((campus) => ({ value: String(campus.id), label: campus.name })));
-const designationOptions = computed(() => props.designations.map((d) => ({ value: String(d.id), label: d.name })));
-const roleOptions = computed(() => props.roles.map((r) => ({ value: r.name, label: r.label || r.name })));
-
-const formatMoney = (amount: number | string | null | undefined) => {
-    if (amount === null || amount === undefined) {
-        return '—';
-    }
-
-    return new Intl.NumberFormat('en-PK', { style: 'currency', currency: 'PKR', minimumFractionDigits: 0 }).format(Number(amount));
-};
 
 const loadStaff = async (page = 1) => {
     loading.value = true;
@@ -156,26 +140,6 @@ const toggleStaff = async (member: StaffRow) => {
         alert.error(error?.response?.data?.errors?.password?.[0] || error?.response?.data?.message || 'Failed to update staff status.');
     }
 };
-
-const submitDesignation = async () => {
-    try {
-        const payload = { ...designationForm, role: designationForm.role || null };
-        if (designationForm.id) {
-            await axios.put(route('staff.designations.update', designationForm.id), payload);
-        } else {
-            await axios.post(route('staff.designations.store'), payload);
-        }
-        alert.success('Designation saved.');
-        designationForm.id = null;
-        designationForm.name = '';
-        designationForm.description = '';
-        designationForm.role = '';
-        designationForm.is_active = true;
-        router.reload({ only: ['designations'] });
-    } catch (error: any) {
-        alert.error(error?.response?.data?.message || 'Failed to save designation.');
-    }
-};
 </script>
 
 <template>
@@ -192,33 +156,6 @@ const submitDesignation = async () => {
                     <Link :href="route('staff.settings.page')" class="inline-flex">
                         <Button variant="outline"><Icon icon="settings" class="h-4 w-4" />Staff Settings</Button>
                     </Link>
-                    <Dialog v-model:open="showLookups">
-                        <DialogTrigger as-child>
-                            <Button variant="outline"><Icon icon="settings" class="h-4 w-4" />Designations</Button>
-                        </DialogTrigger>
-                        <DialogContent class="sm:max-w-105">
-                            <DialogHeader>
-                                <DialogTitle>Designations</DialogTitle>
-                            </DialogHeader>
-                            <div>
-                                <div class="mb-3 space-y-2">
-                                    <Input v-model="designationForm.name" placeholder="Designation name" />
-                                    <textarea v-model="designationForm.description" :class="textareaClass" placeholder="Description" />
-                                    <SearchableSelect v-model="designationForm.role" :options="roleOptions" placeholder="System Role — none —" clearable />
-                                    <div class="flex gap-2">
-                                        <Button size="sm" @click="submitDesignation">{{ designationForm.id ? 'Update' : 'Add' }}</Button>
-                                        <Button v-if="designationForm.id" size="sm" variant="outline" @click="designationForm.id = null; designationForm.name = ''; designationForm.description = ''; designationForm.role = ''">Cancel</Button>
-                                    </div>
-                                </div>
-                                <ul class="max-h-48 space-y-1 overflow-y-auto text-sm">
-                                    <li v-for="d in props.designations" :key="d.id" class="flex items-center justify-between rounded border border-border px-2 py-1.5">
-                                        <span>{{ d.name }}<span v-if="d.role" class="ml-1 text-xs text-muted-foreground">→ {{ d.role }}</span></span>
-                                        <button type="button" class="text-xs text-primary hover:underline" @click="designationForm.id = d.id; designationForm.name = d.name; designationForm.description = d.description ?? ''; designationForm.role = d.role ?? ''; designationForm.is_active = d.is_active">Edit</button>
-                                    </li>
-                                </ul>
-                            </div>
-                        </DialogContent>
-                    </Dialog>
                     <Link :href="route('staff.people.create')">
                         <Button>
                             <Icon icon="user-plus" class="h-4 w-4" />

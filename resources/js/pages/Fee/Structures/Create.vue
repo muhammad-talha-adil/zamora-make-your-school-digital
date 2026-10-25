@@ -4,6 +4,7 @@ import { reactive, ref, computed, watch } from 'vue';
 import { route } from 'ziggy-js';
 import axios from 'axios';
 import { alert } from '@/utils';
+import SchoolClassForm from '@/components/forms/SchoolClassForm.vue';
 import { useFormValidity } from '@/composables/useFormValidity';
 import AppLayout from '@/layouts/AppLayout.vue';
 import type { BreadcrumbItem } from '@/types';
@@ -18,11 +19,13 @@ import SearchableSelect from '@/components/ui/searchable-select/SearchableSelect
 interface Props {
     active_session_id?: number;
     sessions: Array<{ id: number; name: string; start_date: string; end_date: string }>;
-    classes: Array<{ id: number; name: string }>;
+    classes: Array<{ id: number; name: string; campus_id: number }>;
     sections: Array<{ id: number; name: string; class_id: number }>;
     months: Array<{ id: number; name: string; month_number: number }>;
     feeHeads: Array<{ id: number; name: string; default_frequency: string }>;
     feeHeadFrequencies: Array<{ value: string; label: string }>;
+    isSuperAdmin?: boolean;
+    campuses?: Array<{ id: number; name: string }>;
 }
 
 const props = defineProps<Props>();
@@ -41,6 +44,24 @@ const feeHeadsList = ref([...props.feeHeads]);
 
 // Same reasoning for a class.
 const classesList = ref([...props.classes]);
+
+// Owner/developer only: which campuses' classes are offered below. Starts
+// with every campus checked so the class list isn't empty by default.
+const selectedCampusIds = ref<number[]>((props.campuses ?? []).map((c) => c.id));
+const allCampusesSelected = computed(
+    () => selectedCampusIds.value.length === (props.campuses?.length ?? 0) && (props.campuses?.length ?? 0) > 0,
+);
+const toggleAllCampuses = (checked: boolean) => {
+    selectedCampusIds.value = checked ? (props.campuses ?? []).map((c) => c.id) : [];
+};
+
+// Non-super-admin's classesList is already scoped server-side to their one
+// campus; a super admin's is scoped here to whichever campuses are checked.
+const visibleClasses = computed(() =>
+    props.isSuperAdmin
+        ? classesList.value.filter((c) => selectedCampusIds.value.includes(c.campus_id))
+        : classesList.value,
+);
 
 const breadcrumbItems: BreadcrumbItem[] = [
     { title: 'Dashboard', href: '/dashboard' },
@@ -86,7 +107,8 @@ const form: {
 const errors = ref<Record<string, string>>({});
 const isSubmitting = ref(false);
 
-const { isValid } = useFormValidity(form, ['title', 'session_id', 'campus_id', 'status', 'class_id']);
+const { isValid: isBaseValid } = useFormValidity(form, ['title', 'session_id', 'campus_id', 'status']);
+const isValid = computed(() => isBaseValid.value && selectedClassIds.value.length > 0);
 
 // Fee Items - Local state for new items to be created with structure
 const feeItems = ref<Array<{
@@ -159,53 +181,15 @@ const saveFeeHead = async () => {
     }
 };
 
-// Inline "Add Class" modal — same reasoning as the Fee Head one above.
-const showClassModal = ref(false);
-const isSavingClass = ref(false);
-const classForm = reactive({ name: '', description: '' });
-const classFormErrors = ref<Record<string, string>>({});
-
-const openAddClassModal = () => {
-    classForm.name = '';
-    classForm.description = '';
-    classFormErrors.value = {};
-    showClassModal.value = true;
-};
-
-const saveClass = async () => {
-    classFormErrors.value = {};
-    isSavingClass.value = true;
-
-    try {
-        const response = await axios.post('/settings/school-classes', {
-            name: classForm.name,
-            description: classForm.description || null,
-        }, { headers: { Accept: 'application/json' } });
-
-        const newClass = response.data.schoolClass ?? response.data.class;
-        classesList.value.push({ id: newClass.id, name: newClass.name });
-        form.class_id = String(newClass.id);
-        onClassChange();
-
-        showClassModal.value = false;
-        alert.success('Class created successfully!');
-    } catch (err: unknown) {
-        const response = (err as { response?: { data?: { errors?: Record<string, string[]>; message?: string } } }).response;
-        if (response?.data?.errors) {
-            classFormErrors.value = Object.fromEntries(
-                Object.entries(response.data.errors).map(([key, value]) => [key, value[0]])
-            );
-        } else {
-            alert.error(response?.data?.message || 'Failed to create class.');
-        }
-    } finally {
-        isSavingClass.value = false;
-    }
+// "Add Class" reuses the same SchoolClassForm modal as the Classes settings
+// page (prefix buttons included) instead of a second, stripped-down copy -
+// refetches the class list on save so the new one shows up immediately.
+const onClassCreated = async () => {
+    const response = await axios.get('/settings/school-classes/all', { params: { per_page: 1000 } });
+    classesList.value = (response.data.data ?? []).map((c: { id: number; name: string }) => ({ id: c.id, name: c.name }));
 };
 
 const sessionOptions = computed(() => props.sessions.map((session) => ({ value: String(session.id), label: session.name })));
-const classOptions = computed(() => classesList.value.map((cls) => ({ value: String(cls.id), label: cls.name })));
-const sectionOptions = computed(() => filteredSections.value.map((section) => ({ value: String(section.id), label: section.name })));
 const feeHeadOptions = computed(() => feeHeadsList.value.map((fh) => ({ value: String(fh.id), label: fh.name })));
 const feeHeadFrequencyOptions = computed(() => props.feeHeadFrequencies.map((freq) => ({ value: freq.value, label: freq.label })));
 const statusOptions = [
@@ -214,11 +198,22 @@ const statusOptions = [
     { value: 'inactive', label: 'Inactive' },
 ];
 
-// Filter sections based on selected class
-const filteredSections = computed(() => {
-    if (!form.class_id) return [];
-    return props.sections.filter(s => s.class_id === Number(form.class_id));
-});
+// Multi-class mode: each checked class shows its own sections, checked by
+// default (unchecking one excludes just that section from the batch).
+const selectedClassIds = ref<number[]>([]);
+const sectionIdsByClass = ref<Record<number, number[]>>({});
+
+const sectionsForClass = (classId: number) => props.sections.filter((s) => s.class_id === classId);
+
+const toggleClass = (classId: number, checked: boolean) => {
+    if (checked) {
+        selectedClassIds.value.push(classId);
+        sectionIdsByClass.value[classId] = sectionsForClass(classId).map((s) => s.id);
+    } else {
+        selectedClassIds.value = selectedClassIds.value.filter((id) => id !== classId);
+        delete sectionIdsByClass.value[classId];
+    }
+};
 
 // Generate search URL for title combobox based on selected scope
 const titleSearchUrl = computed(() => {
@@ -262,11 +257,6 @@ const totalOneTime = computed(() => {
 
 const grandTotal = computed(() => totalMonthly.value + totalYearly.value + totalOneTime.value);
 
-// Reset section when class changes
-const onClassChange = () => {
-    form.section_id = '';
-};
-
 // Handle title change from ComboboxInput
 const onTitleChange = (value: string | number | null) => {
     form.title = value;
@@ -291,8 +281,8 @@ const validateForm = () => {
     if (!form.status) {
         errors.value.status = 'Status is required';
     }
-    if (!form.class_id) {
-        errors.value.class_id = 'Class is required';
+    if (selectedClassIds.value.length === 0) {
+        errors.value.class_id = 'Pick at least one class';
     }
 
     return Object.keys(errors.value).length === 0;
@@ -352,6 +342,21 @@ const getFeeHeadName = (id: number) => {
     return fh ? fh.name : 'Unknown';
 };
 
+// A fee head's color is derived from its own id, not stored anywhere - so
+// every fee head (including ones created after this was written) gets a
+// consistent color automatically, with no setup step.
+const feeHeadColorClasses = [
+    'bg-primary/10 text-primary',
+    'bg-success/10 text-success',
+    'bg-warning/10 text-warning',
+    'bg-destructive/10 text-destructive',
+    'bg-info/10 text-info',
+    'bg-purple-500/10 text-purple-500',
+    'bg-pink-500/10 text-pink-500',
+    'bg-teal-500/10 text-teal-500',
+];
+const getFeeHeadColor = (id: number) => feeHeadColorClasses[id % feeHeadColorClasses.length];
+
 
 
 const formatCurrency = (amount: number) => {
@@ -375,17 +380,16 @@ const submitForm = () => {
     
     isSubmitting.value = true;
     
-    // A structure applies to exactly one section - or to the whole class, for
-    // a class that has no sections set up at all.
-    const sectionIds: number[] = form.section_id ? [Number(form.section_id)] : [];
-
+    const classes = selectedClassIds.value.map((classId) => ({
+        class_id: classId,
+        section_ids: sectionIdsByClass.value[classId] ?? [],
+    }));
 
     router.post(route('fee.structures.store'), {
         title: String(form.title),
         session_id: form.session_id ? Number(form.session_id) : null,
         campus_id: form.campus_id ? Number(form.campus_id) : null,
-        class_id: form.class_id ? Number(form.class_id) : null,
-        section_ids: sectionIds,
+        classes,
         status: form.status,
         notes: form.notes,
         items: feeItems.value,
@@ -440,25 +444,26 @@ const cancel = () => {
             <div class="bg-card rounded-lg border border-border p-4 md:p-6">
                 <form @submit.prevent="submitForm" class="space-y-6">
                     <!-- Basic Information -->
-                    <div class="grid gap-4 md:grid-cols-2">
-                        <div class="space-y-2">
-                            <Label for="title">Title <span class="text-destructive">*</span></Label>
-                            <ComboboxInput
-                                id="title"
-                                v-model="form.title"
-                                :placeholder="'e.g. Class 1 Annual Fee Structure'"
-                                :search-url="titleSearchUrl"
-                                :value-type="'name'"
-                                display-key="title"
-                                classMinWidth="w-full"
-                                @update:modelValue="onTitleChange"
-                            />
-                            <p class="text-xs text-muted-foreground">
-                                A short, descriptive name for this fee structure (e.g. "Class 1 Annual Fee Structure", "Grade 5 Term 1 Fees").
-                            </p>
-                            <p v-if="errors.title" class="text-sm text-destructive">{{ errors.title }}</p>
-                        </div>
+                    <div class="space-y-2">
+                        <Label for="title">Title <span class="text-destructive">*</span></Label>
+                        <ComboboxInput
+                            id="title"
+                            v-model="form.title"
+                            :placeholder="'e.g. Class 1 Annual Fee Structure'"
+                            :search-url="titleSearchUrl"
+                            :value-type="'name'"
+                            display-key="title"
+                            classMinWidth="w-full"
+                            @update:modelValue="onTitleChange"
+                        />
+                        <p class="text-xs text-muted-foreground">
+                            A short, descriptive name for this fee structure (e.g. "Class 1 Annual Fee Structure", "Grade 5 Term 1 Fees").
+                        </p>
+                        <p v-if="errors.title" class="text-sm text-destructive">{{ errors.title }}</p>
+                    </div>
 
+                    <!-- Status & Session -->
+                    <div class="grid grid-cols-2 gap-3 sm:gap-4">
                         <div class="space-y-2">
                             <Label for="status">Status <span class="text-destructive">*</span></Label>
                             <SearchableSelect
@@ -469,10 +474,7 @@ const cancel = () => {
                             />
                             <p v-if="errors.status" class="text-sm text-destructive">{{ errors.status }}</p>
                         </div>
-                    </div>
 
-                    <!-- Scope Selection -->
-                    <div class="grid gap-4 md:grid-cols-2">
                         <div class="space-y-2">
                             <Label for="session">Session <span class="text-destructive">*</span></Label>
                             <SearchableSelect
@@ -486,44 +488,83 @@ const cancel = () => {
                         </div>
                     </div>
 
-                    <!-- Class & Section -->
-                    <div class="grid gap-4 md:grid-cols-2">
-                        <div class="space-y-2">
-                            <div class="flex items-center justify-between">
-                                <Label for="class">Class <span class="text-destructive">*</span></Label>
-                                <button type="button" class="text-xs text-primary hover:underline" @click="openAddClassModal">
-                                    + Add Class
-                                </button>
-                            </div>
-                            <SearchableSelect
-                                id="class"
-                                v-model="form.class_id"
-                                :options="classOptions"
-                                placeholder="Select Class"
-                                :class="errors.class_id ? 'border-destructive' : ''"
-                                @update:modelValue="onClassChange"
+                    <!-- Campuses (owner/developer only) -->
+                    <div v-if="isSuperAdmin" class="space-y-2">
+                        <Label>Campuses <span class="text-destructive">*</span></Label>
+                        <div class="flex items-center gap-2 border-b border-border pb-2">
+                            <input
+                                id="fs_campus_all"
+                                type="checkbox"
+                                :checked="allCampusesSelected"
+                                class="rounded border-border text-primary focus:ring-primary"
+                                @change="toggleAllCampuses(($event.target as HTMLInputElement).checked)"
                             />
-                            <p v-if="errors.class_id" class="text-sm text-destructive">{{ errors.class_id }}</p>
+                            <Label for="fs_campus_all" class="font-normal">All Campuses</Label>
                         </div>
+                        <div class="flex flex-wrap gap-2">
+                            <label
+                                v-for="campus in campuses"
+                                :key="campus.id"
+                                class="flex cursor-pointer items-center gap-1.5 rounded-full border border-border bg-background px-3 py-1 text-xs has-[:checked]:border-primary has-[:checked]:bg-primary/10 has-[:checked]:text-primary"
+                            >
+                                <input
+                                    v-model="selectedCampusIds"
+                                    type="checkbox"
+                                    :value="campus.id"
+                                    class="h-3.5 w-3.5 rounded border-border text-primary focus:ring-primary"
+                                />
+                                {{ campus.name }}
+                            </label>
+                        </div>
+                        <p class="text-xs text-muted-foreground">Determines which campuses' classes are offered below.</p>
+                    </div>
 
-                        <div class="space-y-2">
-                            <Label for="section">Section (Optional)</Label>
-                            <SearchableSelect
-                                id="section"
-                                v-model="form.section_id"
-                                :options="sectionOptions"
-                                placeholder="Select Section"
-                                :disabled="!form.class_id || filteredSections.length === 0"
-                                clearable
-                                :class="errors.section_id ? 'border-destructive' : ''"
-                            />
-                            <p v-if="errors.section_id" class="text-sm text-destructive">{{ errors.section_id }}</p>
-                            <p v-else class="text-xs text-muted-foreground">
-                                <span v-if="!form.class_id">Select a class first</span>
-                                <span v-else-if="filteredSections.length === 0">This class has no sections</span>
-                                <span v-else>Leave empty to apply to the whole class</span>
-                            </p>
+                    <!-- Class & Section -->
+                    <div class="space-y-2">
+                        <div class="flex items-center justify-between">
+                            <Label>Classes <span class="text-destructive">*</span></Label>
+                            <SchoolClassForm trigger="Add Class" variant="link" size="sm" @saved="onClassCreated" />
                         </div>
+                        <div class="grid grid-cols-2 gap-2">
+                            <div
+                                v-for="cls in visibleClasses"
+                                :key="cls.id"
+                                class="rounded-lg border transition-colors"
+                                :class="selectedClassIds.includes(cls.id) ? 'border-primary bg-primary/5' : 'border-border bg-card'"
+                            >
+                                <label class="flex cursor-pointer items-center gap-3 px-4 py-3">
+                                    <input
+                                        type="checkbox"
+                                        class="h-4 w-4 rounded border-border text-primary focus:ring-primary"
+                                        :checked="selectedClassIds.includes(cls.id)"
+                                        @change="toggleClass(cls.id, ($event.target as HTMLInputElement).checked)"
+                                    />
+                                    <span class="text-sm font-medium">{{ cls.name }}</span>
+                                </label>
+                                <div v-if="selectedClassIds.includes(cls.id)" class="flex flex-wrap gap-2 px-4 pb-3 pl-11">
+                                    <span v-if="sectionsForClass(cls.id).length === 0" class="text-xs text-muted-foreground">
+                                        No sections - applies to the whole class.
+                                    </span>
+                                    <label
+                                        v-for="sec in sectionsForClass(cls.id)"
+                                        :key="sec.id"
+                                        class="flex cursor-pointer items-center gap-1.5 rounded-full border border-border bg-background px-3 py-1 text-xs has-[:checked]:border-primary has-[:checked]:bg-primary/10 has-[:checked]:text-primary"
+                                    >
+                                        <input
+                                            type="checkbox"
+                                            class="h-3.5 w-3.5 rounded border-border text-primary focus:ring-primary"
+                                            :checked="(sectionIdsByClass[cls.id] ?? []).includes(sec.id)"
+                                            @change="($event.target as HTMLInputElement).checked
+                                                ? sectionIdsByClass[cls.id].push(sec.id)
+                                                : (sectionIdsByClass[cls.id] = sectionIdsByClass[cls.id].filter((id) => id !== sec.id))"
+                                        />
+                                        {{ sec.name }}
+                                    </label>
+                                </div>
+                            </div>
+                        </div>
+                        <p v-if="errors.class_id" class="text-sm text-destructive">{{ errors.class_id }}</p>
+                        <p v-else class="text-xs text-muted-foreground">Unchecking a section applies the structure to the rest of that class only.</p>
                     </div>
 
                     <!-- Notes -->
@@ -585,13 +626,6 @@ const cancel = () => {
                             />
                             <p v-if="itemErrors.amount" class="text-sm text-destructive">{{ itemErrors.amount }}</p>
                         </div>
-
-                        <div class="space-y-2">
-                            <Label>Frequency</Label>
-                            <div class="text-sm text-muted-foreground p-2 bg-muted rounded">
-                                Auto-set from Fee Head
-                            </div>
-                        </div>
                     </div>
 
                     <div class="flex flex-wrap justify-end gap-2 mt-4">
@@ -626,12 +660,14 @@ const cancel = () => {
                         <tbody class="divide-y divide-border bg-card">
                             <tr v-for="item in feeItems" :key="item.temp_id" class="transition-colors hover:bg-accent">
                                 <td class="px-4 py-3 whitespace-nowrap">
-                                    <div class="text-sm font-medium text-foreground">{{ getFeeHeadName(item.fee_head_id) }}</div>
+                                    <span :class="['px-2 py-1 text-xs font-medium rounded-full', getFeeHeadColor(item.fee_head_id)]">
+                                        {{ getFeeHeadName(item.fee_head_id) }}
+                                    </span>
                                 </td>
                                 <td class="px-4 py-3 whitespace-nowrap">
-                                    <span :class="['px-2 py-1 text-xs font-medium rounded-full', 
+                                    <span :class="['px-2 py-1 text-xs font-medium rounded-full',
                                         item.frequency === 'monthly' ? 'bg-primary/10 text-primary' :
-                                        item.frequency === 'yearly' ? 'bg-primary/10 text-primary' :
+                                        item.frequency === 'yearly' ? 'bg-warning/10 text-warning' :
                                         'bg-success/10 text-success'
                                     ]">
                                         {{ getFrequencyLabel(item.frequency) }}
@@ -728,33 +764,5 @@ const cancel = () => {
             </DialogContent>
         </Dialog>
 
-        <!-- Add Class Modal -->
-        <Dialog v-model:open="showClassModal">
-            <DialogContent>
-                <DialogHeader>
-                    <DialogTitle>Add Class</DialogTitle>
-                </DialogHeader>
-
-                <div class="space-y-4">
-                    <div class="space-y-2">
-                        <Label for="cls-name">Name <span class="text-destructive">*</span></Label>
-                        <Input id="cls-name" v-model="classForm.name" placeholder='e.g. "10", "Class 10"' :class="{ 'border-destructive': classFormErrors.name }" />
-                        <p v-if="classFormErrors.name" class="text-sm text-destructive">{{ classFormErrors.name }}</p>
-                    </div>
-
-                    <div class="space-y-2">
-                        <Label for="cls-description">Description (optional)</Label>
-                        <Input id="cls-description" v-model="classForm.description" placeholder="Enter class description" />
-                    </div>
-                </div>
-
-                <DialogFooter>
-                    <Button variant="outline" @click="showClassModal = false">Cancel</Button>
-                    <Button @click="saveClass" :disabled="isSavingClass || !classForm.name">
-                        {{ isSavingClass ? 'Saving...' : 'Save Class' }}
-                    </Button>
-                </DialogFooter>
-            </DialogContent>
-        </Dialog>
     </AppLayout>
 </template>

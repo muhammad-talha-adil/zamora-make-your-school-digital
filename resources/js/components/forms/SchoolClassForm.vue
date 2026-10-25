@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import axios from 'axios';
-import { ref, watch } from 'vue';
+import { computed, ref, watch } from 'vue';
 import { alert } from '@/utils';
 import { useFormValidity } from '@/composables/useFormValidity';
 
@@ -28,17 +28,29 @@ interface Props {
         code: string;
         description?: string;
         is_active: boolean;
+        campus_id?: number;
+        /** Every campus a class with this same name already exists in, including this row's own. */
+        existing_campus_ids?: number[];
     };
     trigger?: string;
     variant?: ButtonVariants['variant'];
     size?: ButtonVariants['size'];
+    /** Owner/developer only - everyone else is auto-scoped to their own campus server-side. */
+    isSuperAdmin?: boolean;
+    campuses?: Array<{ id: number; name: string }>;
 }
 
 const props = withDefaults(defineProps<Props>(), {
     trigger: 'Add Class',
     variant: 'default',
     size: 'default',
+    isSuperAdmin: false,
+    campuses: () => [],
 });
+
+// The campuses this class is already filed under elsewhere (locked, can't
+// be unchecked here - removing it is done from that campus's own row).
+const lockedCampusIds = computed(() => new Set(props.schoolClass?.existing_campus_ids ?? []));
 
 // Emits
 const emit = defineEmits<{
@@ -49,6 +61,11 @@ const getInitialForm = () => ({
     name: props.schoolClass?.name || '',
     code: props.schoolClass?.code || '',
     description: props.schoolClass?.description || '',
+    // Editing starts from the campuses this class is already in (locked);
+    // creating defaults to every campus selected (the common case).
+    campus_ids: props.schoolClass
+        ? [...(props.schoolClass.existing_campus_ids ?? [])]
+        : props.campuses.map((c) => c.id),
 });
 
 const form = ref(getInitialForm());
@@ -121,10 +138,14 @@ const submit = () => {
     processing.value = true;
     errors.value = {};
 
-    const formData = {
+    const formData: Record<string, unknown> = {
         name: form.value.name,
         description: form.value.description,
     };
+
+    if (props.isSuperAdmin) {
+        formData.campus_ids = form.value.campus_ids;
+    }
 
     if (props.schoolClass) {
         axios.patch(`/settings/school-classes/${props.schoolClass.id}`, formData, {
@@ -252,6 +273,45 @@ const resetForm = () => {
                             @blur="applyPrefix"
                         />
                         <InputError :message="errors.name" />
+                    </div>
+
+                    <!--
+                        Creating makes one class per campus chosen - any one,
+                        several, or every campus. Editing shows the same
+                        list, but a campus this class already exists in
+                        (including its own) is locked on - unchecking it
+                        here does nothing; checking a new one adds the class
+                        there too.
+                    -->
+                    <div v-if="isSuperAdmin" class="grid gap-2">
+                        <Label>Campuses <span class="text-destructive">*</span></Label>
+                        <div class="flex items-center gap-2 border-b border-border pb-2">
+                            <input
+                                id="class_campus_ids_all"
+                                type="checkbox"
+                                :checked="form.campus_ids.length === campuses.length && campuses.length > 0"
+                                class="rounded border-border text-primary shadow-sm focus:ring-primary"
+                                @change="form.campus_ids = ($event.target as HTMLInputElement).checked ? campuses.map((c) => c.id) : [...lockedCampusIds]"
+                            />
+                            <Label for="class_campus_ids_all" class="font-normal">All Campuses</Label>
+                        </div>
+                        <div class="grid max-h-40 grid-cols-2 gap-2 overflow-y-auto">
+                            <div v-for="campus in campuses" :key="campus.id" class="flex items-center gap-2">
+                                <input
+                                    :id="`class_campus_ids_${campus.id}`"
+                                    v-model="form.campus_ids"
+                                    type="checkbox"
+                                    :value="campus.id"
+                                    :disabled="lockedCampusIds.has(campus.id)"
+                                    class="rounded border-border text-primary shadow-sm focus:ring-primary disabled:opacity-60"
+                                />
+                                <Label :for="`class_campus_ids_${campus.id}`" class="font-normal">
+                                    {{ campus.name }}
+                                    <span v-if="lockedCampusIds.has(campus.id)" class="text-xs text-muted-foreground">(already has this class)</span>
+                                </Label>
+                            </div>
+                        </div>
+                        <InputError :message="errors.campus_ids" />
                     </div>
 
                     <div class="grid gap-2">

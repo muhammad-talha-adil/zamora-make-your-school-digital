@@ -46,12 +46,10 @@ interface Props {
         to: number;
     };
     sessions: Array<{ id: number; name: string }>;
-    campuses: Array<{ id: number; name: string }>;
     classes: Array<{ id: number; name: string }>;
     sections: Array<{ id: number; name: string; class_id: number }>;
     filters?: {
         session_id?: string;
-        campus_id?: string;
         class_id?: string;
         section_id?: string;
         status?: string;
@@ -73,7 +71,6 @@ const breadcrumbItems: BreadcrumbItem[] = [
 ];
 
 const filterSession = ref(props.filters?.session_id || '');
-const filterCampus = ref(props.filters?.campus_id || '');
 const filterClass = ref(props.filters?.class_id || '');
 const filterSection = ref(props.filters?.section_id || '');
 const filterStatus = ref(props.filters?.status || '');
@@ -94,7 +91,6 @@ const filteredSections = computed(() => {
     return props.sections.filter((section) => section.class_id === Number(filterClass.value));
 });
 
-const campusOptions = computed(() => props.campuses.map((campus) => ({ value: String(campus.id), label: campus.name })));
 const sessionOptions = computed(() => props.sessions.map((session) => ({ value: String(session.id), label: session.name })));
 const classOptions = computed(() => props.classes.map((cls) => ({ value: String(cls.id), label: cls.name })));
 const sectionOptions = computed(() => filteredSections.value.map((section) => ({ value: String(section.id), label: section.name })));
@@ -113,7 +109,6 @@ const fetchStructures = (page = 1) => {
     };
 
     if (filterSession.value) params.session_id = filterSession.value;
-    if (filterCampus.value) params.campus_id = filterCampus.value;
     if (filterClass.value) params.class_id = filterClass.value;
     if (filterSection.value) params.section_id = filterSection.value;
     if (filterStatus.value) params.status = filterStatus.value;
@@ -138,7 +133,7 @@ const fetchStructures = (page = 1) => {
     });
 };
 
-watch([filterSession, filterCampus, filterStatus], () => {
+watch([filterSession, filterStatus], () => {
     fetchStructures(1);
 });
 
@@ -170,16 +165,6 @@ watch(() => props.structures, (newStructures) => {
     structuresData.value = newStructures?.data || [];
     pagination.value = newStructures || { data: [], links: [], from: 0, to: 0, total: 0, current_page: 1, last_page: 1, per_page: 10 };
 }, { deep: true });
-
-const getStatusColor = (status: string) => {
-    const colors: Record<string, string> = {
-        active: 'bg-success/10 text-success',
-        inactive: 'bg-muted text-foreground',
-        draft: 'bg-warning/10 text-warning',
-    };
-
-    return colors[status] || colors.inactive;
-};
 
 const toggleStatus = (structure: FeeStructure) => {
     const actionText = structure.status === 'active' ? 'deactivate' : 'activate';
@@ -263,17 +248,7 @@ const deleteStructure = (structure: FeeStructure) => {
             </div>
 
             <div class="bg-card rounded-lg border border-border p-4">
-                <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
-                    <div class="space-y-2">
-                        <Label for="filter-campus">Campus</Label>
-                        <SearchableSelect
-                            id="filter-campus"
-                            v-model="filterCampus"
-                            :options="campusOptions"
-                            placeholder="All Campuses"
-                            clearable
-                        />
-                    </div>
+                <div class="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
                     <div class="space-y-2">
                         <Label for="filter-session">Session</Label>
                         <SearchableSelect
@@ -315,7 +290,7 @@ const deleteStructure = (structure: FeeStructure) => {
                             clearable
                         />
                     </div>
-                    <div class="space-y-2 md:col-span-5">
+                    <div class="col-span-2 space-y-2 lg:col-span-4">
                         <Label for="search-structure">Search</Label>
                         <Input
                             id="search-structure"

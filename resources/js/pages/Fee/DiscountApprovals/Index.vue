@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Head, router } from '@inertiajs/vue3';
+import { Head } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import { alert } from '@/utils';
 import { route } from 'ziggy-js';

@@ -498,3 +498,16 @@
         display: none !important;
     }
 }
+
+/*
+ * When a SweetAlert2 dialog (alert.error/success/confirm) fires while a
+ * reka-ui Dialog modal is still open behind it, reka-ui has already set
+ * pointer-events: none on <body> to block interaction with the background.
+ * SweetAlert2 appends its own popup as a direct child of <body> too, so it
+ * inherited that none and its buttons (e.g. "OK") stopped responding to
+ * clicks. A child's own pointer-events always wins over an ancestor's none.
+ */
+.swal2-container,
+.swal2-popup {
+    pointer-events: auto !important;
+}

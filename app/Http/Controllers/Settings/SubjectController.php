@@ -3,11 +3,15 @@
 namespace App\Http\Controllers\Settings;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Settings\BulkStoreSubjectRequest;
 use App\Http\Requests\Settings\StoreSubjectRequest;
 use App\Http\Requests\Settings\UpdateSubjectRequest;
+use App\Models\Campus;
 use App\Models\Subject;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
+use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -21,12 +25,36 @@ class SubjectController extends Controller
     {
         Gate::authorize('viewAny', Subject::class);
 
-        $subjects = Subject::orderBy('id', 'desc')
+        $subjects = $this->scopedQuery()
+            ->orderBy('name', 'asc')
             ->paginate(10);
+
+        $user = request()->user();
 
         return Inertia::render('settings/Subjects/Index', [
             'tableSubjects' => $subjects,
+            'isSuperAdmin' => $user?->isSuperAdmin() ?? false,
+            'campuses' => $user?->isSuperAdmin()
+                ? Campus::query()->orderBy('name')->get(['id', 'name'])
+                : [],
         ]);
+    }
+
+    /**
+     * A subject's campus is applied once here rather than in every method
+     * below that lists subjects, so a non-super-admin never sees (or can
+     * accidentally edit) a subject outside their own campus.
+     */
+    private function scopedQuery(): Builder
+    {
+        $query = Subject::query()->with('campuses:id,name');
+
+        $campusId = request()->user()?->campusId();
+        if ($campusId) {
+            $query->whereHas('campuses', fn ($q) => $q->where('campuses.id', $campusId));
+        }
+
+        return $query;
     }
 
     /**
@@ -36,7 +64,7 @@ class SubjectController extends Controller
     {
         Gate::authorize('viewAny', Subject::class);
 
-        $query = Subject::query();
+        $query = $this->scopedQuery();
 
         if (request()->has('status')) {
             $status = request('status');
@@ -47,7 +75,7 @@ class SubjectController extends Controller
             }
         }
 
-        $subjects = $query->orderBy('id', 'desc')
+        $subjects = $query->orderBy('name', 'asc')
             ->paginate((int) request('per_page', 10));
 
         return response()->json($subjects);
@@ -71,8 +99,11 @@ class SubjectController extends Controller
         Gate::authorize('create', Subject::class);
 
         $validated = $request->validated();
+        $campusIds = $this->resolveCampusIds($request, $validated);
+        unset($validated['campus_ids']);
 
-        Subject::create($validated);
+        $subject = Subject::create($validated);
+        $subject->campuses()->sync($campusIds);
 
         if ($request->expectsJson()) {
             return response()->json([
@@ -85,14 +116,81 @@ class SubjectController extends Controller
     }
 
     /**
+     * Creates every subject name at once, each synced to the picked
+     * campuses. A name already in use (subject names are unique school-wide)
+     * is skipped rather than failing the whole batch.
+     */
+    public function bulkStore(BulkStoreSubjectRequest $request): JsonResponse
+    {
+        Gate::authorize('create', Subject::class);
+
+        $validated = $request->validated();
+        $user = $request->user();
+        $campusIds = $this->resolveCampusIds($request, $validated);
+
+        $names = collect($validated['subject_names'])->map(fn ($n) => trim($n))->filter()->unique();
+        $existingNames = Subject::query()->whereIn('name', $names)->pluck('name');
+
+        $created = 0;
+        $skipped = [];
+
+        foreach ($names as $name) {
+            if ($existingNames->contains($name)) {
+                $skipped[] = $name;
+
+                continue;
+            }
+
+            $subject = Subject::create(['name' => $name, 'is_active' => true]);
+            $subject->campuses()->sync($campusIds);
+            $created++;
+        }
+
+        $message = "Created {$created} subject".($created === 1 ? '' : 's').'.';
+        if (! empty($skipped)) {
+            $message .= ' Already existed, skipped: '.implode(', ', $skipped).'.';
+        }
+
+        return response()->json(['success' => true, 'message' => $message, 'created' => $created, 'skipped' => $skipped]);
+    }
+
+    /**
+     * The campuses a subject should be attached to on save. Only an
+     * owner/developer may choose; everyone else is scoped to their own
+     * campus regardless of what (if anything) was submitted.
+     *
+     * @param  array<string, mixed>  $validated
+     * @return array<int, int>
+     */
+    private function resolveCampusIds(Request $request, array $validated): array
+    {
+        $user = $request->user();
+
+        if (! $user?->isSuperAdmin()) {
+            $campusId = $user?->campusId();
+
+            return $campusId ? [$campusId] : [];
+        }
+
+        return $validated['campus_ids'] ?? [];
+    }
+
+    /**
      * Show the form for editing the specified resource.
      */
     public function edit(Subject $subject): Response
     {
         Gate::authorize('update', $subject);
 
+        $subject->load('campuses:id');
+        $user = request()->user();
+
         return Inertia::render('settings/Subjects/Edit', [
             'subject' => $subject,
+            'isSuperAdmin' => $user?->isSuperAdmin() ?? false,
+            'campuses' => $user?->isSuperAdmin()
+                ? Campus::query()->orderBy('name')->get(['id', 'name'])
+                : [],
         ]);
     }
 
@@ -104,8 +202,11 @@ class SubjectController extends Controller
         Gate::authorize('update', $subject);
 
         $validated = $request->validated();
+        $campusIds = $this->resolveCampusIds($request, $validated);
+        unset($validated['campus_ids']);
 
         $subject->update($validated);
+        $subject->campuses()->sync($campusIds);
 
         if ($request->expectsJson()) {
             return response()->json([

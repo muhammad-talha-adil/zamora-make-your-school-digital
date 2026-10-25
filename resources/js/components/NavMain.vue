@@ -40,7 +40,7 @@ const closeSubmenu = () => {
     openSubmenuId.value = null;
 };
 
-let itemIndex = 0;
+const itemIndex = 0;
 </script>
 
 <template>

@@ -193,6 +193,9 @@ const getDaysCount = (start: string, end: string) => {
                                 </div>
                             </td>
                         </tr>
+                        <tr v-if="holidaysData.length === 0">
+                            <td colspan="8" class="px-6 py-8 text-center text-sm text-muted-foreground">No past holidays found.</td>
+                        </tr>
                     </tbody>
                 </table>
             </div>

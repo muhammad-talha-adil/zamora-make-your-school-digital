@@ -32,16 +32,22 @@ interface Props {
         is_active: boolean;
         start_date?: string;
         end_date?: string;
+        campuses?: Array<{ id: number; name: string }>;
     };
     trigger?: string;
     variant?: ButtonVariants['variant'];
     size?: ButtonVariants['size'];
+    /** Owner/developer only - everyone else is auto-scoped to their own campus server-side. */
+    isSuperAdmin?: boolean;
+    campuses?: Array<{ id: number; name: string }>;
 }
 
 const props = withDefaults(defineProps<Props>(), {
     trigger: 'Add Session',
     variant: 'default',
     size: 'default',
+    isSuperAdmin: false,
+    campuses: () => [],
 });
 
 // Emits
@@ -57,6 +63,12 @@ const getInitialForm = () => ({
     is_active: props.session?.is_active ?? false,
     start_date: props.session?.start_date || '',
     end_date: props.session?.end_date || '',
+    // Editing an existing session starts from the campuses it's already
+    // attached to; a new one defaults to every campus selected (the common
+    // case), since nothing has been chosen yet.
+    campus_ids: props.session
+        ? (props.session.campuses ?? []).map((c) => c.id)
+        : props.campuses.map((c) => c.id),
 });
 
 const form = ref(getInitialForm());
@@ -78,6 +90,12 @@ watch(open, (isOpen) => {
         if (form.value.start_year && form.value.end_year) {
             form.value.name = `${form.value.start_year}-${form.value.end_year}`;
         }
+        if (!form.value.start_date && form.value.start_year) {
+            form.value.start_date = `${form.value.start_year}-01-01`;
+        }
+        if (!form.value.end_date && form.value.end_year) {
+            form.value.end_date = `${form.value.end_year}-12-31`;
+        }
         errors.value = {};
     }
 });
@@ -93,8 +111,10 @@ const endYearOptions = Array.from(
     { length: currentYear + 1 - 2000 + 1 },
     (_, i) => 2000 + i,
 );
-const startYearSelectOptions = startYearOptions.map((year) => ({ value: year, label: String(year) }));
-const endYearSelectOptions = endYearOptions.map((year) => ({ value: year, label: String(year) }));
+// Newest year first - the most likely pick for a new session, so it is
+// what the office sees without scrolling.
+const startYearSelectOptions = startYearOptions.map((year) => ({ value: year, label: String(year) })).reverse();
+const endYearSelectOptions = endYearOptions.map((year) => ({ value: year, label: String(year) })).reverse();
 
 /**
  * The Session Name is derived from Start Year + End Year (issue #59) so the
@@ -124,7 +144,11 @@ watch(
         if (form.value.start_date && !form.value.start_date.startsWith(String(year))) {
             form.value.start_date = '';
         }
+        if (!form.value.start_date) {
+            form.value.start_date = `${year}-01-01`;
+        }
     },
+    { immediate: true },
 );
 
 watch(
@@ -134,7 +158,11 @@ watch(
         if (form.value.end_date && !form.value.end_date.startsWith(String(year))) {
             form.value.end_date = '';
         }
+        if (!form.value.end_date) {
+            form.value.end_date = `${year}-12-31`;
+        }
     },
+    { immediate: true },
 );
 
 const startDateMin = computed(() => form.value.start_year ? `${form.value.start_year}-01-01` : undefined);
@@ -142,11 +170,23 @@ const startDateMax = computed(() => form.value.start_year ? `${form.value.start_
 const endDateMin = computed(() => form.value.end_year ? `${form.value.end_year}-01-01` : undefined);
 const endDateMax = computed(() => form.value.end_year ? `${form.value.end_year}-12-31` : undefined);
 
+// The native date input's MM/DD/YYYY display is the browser's own locale
+// formatting and can't be changed - this readable English-month restatement
+// underneath it is so the office doesn't have to decode the numeric format.
+const formatReadableDate = (isoDate: string): string => {
+    if (!isoDate) return '';
+    const date = new Date(`${isoDate}T00:00:00`);
+    if (Number.isNaN(date.getTime())) return '';
+    return date.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+};
+const startDateReadable = computed(() => formatReadableDate(form.value.start_date));
+const endDateReadable = computed(() => formatReadableDate(form.value.end_date));
+
 const submit = () => {
     processing.value = true;
     errors.value = {};
 
-    const formData = {
+    const formData: Record<string, unknown> = {
         name: form.value.name,
         start_year: form.value.start_year,
         end_year: form.value.end_year,
@@ -154,6 +194,12 @@ const submit = () => {
         start_date: form.value.start_date || null,
         end_date: form.value.end_date || null,
     };
+
+    // A campus-restricted user never sees the picker, so never sends this -
+    // the backend scopes their session to their own campus regardless.
+    if (props.isSuperAdmin) {
+        formData.campus_ids = form.value.campus_ids;
+    }
 
     if (props.session) {
         // Update
@@ -267,29 +313,64 @@ const resetForm = () => {
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div class="grid gap-2">
                             <Label for="start_date">Start Date <span class="text-destructive">*</span></Label>
-                            <Input
-                                id="start_date"
-                                v-model="form.start_date"
-                                type="date"
-                                :min="startDateMin"
-                                :max="startDateMax"
-                                :class="{ 'border-destructive': errors.start_date }"
-                            />
+                            <div class="relative">
+                                <Input
+                                    id="start_date"
+                                    v-model="form.start_date"
+                                    type="date"
+                                    :min="startDateMin"
+                                    :max="startDateMax"
+                                    class="[&::-webkit-datetime-edit-fields-wrapper]:text-transparent [&::-webkit-datetime-edit-text]:text-transparent"
+                                    :class="{ 'border-destructive': errors.start_date }"
+                                />
+                                <span v-if="startDateReadable" class="pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm text-foreground">{{ startDateReadable }}</span>
+                            </div>
                             <InputError :message="errors.start_date" />
                         </div>
 
                         <div class="grid gap-2">
                             <Label for="end_date">End Date <span class="text-destructive">*</span></Label>
-                            <Input
-                                id="end_date"
-                                v-model="form.end_date"
-                                type="date"
-                                :min="endDateMin"
-                                :max="endDateMax"
-                                :class="{ 'border-destructive': errors.end_date }"
-                            />
+                            <div class="relative">
+                                <Input
+                                    id="end_date"
+                                    v-model="form.end_date"
+                                    type="date"
+                                    :min="endDateMin"
+                                    :max="endDateMax"
+                                    class="[&::-webkit-datetime-edit-fields-wrapper]:text-transparent [&::-webkit-datetime-edit-text]:text-transparent"
+                                    :class="{ 'border-destructive': errors.end_date }"
+                                />
+                                <span v-if="endDateReadable" class="pointer-events-none absolute inset-y-0 left-3 flex items-center text-sm text-foreground">{{ endDateReadable }}</span>
+                            </div>
                             <InputError :message="errors.end_date" />
                         </div>
+                    </div>
+
+                    <div v-if="isSuperAdmin" class="grid gap-2">
+                        <Label>Campuses <span class="text-destructive">*</span></Label>
+                        <div class="flex items-center gap-2 border-b border-border pb-2">
+                            <input
+                                id="campus_ids_all"
+                                type="checkbox"
+                                :checked="form.campus_ids.length === campuses.length && campuses.length > 0"
+                                class="rounded border-border text-primary shadow-sm focus:ring-primary"
+                                @change="form.campus_ids = ($event.target as HTMLInputElement).checked ? campuses.map((c) => c.id) : []"
+                            />
+                            <Label for="campus_ids_all" class="font-normal">All Campuses</Label>
+                        </div>
+                        <div class="grid max-h-40 grid-cols-2 gap-2 overflow-y-auto">
+                            <div v-for="campus in campuses" :key="campus.id" class="flex items-center gap-2">
+                                <input
+                                    :id="`campus_ids_${campus.id}`"
+                                    v-model="form.campus_ids"
+                                    type="checkbox"
+                                    :value="campus.id"
+                                    class="rounded border-border text-primary shadow-sm focus:ring-primary"
+                                />
+                                <Label :for="`campus_ids_${campus.id}`" class="font-normal">{{ campus.name }}</Label>
+                            </div>
+                        </div>
+                        <InputError :message="errors.campus_ids" />
                     </div>
 
                     <div class="flex items-center space-x-2">
