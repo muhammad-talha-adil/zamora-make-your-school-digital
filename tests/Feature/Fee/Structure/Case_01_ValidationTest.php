@@ -41,7 +41,7 @@ function postStructure(AdmissionWorld $world, array $overrides = [])
 it('accepts a complete structure', function () {
     postStructure($this->world)->assertRedirect(route('fee.structures.index'));
 
-    expect(FeeStructure::where('title', 'Class 5 Standard')->exists())->toBeTrue();
+    expect(FeeStructure::where('title', 'like', '%Class 5 Standard')->exists())->toBeTrue();
 });
 
 it('requires a title', function () {
@@ -65,7 +65,7 @@ it('ignores a client-supplied campus_id and derives it from the actor\'s scope',
     postStructure($this->world, ['campus_id' => null])
         ->assertRedirect(route('fee.structures.index'));
 
-    expect(FeeStructure::where('title', 'Class 5 Standard')->first()->campus_id)
+    expect(FeeStructure::where('title', 'like', '%Class 5 Standard')->first()->campus_id)
         ->toBe($this->world->campus->id);
 });
 

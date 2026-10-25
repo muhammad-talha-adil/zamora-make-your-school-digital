@@ -383,7 +383,7 @@ class FeeStructureController extends Controller
 
         foreach ($sectionsToKeep as $sectionId) {
             $duplicateQuery = FeeStructure::where('session_id', $validated['session_id'])
-                ->where('campus_id', $validated['campus_id'])
+                ->where('campus_id', $feeStructure->campus_id)
                 ->where('class_id', $validated['class_id'] ?? null)
                 ->where('title', $validated['title'])
                 ->whereNotIn('id', $relatedStructureIds);
@@ -451,6 +451,7 @@ class FeeStructureController extends Controller
                 // Create new structure for this section
                 $newStructureData = $validated;
                 $newStructureData['section_id'] = $sectionId;
+                $newStructureData['campus_id'] = $feeStructure->campus_id;
                 $newStructureData['created_by'] = auth()->id();
                 $newStructure = FeeStructure::create($newStructureData);
                 $structures[] = $newStructure;

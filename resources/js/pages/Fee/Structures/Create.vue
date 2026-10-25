@@ -190,8 +190,6 @@ const onClassCreated = async () => {
 };
 
 const sessionOptions = computed(() => props.sessions.map((session) => ({ value: String(session.id), label: session.name })));
-const classOptions = computed(() => classesList.value.map((cls) => ({ value: String(cls.id), label: cls.name })));
-const sectionOptions = computed(() => filteredSections.value.map((section) => ({ value: String(section.id), label: section.name })));
 const feeHeadOptions = computed(() => feeHeadsList.value.map((fh) => ({ value: String(fh.id), label: fh.name })));
 const feeHeadFrequencyOptions = computed(() => props.feeHeadFrequencies.map((freq) => ({ value: freq.value, label: freq.label })));
 const statusOptions = [
@@ -199,12 +197,6 @@ const statusOptions = [
     { value: 'active', label: 'Active' },
     { value: 'inactive', label: 'Inactive' },
 ];
-
-// Filter sections based on selected class
-const filteredSections = computed(() => {
-    if (!form.class_id) return [];
-    return props.sections.filter(s => s.class_id === Number(form.class_id));
-});
 
 // Multi-class mode: each checked class shows its own sections, checked by
 // default (unchecking one excludes just that section from the batch).
@@ -264,11 +256,6 @@ const totalOneTime = computed(() => {
 });
 
 const grandTotal = computed(() => totalMonthly.value + totalYearly.value + totalOneTime.value);
-
-// Reset section when class changes
-const onClassChange = () => {
-    form.section_id = '';
-};
 
 // Handle title change from ComboboxInput
 const onTitleChange = (value: string | number | null) => {
