@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Settings;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Settings\BulkStoreSubjectRequest;
 use App\Http\Requests\Settings\StoreSubjectRequest;
 use App\Http\Requests\Settings\UpdateSubjectRequest;
 use App\Models\Campus;
@@ -25,7 +26,7 @@ class SubjectController extends Controller
         Gate::authorize('viewAny', Subject::class);
 
         $subjects = $this->scopedQuery()
-            ->orderBy('id', 'desc')
+            ->orderBy('name', 'asc')
             ->paginate(10);
 
         $user = request()->user();
@@ -74,7 +75,7 @@ class SubjectController extends Controller
             }
         }
 
-        $subjects = $query->orderBy('id', 'desc')
+        $subjects = $query->orderBy('name', 'asc')
             ->paginate((int) request('per_page', 10));
 
         return response()->json($subjects);
@@ -112,6 +113,45 @@ class SubjectController extends Controller
         }
 
         return redirect()->route('subjects.index')->with('success', 'Subject created successfully.');
+    }
+
+    /**
+     * Creates every subject name at once, each synced to the picked
+     * campuses. A name already in use (subject names are unique school-wide)
+     * is skipped rather than failing the whole batch.
+     */
+    public function bulkStore(BulkStoreSubjectRequest $request): JsonResponse
+    {
+        Gate::authorize('create', Subject::class);
+
+        $validated = $request->validated();
+        $user = $request->user();
+        $campusIds = $this->resolveCampusIds($request, $validated);
+
+        $names = collect($validated['subject_names'])->map(fn ($n) => trim($n))->filter()->unique();
+        $existingNames = Subject::query()->whereIn('name', $names)->pluck('name');
+
+        $created = 0;
+        $skipped = [];
+
+        foreach ($names as $name) {
+            if ($existingNames->contains($name)) {
+                $skipped[] = $name;
+
+                continue;
+            }
+
+            $subject = Subject::create(['name' => $name, 'is_active' => true]);
+            $subject->campuses()->sync($campusIds);
+            $created++;
+        }
+
+        $message = "Created {$created} subject".($created === 1 ? '' : 's').'.';
+        if (! empty($skipped)) {
+            $message .= ' Already existed, skipped: '.implode(', ', $skipped).'.';
+        }
+
+        return response()->json(['success' => true, 'message' => $message, 'created' => $created, 'skipped' => $skipped]);
     }
 
     /**

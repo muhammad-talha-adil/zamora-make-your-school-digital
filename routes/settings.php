@@ -131,6 +131,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('settings/school-classes/all', [SchoolClassController::class, 'apiIndex'])->name('school-classes.all');
         Route::get('settings/school-classes/create', [SchoolClassController::class, 'create'])->name('school-classes.create');
         Route::post('settings/school-classes', [SchoolClassController::class, 'store'])->name('school-classes.store');
+        Route::post('settings/school-classes/bulk', [SchoolClassController::class, 'bulkStore'])->name('school-classes.bulk-store');
         Route::get('settings/school-classes/{schoolClass}/edit', [SchoolClassController::class, 'edit'])->name('school-classes.edit');
         Route::patch('settings/school-classes/{schoolClass}', [SchoolClassController::class, 'update'])->name('school-classes.update');
         Route::delete('settings/school-classes/{schoolClass}', [SchoolClassController::class, 'destroy'])->name('school-classes.destroy');
@@ -144,6 +145,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         Route::get('settings/sections/all', [SectionController::class, 'apiIndex'])->name('sections.all');
         Route::get('settings/sections/create', [SectionController::class, 'create'])->name('sections.create');
         Route::post('settings/sections', [SectionController::class, 'store'])->name('sections.store');
+        Route::post('settings/sections/bulk', [SectionController::class, 'bulkStore'])->name('sections.bulk-store');
         Route::get('settings/sections/{section}/edit', [SectionController::class, 'edit'])->name('sections.edit');
         Route::patch('settings/sections/{section}', [SectionController::class, 'update'])->name('sections.update');
         Route::delete('settings/sections/{section}', [SectionController::class, 'destroy'])->name('sections.destroy');
@@ -158,6 +160,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('settings/subjects/all', [SubjectController::class, 'apiIndex'])->name('subjects.all');
     Route::get('settings/subjects/create', [SubjectController::class, 'create'])->name('subjects.create');
     Route::post('settings/subjects', [SubjectController::class, 'store'])->name('subjects.store');
+    Route::post('settings/subjects/bulk', [SubjectController::class, 'bulkStore'])->name('subjects.bulk-store');
     Route::get('settings/subjects/{subject}/edit', [SubjectController::class, 'edit'])->name('subjects.edit');
     Route::patch('settings/subjects/{subject}', [SubjectController::class, 'update'])->name('subjects.update');
     Route::delete('settings/subjects/{subject}', [SubjectController::class, 'destroy'])->name('subjects.destroy');

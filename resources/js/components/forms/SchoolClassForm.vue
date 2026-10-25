@@ -17,7 +17,6 @@ import {
 } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import SearchableSelect from '@/components/ui/searchable-select/SearchableSelect.vue';
 import Icon from '@/components/Icon.vue';
 import RowAction from '@/components/tables/RowAction.vue';
 
@@ -30,6 +29,8 @@ interface Props {
         description?: string;
         is_active: boolean;
         campus_id?: number;
+        /** Every campus a class with this same name already exists in, including this row's own. */
+        existing_campus_ids?: number[];
     };
     trigger?: string;
     variant?: ButtonVariants['variant'];
@@ -47,7 +48,9 @@ const props = withDefaults(defineProps<Props>(), {
     campuses: () => [],
 });
 
-const campusSelectOptions = computed(() => props.campuses.map((c) => ({ value: c.id, label: c.name })));
+// The campuses this class is already filed under elsewhere (locked, can't
+// be unchecked here - removing it is done from that campus's own row).
+const lockedCampusIds = computed(() => new Set(props.schoolClass?.existing_campus_ids ?? []));
 
 // Emits
 const emit = defineEmits<{
@@ -58,11 +61,11 @@ const getInitialForm = () => ({
     name: props.schoolClass?.name || '',
     code: props.schoolClass?.code || '',
     description: props.schoolClass?.description || '',
-    // Editing moves one existing class to a different single campus; a new
-    // class is created once per campus picked here, defaulting to every
-    // campus selected (the common case).
-    campus_id: props.schoolClass?.campus_id ?? null,
-    campus_ids: props.campuses.map((c) => c.id),
+    // Editing starts from the campuses this class is already in (locked);
+    // creating defaults to every campus selected (the common case).
+    campus_ids: props.schoolClass
+        ? [...(props.schoolClass.existing_campus_ids ?? [])]
+        : props.campuses.map((c) => c.id),
 });
 
 const form = ref(getInitialForm());
@@ -141,11 +144,7 @@ const submit = () => {
     };
 
     if (props.isSuperAdmin) {
-        if (props.schoolClass) {
-            formData.campus_id = form.value.campus_id;
-        } else {
-            formData.campus_ids = form.value.campus_ids;
-        }
+        formData.campus_ids = form.value.campus_ids;
     }
 
     if (props.schoolClass) {
@@ -276,21 +275,15 @@ const resetForm = () => {
                         <InputError :message="errors.name" />
                     </div>
 
-                    <!-- Editing moves one existing class row, so only a single campus applies. -->
-                    <div v-if="isSuperAdmin && props.schoolClass" class="grid gap-2">
-                        <Label for="campus_id">Campus <span class="text-destructive">*</span></Label>
-                        <SearchableSelect
-                            id="campus_id"
-                            v-model="form.campus_id"
-                            :options="campusSelectOptions"
-                            placeholder="Select campus"
-                            :class="errors.campus_id ? 'border-destructive' : ''"
-                        />
-                        <InputError :message="errors.campus_id" />
-                    </div>
-
-                    <!-- Creating makes one class per campus chosen - any one, several, or every campus. -->
-                    <div v-else-if="isSuperAdmin" class="grid gap-2">
+                    <!--
+                        Creating makes one class per campus chosen - any one,
+                        several, or every campus. Editing shows the same
+                        list, but a campus this class already exists in
+                        (including its own) is locked on - unchecking it
+                        here does nothing; checking a new one adds the class
+                        there too.
+                    -->
+                    <div v-if="isSuperAdmin" class="grid gap-2">
                         <Label>Campuses <span class="text-destructive">*</span></Label>
                         <div class="flex items-center gap-2 border-b border-border pb-2">
                             <input
@@ -298,7 +291,7 @@ const resetForm = () => {
                                 type="checkbox"
                                 :checked="form.campus_ids.length === campuses.length && campuses.length > 0"
                                 class="rounded border-border text-primary shadow-sm focus:ring-primary"
-                                @change="form.campus_ids = ($event.target as HTMLInputElement).checked ? campuses.map((c) => c.id) : []"
+                                @change="form.campus_ids = ($event.target as HTMLInputElement).checked ? campuses.map((c) => c.id) : [...lockedCampusIds]"
                             />
                             <Label for="class_campus_ids_all" class="font-normal">All Campuses</Label>
                         </div>
@@ -309,9 +302,13 @@ const resetForm = () => {
                                     v-model="form.campus_ids"
                                     type="checkbox"
                                     :value="campus.id"
-                                    class="rounded border-border text-primary shadow-sm focus:ring-primary"
+                                    :disabled="lockedCampusIds.has(campus.id)"
+                                    class="rounded border-border text-primary shadow-sm focus:ring-primary disabled:opacity-60"
                                 />
-                                <Label :for="`class_campus_ids_${campus.id}`" class="font-normal">{{ campus.name }}</Label>
+                                <Label :for="`class_campus_ids_${campus.id}`" class="font-normal">
+                                    {{ campus.name }}
+                                    <span v-if="lockedCampusIds.has(campus.id)" class="text-xs text-muted-foreground">(already has this class)</span>
+                                </Label>
                             </div>
                         </div>
                         <InputError :message="errors.campus_ids" />

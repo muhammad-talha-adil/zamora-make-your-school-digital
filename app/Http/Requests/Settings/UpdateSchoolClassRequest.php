@@ -24,7 +24,6 @@ class UpdateSchoolClassRequest extends FormRequest
     public function rules(): array
     {
         $schoolClass = $this->route('schoolClass');
-        $campusId = $this->input('campus_id') ?? $schoolClass->campus_id;
 
         return [
             'name' => [
@@ -33,11 +32,15 @@ class UpdateSchoolClassRequest extends FormRequest
                 'max:255',
                 Rule::unique('school_classes', 'name')
                     ->ignore($schoolClass->id)
-                    ->where('campus_id', $campusId)
+                    ->where('campus_id', $schoolClass->campus_id)
                     ->whereNull('deleted_at'),
             ],
             'description' => 'nullable|string',
-            'campus_id' => 'nullable|integer|exists:campuses,id',
+            // Owner/developer only - checking an extra campus here adds this
+            // class to it too (see SchoolClassController::update()); a
+            // campus-restricted editor never submits this.
+            'campus_ids' => 'nullable|array',
+            'campus_ids.*' => 'integer|exists:campuses,id',
         ];
     }
 }

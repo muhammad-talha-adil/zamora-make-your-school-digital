@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import BulkSectionForm from '@/components/forms/BulkSectionForm.vue';
 import SectionForm from '@/components/forms/SectionForm.vue';
 import RowAction from '@/components/tables/RowAction.vue';
 import RowActions from '@/components/tables/RowActions.vue';
@@ -132,6 +133,7 @@ const handleSaved = () => {
                 <SearchableSelect v-model="statusFilter" :options="statusFilterOptions" placeholder="All" class="w-32" />
             </div>
             <div class="flex gap-2">
+                <BulkSectionForm :school-classes="schoolClasses" @saved="handleSaved" />
                 <SectionForm :school-classes="schoolClasses" @saved="handleSaved" />
             </div>
         </div>

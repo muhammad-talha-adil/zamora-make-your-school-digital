@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import BulkSubjectForm from '@/components/forms/BulkSubjectForm.vue';
 import SubjectForm from '@/components/forms/SubjectForm.vue';
 import RowAction from '@/components/tables/RowAction.vue';
 import RowActions from '@/components/tables/RowActions.vue';
@@ -135,6 +136,7 @@ const inactivateSubject = (subject: any) => {
                 <SearchableSelect v-model="statusFilter" :options="statusSelectOptions" placeholder="All" class="w-32" />
             </div>
             <div class="flex gap-2">
+                <BulkSubjectForm :is-super-admin="isSuperAdmin" :campuses="campuses" @saved="handleSaved" />
                 <SubjectForm :is-super-admin="isSuperAdmin" :campuses="campuses" @saved="handleSaved" />
             </div>
         </div>
@@ -148,9 +150,6 @@ const inactivateSubject = (subject: any) => {
                             </th>
                             <th scope="col" class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">
                                 Subject Name
-                            </th>
-                            <th scope="col" class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">
-                                Code
                             </th>
                             <th scope="col" class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">
                                 Description
@@ -179,11 +178,6 @@ const inactivateSubject = (subject: any) => {
                                     {{ subject.name }}
                                 </div>
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="text-sm text-muted-foreground">
-                                    {{ subject.code || subject.short_name || EMPTY_VALUE }}
-                                </div>
-                            </td>
                             <td class="px-6 py-4">
                                 <div class="max-w-xs truncate text-sm text-muted-foreground">
                                     {{ subject.description || EMPTY_VALUE }}
@@ -210,7 +204,7 @@ const inactivateSubject = (subject: any) => {
                             </td>
                         </tr>
                         <tr v-if="subjectsData.length === 0">
-                            <td colspan="6" class="px-6 py-8 text-center text-sm text-muted-foreground">No subjects found.</td>
+                            <td colspan="5" class="px-6 py-8 text-center text-sm text-muted-foreground">No subjects found.</td>
                         </tr>
                     </tbody>
                 </table>

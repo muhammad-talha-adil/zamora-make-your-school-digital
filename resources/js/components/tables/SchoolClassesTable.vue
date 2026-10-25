@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import TablePagination from '@/components/tables/TablePagination.vue';
+import BulkSchoolClassForm from '@/components/forms/BulkSchoolClassForm.vue';
 import SchoolClassForm from '@/components/forms/SchoolClassForm.vue';
 import RowAction from '@/components/tables/RowAction.vue';
 import RowActions from '@/components/tables/RowActions.vue';
@@ -140,6 +141,7 @@ const inactivateClass = (schoolClass: any) => {
                 <SearchableSelect v-model="statusFilter" :options="statusSelectOptions" placeholder="All" class="w-32" />
             </div>
             <div class="flex gap-2">
+                <BulkSchoolClassForm :is-super-admin="isSuperAdmin" :campuses="campuses" @saved="handleSaved" />
                 <SchoolClassForm :is-super-admin="isSuperAdmin" :campuses="campuses" @saved="handleSaved" />
             </div>
         </div>
@@ -159,12 +161,6 @@ const inactivateClass = (schoolClass: any) => {
                                 class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase"
                             >
                                 Class Name
-                            </th>
-                            <th
-                                scope="col"
-                                class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase"
-                            >
-                                Code
                             </th>
                             <th
                                 scope="col"
@@ -202,11 +198,6 @@ const inactivateClass = (schoolClass: any) => {
                                     {{ schoolClass.name }}
                                 </div>
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="text-sm text-muted-foreground">
-                                    {{ schoolClass.code || '—' }}
-                                </div>
-                            </td>
                             <td class="px-6 py-4">
                                 <div class="max-w-xs truncate text-sm text-muted-foreground">
                                     {{ schoolClass.description || '—' }}
@@ -233,7 +224,7 @@ const inactivateClass = (schoolClass: any) => {
                             </td>
                         </tr>
                         <tr v-if="classesData.length === 0">
-                            <td colspan="7" class="px-6 py-8 text-center text-sm text-muted-foreground">No classes found.</td>
+                            <td colspan="6" class="px-6 py-8 text-center text-sm text-muted-foreground">No classes found.</td>
                         </tr>
                     </tbody>
                 </table>
