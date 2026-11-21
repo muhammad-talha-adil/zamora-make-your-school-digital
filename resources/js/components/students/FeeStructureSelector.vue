@@ -352,7 +352,6 @@ const {
     syncScopeRefs,
     fetchFeeStructure,
     fetchDiscountTypes,
-    setManualFeeAmount,
     setManualFeeAmountDebounced,
     calculateDiscountPercentage,
     createFeeStructure,

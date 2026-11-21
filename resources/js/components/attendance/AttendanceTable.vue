@@ -141,7 +141,6 @@
 
 <script setup lang="ts">
 import TablePagination from '@/components/tables/TablePagination.vue';
-import { Link } from '@inertiajs/vue3';
 import { computed } from 'vue';
 import { router } from '@inertiajs/vue3';
 import { route } from 'ziggy-js';

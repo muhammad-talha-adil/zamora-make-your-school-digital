@@ -21,7 +21,7 @@ beforeEach(function () {
 
 it('shows a child their own class upcoming exam paper timing on the portal', function () {
     [$user, $student] = $this->world->portalStudent();
-    $paper = $this->world->paperFor('Mathematics', '2026-09-25');
+    $paper = $this->world->paperFor('Mathematics', now()->addDays(5)->toDateString());
 
     $response = $this->actingAs($user)->get(route('portal.exams.index'));
 
@@ -36,7 +36,7 @@ it('shows a child their own class upcoming exam paper timing on the portal', fun
 
 it('does not show a family a paper timetabled for a different class', function () {
     [$user] = $this->world->portalStudent();
-    $paper = $this->world->paperFor('Mathematics', '2026-09-25');
+    $paper = $this->world->paperFor('Mathematics', now()->addDays(5)->toDateString());
     $otherClass = SchoolClass::create(['name' => 'Other Class', 'level' => 99, 'is_active' => true]);
     $paper->update(['class_id' => $otherClass->id, 'section_id' => null]);
 
@@ -51,7 +51,7 @@ it('does not show a family a paper timetabled for a different class', function (
 
 it('shows a teacher the upcoming papers for the class they are assigned', function () {
     $teacher = $this->world->teacherFor();
-    $paper = $this->world->paperFor('Science', '2026-09-28');
+    $paper = $this->world->paperFor('Science', now()->addDays(7)->toDateString());
 
     $response = $this->actingAs($teacher)->get(route('staff.teaching.exams'));
 
@@ -65,7 +65,7 @@ it('shows a teacher the upcoming papers for the class they are assigned', functi
 
 it('does not show a teacher papers for a class they are not assigned to', function () {
     $teacher = $this->world->teacherFor();
-    $paper = $this->world->paperFor('Science', '2026-09-28');
+    $paper = $this->world->paperFor('Science', now()->addDays(7)->toDateString());
     $otherSection = Section::create(['name' => 'Other Section', 'class_id' => $paper->class_id, 'is_active' => true]);
     $paper->update(['section_id' => $otherSection->id]);
 
@@ -87,7 +87,7 @@ it('turns away a signed-in user with no staff record from the teacher exams scre
 it('excludes a cancelled paper from both the portal and teacher lists', function () {
     [$user] = $this->world->portalStudent();
     $teacher = $this->world->teacherFor();
-    $paper = $this->world->paperFor('Urdu', '2026-09-30');
+    $paper = $this->world->paperFor('Urdu', now()->addDays(9)->toDateString());
     $paper->update(['status' => 'cancelled']);
 
     $this->actingAs($user)->get(route('portal.exams.index'))

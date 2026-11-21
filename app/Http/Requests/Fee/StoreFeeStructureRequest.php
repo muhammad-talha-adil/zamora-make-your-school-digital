@@ -25,19 +25,6 @@ class StoreFeeStructureRequest extends FormRequest
     }
 
     /**
-     * The campus is derived from whichever campus the creator is currently
-     * scoped to (their own campus, or the header switcher's pick for an
-     * owner/developer) — not a client-supplied value — matching the same
-     * convention used for staff and inventory records.
-     */
-    protected function prepareForValidation(): void
-    {
-        $this->merge([
-            'campus_id' => $this->user()->campusId(),
-        ]);
-    }
-
-    /**
      * @return array<string, ValidationRule|array<mixed>|string>
      */
     public function rules(): array
@@ -45,15 +32,24 @@ class StoreFeeStructureRequest extends FormRequest
         return [
             'title' => ['required', 'string', 'max:200'],
             'session_id' => ['required', 'integer', Rule::exists('academic_sessions', 'id')],
-            'campus_id' => ['required', 'integer', Rule::exists('campuses', 'id')],
-            'class_id' => ['required', 'integer', Rule::exists('school_classes', 'id')],
-
-            // A structure is scoped to exactly one class and, when that class
-            // has sections, exactly one of them - never "all classes" or "all
-            // sections" any more (see withValidator() below for the
-            // has-sections-but-none-picked case).
+            // No campus_id field - every class already belongs to exactly
+            // one campus, so the controller derives it per class/section row
+            // from the class itself (see FeeStructureController::store()).
+            // This also means a campus-restricted creator can never spoof a
+            // row into someone else's campus - the class_id they can even
+            // select is already scoped to their own.
+            // Either a single class_id (+ at most one section_id, the
+            // original single-class form), or a `classes` array for
+            // creating across several classes at once - each entry still
+            // produces its own one-class-one-section row (see store()).
+            'class_id' => ['required_without:classes', 'nullable', 'integer', Rule::exists('school_classes', 'id')],
             'section_ids' => ['nullable', 'array', 'max:1'],
             'section_ids.*' => ['integer', Rule::exists('sections', 'id')],
+
+            'classes' => ['nullable', 'array', 'min:1'],
+            'classes.*.class_id' => ['required', 'integer', Rule::exists('school_classes', 'id')],
+            'classes.*.section_ids' => ['nullable', 'array'],
+            'classes.*.section_ids.*' => ['integer', Rule::exists('sections', 'id')],
 
             'status' => ['required', Rule::enum(FeeStructureStatus::class)],
             'is_default' => ['nullable', 'boolean'],
@@ -88,7 +84,6 @@ class StoreFeeStructureRequest extends FormRequest
         return [
             'title.required' => 'Please give the fee structure a title.',
             'session_id.required' => 'Please select an academic session.',
-            'campus_id.required' => 'Please select a campus.',
             'class_id.required' => 'Please select a class.',
             'items.*.fee_head_id.required_with' => 'Each charge needs a fee head.',
             'items.*.amount.required_with' => 'Each charge needs an amount.',

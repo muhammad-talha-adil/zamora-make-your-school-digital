@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Head, Link, router } from '@inertiajs/vue3';
+import { Head } from '@inertiajs/vue3';
 import TablePagination from '@/components/tables/TablePagination.vue';
 import PortalLayout from '@/layouts/PortalLayout.vue';
 import Icon from '@/components/Icon.vue';
@@ -123,10 +123,6 @@ const isToday = (date: Date | null) => {
     return date.getDate() === today.getDate() &&
            date.getMonth() === today.getMonth() &&
            date.getFullYear() === today.getFullYear();
-};
-
-const formatDateKey = (date: Date) => {
-    return date.toISOString().split('T')[0];
 };
 
 const breadcrumbs = computed(() => [

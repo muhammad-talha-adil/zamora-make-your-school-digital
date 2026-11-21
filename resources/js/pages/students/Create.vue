@@ -1375,7 +1375,19 @@ const submitForm = () => {
             processing.value = false;
         },
         onSuccess: () => {
-            alert.success('Student admitted successfully!');
+            // A caught exception in the controller still responds with a
+            // plain redirect-back (not a validation error), which Inertia
+            // treats as an ordinary successful navigation - so `onSuccess`
+            // alone can't tell a real admission apart from one that failed
+            // and bounced back to this same form. `createdStudent` is only
+            // ever set on the actual success path; its absence here means
+            // the backend caught something and flashed an error instead.
+            if (props.createdStudent) {
+                alert.success('Student admitted successfully!');
+            } else {
+                const flashError = (page.props.flash as { error?: string } | undefined)?.error;
+                alert.error(flashError || 'Failed to admit student. Please check the details and try again.');
+            }
         },
         onError: (err) => {
             errors.value = err as Record<string, string>;

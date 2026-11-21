@@ -31,15 +31,17 @@ class FeeStructureController extends Controller
         $perPage = $request->input('per_page', 10);
         $page = $request->input('page', 1);
 
+        // Always the campus currently being viewed (the header switcher's
+        // pick) - matching every other campus-scoped listing in the app.
+        // There is no "all campuses" filter here any more; it previously
+        // defaulted to showing every campus's structures at once, which
+        // looked like campus scoping was broken.
         $structures = FeeStructure::with(['session', 'campus', 'class', 'section'])
+            ->where('campus_id', $request->user()->campusId())
             ->withCount('items');
 
         if ($request->filled('session_id')) {
             $structures->where('session_id', $request->session_id);
-        }
-
-        if ($request->filled('campus_id')) {
-            $structures->where('campus_id', $request->campus_id);
         }
 
         if ($request->filled('class_id')) {
@@ -69,10 +71,9 @@ class FeeStructureController extends Controller
         return Inertia::render('Fee/Structures/Index', [
             'structures' => $transformedStructures,
             'sessions' => Session::select('id', 'name')->get(),
-            'campuses' => Campus::select('id', 'name')->get(),
             'classes' => SchoolClass::visibleTo($request->user())->select('id', 'name')->get(),
             'sections' => Section::select('id', 'name', 'class_id')->get(),
-            'filters' => $request->only(['session_id', 'campus_id', 'class_id', 'section_id', 'status', 'search']),
+            'filters' => $request->only(['session_id', 'class_id', 'section_id', 'status', 'search']),
         ]);
     }
 
@@ -83,11 +84,22 @@ class FeeStructureController extends Controller
     {
         // Get the currently active session for auto-selection
         $activeSession = Session::where('is_active', true)->first();
+        $user = auth()->user();
+
+        // An owner/developer can file a structure under any campus they
+        // pick (classes.* carry their own campus_id, so this doubles as the
+        // class picker's filter) - everyone else only ever sees their own
+        // campus's classes, same as every other campus-scoped listing.
+        $classes = $user->isSuperAdmin()
+            ? SchoolClass::with('campus:id,name')->select('id', 'name', 'campus_id')->get()
+            : SchoolClass::visibleTo($user)->select('id', 'name', 'campus_id')->get();
 
         return Inertia::render('Fee/Structures/Create', [
             'sessions' => Session::select('id', 'name', 'start_date', 'end_date')->get(),
             'active_session_id' => $activeSession?->id,
-            'classes' => SchoolClass::visibleTo(auth()->user())->select('id', 'name')->get(),
+            'isSuperAdmin' => $user->isSuperAdmin(),
+            'campuses' => $user->isSuperAdmin() ? Campus::orderBy('name')->select('id', 'name')->get() : [],
+            'classes' => $classes,
             'sections' => Section::select('id', 'name', 'class_id')->get(),
             'months' => Month::select('id', 'name', 'month_number')->orderBy('month_number')->get(),
             'feeHeads' => FeeHead::active()->select('id', 'name', 'default_frequency')->ordered()->get(),
@@ -109,43 +121,82 @@ class FeeStructureController extends Controller
 
         $validated['created_by'] = auth()->id();
 
-        // Get section_ids from validated data
-        $sectionIds = $validated['section_ids'] ?? [];
-        unset($validated['section_ids']); // Remove from base data
+        // Bulk mode (several classes, each with its own section picks) vs.
+        // the original single-class form - normalized to the same shape so
+        // one loop below handles both.
+        $classGroups = ! empty($validated['classes'])
+            ? collect($validated['classes'])->map(fn ($c) => ['class_id' => $c['class_id'], 'section_ids' => $c['section_ids'] ?? []])
+            : collect([['class_id' => $validated['class_id'], 'section_ids' => $validated['section_ids'] ?? []]]);
+        unset($validated['classes'], $validated['class_id'], $validated['section_ids']);
+        $baseTitle = $validated['title'];
 
-        $sectionsToCreate = empty($sectionIds) ? [null] : array_values($sectionIds);
+        // Every class already belongs to exactly one campus - that's where
+        // its structure row is filed, derived here rather than trusted from
+        // the request. A campus-restricted creator can only ever pick
+        // classes from their own campus to begin with (see create()), but
+        // this re-scopes defensively in case a class_id was tampered with.
+        $classCampusIds = SchoolClass::whereIn('id', $classGroups->pluck('class_id'))->pluck('campus_id', 'id');
+        $user = $request->user();
+        if (! $user->isSuperAdmin()) {
+            $classGroups = $classGroups->filter(fn ($g) => ($classCampusIds[$g['class_id']] ?? null) === $user->campusId())->values();
+        }
 
-        foreach ($sectionsToCreate as $sectionId) {
-            $existingStructure = FeeStructure::where('session_id', $validated['session_id'])
-                ->where('campus_id', $validated['campus_id'])
-                ->where('class_id', $validated['class_id'] ?? null)
-                ->where('section_id', $sectionId)
-                ->where('title', $validated['title'])
-                ->first();
+        // Every created row's title is prefixed with its own class/section
+        // (e.g. "Class 1 - A Monthly Fee") so same-named structures across
+        // many classes/sections stay distinct and identifiable in listings.
+        $classNames = SchoolClass::whereIn('id', $classGroups->pluck('class_id'))->pluck('name', 'id');
+        $sectionIds = $classGroups->pluck('section_ids')->flatten()->filter();
+        $sectionNames = Section::whereIn('id', $sectionIds)->pluck('name', 'id');
 
-            if ($existingStructure) {
-                return response()->json([
-                    'message' => 'A fee structure with this title already exists for one of the selected class/section combinations. Please use a different title or change the selection.',
-                ], 422);
+        $titleFor = function (int $classId, ?int $sectionId) use ($classNames, $sectionNames, $baseTitle) {
+            $className = $classNames[$classId] ?? '';
+
+            return $sectionId
+                ? "{$className} - {$sectionNames[$sectionId]} {$baseTitle}"
+                : "{$className} {$baseTitle}";
+        };
+
+        foreach ($classGroups as $group) {
+            $sectionsToCreate = empty($group['section_ids']) ? [null] : array_values($group['section_ids']);
+
+            foreach ($sectionsToCreate as $sectionId) {
+                $existingStructure = FeeStructure::where('session_id', $validated['session_id'])
+                    ->where('campus_id', $classCampusIds[$group['class_id']])
+                    ->where('class_id', $group['class_id'])
+                    ->where('section_id', $sectionId)
+                    ->where('title', $titleFor($group['class_id'], $sectionId))
+                    ->first();
+
+                if ($existingStructure) {
+                    return response()->json([
+                        'message' => 'A fee structure with this title already exists for one of the selected class/section combinations. Please use a different title or change the selection.',
+                    ], 422);
+                }
             }
         }
 
-        // If no sections selected, create ONE record with NULL section (applies to all)
-        // If sections selected, create ONE record per section
+        // If no sections selected for a class, create ONE record with NULL
+        // section (applies to all) - otherwise one record per section.
         $structures = [];
 
-        foreach ($sectionsToCreate as $sectionId) {
-            $structureData = $validated;
-            unset($structureData['items']);
-            $structureData['section_id'] = $sectionId;
+        foreach ($classGroups as $group) {
+            $sectionsToCreate = empty($group['section_ids']) ? [null] : array_values($group['section_ids']);
 
-            $structure = FeeStructure::create($structureData);
-            $structures[] = $structure;
+            foreach ($sectionsToCreate as $sectionId) {
+                $structureData = $validated;
+                unset($structureData['items']);
+                $structureData['class_id'] = $group['class_id'];
+                $structureData['section_id'] = $sectionId;
+                $structureData['campus_id'] = $classCampusIds[$group['class_id']];
+                $structureData['title'] = $titleFor($group['class_id'], $sectionId);
 
-            // Create fee structure items for this structure
-            if (! empty($validated['items'])) {
-                foreach ($validated['items'] as $item) {
-                    $structure->items()->create($this->itemAttributes($item));
+                $structure = FeeStructure::create($structureData);
+                $structures[] = $structure;
+
+                if (! empty($validated['items'])) {
+                    foreach ($validated['items'] as $item) {
+                        $structure->items()->create($this->itemAttributes($item));
+                    }
                 }
             }
         }
@@ -153,7 +204,7 @@ class FeeStructureController extends Controller
         $count = count($structures);
         $message = $count === 1
             ? 'Fee structure created successfully with '.count($validated['items'] ?? []).' fee items.'
-            : 'Fee structures created successfully for '.$count.' sections with '.count($validated['items'] ?? []).' fee items each.';
+            : 'Fee structures created successfully for '.$count.' class/section combinations with '.count($validated['items'] ?? []).' fee items each.';
 
         return redirect()->route('fee.structures.index')
             ->with('success', $message);
@@ -167,6 +218,12 @@ class FeeStructureController extends Controller
         // Use explicit find to handle soft deletes properly
         $structure = FeeStructure::with(['session', 'campus', 'class', 'section', 'items.feeHead', 'creator'])
             ->findOrFail($feeStructure);
+
+        // A structure belongs to exactly one campus - viewing it while a
+        // different campus is selected (header switcher) 404s instead of
+        // silently showing another campus's data, matching the index/create
+        // scoping above.
+        abort_unless($structure->campus_id === request()->user()->campusId(), 404);
 
         // Transform the structure data for frontend (matching index method format)
         $data = [
@@ -229,6 +286,8 @@ class FeeStructureController extends Controller
      */
     public function edit(FeeStructure $feeStructure)
     {
+        abort_unless($feeStructure->campus_id === request()->user()->campusId(), 404);
+
         // Find ALL related structures (same session/campus/class, different sections)
         $relatedStructures = FeeStructure::where('session_id', $feeStructure->session_id)
             ->where('campus_id', $feeStructure->campus_id)
@@ -295,6 +354,8 @@ class FeeStructureController extends Controller
      */
     public function update(UpdateFeeStructureRequest $request, FeeStructure $feeStructure)
     {
+        abort_unless($feeStructure->campus_id === $request->user()->campusId(), 404);
+
         $validated = $request->validated();
 
         // Get session to auto-fill effective dates
@@ -322,7 +383,7 @@ class FeeStructureController extends Controller
 
         foreach ($sectionsToKeep as $sectionId) {
             $duplicateQuery = FeeStructure::where('session_id', $validated['session_id'])
-                ->where('campus_id', $validated['campus_id'])
+                ->where('campus_id', $feeStructure->campus_id)
                 ->where('class_id', $validated['class_id'] ?? null)
                 ->where('title', $validated['title'])
                 ->whereNotIn('id', $relatedStructureIds);
@@ -390,6 +451,7 @@ class FeeStructureController extends Controller
                 // Create new structure for this section
                 $newStructureData = $validated;
                 $newStructureData['section_id'] = $sectionId;
+                $newStructureData['campus_id'] = $feeStructure->campus_id;
                 $newStructureData['created_by'] = auth()->id();
                 $newStructure = FeeStructure::create($newStructureData);
                 $structures[] = $newStructure;
@@ -424,6 +486,8 @@ class FeeStructureController extends Controller
      */
     public function destroy(FeeStructure $feeStructure)
     {
+        abort_unless($feeStructure->campus_id === request()->user()->campusId(), 404);
+
         $inUse = $this->usageOf($feeStructure);
 
         // Deleting a structure students are enrolled on, or that vouchers were
@@ -549,6 +613,8 @@ class FeeStructureController extends Controller
      */
     public function activate(Request $request, FeeStructure $feeStructure): JsonResponse
     {
+        abort_unless($feeStructure->campus_id === $request->user()->campusId(), 404);
+
         $feeStructure->update([
             'status' => FeeStructureStatus::ACTIVE,
         ]);
@@ -565,6 +631,8 @@ class FeeStructureController extends Controller
      */
     public function deactivate(Request $request, FeeStructure $feeStructure): JsonResponse
     {
+        abort_unless($feeStructure->campus_id === $request->user()->campusId(), 404);
+
         $feeStructure->update([
             'status' => FeeStructureStatus::INACTIVE,
         ]);
@@ -581,6 +649,8 @@ class FeeStructureController extends Controller
      */
     public function setDefault(Request $request, FeeStructure $feeStructure): JsonResponse
     {
+        abort_unless($feeStructure->campus_id === $request->user()->campusId(), 404);
+
         FeeStructure::where('session_id', $feeStructure->session_id)
             ->where('campus_id', $feeStructure->campus_id)
             ->where('class_id', $feeStructure->class_id)

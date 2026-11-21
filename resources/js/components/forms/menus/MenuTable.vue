@@ -48,14 +48,6 @@ const emit = defineEmits<{
     (e: 'update:perPage', value: number): void;
 }>();
 
-const handlePageClick = (link: { url: string | null; label: string; active: boolean }) => {
-    if (link.url) {
-        const match = link.url.match(/page=(\d+)/);
-        const page = match ? parseInt(match[1]) : 1;
-        emit('fetchMenus', page);
-    }
-};
-
 const updatePerPage = (value: number) => {
     emit('update:perPage', Number(value));
 };

@@ -3,9 +3,13 @@
 namespace App\Http\Controllers\Settings;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Settings\BulkStoreSchoolClassRequest;
 use App\Http\Requests\Settings\StoreSchoolClassRequest;
 use App\Http\Requests\Settings\UpdateSchoolClassRequest;
+use App\Models\Campus;
 use App\Models\SchoolClass;
+use Illuminate\Http\JsonResponse;
+use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -24,8 +28,16 @@ class SchoolClassController extends Controller
             ->orderBy('id', 'desc')
             ->paginate(10);
 
+        $this->attachExistingCampusIds($schoolClasses);
+
+        $user = request()->user();
+
         return Inertia::render('settings/SchoolClasses/Index', [
             'tableSchoolClasses' => $schoolClasses,
+            'isSuperAdmin' => $user?->isSuperAdmin() ?? false,
+            'campuses' => $user?->isSuperAdmin()
+                ? Campus::query()->orderBy('name')->get(['id', 'name'])
+                : [],
         ]);
     }
 
@@ -57,7 +69,32 @@ class SchoolClassController extends Controller
         $schoolClasses = $query->orderBy('id', 'desc')
             ->paginate($perPage, ['*'], 'page', $page);
 
+        $this->attachExistingCampusIds($schoolClasses);
+
         return response()->json($schoolClasses);
+    }
+
+    /**
+     * For each class on the page, the campus_ids every class sharing its
+     * name is already in (including its own) - so the edit modal's campus
+     * checklist can lock the ones already taken and only offer to add it to
+     * the rest, rather than risking a silent duplicate or an accidental
+     * removal of a campus's own class row.
+     */
+    private function attachExistingCampusIds(LengthAwarePaginator $paginated): void
+    {
+        $names = $paginated->getCollection()->pluck('name')->unique();
+
+        $byName = SchoolClass::query()
+            ->whereIn('name', $names)
+            ->get(['id', 'name', 'campus_id'])
+            ->groupBy('name');
+
+        $paginated->getCollection()->transform(function (SchoolClass $class) use ($byName) {
+            $class->existing_campus_ids = $byName->get($class->name, collect())->pluck('campus_id')->values();
+
+            return $class;
+        });
     }
 
     /**
@@ -78,20 +115,110 @@ class SchoolClassController extends Controller
         Gate::authorize('create', SchoolClass::class);
 
         $validated = $request->validated();
-        $validated['is_active'] = true; // New classes are always active
-        // The class belongs to whichever campus the creator is currently
-        // scoped to (their own campus, or the header switcher's pick for an
-        // owner/developer) — not a client-supplied value, so a class can't
-        // be filed under a campus the creator doesn't actually administer.
-        $validated['campus_id'] = $request->user()->campusId();
+        $user = $request->user();
 
-        $schoolClass = SchoolClass::create($validated);
+        // A class is one row per campus (Sections, enrollment, fee and
+        // attendance all key off a class's single campus_id) - an
+        // owner/developer picking several campuses gets one identical class
+        // created in each, rather than one row shared across them.
+        $campusIds = ($user->isSuperAdmin() && ! empty($validated['campus_ids']))
+            ? $validated['campus_ids']
+            : [$user->campusId()];
+
+        $conflictingCampusIds = SchoolClass::query()
+            ->whereIn('campus_id', $campusIds)
+            ->where('name', $validated['name'])
+            ->pluck('campus_id');
+
+        $duplicateCampusNames = Campus::query()->whereIn('id', $conflictingCampusIds)->pluck('name');
+
+        if ($duplicateCampusNames->isNotEmpty()) {
+            $message = 'A class named "'.$validated['name'].'" already exists in: '.$duplicateCampusNames->implode(', ').'.';
+
+            if ($request->expectsJson()) {
+                return response()->json(['success' => false, 'message' => $message, 'errors' => ['name' => [$message]]], 422);
+            }
+
+            return redirect()->back()->withErrors(['name' => $message]);
+        }
+
+        $schoolClasses = collect($campusIds)->map(fn ($campusId) => SchoolClass::create([
+            'name' => $validated['name'],
+            'description' => $validated['description'] ?? null,
+            'is_active' => true,
+            'campus_id' => $campusId,
+        ]));
 
         if (request()->expectsJson()) {
-            return response()->json(['success' => true, 'message' => 'Class created successfully.', 'schoolClass' => $schoolClass]);
+            return response()->json([
+                'success' => true,
+                'message' => $schoolClasses->count() > 1
+                    ? 'Class created in '.$schoolClasses->count().' campuses.'
+                    : 'Class created successfully.',
+                'schoolClass' => $schoolClasses->first(),
+            ]);
         }
 
         return redirect()->route('school-classes.index')->with('success', 'School class created successfully.');
+    }
+
+    /**
+     * Creates every (class name, campus) pair at once - e.g. five class
+     * names across three campuses in one submit. A pair that already exists
+     * (e.g. "Class 3" already in Campus 3) is skipped rather than
+     * overwritten or failing the whole batch; the response names exactly
+     * which ones were skipped so the office knows what to check manually.
+     */
+    public function bulkStore(BulkStoreSchoolClassRequest $request): JsonResponse
+    {
+        Gate::authorize('create', SchoolClass::class);
+
+        $validated = $request->validated();
+        $user = $request->user();
+
+        $campusIds = ($user->isSuperAdmin() && ! empty($validated['campus_ids']))
+            ? $validated['campus_ids']
+            : [$user->campusId()];
+
+        $names = collect($validated['class_names'])
+            ->map(fn ($name) => trim($name))
+            ->filter()
+            ->unique();
+
+        $existingPairs = SchoolClass::query()
+            ->whereIn('campus_id', $campusIds)
+            ->whereIn('name', $names)
+            ->get(['campus_id', 'name'])
+            ->map(fn ($class) => $class->campus_id.'|'.$class->name);
+
+        $campusNames = Campus::query()->whereIn('id', $campusIds)->pluck('name', 'id');
+
+        $created = 0;
+        $skipped = [];
+
+        foreach ($campusIds as $campusId) {
+            foreach ($names as $name) {
+                if ($existingPairs->contains($campusId.'|'.$name)) {
+                    $skipped[] = "\"{$name}\" in {$campusNames[$campusId]}";
+
+                    continue;
+                }
+
+                SchoolClass::create([
+                    'name' => $name,
+                    'is_active' => true,
+                    'campus_id' => $campusId,
+                ]);
+                $created++;
+            }
+        }
+
+        $message = "Created {$created} class".($created === 1 ? '' : 'es').'.';
+        if (! empty($skipped)) {
+            $message .= ' Already existed, skipped: '.implode(', ', $skipped).'.';
+        }
+
+        return response()->json(['success' => true, 'message' => $message, 'created' => $created, 'skipped' => $skipped]);
     }
 
     /**
@@ -101,8 +228,14 @@ class SchoolClassController extends Controller
     {
         Gate::authorize('update', $schoolClass);
 
+        $user = request()->user();
+
         return Inertia::render('settings/SchoolClasses/Edit', [
             'schoolClass' => $schoolClass,
+            'isSuperAdmin' => $user?->isSuperAdmin() ?? false,
+            'campuses' => $user?->isSuperAdmin()
+                ? Campus::query()->orderBy('name')->get(['id', 'name'])
+                : [],
         ]);
     }
 
@@ -114,11 +247,32 @@ class SchoolClassController extends Controller
         Gate::authorize('update', $schoolClass);
 
         $validated = $request->validated();
-        // is_active should not be changed through form; preserve existing value
-        // (if somehow sent, ignore it)
-        unset($validated['is_active']);
+        $campusIds = $validated['campus_ids'] ?? [];
+        unset($validated['is_active'], $validated['campus_ids']);
 
         $schoolClass->update($validated);
+
+        // Checking a campus this class wasn't already in adds it there too -
+        // one new row per newly-checked campus, same name/description.
+        // Unchecking an already-present one does nothing here; removing a
+        // campus's class is done by deleting that campus's own row, not by
+        // silently discarding it from someone else's edit.
+        if ($request->user()->isSuperAdmin() && ! empty($campusIds)) {
+            $alreadyPresentCampusIds = SchoolClass::query()
+                ->where('name', $schoolClass->name)
+                ->pluck('campus_id');
+
+            $newCampusIds = collect($campusIds)->diff($alreadyPresentCampusIds);
+
+            foreach ($newCampusIds as $campusId) {
+                SchoolClass::create([
+                    'name' => $schoolClass->name,
+                    'description' => $schoolClass->description,
+                    'is_active' => true,
+                    'campus_id' => $campusId,
+                ]);
+            }
+        }
 
         if (request()->expectsJson()) {
             return response()->json(['success' => true, 'message' => 'Class updated successfully.']);

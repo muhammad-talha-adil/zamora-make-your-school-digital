@@ -55,7 +55,6 @@ const feeTrendPoints = computed(() =>
 );
 
 const isLoading = ref(true);
-const chartLoaded = ref(false);
 
 onMounted(() => {
     setTimeout(() => {

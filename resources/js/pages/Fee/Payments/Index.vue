@@ -156,14 +156,6 @@ const paymentMethodOptions = [
     { value: 'cheque', label: 'Cheque' },
 ];
 
-const getPageFromUrl = (url: string | null) => {
-    if (!url) {
-        return 1;
-    }
-
-    const page = new URL(url, window.location.origin).searchParams.get('page');
-    return page ? Number.parseInt(page, 10) : 1;
-};
 </script>
 
 <template>

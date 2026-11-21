@@ -100,4 +100,13 @@ class Subject extends Model
     {
         return $this->belongsToMany(SchoolClass::class, 'class_subject', 'subject_id', 'class_id');
     }
+
+    /**
+     * The campuses this subject is usable from. No rows means it was never
+     * scoped (pre-feature data only) and is treated as every campus.
+     */
+    public function campuses()
+    {
+        return $this->belongsToMany(Campus::class, 'subject_campuses');
+    }
 }

@@ -1,22 +1,16 @@
 <script setup lang="ts">
 import { Head, router, usePage } from '@inertiajs/vue3';
 import axios from 'axios';
-import { computed, reactive, ref, onMounted } from 'vue';
+import { computed, reactive, ref } from 'vue';
 import { route } from 'ziggy-js';
-import PortalLayout from '@/layouts/PortalLayout.vue';
+import AppLayout from '@/layouts/AppLayout.vue';
 import Icon from '@/components/Icon.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
-import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge } from '@/components/ui/badge';
-import { Separator } from '@/components/ui/separator';
 import { alert } from '@/utils';
 import GiveAdvanceDialog from '@/components/Staff/GiveAdvanceDialog.vue';
 import SearchableSelect from '@/components/ui/searchable-select/SearchableSelect.vue';
-import type { BreadcrumbItem } from '@/types';
 
 interface Lookup {
     id: number;
@@ -136,13 +130,24 @@ interface Props {
 const props = defineProps<Props>();
 
 const breadcrumbs = computed(() => [
-    { title: 'Staff Portal', href: route('staff.index') },
-    { title: 'My Profile', href: route('staff.me') },
+    { title: 'Dashboard', href: '/dashboard' },
+    { title: 'Staff', href: route('staff.index') },
+    { title: 'Directory', href: route('staff.people.index') },
+    { title: props.staff.user?.name ?? 'Profile', href: route('staff.people.show', props.staff.id) },
 ]);
 
-const selectClass = 'w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground';
 
 const genderOptions = computed(() => props.genders.map((g) => ({ value: String(g.id), label: g.name })));
+const bloodGroupOptions = [
+    { value: 'A+', label: 'A+' },
+    { value: 'A-', label: 'A-' },
+    { value: 'B+', label: 'B+' },
+    { value: 'B-', label: 'B-' },
+    { value: 'AB+', label: 'AB+' },
+    { value: 'AB-', label: 'AB-' },
+    { value: 'O+', label: 'O+' },
+    { value: 'O-', label: 'O-' },
+];
 const documentKindOptions = computed(() => props.documentTypes.map((type) => ({ value: type.name, label: type.name })));
 
 const campusOptions = computed(() => props.campuses.map((c) => ({ value: String(c.id), label: c.name })));
@@ -151,12 +156,12 @@ const sessionOptions = computed(() => props.sessions.map((s) => ({ value: String
 const classSelectOptions = computed(() => props.classOptions.map((c) => ({ value: String(c.id), label: c.name })));
 const subjectSelectOptions = computed(() => props.subjectOptions.map((s) => ({ value: String(s.id), label: s.name })));
 
-type TabKey = 'personal' | 'attendance' | 'leave' | 'salary' | 'advances';
+type TabKey = 'personal' | 'jobs' | 'leave' | 'salary' | 'advances';
 const activeTab = ref<TabKey>('personal');
 
 const tabs: { key: TabKey; label: string; icon: any; show: boolean }[] = [
     { key: 'personal', label: 'Personal', icon: 'user', show: true },
-    { key: 'attendance', label: 'Attendance', icon: 'calendar-check', show: props.can.viewAttendance },
+    { key: 'jobs', label: 'Jobs', icon: 'briefcase', show: props.can.edit },
     { key: 'leave', label: 'Leave', icon: 'calendar-x', show: props.can.viewAttendance || props.can.applyForLeave },
     { key: 'salary', label: 'Salary', icon: 'wallet', show: props.can.viewSalary },
     { key: 'advances', label: 'Advances', icon: 'banknote', show: props.can.viewSalary },
@@ -188,35 +193,6 @@ const personalForm = reactive({
     emergency_contact_relation: props.staff.emergency_contact_relation ?? '',
 });
 
-const avatarFile = ref<File | null>(null);
-const avatarPreview = ref<string | null>(props.staff.avatar ?? null);
-const savingAvatar = ref(false);
-
-const onAvatarChange = (event: Event) => {
-    const file = (event.target as HTMLInputElement).files?.[0];
-    if (file) {
-        avatarFile.value = file;
-        avatarPreview.value = URL.createObjectURL(file);
-    }
-};
-
-const uploadAvatar = async () => {
-    if (!avatarFile.value) return;
-    savingAvatar.value = true;
-    try {
-        const formData = new FormData();
-        formData.append('avatar', avatarFile.value);
-        await axios.post(route('staff.people.avatar', props.staff.id), formData, {
-            headers: { 'Content-Type': 'multipart/form-data' },
-        });
-        alert.success('Avatar updated.');
-        router.reload({ only: ['staff'] });
-    } catch (error: any) {
-        alert.error(error?.response?.data?.message || 'Failed to upload avatar.');
-    } finally {
-        savingAvatar.value = false;
-    }
-};
 
 const savePersonal = async () => {
     try {
@@ -422,117 +398,6 @@ const rejoinStaff = async () => {
     }
 };
 
-/* -------------------------------------------------------------------- attendance */
-
-interface AttendanceRow {
-    id: number;
-    attendance_date: string;
-    check_in_at?: string | null;
-    check_out_at?: string | null;
-    minutes_late: number;
-    status?: { name: string; code: string } | null;
-}
-
-const attendanceRows = ref<AttendanceRow[]>([]);
-const attendanceLoaded = ref(false);
-const attendanceSummary = ref<Record<string, number> | null>(null);
-const attendanceStatuses = ref<{ id: number; name: string; code: string }[]>([]);
-const attendanceStatusOptions = computed(() => attendanceStatuses.value.map((s) => ({ value: String(s.id), label: s.name })));
-const currentAttendanceMonth = ref(new Date());
-const attendanceCalendarDays = ref<(Date | null)[]>([]);
-const attendanceMap = ref<Map<string, AttendanceRow>>(new Map());
-
-const markForm = reactive({
-    attendance_date: new Date().toISOString().slice(0, 10),
-    attendance_status_id: '',
-    check_in_at: '',
-    check_out_at: '',
-    remarks: '',
-});
-
-const loadAttendance = async () => {
-    const [rows, statuses] = await Promise.all([
-        axios.get(route('staff.attendance.index', props.staff.id)),
-        attendanceStatuses.value.length ? Promise.resolve(null) : axios.get(route('staff.attendance.statuses')),
-    ]);
-
-    attendanceRows.value = rows.data.data;
-    if (statuses) attendanceStatuses.value = statuses.data.data;
-    attendanceLoaded.value = true;
-    buildAttendanceCalendar();
-};
-
-const loadAttendanceSummary = async () => {
-    const now = new Date();
-    const response = await axios.get(route('staff.attendance.summary', props.staff.id), {
-        params: { from_month: now.getMonth() + 1, to_month: now.getMonth() + 1, year: now.getFullYear() },
-    });
-    attendanceSummary.value = response.data.data;
-};
-
-const buildAttendanceCalendar = () => {
-    const year = currentAttendanceMonth.value.getFullYear();
-    const month = currentAttendanceMonth.value.getMonth();
-    const firstDay = new Date(year, month, 1).getDay();
-    const daysInMonth = new Date(year, month + 1, 0).getDate();
-    const days: (Date | null)[] = [];
-
-    for (let i = 0; i < firstDay; i++) days.push(null);
-    for (let day = 1; day <= daysInMonth; day++) days.push(new Date(year, month, day));
-
-    attendanceCalendarDays.value = days;
-
-    attendanceMap.value.clear();
-    attendanceRows.value.forEach(record => {
-        if (record.attendance_date) {
-            attendanceMap.value.set(record.attendance_date, record);
-        }
-    });
-};
-
-const getDayAttendanceStatus = (date: Date | null) => {
-    if (!date) return null;
-    const key = date.toISOString().split('T')[0];
-    return attendanceMap.value.get(key)?.status?.code ?? null;
-};
-
-const isToday = (date: Date | null) => {
-    if (!date) return false;
-    const today = new Date();
-    return date.getDate() === today.getDate() &&
-           date.getMonth() === today.getMonth() &&
-           date.getFullYear() === today.getFullYear();
-};
-
-const prevAttendanceMonth = () => {
-    currentAttendanceMonth.value = new Date(currentAttendanceMonth.value.getFullYear(), currentAttendanceMonth.value.getMonth() - 1, 1);
-    buildAttendanceCalendar();
-};
-
-const nextAttendanceMonth = () => {
-    currentAttendanceMonth.value = new Date(currentAttendanceMonth.value.getFullYear(), currentAttendanceMonth.value.getMonth() + 1, 1);
-    buildAttendanceCalendar();
-};
-
-const goToTodayAttendance = () => {
-    currentAttendanceMonth.value = new Date();
-    buildAttendanceCalendar();
-};
-
-const markAttendance = async () => {
-    try {
-        await axios.post(route('staff.attendance.store', props.staff.id), markForm);
-        alert.success('Attendance marked.');
-        loadAttendance();
-    } catch (error: any) {
-        alert.error(error?.response?.data?.message || 'Failed to mark attendance.');
-    }
-};
-
-const attendanceMonthLabel = computed(() => {
-    return currentAttendanceMonth.value.toLocaleDateString(undefined, { month: 'long', year: 'numeric' });
-});
-
 /* ------------------------------------------------------------------ leave */
 
 interface LeaveRow {
@@ -600,16 +465,6 @@ const cancelLeave = async (leave: LeaveRow) => {
     loadLeave();
 };
 
-const getLeaveStatusConfig = (status: string) => {
-    const configs: Record<string, { label: string; variant: 'success' | 'destructive' | 'warning' | 'secondary' | 'default'; color: string }> = {
-        pending: { label: 'Pending', variant: 'warning', color: 'text-warning' },
-        approved: { label: 'Approved', variant: 'success', color: 'text-success' },
-        rejected: { label: 'Rejected', variant: 'destructive', color: 'text-destructive' },
-        cancelled: { label: 'Cancelled', variant: 'secondary', color: 'text-muted-foreground' },
-    };
-    return configs[status] ?? { label: status, variant: 'default', color: 'text-muted-foreground' };
-};
-
 /* ----------------------------------------------------------------- salary */
 
 interface SalaryComponent {
@@ -626,7 +481,6 @@ const salaryHeadOptions = computed(() => salaryHeads.value.map((h) => ({ value: 
 const salaryGross = ref<number | null>(null);
 const salaryDeductions = ref<number | null>(null);
 const salaryLoaded = ref(false);
-const showPayslipDialog = ref(false);
 
 const componentForm = reactive({ salary_head_id: '', amount: '', effective_from: new Date().toISOString().slice(0, 10) });
 
@@ -709,10 +563,7 @@ const returnAdvance = async (advance: Advance, status: 'returned' | 'waived') =>
 const switchTab = (tab: TabKey) => {
     activeTab.value = tab;
 
-    if (tab === 'attendance' && !attendanceLoaded.value) {
-        loadAttendance();
-        loadAttendanceSummary();
-    } else if (tab === 'leave' && !leaveLoaded.value) {
+    if (tab === 'leave' && !leaveLoaded.value) {
         loadLeave();
     } else if (tab === 'salary' && !salaryLoaded.value && props.can.viewSalary) {
         loadSalary();
@@ -725,7 +576,7 @@ const activeJobsCount = computed(() => props.jobs.length);
 </script>
 
 <template>
-    <PortalLayout :breadcrumbs="breadcrumbs">
+    <AppLayout :breadcrumbs="breadcrumbs">
         <Head :title="props.staff.user?.name ?? 'Staff Profile'" />
 
         <div class="space-y-6 p-4 md:p-6">
@@ -857,7 +708,7 @@ const activeJobsCount = computed(() => props.jobs.length);
                         </div>
                         <div>
                             <label class="mb-2 block text-sm font-medium text-muted-foreground">Blood Group</label>
-                            <Input v-model="personalForm.blood_group" placeholder="e.g. O+" :disabled="!props.can.edit" />
+                            <SearchableSelect v-model="personalForm.blood_group" :options="bloodGroupOptions" placeholder="Select blood group" :disabled="!props.can.edit" clearable />
                         </div>
                         <div>
                             <label class="mb-2 block text-sm font-medium text-muted-foreground">Address</label>
@@ -873,8 +724,8 @@ const activeJobsCount = computed(() => props.jobs.length);
                                 <Input v-model="personalForm.emergency_contact_phone" maxlength="20" :disabled="!props.can.edit" />
                             </div>
                             <div>
-                                <label class="mb-2 block text-sm font-medium text-muted-foreground">Relation</label>
-                                <Input v-model="personalForm.emergency_contact_relation" :disabled="!props.can.edit" />
+                                <label class="mb-2 block text-sm font-medium text-muted-foreground">Relationship to Staff Member</label>
+                                <Input v-model="personalForm.emergency_contact_relation" placeholder="e.g. Father, Spouse, Sibling" :disabled="!props.can.edit" />
                             </div>
                         </div>
                         <Button v-if="props.can.edit" @click="savePersonal">
@@ -1136,66 +987,6 @@ const activeJobsCount = computed(() => props.jobs.length);
                 </div>
             </div>
 
-            <!-- Attendance -->
-            <div v-if="activeTab === 'attendance'" class="grid gap-6 xl:grid-cols-[380px_minmax(0,1fr)]">
-                <div class="space-y-6">
-                    <div v-if="attendanceSummary" class="grid grid-cols-2 gap-3">
-                        <div class="rounded-xl border border-border bg-card p-4 text-center">
-                            <p class="text-xs text-muted-foreground">Present</p>
-                            <p class="text-xl font-bold text-success">{{ attendanceSummary.present }}</p>
-                        </div>
-                        <div class="rounded-xl border border-border bg-card p-4 text-center">
-                            <p class="text-xs text-muted-foreground">Absent</p>
-                            <p class="text-xl font-bold text-destructive">{{ attendanceSummary.absent }}</p>
-                        </div>
-                        <div class="rounded-xl border border-border bg-card p-4 text-center">
-                            <p class="text-xs text-muted-foreground">Late</p>
-                            <p class="text-xl font-bold text-warning">{{ attendanceSummary.late }}</p>
-                        </div>
-                        <div class="rounded-xl border border-border bg-card p-4 text-center">
-                            <p class="text-xs text-muted-foreground">Expected Days</p>
-                            <p class="text-xl font-bold text-foreground">{{ attendanceSummary.expected_days }}</p>
-                        </div>
-                    </div>
-
-                    <div v-if="props.can.markAttendance" class="rounded-2xl border border-border bg-card p-5 shadow-sm">
-                        <h2 class="mb-4 text-lg font-semibold text-foreground">Mark Attendance</h2>
-                        <div class="space-y-3">
-                            <Input v-model="markForm.attendance_date" type="date" />
-                            <SearchableSelect v-model="markForm.attendance_status_id" :options="attendanceStatusOptions" placeholder="Select status" clearable />
-                            <Input v-model="markForm.check_in_at" type="time" placeholder="Check-in" />
-                            <Input v-model="markForm.check_out_at" type="time" placeholder="Check-out" />
-                            <Input v-model="markForm.remarks" placeholder="Remarks (optional)" />
-                            <Button @click="markAttendance">Save</Button>
-                        </div>
-                    </div>
-                </div>
-
-                <div class="overflow-hidden rounded-2xl border border-border bg-card shadow-sm">
-                    <table class="min-w-full divide-y divide-border">
-                        <thead class="bg-muted">
-                            <tr>
-                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase text-muted-foreground">#</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase text-muted-foreground">Date</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase text-muted-foreground">Status</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase text-muted-foreground">Check-in / out</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase text-muted-foreground">Late (min)</th>
-                            </tr>
-                        </thead>
-                        <tbody class="divide-y divide-border">
-                            <tr v-for="(row, rowIndex) in attendanceRows" :key="row.id">
-                                <td class="px-4 py-3 text-sm text-muted-foreground">{{ rowIndex + 1 }}</td>
-                                <td class="px-4 py-3 text-sm text-foreground">{{ formatDate(row.attendance_date) }}</td>
-                                <td class="px-4 py-3 text-sm text-muted-foreground">{{ row.status?.name || '-' }}</td>
-                                <td class="px-4 py-3 text-sm text-muted-foreground">{{ row.check_in_at || '-' }} / {{ row.check_out_at || '-' }}</td>
-                                <td class="px-4 py-3 text-sm text-muted-foreground">{{ row.minutes_late }}</td>
-                            </tr>
-                            <tr v-if="attendanceRows.length === 0"><td colspan="5" class="px-4 py-6 text-center text-sm text-muted-foreground">No attendance recorded yet.</td></tr>
-                        </tbody>
-                    </table>
-                </div>
-            </div>
-
             <!-- Leave -->
             <div v-if="activeTab === 'leave'" class="grid gap-6 xl:grid-cols-[380px_minmax(0,1fr)]">
                 <div class="space-y-6">
@@ -1367,5 +1158,5 @@ const activeJobsCount = computed(() => props.jobs.length);
             :staff-profile-id="props.staff.id"
             @given="loadAdvances"
         />
-    </PortalLayout>
+    </AppLayout>
 </template>
