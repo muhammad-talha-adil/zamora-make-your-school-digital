@@ -453,6 +453,51 @@ class MenuSeeder extends Seeder
         // Staff Settings menu removed (#101) - reachable only from the
         // central School Setting hub now.
 
+        // ==================== TIMETABLE MENU ====================
+        // academics.timetable.view: teacher (their own sections); manage: admins.
+        $timetable = Menu::create([
+            'title' => 'Timetable',
+            'icon' => 'calendar-clock',
+            'type' => 'main',
+            'order' => 8,
+            'is_active' => true,
+            'role' => 'developer,owner,campus_admin,teacher',
+        ]);
+
+        Menu::create([
+            'title' => 'Class Timetable',
+            'icon' => 'calendar-days',
+            'type' => 'main',
+            'order' => 1,
+            'parent_id' => $timetable->id,
+            'is_active' => true,
+            'url' => '/timetable',
+            'role' => 'developer,owner,campus_admin,teacher',
+        ]);
+
+        Menu::create([
+            'title' => 'My Timetable',
+            'icon' => 'user',
+            'type' => 'main',
+            'order' => 2,
+            'parent_id' => $timetable->id,
+            'is_active' => true,
+            'url' => '/timetable/my',
+            // Only accounts with a staff record have a week of their own.
+            'role' => 'teacher',
+        ]);
+
+        Menu::create([
+            'title' => 'Periods',
+            'icon' => 'clock',
+            'type' => 'main',
+            'order' => 3,
+            'parent_id' => $timetable->id,
+            'is_active' => true,
+            'url' => '/timetable/periods',
+            'role' => 'developer,owner,campus_admin',
+        ]);
+
         // ==================== TRANSPORT MENU ====================
         $transport = Menu::create([
             'title' => 'Transport',
@@ -655,10 +700,21 @@ class MenuSeeder extends Seeder
         ]);
 
         Menu::create([
+            'title' => 'Timetable',
+            'icon' => 'calendar-clock',
+            'type' => 'main',
+            'order' => 5,
+            'parent_id' => $portal->id,
+            'is_active' => true,
+            'url' => '/portal/timetable',
+            'role' => 'student,guardian',
+        ]);
+
+        Menu::create([
             'title' => 'Leave Applications',
             'icon' => 'calendar-off',
             'type' => 'main',
-            'order' => 5,
+            'order' => 6,
             'parent_id' => $portal->id,
             'is_active' => true,
             'url' => '/student-leaves/page',

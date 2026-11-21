@@ -4,6 +4,7 @@ use App\Http\Controllers\Portal\PortalAttendanceController;
 use App\Http\Controllers\Portal\PortalController;
 use App\Http\Controllers\Portal\PortalExamController;
 use App\Http\Controllers\Portal\PortalFeeController;
+use App\Http\Controllers\Portal\PortalTimetableController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -35,4 +36,7 @@ Route::prefix('portal')->name('portal.')->middleware(['web', 'auth', 'permission
     Route::prefix('attendance')->name('attendance.')->group(function () {
         Route::get('/', [PortalAttendanceController::class, 'index'])->name('index');
     });
+
+    Route::get('timetable', [PortalTimetableController::class, 'index'])->name('timetable.index')
+        ->middleware('permission:academics.timetable.view');
 });

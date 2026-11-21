@@ -64,6 +64,9 @@ require __DIR__.'/staff.php';
 // Include Transport Routes
 require __DIR__.'/transport.php';
 
+// Class timetable
+require __DIR__.'/timetable.php';
+
 // Include Student/Guardian Portal Routes
 require __DIR__.'/portal.php';
 
