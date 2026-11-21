@@ -49,7 +49,6 @@ class SectionSeeder extends Seeder
                         'class_id' => $class->id,
                     ],
                     [
-                        'description' => "Section {$sectionName} for Class {$class->name}",
                         'code' => "{$class->code}-{$sectionName}",
                         'is_active' => true,
                     ]

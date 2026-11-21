@@ -12,7 +12,6 @@ class ExamType extends Model
 
     protected $fillable = [
         'name',
-        'short_name',
         'is_active',
     ];
 

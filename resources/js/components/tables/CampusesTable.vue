@@ -80,6 +80,9 @@ watch(() => props.campuses, (newCampuses) => {
     pagination.value = newCampuses;
 }, { deep: true });
 
+// The "Create Campus" banner links here with ?add=1 so the modal is already open.
+const openAddOnLoad = new URLSearchParams(window.location.search).get('add') === '1';
+
 // Handle saved event from CampusForm (when campus is added/edited)
 const handleSaved = () => {
     // Refresh campuses
@@ -154,6 +157,7 @@ const inactivateCampus = (campus: any) => {
             </div>
             <div class="flex gap-2">
                 <CampusForm
+                    :open-on-mount="openAddOnLoad"
                     :campus-types="campusTypesLoaded"
                     @saved="handleSaved"
                 />

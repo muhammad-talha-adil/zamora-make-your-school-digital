@@ -61,7 +61,6 @@ class ExamTypeController extends Controller
 
         request()->validate([
             'name' => 'required|string|max:255',
-            'short_name' => 'nullable|string|max:50',
             'is_active' => 'boolean',
         ]);
 
@@ -76,11 +75,10 @@ class ExamTypeController extends Controller
 
         ExamType::create([
             'name' => request('name'),
-            'short_name' => request('short_name'),
             'is_active' => $isActive,
         ]);
 
-        return redirect()->back()->with('success', 'Exam type created successfully.');
+        return redirect()->back()->with('success', 'Exam type added.');
     }
 
     /**
@@ -100,7 +98,6 @@ class ExamTypeController extends Controller
 
         request()->validate([
             'name' => 'required|string|max:255',
-            'short_name' => 'nullable|string|max:50',
             'is_active' => 'boolean',
         ]);
 
@@ -114,11 +111,10 @@ class ExamTypeController extends Controller
 
         $examType->update([
             'name' => request('name'),
-            'short_name' => request('short_name'),
             'is_active' => $isActive,
         ]);
 
-        return redirect()->back()->with('success', 'Exam type updated successfully.');
+        return redirect()->back()->with('success', 'Exam type saved.');
     }
 
     /**
@@ -135,7 +131,7 @@ class ExamTypeController extends Controller
                 ->with('error', 'This exam type cannot be deleted because it is already in use by an exam.');
         }
 
-        return redirect()->back()->with('success', 'Exam type deleted successfully.');
+        return redirect()->back()->with('success', 'Exam type deleted.');
     }
 
     /**
@@ -155,7 +151,7 @@ class ExamTypeController extends Controller
 
         $examType->update(['is_active' => false]);
 
-        return redirect()->back()->with('success', 'Exam type inactivated successfully.');
+        return redirect()->back()->with('success', 'Exam type inactivated.');
     }
 
     /**
@@ -170,7 +166,7 @@ class ExamTypeController extends Controller
 
         $examType->update(['is_active' => true]);
 
-        return redirect()->back()->with('success', 'Exam type activated successfully.');
+        return redirect()->back()->with('success', 'Exam type activated.');
     }
 
     /**
@@ -183,7 +179,7 @@ class ExamTypeController extends Controller
         $examType = ExamType::onlyTrashed()->findOrFail($id);
         $examType->restore();
 
-        return redirect()->back()->with('success', 'Exam type restored successfully.');
+        return redirect()->back()->with('success', 'Exam type restored.');
     }
 
     /**

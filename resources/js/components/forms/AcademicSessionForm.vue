@@ -55,11 +55,17 @@ const emit = defineEmits<{
     saved: [];
 }>();
 
+// Current academic year runs April to March: Jan-Mar still belongs to last year's session.
+const now = new Date();
+const academicYearStart = now.getMonth() < 3 ? now.getFullYear() - 1 : now.getFullYear();
+
 // Form data
+const defaultEndDate = (startYear: number, endYear: number) => (endYear > startYear ? `${endYear}-03-31` : `${endYear}-12-31`);
+
 const getInitialForm = () => ({
     name: props.session?.name || '',
-    start_year: props.session?.start_year || new Date().getFullYear(),
-    end_year: props.session?.end_year || new Date().getFullYear() + 1,
+    start_year: props.session?.start_year || academicYearStart,
+    end_year: props.session?.end_year || academicYearStart + 1,
     is_active: props.session?.is_active ?? false,
     start_date: props.session?.start_date || '',
     end_date: props.session?.end_date || '',
@@ -91,10 +97,10 @@ watch(open, (isOpen) => {
             form.value.name = `${form.value.start_year}-${form.value.end_year}`;
         }
         if (!form.value.start_date && form.value.start_year) {
-            form.value.start_date = `${form.value.start_year}-01-01`;
+            form.value.start_date = `${form.value.start_year}-04-01`;
         }
         if (!form.value.end_date && form.value.end_year) {
-            form.value.end_date = `${form.value.end_year}-12-31`;
+            form.value.end_date = defaultEndDate(form.value.start_year, form.value.end_year);
         }
         errors.value = {};
     }
@@ -145,7 +151,7 @@ watch(
             form.value.start_date = '';
         }
         if (!form.value.start_date) {
-            form.value.start_date = `${year}-01-01`;
+            form.value.start_date = `${year}-04-01`;
         }
     },
     { immediate: true },
@@ -159,7 +165,7 @@ watch(
             form.value.end_date = '';
         }
         if (!form.value.end_date) {
-            form.value.end_date = `${year}-12-31`;
+            form.value.end_date = defaultEndDate(form.value.start_year, year);
         }
     },
     { immediate: true },
@@ -206,7 +212,7 @@ const submit = () => {
         axios.patch(`/settings/sessions/${props.session.id}`, formData, {
             headers: { Accept: 'application/json' },
         }).then(() => {
-                alert.success('Academic session updated successfully!');
+                alert.success('Academic session saved.');
                 open.value = false;
                 resetForm();
                 emit('saved');
@@ -216,7 +222,7 @@ const submit = () => {
                     const firstError = Object.values(errors.value)[0];
                     alert.error(firstError);
                 } else {
-                    alert.error('Failed to update session. Please check the errors.');
+                    alert.error('Could not save session. Check the form.');
                 }
             }).finally(() => {
                 processing.value = false;
@@ -226,7 +232,7 @@ const submit = () => {
         axios.post('/settings/sessions', formData, {
             headers: { Accept: 'application/json' },
         }).then(() => {
-                alert.success('Academic session created successfully!');
+                alert.success('Academic session added.');
                 open.value = false;
                 resetForm();
                 emit('saved');
@@ -236,7 +242,7 @@ const submit = () => {
                     const firstError = Object.values(errors.value)[0];
                     alert.error(firstError);
                 } else {
-                    alert.error('Failed to create session. Please check the errors.');
+                    alert.error('Could not save session. Check the form.');
                 }
             }).finally(() => {
                 processing.value = false;

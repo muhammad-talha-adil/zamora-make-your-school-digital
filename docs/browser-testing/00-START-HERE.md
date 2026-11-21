@@ -27,6 +27,25 @@ RULES
 - Token kam: lamba page text paste mat karo, screenshot sirf bug par, jawab bullet points mein.
 - Ek module poora karke hi LOG BLOCK do; beech mein har 10-12 pages par "progress" ek line mein.
 
+PRODUCT RULES (hamesha lagu — module prompts mein dobara nahi likhe jaate; har page inhi par judge karo)
+P1 Simple wording: labels, buttons, errors, success messages aam school owner/teacher ki zaban mein. Jargon, raw keys (academics.class.manage),
+   technical error text, lambe jumle = finding. Success/error ek chhoti line, saaf (kya hua + agla kadam).
+P2 Kam se kam clicks aur page changes/refresh: defaults pehle se bhare (campus, session, aaj ki date, last choice), ek hi jagah se kaam
+   poora, modal ke baad list khud update ho, wapas jaane ke extra clicks nahi. 5+ clicks wala kaam jo 2 mein ho sakta ho = Efficiency finding.
+P3 Faltu cheez hatao: jo column/field/word/option/checkbox user ke kaam ka nahi (e.g. class ke saath "code", internal id, dohra label,
+   same cheez do jagah) = "REMOVE" finding (page + column/field naam + wajah). Table mein wohi dikhe jo user ko chahiye (class table = naam).
+P4 Duplicate ya confusing: do jagah same kaam, mushkil naam, unclear checkbox/toggle, ajeeb default = finding ("confusing" + behtar tareeqa).
+P5 Rang: blue/dark surface par text safed; light surface par text gehra; kisi bhi theme mein contrast kam ho to finding. Buttons ka ek jaisa style.
+P6 UI/UX behtareen: alignment, spacing, icons, empty states, loading, responsive, consistency. "Theek hai" nahi, "behtar kya ho sakta hai" batao.
+P7 ROLE VISIBILITY: har role ko sirf wohi menu/page/button/column/card/number nazar aaye jo uske kaam ka hai.
+   Owner/campus admin = poora school/apna campus. Accountant = fee/finance. Teacher = apni classes (attendance, marks, timetable).
+   Receptionist/clerk = admission, enquiry, basic student. Student/guardian = sirf apna portal. Driver/maid = apna profile.
+   Jo cheez kisi role ko dikhni nahi chahiye wo dikh rahi ho (menu, button, card, doosre campus ka data) = High finding; jo zaroori ho aur
+   na dikhe = finding. URL badal kar bhi check karo (403 hona chahiye, 500/blank nahi).
+P8 Naye feature ya nayi cheez ki zaroorat lage to "NEW IDEA" ke taur par likho (code/prompt mein khud nahi), sirf batao.
+P9 Website content (public site) poori tarah ignore karo.
+P10 Abhi sirf wohi login use karo jo module prompt kahe.
+
 STANDARD PAGE CHECKLIST (SPC) — har page par
 A Load: 3 sec mein khule? console errors? failed network? 404/500? blank flash? skeleton?
 B Layout: title/breadcrumb, primary action nazar aata hai, alignment, spacing, truncation, lamba text.

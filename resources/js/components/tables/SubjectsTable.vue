@@ -152,9 +152,6 @@ const inactivateSubject = (subject: any) => {
                                 Subject Name
                             </th>
                             <th scope="col" class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">
-                                Description
-                            </th>
-                            <th scope="col" class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">
                                 Status
                             </th>
                             <th scope="col" class="px-6 py-4 text-right text-xs font-semibold tracking-wider text-muted-foreground uppercase">
@@ -178,11 +175,6 @@ const inactivateSubject = (subject: any) => {
                                     {{ subject.name }}
                                 </div>
                             </td>
-                            <td class="px-6 py-4">
-                                <div class="max-w-xs truncate text-sm text-muted-foreground">
-                                    {{ subject.description || EMPTY_VALUE }}
-                                </div>
-                            </td>
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <StatusToggle
                                     :active="subject.is_active"
@@ -204,7 +196,7 @@ const inactivateSubject = (subject: any) => {
                             </td>
                         </tr>
                         <tr v-if="subjectsData.length === 0">
-                            <td colspan="5" class="px-6 py-8 text-center text-sm text-muted-foreground">No subjects found.</td>
+                            <td colspan="4" class="px-6 py-8 text-center text-sm text-muted-foreground">No subjects found.</td>
                         </tr>
                     </tbody>
                 </table>

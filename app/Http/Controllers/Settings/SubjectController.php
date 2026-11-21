@@ -106,11 +106,11 @@ class SubjectController extends Controller
         if ($request->expectsJson()) {
             return response()->json([
                 'success' => true,
-                'message' => 'Subject created successfully.',
+                'message' => 'Subject added.',
             ]);
         }
 
-        return redirect()->route('subjects.index')->with('success', 'Subject created successfully.');
+        return redirect()->route('subjects.index')->with('success', 'Subject added.');
     }
 
     /**
@@ -144,7 +144,7 @@ class SubjectController extends Controller
             $created++;
         }
 
-        $message = "Created {$created} subject".($created === 1 ? '' : 's').'.';
+        $message = "Added {$created} subject".($created === 1 ? '' : 's').'.';
         if (! empty($skipped)) {
             $message .= ' Already existed, skipped: '.implode(', ', $skipped).'.';
         }
@@ -198,11 +198,11 @@ class SubjectController extends Controller
         if ($request->expectsJson()) {
             return response()->json([
                 'success' => true,
-                'message' => 'Subject updated successfully.',
+                'message' => 'Subject saved.',
             ]);
         }
 
-        return redirect()->route('subjects.index')->with('success', 'Subject updated successfully.');
+        return redirect()->route('subjects.index')->with('success', 'Subject saved.');
     }
 
     /**
@@ -218,7 +218,7 @@ class SubjectController extends Controller
             return response()->json(['success' => true]);
         }
 
-        return redirect()->route('subjects.index')->with('success', 'Subject deleted successfully.');
+        return redirect()->route('subjects.index')->with('success', 'Subject deleted.');
     }
 
     /**
@@ -234,7 +234,7 @@ class SubjectController extends Controller
             return response()->json(['success' => true]);
         }
 
-        return redirect()->route('subjects.index')->with('success', 'Subject inactivated successfully.');
+        return redirect()->route('subjects.index')->with('success', 'Subject inactivated.');
     }
 
     /**
@@ -250,7 +250,7 @@ class SubjectController extends Controller
             return response()->json(['success' => true]);
         }
 
-        return redirect()->route('subjects.index')->with('success', 'Subject activated successfully.');
+        return redirect()->route('subjects.index')->with('success', 'Subject activated.');
     }
 
     /**
@@ -267,7 +267,7 @@ class SubjectController extends Controller
             return response()->json(['success' => true]);
         }
 
-        return redirect()->route('subjects.index')->with('success', 'Subject restored successfully.');
+        return redirect()->route('subjects.index')->with('success', 'Subject restored.');
     }
 
     /**

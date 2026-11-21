@@ -26,16 +26,16 @@ it('turns an unpermissioned account away from every session action', function ()
         'name' => '2027-2028',
         'start_year' => 2027,
         'end_year' => 2028,
-        'start_date' => '2027-01-01',
-        'end_date' => '2028-12-31',
+        'start_date' => '2027-04-01',
+        'end_date' => '2028-03-31',
     ])->assertForbidden();
 
     $this->actingAs($this->outsider)->patch(route('sessions.update', $this->world->otherSession), [
         'name' => 'Renamed',
         'start_year' => 2027,
         'end_year' => 2028,
-        'start_date' => '2027-01-01',
-        'end_date' => '2028-12-31',
+        'start_date' => '2027-04-01',
+        'end_date' => '2028-03-31',
     ])->assertForbidden();
 
     $this->actingAs($this->outsider)->patch(route('sessions.activate', $this->world->otherSession))
@@ -57,7 +57,7 @@ it('does not leave two sessions active when a new one is created active', functi
         'is_active' => true,
         'start_year' => 2027,
         'end_year' => 2028,
-        'start_date' => '2027-01-01',
+        'start_date' => '2027-04-01',
         'end_date' => '2028-01-01',
     ])->assertSuccessful();
 
@@ -120,4 +120,22 @@ it('allows a new session to reuse the name of a soft-deleted one', function () {
     ])->assertSuccessful();
 
     expect(Session::where('name', $name)->whereNull('deleted_at')->count())->toBe(1);
+});
+
+it('rejects a session longer than 13 months', function () {
+    $payload = [
+        'name' => '2027-2028',
+        'start_year' => 2027,
+        'end_year' => 2028,
+        'start_date' => '2027-01-01',
+        'end_date' => '2028-12-31',
+    ];
+
+    $this->actingAs($this->authorized)->postJson(route('sessions.store'), $payload)
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors(['end_date']);
+
+    $this->actingAs($this->authorized)->patchJson(route('sessions.update', $this->world->otherSession), $payload)
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors(['end_date']);
 });

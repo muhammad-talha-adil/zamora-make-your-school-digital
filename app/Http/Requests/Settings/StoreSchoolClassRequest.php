@@ -24,7 +24,6 @@ class StoreSchoolClassRequest extends FormRequest
     {
         return [
             'name' => ['required', 'string', 'max:255'],
-            'description' => 'nullable|string',
             // Owner/developer only - a campus-restricted creator never
             // submits this; the controller creates one class row per campus
             // chosen here (or just their own campus otherwise). Per-campus
@@ -32,6 +31,17 @@ class StoreSchoolClassRequest extends FormRequest
             // checked once per selected campus, not once for the request.
             'campus_ids' => 'nullable|array',
             'campus_ids.*' => 'integer|exists:campuses,id',
+        ];
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return [
+            'name.unique' => 'This name is already used.',
+            'name.required' => 'Please enter a name.',
         ];
     }
 }

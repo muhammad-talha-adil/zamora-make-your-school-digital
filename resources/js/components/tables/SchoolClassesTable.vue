@@ -163,10 +163,11 @@ const inactivateClass = (schoolClass: any) => {
                                 Class Name
                             </th>
                             <th
+                                v-if="isSuperAdmin"
                                 scope="col"
                                 class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase"
                             >
-                                Description
+                                Campus
                             </th>
                             <th
                                 scope="col"
@@ -198,10 +199,8 @@ const inactivateClass = (schoolClass: any) => {
                                     {{ schoolClass.name }}
                                 </div>
                             </td>
-                            <td class="px-6 py-4">
-                                <div class="max-w-xs truncate text-sm text-muted-foreground">
-                                    {{ schoolClass.description || '—' }}
-                                </div>
+                            <td v-if="isSuperAdmin" class="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
+                                {{ schoolClass.campus?.name || '—' }}
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
                                 <StatusToggle
@@ -224,7 +223,7 @@ const inactivateClass = (schoolClass: any) => {
                             </td>
                         </tr>
                         <tr v-if="classesData.length === 0">
-                            <td colspan="6" class="px-6 py-8 text-center text-sm text-muted-foreground">No classes found.</td>
+                            <td colspan="5" class="px-6 py-8 text-center text-sm text-muted-foreground">No classes found.</td>
                         </tr>
                     </tbody>
                 </table>

@@ -69,7 +69,6 @@ const statCards = computed(() => [
         icon: 'users',
         iconBg: 'bg-primary/10',
         iconColor: 'text-primary',
-        trend: { value: '+2.1%', direction: 'up' as const },
     },
     {
         label: 'Active Staff',
@@ -77,7 +76,6 @@ const statCards = computed(() => [
         icon: 'user-check',
         iconBg: 'bg-primary/10',
         iconColor: 'text-primary',
-        trend: { value: '+1.5%', direction: 'up' as const },
     },
     {
         label: 'Fees Collected Today',
@@ -85,7 +83,6 @@ const statCards = computed(() => [
         icon: 'banknote',
         iconBg: 'bg-success/10',
         iconColor: 'text-success',
-        trend: { value: '+5.3%', direction: 'up' as const },
     },
     {
         label: 'Fees This Month',
@@ -93,31 +90,8 @@ const statCards = computed(() => [
         icon: 'wallet',
         iconBg: 'bg-primary/10',
         iconColor: 'text-primary',
-        trend: { value: '+12%', direction: 'up' as const },
     },
 ]);
-
-const getTrendIcon = (direction: 'up' | 'down' | 'neutral') => {
-    switch (direction) {
-        case 'up':
-            return 'trending-up';
-        case 'down':
-            return 'trending-down';
-        default:
-            return 'minus';
-    }
-};
-
-const getTrendClass = (direction: 'up' | 'down' | 'neutral') => {
-    switch (direction) {
-        case 'up':
-            return 'text-success';
-        case 'down':
-            return 'text-destructive';
-        default:
-            return 'text-muted-foreground';
-    }
-};
 
 const lowStockItems = [
     { name: 'A4 Paper Reams', current: 12, threshold: 20, unit: 'reams' },
@@ -143,13 +117,13 @@ const groupedActivity = computed(() => {
 
         <div class="space-y-6 p-4 md:p-6 lg:p-8">
             <!-- Welcome Section -->
-            <div class="bg-gradient-to-r from-primary to-primary/80 rounded-xl p-6 md:p-8 text-primary-foreground shadow-sm animate-fade-in">
+            <div class="bg-gradient-to-r from-primary to-primary/80 rounded-xl p-6 md:p-8 text-white shadow-sm animate-fade-in">
                 <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                     <div class="max-w-4xl">
                         <h1 class="text-2xl md:text-3xl font-bold tracking-tight mb-2">
                             Welcome back, {{ $page.props.auth.user?.name || 'User' }}!
                         </h1>
-                        <p class="text-sm md:text-base text-primary-foreground/80">
+                        <p class="text-sm md:text-base text-white/90">
                             Here's what's happening with your school today.
                         </p>
                     </div>
@@ -157,7 +131,7 @@ const groupedActivity = computed(() => {
                         :href="route('home')"
                         target="_blank"
                         rel="noopener"
-                        class="inline-flex shrink-0 items-center gap-2 rounded-md bg-primary-foreground px-4 py-2 text-sm font-medium text-primary transition-colors hover:bg-primary-foreground/90"
+                        class="inline-flex shrink-0 items-center gap-2 rounded-md border border-white/40 bg-white/15 px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-white/25"
                     >
                         <Icon icon="globe" class="h-4 w-4" />
                         Visit Website
@@ -179,17 +153,6 @@ const groupedActivity = computed(() => {
                             <div class="mt-1 flex items-baseline gap-2">
                                 <p class="text-2xl md:text-3xl font-bold text-foreground" v-if="!isLoading">{{ card.value }}</p>
                                 <div v-else class="h-8 w-32 animate-pulse bg-muted rounded" />
-                            </div>
-                            <div class="mt-2 flex items-center gap-1.5">
-                                <Icon
-                                    :icon="getTrendIcon(card.trend.direction)"
-                                    :class="getTrendClass(card.trend.direction)"
-                                    class="h-4 w-4"
-                                />
-                                <span :class="getTrendClass(card.trend.direction)" class="text-sm font-medium">
-                                    {{ card.trend.value }}
-                                </span>
-                                <span class="text-xs text-muted-foreground">vs last period</span>
                             </div>
                         </div>
                         <div :class="['p-3 rounded-lg', card.iconBg]">

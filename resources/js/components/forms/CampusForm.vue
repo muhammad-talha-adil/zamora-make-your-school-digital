@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { router } from '@inertiajs/vue3';
-import { ref, watch } from 'vue';
+import { onMounted, ref, watch } from 'vue';
 import { alert } from '@/utils';
 import { useFormValidity } from '@/composables/useFormValidity';
 
@@ -40,12 +40,15 @@ interface Props {
         name: string;
     }>;
     trigger?: string;
+    /** Open the modal as soon as the form appears (used by the "Create Campus" banner). */
+    openOnMount?: boolean;
     variant?: ButtonVariants['variant'];
     size?: ButtonVariants['size'];
 }
 
 const props = withDefaults(defineProps<Props>(), {
     trigger: 'Add Campus',
+    openOnMount: false,
     campusTypes: () => [],
     variant: 'default',
     size: 'default',
@@ -102,7 +105,7 @@ const submit = () => {
         router.put(`/settings/campuses/${props.campus.id}`, form.value, {
             preserveScroll: true,
             onSuccess: () => {
-                alert.success('Campus updated successfully!');
+                alert.success('Campus saved.');
                 closeModal();
                 emit('saved');
                 // Refresh page data after modal closes
@@ -123,7 +126,7 @@ const submit = () => {
                         alert.error(firstError);
                     }
                 } else {
-                    alert.error(err instanceof Error ? err.message : 'Failed to update campus. Please try again.');
+                    alert.error(err instanceof Error ? err.message : 'Could not save campus. Please try again.');
                 }
             },
             onFinish: () => {
@@ -135,7 +138,7 @@ const submit = () => {
         router.post('/settings/campuses', form.value, {
             preserveScroll: true,
             onSuccess: () => {
-                alert.success('Campus created successfully!');
+                alert.success('Campus added.');
                 closeModal();
                 emit('saved');
                 // Refresh page data after modal closes
@@ -159,7 +162,7 @@ const submit = () => {
                     }
                 } else {
                     // Non-validation error (500, network, etc)
-                    alert.error(err instanceof Error ? err.message : 'Failed to create campus. Please try again.');
+                    alert.error(err instanceof Error ? err.message : 'Could not save campus. Please try again.');
                 }
             },
             onFinish: () => {
@@ -182,6 +185,12 @@ const resetForm = () => {
     };
     errors.value = {};
 };
+
+onMounted(() => {
+    if (props.openOnMount) {
+        campusDialogOpen.value = true;
+    }
+});
 
 const openCampusTypeModal = () => {
     showCampusTypeModal.value = true;

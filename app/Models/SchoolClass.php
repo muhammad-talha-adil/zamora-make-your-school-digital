@@ -21,7 +21,6 @@ class SchoolClass extends Model
         'name',
         'code',
         'level',
-        'description',
         'is_active',
     ];
 

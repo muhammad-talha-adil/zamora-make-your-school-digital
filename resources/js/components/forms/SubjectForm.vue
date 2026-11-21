@@ -28,7 +28,6 @@ interface Props {
         name: string;
         code: string;
         short_name?: string;
-        description?: string;
         is_active: boolean;
         campuses?: Array<{ id: number; name: string }>;
     };
@@ -58,7 +57,6 @@ const getInitialForm = () => ({
     name: props.subject?.name || '',
     code: props.subject?.code || '',
     short_name: props.subject?.short_name || '',
-    description: props.subject?.description || '',
     is_active: props.subject?.is_active ?? true,
     campus_ids: props.subject
         ? (props.subject.campuses ?? []).map((c) => c.id)
@@ -87,7 +85,6 @@ const submit = () => {
 
     const formData: Record<string, unknown> = {
         name: form.value.name,
-        description: form.value.description,
         is_active: form.value.is_active ? 1 : 0,
     };
 
@@ -100,7 +97,7 @@ const submit = () => {
         axios.patch(`/settings/subjects/${props.subject.id}`, formData, {
             headers: { Accept: 'application/json' },
         }).then(() => {
-                alert.success('Subject updated successfully!');
+                alert.success('Subject saved.');
                 open.value = false;
                 resetForm();
                 emit('saved');
@@ -110,7 +107,7 @@ const submit = () => {
                     const firstError = Object.values(errors.value)[0];
                     alert.error(firstError);
                 } else {
-                    alert.error('Failed to update subject. Please check the errors.');
+                    alert.error('Could not save subject. Check the form.');
                 }
             }).finally(() => {
                 processing.value = false;
@@ -120,7 +117,7 @@ const submit = () => {
         axios.post('/settings/subjects', formData, {
             headers: { Accept: 'application/json' },
         }).then(() => {
-                alert.success('Subject created successfully!');
+                alert.success('Subject added.');
                 open.value = false;
                 resetForm();
                 emit('saved');
@@ -130,7 +127,7 @@ const submit = () => {
                     const firstError = Object.values(errors.value)[0];
                     alert.error(firstError);
                 } else {
-                    alert.error('Failed to create subject. Please check the errors.');
+                    alert.error('Could not save subject. Check the form.');
                 }
             }).finally(() => {
                 processing.value = false;
@@ -175,17 +172,6 @@ const resetForm = () => {
                             :class="{ 'border-destructive': errors.name }"
                         />
                         <InputError :message="errors.name" />
-                    </div>
-
-                    <div class="grid gap-2">
-                        <Label for="description">Description</Label>
-                        <Input
-                            id="description"
-                            v-model="form.description"
-                            placeholder="Enter subject description (optional)"
-                            :class="{ 'border-destructive': errors.description }"
-                        />
-                        <InputError :message="errors.description" />
                     </div>
 
                     <div v-if="isSuperAdmin" class="grid gap-2">

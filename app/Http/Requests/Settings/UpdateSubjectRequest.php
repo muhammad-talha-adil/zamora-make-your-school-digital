@@ -32,10 +32,20 @@ class UpdateSubjectRequest extends FormRequest
                     ->ignore($this->route('subject')->id)
                     ->whereNull('deleted_at'),
             ],
-            'description' => 'nullable|string',
             'is_active' => 'boolean',
             'campus_ids' => 'nullable|array',
             'campus_ids.*' => 'integer|exists:campuses,id',
+        ];
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return [
+            'name.unique' => 'This name is already used.',
+            'name.required' => 'Please enter a name.',
         ];
     }
 }

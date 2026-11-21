@@ -26,7 +26,6 @@ interface Props {
         id: number;
         name: string;
         code: string;
-        description?: string;
         is_active: boolean;
         campus_id?: number;
         /** Every campus a class with this same name already exists in, including this row's own. */
@@ -60,7 +59,6 @@ const emit = defineEmits<{
 const getInitialForm = () => ({
     name: props.schoolClass?.name || '',
     code: props.schoolClass?.code || '',
-    description: props.schoolClass?.description || '',
     // Editing starts from the campuses this class is already in (locked);
     // creating defaults to every campus selected (the common case).
     campus_ids: props.schoolClass
@@ -140,7 +138,6 @@ const submit = () => {
 
     const formData: Record<string, unknown> = {
         name: form.value.name,
-        description: form.value.description,
     };
 
     if (props.isSuperAdmin) {
@@ -151,7 +148,7 @@ const submit = () => {
         axios.patch(`/settings/school-classes/${props.schoolClass.id}`, formData, {
             headers: { Accept: 'application/json' },
         }).then(() => {
-                alert.success('Class updated successfully!');
+                alert.success('Class saved.');
                 open.value = false;
                 resetForm();
                 emit('saved');
@@ -169,7 +166,7 @@ const submit = () => {
                         alert.error(firstError);
                     }
                 } else {
-                    alert.error(err instanceof Error ? err.message : 'Failed to update class. Please try again.');
+                    alert.error(err instanceof Error ? err.message : 'Could not save class. Please try again.');
                 }
             }).finally(() => {
                 processing.value = false;
@@ -178,7 +175,7 @@ const submit = () => {
         axios.post('/settings/school-classes', formData, {
             headers: { Accept: 'application/json' },
         }).then(() => {
-                alert.success('Class created successfully!');
+                alert.success('Class added.');
                 open.value = false;
                 resetForm();
                 emit('saved');
@@ -196,7 +193,7 @@ const submit = () => {
                         alert.error(firstError);
                     }
                 } else {
-                    alert.error(err instanceof Error ? err.message : 'Failed to create class. Please try again.');
+                    alert.error(err instanceof Error ? err.message : 'Could not save class. Please try again.');
                 }
             }).finally(() => {
                 processing.value = false;
@@ -312,17 +309,6 @@ const resetForm = () => {
                             </div>
                         </div>
                         <InputError :message="errors.campus_ids" />
-                    </div>
-
-                    <div class="grid gap-2">
-                        <Label for="description">Description</Label>
-                        <Input
-                            id="description"
-                            v-model="form.description"
-                            placeholder="Enter class description (optional)"
-                            :class="{ 'border-destructive': errors.description }"
-                        />
-                        <InputError :message="errors.description" />
                     </div>
                 </div>
 

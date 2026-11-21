@@ -6,19 +6,7 @@
                 Assign Subjects to Class Sections
             </h3>
             
-            <div class="grid gap-4 md:grid-cols-3">
-                <!-- Campus Filter -->
-                <div class="space-y-2">
-                    <Label for="campus-filter">Campus</Label>
-                    <SearchableSelect
-                        id="campus-filter"
-                        v-model="filters.campus_id"
-                        :options="campusOptions"
-                        placeholder="Select Campus"
-                        clearable
-                        :class="filters.campus_id ? 'border-green-500 focus:ring-green-500' : 'border-border'"
-                    />
-                </div>
+            <div class="grid gap-4 md:grid-cols-2">
 
                 <!-- Class Filter -->
                 <div class="space-y-2">
@@ -35,35 +23,20 @@
 
                 <!-- Section Filter -->
                 <div class="space-y-2">
-                    <Label for="section-filter">
-                        Section
-                        <span v-if="filters.class_id && classHasSections" class="text-destructive">*</span>
-                    </Label>
+                    <Label for="section-filter">Section</Label>
                     <SearchableSelect
                         id="section-filter"
                         v-model="filters.section_id"
                         :options="sectionOptions"
-                        :placeholder="classHasSections ? 'Select Section' : 'All Sections'"
+                        :placeholder="'All sections'"
                         :disabled="!filters.class_id"
                         clearable
                         :class="filters.section_id ? 'border-green-500 focus:ring-green-500' : 'border-border'"
                     />
                     <p v-if="filters.class_id && classHasSections && !filters.section_id" class="text-xs text-muted-foreground">
-                        Select a section to load its subjects.
+                        Saving applies to every section of this class.
                     </p>
                 </div>
-            </div>
-
-            <!-- Load Button -->
-            <div class="mt-4">
-                <Button
-                    @click="loadAssignedSubjects"
-                    :disabled="!canLoadSubjects || loading"
-                    variant="secondary"
-                >
-                    <Icon icon="search" class="mr-1"  />
-                    {{ loading ? 'Loading...' : 'Load Subjects' }}
-                </Button>
             </div>
         </div>
 
@@ -120,7 +93,7 @@
                     :disabled="saving || !hasChanges"
                 >
                     <Icon icon="save" class="mr-1" />
-                    {{ saving ? 'Saving...' : 'Save Assignments' }}
+                    {{ saving ? 'Saving...' : 'Save' }}
                 </Button>
             </div>
         </div>
@@ -144,11 +117,6 @@ import Icon from '@/components/Icon.vue';
 import { alert } from '@/utils';
 import axios from 'axios';
 
-interface Campus {
-    id: number;
-    name: string;
-}
-
 interface SchoolClass {
     id: number;
     name: string;
@@ -167,13 +135,11 @@ interface Subject {
 }
 
 // State
-const campuses = ref<Campus[]>([]);
 const classes = ref<SchoolClass[]>([]);
 const sections = ref<Section[]>([]);
 const subjects = ref<Subject[]>([]);
 
 const filters = reactive({
-    campus_id: '',
     class_id: '',
     section_id: '',
 });
@@ -192,7 +158,6 @@ const filteredSections = computed(() => {
     return sections.value.filter(s => s.class_id === Number(filters.class_id));
 });
 
-const campusOptions = computed(() => campuses.value.map((campus) => ({ value: campus.id, label: campus.name })));
 const classOptions = computed(() => classes.value.map((cls) => ({ value: cls.id, label: cls.name })));
 const sectionOptions = computed(() => filteredSections.value.map((section) => ({ value: section.id, label: section.name })));
 
@@ -204,10 +169,6 @@ const classHasSections = computed(() => {
     return sections.value.some(s => s.class_id === Number(filters.class_id));
 });
 
-const canLoadSubjects = computed(() => {
-    if (!filters.class_id) return false;
-    return !classHasSections.value || !!filters.section_id;
-});
 
 const hasChanges = computed(() => {
     if (!showSubjects.value) return false;
@@ -232,7 +193,6 @@ const loadInitialData = async () => {
         });
         const data = await response.json();
         
-        campuses.value = data.campuses || [];
         classes.value = data.classes || [];
         sections.value = data.sections || [];
         subjects.value = data.subjects || [];
@@ -241,16 +201,15 @@ const loadInitialData = async () => {
     }
 };
 
-// Campus filter doesn't directly affect sections in this implementation
-// but kept for future use
-watch(() => filters.campus_id, () => {});
-
 watch(() => filters.class_id, () => {
     filters.section_id = '';
     showSubjects.value = false;
     hasLoaded.value = false;
     selectedSubjects.value = [];
     originalSubjects.value = [];
+    if (filters.class_id) {
+        loadAssignedSubjects();
+    }
 });
 
 watch(() => filters.section_id, () => {
@@ -258,7 +217,10 @@ watch(() => filters.section_id, () => {
     hasLoaded.value = false;
     selectedSubjects.value = [];
     originalSubjects.value = [];
-    // When section_id is empty string, it means "All Sections"
+    // An empty section means every section of the class.
+    if (filters.class_id) {
+        loadAssignedSubjects();
+    }
 });
 
 const loadAssignedSubjects = async () => {
@@ -314,7 +276,7 @@ const saveAssignments = () => {
         headers: { Accept: 'application/json' },
     }).then(() => {
             originalSubjects.value = [...selectedSubjects.value];
-            alert.success('Subjects assigned successfully!');
+            alert.success('Subjects saved.');
             return loadAssignedSubjects();
         }).catch((error) => {
             const errors = error.response?.data?.errors;
@@ -322,7 +284,7 @@ const saveAssignments = () => {
                 ? Object.values(errors).flat().join(', ')
                 : (error.response?.data?.message || 'Unknown error');
 
-            alert.error('Failed to save: ' + errorMessage);
+            alert.error('Could not save. ' + errorMessage);
         }).finally(() => {
             saving.value = false;
         });

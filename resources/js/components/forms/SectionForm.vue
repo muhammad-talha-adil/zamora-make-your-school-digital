@@ -28,7 +28,6 @@ interface Props {
         id: number;
         name: string;
         code: string;
-        description?: string;
         is_active: boolean;
         class_id: number;
     };
@@ -54,7 +53,6 @@ const emit = defineEmits<{
 const getInitialForm = () => ({
     name: props.section?.name || '',
     code: props.section?.code || '',
-    description: props.section?.description || '',
     class_id: props.section?.class_id || '',
 });
 
@@ -81,7 +79,6 @@ const submit = () => {
 
     const formData = {
         name: form.value.name,
-        description: form.value.description,
         class_id: form.value.class_id,
     };
 
@@ -90,7 +87,7 @@ const submit = () => {
         axios.patch(`/settings/sections/${props.section.id}`, formData, {
             headers: { Accept: 'application/json' },
         }).then(() => {
-                alert.success('Section updated successfully!');
+                alert.success('Section saved.');
                 open.value = false;
                 resetForm();
                 emit('saved');
@@ -100,7 +97,7 @@ const submit = () => {
                     const firstError = Object.values(errors.value)[0];
                     alert.error(firstError);
                 } else {
-                    alert.error('Failed to update section. Please check the errors.');
+                    alert.error('Could not save section. Check the form.');
                 }
             }).finally(() => {
                 processing.value = false;
@@ -110,7 +107,7 @@ const submit = () => {
         axios.post('/settings/sections', formData, {
             headers: { Accept: 'application/json' },
         }).then(() => {
-                alert.success('Section created successfully!');
+                alert.success('Section added.');
                 open.value = false;
                 resetForm();
                 emit('saved');
@@ -120,7 +117,7 @@ const submit = () => {
                     const firstError = Object.values(errors.value)[0];
                     alert.error(firstError);
                 } else {
-                    alert.error('Failed to create section. Please check the errors.');
+                    alert.error('Could not save section. Check the form.');
                 }
             }).finally(() => {
                 processing.value = false;
@@ -177,17 +174,6 @@ const resetForm = () => {
                             :class="errors.class_id ? 'border-destructive' : ''"
                         />
                         <InputError :message="errors.class_id" />
-                    </div>
-
-                    <div class="grid gap-2">
-                        <Label for="description">Description</Label>
-                        <Input
-                            id="description"
-                            v-model="form.description"
-                            placeholder="Enter section description (optional)"
-                            :class="{ 'border-destructive': errors.description }"
-                        />
-                        <InputError :message="errors.description" />
                     </div>
 
                 </div>

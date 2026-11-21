@@ -39,7 +39,7 @@ it('lets the actor with exam settings abilities through', function () {
 });
 
 it('soft deletes, restores and permanently deletes an exam type without crashing', function () {
-    $examType = ExamType::create(['name' => 'Second Term', 'short_name' => 'ST', 'is_active' => true]);
+    $examType = ExamType::create(['name' => 'Second Term', 'is_active' => true]);
     $actor = $this->world->school->actor;
 
     $this->actingAs($actor)->delete(route('exam-types.destroy', $examType))->assertRedirect();
@@ -68,11 +68,10 @@ it('deactivates every other exam type when a new one is created active', functio
 
 it('deactivates every other exam type when one is edited to active', function () {
     $actor = $this->world->school->actor;
-    $second = ExamType::create(['name' => 'Second Term', 'short_name' => 'ST', 'is_active' => false]);
+    $second = ExamType::create(['name' => 'Second Term', 'is_active' => false]);
 
     $this->actingAs($actor)->patch(route('exam-types.update', $second), [
         'name' => 'Second Term',
-        'short_name' => 'ST',
         'is_active' => true,
     ])->assertRedirect();
 
@@ -82,7 +81,7 @@ it('deactivates every other exam type when one is edited to active', function ()
 
 it('deactivates every other exam type when one is activated directly', function () {
     $actor = $this->world->school->actor;
-    $second = ExamType::create(['name' => 'Second Term', 'short_name' => 'ST', 'is_active' => false]);
+    $second = ExamType::create(['name' => 'Second Term', 'is_active' => false]);
 
     $this->actingAs($actor)->patch(route('exam-types.activate', $second))->assertRedirect();
 

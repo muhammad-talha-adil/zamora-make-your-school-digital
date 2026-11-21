@@ -20,7 +20,6 @@ class Subject extends Model
         'name',
         'short_name',
         'code',
-        'description',
         'is_active',
     ];
 

@@ -37,4 +37,15 @@ class UpdateCampusRequest extends FormRequest
             'campus_type_id' => 'required|exists:campus_types,id',
         ];
     }
+
+    /**
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return [
+            'name.unique' => 'This name is already used.',
+            'name.required' => 'Please enter a name.',
+        ];
+    }
 }

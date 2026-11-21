@@ -35,9 +35,19 @@ class UpdateSectionRequest extends FormRequest
                     ->where('class_id', $this->input('class_id'))
                     ->ignore($this->route('section')->id),
             ],
-            'description' => 'nullable|string',
             'is_active' => 'boolean',
             'class_id' => 'required|exists:school_classes,id',
+        ];
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return [
+            'name.unique' => 'This name is already used.',
+            'name.required' => 'Please enter a name.',
         ];
     }
 }

@@ -25,7 +25,6 @@ class Session extends Model
      */
     protected $fillable = [
         'name',
-        'description',
         'is_active',
         'start_year',
         'end_year',

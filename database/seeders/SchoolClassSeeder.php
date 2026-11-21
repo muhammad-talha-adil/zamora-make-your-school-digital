@@ -39,7 +39,7 @@ class SchoolClassSeeder extends Seeder
             foreach ($names as $name => $description) {
                 SchoolClass::updateOrCreate(
                     ['campus_id' => $campus->id, 'name' => $name],
-                    ['description' => $description, 'is_active' => true]
+                    ['is_active' => true]
                 );
             }
 
@@ -47,12 +47,12 @@ class SchoolClassSeeder extends Seeder
             // exercising the inactive/soft-delete-name-reuse paths.
             SchoolClass::updateOrCreate(
                 ['campus_id' => $campus->id, 'name' => 'Eleven'],
-                ['description' => 'Class Eleven', 'is_active' => false]
+                ['is_active' => false]
             );
 
             $retired = SchoolClass::firstOrCreate(
                 ['campus_id' => $campus->id, 'name' => 'Twelve'],
-                ['description' => 'Discontinued class', 'is_active' => false]
+                ['is_active' => false]
             );
             $retired->delete();
         }

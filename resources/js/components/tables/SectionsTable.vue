@@ -152,12 +152,6 @@ const handleSaved = () => {
                                 Class
                             </th>
                             <th scope="col" class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">
-                                Code
-                            </th>
-                            <th scope="col" class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">
-                                Description
-                            </th>
-                            <th scope="col" class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">
                                 Status
                             </th>
                             <th scope="col" class="px-6 py-4 text-right text-xs font-semibold tracking-wider text-muted-foreground uppercase">
@@ -187,16 +181,6 @@ const handleSaved = () => {
                                 </div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="text-sm text-muted-foreground">
-                                    {{ section.code || EMPTY_VALUE }}
-                                </div>
-                            </td>
-                            <td class="px-6 py-4">
-                                <div class="max-w-xs truncate text-sm text-muted-foreground">
-                                    {{ section.description || EMPTY_VALUE }}
-                                </div>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
                                 <StatusToggle
                                     :active="section.is_active"
                                     @toggle="section.is_active ? inactivateSection(section) : activateSection(section)"
@@ -216,7 +200,7 @@ const handleSaved = () => {
                             </td>
                         </tr>
                         <tr v-if="sectionsData.length === 0">
-                            <td colspan="7" class="px-6 py-8 text-center text-sm text-muted-foreground">No sections found.</td>
+                            <td colspan="5" class="px-6 py-8 text-center text-sm text-muted-foreground">No sections found.</td>
                         </tr>
                     </tbody>
                 </table>

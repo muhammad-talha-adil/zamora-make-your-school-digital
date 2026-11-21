@@ -26,7 +26,6 @@ interface Props {
     examType?: {
         id: number;
         name: string;
-        short_name: string;
         is_active: boolean;
     };
     trigger?: string;
@@ -48,7 +47,6 @@ const emit = defineEmits<{
 // Form data
 const form = ref({
     name: props.examType?.name || '',
-    short_name: props.examType?.short_name || '',
     is_active: props.examType?.is_active ?? true,
 });
 
@@ -66,7 +64,6 @@ const submit = () => {
 
     const formData = {
         name: form.value.name,
-        short_name: form.value.short_name,
         is_active: form.value.is_active ? 1 : 0,
     };
 
@@ -75,7 +72,7 @@ const submit = () => {
         router.patch(`/settings/exam-types/${props.examType.id}`, formData, {
             preserveScroll: true,
             onSuccess: () => {
-                alert.success('Exam type updated successfully!');
+                alert.success('Exam type saved.');
                 open.value = false;
                 resetForm();
                 emit('saved');
@@ -86,7 +83,7 @@ const submit = () => {
                     const firstError = Object.values(errors.value)[0];
                     alert.error(firstError);
                 } else {
-                    alert.error('Failed to update exam type. Please check the errors.');
+                    alert.error('Could not save exam type. Check the form.');
                 }
             },
             onFinish: () => {
@@ -98,7 +95,7 @@ const submit = () => {
         router.post('/settings/exam-types', formData, {
             preserveScroll: true,
             onSuccess: () => {
-                alert.success('Exam type created successfully!');
+                alert.success('Exam type added.');
                 open.value = false;
                 resetForm();
                 emit('saved');
@@ -109,7 +106,7 @@ const submit = () => {
                     const firstError = Object.values(errors.value)[0];
                     alert.error(firstError);
                 } else {
-                    alert.error('Failed to create exam type. Please check the errors.');
+                    alert.error('Could not save exam type. Check the form.');
                 }
             },
             onFinish: () => {
@@ -122,7 +119,6 @@ const submit = () => {
 const resetForm = () => {
     form.value = {
         name: '',
-        short_name: '',
         is_active: true,
     };
     errors.value = {};
@@ -161,18 +157,6 @@ const resetForm = () => {
                         />
                         <InputError :message="errors.name" />
                     </div>
-
-                    <div class="grid gap-2">
-                        <Label for="short_name">Short Name</Label>
-                        <Input
-                            id="short_name"
-                            v-model="form.short_name"
-                            placeholder="e.g., MT, FT"
-                            :class="{ 'border-destructive': errors.short_name }"
-                        />
-                        <InputError :message="errors.short_name" />
-                    </div>
-
                     <div class="flex items-center space-x-2">
                         <input
                             id="is_active"
@@ -182,6 +166,7 @@ const resetForm = () => {
                         />
                         <Label for="is_active">Active</Label>
                     </div>
+                    <p class="-mt-2 text-xs text-muted-foreground">Only one exam type can be active. Making this one active turns the other off.</p>
                 </div>
 
                 <DialogFooter>

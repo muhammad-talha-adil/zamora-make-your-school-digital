@@ -25,10 +25,10 @@ class SectionController extends Controller
 
         $sections = Section::with('schoolClass')
             ->whereHas('schoolClass', fn ($q) => $q->visibleTo(request()->user()))
-            ->orderBy('id', 'desc')
+            ->orderBy('class_id', 'asc')->orderBy('id', 'asc')
             ->paginate(10);
 
-        $schoolClasses = SchoolClass::visibleTo(request()->user())->orderBy('name', 'asc')->get(['id', 'name']);
+        $schoolClasses = SchoolClass::visibleTo(request()->user())->orderBy('id', 'asc')->get(['id', 'name']);
 
         return Inertia::render('settings/Sections/Index', [
             'tableSections' => $sections,
@@ -68,7 +68,7 @@ class SectionController extends Controller
         $perPage = request()->get('per_page', 10);
         $page = request()->get('page', 1);
 
-        $sections = $query->orderBy('id', 'desc')
+        $sections = $query->orderBy('class_id', 'asc')->orderBy('id', 'asc')
             ->paginate($perPage, ['*'], 'page', $page);
 
         return response()->json($sections);
@@ -96,11 +96,11 @@ class SectionController extends Controller
         if (request()->expectsJson()) {
             return response()->json([
                 'success' => true,
-                'message' => 'Section created successfully.',
+                'message' => 'Section added.',
             ]);
         }
 
-        return redirect()->route('sections.index')->with('success', 'Section created successfully.');
+        return redirect()->route('sections.index')->with('success', 'Section added.');
     }
 
     /**
@@ -155,7 +155,7 @@ class SectionController extends Controller
             }
         }
 
-        $message = "Created {$created} section".($created === 1 ? '' : 's').'.';
+        $message = "Added {$created} section".($created === 1 ? '' : 's').'.';
         if (! empty($skipped)) {
             $message .= ' Already existed, skipped: '.implode(', ', $skipped).'.';
         }
@@ -177,11 +177,11 @@ class SectionController extends Controller
         if (request()->expectsJson()) {
             return response()->json([
                 'success' => true,
-                'message' => 'Section updated successfully.',
+                'message' => 'Section saved.',
             ]);
         }
 
-        return redirect()->route('sections.index')->with('success', 'Section updated successfully.');
+        return redirect()->route('sections.index')->with('success', 'Section saved.');
     }
 
     /**
@@ -197,7 +197,7 @@ class SectionController extends Controller
             return response()->json(['success' => true]);
         }
 
-        return redirect()->route('sections.index')->with('success', 'Section deleted successfully.');
+        return redirect()->route('sections.index')->with('success', 'Section deleted.');
     }
 
     /**
@@ -213,7 +213,7 @@ class SectionController extends Controller
             return response()->json(['success' => true]);
         }
 
-        return redirect()->route('sections.index')->with('success', 'Section inactivated successfully.');
+        return redirect()->route('sections.index')->with('success', 'Section inactivated.');
     }
 
     /**
@@ -229,7 +229,7 @@ class SectionController extends Controller
             return response()->json(['success' => true]);
         }
 
-        return redirect()->route('sections.index')->with('success', 'Section activated successfully.');
+        return redirect()->route('sections.index')->with('success', 'Section activated.');
     }
 
     /**
@@ -246,7 +246,7 @@ class SectionController extends Controller
             return response()->json(['success' => true]);
         }
 
-        return redirect()->route('sections.index')->with('success', 'Section restored successfully.');
+        return redirect()->route('sections.index')->with('success', 'Section restored.');
     }
 
     /**

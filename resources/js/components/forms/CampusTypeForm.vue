@@ -51,13 +51,13 @@ const submit = () => {
         router.put(`/settings/campus-types/${props.campusType.id}`, form.value, {
             preserveScroll: true,
             onSuccess: () => {
-                alert.success('Campus type updated successfully!');
+                alert.success('Campus type saved.');
                 resetForm();
                 emit('saved', { id: props.campusType!.id, name: form.value.name });
             },
             onError: (err) => {
                 errors.value = err;
-                alert.error('Failed to update campus type. Please check the errors.');
+                alert.error('Could not save campus type. Check the form.');
             },
             onFinish: () => {
                 processing.value = false;
@@ -68,7 +68,7 @@ const submit = () => {
         router.post('/settings/campus-types', form.value, {
             preserveScroll: true,
             onSuccess: (page: any) => {
-                alert.success('Campus type created successfully!');
+                alert.success('Campus type added.');
                 // Try to get the newly created campus type from flash data
                 const newCampusType = page?.props?.flash?.campusType;
                 resetForm();
@@ -81,7 +81,7 @@ const submit = () => {
             },
             onError: (err) => {
                 errors.value = err;
-                alert.error('Failed to create campus type. Please check the errors.');
+                alert.error('Could not save campus type. Check the form.');
             },
             onFinish: () => {
                 processing.value = false;

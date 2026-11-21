@@ -1,6 +1,6 @@
 # 01b · Owner: pichle bugs dobara check + setup aage jari (Phase 1 retest, phir Phase 2 se 6)
 
-Bugs fix ho chuke hain aur DB dobara khali (sirf owner) kar di gayi hai. Same browser chat mein (jahan MASTER PROMPT + 01 paste hua tha) yeh paste karein.
+Bugs fix ho kar push ho chuke hain (S1, S3, S4, S5, S7, S8; S6 date format skip) aur DB sach mein khali hai (2026-11-22, sirf owner). Pehle browser mein logout/login karo (purana campus selection saaf ho). Same browser chat mein (jahan MASTER PROMPT + 01 paste hua tha) yeh paste karein.
 Agar nayi chat hai to pehle MASTER PROMPT, phir 01 ka code block, phir yeh.
 
 ```

@@ -61,7 +61,7 @@ const isValid = computed(() => {
 
 watch(open, (isOpen) => {
     if (isOpen) {
-        selectedCampusIds.value = [];
+        selectedCampusIds.value = props.isSuperAdmin ? props.campuses.map((c) => c.id) : [];
         classCount.value = 2;
         classNames.value = ['', ''];
     }

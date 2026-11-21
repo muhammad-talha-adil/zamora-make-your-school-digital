@@ -38,6 +38,7 @@ interface Props {
     };
     campuses: Array<{ id: number; name: string }>;
     classes: Array<{ id: number; name: string }>;
+    activeSession?: { start_date: string; end_date: string } | null;
     trigger?: string;
 }
 
@@ -55,8 +56,8 @@ const defaultForm = () => ({
     session_id: props.shiftTiming?.session_id ?? '',
     class_ids: (props.shiftTiming?.class_ids ?? []) as number[],
     name: props.shiftTiming?.name || '',
-    starts_on: props.shiftTiming?.starts_on || '',
-    ends_on: props.shiftTiming?.ends_on || '',
+    starts_on: props.shiftTiming?.starts_on || props.activeSession?.start_date?.slice(0, 10) || '',
+    ends_on: props.shiftTiming?.ends_on || props.activeSession?.end_date?.slice(0, 10) || '',
     day_starts_at: props.shiftTiming?.day_starts_at?.slice(0, 5) || '',
     late_after: props.shiftTiming?.late_after?.slice(0, 5) || '',
     break_starts_at: props.shiftTiming?.break_starts_at?.slice(0, 5) || '',

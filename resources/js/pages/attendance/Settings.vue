@@ -16,6 +16,7 @@ interface Props {
     holidays: any;
     campuses: any;
     classes: any;
+    activeSession?: { start_date: string; end_date: string } | null;
     shiftTimings: any;
 }
 
@@ -119,6 +120,7 @@ const showPastHolidays = ref(false);
                         :shift-timings="shiftTimings"
                         :campuses="campuses"
                         :classes="classes"
+                        :active-session="activeSession"
                         @saved="reloadShiftTimings"
                     />
                 </div>

@@ -91,10 +91,10 @@ class CampusController extends Controller
 
         // Check if request expects JSON (axios) or redirect (Inertia)
         if (request()->expectsJson()) {
-            return response()->json(['success' => true, 'message' => 'Campus created successfully.', 'campus' => $campus]);
+            return response()->json(['success' => true, 'message' => 'Campus added.', 'campus' => $campus]);
         }
 
-        return redirect()->back()->with('success', 'Campus created successfully.');
+        return redirect()->back()->with('success', 'Campus added.');
     }
 
     /**
@@ -118,10 +118,10 @@ class CampusController extends Controller
 
         // Check if request expects JSON (axios) or redirect (Inertia)
         if (request()->expectsJson()) {
-            return response()->json(['success' => true, 'message' => 'Campus updated successfully.']);
+            return response()->json(['success' => true, 'message' => 'Campus saved.']);
         }
 
-        return redirect()->back()->with('success', 'Campus updated successfully.');
+        return redirect()->back()->with('success', 'Campus saved.');
     }
 
     /**
@@ -149,7 +149,7 @@ class CampusController extends Controller
             return response()->json(['success' => true]);
         }
 
-        return redirect()->back()->with('success', 'Campus inactivated successfully.');
+        return redirect()->back()->with('success', 'Campus inactivated.');
     }
 
     /**
@@ -165,7 +165,7 @@ class CampusController extends Controller
             return response()->json(['success' => true]);
         }
 
-        return redirect()->back()->with('success', 'Campus activated successfully.');
+        return redirect()->back()->with('success', 'Campus activated.');
     }
 
     /**
@@ -182,7 +182,7 @@ class CampusController extends Controller
             return response()->json(['success' => true]);
         }
 
-        return redirect()->route('campuses.index')->with('success', 'Campus restored successfully.');
+        return redirect()->route('campuses.index')->with('success', 'Campus restored.');
     }
 
     /**

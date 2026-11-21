@@ -241,7 +241,7 @@
             <p class="text-muted-foreground">Every record in the system is filed under a campus - create one before adding students, staff, classes or anything else.</p>
           </div>
           <Link
-            :href="route('campuses.index')"
+            :href="route('campuses.index', { add: 1 })"
             class="shrink-0 rounded-md bg-warning px-3 py-1.5 text-sm font-medium text-warning-foreground hover:opacity-90"
           >
             Create Campus

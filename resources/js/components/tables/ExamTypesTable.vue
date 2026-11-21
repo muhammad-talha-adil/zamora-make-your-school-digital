@@ -166,12 +166,6 @@ const forceDeleteExamType = (examType: any) => {
                                 scope="col"
                                 class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase"
                             >
-                                Short Name
-                            </th>
-                            <th
-                                scope="col"
-                                class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase"
-                            >
                                 Status
                             </th>
                             <th
@@ -199,11 +193,6 @@ const forceDeleteExamType = (examType: any) => {
                                 </div>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="text-sm text-muted-foreground">
-                                    {{ examType.short_name || '—' }}
-                                </div>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
                                 <StatusToggle
                                     :active="examType.is_active"
                                     @toggle="examType.is_active ? inactivateExamType(examType) : activateExamType(examType)"
@@ -219,7 +208,7 @@ const forceDeleteExamType = (examType: any) => {
                             </td>
                         </tr>
                         <tr v-if="examTypesData.length === 0">
-                            <td colspan="6" class="px-6 py-8 text-center text-sm text-muted-foreground">No exam types found.</td>
+                            <td colspan="4" class="px-6 py-8 text-center text-sm text-muted-foreground">No exam types found.</td>
                         </tr>
                     </tbody>
                 </table>

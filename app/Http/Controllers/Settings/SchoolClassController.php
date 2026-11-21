@@ -26,7 +26,7 @@ class SchoolClassController extends Controller
 
         $schoolClasses = SchoolClass::with('campus:id,name')
             ->visibleTo(request()->user())
-            ->orderBy('id', 'desc')
+            ->orderBy('id', 'asc')
             ->paginate(10);
 
         $this->attachExistingCampusIds($schoolClasses);
@@ -49,7 +49,7 @@ class SchoolClassController extends Controller
     {
         Gate::authorize('viewAny', SchoolClass::class);
 
-        $query = SchoolClass::query()->visibleTo(request()->user());
+        $query = SchoolClass::query()->with('campus:id,name')->visibleTo(request()->user());
 
         // Handle status filter
         $status = request()->get('status');
@@ -67,7 +67,7 @@ class SchoolClassController extends Controller
         $perPage = request()->get('per_page', 10);
         $page = request()->get('page', 1);
 
-        $schoolClasses = $query->orderBy('id', 'desc')
+        $schoolClasses = $query->orderBy('id', 'asc')
             ->paginate($perPage, ['*'], 'page', $page);
 
         $this->attachExistingCampusIds($schoolClasses);
@@ -132,7 +132,7 @@ class SchoolClassController extends Controller
         $duplicateCampusNames = Campus::query()->whereIn('id', $conflictingCampusIds)->pluck('name');
 
         if ($duplicateCampusNames->isNotEmpty()) {
-            $message = 'A class named "'.$validated['name'].'" already exists in: '.$duplicateCampusNames->implode(', ').'.';
+            $message = 'This class already exists in: '.$duplicateCampusNames->implode(', ').'.';
 
             if ($request->expectsJson()) {
                 return response()->json(['success' => false, 'message' => $message, 'errors' => ['name' => [$message]]], 422);
@@ -143,7 +143,6 @@ class SchoolClassController extends Controller
 
         $schoolClasses = collect($campusIds)->map(fn ($campusId) => SchoolClass::create([
             'name' => $validated['name'],
-            'description' => $validated['description'] ?? null,
             'is_active' => true,
             'campus_id' => $campusId,
         ]));
@@ -153,12 +152,12 @@ class SchoolClassController extends Controller
                 'success' => true,
                 'message' => $schoolClasses->count() > 1
                     ? 'Class created in '.$schoolClasses->count().' campuses.'
-                    : 'Class created successfully.',
+                    : 'Class added.',
                 'schoolClass' => $schoolClasses->first(),
             ]);
         }
 
-        return redirect()->route('school-classes.index')->with('success', 'School class created successfully.');
+        return redirect()->route('school-classes.index')->with('success', 'Class added.');
     }
 
     /**
@@ -212,7 +211,7 @@ class SchoolClassController extends Controller
             }
         }
 
-        $message = "Created {$created} class".($created === 1 ? '' : 'es').'.';
+        $message = "Added {$created} class".($created === 1 ? '' : 'es').'.';
         if (! empty($skipped)) {
             $message .= ' Already existed, skipped: '.implode(', ', $skipped).'.';
         }
@@ -242,7 +241,7 @@ class SchoolClassController extends Controller
         $schoolClass->update($validated);
 
         // Checking a campus this class wasn't already in adds it there too -
-        // one new row per newly-checked campus, same name/description.
+        // one new row per newly-checked campus, same name.
         // Unchecking an already-present one does nothing here; removing a
         // campus's class is done by deleting that campus's own row, not by
         // silently discarding it from someone else's edit.
@@ -256,7 +255,6 @@ class SchoolClassController extends Controller
             foreach ($newCampusIds as $campusId) {
                 SchoolClass::create([
                     'name' => $schoolClass->name,
-                    'description' => $schoolClass->description,
                     'is_active' => true,
                     'campus_id' => $campusId,
                 ]);
@@ -264,10 +262,10 @@ class SchoolClassController extends Controller
         }
 
         if (request()->expectsJson()) {
-            return response()->json(['success' => true, 'message' => 'Class updated successfully.']);
+            return response()->json(['success' => true, 'message' => 'Class saved.']);
         }
 
-        return redirect()->route('school-classes.index')->with('success', 'School class updated successfully.');
+        return redirect()->route('school-classes.index')->with('success', 'Class saved.');
     }
 
     /**
@@ -283,7 +281,7 @@ class SchoolClassController extends Controller
             return response()->json(['success' => true]);
         }
 
-        return redirect()->route('school-classes.index')->with('success', 'School class deleted successfully.');
+        return redirect()->route('school-classes.index')->with('success', 'Class deleted.');
     }
 
     /**
@@ -299,7 +297,7 @@ class SchoolClassController extends Controller
             return response()->json(['success' => true]);
         }
 
-        return redirect()->route('school-classes.index')->with('success', 'School class inactivated successfully.');
+        return redirect()->route('school-classes.index')->with('success', 'Class inactivated.');
     }
 
     /**
@@ -315,7 +313,7 @@ class SchoolClassController extends Controller
             return response()->json(['success' => true]);
         }
 
-        return redirect()->route('school-classes.index')->with('success', 'School class activated successfully.');
+        return redirect()->route('school-classes.index')->with('success', 'Class activated.');
     }
 
     /**
@@ -332,7 +330,7 @@ class SchoolClassController extends Controller
             return response()->json(['success' => true]);
         }
 
-        return redirect()->route('school-classes.index')->with('success', 'School class restored successfully.');
+        return redirect()->route('school-classes.index')->with('success', 'Class restored.');
     }
 
     /**
@@ -350,6 +348,6 @@ class SchoolClassController extends Controller
             return response()->json(['success' => true]);
         }
 
-        return redirect()->route('school-classes.index')->with('success', 'School class permanently deleted.');
+        return redirect()->route('school-classes.index')->with('success', 'Class permanently deleted.');
     }
 }

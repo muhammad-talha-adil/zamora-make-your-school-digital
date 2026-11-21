@@ -87,11 +87,11 @@ class SessionController extends Controller
         if ($request->expectsJson()) {
             return response()->json([
                 'success' => true,
-                'message' => 'Session created successfully.',
+                'message' => 'Session added.',
             ]);
         }
 
-        return redirect()->route('sessions.index')->with('success', 'Session created successfully.');
+        return redirect()->route('sessions.index')->with('success', 'Session added.');
     }
 
     /**
@@ -154,11 +154,11 @@ class SessionController extends Controller
         if ($request->expectsJson()) {
             return response()->json([
                 'success' => true,
-                'message' => 'Session updated successfully.',
+                'message' => 'Session saved.',
             ]);
         }
 
-        return redirect()->route('sessions.index')->with('success', 'Session updated successfully.');
+        return redirect()->route('sessions.index')->with('success', 'Session saved.');
     }
 
     /**
@@ -184,7 +184,7 @@ class SessionController extends Controller
             return response()->json(['success' => true]);
         }
 
-        return redirect()->route('sessions.index')->with('success', 'Session deleted successfully.');
+        return redirect()->route('sessions.index')->with('success', 'Session deleted.');
     }
 
     /**
@@ -213,7 +213,7 @@ class SessionController extends Controller
             return response()->json(['success' => true]);
         }
 
-        return redirect()->route('sessions.index')->with('success', 'Session inactivated successfully.');
+        return redirect()->route('sessions.index')->with('success', 'Session inactivated.');
     }
 
     /**
@@ -232,7 +232,7 @@ class SessionController extends Controller
             return response()->json(['success' => true]);
         }
 
-        return redirect()->route('sessions.index')->with('success', 'Session activated successfully.');
+        return redirect()->route('sessions.index')->with('success', 'Session activated.');
     }
 
     /**
@@ -249,7 +249,7 @@ class SessionController extends Controller
             return response()->json(['success' => true]);
         }
 
-        return redirect()->route('sessions.index')->with('success', 'Session restored successfully.');
+        return redirect()->route('sessions.index')->with('success', 'Session restored.');
     }
 
     /**

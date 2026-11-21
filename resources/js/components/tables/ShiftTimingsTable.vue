@@ -11,6 +11,7 @@ interface Props {
     shiftTimings: any[];
     campuses: Array<{ id: number; name: string }>;
     classes: Array<{ id: number; name: string }>;
+    activeSession?: { start_date: string; end_date: string } | null;
 }
 
 const props = defineProps<Props>();
@@ -64,7 +65,7 @@ const deleteTiming = (timing: any) => {
             <p class="text-sm text-muted-foreground">
                 Group classes under a shared check-in/check-out, grace and break time. A class with no timing of its own falls back to the campus's general one.
             </p>
-            <ShiftTimingForm :campuses="campuses" :classes="classes" @saved="handleSaved" />
+            <ShiftTimingForm :campuses="campuses" :classes="classes" :active-session="activeSession" @saved="handleSaved" />
         </div>
         <div class="overflow-hidden rounded-lg border border-border bg-card shadow-sm">
             <div class="overflow-x-auto">
@@ -103,7 +104,7 @@ const deleteTiming = (timing: any) => {
                             </td>
                             <td class="px-6 py-4 text-sm font-medium whitespace-nowrap">
                                 <RowActions>
-                                    <ShiftTimingForm :shift-timing="timing" :campuses="campuses" :classes="classes" @saved="handleSaved" />
+                                    <ShiftTimingForm :shift-timing="timing" :campuses="campuses" :classes="classes" :active-session="activeSession" @saved="handleSaved" />
                                     <RowAction kind="delete" @click="deleteTiming(timing)" />
                                 </RowActions>
                             </td>

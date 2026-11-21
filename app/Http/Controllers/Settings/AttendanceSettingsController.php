@@ -8,6 +8,7 @@ use App\Models\Campus;
 use App\Models\Holiday;
 use App\Models\LeaveType;
 use App\Models\SchoolClass;
+use App\Models\Session;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
@@ -48,6 +49,7 @@ class AttendanceSettingsController extends Controller
             'campuses' => $campuses,
             'classes' => $classes,
             'shiftTimings' => $shiftTimings,
+            'activeSession' => Session::query()->where('is_active', true)->first(['start_date', 'end_date']),
         ]);
     }
 

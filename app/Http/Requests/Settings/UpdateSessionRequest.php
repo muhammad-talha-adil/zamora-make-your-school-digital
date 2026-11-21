@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Settings;
 
+use Closure;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -32,14 +33,36 @@ class UpdateSessionRequest extends FormRequest
                     ->ignore($this->route('session')->id)
                     ->whereNull('deleted_at'),
             ],
-            'description' => 'nullable|string',
             'is_active' => 'boolean',
             'start_year' => 'required|integer|min:2000|max:2100',
             'end_year' => 'required|integer|min:2000|max:2100|gte:start_year',
             'start_date' => 'required|date',
-            'end_date' => 'required|date|after_or_equal:start_date',
+            'end_date' => [
+                'required',
+                'date',
+                'after_or_equal:start_date',
+                function (string $attribute, mixed $value, Closure $fail): void {
+                    $start = strtotime((string) $this->input('start_date'));
+                    $end = strtotime((string) $value);
+
+                    if ($start && $end && $end > strtotime('+13 months', $start)) {
+                        $fail('A session can be at most 1 year long.');
+                    }
+                },
+            ],
             'campus_ids' => 'nullable|array',
             'campus_ids.*' => 'integer|exists:campuses,id',
+        ];
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return [
+            'name.unique' => 'This session already exists.',
+            'end_date.after_or_equal' => 'End date must be after the start date.',
         ];
     }
 }
