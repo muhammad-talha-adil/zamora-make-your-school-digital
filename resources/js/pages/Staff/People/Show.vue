@@ -122,6 +122,7 @@ interface Props {
     classOptions: Lookup[];
     sessions: Lookup[];
     can: {
+        isOwn: boolean;
         edit: boolean;
         viewSalary: boolean;
         manageSalary: boolean;
@@ -741,6 +742,9 @@ const activeJobsCount = computed(() => props.jobs.length);
                     <span :class="props.staff.is_active ? 'bg-success/10 text-success' : 'bg-muted text-muted-foreground'" class="inline-flex rounded-full px-3 py-1 text-sm font-medium">
                         {{ props.staff.is_active ? 'Active' : 'Inactive' }}
                     </span>
+                    <Button v-if="props.can.isOwn" variant="outline" size="sm" @click="router.visit(route('staff.me.dashboard'))">
+                        My Dashboard
+                    </Button>
                     <Button v-if="props.can.edit" variant="outline" size="sm" @click="router.visit(route('staff.people.permissions', props.staff.id))">
                         Permissions
                     </Button>

@@ -5,6 +5,7 @@ use App\Http\Controllers\Staff\StaffDocumentTypeController;
 use App\Http\Controllers\Staff\StaffLeaveController;
 use App\Http\Controllers\Staff\StaffProfileController;
 use App\Http\Controllers\Staff\StaffSalaryController;
+use App\Http\Controllers\Staff\StaffSelfServiceController;
 use App\Http\Controllers\Staff\TeacherAssignmentController;
 use App\Http\Controllers\StaffController;
 use Illuminate\Support\Facades\Route;
@@ -95,6 +96,10 @@ Route::prefix('staff')->name('staff.')->middleware([...$middleware, 'campus.exis
         ->name('payroll.items.pay')
         ->middleware('permission:staff.payroll.approve');
 
+    Route::get('/payroll/items/{payrollRunItem}/slip', [StaffSelfServiceController::class, 'salarySlip'])
+        ->name('payroll.items.slip')
+        ->middleware('permission:staff.salary.manage|staff.view.own');
+
     // -------------------------------------------------------------- advances
     Route::get('/members/{staffProfile}/advances', [StaffController::class, 'advancesForStaff'])
         ->name('advances.index')
@@ -117,6 +122,8 @@ Route::prefix('staff')->name('staff.')->middleware([...$middleware, 'campus.exis
         // record without already knowing its numeric id. An admin does not
         // need this — they already have full navigation to any profile.
         Route::get('/me', 'me')->name('me')
+            ->middleware('permission:staff.view.own');
+        Route::get('/me/dashboard', [StaffSelfServiceController::class, 'dashboard'])->name('me.dashboard')
             ->middleware('permission:staff.view.own');
 
         Route::get('/people', 'index')->name('people.index')

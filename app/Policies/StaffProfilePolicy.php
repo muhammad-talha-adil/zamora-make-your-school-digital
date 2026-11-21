@@ -89,6 +89,14 @@ class StaffProfilePolicy
     }
 
     /**
+     * Printing one month's salary slip: same width as reading the salary.
+     */
+    public function viewPayslip(User $user, StaffProfile $staff): bool
+    {
+        return $this->viewSalary($user, $staff);
+    }
+
+    /**
      * Setting what somebody is paid.
      */
     public function manageSalary(User $user, StaffProfile $staff): bool

@@ -185,6 +185,7 @@ class StaffProfileController extends Controller
             'sessions' => Session::where('is_active', true)->get(['id', 'name']),
 
             'can' => [
+                'isOwn' => $staffProfile->user_id !== null && (int) $staffProfile->user_id === (int) $request->user()?->id,
                 'edit' => $request->user()?->can('update', $staffProfile) ?? false,
                 'viewSalary' => $request->user()?->can('viewSalary', $staffProfile) ?? false,
                 'manageSalary' => $request->user()?->can('manageSalary', $staffProfile) ?? false,
