@@ -131,6 +131,20 @@ class HandleInertiaRequests extends Middleware
             // EnsureCampusExists), so a brand-new school needs to be pointed
             // there before anything else.
             'hasCampuses' => fn () => Campus::query()->exists(),
+
+            // Attendance, fee vouchers, enrollments and more are all filed
+            // under an active academic session - without one, nothing can
+            // be recorded. Mirrors hasCampuses above. The active session also
+            // has to be usable from the campus currently being viewed, not
+            // just active somewhere.
+            'hasActiveSession' => function () use ($user) {
+                $campusId = $user?->campusId();
+
+                return Session::query()
+                    ->where('is_active', true)
+                    ->when($campusId, fn ($q) => $q->whereHas('campuses', fn ($q2) => $q2->where('campuses.id', $campusId)))
+                    ->exists();
+            },
         ];
     }
 

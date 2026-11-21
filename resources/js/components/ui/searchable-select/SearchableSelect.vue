@@ -60,6 +60,15 @@ const emit = defineEmits<{
 
 const modelValueAsArray = computed(() => (Array.isArray(props.modelValue) ? props.modelValue : []));
 
+// reka-ui's Combobox reserves the empty string as its own "nothing selected"
+// sentinel, so an item (e.g. an "All" filter option) can no longer have
+// value="" as of reka-ui 2.8+ - it silently fails to register. Item values
+// are remapped through this non-empty placeholder and back, everywhere an
+// option's real value is compared against or emitted.
+const EMPTY_ITEM_SENTINEL = '__empty__';
+const toItemValue = (value: string | number): string => (value === '' ? EMPTY_ITEM_SENTINEL : String(value));
+const fromItemValue = (value: string): string => (value === EMPTY_ITEM_SENTINEL ? '' : value);
+
 // Loosely compared: a model value can arrive as a string (e.g. straight off
 // a session value or a route param) while option values come from freshly
 // cast model ids — a strict `===` here silently fails to match and falls
@@ -92,25 +101,27 @@ const triggerLabel = computed(() => {
 
 // Single mode: ComboboxRoot's own v-model, bridged to the string|number modelValue.
 const modelValueAsString = computed({
-    get: () => (props.modelValue === null || props.modelValue === undefined ? undefined : String(props.modelValue)),
+    get: () => (props.modelValue === null || props.modelValue === undefined ? undefined : toItemValue(props.modelValue as string | number)),
     set: (value: string | undefined) => {
         if (value === undefined) {
             emit('update:modelValue', null);
             return;
         }
 
-        const matched = props.options.find((option) => String(option.value) === value);
-        emit('update:modelValue', matched ? matched.value : value);
+        const realValue = fromItemValue(value);
+        const matched = props.options.find((option) => String(option.value) === realValue);
+        emit('update:modelValue', matched ? matched.value : realValue);
     },
 });
 
 // Multiple mode: ComboboxRoot's v-model as an array of strings, bridged to the array of real values.
 const modelValueAsStringArray = computed({
-    get: () => modelValueAsArray.value.map((v) => String(v)),
+    get: () => modelValueAsArray.value.map((v) => toItemValue(v)),
     set: (values: string[]) => {
         const matched = values.map((value) => {
-            const option = props.options.find((o) => String(o.value) === value);
-            return option ? option.value : value;
+            const realValue = fromItemValue(value);
+            const option = props.options.find((o) => String(o.value) === realValue);
+            return option ? option.value : realValue;
         });
         emit('update:modelValue', matched);
     },
@@ -185,7 +196,7 @@ const isSelected = (optionValue: string | number): boolean =>
                     <ComboboxItem
                         v-for="option in props.options"
                         :key="option.value"
-                        :value="String(option.value)"
+                        :value="toItemValue(option.value)"
                         :text-value="option.label"
                         :disabled="option.disabled"
                         class="relative flex cursor-pointer select-none items-center justify-between rounded-sm px-3 py-2 text-sm text-foreground outline-none data-[highlighted]:bg-accent data-[disabled]:pointer-events-none data-[disabled]:opacity-50"
@@ -257,7 +268,7 @@ const isSelected = (optionValue: string | number): boolean =>
                     <ComboboxItem
                         v-for="option in props.options"
                         :key="option.value"
-                        :value="String(option.value)"
+                        :value="toItemValue(option.value)"
                         :text-value="option.label"
                         :disabled="option.disabled"
                         class="relative flex cursor-pointer select-none items-center justify-between rounded-sm px-3 py-2 text-sm text-foreground outline-none data-[highlighted]:bg-accent data-[disabled]:pointer-events-none data-[disabled]:opacity-50"

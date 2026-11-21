@@ -52,7 +52,7 @@ const passwordInput = useTemplateRef('passwordInput');
                             preserveScroll: true,
                         }"
                         class="space-y-6"
-                        v-slot="{ errors, processing, reset, clearErrors }"
+                        v-slot="{ errors, processing }"
                     >
                         <DialogHeader class="space-y-3">
                             <DialogTitle

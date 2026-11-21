@@ -181,7 +181,7 @@
 </template>
 
 <script setup lang="ts">
-import { Head, router, Link } from '@inertiajs/vue3';
+import { Head, router } from '@inertiajs/vue3';
 import TablePagination from '@/components/tables/TablePagination.vue';
 import { computed, reactive, watch } from 'vue';
 import SearchableSelect from '@/components/ui/searchable-select/SearchableSelect.vue';

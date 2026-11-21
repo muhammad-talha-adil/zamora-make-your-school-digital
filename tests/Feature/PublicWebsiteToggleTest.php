@@ -29,8 +29,13 @@ test('an authenticated user is unaffected by the public website toggle', functio
     $user = User::factory()->create();
 
     $this->actingAs($user)->get(route('home'))->assertOk();
-    $this->actingAs($user)->get(route('about'))->assertOk();
-    $this->actingAs($user)->get(route('contact'))->assertOk();
+
+    // /about and /contact are single-page anchors on the home route by
+    // design (PageController::about()/contact() redirect to
+    // home#about/home#contact) - never blocked by the toggle, but never
+    // their own 200 either, authenticated or not.
+    $this->actingAs($user)->get(route('about'))->assertRedirect(route('home').'#about');
+    $this->actingAs($user)->get(route('contact'))->assertRedirect(route('home').'#contact');
 });
 
 test('the public website defaults to active when no school row exists', function () {

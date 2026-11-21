@@ -324,7 +324,7 @@ class User extends Authenticatable
         return $this->hasRole('teacher')
             && ! $this->isSuperAdmin()
             && ! $this->hasRole('campus_admin')
-            && ! $this->hasPermissionTo('attendance.view.campus-wide');
+            && ! $this->hasPermission('attendance.view.campus-wide');
     }
 
     /**

@@ -247,12 +247,14 @@ const inactivateCampus = (campus: any) => {
                                         :campus="campus"
                                         :campus-types="campusTypesLoaded"
                                         trigger="Edit"
-                                        class="contents"
                                         @saved="handleSaved"
                                     />
                                     <RowAction kind="delete" @click="deleteCampus(campus)" />
                                 </RowActions>
                             </td>
+                        </tr>
+                        <tr v-if="campusesData.length === 0">
+                            <td colspan="6" class="px-6 py-8 text-center text-sm text-muted-foreground">No campuses found.</td>
                         </tr>
                     </tbody>
                 </table>

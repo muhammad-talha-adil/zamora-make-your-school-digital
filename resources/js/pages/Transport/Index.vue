@@ -162,7 +162,6 @@ const breadcrumbItems: BreadcrumbItem[] = [
     { title: 'Transport', href: '/transport' },
 ];
 
-const selectClass = 'w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground';
 const textareaClass = 'min-h-24 w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground';
 
 const activeTab = ref<'vehicles' | 'routes' | 'stops' | 'assignments' | 'expenses' | 'dues'>('vehicles');
@@ -395,7 +394,6 @@ const vehicleOptions = computed(() => props.vehicles.map((vehicle) => ({ value: 
 const routeOptions = computed(() => props.routes.map((routeRow) => ({ value: String(routeRow.id), label: routeRow.name })));
 const monthOptions = computed(() => props.months.map((month) => ({ value: String(month.id), label: month.name })));
 const studentOptions = computed(() => filteredStudents.value.map((student) => ({ value: String(student.id), label: student.display })));
-const availableStopOptions = computed(() => availableStops.value.map((stop) => ({ value: String(stop.id), label: stop.name })));
 const availableRouteStopOptions = computed(() => availableRouteStops.value.map((stop) => ({ value: String(stop.id), label: stop.name })));
 
 const reloadPage = (only: string[] = ['vehicles', 'routes', 'stops', 'assignments', 'expenses', 'summary']) => {

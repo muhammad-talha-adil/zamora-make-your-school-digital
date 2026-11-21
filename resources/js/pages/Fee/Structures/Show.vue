@@ -50,14 +50,6 @@ const getStatusColor = (status: string) => {
     return colors[status] || colors.inactive;
 };
 
-const formatDate = (date: string) => {
-    return new Date(date).toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-    });
-};
-
 const formatCurrency = (amount: number) => {
     return new Intl.NumberFormat('en-US', {
         style: 'currency',
@@ -107,7 +99,7 @@ const goBack = () => {
 
             <!-- Details Card -->
             <div class="bg-card rounded-lg border border-border p-4 md:p-6">
-                <div class="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
+                <div class="grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-3">
                     <!-- Title -->
                     <div class="space-y-1">
                         <p class="text-sm font-medium text-muted-foreground">Title</p>
@@ -146,23 +138,6 @@ const goBack = () => {
                         <p class="text-base text-foreground">{{ structure.section?.name || 'All Sections' }}</p>
                     </div>
 
-                    <!-- Effective From -->
-                    <div class="space-y-1">
-                        <p class="text-sm font-medium text-muted-foreground">Effective From</p>
-                        <p class="text-base text-foreground">{{ formatDate(structure.effective_from) }}</p>
-                    </div>
-
-                    <!-- Effective To -->
-                    <div class="space-y-1">
-                        <p class="text-sm font-medium text-muted-foreground">Effective To</p>
-                        <p class="text-base text-foreground">{{ structure.effective_to ? formatDate(structure.effective_to) : 'Indefinite' }}</p>
-                    </div>
-
-                    <!-- Created By -->
-                    <div v-if="structure.created_by" class="space-y-1">
-                        <p class="text-sm font-medium text-muted-foreground">Created By</p>
-                        <p class="text-base text-foreground">{{ structure.created_by.name }}</p>
-                    </div>
                 </div>
 
                 <!-- Notes -->
@@ -180,14 +155,11 @@ const goBack = () => {
                 </div>
 
                 <div v-if="structure.items && structure.items.length > 0" class="overflow-x-auto">
-                    <table class="min-w-full divide-y divide-border">
+                    <table class="w-full divide-y divide-border">
                         <thead class="bg-muted">
                             <tr>
                                 <th scope="col" class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">
                                     Fee Head
-                                </th>
-                                <th scope="col" class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">
-                                    Type
                                 </th>
                                 <th scope="col" class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">
                                     Frequency
@@ -201,9 +173,6 @@ const goBack = () => {
                             <tr v-for="item in structure.items" :key="item.id" class="transition-colors hover:bg-accent">
                                 <td class="px-4 py-3 whitespace-nowrap">
                                     <div class="text-sm font-medium text-foreground">{{ item.fee_head?.name || 'N/A' }}</div>
-                                </td>
-                                <td class="px-4 py-3 whitespace-nowrap">
-                                    <div class="text-sm text-muted-foreground">{{ item.type || 'N/A' }}</div>
                                 </td>
                                 <td class="px-4 py-3 whitespace-nowrap">
                                     <div class="text-sm text-muted-foreground">{{ item.frequency || 'N/A' }}</div>

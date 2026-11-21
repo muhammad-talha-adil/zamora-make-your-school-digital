@@ -176,10 +176,6 @@ const submitForm = () => {
     });
 };
 
-const cancel = () => {
-    router.visit(route('fee.vouchers.show', props.voucher.id));
-};
-
 const formatCurrency = (amount: number): string => {
     return new Intl.NumberFormat('en-PK', {
         style: 'currency',
@@ -363,16 +359,6 @@ const removeItem = async (item: FeeVoucherItem) => {
                         Voucher #{{ props.voucher.voucher_no }}
                     </p>
                 </div>
-                <div class="flex gap-2">
-                    <Button variant="outline" @click="cancel">
-                        <Icon icon="x" class="mr-2 h-4 w-4" />
-                        Cancel
-                    </Button>
-                    <Button @click="submitForm" :disabled="isSubmitting">
-                        <Icon icon="check" class="mr-2 h-4 w-4" />
-                        {{ isSubmitting ? 'Saving...' : 'Save Changes' }}
-                    </Button>
-                </div>
             </div>
 
             <!-- Voucher Info -->
@@ -513,17 +499,6 @@ const removeItem = async (item: FeeVoucherItem) => {
                             placeholder="Additional notes..."
                             :disabled="isVoucherPaid"
                         ></textarea>
-                    </div>
-
-                    <!-- Submit -->
-                    <div class="flex flex-wrap justify-end gap-3 pt-4 border-t border-border">
-                        <Button type="button" variant="outline" @click="cancel">
-                            Cancel
-                        </Button>
-                        <Button type="submit" :disabled="isSubmitting || isVoucherPaid">
-                            <Icon icon="check" class="mr-2 h-4 w-4" />
-                            {{ isSubmitting ? 'Saving...' : 'Save Changes' }}
-                        </Button>
                     </div>
                 </form>
             </div>

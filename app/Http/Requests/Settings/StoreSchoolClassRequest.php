@@ -4,7 +4,6 @@ namespace App\Http\Requests\Settings;
 
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
-use Illuminate\Validation\Rule;
 
 class StoreSchoolClassRequest extends FormRequest
 {
@@ -24,17 +23,15 @@ class StoreSchoolClassRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'name' => [
-                'required',
-                'string',
-                'max:255',
-                // Unique per campus, not school-wide — "Class 9" exists once
-                // per campus now, so two campuses can each have their own.
-                Rule::unique('school_classes', 'name')
-                    ->where('campus_id', $this->user()->campusId())
-                    ->whereNull('deleted_at'),
-            ],
+            'name' => ['required', 'string', 'max:255'],
             'description' => 'nullable|string',
+            // Owner/developer only - a campus-restricted creator never
+            // submits this; the controller creates one class row per campus
+            // chosen here (or just their own campus otherwise). Per-campus
+            // name uniqueness is checked in the controller, since it must be
+            // checked once per selected campus, not once for the request.
+            'campus_ids' => 'nullable|array',
+            'campus_ids.*' => 'integer|exists:campuses,id',
         ];
     }
 }

@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import TablePagination from '@/components/tables/TablePagination.vue';
+import BulkSchoolClassForm from '@/components/forms/BulkSchoolClassForm.vue';
 import SchoolClassForm from '@/components/forms/SchoolClassForm.vue';
 import RowAction from '@/components/tables/RowAction.vue';
 import RowActions from '@/components/tables/RowActions.vue';
@@ -13,9 +14,14 @@ import { route } from 'ziggy-js';
 // Props
 interface Props {
     classes: any; // Paginated response
+    isSuperAdmin?: boolean;
+    campuses?: Array<{ id: number; name: string }>;
 }
 
-const props = defineProps<Props>();
+const props = withDefaults(defineProps<Props>(), {
+    isSuperAdmin: false,
+    campuses: () => [],
+});
 
 const emit = defineEmits<{ saved: [] }>();
 
@@ -135,7 +141,8 @@ const inactivateClass = (schoolClass: any) => {
                 <SearchableSelect v-model="statusFilter" :options="statusSelectOptions" placeholder="All" class="w-32" />
             </div>
             <div class="flex gap-2">
-                <SchoolClassForm @saved="handleSaved" />
+                <BulkSchoolClassForm :is-super-admin="isSuperAdmin" :campuses="campuses" @saved="handleSaved" />
+                <SchoolClassForm :is-super-admin="isSuperAdmin" :campuses="campuses" @saved="handleSaved" />
             </div>
         </div>
         <div class="overflow-hidden rounded-lg border border-border bg-card shadow-sm">
@@ -154,12 +161,6 @@ const inactivateClass = (schoolClass: any) => {
                                 class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase"
                             >
                                 Class Name
-                            </th>
-                            <th
-                                scope="col"
-                                class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase"
-                            >
-                                Code
                             </th>
                             <th
                                 scope="col"
@@ -197,11 +198,6 @@ const inactivateClass = (schoolClass: any) => {
                                     {{ schoolClass.name }}
                                 </div>
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap">
-                                <div class="text-sm text-muted-foreground">
-                                    {{ schoolClass.code || '—' }}
-                                </div>
-                            </td>
                             <td class="px-6 py-4">
                                 <div class="max-w-xs truncate text-sm text-muted-foreground">
                                     {{ schoolClass.description || '—' }}
@@ -217,6 +213,8 @@ const inactivateClass = (schoolClass: any) => {
                                 <RowActions>
                                     <SchoolClassForm
                                         :school-class="schoolClass"
+                                        :is-super-admin="isSuperAdmin"
+                                        :campuses="campuses"
                                         trigger="Edit"
                                         class="contents"
                                         @saved="handleSaved"
@@ -224,6 +222,9 @@ const inactivateClass = (schoolClass: any) => {
                                     <RowAction kind="delete" @click="deleteClass(schoolClass)" />
                                 </RowActions>
                             </td>
+                        </tr>
+                        <tr v-if="classesData.length === 0">
+                            <td colspan="6" class="px-6 py-8 text-center text-sm text-muted-foreground">No classes found.</td>
                         </tr>
                     </tbody>
                 </table>

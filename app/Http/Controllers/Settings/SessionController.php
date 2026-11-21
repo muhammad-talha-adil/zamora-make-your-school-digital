@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Settings;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Settings\StoreSessionRequest;
 use App\Http\Requests\Settings\UpdateSessionRequest;
+use App\Models\Campus;
 use App\Models\Session;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
@@ -21,7 +22,12 @@ class SessionController extends Controller
     {
         $this->authorize('academics.session.manage');
 
-        $query = Session::query();
+        $query = Session::query()->with('campuses:id,name');
+
+        $campusId = $request->user()?->campusId();
+        if ($campusId) {
+            $query->whereHas('campuses', fn ($q) => $q->where('campuses.id', $campusId));
+        }
 
         $status = $request->get('status');
         if ($status === 'active') {
@@ -43,6 +49,10 @@ class SessionController extends Controller
 
         return Inertia::render('settings/Sessions/Index', [
             'tableSessions' => $sessions,
+            'isSuperAdmin' => $request->user()?->isSuperAdmin() ?? false,
+            'campuses' => $request->user()?->isSuperAdmin()
+                ? Campus::query()->orderBy('name')->get(['id', 'name'])
+                : [],
         ]);
     }
 
@@ -64,6 +74,8 @@ class SessionController extends Controller
         $this->authorize('academics.session.manage');
 
         $validated = $request->validated();
+        $campusIds = $this->resolveCampusIds($request, $validated);
+        unset($validated['campus_ids']);
 
         // Only one session may be active at a time: the same rule `activate()`
         // enforces, applied here so this form cannot create a second one.
@@ -71,7 +83,8 @@ class SessionController extends Controller
             Session::query()->update(['is_active' => false]);
         }
 
-        Session::create($validated);
+        $session = Session::create($validated);
+        $session->campuses()->sync($campusIds);
 
         if ($request->expectsJson()) {
             return response()->json([
@@ -84,14 +97,43 @@ class SessionController extends Controller
     }
 
     /**
+     * The campuses a session should be attached to on save.
+     *
+     * Only an owner/developer may choose - a campus-restricted creator never
+     * sees that control, so their session is always scoped to their own
+     * campus regardless of what (if anything) was submitted.
+     *
+     * @param  array<string, mixed>  $validated
+     * @return array<int, int>
+     */
+    private function resolveCampusIds(Request $request, array $validated): array
+    {
+        $user = $request->user();
+
+        if (! $user?->isSuperAdmin()) {
+            $campusId = $user?->campusId();
+
+            return $campusId ? [$campusId] : [];
+        }
+
+        return $validated['campus_ids'] ?? [];
+    }
+
+    /**
      * Show the form for editing the specified resource.
      */
     public function edit(Session $session): Response
     {
         $this->authorize('academics.session.manage');
 
+        $session->load('campuses:id');
+
         return Inertia::render('settings/Sessions/Edit', [
             'session' => $session,
+            'isSuperAdmin' => request()->user()?->isSuperAdmin() ?? false,
+            'campuses' => request()->user()?->isSuperAdmin()
+                ? Campus::query()->orderBy('name')->get(['id', 'name'])
+                : [],
         ]);
     }
 
@@ -103,6 +145,8 @@ class SessionController extends Controller
         $this->authorize('academics.session.manage');
 
         $validated = $request->validated();
+        $campusIds = $this->resolveCampusIds($request, $validated);
+        unset($validated['campus_ids']);
 
         // Same single-active-session rule as store(): edit-in-place must not
         // be able to leave two sessions active at once.
@@ -111,6 +155,7 @@ class SessionController extends Controller
         }
 
         $session->update($validated);
+        $session->campuses()->sync($campusIds);
 
         if ($request->expectsJson()) {
             return response()->json([

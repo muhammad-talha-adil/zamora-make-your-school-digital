@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Session extends Model
@@ -47,4 +48,13 @@ class Session extends Model
         'updated_at' => 'datetime',
         'deleted_at' => 'datetime',
     ];
+
+    /**
+     * The campuses this session is usable from. No rows means it was never
+     * scoped (pre-feature data only) and is treated as every campus.
+     */
+    public function campuses(): BelongsToMany
+    {
+        return $this->belongsToMany(Campus::class, 'session_campuses');
+    }
 }

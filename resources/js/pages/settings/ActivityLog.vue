@@ -340,8 +340,9 @@ const changeLines = (changes: Record<string, unknown> | null): Array<{ field: st
                             :variant="link.active ? 'default' : 'ghost'"
                             size="sm"
                             @click="link.url && router.get(link.url, {}, { preserveState: true, preserveScroll: true })"
-                            v-html="link.label"
-                        />
+                        >
+                            <span v-html="link.label" />
+                        </Button>
                     </div>
                 </div>
             </div>

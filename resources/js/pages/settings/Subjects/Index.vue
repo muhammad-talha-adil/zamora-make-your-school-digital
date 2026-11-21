@@ -8,6 +8,8 @@ import { type BreadcrumbItem } from '@/types';
 
 interface Props {
     tableSubjects: any;
+    isSuperAdmin?: boolean;
+    campuses?: Array<{ id: number; name: string }>;
 }
 
 defineProps<Props>();
@@ -29,7 +31,7 @@ const breadcrumbItems: BreadcrumbItem[] = [
                     <p class="mt-1 text-sm text-muted-foreground">Manage subjects.</p>
                 </div>
 
-                <SubjectsTable :subjects="tableSubjects" />
+                <SubjectsTable :subjects="tableSubjects" :is-super-admin="isSuperAdmin" :campuses="campuses" />
             </div>
         </SettingsLayout>
     </AppLayout>
