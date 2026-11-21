@@ -25,13 +25,13 @@ beforeEach(function () {
  *
  * @return Collection<int, FeeStructureItem>
  */
-function itemsAfterCreate(AdmissionWorld $world, array $items, string $title = 'Frequency Test')
+function itemsAfterCreate(AdmissionWorld $world, array $items, string $title = 'Frequency Test', ?int $classId = null)
 {
     test()->post(route('fee.structures.store'), [
         'title' => $title,
         'session_id' => $world->session->id,
         'campus_id' => $world->campus->id,
-        'class_id' => $world->class->id,
+        'class_id' => $classId ?? $world->class->id,
         'status' => 'active',
         'items' => $items,
     ])->assertSessionHasNoErrors();
@@ -65,7 +65,7 @@ it('bills the same head at different frequencies in two structures', function ()
 
     $classNine = itemsAfterCreate($this->world, [
         ['fee_head_id' => $this->world->optionalHead->id, 'amount' => 3000, 'frequency' => 'yearly'],
-    ], 'Class 9 Sports');
+    ], 'Class 9 Sports', $this->world->classWithoutSections->id);
 
     expect($classFive[$this->world->optionalHead->id]->frequency)->toBe(FeeFrequency::MONTHLY)
         ->and($classNine[$this->world->optionalHead->id]->frequency)->toBe(FeeFrequency::YEARLY);

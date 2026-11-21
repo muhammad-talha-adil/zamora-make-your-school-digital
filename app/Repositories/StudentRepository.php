@@ -74,10 +74,13 @@ class StudentRepository
         // Get current page from request if not provided
         $page = $page ?? request()->get('page', 1);
         $viewer = auth()->user();
-        $cacheKey = self::CACHE_KEY_STUDENTS.':'
-            .md5(json_encode($filters).$perPage.$page.$this->reachKey($viewer));
 
-        return Cache::remember($cacheKey, self::CACHE_TTL, function () use ($filters, $perPage, $viewer) {
+        /*
+         * Not cached: nothing invalidated this list when a student was
+         * admitted, so the first (empty) page was served for an hour and new
+         * students only showed up through a search, which is a different key.
+         */
+        return (function () use ($filters, $perPage, $viewer) {
             $query = Student::with(self::WITH_RELATIONS)->visibleTo($viewer);
 
             // Filter by enrollment's campus
@@ -139,7 +142,7 @@ class StudentRepository
             return $query->orderBy('id', 'desc')
                 ->paginate($perPage)
                 ->withQueryString();
-        });
+        })();
     }
 
     /**
@@ -808,6 +811,23 @@ class StudentRepository
             ->first();
 
         return $guardian;
+    }
+
+    /**
+     * A guardian whose phone ends in the same last six digits, offered as a
+     * "did you mean" - never linked automatically.
+     */
+    public function findSimilarGuardianByPhone(string $phone): ?Guardian
+    {
+        $lastSix = substr(preg_replace('/\D/', '', $phone), -6);
+
+        if (strlen($lastSix) < 6) {
+            return null;
+        }
+
+        return Guardian::where('phone', 'LIKE', '%'.$lastSix)
+            ->with(['user:id,name,email', 'students'])
+            ->first();
     }
 
     /**

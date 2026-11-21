@@ -19,7 +19,7 @@ import SearchableSelect from '@/components/ui/searchable-select/SearchableSelect
 interface Props {
     active_session_id?: number;
     sessions: Array<{ id: number; name: string; start_date: string; end_date: string }>;
-    classes: Array<{ id: number; name: string; campus_id: number }>;
+    classes: Array<{ id: number; name: string; campus_id: number; campus?: { id: number; name: string } | null }>;
     sections: Array<{ id: number; name: string; class_id: number }>;
     months: Array<{ id: number; name: string; month_number: number }>;
     feeHeads: Array<{ id: number; name: string; default_frequency: string }>;
@@ -186,7 +186,12 @@ const saveFeeHead = async () => {
 // refetches the class list on save so the new one shows up immediately.
 const onClassCreated = async () => {
     const response = await axios.get('/settings/school-classes/all', { params: { per_page: 1000 } });
-    classesList.value = (response.data.data ?? []).map((c: { id: number; name: string }) => ({ id: c.id, name: c.name }));
+    classesList.value = (response.data.data ?? []).map((c: { id: number; name: string; campus_id: number; campus?: { id: number; name: string } | null }) => ({
+        id: c.id,
+        name: c.name,
+        campus_id: c.campus_id,
+        campus: c.campus ?? props.campuses?.find((campus) => campus.id === c.campus_id) ?? null,
+    }));
 };
 
 const sessionOptions = computed(() => props.sessions.map((session) => ({ value: String(session.id), label: session.name })));
@@ -539,7 +544,7 @@ const cancel = () => {
                                         :checked="selectedClassIds.includes(cls.id)"
                                         @change="toggleClass(cls.id, ($event.target as HTMLInputElement).checked)"
                                     />
-                                    <span class="text-sm font-medium">{{ cls.name }}</span>
+                                    <span class="text-sm font-medium">{{ cls.name }}<template v-if="isSuperAdmin && cls.campus"> · {{ cls.campus.name }}</template></span>
                                 </label>
                                 <div v-if="selectedClassIds.includes(cls.id)" class="flex flex-wrap gap-2 px-4 pb-3 pl-11">
                                     <span v-if="sectionsForClass(cls.id).length === 0" class="text-xs text-muted-foreground">

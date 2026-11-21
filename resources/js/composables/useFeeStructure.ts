@@ -75,6 +75,8 @@ export function useFeeStructure() {
     const manualSelectedFeeHeads = ref<number[]>([]);
     const manualFeeAmounts = ref<Record<number, number>>({});
     const manualReason = ref('');
+    const structureCandidates = ref<Array<{ id: number; title: string }>>([]);
+    const chosenStructureId = ref<number | ''>('');
 
     // Form refs (set from parent)
     const formClassId = ref<number | string>('');
@@ -112,6 +114,7 @@ export function useFeeStructure() {
         watch(
             [formClassId, formSessionId, formCampusId, formSectionId],
             () => {
+                chosenStructureId.value = '';
                 if (formClassId.value && formSessionId.value && formCampusId.value) {
                     fetchFeeStructure();
                 } else {
@@ -206,10 +209,15 @@ export function useFeeStructure() {
                     session_id: formSessionId.value,
                     campus_id: formCampusId.value,
                     section_id: formSectionId.value || null,
+                    fee_structure_id: chosenStructureId.value || null,
                 },
             });
 
-            if (response.data.success) {
+            structureCandidates.value = response.data.candidates ?? [];
+
+            if (response.data.success && response.data.needs_choice) {
+                feeStructure.value = null;
+            } else if (response.data.success) {
                 feeStructure.value = response.data.data;
                 resetSelections();
                 prefillFromStructure();
@@ -419,6 +427,8 @@ export function useFeeStructure() {
         discountSelectedFeeHeads,
         manualSelectedFeeHeads,
         manualFeeAmounts,
+        structureCandidates,
+        chosenStructureId,
         manualReason,
         // Form refs for external control
         formClassId,

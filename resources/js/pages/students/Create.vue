@@ -59,6 +59,22 @@
                 </div>
             </div>
 
+            <!-- Similar-phone guardian: a soft warning, never linked automatically -->
+            <div
+                v-if="similarGuardian && !siblingMatch"
+                class="rounded-lg border border-warning/40 bg-warning/10 p-4"
+            >
+                <div class="flex flex-wrap items-center gap-3">
+                    <Icon icon="users" class="h-5 w-5 text-warning" />
+                    <p class="flex-1 text-sm text-warning">
+                        A guardian with a similar phone exists: {{ similarGuardian.name }}
+                        ({{ similarGuardian.phone }}). Use the same guardian?
+                    </p>
+                    <Button type="button" size="sm" @click="useSimilarGuardian">Use this guardian</Button>
+                    <Button type="button" variant="outline" size="sm" @click="similarGuardian = null">No, different</Button>
+                </div>
+            </div>
+
             <!-- Step 2: Admission done - file documents (optional) before leaving -->
             <div v-if="props.createdStudent" class="space-y-6">
                 <div class="rounded-lg border border-success/40 bg-success/10 p-4">
@@ -694,6 +710,7 @@
 
                 <!-- Form Actions -->
                 <div class="flex flex-col justify-end gap-3 pt-4 sm:flex-row">
+                    <p v-if="!processing && !isValid" class="text-sm text-muted-foreground sm:mr-auto sm:self-center">{{ missingRequiredHint }}</p>
                     <Button
                         type="button"
                         variant="outline"
@@ -764,7 +781,7 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import type { AppPageProps, BreadcrumbItem } from '@/types';
 import { Head, router, usePage } from '@inertiajs/vue3';
 import axios from 'axios';
-import { computed, onMounted, reactive, ref, watch } from 'vue';
+import { computed, nextTick, onMounted, reactive, ref, watch } from 'vue';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { route } from 'ziggy-js';
 import { useStudentForm } from '@/composables/useStudentForm';
@@ -951,6 +968,34 @@ const { isValid } = useFormValidity(form, [
     'father_phone',
 ]);
 
+const requiredFieldLabels: Record<string, string> = {
+    name: 'student name',
+    admission_no: 'admission number',
+    dob: 'date of birth',
+    gender_id: 'gender',
+    campus_id: 'campus',
+    session_id: 'session',
+    class_id: 'class',
+    father_name: 'guardian name',
+    father_phone: 'guardian phone',
+};
+
+/** Plain-words list of what still blocks the Submit button. */
+const missingRequiredHint = computed(() => {
+    const missing = Object.keys(requiredFieldLabels).filter((field) => {
+        const value = (form.value as Record<string, unknown>)[field];
+        return value === null || value === undefined || String(value).trim() === '';
+    });
+
+    return missing.length ? `Still needed: ${missing.map((field) => requiredFieldLabels[field]).join(', ')}.` : '';
+});
+
+const scrollToFirstError = async () => {
+    await nextTick();
+    const firstError = document.querySelector<HTMLElement>('.border-destructive, p.text-destructive');
+    firstError?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+};
+
 /**
  * The enquiry this admission is closing out, if it was opened from the
  * Admission Enquiries screen's "Admit" action rather than the plain "New
@@ -1108,6 +1153,7 @@ const lookupFatherGuardian = async () => {
             siblingMatch.value = null;
             linkedGuardianId.value = null;
         }
+        similarGuardian.value = null;
         return;
     }
     
@@ -1139,15 +1185,49 @@ const lookupFatherGuardian = async () => {
             form.value.father_cnic = guardian.cnic || '';
             form.value.father_occupation = guardian.occupation || '';
             form.value.father_address = guardian.address || '';
+            similarGuardian.value = null;
         } else {
             siblingMatch.value = null;
             linkedGuardianId.value = null;
+            similarGuardian.value = response.data.similar ?? null;
         }
     } catch (error) {
         console.error('Error looking up guardian:', error);
     } finally {
         guardianLookupLoading.value = false;
     }
+};
+
+const similarGuardian = ref<{
+    id: number;
+    name: string | null;
+    email: string | null;
+    phone: string | null;
+    cnic: string | null;
+    occupation: string | null;
+    address: string | null;
+} | null>(null);
+
+const useSimilarGuardian = () => {
+    const guardian = similarGuardian.value;
+    if (!guardian) {
+        return;
+    }
+    siblingMatch.value = {
+        id: guardian.id,
+        name: guardian.name ?? '',
+        email: guardian.email ?? '',
+        cnic: guardian.cnic ?? '',
+        occupation: guardian.occupation || '',
+        address: guardian.address || '',
+    };
+    linkedGuardianId.value = guardian.id;
+    form.value.father_name = guardian.name || '';
+    form.value.father_email = guardian.email || '';
+    form.value.father_cnic = guardian.cnic || '';
+    form.value.father_occupation = guardian.occupation || '';
+    form.value.father_address = guardian.address || '';
+    similarGuardian.value = null;
 };
 
 const submitForm = () => {
@@ -1391,6 +1471,7 @@ const submitForm = () => {
         },
         onError: (err) => {
             errors.value = err as Record<string, string>;
+            scrollToFirstError();
             // Show prominent error alert with all error messages
             const errorMessages = Object.values(err as Record<string, string>);
             if (errorMessages.length > 0) {

@@ -665,6 +665,7 @@ class StoreStudentRequest extends FormRequest
         $this->merge([
             'admission_no' => trim($this->admission_no ?? ''),
             'name' => trim($this->name ?? ''),
+            'b_form' => trim($this->b_form ?? ''),
             'student_email' => trim($this->student_email ?? ''),
             'father_name' => trim($this->father_name ?? ''),
             'father_email' => trim($this->father_email ?? ''),
@@ -677,6 +678,19 @@ class StoreStudentRequest extends FormRequest
             'other_phone' => trim($this->other_phone ?? ''),
             'other_cnic' => trim($this->other_cnic ?? ''),
         ]);
+
+        /*
+         * An empty optional value is saved as NULL, never as ''. The unique
+         * columns (guardian CNIC, student B-Form, emails) treat '' as a real
+         * value, so a second blank would collide with the first.
+         */
+        $blankToNull = [];
+        foreach (['b_form', 'student_email', 'father_email', 'father_cnic', 'father_occupation', 'father_address', 'other_email', 'other_phone', 'other_cnic'] as $field) {
+            if ($this->has($field) && $this->input($field) === '') {
+                $blankToNull[$field] = null;
+            }
+        }
+        $this->merge($blankToNull);
 
         // Decode JSON strings sent from frontend via FormData
         // FormData sends JSON as string, so we need to decode it before validation

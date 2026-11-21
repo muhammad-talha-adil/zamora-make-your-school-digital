@@ -2,6 +2,7 @@
 
 namespace App\Services;
 
+use App\Models\Campus;
 use App\Models\School;
 use App\Models\Section;
 use App\Models\Student;
@@ -41,6 +42,16 @@ class StudentService
         // a super-admin unscoped by design (for the rare case code elsewhere
         // relies on seeing every campus), so it's applied here explicitly.
         $filters['campus_id'] = $request->user()?->campusId();
+
+        /*
+         * Someone who may see every campus (the owner) can narrow the list to
+         * one with `?campus_id=`. Everyone else stays on their own campus.
+         */
+        $requestedCampusId = $request->integer('campus_id');
+        if ($requestedCampusId > 0 && $request->user()?->isSuperAdmin()
+            && Campus::whereKey($requestedCampusId)->exists()) {
+            $filters['campus_id'] = $requestedCampusId;
+        }
 
         $students = $this->repository->getPaginatedWithFilters($filters, 10);
 
@@ -410,7 +421,20 @@ class StudentService
             ]);
         }
 
-        return response()->json(['found' => false]);
+        $similar = $this->repository->findSimilarGuardianByPhone($phone);
+
+        return response()->json([
+            'found' => false,
+            'similar' => $similar ? [
+                'id' => $similar->id,
+                'name' => $similar->user?->name,
+                'email' => $similar->user?->email,
+                'phone' => $similar->phone,
+                'cnic' => $similar->cnic,
+                'occupation' => $similar->occupation,
+                'address' => $similar->address,
+            ] : null,
+        ]);
     }
 
     /**

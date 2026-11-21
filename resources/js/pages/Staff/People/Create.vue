@@ -57,8 +57,8 @@
                             <Input id="employee_no" v-model="form.employee_no" placeholder="Made for you if empty" />
                         </div>
                         <div class="space-y-2">
-                            <Label for="designation_id">Designation</Label>
-                            <SearchableSelect id="designation_id" v-model="form.designation_id" :options="designationOptions" placeholder="Select designation" clearable />
+                            <Label for="designation_id">Position</Label>
+                            <SearchableSelect id="designation_id" v-model="form.designation_id" :options="designationOptions" placeholder="Select position" clearable />
                             <div class="flex gap-2">
                                 <Input v-model="newDesignation" placeholder="Not in the list? Type a new one" @keydown.enter.prevent="addDesignation" />
                                 <Button type="button" variant="outline" :disabled="!newDesignation.trim()" @click="addDesignation">Add</Button>
@@ -94,9 +94,13 @@
                             <Label for="email">Email</Label>
                             <Input id="email" v-model="form.email" type="email" placeholder="Leave empty to make one from the name" />
                         </div>
-                        <div class="space-y-2">
-                            <Label for="role">Role</Label>
-                            <SearchableSelect id="role" v-model="form.role" :options="roleOptions" placeholder="Same as designation" clearable />
+                        <div v-if="linkedRoleLabel" class="space-y-2">
+                            <Label>Access level</Label>
+                            <p class="text-sm text-muted-foreground">Set from the position: {{ linkedRoleLabel }}.</p>
+                        </div>
+                        <div v-else class="space-y-2">
+                            <Label for="role">Access level (what this person can see/do)</Label>
+                            <SearchableSelect id="role" v-model="form.role" :options="roleOptions" placeholder="Select access level" clearable />
                         </div>
                         <p class="text-xs text-muted-foreground md:col-span-2">A password is made for you and shown once after saving.</p>
                     </div>
@@ -208,7 +212,7 @@ import { useFormValidity } from '@/composables/useFormValidity';
 import { alert } from '@/utils';
 import { Head, router } from '@inertiajs/vue3';
 import axios from 'axios';
-import { computed, reactive, ref } from 'vue';
+import { computed, reactive, ref, watch } from 'vue';
 import { route } from 'ziggy-js';
 
 interface Lookup {
@@ -223,7 +227,7 @@ interface DocumentType {
 }
 
 interface Props {
-    designations: Lookup[];
+    designations: (Lookup & { role?: string | null })[];
     roles?: { name: string; label: string | null }[];
     campuses?: Lookup[];
     defaultCampusId?: number | null;
@@ -242,7 +246,7 @@ const breadcrumbItems: BreadcrumbItem[] = [
 const processing = ref(false);
 const createdLogin = ref<{ name: string; username: string; email: string; password: string } | null>(null);
 const created = ref<{ id: number } | null>(null);
-const designationList = ref<Lookup[]>([...props.designations]);
+const designationList = ref<(Lookup & { role?: string | null })[]>([...props.designations]);
 const newDesignation = ref('');
 const photoFile = ref<File | null>(null);
 
@@ -305,6 +309,22 @@ const campuses = computed(() => props.campuses ?? []);
 const campusOptions = computed(() => campuses.value.map((c) => ({ value: String(c.id), label: c.name })));
 const roleOptions = computed(() => (props.roles ?? []).map((r) => ({ value: r.name, label: r.label || r.name })));
 const documentTypes = computed(() => props.documentTypes ?? []);
+
+/** The access role the chosen position already carries, if Staff Settings links one. */
+const linkedRole = computed(() => designationList.value.find((d) => String(d.id) === form.designation_id)?.role ?? null);
+const linkedRoleLabel = computed(() => {
+    if (!linkedRole.value) {
+        return '';
+    }
+    const role = (props.roles ?? []).find((r) => r.name === linkedRole.value);
+    return role?.label || role?.name || linkedRole.value;
+});
+
+watch(linkedRole, (role) => {
+    if (role) {
+        form.role = '';
+    }
+});
 
 interface DocumentEntry {
     file: File | null;

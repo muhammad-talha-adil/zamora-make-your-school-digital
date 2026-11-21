@@ -18,18 +18,29 @@
             <p class="mt-2 text-muted-foreground">Loading fee structure...</p>
         </div>
 
+        <!-- More than one structure matches: ask, never pick silently -->
+        <div v-else-if="!feeStructure && structureCandidates.length > 1" class="rounded-lg border border-warning/40 bg-warning/10 p-4">
+            <p class="font-medium text-warning">More than one fee structure matches this class</p>
+            <p class="mt-1 text-sm text-warning">Choose the one to use for this student.</p>
+            <select
+                v-model="chosenStructureId"
+                class="mt-3 h-11 w-full rounded-md border border-border bg-card px-3 text-foreground"
+                @change="fetchFeeStructure()"
+            >
+                <option value="" disabled>Select a fee structure</option>
+                <option v-for="candidate in structureCandidates" :key="candidate.id" :value="candidate.id">{{ candidate.title }}</option>
+            </select>
+        </div>
+
         <!-- No Fee Structure Found -->
         <div v-else-if="!feeStructure" class="text-center py-8">
             <div class="rounded-lg border border-warning/40 bg-warning/10 p-4">
                 <Icon icon="alert-triangle" class="mx-auto mb-2 h-8 w-8 text-warning" />
-                <p class="font-medium text-warning">No Fee Structure Found</p>
-                <p class="mt-1 text-sm text-warning">
-                    No active fee structure exists for the selected session, class, and section combination.
-                    Please create the matching fee structure first.
-                </p>
+                <p class="font-medium text-warning">No fee structure for this class/section</p>
+                <p class="mt-1 text-sm text-warning">Add one to continue.</p>
                 <Button type="button" variant="outline" size="sm" class="mt-3" @click="handleCreateFeeStructure">
                     <Icon icon="plus" class="mr-1 h-4 w-4" />
-                    Create Fee Structure
+                    Add fee structure
                 </Button>
             </div>
         </div>
@@ -80,6 +91,15 @@
                     </button>
                 </nav>
             </div>
+
+            <select
+                v-if="structureCandidates.length > 1"
+                v-model="chosenStructureId"
+                class="mb-3 h-11 w-full rounded-md border border-border bg-card px-3 text-foreground"
+                @change="fetchFeeStructure()"
+            >
+                <option v-for="candidate in structureCandidates" :key="candidate.id" :value="candidate.id">{{ candidate.title }}</option>
+            </select>
 
             <!-- Fee Structure Summary -->
             <div class="mb-4 rounded-lg bg-primary/10 p-4">
@@ -240,8 +260,9 @@
                                         <div class="flex-1">
                                             <Input
                                                 :id="'custom_amount_' + item.fee_head_id"
-                                                :value="localManualAmounts[item.fee_head_id] ?? (manualFeeAmounts[item.fee_head_id] || '')"
-                                                @input="(e: any) => onManualAmountInput(item.fee_head_id, e.target.value)"
+                                                :model-value="localManualAmounts[item.fee_head_id] ?? String(manualFeeAmounts[item.fee_head_id] ?? '')"
+                                                @update:model-value="(value: string | number) => onManualAmountInput(item.fee_head_id, String(value))"
+                                                @blur="formatManualAmount(item.fee_head_id)"
                                                 type="number"
                                                 min="0"
                                                 step="0.01"
@@ -345,6 +366,8 @@ const {
     manualSelectedFeeHeads,
     manualFeeAmounts,
     manualReason,
+    structureCandidates,
+    chosenStructureId,
     selectedDiscountTypeObj,
     appliedDiscounts,
     manualFeeEntries,
@@ -370,6 +393,21 @@ const localManualAmounts = reactive<Record<number, string>>({});
 function onManualAmountInput(feeHeadId: number, rawValue: string) {
     localManualAmounts[feeHeadId] = rawValue;
     setManualFeeAmountDebounced(feeHeadId, parseFloat(rawValue) || 0);
+}
+
+watch(feeStructure, () => {
+    Object.keys(localManualAmounts).forEach((key) => delete localManualAmounts[Number(key)]);
+});
+
+/** Tidies the typed amount only once the user leaves the field. */
+function formatManualAmount(feeHeadId: number) {
+    const raw = localManualAmounts[feeHeadId];
+    if (raw === undefined) {
+        return;
+    }
+    const amount = parseFloat(raw) || 0;
+    localManualAmounts[feeHeadId] = String(Math.round(amount * 100) / 100);
+    setManualFeeAmountDebounced(feeHeadId, amount);
 }
 
 // Initialize on mount

@@ -9,6 +9,7 @@ use App\Services\Concerns\GeneratesPasswords;
 use App\Services\Student\AdmissionCredentials;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 
 class GuardianService
 {
@@ -90,7 +91,7 @@ class GuardianService
         // Create new guardian
         $guardian = Guardian::create([
             'phone' => $cleanPhone,
-            'cnic' => $data['cnic'] ?? null,
+            'cnic' => $this->normalisedCnic($data['cnic'] ?? null),
             'occupation' => $data['occupation'] ?? null,
             'address' => $data['address'] ?? null,
         ]);
@@ -102,6 +103,31 @@ class GuardianService
     }
 
     /**
+     * A blank CNIC is NULL, and a CNIC already on another guardian is
+     * refused with a readable message instead of the database's unique error.
+     */
+    protected function normalisedCnic(?string $cnic, ?int $exceptGuardianId = null): ?string
+    {
+        $cnic = trim((string) $cnic);
+
+        if ($cnic === '') {
+            return null;
+        }
+
+        $taken = Guardian::where('cnic', $cnic)
+            ->when($exceptGuardianId, fn ($query) => $query->where('id', '!=', $exceptGuardianId))
+            ->exists();
+
+        if ($taken) {
+            throw ValidationException::withMessages([
+                'father_cnic' => 'This CNIC is already registered to another guardian. Pick the existing guardian instead.',
+            ]);
+        }
+
+        return $cnic;
+    }
+
+    /**
      * Create a new guardian without phone number lookup.
      *
      * @param  array  $data  Guardian data
@@ -110,7 +136,7 @@ class GuardianService
     {
         $guardian = Guardian::create([
             'phone' => $data['phone'] ?? null,
-            'cnic' => $data['cnic'] ?? null,
+            'cnic' => $this->normalisedCnic($data['cnic'] ?? null),
             'occupation' => $data['occupation'] ?? null,
             'address' => $data['address'] ?? null,
         ]);
@@ -241,7 +267,9 @@ class GuardianService
     public function updateGuardian(Guardian $guardian, array $data): Guardian
     {
         $guardian->update([
-            'cnic' => $data['cnic'] ?? $guardian->cnic,
+            'cnic' => array_key_exists('cnic', $data) && trim((string) $data['cnic']) !== ''
+                ? $this->normalisedCnic($data['cnic'], $guardian->id)
+                : $guardian->cnic,
             'occupation' => $data['occupation'] ?? $guardian->occupation,
             'address' => $data['address'] ?? $guardian->address,
         ]);

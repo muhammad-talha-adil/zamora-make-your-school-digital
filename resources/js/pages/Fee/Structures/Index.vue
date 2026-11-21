@@ -30,6 +30,22 @@ interface FeeStructure {
     is_default?: boolean;
 }
 
+/**
+ * The class and section are already shown in their own column, so the
+ * "Class 1 - A" prefix the title is saved with is dropped from the display.
+ */
+function displayTitle(structure: FeeStructure): string {
+    const className = structure.class?.name;
+    if (!className || !structure.title.startsWith(className)) {
+        return structure.title;
+    }
+    let rest = structure.title.slice(className.length);
+    if (structure.section && rest.startsWith(` - ${structure.section.name} `)) {
+        rest = rest.slice(` - ${structure.section.name}`.length);
+    }
+    return rest.trim() || structure.title;
+}
+
 interface Props {
     structures: {
         data: FeeStructure[];
@@ -310,7 +326,7 @@ const deleteStructure = (structure: FeeStructure) => {
                     <div class="flex flex-wrap justify-between items-start gap-3">
                         <div>
                             <div class="text-xs text-muted-foreground">Sr# {{ ((pagination.from || 1) - 1) + index + 1 }}</div>
-                            <div class="font-medium text-foreground">{{ structure.title }}</div>
+                            <div class="font-medium text-foreground">{{ displayTitle(structure) }}</div>
                             <div class="text-xs text-muted-foreground">{{ structure.session?.name || '-' }}</div>
                         </div>
                         <StatusToggle :active="structure.status === 'active'" @toggle="toggleStatus(structure)" />
@@ -382,7 +398,7 @@ const deleteStructure = (structure: FeeStructure) => {
                                     <div class="text-sm font-medium text-foreground">{{ ((pagination.from || 1) - 1) + index + 1 }}</div>
                                 </td>
                                 <td class="px-4 py-3 whitespace-nowrap">
-                                    <div class="text-sm font-medium text-foreground">{{ structure.title }}</div>
+                                    <div class="text-sm font-medium text-foreground">{{ displayTitle(structure) }}</div>
                                 </td>
                                 <td class="px-4 py-3 whitespace-nowrap">
                                     <div class="text-sm text-muted-foreground">{{ structure.session?.name || '-' }}</div>
@@ -391,10 +407,11 @@ const deleteStructure = (structure: FeeStructure) => {
                                     <div class="text-sm text-muted-foreground">{{ structure.campus?.name || '-' }}</div>
                                 </td>
                                 <td class="px-4 py-3 whitespace-nowrap">
-                                    <div class="text-sm text-muted-foreground">
-                                        {{ structure.class?.name || 'All Classes' }}
-                                        <span v-if="structure.section"> / {{ structure.section.name }}</span>
-                                        <span v-else-if="structure.class"> / All Sections</span>
+                                    <div class="flex items-center gap-2 text-sm">
+                                        <span class="font-medium text-foreground">{{ structure.class?.name || 'All Classes' }}</span>
+                                        <span class="rounded-full border border-border bg-muted px-2 py-0.5 text-xs text-muted-foreground">
+                                            {{ structure.section ? 'Section ' + structure.section.name : 'All sections' }}
+                                        </span>
                                     </div>
                                 </td>
                                 <td class="px-4 py-3 whitespace-nowrap">

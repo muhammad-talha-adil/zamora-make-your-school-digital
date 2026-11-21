@@ -22,7 +22,9 @@ use Spatie\Permission\PermissionRegistrar;
  *   teacher       their own classes: attendance, marks, papers, timetable.
  *                 Individual teachers can be granted extra permissions
  *                 directly (e.g. `attendance.view.campus-wide`,
- *                 `exam.marks.verify`) without a second "head teacher" role.
+ *                 `exam.marks.verify`).
+ *   head_teacher  a teacher's abilities across the whole campus, plus
+ *                 verifying marks.
  *   accountant    everything financial
  *   student       their own record only
  *   guardian      the same view as the student they belong to
@@ -186,6 +188,17 @@ class RolesSeeder extends Seeder
                 'label' => 'Teacher',
                 'scope' => Role::SCOPE_CAMPUS,
                 'permissions' => $teacher,
+            ],
+
+            'head_teacher' => [
+                'label' => 'Head Teacher',
+                'scope' => Role::SCOPE_CAMPUS,
+                // A teacher's abilities across the whole campus rather than
+                // one class, plus signing off marks.
+                'permissions' => array_merge($teacher, [
+                    'attendance.view.campus-wide',
+                    'exam.marks.verify',
+                ]),
             ],
 
             'accountant' => [

@@ -175,6 +175,25 @@ class FeeStructureController extends Controller
             }
         }
 
+        if (($validated['status'] ?? null) === FeeStructureStatus::ACTIVE->value) {
+            foreach ($classGroups as $group) {
+                $sectionsToCreate = empty($group['section_ids']) ? [null] : array_values($group['section_ids']);
+
+                foreach ($sectionsToCreate as $sectionId) {
+                    $message = $this->overlappingActiveStructureMessage(
+                        (int) $validated['session_id'],
+                        (int) $classCampusIds[$group['class_id']],
+                        (int) $group['class_id'],
+                        $sectionId ? (int) $sectionId : null,
+                    );
+
+                    if ($message) {
+                        return response()->json(['message' => $message], 422);
+                    }
+                }
+            }
+        }
+
         // If no sections selected for a class, create ONE record with NULL
         // section (applies to all) - otherwise one record per section.
         $structures = [];
@@ -401,6 +420,22 @@ class FeeStructureController extends Controller
             }
         }
 
+        if (($validated['status'] ?? null) === FeeStructureStatus::ACTIVE->value) {
+            foreach ($sectionsToKeep as $sectionId) {
+                $message = $this->overlappingActiveStructureMessage(
+                    (int) $validated['session_id'],
+                    (int) $feeStructure->campus_id,
+                    (int) ($validated['class_id'] ?? $feeStructure->class_id),
+                    $sectionId ? (int) $sectionId : null,
+                    $relatedStructureIds,
+                );
+
+                if ($message) {
+                    return response()->json(['message' => $message], 422);
+                }
+            }
+        }
+
         // Determine which sections should have structures
         // Delete structures that are no longer selected
         foreach ($existingRelatedStructures as $relatedStructure) {
@@ -609,11 +644,53 @@ class FeeStructureController extends Controller
     }
 
     /**
+     * The refusal message when another active structure already covers this
+     * session, campus, class and section, or null when the way is clear.
+     * Two active structures for one class would leave admission guessing
+     * which one to bill.
+     *
+     * @param  array<int, int>  $exceptIds
+     */
+    private function overlappingActiveStructureMessage(int $sessionId, int $campusId, int $classId, ?int $sectionId, array $exceptIds = []): ?string
+    {
+        $exists = FeeStructure::active()
+            ->where('session_id', $sessionId)
+            ->where('campus_id', $campusId)
+            ->where('class_id', $classId)
+            ->when($sectionId, fn ($q) => $q->where('section_id', $sectionId), fn ($q) => $q->whereNull('section_id'))
+            ->when($exceptIds !== [], fn ($q) => $q->whereNotIn('id', $exceptIds))
+            ->exists();
+
+        if (! $exists) {
+            return null;
+        }
+
+        $className = SchoolClass::whereKey($classId)->value('name');
+        $label = $sectionId
+            ? $className.'-'.Section::whereKey($sectionId)->value('name')
+            : $className;
+
+        return "A fee structure already exists for {$label}. Edit it instead.";
+    }
+
+    /**
      * Activate the specified fee structure.
      */
     public function activate(Request $request, FeeStructure $feeStructure): JsonResponse
     {
         abort_unless($feeStructure->campus_id === $request->user()->campusId(), 404);
+
+        $message = $this->overlappingActiveStructureMessage(
+            (int) $feeStructure->session_id,
+            (int) $feeStructure->campus_id,
+            (int) $feeStructure->class_id,
+            $feeStructure->section_id ? (int) $feeStructure->section_id : null,
+            [$feeStructure->id],
+        );
+
+        if ($message) {
+            return response()->json(['success' => false, 'message' => $message], 422);
+        }
 
         $feeStructure->update([
             'status' => FeeStructureStatus::ACTIVE,
@@ -701,41 +778,59 @@ class FeeStructureController extends Controller
         // For student admission/edit forms, match the selected session scope.
         // Do not block lookup only because the current date falls outside effective range.
 
-        // Try section-specific first (class_id AND section_id both set)
+        // The first tier that has any active structure wins: section-specific,
+        // then class-wide, then campus-wide. When that tier holds more than
+        // one, none is picked silently - the form is told so it can ask.
+        $tiers = [];
         if ($classId && $sectionId) {
-            $structure = (clone $baseQuery)
-                ->where('class_id', $classId)
-                ->where('section_id', $sectionId)
-                ->first();
-
-            if ($structure) {
-                return $this->formatFeeStructureResponse($structure);
-            }
+            $tiers[] = (clone $baseQuery)->where('class_id', $classId)->where('section_id', $sectionId);
         }
-
-        // Try class-specific (class_id set, section_id is null)
         if ($classId) {
-            $structure = (clone $baseQuery)
-                ->where('class_id', $classId)
-                ->whereNull('section_id')
-                ->first();
+            $tiers[] = (clone $baseQuery)->where('class_id', $classId)->whereNull('section_id');
+        }
+        $tiers[] = (clone $baseQuery)->whereNull('class_id')->whereNull('section_id');
 
-            if ($structure) {
-                return $this->formatFeeStructureResponse($structure);
+        $matches = collect();
+        foreach ($tiers as $tier) {
+            $matches = $tier->get();
+            if ($matches->isNotEmpty()) {
+                break;
             }
         }
 
-        // Try campus-wide (both class_id and section_id are null)
-        $structure = (clone $baseQuery)
-            ->whereNull('class_id')
-            ->whereNull('section_id')
-            ->first();
+        if ($matches->isEmpty()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'No fee structure for this class/section. Add one.',
+            ]);
+        }
+
+        $chosenId = (int) $request->query('fee_structure_id');
+        $structure = $matches->count() === 1
+            ? $matches->first()
+            : $matches->firstWhere('id', $chosenId);
 
         if (! $structure) {
             return response()->json([
-                'success' => false,
-                'message' => 'No active fee structure found for this class',
+                'success' => true,
+                'needs_choice' => true,
+                'candidates' => $matches->map(fn (FeeStructure $match) => [
+                    'id' => $match->id,
+                    'title' => $match->title,
+                ])->values(),
             ]);
+        }
+
+        $response = $this->formatFeeStructureResponse($structure);
+
+        if ($matches->count() > 1) {
+            $payload = $response->getData(true);
+            $payload['candidates'] = $matches->map(fn (FeeStructure $match) => [
+                'id' => $match->id,
+                'title' => $match->title,
+            ])->values();
+
+            return response()->json($payload);
         }
 
         return $this->formatFeeStructureResponse($structure);
