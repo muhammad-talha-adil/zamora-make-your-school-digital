@@ -42,9 +42,20 @@
                     ? "color-mix(in srgb, {$a} {$pct}%, {$b})"
                     : null;
 
+                $readableOn = function (?string $hex, ?string $fallback): ?string {
+                    if (! $hex || ! preg_match('/^#?([0-9a-f]{6})$/i', trim($hex), $m)) {
+                        return $fallback;
+                    }
+                    $lin = fn (int $v): float => ($v / 255) <= 0.03928 ? ($v / 255) / 12.92 : ((($v / 255) + 0.055) / 1.055) ** 2.4;
+                    $n = hexdec($m[1]);
+                    $l = 0.2126 * $lin(($n >> 16) & 255) + 0.7152 * $lin(($n >> 8) & 255) + 0.0722 * $lin($n & 255);
+
+                    return $l > 0.4 ? '#0B1220' : '#FFFFFF';
+                };
+
                 return array_filter([
                     '--primary' => $c['primary'] ?? null,
-                    '--primary-foreground' => $c['primary_text'] ?? null,
+                    '--primary-foreground' => $readableOn($c['primary'] ?? null, $c['primary_text'] ?? null),
                     '--destructive' => $c['danger'] ?? null,
                     '--destructive-foreground' => $c['danger_text'] ?? null,
                     '--success' => $c['success'] ?? null,

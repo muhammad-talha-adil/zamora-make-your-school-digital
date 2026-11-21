@@ -90,6 +90,20 @@ const mix = (a: string | undefined, b: string | undefined, pct: number) =>
  * earlier version did, pointing `--border` at `content_bg` — collapses the
  * hierarchy and makes every border invisible.
  */
+/** Picks white or near-black text, whichever reads better on the given hex colour. */
+function readableOn(hex: string | undefined, fallback: string | undefined): string | undefined {
+    const m = /^#?([0-9a-f]{6})$/i.exec((hex ?? '').trim());
+    if (!m) {
+        return fallback;
+    }
+    const n = parseInt(m[1], 16);
+    const [r, g, b] = [(n >> 16) & 255, (n >> 8) & 255, n & 255].map((v) => {
+        const c = v / 255;
+        return c <= 0.03928 ? c / 12.92 : ((c + 0.055) / 1.055) ** 2.4;
+    });
+    return 0.2126 * r + 0.7152 * g + 0.0722 * b > 0.4 ? '#0B1220' : '#FFFFFF';
+}
+
 function paletteTokens(colors: PaletteColors): Record<string, string> {
     const surface = colors.card_bg;
     const onSurface = colors.card_text;
@@ -98,7 +112,7 @@ function paletteTokens(colors: PaletteColors): Record<string, string> {
 
     const tokens: Record<string, string | undefined> = {
         '--primary': colors.primary,
-        '--primary-foreground': colors.primary_text,
+        '--primary-foreground': readableOn(colors.primary, colors.primary_text),
         '--destructive': colors.danger,
         '--destructive-foreground': colors.danger_text,
         '--success': colors.success,
