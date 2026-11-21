@@ -19,6 +19,7 @@ use App\Models\StaffDepartment;
 use App\Models\StaffDesignation;
 use App\Models\StaffProfile;
 use App\Models\User;
+use App\Services\Staff\StaffLoginService;
 use App\Services\Staff\StaffPayrollService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
@@ -31,7 +32,8 @@ use Inertia\Inertia;
 class StaffController extends Controller
 {
     public function __construct(
-        protected StaffPayrollService $payroll
+        protected StaffPayrollService $payroll,
+        protected StaffLoginService $logins
     ) {}
 
     /**
@@ -260,6 +262,12 @@ class StaffController extends Controller
             'bank_name' => 'nullable|string|max:150',
             'account_no' => 'nullable|string|max:150',
             'is_active' => 'boolean',
+            'cnic' => ['nullable', 'string', 'regex:/^[0-9]{5}-[0-9]{7}-[0-9]$/'],
+            'phone' => ['nullable', 'string', 'max:20', 'regex:/^[0-9+\-\s]+$/'],
+            'photo' => ['nullable', 'image', 'max:2048'],
+            'campus_id' => ['nullable', 'integer', 'exists:campuses,id'],
+            'create_login' => ['nullable', 'boolean'],
+            'role' => ['nullable', 'string', Rule::exists('roles', 'name')->where(fn ($q) => $q->where('scope_level', '!=', Role::SCOPE_SELF)->whereNotIn('name', $this->excludedDesignationRoles()))],
             'documents' => 'nullable|array',
             'documents.*.kind' => 'required_with:documents|string|max:50',
             'documents.*.title' => 'required_with:documents|string|max:150',
@@ -270,15 +278,26 @@ class StaffController extends Controller
 
         $profile = DB::transaction(function () use ($data, $request) {
             $employeeNo = $data['employee_no'] ?? $this->generateEmployeeNo();
-            $email = $data['email'] ?? strtolower(Str::slug($data['name'], '')).'.'.$employeeNo.'@staff.local';
+            $wantsLogin = $request->boolean('create_login', true);
+            $email = $this->logins->emailFor($data['name'], $data['email'] ?? null);
 
+            // Every staff record needs a user row. Without a login the
+            // password is random and never shown, so nobody can sign in.
             $user = User::create([
                 'username' => strtolower($employeeNo),
                 'name' => $data['name'],
                 'email' => $email,
-                'password' => Hash::make('password123'),
+                'password' => Hash::make(Str::random(40)),
                 'is_active' => $data['is_active'] ?? true,
             ]);
+
+            // Only an owner/developer may file staff under another campus.
+            $viewer = $request->user();
+            $campusId = $viewer->isSuperAdmin()
+                ? ($data['campus_id'] ?? $viewer->campusId())
+                : $viewer->campusId();
+
+            $photoPath = $request->file('photo')?->store('staff/photos', 'public');
 
             // Filed under whichever campus the creator is currently scoped to
             // (their own campus, or the header switcher's pick for an
@@ -286,7 +305,10 @@ class StaffController extends Controller
             $profile = StaffProfile::create([
                 'user_id' => $user->id,
                 'employee_no' => $employeeNo,
-                'campus_id' => $request->user()->campusId(),
+                'campus_id' => $campusId,
+                'cnic' => $data['cnic'] ?? null,
+                'phone' => $data['phone'] ?? null,
+                'photo' => $photoPath ? '/storage/'.$photoPath : null,
                 'designation_id' => $data['designation_id'] ?? null,
                 'employment_type' => $data['employment_type'],
                 'hire_date' => $data['hire_date'] ?? null,
@@ -298,7 +320,15 @@ class StaffController extends Controller
                 'is_active' => $data['is_active'] ?? true,
             ]);
 
-            $this->assignDesignationRole($user, $data['designation_id'] ?? null);
+            if (! empty($data['role'])) {
+                $user->assignRole($data['role']);
+            } else {
+                $this->assignDesignationRole($user, $data['designation_id'] ?? null);
+            }
+
+            $login = $wantsLogin
+                ? $this->logins->issue($user->refresh(), $email)
+                : null;
 
             foreach ($data['documents'] ?? [] as $index => $document) {
                 $file = $request->file("documents.{$index}.file");
@@ -314,13 +344,17 @@ class StaffController extends Controller
                 ]);
             }
 
-            return $profile;
+            return [$profile, $login];
         });
+
+        [$profile, $login] = $profile;
 
         return response()->json([
             'success' => true,
-            'message' => 'Staff member created successfully.',
+            'message' => 'Staff member added.',
             'staff' => $profile->load(['user', 'campus', 'department', 'designation']),
+            // Shown once on the success screen, never kept.
+            'login' => $login,
         ]);
     }
 

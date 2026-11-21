@@ -9,6 +9,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { alert } from '@/utils';
+import LoginDetails from '@/components/Staff/LoginDetails.vue';
 import GiveAdvanceDialog from '@/components/Staff/GiveAdvanceDialog.vue';
 import SearchableSelect from '@/components/ui/searchable-select/SearchableSelect.vue';
 
@@ -194,6 +195,22 @@ const personalForm = reactive({
     emergency_contact_relation: props.staff.emergency_contact_relation ?? '',
 });
 
+
+const newLogin = ref<{ name: string; username: string; email: string; password: string } | null>(null);
+const loginSaving = ref(false);
+
+const giveLogin = async () => {
+    loginSaving.value = true;
+
+    try {
+        const response = await axios.post(route('staff.people.login', props.staff.id));
+        newLogin.value = response.data.login;
+    } catch (error: any) {
+        alert.error(error?.response?.data?.message || 'Could not make the login. Please try again.');
+    } finally {
+        loginSaving.value = false;
+    }
+};
 
 const savePersonal = async () => {
     try {
@@ -737,6 +754,18 @@ const activeJobsCount = computed(() => props.jobs.length);
                             Save Details
                         </Button>
                     </div>
+                </div>
+
+                <div v-if="props.can.edit" class="rounded-2xl border border-border bg-card p-5 shadow-sm">
+                    <h2 class="mb-2 text-lg font-semibold text-foreground">Login</h2>
+                    <p class="mb-4 text-sm text-muted-foreground">
+                        Signs in with {{ props.staff.user?.email }}. Forgot the password, or no login yet? Make a new one.
+                    </p>
+                    <LoginDetails v-if="newLogin" :login="newLogin" class="mb-4" />
+                    <Button type="button" :disabled="loginSaving" @click="giveLogin">
+                        <Icon icon="key" class="mr-1 h-4 w-4" />
+                        {{ loginSaving ? 'Please wait...' : 'Make new password' }}
+                    </Button>
                 </div>
 
                 <div class="rounded-2xl border border-border bg-card p-5 shadow-sm">

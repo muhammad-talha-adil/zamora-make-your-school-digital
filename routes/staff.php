@@ -171,6 +171,8 @@ Route::prefix('staff')->name('staff.')->middleware([...$middleware, 'campus.exis
         // StaffProfile is (StaffProfilePolicy::update).
         Route::get('/people/{staffProfile}/permissions', 'permissions')
             ->name('people.permissions')->middleware('permission:staff.manage');
+        Route::post('/people/{staffProfile}/login', 'issueLogin')
+            ->name('people.login')->middleware('permission:staff.manage');
         Route::put('/people/{staffProfile}/permissions', 'updatePermissions')
             ->name('people.permissions.update')->middleware('permission:staff.manage');
     });

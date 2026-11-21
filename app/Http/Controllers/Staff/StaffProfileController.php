@@ -21,9 +21,11 @@ use App\Models\Subject;
 use App\Services\Staff\StaffAssignmentService;
 use App\Services\Staff\StaffEmploymentService;
 use App\Services\Staff\StaffIdCardService;
+use App\Services\Staff\StaffLoginService;
 use App\Services\Staff\TeacherAssignmentService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 
 /**
@@ -85,8 +87,15 @@ class StaffProfileController extends Controller
     {
         Gate::authorize('create', StaffProfile::class);
 
+        $viewer = request()->user();
+        $excludedRoles = $viewer->isSuperAdmin() ? ['developer', 'owner'] : ['developer', 'owner', 'campus_admin'];
+
         return Inertia::render('Staff/People/Create', [
             'designations' => StaffDesignation::orderBy('name')->get(['id', 'name', 'description', 'role', 'is_active']),
+            'roles' => Role::where('scope_level', '!=', Role::SCOPE_SELF)->whereNotIn('name', $excludedRoles)->orderBy('name')->get(['name', 'label']),
+            // Only an owner picks a campus; everyone else files under their own.
+            'campuses' => $viewer->isSuperAdmin() ? Campus::orderBy('name')->get(['id', 'name']) : [],
+            'defaultCampusId' => $viewer->campusId(),
             'documentTypes' => StaffDocumentType::where('is_active', true)->orderBy('name')->get(['id', 'name', 'is_required']),
         ]);
     }
@@ -222,7 +231,7 @@ class StaffProfileController extends Controller
 
         $staffProfile->update($validated);
 
-        return response()->json(['message' => 'Details saved', 'data' => $staffProfile->fresh()]);
+        return response()->json(['message' => 'Saved', 'data' => $staffProfile->fresh()]);
     }
 
     /* ------------------------------------------------------------- the jobs */
@@ -438,10 +447,15 @@ class StaffProfileController extends Controller
         $ownerOnly = self::ownerOnlyPermissions();
         $granted = $staffProfile->user->getDirectPermissions()->pluck('name')->all();
 
-        $grouped = Permission::orderBy('name')->get(['name'])
+        // [{ name, label }] per module, so the page reads plain words instead
+        // of keys like `academics.class.manage`.
+        $grouped = Permission::orderBy('name')->get(['name', 'label', 'module'])
             ->reject(fn ($permission) => in_array($permission->name, $ownerOnly, true))
             ->groupBy(fn ($permission) => explode('.', $permission->name)[0])
-            ->map(fn ($group) => $group->pluck('name')->values())
+            ->map(fn ($group) => $group->map(fn ($permission) => [
+                'name' => $permission->name,
+                'label' => $permission->label ?: ucfirst(str_replace(['.', '_', '-'], ' ', $permission->name)),
+            ])->values())
             ->sortKeys();
 
         return Inertia::render('Staff/People/Permissions', [
@@ -469,6 +483,30 @@ class StaffProfileController extends Controller
 
         $staffProfile->user->syncPermissions($safePermissions);
 
-        return back()->with('success', 'Permissions updated.');
+        return back()->with('success', 'Permissions saved.');
+    }
+
+    /**
+     * Gives this person a login, or a new password if they forgot theirs.
+     * The password comes back once, for the owner to read out.
+     */
+    public function issueLogin(Request $request, StaffProfile $staffProfile, StaffLoginService $logins)
+    {
+        Gate::authorize('update', $staffProfile);
+
+        $user = $staffProfile->user;
+
+        // An owner's login is never reset from here.
+        abort_if($user->isSuperAdmin() && ! $request->user()->isSuperAdmin(), 403);
+
+        $validated = $request->validate([
+            'email' => ['nullable', 'email', 'max:150', Rule::unique('users', 'email')->ignore($user->id)],
+            'role' => ['nullable', 'string', Rule::exists('roles', 'name')->where(fn ($q) => $q->where('scope_level', '!=', Role::SCOPE_SELF)->whereNotIn('name', $request->user()->isSuperAdmin() ? ['developer', 'owner'] : ['developer', 'owner', 'campus_admin']))],
+        ]);
+
+        return response()->json([
+            'message' => 'Login ready.',
+            'login' => $logins->issue($user, $validated['email'] ?? null, $validated['role'] ?? null),
+        ]);
     }
 }

@@ -10,7 +10,7 @@ import { alert } from '@/utils';
 
 interface Props {
     staffProfile: { id: number; user: { name: string } };
-    permissionGroups: Record<string, string[]>;
+    permissionGroups: Record<string, { name: string; label: string }[]>;
     grantedPermissions: string[];
 }
 
@@ -20,6 +20,8 @@ const search = ref('');
 const granted = ref<Set<string>>(new Set(props.grantedPermissions));
 const saving = ref(false);
 
+type Perm = { name: string; label: string };
+
 const filteredGroups = computed(() => {
     const term = search.value.trim().toLowerCase();
 
@@ -27,10 +29,10 @@ const filteredGroups = computed(() => {
         return props.permissionGroups;
     }
 
-    const result: Record<string, string[]> = {};
+    const result: Record<string, Perm[]> = {};
 
     for (const [group, permissions] of Object.entries(props.permissionGroups)) {
-        const matches = permissions.filter((p) => p.toLowerCase().includes(term) || group.toLowerCase().includes(term));
+        const matches = permissions.filter((p) => p.label.toLowerCase().includes(term) || group.toLowerCase().includes(term));
 
         if (matches.length) {
             result[group] = matches;
@@ -50,16 +52,16 @@ const toggle = (permission: string) => {
     granted.value = new Set(granted.value);
 };
 
-const groupFullyGranted = (permissions: string[]) => permissions.every((p) => granted.value.has(p));
+const groupFullyGranted = (permissions: Perm[]) => permissions.every((p) => granted.value.has(p.name));
 
-const toggleGroup = (permissions: string[]) => {
+const toggleGroup = (permissions: Perm[]) => {
     const allGranted = groupFullyGranted(permissions);
 
     for (const p of permissions) {
         if (allGranted) {
-            granted.value.delete(p);
+            granted.value.delete(p.name);
         } else {
-            granted.value.add(p);
+            granted.value.add(p.name);
         }
     }
     granted.value = new Set(granted.value);
@@ -73,8 +75,8 @@ const save = () => {
         { permissions: Array.from(granted.value) },
         {
             preserveScroll: true,
-            onSuccess: () => alert.success('Permissions updated.'),
-            onError: () => alert.error('Failed to update permissions.'),
+            onSuccess: () => alert.success('Permissions saved.'),
+            onError: () => alert.error('Could not save. Please try again.'),
             onFinish: () => (saving.value = false),
         },
     );
@@ -90,8 +92,7 @@ const save = () => {
                 <div>
                     <h1 class="text-2xl font-bold text-foreground">Permissions — {{ props.staffProfile.user.name }}</h1>
                     <p class="mt-1 text-sm text-muted-foreground">
-                        Grant or remove specific abilities for this staff member, independent of their role. Their sidebar and
-                        pages adjust to match.
+                        Tick what this person is allowed to do, on top of their role.
                     </p>
                 </div>
                 <Button :disabled="saving" @click="save">
@@ -101,7 +102,7 @@ const save = () => {
             </div>
 
             <div class="relative max-w-sm">
-                <Input v-model="search" placeholder="Search permissions..." class="pl-9" />
+                <Input v-model="search" placeholder="Search..." class="pl-9" />
                 <Icon icon="search" class="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             </div>
 
@@ -124,22 +125,22 @@ const save = () => {
                     <div class="grid grid-cols-1 gap-2 sm:grid-cols-2 lg:grid-cols-3">
                         <label
                             v-for="permission in permissions"
-                            :key="permission"
+                            :key="permission.name"
                             class="flex items-center gap-2 rounded-md px-2 py-1.5 text-sm hover:bg-accent"
                         >
                             <input
                                 type="checkbox"
                                 class="h-4 w-4 rounded border-border text-primary"
-                                :checked="granted.has(permission)"
-                                @change="toggle(permission)"
+                                :checked="granted.has(permission.name)"
+                                @change="toggle(permission.name)"
                             />
-                            <span class="truncate text-foreground">{{ permission }}</span>
+                            <span class="text-foreground">{{ permission.label }}</span>
                         </label>
                     </div>
                 </div>
 
                 <div v-if="Object.keys(filteredGroups).length === 0" class="py-12 text-center text-sm text-muted-foreground">
-                    No permissions match "{{ search }}".
+                    Nothing found for "{{ search }}".
                 </div>
             </div>
         </div>

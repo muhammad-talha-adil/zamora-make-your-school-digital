@@ -2,11 +2,21 @@
     <AppLayout :breadcrumbs="breadcrumbItems">
         <Head title="New Staff Member" />
 
-        <div class="space-y-6 p-4 md:p-6">
+        <div v-if="createdLogin || created" class="space-y-6 p-4 md:p-6">
+            <h1 class="text-lg font-bold text-foreground md:text-2xl">Staff member added</h1>
+            <LoginDetails v-if="createdLogin" :login="createdLogin" />
+            <p v-else class="text-sm text-muted-foreground">No login was made. You can make one later from their profile.</p>
+            <div class="flex flex-wrap gap-3">
+                <Button @click="router.visit(route('staff.people.show', created!.id))">Open profile</Button>
+                <Button variant="outline" @click="router.visit(route('staff.people.index'))">Back to list</Button>
+            </div>
+        </div>
+
+        <div v-else class="space-y-6 p-4 md:p-6">
             <div class="flex flex-col items-start justify-between gap-3 sm:flex-row sm:items-center md:gap-4">
                 <div>
                     <h1 class="text-lg font-bold text-foreground md:text-2xl">New Staff Member</h1>
-                    <p class="mt-1 text-xs text-muted-foreground md:text-sm">Add a new staff member to the directory</p>
+                    <p class="mt-1 text-xs text-muted-foreground md:text-sm">Fill this once. Nothing else is needed.</p>
                 </div>
                 <Button variant="outline" @click="router.visit(route('staff.people.index'))">
                     <Icon icon="arrow-left" class="mr-1 h-4 w-4" />
@@ -27,16 +37,32 @@
                             <Input id="name" v-model="form.name" placeholder="Staff name" />
                         </div>
                         <div class="space-y-2">
-                            <Label for="email">Email</Label>
-                            <Input id="email" v-model="form.email" type="email" placeholder="Email (optional)" />
+                            <Label for="cnic">CNIC</Label>
+                            <Input id="cnic" v-model="form.cnic" placeholder="12345-1234567-1" maxlength="15" />
+                        </div>
+                        <div class="space-y-2">
+                            <Label for="phone">Phone</Label>
+                            <Input id="phone" v-model="form.phone" placeholder="0300 1234567" maxlength="20" />
+                        </div>
+                        <div class="space-y-2">
+                            <Label for="photo">Photo</Label>
+                            <input id="photo" type="file" accept="image/*" class="w-full text-sm text-foreground" @change="onPhoto" />
+                        </div>
+                        <div v-if="campuses.length" class="space-y-2">
+                            <Label for="campus_id">Campus</Label>
+                            <SearchableSelect id="campus_id" v-model="form.campus_id" :options="campusOptions" placeholder="Select campus" />
                         </div>
                         <div class="space-y-2">
                             <Label for="employee_no">Employee No</Label>
-                            <Input id="employee_no" v-model="form.employee_no" placeholder="Auto-generate if empty" />
+                            <Input id="employee_no" v-model="form.employee_no" placeholder="Made for you if empty" />
                         </div>
                         <div class="space-y-2">
                             <Label for="designation_id">Designation</Label>
                             <SearchableSelect id="designation_id" v-model="form.designation_id" :options="designationOptions" placeholder="Select designation" clearable />
+                            <div class="flex gap-2">
+                                <Input v-model="newDesignation" placeholder="Not in the list? Type a new one" @keydown.enter.prevent="addDesignation" />
+                                <Button type="button" variant="outline" :disabled="!newDesignation.trim()" @click="addDesignation">Add</Button>
+                            </div>
                         </div>
                         <div class="space-y-2">
                             <Label for="employment_type">Employment Type</Label>
@@ -51,6 +77,28 @@
                             <Label for="hire_date">Hire Date</Label>
                             <Input id="hire_date" v-model="form.hire_date" type="date" />
                         </div>
+                    </div>
+                </div>
+
+                <div class="rounded-lg border border-border bg-card p-6">
+                    <h2 class="mb-4 flex items-center gap-2 text-lg font-semibold text-foreground">
+                        <Icon icon="key" class="h-5 w-5 text-primary" />
+                        Login
+                    </h2>
+                    <label class="flex items-center gap-2 text-sm text-foreground">
+                        <input v-model="form.create_login" type="checkbox" class="h-4 w-4 rounded border-border text-primary" />
+                        Let this person sign in
+                    </label>
+                    <div v-if="form.create_login" class="mt-4 grid grid-cols-1 gap-4 md:grid-cols-2">
+                        <div class="space-y-2">
+                            <Label for="email">Email</Label>
+                            <Input id="email" v-model="form.email" type="email" placeholder="Leave empty to make one from the name" />
+                        </div>
+                        <div class="space-y-2">
+                            <Label for="role">Role</Label>
+                            <SearchableSelect id="role" v-model="form.role" :options="roleOptions" placeholder="Same as designation" clearable />
+                        </div>
+                        <p class="text-xs text-muted-foreground md:col-span-2">A password is made for you and shown once after saving.</p>
                     </div>
                 </div>
 
@@ -139,7 +187,7 @@
                     <Button type="submit" :disabled="processing || !isValid">
                         <Icon v-if="processing" icon="loader" class="mr-2 h-4 w-4 animate-spin" />
                         <Icon v-else icon="save" class="mr-2 h-4 w-4" />
-                        Create Staff
+                        Save
                     </Button>
                 </div>
             </form>
@@ -155,6 +203,7 @@ import { Label } from '@/components/ui/label';
 import SearchableSelect from '@/components/ui/searchable-select/SearchableSelect.vue';
 import AppLayout from '@/layouts/AppLayout.vue';
 import type { BreadcrumbItem } from '@/types';
+import LoginDetails from '@/components/Staff/LoginDetails.vue';
 import { useFormValidity } from '@/composables/useFormValidity';
 import { alert } from '@/utils';
 import { Head, router } from '@inertiajs/vue3';
@@ -175,6 +224,9 @@ interface DocumentType {
 
 interface Props {
     designations: Lookup[];
+    roles?: { name: string; label: string | null }[];
+    campuses?: Lookup[];
+    defaultCampusId?: number | null;
     documentTypes?: DocumentType[];
 }
 
@@ -188,6 +240,32 @@ const breadcrumbItems: BreadcrumbItem[] = [
 ];
 
 const processing = ref(false);
+const createdLogin = ref<{ name: string; username: string; email: string; password: string } | null>(null);
+const created = ref<{ id: number } | null>(null);
+const designationList = ref<Lookup[]>([...props.designations]);
+const newDesignation = ref('');
+const photoFile = ref<File | null>(null);
+
+const onPhoto = (event: Event) => {
+    photoFile.value = (event.target as HTMLInputElement).files?.[0] ?? null;
+};
+
+const addDesignation = async () => {
+    const name = newDesignation.value.trim();
+
+    if (!name) {
+        return;
+    }
+
+    try {
+        const response = await axios.post(route('staff.designations.store'), { name });
+        designationList.value.push(response.data.designation);
+        form.designation_id = String(response.data.designation.id);
+        newDesignation.value = '';
+    } catch (error: any) {
+        alert.error(error?.response?.data?.errors?.name?.[0] || 'Could not add. Please try again.');
+    }
+};
 
 const employmentTypeOptions = [
     { value: 'permanent', label: 'Permanent' },
@@ -215,9 +293,17 @@ const form = reactive({
     bank_name: '',
     account_no: '',
     is_active: true,
+    cnic: '',
+    phone: '',
+    campus_id: props.defaultCampusId ? String(props.defaultCampusId) : '',
+    create_login: true,
+    role: '',
 });
 
-const designationOptions = computed(() => props.designations.map((d) => ({ value: String(d.id), label: d.name })));
+const designationOptions = computed(() => designationList.value.map((d) => ({ value: String(d.id), label: d.name })));
+const campuses = computed(() => props.campuses ?? []);
+const campusOptions = computed(() => campuses.value.map((c) => ({ value: String(c.id), label: c.name })));
+const roleOptions = computed(() => (props.roles ?? []).map((r) => ({ value: r.name, label: r.label || r.name })));
 const documentTypes = computed(() => props.documentTypes ?? []);
 
 interface DocumentEntry {
@@ -259,6 +345,10 @@ const submitStaff = async () => {
             }
         });
 
+        if (photoFile.value) {
+            formData.append('photo', photoFile.value);
+        }
+
         documentTypes.value.forEach((type, index) => {
             const entry = documents[type.id];
 
@@ -280,13 +370,15 @@ const submitStaff = async () => {
             }
         });
 
-        await axios.post(route('staff.members.store'), formData, {
+        const response = await axios.post(route('staff.members.store'), formData, {
             headers: { 'Content-Type': 'multipart/form-data' },
         });
-        alert.success('Staff member created successfully.');
-        router.visit(route('staff.people.index'));
+        alert.success('Staff member added.');
+        createdLogin.value = response.data.login ?? null;
+        created.value = { id: response.data.staff.id };
     } catch (error: any) {
-        alert.error(error?.response?.data?.message || 'Failed to save staff member.');
+        const errors = error?.response?.data?.errors;
+        alert.error((errors && (Object.values(errors).flat()[0] as string)) || error?.response?.data?.message || 'Could not save. Please try again.');
     } finally {
         processing.value = false;
     }
