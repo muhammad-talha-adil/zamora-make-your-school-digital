@@ -3,11 +3,11 @@
 namespace App\Http\Controllers\Settings;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Settings\UpdateSchoolRequest;
 use App\Http\Requests\Settings\UpdateSchoolWebsiteContentRequest;
 use App\Models\School;
 use App\Models\ThemeSetting;
 use Illuminate\Http\RedirectResponse;
-use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -29,21 +29,11 @@ class SchoolController extends Controller
         ]);
     }
 
-    public function update(Request $request): RedirectResponse
+    public function update(UpdateSchoolRequest $request): RedirectResponse
     {
         $this->authorize('school.profile.manage');
 
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'slogan' => 'nullable|string|max:255',
-            'address' => 'nullable|string',
-            'phone' => 'nullable|string|max:20',
-            'contact_email' => 'nullable|email|max:255',
-            'logo' => 'nullable|image|mimes:jpeg,png,jpg,gif|max:2048',
-            'is_active' => 'boolean',
-            'website_enabled' => 'boolean',
-            'theme_colors' => 'nullable|string',
-        ]);
+        $validated = $request->validated();
 
         // Not a School column - handled separately below, and must not reach
         // School::update()/create() or it fails as an unknown attribute.

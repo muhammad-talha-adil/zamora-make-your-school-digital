@@ -254,7 +254,7 @@ const inactivateCampus = (campus: any) => {
                             </td>
                         </tr>
                         <tr v-if="campusesData.length === 0">
-                            <td colspan="6" class="px-6 py-8 text-center text-sm text-muted-foreground">No campuses found.</td>
+                            <td colspan="6" class="px-6 py-8 text-center text-sm text-muted-foreground">No campuses yet - use the Add Campus button above to create your first one.</td>
                         </tr>
                     </tbody>
                 </table>

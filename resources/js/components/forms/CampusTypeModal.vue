@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { router } from '@inertiajs/vue3';
 import axios from 'axios';
-import { ref, watch, computed } from 'vue';
+import { ref, watch, computed, nextTick } from 'vue';
 import { alert } from '@/utils';
 import { useFormValidity } from '@/composables/useFormValidity';
 
@@ -146,6 +146,7 @@ const submit = () => {
                 form.value.name = '';
                 errors.value = {};
                 fetchCampusTypes();
+                nextTick(() => document.getElementById('typeName')?.focus());
             },
             onError: (err) => {
                 errors.value = err as Record<string, string>;

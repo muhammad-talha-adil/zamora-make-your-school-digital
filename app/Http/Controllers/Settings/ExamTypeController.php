@@ -7,24 +7,17 @@ use App\Models\Exam\ExamType;
 use Illuminate\Database\QueryException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
-use Inertia\Inertia;
-use Inertia\Response;
 
 class ExamTypeController extends Controller
 {
     /**
      * Display a listing of the resource.
      */
-    public function index(): Response
+    public function index(): RedirectResponse
     {
         $this->authorize('exam.settings');
 
-        $examTypes = ExamType::orderBy('id', 'desc')
-            ->paginate(10);
-
-        return Inertia::render('settings/ExamTypes/Index', [
-            'tableExamTypes' => $examTypes,
-        ]);
+        return redirect()->route('exam.settings.index-page');
     }
 
     /**
@@ -54,11 +47,9 @@ class ExamTypeController extends Controller
     /**
      * Show the form for creating a new resource.
      */
-    public function create(): Response
+    public function create(): RedirectResponse
     {
-        $this->authorize('exam.settings');
-
-        return Inertia::render('settings/ExamTypes/Create');
+        return redirect()->route('exam.settings.index-page');
     }
 
     /**
@@ -95,13 +86,9 @@ class ExamTypeController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(ExamType $examType): Response
+    public function edit(ExamType $examType): RedirectResponse
     {
-        $this->authorize('exam.settings');
-
-        return Inertia::render('settings/ExamTypes/Edit', [
-            'examType' => $examType,
-        ]);
+        return redirect()->route('exam.settings.index-page');
     }
 
     /**

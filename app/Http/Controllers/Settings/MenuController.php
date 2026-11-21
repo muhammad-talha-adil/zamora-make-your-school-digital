@@ -82,15 +82,9 @@ class MenuController extends Controller
         return response()->json($menus);
     }
 
-    public function create(Request $request): Response
+    public function create(): RedirectResponse
     {
-        $this->assertDeveloper();
-
-        $parentMenus = $this->getParentMenuOptions();
-
-        return Inertia::render('settings/Menus/Create', [
-            'parentMenus' => $parentMenus,
-        ]);
+        return redirect()->route('menus.index');
     }
 
     public function store(StoreMenuRequest $request): RedirectResponse
@@ -124,30 +118,14 @@ class MenuController extends Controller
         return redirect()->route('menus.index')->with('success', 'Menu created successfully.');
     }
 
-    public function show($id): Response
+    public function show($id): RedirectResponse
     {
-        $this->assertDeveloper();
-
-        $menu = Menu::with(['parent', 'children'])->findOrFail($id);
-
-        return Inertia::render('settings/Menus/Show', [
-            'menu' => $menu,
-        ]);
+        return redirect()->route('menus.index');
     }
 
-    public function edit($id): Response
+    public function edit($id): RedirectResponse
     {
-        $this->assertDeveloper();
-
-        $menu = Menu::findOrFail($id);
-        $parentMenus = $this->getParentMenuOptions()
-            ->filter(fn (array $menu) => $menu['id'] !== (int) $id)
-            ->values();
-
-        return Inertia::render('settings/Menus/Edit', [
-            'menu' => $menu,
-            'parentMenus' => $parentMenus,
-        ]);
+        return redirect()->route('menus.index');
     }
 
     public function update(UpdateMenuRequest $request, $id): RedirectResponse

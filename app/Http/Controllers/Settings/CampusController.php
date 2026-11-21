@@ -8,6 +8,7 @@ use App\Http\Requests\Settings\UpdateCampusRequest;
 use App\Models\Campus;
 use App\Models\CampusType;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -68,15 +69,9 @@ class CampusController extends Controller
     /**
      * Show the form for creating a new resource.
      */
-    public function create(): Response
+    public function create(): RedirectResponse
     {
-        Gate::authorize('create', Campus::class);
-
-        $campusTypes = CampusType::orderBy('name', 'asc')->get(['id', 'name']);
-
-        return Inertia::render('settings/Campuses/Create', [
-            'campusTypes' => $campusTypes,
-        ]);
+        return redirect()->route('campuses.index');
     }
 
     /**
@@ -105,16 +100,9 @@ class CampusController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(Campus $campus): Response
+    public function edit(Campus $campus): RedirectResponse
     {
-        Gate::authorize('update', $campus);
-
-        $campusTypes = CampusType::orderBy('name', 'asc')->get(['id', 'name']);
-
-        return Inertia::render('settings/Campuses/Edit', [
-            'campus' => $campus->load('campusType'),
-            'campusTypes' => $campusTypes,
-        ]);
+        return redirect()->route('campuses.index');
     }
 
     /**

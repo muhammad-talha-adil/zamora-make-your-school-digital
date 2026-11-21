@@ -9,6 +9,7 @@ use App\Http\Requests\Settings\UpdateSectionRequest;
 use App\Models\SchoolClass;
 use App\Models\Section;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -76,15 +77,9 @@ class SectionController extends Controller
     /**
      * Show the form for creating a new resource.
      */
-    public function create(): Response
+    public function create(): RedirectResponse
     {
-        Gate::authorize('create', Section::class);
-
-        $schoolClasses = SchoolClass::visibleTo(request()->user())->orderBy('name', 'asc')->get(['id', 'name']);
-
-        return Inertia::render('settings/Sections/Create', [
-            'schoolClasses' => $schoolClasses,
-        ]);
+        return redirect()->route('sections.index');
     }
 
     /**
@@ -275,15 +270,8 @@ class SectionController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(Section $section): Response
+    public function edit(Section $section): RedirectResponse
     {
-        Gate::authorize('update', $section);
-
-        $schoolClasses = SchoolClass::visibleTo(request()->user())->orderBy('name', 'asc')->get(['id', 'name']);
-
-        return Inertia::render('settings/Sections/Edit', [
-            'section' => $section->load('schoolClass'),
-            'schoolClasses' => $schoolClasses,
-        ]);
+        return redirect()->route('sections.index');
     }
 }

@@ -9,6 +9,7 @@ use App\Http\Requests\Settings\UpdateSchoolClassRequest;
 use App\Models\Campus;
 use App\Models\SchoolClass;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
@@ -100,11 +101,9 @@ class SchoolClassController extends Controller
     /**
      * Show the form for creating a new resource.
      */
-    public function create(): Response
+    public function create(): RedirectResponse
     {
-        Gate::authorize('create', SchoolClass::class);
-
-        return Inertia::render('settings/SchoolClasses/Create');
+        return redirect()->route('school-classes.index');
     }
 
     /**
@@ -224,19 +223,9 @@ class SchoolClassController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(SchoolClass $schoolClass): Response
+    public function edit(SchoolClass $schoolClass): RedirectResponse
     {
-        Gate::authorize('update', $schoolClass);
-
-        $user = request()->user();
-
-        return Inertia::render('settings/SchoolClasses/Edit', [
-            'schoolClass' => $schoolClass,
-            'isSuperAdmin' => $user?->isSuperAdmin() ?? false,
-            'campuses' => $user?->isSuperAdmin()
-                ? Campus::query()->orderBy('name')->get(['id', 'name'])
-                : [],
-        ]);
+        return redirect()->route('school-classes.index');
     }
 
     /**

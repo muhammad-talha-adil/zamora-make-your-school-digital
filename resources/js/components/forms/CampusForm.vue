@@ -289,6 +289,9 @@ const handleCampusTypeSaved = (campusType: { id: number; name: string } | undefi
                                  </Tooltip>
                                  </TooltipProvider>
                              </div>
+                             <p v-if="props.campusTypes.length + locallyAddedCampusTypes.length === 0" class="text-xs text-muted-foreground">
+                                 No campus types yet - add one with the gear icon
+                             </p>
                              <InputError :message="errors.campus_type_id" />
                          </div>
 

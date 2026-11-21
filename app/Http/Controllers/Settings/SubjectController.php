@@ -84,11 +84,9 @@ class SubjectController extends Controller
     /**
      * Show the form for creating a new resource.
      */
-    public function create(): Response
+    public function create(): RedirectResponse
     {
-        Gate::authorize('create', Subject::class);
-
-        return Inertia::render('settings/Subjects/Create');
+        return redirect()->route('subjects.index');
     }
 
     /**
@@ -178,20 +176,9 @@ class SubjectController extends Controller
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(Subject $subject): Response
+    public function edit(Subject $subject): RedirectResponse
     {
-        Gate::authorize('update', $subject);
-
-        $subject->load('campuses:id');
-        $user = request()->user();
-
-        return Inertia::render('settings/Subjects/Edit', [
-            'subject' => $subject,
-            'isSuperAdmin' => $user?->isSuperAdmin() ?? false,
-            'campuses' => $user?->isSuperAdmin()
-                ? Campus::query()->orderBy('name')->get(['id', 'name'])
-                : [],
-        ]);
+        return redirect()->route('subjects.index');
     }
 
     /**

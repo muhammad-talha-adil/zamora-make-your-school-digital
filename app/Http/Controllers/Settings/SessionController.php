@@ -59,11 +59,9 @@ class SessionController extends Controller
     /**
      * Show the form for creating a new resource.
      */
-    public function create(): Response
+    public function create(): RedirectResponse
     {
-        $this->authorize('academics.session.manage');
-
-        return Inertia::render('settings/Sessions/Create');
+        return redirect()->route('sessions.index');
     }
 
     /**
@@ -116,25 +114,21 @@ class SessionController extends Controller
             return $campusId ? [$campusId] : [];
         }
 
-        return $validated['campus_ids'] ?? [];
+        // Nothing chosen: attach every active campus, otherwise the session
+        // has no pivot rows and is invisible everywhere campus-scoped.
+        if (empty($validated['campus_ids'])) {
+            return Campus::query()->where('is_active', true)->pluck('id')->all();
+        }
+
+        return $validated['campus_ids'];
     }
 
     /**
      * Show the form for editing the specified resource.
      */
-    public function edit(Session $session): Response
+    public function edit(Session $session): RedirectResponse
     {
-        $this->authorize('academics.session.manage');
-
-        $session->load('campuses:id');
-
-        return Inertia::render('settings/Sessions/Edit', [
-            'session' => $session,
-            'isSuperAdmin' => request()->user()?->isSuperAdmin() ?? false,
-            'campuses' => request()->user()?->isSuperAdmin()
-                ? Campus::query()->orderBy('name')->get(['id', 'name'])
-                : [],
-        ]);
+        return redirect()->route('sessions.index');
     }
 
     /**
