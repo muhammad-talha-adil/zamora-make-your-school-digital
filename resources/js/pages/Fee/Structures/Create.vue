@@ -458,6 +458,7 @@ const cancel = () => {
                             :search-url="titleSearchUrl"
                             :value-type="'name'"
                             display-key="title"
+                            :show-empty-message="false"
                             classMinWidth="w-full"
                             @update:modelValue="onTitleChange"
                         />

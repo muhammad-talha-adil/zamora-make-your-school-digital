@@ -17,6 +17,7 @@ interface StudentSearchResult {
     name: string;
     registration_number: string;
     admission_no?: string | null;
+    class_name?: string | null;
     matched_voucher_no?: string | null;
 }
 
@@ -56,6 +57,7 @@ interface ChargeAllocation {
 interface Props {
     unpaidVouchers: Voucher[];
     studentId: number | null;
+    preselectedVoucherId?: number | null;
     selectedStudent?: StudentSearchResult | null;
 }
 
@@ -122,17 +124,13 @@ const initializeVouchers = (vouchers: Voucher[]) => {
             fee_voucher_item_id: item.id,
             student_account_charge_id: item.student_account_charge_id,
             source_module: item.source_module || 'fee',
-            amount: Number(item.balance_amount),
-            enabled: true,
+            amount: !props.preselectedVoucherId || props.preselectedVoucherId === voucher.id ? Number(item.balance_amount) : 0,
+            enabled: !props.preselectedVoucherId || props.preselectedVoucherId === voucher.id,
         }))
     );
 };
 
 initializeVouchers(props.unpaidVouchers || []);
-
-if (props.studentId) {
-    fetchSiblings(props.studentId);
-}
 
 let searchTimeout: ReturnType<typeof setTimeout> | null = null;
 
@@ -205,6 +203,10 @@ const fetchSiblings = (studentId: number) => {
         isLoadingSiblings.value = false;
     });
 };
+
+if (props.studentId) {
+    fetchSiblings(props.studentId);
+}
 
 const selectStudent = (student: StudentSearchResult) => {
     selectedStudent.value = student;
@@ -279,6 +281,10 @@ const totalAllocated = computed(() => {
 
         return sum + Number(charge.amount || 0);
     }, 0);
+});
+
+watch(totalAllocated, (total) => {
+    form.received_amount = total;
 });
 
 const remainingAmount = computed(() => form.received_amount - totalAllocated.value);
@@ -432,6 +438,7 @@ const submitForm = () => {
                                     <div class="text-sm text-muted-foreground">
                                         {{ student.registration_number }}
                                         <span v-if="student.admission_no"> | {{ student.admission_no }}</span>
+                                        <span v-if="student.class_name"> | {{ student.class_name }}</span>
                                     </div>
                                     <div v-if="student.matched_voucher_no" class="text-xs text-primary">
                                         Matched voucher: {{ student.matched_voucher_no }}
@@ -440,7 +447,7 @@ const submitForm = () => {
                             </div>
                         </div>
                         <div v-if="selectedStudent" class="mt-2 rounded-md bg-primary/10 px-3 py-2 text-sm text-primary">
-                            Selected: {{ selectedStudent.name }} ({{ selectedStudent.registration_number }})
+                            Selected: {{ selectedStudent.name }} ({{ selectedStudent.registration_number }}<span v-if="selectedStudent.admission_no"> | {{ selectedStudent.admission_no }}</span><span v-if="selectedStudent.class_name"> | {{ selectedStudent.class_name }}</span>)
                         </div>
                         <input v-model="form.student_id" type="hidden" required />
                     </div>

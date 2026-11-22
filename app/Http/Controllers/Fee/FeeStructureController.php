@@ -19,6 +19,7 @@ use App\Models\Session;
 use App\Models\StudentEnrollmentRecord;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 
 class FeeStructureController extends Controller
@@ -168,9 +169,7 @@ class FeeStructureController extends Controller
                     ->first();
 
                 if ($existingStructure) {
-                    return response()->json([
-                        'message' => 'A fee structure with this title already exists for one of the selected class/section combinations. Please use a different title or change the selection.',
-                    ], 422);
+                    throw ValidationException::withMessages(['title' => 'A fee structure with this title already exists for one of the selected class/section combinations. Please use a different title or change the selection.']);
                 }
             }
         }
@@ -188,7 +187,7 @@ class FeeStructureController extends Controller
                     );
 
                     if ($message) {
-                        return response()->json(['message' => $message], 422);
+                        throw ValidationException::withMessages(['title' => $message]);
                     }
                 }
             }
@@ -414,9 +413,7 @@ class FeeStructureController extends Controller
             }
 
             if ($duplicateQuery->exists()) {
-                return response()->json([
-                    'message' => 'A fee structure with this title already exists for one of the selected class/section combinations. Please use a different title or change the selection.',
-                ], 422);
+                throw ValidationException::withMessages(['title' => 'A fee structure with this title already exists for one of the selected class/section combinations. Please use a different title or change the selection.']);
             }
         }
 
@@ -431,7 +428,7 @@ class FeeStructureController extends Controller
                 );
 
                 if ($message) {
-                    return response()->json(['message' => $message], 422);
+                    throw ValidationException::withMessages(['title' => $message]);
                 }
             }
         }

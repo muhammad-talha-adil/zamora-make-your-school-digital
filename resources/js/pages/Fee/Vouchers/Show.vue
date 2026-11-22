@@ -408,7 +408,7 @@ const handleCancel = () => {
                                 <Icon icon="printer" class="mr-2 h-4 w-4" />
                                 Print Voucher
                             </Button>
-                            <Button v-if="voucher.status !== 'paid'" variant="outline" class="w-full justify-start" size="sm" @click="router.visit(`${route('fee.payments.create')}?student_id=${voucher.student.id}`)">
+                            <Button v-if="voucher.status !== 'paid'" variant="outline" class="w-full justify-start" size="sm" @click="router.visit(`${route('fee.payments.create')}?student_id=${voucher.student.id}&voucher_id=${voucher.id}`)">
                                 <Icon icon="credit-card" class="mr-2 h-4 w-4" />
                                 Record Payment
                             </Button>

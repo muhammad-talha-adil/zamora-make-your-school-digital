@@ -237,7 +237,7 @@ const academicScope = computed(() => (page.props as any).academicScope as { camp
 const showCampusField = computed(() => !academicScope.value?.isCampusRestricted);
 
 const selectedCampusId = ref<number | ''>(props.selectedCampusId || academicScope.value?.campusId || '');
-const selectedSessionId = ref<number | ''>(props.selectedSessionId || '');
+const selectedSessionId = ref<number | ''>(props.selectedSessionId || props.sessions[0]?.id || '');
 const selectedClassId = ref<number | ''>(props.selectedClassId || '');
 const selectedSectionId = ref<string | number>(props.selectedSectionId || 'all');
 const selectedDate = ref<string>(props.selectedDate || '');
@@ -295,7 +295,7 @@ watch(() => props.shiftTiming, (timing) => {
 const formData = reactive({
     attendance_date: props.selectedDate || '',
     campus_id: props.selectedCampusId || academicScope.value?.campusId || 0,
-    session_id: props.selectedSessionId || 0,
+    session_id: props.selectedSessionId || props.sessions[0]?.id || 0,
     class_id: props.selectedClassId || 0,
     section_id: props.selectedSectionId || 0,
     attendances: [] as StudentAttendanceFormData[],
@@ -435,8 +435,8 @@ const submitAttendance = () => {
     formData.session_id = Number(selectedSessionId.value) || 0;
     formData.class_id = Number(selectedClassId.value) || 0;
     formData.section_id = selectedSectionId.value === 'all' ? 0 : (Number(selectedSectionId.value) || 0);
-    router.post(route('attendance.store'), formData, {
-        onSuccess: () => router.visit(route('attendance.index')),
+    router.post(route('attendance.store'), { ...formData, stay: true }, {
+        preserveScroll: true,
     });
 };
 </script>

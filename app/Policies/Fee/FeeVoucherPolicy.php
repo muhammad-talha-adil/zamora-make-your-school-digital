@@ -64,7 +64,8 @@ class FeeVoucherPolicy
      */
     public function generate(User $user, ?int $campusId = null): bool
     {
-        return $this->may($user, 'fee.voucher.generate') && $this->reaches($user, $campusId);
+        return $this->may($user, 'fee.voucher.generate')
+            && ($user->isSuperAdmin() || $this->reaches($user, $campusId));
     }
 
     public function update(User $user, FeeVoucher $voucher): bool

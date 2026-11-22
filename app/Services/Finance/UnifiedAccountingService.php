@@ -343,7 +343,42 @@ class UnifiedAccountingService
      */
     public function voidPaymentJournal(FeePayment $payment): void
     {
-        $this->deleteSourceJournal('fee', 'fee_payment', $payment->id);
+        $original = JournalEntry::with('lines')
+            ->where('source_module', 'fee')
+            ->where('source_type', 'fee_payment')
+            ->where('source_id', $payment->id)
+            ->first();
+
+        $alreadyReversed = JournalEntry::where('source_module', 'fee')
+            ->where('source_type', 'fee_payment_reversal')
+            ->where('source_id', $payment->id)
+            ->exists();
+
+        if (! $original || $alreadyReversed) {
+            return;
+        }
+
+        $reversal = $this->createEntry([
+            'entry_date' => now(),
+            'source_module' => 'fee',
+            'source_type' => 'fee_payment_reversal',
+            'source_id' => $payment->id,
+            'campus_id' => $payment->campus_id,
+            'student_id' => $payment->student_id,
+            'description' => 'Fee payment reversed: '.$payment->receipt_no,
+            'meta' => ['receipt_no' => $payment->receipt_no, 'reverses_entry' => $original->entry_no],
+        ]);
+
+        foreach ($original->lines as $line) {
+            $reversal->lines()->create([
+                'account_id' => $line->account_id,
+                'campus_id' => $line->campus_id,
+                'student_id' => $line->student_id,
+                'debit' => $line->credit,
+                'credit' => $line->debit,
+                'memo' => 'Reversal: '.$line->memo,
+            ]);
+        }
     }
 
     /**

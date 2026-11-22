@@ -141,12 +141,12 @@ const submitReverse = () => {
                         </DialogHeader>
 
                         <div class="grid gap-2">
-                            <label class="text-sm font-medium text-muted-foreground" for="reverse-reason">Reason</label>
+                            <label class="text-sm font-medium text-muted-foreground" for="reverse-reason">Reason *</label>
                             <textarea
                                 id="reverse-reason"
                                 v-model="reverseForm.reason"
                                 class="min-h-20 w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground"
-                                placeholder="Reason for reversal (optional)"
+                                placeholder="Why is this payment being reversed?"
                             />
                         </div>
 

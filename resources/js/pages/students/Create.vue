@@ -83,6 +83,14 @@
                         <p class="font-medium text-success">
                             {{ props.createdStudent.name || 'Student' }} admitted successfully.
                         </p>
+                        <Button
+                            type="button"
+                            size="sm"
+                            class="ml-auto"
+                            @click="router.visit(route('fee.vouchers.create', props.createdStudent.voucher_scope || {}))"
+                        >
+                            Generate first voucher
+                        </Button>
                     </div>
                 </div>
 
@@ -822,7 +830,7 @@ interface Props {
      * clerk can immediately file the new student's documents before moving
      * on, which needs the freshly created student's id.
      */
-    createdStudent?: { id: number; name: string | null } | null;
+    createdStudent?: { id: number; name: string | null; voucher_scope?: Record<string, string | number> } | null;
 }
 
 const props = defineProps<Props>();

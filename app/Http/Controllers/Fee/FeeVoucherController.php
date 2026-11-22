@@ -224,6 +224,7 @@ class FeeVoucherController extends Controller
         Gate::authorize('generate', FeeVoucher::class);
 
         return Inertia::render('Fee/Vouchers/Generate', [
+            'defaultCampusId' => auth()->user()->campusId(),
             'sessions' => Session::select('id', 'name', 'start_date', 'end_date')->orderBy('start_date', 'desc')->get(),
             'months' => Month::select('id', 'name', 'month_number')->orderBy('month_number')->get(),
             'campuses' => Campus::select('id', 'name')->where('is_active', true)->orderBy('name')->get(),
@@ -364,6 +365,7 @@ class FeeVoucherController extends Controller
             'campus_id' => $validated['campus_id'],
             'class_id' => $validated['class_id'],
             'section_id' => $validated['section_id'] ?? null,
+            'fee_structure_id' => $validated['fee_structure_id'] ?? null,
             'include_previous_unpaid' => $validated['include_previous_unpaid'] ?? false,
             'include_inventory_dues' => $validated['include_inventory_dues'] ?? false,
             'include_transport_dues' => $validated['include_transport_dues'] ?? false,

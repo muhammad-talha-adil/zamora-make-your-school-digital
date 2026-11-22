@@ -24,7 +24,7 @@
        </div>
     </div>
     <div
-      v-if="isOpen && displayItems.length === 0 && query.length > 0"
+      v-if="showEmptyMessage && isOpen && displayItems.length === 0 && query.length > 0"
       class="absolute top-full left-0 z-[100] mt-1 w-full rounded-md border border-border bg-card shadow-lg"
     >
       <div class="px-3 py-2 text-muted-foreground">
@@ -54,6 +54,7 @@ interface Props {
   valueType?: 'id' | 'name'
   displayKey?: string
   classMinWidth?: string
+  showEmptyMessage?: boolean
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -64,6 +65,7 @@ const props = withDefaults(defineProps<Props>(), {
   valueType: 'id',
   displayKey: 'name',
   classMinWidth: 'min-w-[200px]',
+  showEmptyMessage: true,
 })
 
 const emit = defineEmits<{

@@ -158,7 +158,18 @@ class StudentController extends Controller
              */
             return Inertia::render('students/Create', array_merge(
                 $this->service->getCreateData(),
-                ['createdStudent' => ['id' => $student->id, 'name' => $student->user?->name]]
+                [
+                    'createdStudent' => [
+                        'id' => $student->id,
+                        'name' => $student->user?->name,
+                        'voucher_scope' => array_filter([
+                            'campus_id' => $request->input('campus_id'),
+                            'session_id' => $request->input('session_id'),
+                            'class_id' => $request->input('class_id'),
+                            'section_id' => $request->input('section_id'),
+                        ]),
+                    ],
+                ]
             ));
             // Throwable, not Exception: a bad enum value raises a ValueError,
             // which slipped past the narrower catch and returned a bare 500

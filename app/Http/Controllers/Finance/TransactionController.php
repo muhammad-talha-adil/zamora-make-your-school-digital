@@ -134,7 +134,7 @@ class TransactionController extends Controller
             $sourceTypes = match (strtolower((string) $request->kind)) {
                 'receivable' => ['fee_voucher', 'student_inventory_assignment', 'transport_charge'],
                 'collection' => ['fee_payment'],
-                'adjustment' => ['student_inventory_return'],
+                'adjustment' => ['student_inventory_return', 'fee_payment_reversal'],
                 'expense' => ['payroll_run', 'payroll_payment', 'vehicle_expense'],
                 'income' => [],
                 default => null,

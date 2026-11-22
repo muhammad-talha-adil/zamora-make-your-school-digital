@@ -467,8 +467,11 @@ class AttendanceController extends Controller
                 $this->refreshDerivedRecords($validated);
             });
 
-            return redirect()->route('attendance.index')
-                ->with('success', 'Attendance recorded successfully.');
+            $destination = $request->boolean('stay')
+                ? redirect()->back()
+                : redirect()->route('attendance.index');
+
+            return $destination->with('success', 'Attendance recorded successfully.');
         } catch (\Exception $e) {
             return redirect()->back()
                 ->with('error', 'Failed to record attendance: '.$e->getMessage())

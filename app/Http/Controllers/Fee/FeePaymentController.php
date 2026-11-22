@@ -93,17 +93,20 @@ class FeePaymentController extends Controller
         $selectedStudent = null;
 
         if ($studentId) {
-            $selectedStudent = Student::with('user:id,name')->find($studentId);
+            $selectedStudent = Student::with(['user:id,name', 'currentEnrollment.class:id,name', 'currentEnrollment.section:id,name'])->find($studentId);
             $unpaidVouchers = $this->getUnpaidVouchersForStudent((int) $studentId);
         }
 
         return Inertia::render('Fee/Payments/Create', [
             'unpaidVouchers' => $unpaidVouchers,
             'studentId' => $studentId,
+            'preselectedVoucherId' => $request->integer('voucher_id') ?: null,
             'selectedStudent' => $selectedStudent ? [
                 'id' => $selectedStudent->id,
                 'name' => $selectedStudent->name,
                 'registration_number' => $selectedStudent->registration_number,
+                'admission_no' => $selectedStudent->admission_no,
+                'class_name' => trim(($selectedStudent->currentEnrollment?->class?->name ?? '').' '.($selectedStudent->currentEnrollment?->section?->name ?? '')) ?: null,
             ] : null,
         ]);
     }
@@ -122,7 +125,7 @@ class FeePaymentController extends Controller
         }
 
         $students = Student::query()
-            ->with('user:id,name')
+            ->with(['user:id,name', 'currentEnrollment.class:id,name', 'currentEnrollment.section:id,name'])
             ->where(function ($query) use ($search) {
                 $query->where('registration_no', 'like', "%{$search}%")
                     ->orWhere('admission_no', 'like', "%{$search}%")
@@ -134,7 +137,7 @@ class FeePaymentController extends Controller
                     });
             })
             ->limit(15)
-            ->get(['id', 'registration_no', 'admission_no'])
+            ->get()
             ->map(function (Student $student) use ($search) {
                 $matchedVoucher = $student->feeVouchers()
                     ->where('voucher_no', 'like', "%{$search}%")
@@ -146,6 +149,7 @@ class FeePaymentController extends Controller
                     'name' => $student->name,
                     'registration_number' => $student->registration_number,
                     'admission_no' => $student->admission_no,
+                    'class_name' => trim(($student->currentEnrollment?->class?->name ?? '').' '.($student->currentEnrollment?->section?->name ?? '')) ?: null,
                     'matched_voucher_no' => $matchedVoucher,
                 ];
             })

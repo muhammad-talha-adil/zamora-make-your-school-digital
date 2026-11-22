@@ -14,7 +14,7 @@ class ReverseFeePaymentRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'reason' => 'nullable|string|max:500',
+            'reason' => 'required|string|max:500',
         ];
     }
 }

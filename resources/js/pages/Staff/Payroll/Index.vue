@@ -18,8 +18,6 @@ import {
 } from '@/components/ui/dialog';
 import SearchableSelect from '@/components/ui/searchable-select/SearchableSelect.vue';
 import { alert } from '@/utils';
-import RowAction from '@/components/tables/RowAction.vue';
-import RowActions from '@/components/tables/RowActions.vue';
 import GiveAdvanceDialog from '@/components/Staff/GiveAdvanceDialog.vue';
 import type { BreadcrumbItem } from '@/types';
 
@@ -306,20 +304,22 @@ const onAdvanceGiven = () => {
                                         <span :class="item.status === 'paid' ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'" class="inline-flex rounded-full px-2.5 py-1 text-xs font-medium uppercase">{{ item.status }}</span>
                                     </td>
                                     <td class="px-4 py-3">
-                                        <RowActions v-if="props.can.approve">
-                                            <RowAction
-                                                kind="pay"
-                                                :label="item.status === 'paid' ? 'Paid' : 'Mark Paid'"
-                                                :disabled="item.status === 'paid'"
-                                                @click="openPayDialog(item)"
-                                            />
-                                            <RowAction
-                                                kind="custom"
-                                                icon="banknote"
-                                                label="Give Advance"
-                                                @click="openAdvanceDialog(item.staff_profile_id)"
-                                            />
-                                        </RowActions>
+                                        <div class="flex flex-wrap justify-end gap-2">
+                                            <Button variant="outline" size="sm" @click="router.visit(route('staff.payroll.items.slip', item.id))">
+                                                <Icon icon="printer" class="mr-1.5 h-3.5 w-3.5" />
+                                                Salary slip
+                                            </Button>
+                                            <template v-if="props.can.approve">
+                                                <Button size="sm" :disabled="item.status === 'paid'" @click="openPayDialog(item)">
+                                                    <Icon icon="credit-card" class="mr-1.5 h-3.5 w-3.5" />
+                                                    {{ item.status === 'paid' ? 'Paid' : 'Release salary' }}
+                                                </Button>
+                                                <Button variant="outline" size="sm" @click="openAdvanceDialog(item.staff_profile_id)">
+                                                    <Icon icon="banknote" class="mr-1.5 h-3.5 w-3.5" />
+                                                    Give advance
+                                                </Button>
+                                            </template>
+                                        </div>
                                     </td>
                                 </tr>
                             </tbody>

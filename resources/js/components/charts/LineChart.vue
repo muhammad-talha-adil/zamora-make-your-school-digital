@@ -123,6 +123,7 @@ function buildConfig(): ChartConfiguration<'line'> {
                     ticks: { color: text, font: { size: 10 } },
                 },
                 y: {
+                    beginAtZero: true,
                     grid: { color: grid },
                     ticks: {
                         color: text,

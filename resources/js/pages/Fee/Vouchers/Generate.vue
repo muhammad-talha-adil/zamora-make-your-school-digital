@@ -82,6 +82,7 @@ interface Props {
     classes: SchoolClass[];
     sections: Section[];
     feeHeads: FeeHead[];
+    defaultCampusId?: number | null;
 }
 
 const props = defineProps<Props>();
@@ -98,11 +99,13 @@ const currentDate = new Date();
 const currentMonthNumber = currentDate.getMonth() + 1; // 1-12
 const currentYear = currentDate.getFullYear();
 
+const urlParams = new URLSearchParams(window.location.search);
+
 const form = reactive({
-    session_id: '',
-    campus_id: '',
-    class_id: '',
-    section_id: '',
+    session_id: urlParams.get('session_id') || '',
+    campus_id: urlParams.get('campus_id') || (props.defaultCampusId ? String(props.defaultCampusId) : ''),
+    class_id: urlParams.get('class_id') || '',
+    section_id: urlParams.get('section_id') || '',
     year: currentYear,
     month_ids: [] as number[],
     include_previous_unpaid: false,
@@ -131,6 +134,8 @@ const feeStructureLoading = ref(false);
 const applicableFeeStructure = ref<FeeStructure | null>(null);
 const feeStructureSource = ref<string | null>(null);
 const noFeeStructureMessage = ref<string>('');
+const structureCandidates = ref<Array<{ id: number; title: string }>>([]);
+const chosenStructureId = ref<number | null>(null);
 
 // Campus lock + class → section cascade + session default/persist
 // (#47/#64/#82/#99/#100). `form.*` stays the source of truth the rest of the
@@ -185,7 +190,8 @@ const fetchFeeStructure = async () => {
     applicableFeeStructure.value = null;
     feeStructureSource.value = null;
     noFeeStructureMessage.value = '';
-    
+    structureCandidates.value = [];
+
     // Only fetch if we have all required fields
     if (!form.session_id || !form.campus_id || !form.class_id) {
         return;
@@ -201,10 +207,15 @@ const fetchFeeStructure = async () => {
                 campus_id: form.campus_id,
                 class_id: form.class_id,
                 section_id: form.section_id || null,
+                fee_structure_id: chosenStructureId.value,
             }
         });
-        
-        if (response.data.success) {
+
+        if (response.data.needs_choice) {
+            structureCandidates.value = response.data.candidates || [];
+            noFeeStructureMessage.value = 'More than one fee structure matches this class. Pick the one to use.';
+        } else if (response.data.success) {
+            structureCandidates.value = response.data.candidates || [];
             // Transform the response to match our display format
             const data = response.data.data;
             feeStructureSource.value = data.source || null;
@@ -234,7 +245,7 @@ const fetchFeeStructure = async () => {
             noFeeStructureMessage.value = response.data.message || 'No fee structure found for this class.';
         }
     } catch (error: any) {
-        noFeeStructureMessage.value = error?.response?.data?.message || 'Error loading fee structure.';
+        noFeeStructureMessage.value = error?.response?.data?.message || 'Could not load the fee structure. Please try again.';
     } finally {
         feeStructureLoading.value = false;
     }
@@ -244,6 +255,7 @@ const fetchFeeStructure = async () => {
 watch(
     () => [form.session_id, form.campus_id, form.class_id, form.section_id],
     () => {
+        chosenStructureId.value = null;
         if (feeStructureTimer) {
             clearTimeout(feeStructureTimer);
         }
@@ -265,6 +277,11 @@ const years = useYearOptions();
 form.year = currentYear;
 
 // Toggle month selection
+const chooseStructure = (id: number) => {
+    chosenStructureId.value = id;
+    fetchFeeStructure();
+};
+
 const toggleMonth = (monthId: number) => {
     const index = form.month_ids.indexOf(monthId);
     if (index === -1) {
@@ -353,6 +370,7 @@ const generateVouchers = () => {
             section_id: form.section_id || null,
             year: form.year,
             month_ids: form.month_ids,
+            fee_structure_id: chosenStructureId.value,
             include_previous_unpaid: form.include_previous_unpaid,
             include_inventory_dues: form.include_inventory_dues,
             include_transport_dues: form.include_transport_dues,
@@ -566,6 +584,23 @@ const generateVouchers = () => {
                             <span class="ml-2 text-muted-foreground">Loading fee structure...</span>
                         </div>
                         
+                        <div v-if="structureCandidates.length > 1" class="mb-3 flex flex-wrap items-center gap-2">
+                            <span class="text-sm text-muted-foreground">Fee structure to use:</span>
+                            <Button
+                                v-for="candidate in structureCandidates"
+                                :key="candidate.id"
+                                type="button"
+                                size="sm"
+                                :variant="chosenStructureId === candidate.id || applicableFeeStructure?.id === candidate.id ? 'default' : 'outline'"
+                                @click="chooseStructure(candidate.id)"
+                            >
+                                {{ candidate.title }}
+                            </Button>
+                        </div>
+                        <p v-if="!form.section_id" class="mb-2 text-xs text-muted-foreground">
+                            All sections: each section uses its own structure if it has one, otherwise the class structure below.
+                        </p>
+
                         <!-- Fee Structure Found -->
                         <div v-else-if="applicableFeeStructure" class="bg-success/10 border border-success/40 rounded-lg p-4">
                             <div class="flex items-start gap-3">
@@ -660,7 +695,7 @@ const generateVouchers = () => {
                         <Button type="submit" :disabled="isGenerating">
                             <Icon v-if="isGenerating" icon="loader" class="mr-2 h-4 w-4 animate-spin" />
                             <Icon v-else icon="file-plus" class="mr-2 h-4 w-4" />
-                            {{ isGenerating ? 'Generating...' : 'Generate ' + form.month_ids.length + ' Voucher' + (form.month_ids.length !== 1 ? 's' : '') }}
+                            {{ isGenerating ? 'Generating...' : 'Generate vouchers for ' + form.month_ids.length + ' month' + (form.month_ids.length !== 1 ? 's' : '') }}
                         </Button>
                     </div>
                 </form>

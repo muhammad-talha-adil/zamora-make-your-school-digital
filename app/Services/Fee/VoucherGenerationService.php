@@ -39,6 +39,11 @@ class VoucherGenerationService
     ) {}
 
     /**
+     * The structure the cashier picked when several match; used for every student of the run.
+     */
+    protected ?int $chosenFeeStructureId = null;
+
+    /**
      * Generate monthly vouchers for students
      */
     public function generateMonthlyVouchers(int $monthNumber, int $year, array $filters = []): array
@@ -46,6 +51,7 @@ class VoucherGenerationService
         // Sibling ranks are worked out once per family and held for the run; a
         // second run must see any admission made since the first.
         $this->siblingDiscounts->forget();
+        $this->chosenFeeStructureId = isset($filters['fee_structure_id']) ? (int) $filters['fee_structure_id'] : null;
 
         return DB::transaction(function () use ($monthNumber, $year, $filters) {
             $monthId = self::getMonthIdByNumber($monthNumber);
@@ -447,31 +453,36 @@ class VoucherGenerationService
             }
         }
 
-        // Match the enrollment/session scope directly rather than blocking on today's date.
-        if ($enrollment->section_id) {
-            $structure = (clone $baseQuery)
-                ->where('class_id', $enrollment->class_id)
-                ->where('section_id', $enrollment->section_id)
-                ->first();
+        if ($this->chosenFeeStructureId) {
+            $chosen = (clone $baseQuery)->whereKey($this->chosenFeeStructureId)->first();
 
-            if ($structure) {
-                return $structure;
+            if ($chosen) {
+                return $chosen;
             }
         }
 
-        $structure = (clone $baseQuery)
-            ->where('class_id', $enrollment->class_id)
-            ->whereNull('section_id')
-            ->first();
+        $tiers = [];
+        if ($enrollment->section_id) {
+            $tiers[] = (clone $baseQuery)
+                ->where('class_id', $enrollment->class_id)
+                ->where('section_id', $enrollment->section_id);
+        }
+        $tiers[] = (clone $baseQuery)->where('class_id', $enrollment->class_id)->whereNull('section_id');
+        $tiers[] = (clone $baseQuery)->whereNull('class_id')->whereNull('section_id');
 
-        if ($structure) {
-            return $structure;
+        foreach ($tiers as $tier) {
+            $matches = $tier->get();
+
+            if ($matches->count() > 1) {
+                throw new \Exception('More than one fee structure matches this class ('.$matches->pluck('title')->implode(', ').'). Choose which one to use.');
+            }
+
+            if ($matches->isNotEmpty()) {
+                return $matches->first();
+            }
         }
 
-        return (clone $baseQuery)
-            ->whereNull('class_id')
-            ->whereNull('section_id')
-            ->first();
+        return null;
     }
 
     /**

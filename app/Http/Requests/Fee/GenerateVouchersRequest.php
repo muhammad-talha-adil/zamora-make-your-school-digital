@@ -18,6 +18,7 @@ class GenerateVouchersRequest extends FormRequest
             'campus_id' => 'required|exists:campuses,id',
             'class_id' => 'required|exists:school_classes,id',
             'section_id' => 'nullable|exists:sections,id',
+            'fee_structure_id' => 'nullable|exists:fee_structures,id',
             'month_ids' => 'required|array|min:1',
             'month_ids.*' => 'required|exists:months,id',
             'year' => 'required|integer|min:2020|max:2100',
