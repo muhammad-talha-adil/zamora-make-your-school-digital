@@ -25,6 +25,8 @@ interface FeeStructure {
         amount: number;
         type: string;
         frequency: string;
+        is_optional?: boolean;
+        month_range?: string | null;
     }>;
 }
 
@@ -58,7 +60,11 @@ const formatCurrency = (amount: number) => {
 };
 
 const totalAmount = computed(() => {
-    return props.structure.items?.reduce((sum, item) => sum + (item.amount || 0), 0) || 0;
+    return props.structure.items?.filter((item) => !item.is_optional).reduce((sum, item) => sum + (item.amount || 0), 0) || 0;
+});
+
+const optionalAmount = computed(() => {
+    return props.structure.items?.filter((item) => item.is_optional).reduce((sum, item) => sum + (item.amount || 0), 0) || 0;
 });
 
 const editStructure = () => {
@@ -151,7 +157,10 @@ const goBack = () => {
             <div class="bg-card rounded-lg border border-border p-4 md:p-6">
                 <div class="flex flex-wrap gap-2 justify-between items-center mb-4">
                     <h2 class="text-lg font-semibold text-foreground">Fee Items</h2>
-                    <span class="text-sm text-muted-foreground">Total: {{ formatCurrency(totalAmount) }}</span>
+                    <span class="text-sm text-muted-foreground">
+                        Total: {{ formatCurrency(totalAmount) }}
+                        <span v-if="optionalAmount > 0">+ {{ formatCurrency(optionalAmount) }} optional</span>
+                    </span>
                 </div>
 
                 <div v-if="structure.items && structure.items.length > 0" class="overflow-x-auto">
@@ -173,6 +182,11 @@ const goBack = () => {
                             <tr v-for="item in structure.items" :key="item.id" class="transition-colors hover:bg-accent">
                                 <td class="px-4 py-3 whitespace-nowrap">
                                     <div class="text-sm font-medium text-foreground">{{ item.fee_head?.name || 'N/A' }}</div>
+                                    <div v-if="item.is_optional || item.month_range" class="text-xs text-muted-foreground">
+                                        <span v-if="item.is_optional">Optional</span>
+                                        <span v-if="item.is_optional && item.month_range"> · </span>
+                                        <span v-if="item.month_range">{{ item.month_range }}</span>
+                                    </div>
                                 </td>
                                 <td class="px-4 py-3 whitespace-nowrap">
                                     <div class="text-sm text-muted-foreground">{{ item.frequency || 'N/A' }}</div>
@@ -189,6 +203,7 @@ const goBack = () => {
                                 </td>
                                 <td class="px-4 py-3 text-sm font-bold text-foreground text-right">
                                     {{ formatCurrency(totalAmount) }}
+                                    <div v-if="optionalAmount > 0" class="text-xs font-normal text-muted-foreground">+ {{ formatCurrency(optionalAmount) }} optional</div>
                                 </td>
                             </tr>
                         </tfoot>

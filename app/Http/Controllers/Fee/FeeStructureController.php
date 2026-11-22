@@ -262,7 +262,7 @@ class FeeStructureController extends Controller
     public function show($feeStructure)
     {
         // Use explicit find to handle soft deletes properly
-        $structure = FeeStructure::with(['session', 'campus', 'class', 'section', 'items.feeHead', 'creator'])
+        $structure = FeeStructure::with(['session', 'campus', 'class', 'section', 'items.feeHead', 'items.startsFromMonth', 'items.endsAtMonth', 'creator'])
             ->findOrFail($feeStructure);
 
         // A structure belongs to exactly one campus - viewing it while a
@@ -310,6 +310,9 @@ class FeeStructureController extends Controller
                     'type' => $item->feeHead?->category instanceof FeeHeadCategory ? $item->feeHead->category->value : $item->feeHead?->category,
                     'frequency' => $item->frequency instanceof FeeFrequency ? $item->frequency->value : $item->frequency,
                     'is_optional' => $item->is_optional,
+                    'month_range' => $item->startsFromMonth && $item->endsAtMonth
+                        ? mb_substr($item->startsFromMonth->name, 0, 3).'–'.mb_substr($item->endsAtMonth->name, 0, 3)
+                        : null,
                     'applicable_on_admission' => $item->applicable_on_admission,
                 ];
             })->toArray(),
@@ -796,6 +799,7 @@ class FeeStructureController extends Controller
         $sectionId = $sectionId && $sectionId !== '' ? $sectionId : null;
 
         $baseQuery = FeeStructure::active()
+            ->has('items')
             ->with(['items.feeHead'])
             ->where('session_id', $sessionId)
             ->where('campus_id', $campusId)
@@ -896,6 +900,7 @@ class FeeStructureController extends Controller
     {
         // Calculate totals
         $monthlyTotal = 0;
+        $optionalMonthlyTotal = 0;
         $yearlyTotal = 0;
         $oneTimeTotal = 0;
 
@@ -910,7 +915,11 @@ class FeeStructureController extends Controller
 
             switch ($frequency) {
                 case 'monthly':
-                    $monthlyTotal += $amount;
+                    if ($item->is_optional) {
+                        $optionalMonthlyTotal += $amount;
+                    } else {
+                        $monthlyTotal += $amount;
+                    }
                     break;
                 case 'yearly':
                     $yearlyTotal += $amount;
@@ -928,6 +937,7 @@ class FeeStructureController extends Controller
                 'title' => $structure->title,
                 'source' => $structure->section_id ? 'section' : ($structure->class_id ? 'class' : 'campus'),
                 'monthly_fee' => $monthlyTotal,
+                'optional_monthly_fee' => $optionalMonthlyTotal,
                 'annual_fee' => $yearlyTotal,
                 'one_time_fee' => $oneTimeTotal,
                 'annual_billed_in' => $this->annualBillingMonthName($structure),

@@ -182,6 +182,29 @@ watch(() => props.structures, (newStructures) => {
     pagination.value = newStructures || { data: [], links: [], from: 0, to: 0, total: 0, current_page: 1, last_page: 1, per_page: 10 };
 }, { deep: true });
 
+const sendStatusChange = (structure: FeeStructure, actionText: string) => {
+    const actionRoute = structure.status === 'active'
+        ? route('fee.structures.deactivate', structure.id)
+        : route('fee.structures.activate', structure.id);
+
+    axios.patch(actionRoute, {}, {
+        headers: {
+            Accept: 'application/json',
+            'X-Requested-With': 'XMLHttpRequest',
+        },
+    }).then((response) => {
+        const updatedStructure = response.data.structure;
+
+        structuresData.value = structuresData.value.map((item) =>
+            item.id === updatedStructure.id ? updatedStructure : item,
+        );
+
+        alert.success(`Fee structure ${actionText}d successfully!`);
+    }).catch(() => {
+        alert.error('Failed to update status. Please try again.');
+    });
+};
+
 const toggleStatus = (structure: FeeStructure) => {
     const actionText = structure.status === 'active' ? 'deactivate' : 'activate';
     const confirmButtonText = structure.status === 'active' ? 'Yes, deactivate it!' : 'Yes, activate it!';
@@ -194,26 +217,7 @@ const toggleStatus = (structure: FeeStructure) => {
         )
         .then((result) => {
             if (result.isConfirmed) {
-                const actionRoute = structure.status === 'active'
-                    ? route('fee.structures.deactivate', structure.id)
-                    : route('fee.structures.activate', structure.id);
-
-                axios.patch(actionRoute, {}, {
-                    headers: {
-                        Accept: 'application/json',
-                        'X-Requested-With': 'XMLHttpRequest',
-                    },
-                }).then((response) => {
-                    const updatedStructure = response.data.structure;
-
-                    structuresData.value = structuresData.value.map((item) =>
-                        item.id === updatedStructure.id ? updatedStructure : item,
-                    );
-                    
-                    alert.success(`Fee structure ${actionText}d successfully!`);
-                }).catch(() => {
-                    alert.error('Failed to update status. Please try again.');
-                });
+                sendStatusChange(structure, actionText);
             }
         });
 };
@@ -242,7 +246,7 @@ const deleteStructure = (structure: FeeStructure) => {
                             .confirm(message, 'Cannot delete', 'Make it Inactive')
                             .then((answer) => {
                                 if (answer.isConfirmed) {
-                                    toggleStatus(structure);
+                                    sendStatusChange(structure, 'deactivate');
                                 }
                             });
                         return;

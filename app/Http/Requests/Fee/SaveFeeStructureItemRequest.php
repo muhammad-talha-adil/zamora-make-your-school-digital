@@ -48,6 +48,8 @@ class SaveFeeStructureItemRequest extends FormRequest
             'amount.required' => 'Please enter an amount.',
             'amount.min' => 'An amount cannot be negative.',
             'amount.max' => 'An amount cannot be more than 9,999,999.99.',
+            'amount.decimal' => 'Amount can have at most 2 decimal places.',
+            'amount.numeric' => 'Amount must be a number.',
         ];
     }
 

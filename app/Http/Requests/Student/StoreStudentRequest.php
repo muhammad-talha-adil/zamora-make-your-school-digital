@@ -107,7 +107,7 @@ class StoreStudentRequest extends FormRequest
                 'required',
                 'string',
                 'max:255',
-                'regex:/^[a-zA-Z\s\.\-\'\@]+$/',
+                'regex:/^[\p{L}\p{M}\s.\'\-@]+$/u',
             ],
             'student_email' => [
                 'nullable',
@@ -341,7 +341,7 @@ class StoreStudentRequest extends FormRequest
                 'required_without:guardian_id',
                 'string',
                 'max:255',
-                'regex:/^[a-zA-Z\s\.\-\'\@]+$/',
+                'regex:/^[\p{L}\p{M}\s.\'\-@]+$/u',
             ],
             'father_email' => [
                 'nullable',
@@ -692,6 +692,12 @@ class StoreStudentRequest extends FormRequest
             }
         }
         $this->merge($blankToNull);
+
+        // An existing guardian's saved details are used as they are, so the
+        // email the form echoed back is not re-checked (DNS lookups can fail).
+        if (! empty($this->guardian_id)) {
+            $this->merge(['father_email' => null]);
+        }
 
         // Decode JSON strings sent from frontend via FormData
         // FormData sends JSON as string, so we need to decode it before validation

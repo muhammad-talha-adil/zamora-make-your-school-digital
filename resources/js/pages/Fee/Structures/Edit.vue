@@ -249,9 +249,27 @@ const availableFeeHeads = computed(() => {
 // Calculate totals
 const totalMonthly = computed(() => {
     return props.structure.items
-        ?.filter(item => item.frequency === 'monthly')
+        ?.filter(item => item.frequency === 'monthly' && !item.is_optional)
         .reduce((sum, item) => sum + (item.amount || 0), 0) || 0;
 });
+
+const optionalMonthly = computed(() => {
+    return (props.structure.items ?? [])
+        .filter(item => item.frequency === 'monthly' && item.is_optional)
+        .reduce((sum, item) => sum + (item.amount || 0), 0) || 0;
+});
+
+const monthRange = (item: { starts_from_month_id?: number | null; ends_at_month_id?: number | null }) => {
+    const from = props.months.find((m) => m.id === item.starts_from_month_id);
+    const to = props.months.find((m) => m.id === item.ends_at_month_id);
+    return from && to ? `${from.name.slice(0, 3)}–${to.name.slice(0, 3)}` : '';
+};
+
+const roundAmount = () => {
+    if (itemForm.amount !== '' && !Number.isNaN(Number(itemForm.amount))) {
+        itemForm.amount = String(Math.round(Number(itemForm.amount) * 100) / 100);
+    }
+};
 
 const totalYearly = computed(() => {
     return props.structure.items
@@ -388,6 +406,8 @@ const validateItemForm = () => {
     }
     if (!itemForm.amount || Number(itemForm.amount) <= 0) {
         itemErrors.value.amount = 'Valid amount is required';
+    } else if (!/^\d+(\.\d{1,2})?$/.test(String(itemForm.amount))) {
+        itemErrors.value.amount = 'Amount can have at most 2 decimal places';
     } else if (Number(itemForm.amount) > 9999999.99) {
         itemErrors.value.amount = 'Amount cannot be more than 9,999,999.99';
     }
@@ -655,6 +675,7 @@ const getFrequencyLabel = (freq: string) => {
                                 min="0"
                                 step="0.01"
                                 placeholder="0.00"
+                                @blur="roundAmount"
                                 :class="{ 'border-destructive': itemErrors.amount }"
                             />
                             <p v-if="itemErrors.amount" class="text-sm text-destructive">{{ itemErrors.amount }}</p>
@@ -699,6 +720,7 @@ const getFrequencyLabel = (freq: string) => {
                             <tr v-for="item in structure.items" :key="item.id" class="transition-colors hover:bg-accent">
                                 <td class="px-4 py-3 whitespace-nowrap">
                                     <div class="text-sm font-medium text-foreground">{{ item.fee_head?.name || 'N/A' }}</div>
+                                    <div v-if="monthRange(item)" class="text-xs text-muted-foreground">{{ monthRange(item) }}</div>
                                     <div v-if="item.is_optional || item.is_transport_related" class="text-xs text-muted-foreground">
                                         <span v-if="item.is_optional">Optional</span>
                                         <span v-if="item.is_optional && item.is_transport_related"> · </span>
@@ -736,6 +758,7 @@ const getFrequencyLabel = (freq: string) => {
                                 </td>
                                 <td class="px-4 py-3 text-sm font-bold text-foreground text-right">
                                     {{ formatCurrency(totalMonthly) }}
+                                    <div v-if="optionalMonthly > 0" class="text-xs font-normal text-muted-foreground">+ {{ formatCurrency(optionalMonthly) }} optional</div>
                                 </td>
                                 <td></td>
                             </tr>

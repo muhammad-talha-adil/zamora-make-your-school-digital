@@ -71,6 +71,7 @@ interface FeeStructure {
     is_default: boolean;
     items: FeeStructureItem[];
     total_monthly: number;
+    total_optional_monthly?: number;
     total_annual: number;
     total_one_time: number;
 }
@@ -238,6 +239,7 @@ const fetchFeeStructure = async () => {
                     frequency: item.frequency,
                 })),
                 total_monthly: data.monthly_fee || 0,
+                total_optional_monthly: data.optional_monthly_fee || 0,
                 total_annual: data.annual_fee || 0,
                 total_one_time: data.one_time_fee || 0,
             };
@@ -629,7 +631,7 @@ const generateVouchers = () => {
                         </p>
 
                         <!-- Fee Structure Found -->
-                        <div v-else-if="applicableFeeStructure" class="bg-success/10 border border-success/40 rounded-lg p-4">
+                        <div v-if="applicableFeeStructure && !feeStructureLoading" class="bg-success/10 border border-success/40 rounded-lg p-4">
                             <div class="flex items-start gap-3">
                                 <Icon icon="check-circle" class="h-5 w-5 text-success flex-shrink-0 mt-0.5" />
                                 <div class="flex-1">
@@ -645,6 +647,9 @@ const generateVouchers = () => {
                                         <div class="text-right">
                                             <p class="text-lg font-bold text-success">
                                                 Rs. {{ applicableFeeStructure.total_monthly.toLocaleString() }}/month
+                                            </p>
+                                            <p v-if="(applicableFeeStructure.total_optional_monthly ?? 0) > 0" class="text-sm text-success">
+                                                + Rs. {{ applicableFeeStructure.total_optional_monthly?.toLocaleString() }} optional
                                             </p>
                                             <p v-if="applicableFeeStructure.total_annual > 0" class="text-sm text-success">
                                                 + Rs. {{ applicableFeeStructure.total_annual.toLocaleString() }}/annual
@@ -685,7 +690,7 @@ const generateVouchers = () => {
                         </div>
                         
                         <!-- No Fee Structure Found -->
-                        <div v-else class="bg-warning/10 border border-warning/40 rounded-lg p-4">
+                        <div v-else-if="!feeStructureLoading && !structureCandidates.length" class="bg-warning/10 border border-warning/40 rounded-lg p-4">
                             <div class="flex items-start gap-3">
                                 <Icon icon="alert-triangle" class="h-5 w-5 text-warning flex-shrink-0 mt-0.5" />
                                 <div>

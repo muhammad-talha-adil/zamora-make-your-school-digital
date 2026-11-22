@@ -533,6 +533,7 @@
                             <Input
                                 id="father_email"
                                 v-model="form.father_email"
+                                :readonly="!!linkedGuardianId"
                                 type="email"
                                 placeholder="Enter email address"
                                 :class="{

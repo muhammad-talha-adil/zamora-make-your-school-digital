@@ -140,7 +140,13 @@
                                     <div>
                                         <p class="text-xs text-muted-foreground">Monthly Fee</p>
                                         <p class="text-sm font-medium text-foreground">
-                                            {{ formatCurrency(student?.fee_summary?.monthly ?? currentEnrollment?.monthly_fee) }}
+                                            {{ formatCurrency(student?.fee_summary?.monthly_net ?? student?.fee_summary?.monthly ?? currentEnrollment?.monthly_fee) }}
+                                        </p>
+                                        <p
+                                            v-if="student?.fee_summary && student.fee_summary.monthly_net !== undefined && student.fee_summary.monthly_net !== student.fee_summary.monthly"
+                                            class="text-xs text-muted-foreground"
+                                        >
+                                            Structure: {{ formatCurrency(student.fee_summary.monthly) }}
                                         </p>
                                     </div>
                                 </div>
@@ -496,6 +502,7 @@ interface Props {
         documents?: StudentDocumentRow[];
         fee_summary?: {
             structure_title: string | null;
+            monthly_net?: number;
             monthly: number;
             annual: number;
             one_time: number;

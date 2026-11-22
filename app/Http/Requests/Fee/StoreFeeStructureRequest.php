@@ -89,6 +89,8 @@ class StoreFeeStructureRequest extends FormRequest
             'items.*.amount.required_with' => 'Each charge needs an amount.',
             'items.*.amount.min' => 'A charge cannot be negative.',
             'items.*.amount.max' => 'An amount cannot be more than 9,999,999.99.',
+            'items.*.amount.decimal' => 'Amount can have at most 2 decimal places.',
+            'items.*.amount.numeric' => 'Amount must be a number.',
             'items.required' => 'Add at least one fee head.',
             'items.min' => 'Add at least one fee head.',
         ];

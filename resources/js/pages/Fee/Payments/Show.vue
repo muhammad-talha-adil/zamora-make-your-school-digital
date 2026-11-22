@@ -83,10 +83,20 @@ const showReverseDialog = ref(false);
 const reversing = ref(false);
 const reverseForm = reactive({ reason: '' });
 
+const reasonError = ref('');
+
 const submitReverse = () => {
+    if (!reverseForm.reason.trim()) {
+        reasonError.value = 'Please write the reason.';
+        return;
+    }
+    reasonError.value = '';
     reversing.value = true;
     router.post(route('fee.payments.reverse', props.payment.id), reverseForm, {
         preserveScroll: true,
+        onError: (errors) => {
+            reasonError.value = errors.reason ?? '';
+        },
         onSuccess: () => {
             showReverseDialog.value = false;
             reverseForm.reason = '';
@@ -147,7 +157,9 @@ const submitReverse = () => {
                                 v-model="reverseForm.reason"
                                 class="min-h-20 w-full rounded-md border border-border bg-card px-3 py-2 text-sm text-foreground"
                                 placeholder="Why is this payment being reversed?"
+                                @input="reasonError = ''"
                             />
+                            <p v-if="reasonError" class="text-sm text-destructive">{{ reasonError }}</p>
                         </div>
 
                         <DialogFooter>

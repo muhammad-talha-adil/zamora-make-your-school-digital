@@ -380,6 +380,7 @@ class StudentService
         }
 
         $totals = ['monthly' => 0.0, 'yearly' => 0.0, 'once' => 0.0];
+        $monthlyNet = 0.0;
         $discount = 0.0;
 
         foreach ($enrollment->feeStructure?->items ?? [] as $item) {
@@ -394,8 +395,17 @@ class StudentService
             }
             $headDiscount = min($headDiscount, $original);
 
+            if ($frequency === 'monthly' && $item->is_optional) {
+                $discount += $headDiscount;
+
+                continue;
+            }
+
             if (isset($totals[$frequency])) {
                 $totals[$frequency] += $original;
+            }
+            if ($frequency === 'monthly') {
+                $monthlyNet += $original - $headDiscount;
             }
             $discount += $headDiscount;
         }
@@ -418,6 +428,7 @@ class StudentService
         return [
             'structure_title' => $enrollment->feeStructure?->title,
             'monthly' => $totals['monthly'],
+            'monthly_net' => round($monthlyNet, 2),
             'annual' => $totals['yearly'],
             'one_time' => $totals['once'],
             'discount' => round($discount, 2),
