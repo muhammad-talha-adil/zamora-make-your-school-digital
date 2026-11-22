@@ -51,6 +51,7 @@ const breadcrumbItems: BreadcrumbItem[] = [
                 <table class="w-full text-sm">
                     <thead>
                         <tr class="border-b border-border text-muted-foreground">
+                            <th class="px-3 py-2 text-left">#</th>
                             <th class="px-3 py-2 text-left">Date</th>
                             <th class="px-3 py-2 text-left">Entry</th>
                             <th class="px-3 py-2 text-left">Reference</th>
@@ -62,6 +63,7 @@ const breadcrumbItems: BreadcrumbItem[] = [
                     </thead>
                     <tbody>
                         <tr v-for="(row, index) in props.rows" :key="index" class="border-b border-border">
+                            <td class="px-3 py-2 text-muted-foreground">{{ index + 1 }}</td>
                             <td class="px-3 py-2">{{ formatDate(row.date) }}</td>
                             <td class="px-3 py-2">{{ row.type }}</td>
                             <td class="px-3 py-2">{{ row.reference }}</td>
@@ -71,7 +73,7 @@ const breadcrumbItems: BreadcrumbItem[] = [
                             <td class="px-3 py-2 text-right font-medium">{{ formatCurrency(row.balance) }}</td>
                         </tr>
                         <tr v-if="props.rows.length === 0">
-                            <td colspan="7" class="px-3 py-6 text-center text-muted-foreground">No fee entries yet.</td>
+                            <td colspan="8" class="px-3 py-6 text-center text-muted-foreground">No fee entries yet.</td>
                         </tr>
                     </tbody>
                 </table>
