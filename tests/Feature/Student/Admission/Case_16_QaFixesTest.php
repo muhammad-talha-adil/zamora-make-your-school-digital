@@ -37,7 +37,7 @@ it('refuses a CNIC already on another guardian with a friendly message, not a SQ
     ]));
 
     $response->assertSessionHasErrors('father_cnic');
-    expect(session('errors')->first('father_cnic'))->toContain('already registered')
+    expect(session('errors')->first('father_cnic'))->toContain('belongs to another guardian')
         ->and(Student::count())->toBe(0);
 });
 
