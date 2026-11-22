@@ -251,7 +251,7 @@ const deleteStructure = (structure: FeeStructure) => {
                             });
                         return;
                     }
-                    alert.error(message || 'Could not delete the fee structure. Please try again.');
+                    alert.error(message || 'Could not delete the fee structure. Please try again.', 'Cannot delete');
                 });
             }
         });
