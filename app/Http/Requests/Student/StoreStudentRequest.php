@@ -399,8 +399,7 @@ class StoreStudentRequest extends FormRequest
                         ->exists();
 
                     if ($clash) {
-                        $fail('This CNIC is already registered against a different phone number. '
-                            .'Check the CNIC and the phone number, or pick the existing guardian.');
+                        $fail('This CNIC belongs to another guardian. Check the phone number.');
                     }
                 },
             ],
@@ -463,7 +462,7 @@ class StoreStudentRequest extends FormRequest
                         ->exists();
 
                     if ($clash) {
-                        $fail('This CNIC is already registered against a different phone number.');
+                        $fail('This CNIC belongs to another guardian. Check the phone number.');
                     }
                 },
             ],
