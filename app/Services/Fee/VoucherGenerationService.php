@@ -552,8 +552,22 @@ class VoucherGenerationService
                     ? $item->instalmentAmountForMonth($monthNumber)
                     : null;
 
-                // Check frequency - skip if yearly and not first month
-                if ($frequency === FeeFrequency::YEARLY && $instalment === null && ! $isFirstMonth) {
+                // A yearly charge is billed in its own billing month/year when
+                // the structure names one, otherwise in the session's first month.
+                $billingMonthNumber = $item->billingMonth?->month_number;
+                $isBillingMonth = $billingMonthNumber !== null
+                    ? $billingMonthNumber === $monthNumber
+                    : $isFirstMonth;
+
+                if ($frequency === FeeFrequency::YEARLY && $instalment === null
+                    && (! $isBillingMonth || ($item->billing_year && (int) $item->billing_year !== (int) $voucher->voucher_year))) {
+                    continue;
+                }
+
+                // An optional or transport charge is billed only when the office
+                // ticked it for this student (an agreed amount exists for it).
+                if (($item->is_optional || $item->is_transport_related)
+                    && $this->getCustomAmountForFeeHead($customAssignments, $item->fee_head_id) === null) {
                     continue;
                 }
 
@@ -595,21 +609,29 @@ class VoucherGenerationService
                 $isOnce = $frequency === FeeFrequency::ONCE;
                 $instalmentLabel = '';
 
-                if ($instalment !== null) {
-                    // The agreed figure is still the year's charge, so the
-                    // instalment is taken as a share of whatever is being billed
-                    // rather than of the structure's own amount.
-                    $share = (float) $item->amount > 0
-                        ? $instalment / (float) $item->amount
-                        : 0.0;
+                /*
+                 * An instalment is a share of whatever is being billed, and a
+                 * child admitted part-way through the month owes only part of
+                 * that month's recurring charge, where the campus says so.
+                 * Applied to both the agreed amount and the structure's own
+                 * amount, so the voucher can show the list price and the cut.
+                 */
+                $share = $instalment !== null && (float) $item->amount > 0
+                    ? $instalment / (float) $item->amount
+                    : null;
+                $adjusted = function (float $base) use ($share, $enrollment, $frequency, $monthNumber, $voucher): float {
+                    if ($share !== null) {
+                        $base = round($base * $share, 2);
+                    }
 
-                    $amount = round((float) $amount * $share, 2);
+                    return $this->prorated($enrollment, $frequency, $monthNumber, $voucher->voucher_year, $base);
+                };
+
+                if ($instalment !== null) {
                     $instalmentLabel = $this->instalmentLabelFor($item, $monthNumber);
                 }
 
-                // A child admitted part-way through the month owes only part of
-                // that month's recurring charge, where the campus says so.
-                $amount = $this->prorated($enrollment, $frequency, $monthNumber, $voucher->voucher_year, (float) $amount);
+                $amount = $adjusted((float) $amount);
 
                 $discount = $this->largestDiscountFor(
                     $enrollment->student,
@@ -619,6 +641,17 @@ class VoucherGenerationService
                     $this->billedMonthOf($voucher, $monthNumber),
                     $enrollment,
                 );
+
+                // An agreed amount below the structure's is shown as the full
+                // amount with the difference as a discount, not as a smaller
+                // charge with no discount.
+                if ($customAmount !== null) {
+                    $listAmount = $adjusted((float) $item->amount);
+                    if ($listAmount > $amount) {
+                        $discount += $listAmount - $amount;
+                        $amount = $listAmount;
+                    }
+                }
 
                 $description = $item->feeHead->name.($isOnce ? ' (One Time)' : ' - '.self::getMonthNameByNumber($monthNumber).' '.$voucher->voucher_year).$instalmentLabel;
                 $this->createBilledVoucherCharge(

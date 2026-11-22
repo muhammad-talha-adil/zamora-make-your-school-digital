@@ -34,6 +34,8 @@ class UpdateStudentRequest extends FormRequest
     public function messages(): array
     {
         return [
+            'name.regex' => "Name can only have letters, spaces and . ' - @",
+            'father_name.regex' => "Guardian name can only have letters, spaces and . ' - @",
             'admission_no.required' => 'The admission number is required.',
             'admission_no.unique' => 'The admission number has already been taken by another student.',
             'admission_no.max' => 'The admission number may not be greater than 50 characters.',

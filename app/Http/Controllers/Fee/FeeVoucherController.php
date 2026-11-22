@@ -329,7 +329,7 @@ class FeeVoucherController extends Controller
                     'category' => $item->feeHead->category,
                 ] : null,
                 'amount' => (float) $item->amount,
-                'frequency' => $item->frequency,
+                'frequency' => $item->frequency instanceof \BackedEnum ? $item->frequency->value : $item->frequency,
             ];
         });
 
@@ -341,7 +341,7 @@ class FeeVoucherController extends Controller
             'is_default' => $structure->is_default,
             'items' => $items,
             'total_monthly' => $items->where('frequency', 'monthly')->sum('amount'),
-            'total_annual' => $items->where('frequency', 'annual')->sum('amount'),
+            'total_annual' => $items->where('frequency', 'yearly')->sum('amount'),
         ];
     }
 

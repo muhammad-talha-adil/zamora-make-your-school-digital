@@ -81,9 +81,8 @@ it('names the counts so the office knows what is attached', function () {
         ->getSession()
         ->get('error');
 
-    expect($message)->toContain('1 student(s)')
-        ->and($message)->toContain('1 voucher(s)')
-        ->and($message)->toContain('Deactivate');
+    expect($message)->toContain('Used by 1 voucher')
+        ->and($message)->toContain('Inactive');
 });
 
 it('answers a JSON delete with a 422 rather than a redirect', function () {

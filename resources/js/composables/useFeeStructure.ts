@@ -10,6 +10,7 @@ export interface FeeStructureItem {
     amount: number;
     frequency: string;
     is_optional: boolean;
+    is_transport_related?: boolean;
 }
 
 export interface FeeStructure {
@@ -17,6 +18,8 @@ export interface FeeStructure {
     title: string;
     monthly_fee: number;
     annual_fee: number;
+    one_time_fee?: number;
+    annual_billed_in?: string | null;
     items: FeeStructureItem[];
 }
 
@@ -265,7 +268,7 @@ export function useFeeStructure() {
         if (!feeStructure.value) return;
 
         manualSelectedFeeHeads.value = feeStructure.value.items
-            .filter((item) => !item.is_optional)
+            .filter((item) => !item.is_optional && !item.is_transport_related)
             .map((item) => item.fee_head_id);
 
         feeStructure.value.items.forEach((item) => {

@@ -17,8 +17,10 @@ use App\Models\SchoolClass;
 use App\Models\Section;
 use App\Models\Session;
 use App\Models\StudentEnrollmentRecord;
+use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 
@@ -104,6 +106,28 @@ class FeeStructureController extends Controller
             'sections' => Section::select('id', 'name', 'class_id')->get(),
             'months' => Month::select('id', 'name', 'month_number')->orderBy('month_number')->get(),
             'feeHeads' => FeeHead::active()->select('id', 'name', 'default_frequency')->ordered()->get(),
+            'existingStructures' => FeeStructure::with('items')
+                ->when($user->campusId(), fn ($query, $campusId) => $query->where('campus_id', $campusId))
+                ->has('items')
+                ->latest()
+                ->limit(100)
+                ->get()
+                ->map(fn (FeeStructure $structure) => [
+                    'id' => $structure->id,
+                    'title' => $structure->title,
+                    'items' => $structure->items->map(fn ($item) => [
+                        'fee_head_id' => $item->fee_head_id,
+                        'amount' => (float) $item->amount,
+                        'frequency' => $item->frequency instanceof FeeFrequency ? $item->frequency->value : $item->frequency,
+                        'is_optional' => (bool) $item->is_optional,
+                        'applicable_on_admission' => (bool) $item->applicable_on_admission,
+                        'is_transport_related' => (bool) $item->is_transport_related,
+                        'starts_from_month_id' => $item->starts_from_month_id,
+                        'ends_at_month_id' => $item->ends_at_month_id,
+                        'billing_month_id' => $item->billing_month_id,
+                        'billing_year' => $item->billing_year,
+                    ])->values(),
+                ])->values(),
             'feeHeadFrequencies' => collect(FeeFrequency::cases())->map(fn ($case) => ['value' => $case->value, 'label' => $case->label()])->values(),
         ]);
     }
@@ -195,29 +219,33 @@ class FeeStructureController extends Controller
 
         // If no sections selected for a class, create ONE record with NULL
         // section (applies to all) - otherwise one record per section.
-        $structures = [];
+        $structures = DB::transaction(function () use ($classGroups, $validated, $classCampusIds, $titleFor): array {
+            $structures = [];
 
-        foreach ($classGroups as $group) {
-            $sectionsToCreate = empty($group['section_ids']) ? [null] : array_values($group['section_ids']);
+            foreach ($classGroups as $group) {
+                $sectionsToCreate = empty($group['section_ids']) ? [null] : array_values($group['section_ids']);
 
-            foreach ($sectionsToCreate as $sectionId) {
-                $structureData = $validated;
-                unset($structureData['items']);
-                $structureData['class_id'] = $group['class_id'];
-                $structureData['section_id'] = $sectionId;
-                $structureData['campus_id'] = $classCampusIds[$group['class_id']];
-                $structureData['title'] = $titleFor($group['class_id'], $sectionId);
+                foreach ($sectionsToCreate as $sectionId) {
+                    $structureData = $validated;
+                    unset($structureData['items']);
+                    $structureData['class_id'] = $group['class_id'];
+                    $structureData['section_id'] = $sectionId;
+                    $structureData['campus_id'] = $classCampusIds[$group['class_id']];
+                    $structureData['title'] = $titleFor($group['class_id'], $sectionId);
 
-                $structure = FeeStructure::create($structureData);
-                $structures[] = $structure;
+                    $structure = FeeStructure::create($structureData);
+                    $structures[] = $structure;
 
-                if (! empty($validated['items'])) {
-                    foreach ($validated['items'] as $item) {
-                        $structure->items()->create($this->itemAttributes($item));
+                    if (! empty($validated['items'])) {
+                        foreach ($validated['items'] as $item) {
+                            $structure->items()->create($this->itemAttributes($item));
+                        }
                     }
                 }
             }
-        }
+
+            return $structures;
+        });
 
         $count = count($structures);
         $message = $count === 1
@@ -348,6 +376,11 @@ class FeeStructureController extends Controller
                     'frequency' => $item->frequency instanceof FeeFrequency ? $item->frequency->value : $item->frequency,
                     'is_optional' => $item->is_optional,
                     'applicable_on_admission' => $item->applicable_on_admission,
+                    'is_transport_related' => $item->is_transport_related,
+                    'starts_from_month_id' => $item->starts_from_month_id,
+                    'ends_at_month_id' => $item->ends_at_month_id,
+                    'billing_month_id' => $item->billing_month_id,
+                    'billing_year' => $item->billing_year,
                 ];
             })->toArray(),
         ];
@@ -527,14 +560,12 @@ class FeeStructureController extends Controller
         // school deactivates it instead, which stops it being picked up for new
         // vouchers while the history stays readable.
         if ($inUse['enrollments'] > 0 || $inUse['vouchers'] > 0) {
-            $message = sprintf(
-                'This fee structure is in use by %d student(s) and %d voucher(s), so it cannot be deleted. Deactivate it instead.',
-                $inUse['enrollments'],
-                $inUse['vouchers'],
-            );
+            $message = $inUse['vouchers'] > 0
+                ? sprintf('Used by %d %s. You can make it Inactive instead.', $inUse['vouchers'], $inUse['vouchers'] === 1 ? 'voucher' : 'vouchers')
+                : sprintf('Used by %d %s. You can make it Inactive instead.', $inUse['enrollments'], $inUse['enrollments'] === 1 ? 'student' : 'students');
 
             if (request()->expectsJson()) {
-                return response()->json(['success' => false, 'message' => $message], 422);
+                return response()->json(['success' => false, 'message' => $message, 'in_use' => true], 422);
             }
 
             return redirect()->route('fee.structures.index')->with('error', $message);
@@ -899,6 +930,7 @@ class FeeStructureController extends Controller
                 'monthly_fee' => $monthlyTotal,
                 'annual_fee' => $yearlyTotal,
                 'one_time_fee' => $oneTimeTotal,
+                'annual_billed_in' => $this->annualBillingMonthName($structure),
                 'items' => $structure->items->map(function ($item) {
                     // Convert frequency enum to string value for JSON response
                     $frequency = $item->frequency instanceof FeeFrequency
@@ -912,11 +944,24 @@ class FeeStructureController extends Controller
                         'amount' => $item->amount,
                         'frequency' => $frequency,
                         'is_optional' => $item->is_optional,
+                        'is_transport_related' => $item->is_transport_related,
                         'applicable_on_admission' => $item->applicable_on_admission,
                     ];
                 }),
             ],
         ]);
+    }
+
+    /**
+     * The month yearly charges are billed in: the first month of the session
+     * (see VoucherGenerationService::addVoucherItems()). Shown so the office
+     * knows why a yearly charge is missing from other months' vouchers.
+     */
+    private function annualBillingMonthName(FeeStructure $structure): ?string
+    {
+        $start = $structure->session?->start_date;
+
+        return $start ? Carbon::parse($start)->format('F') : null;
     }
 
     /**

@@ -48,7 +48,7 @@ it('bills the typed amount when the mode is manual', function () {
     ]);
 
     // The office negotiated Rs 4,000 against a Rs 5,000 structure.
-    expect((float) monthlyLine($this->world)->amount)->toBe(4000.0);
+    expect((float) monthlyLine($this->world)->net_amount)->toBe(4000.0);
 });
 
 it('falls back to the structure for heads the manual entry does not mention', function () {
@@ -76,7 +76,7 @@ it('keeps the structure frequency for a manually priced head', function () {
     itemsFor(5);
 
     // A hand-priced yearly charge is still yearly, not monthly.
-    $total = FeeVoucherItem::where('fee_head_id', $this->world->school->annualHead->id)->sum('amount');
+    $total = FeeVoucherItem::where('fee_head_id', $this->world->school->annualHead->id)->sum('net_amount');
 
     expect((float) $total)->toBe(9000.0);
 });
@@ -109,7 +109,7 @@ it('applies a mid-session override recorded against the student', function () {
         'reason' => 'Revised after review',
     ]);
 
-    expect((float) monthlyLine($this->world)->amount)->toBe(3500.0);
+    expect((float) monthlyLine($this->world)->net_amount)->toBe(3500.0);
 });
 
 it('lets a mid-session override win over the amount agreed at admission', function () {
@@ -137,7 +137,7 @@ it('lets a mid-session override win over the amount agreed at admission', functi
     ]);
 
     // The later decision is the one that stands.
-    expect((float) monthlyLine($this->world)->amount)->toBe(3000.0);
+    expect((float) monthlyLine($this->world)->net_amount)->toBe(3000.0);
 });
 
 it('does not copy the admission fee into a student fee assignment', function () {

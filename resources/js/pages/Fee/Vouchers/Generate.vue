@@ -277,6 +277,33 @@ const years = useYearOptions();
 form.year = currentYear;
 
 // Toggle month selection
+// Yearly charges are billed only in the first month of the session and
+// one-time charges only on a student's first voucher. Say so here, so the
+// structure total is never mistaken for what this voucher will hold.
+const notInThisVoucherNotes = computed(() => {
+    const structure = applicableFeeStructure.value;
+    const session = props.sessions.find((s) => String(s.id) === String(form.session_id));
+    if (!structure || !session) {
+        return [] as string[];
+    }
+
+    const notes: string[] = [];
+    const startMonth = new Date(session.start_date).getMonth() + 1;
+    const startMonthName = props.months.find((m) => m.month_number === startMonth)?.name
+        ?? new Date(session.start_date).toLocaleString('en-US', { month: 'long' });
+    const hasYearly = structure.items.some((item) => item.frequency === 'yearly');
+    const selectedMonthNumbers = props.months.filter((m) => form.month_ids.includes(m.id)).map((m) => m.month_number);
+
+    if (hasYearly && selectedMonthNumbers.some((n) => n !== startMonth)) {
+        notes.push(`Annual fee is billed in ${startMonthName}, not in other months.`);
+    }
+    if (structure.items.some((item) => item.frequency === 'once')) {
+        notes.push("One-time fees go only on a student's first voucher.");
+    }
+
+    return notes;
+});
+
 const chooseStructure = (id: number) => {
     chosenStructureId.value = id;
     fetchFeeStructure();
@@ -646,6 +673,12 @@ const generateVouchers = () => {
                                                 </tr>
                                             </tbody>
                                         </table>
+                                    </div>
+                                    <div v-if="notInThisVoucherNotes.length" class="mt-3 rounded-md border border-warning/40 bg-warning/10 p-3 text-sm text-warning">
+                                        <p class="font-medium">Not in this voucher:</p>
+                                        <ul class="mt-1 list-disc pl-5">
+                                            <li v-for="note in notInThisVoucherNotes" :key="note">{{ note }}</li>
+                                        </ul>
                                     </div>
                                 </div>
                             </div>

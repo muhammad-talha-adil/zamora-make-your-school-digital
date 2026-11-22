@@ -55,9 +55,9 @@ class StoreFeeStructureRequest extends FormRequest
             'is_default' => ['nullable', 'boolean'],
             'notes' => ['nullable', 'string', 'max:2000'],
 
-            'items' => ['nullable', 'array'],
+            'items' => $this->itemsRules(),
             'items.*.fee_head_id' => ['required_with:items', 'integer', Rule::exists('fee_heads', 'id')],
-            'items.*.amount' => ['required_with:items', 'numeric', 'min:0', 'decimal:0,2'],
+            'items.*.amount' => ['required_with:items', 'numeric', 'min:0', 'max:9999999.99', 'decimal:0,2'],
 
             // Frequency decides whether a charge repeats every month, once a
             // year, or once ever. It defaults to the fee head's own setting.
@@ -88,7 +88,21 @@ class StoreFeeStructureRequest extends FormRequest
             'items.*.fee_head_id.required_with' => 'Each charge needs a fee head.',
             'items.*.amount.required_with' => 'Each charge needs an amount.',
             'items.*.amount.min' => 'A charge cannot be negative.',
+            'items.*.amount.max' => 'An amount cannot be more than 9,999,999.99.',
+            'items.required' => 'Add at least one fee head.',
+            'items.min' => 'Add at least one fee head.',
         ];
+    }
+
+    /**
+     * A new structure needs at least one charge; an edit may omit `items`
+     * entirely (charges are then changed one at a time), but not send none.
+     *
+     * @return array<int, string>
+     */
+    protected function itemsRules(): array
+    {
+        return ['required', 'array', 'min:1'];
     }
 
     public function withValidator($validator): void

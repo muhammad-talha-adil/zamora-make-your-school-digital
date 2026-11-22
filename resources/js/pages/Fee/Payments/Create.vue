@@ -285,7 +285,7 @@ const totalAllocated = computed(() => {
 
 watch(totalAllocated, (total) => {
     form.received_amount = total;
-});
+}, { immediate: true });
 
 const remainingAmount = computed(() => form.received_amount - totalAllocated.value);
 

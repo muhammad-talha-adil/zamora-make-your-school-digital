@@ -235,8 +235,19 @@ const deleteStructure = (structure: FeeStructure) => {
                 }).then(() => {
                     alert.success('Fee structure deleted successfully!');
                     fetchStructures();
-                }).catch(() => {
-                    alert.error('Failed to delete fee structure. Please try again.');
+                }).catch((error) => {
+                    const message = error?.response?.data?.message;
+                    if (error?.response?.status === 422 && error.response.data?.in_use && structure.status === 'active') {
+                        alert
+                            .confirm(message, 'Cannot delete', 'Make it Inactive')
+                            .then((answer) => {
+                                if (answer.isConfirmed) {
+                                    toggleStatus(structure);
+                                }
+                            });
+                        return;
+                    }
+                    alert.error(message || 'Could not delete the fee structure. Please try again.');
                 });
             }
         });

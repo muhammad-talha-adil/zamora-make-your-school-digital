@@ -15,6 +15,7 @@ import { ComboboxInput } from '@/components/ui/combobox';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import Icon from '@/components/Icon.vue';
 import SearchableSelect from '@/components/ui/searchable-select/SearchableSelect.vue';
+import FeeItemOptions, { type FeeItemOptionValues } from '@/components/fee/FeeItemOptions.vue';
 
 interface Props {
     active_session_id?: number;
@@ -26,6 +27,22 @@ interface Props {
     feeHeadFrequencies: Array<{ value: string; label: string }>;
     isSuperAdmin?: boolean;
     campuses?: Array<{ id: number; name: string }>;
+    existingStructures?: Array<{
+        id: number;
+        title: string;
+        items: Array<{
+            fee_head_id: number;
+            amount: number;
+            frequency: string;
+            is_optional: boolean;
+            applicable_on_admission: boolean;
+            is_transport_related: boolean;
+            starts_from_month_id: number | null;
+            ends_at_month_id: number | null;
+            billing_month_id: number | null;
+            billing_year: number | null;
+        }>;
+    }>;
 }
 
 const props = defineProps<Props>();
@@ -46,8 +63,12 @@ const feeHeadsList = ref([...props.feeHeads]);
 const classesList = ref([...props.classes]);
 
 // Owner/developer only: which campuses' classes are offered below. Starts
-// with every campus checked so the class list isn't empty by default.
-const selectedCampusIds = ref<number[]>((props.campuses ?? []).map((c) => c.id));
+// with just the campus picked in the header (every campus only when none is).
+const selectedCampusIds = ref<number[]>(
+    academicScope.value?.campusId
+        ? [academicScope.value.campusId]
+        : (props.campuses ?? []).map((c) => c.id),
+);
 const allCampusesSelected = computed(
     () => selectedCampusIds.value.length === (props.campuses?.length ?? 0) && (props.campuses?.length ?? 0) > 0,
 );
@@ -108,15 +129,70 @@ const errors = ref<Record<string, string>>({});
 const isSubmitting = ref(false);
 
 const { isValid: isBaseValid } = useFormValidity(form, ['title', 'session_id', 'campus_id', 'status']);
-const isValid = computed(() => isBaseValid.value && selectedClassIds.value.length > 0);
+const isValid = computed(() => isBaseValid.value && selectedClassIds.value.length > 0 && feeItems.value.length > 0);
+
+const stillNeeded = computed(() => {
+    const missing: string[] = [];
+    if (!form.title) {
+        missing.push('title');
+    }
+    if (!form.session_id) {
+        missing.push('session');
+    }
+    if (!form.campus_id) {
+        missing.push('campus');
+    }
+    if (selectedClassIds.value.length === 0) {
+        missing.push('at least one class');
+    }
+    if (feeItems.value.length === 0) {
+        missing.push('at least one fee head');
+    }
+    return missing;
+});
 
 // Fee Items - Local state for new items to be created with structure
 const feeItems = ref<Array<{
     temp_id: number;
     fee_head_id: number;
     amount: number;
-    frequency: string;
-}>>([]);
+} & FeeItemOptionValues>>([]);
+
+const defaultItemOptions = (): FeeItemOptionValues => ({
+    frequency: 'monthly',
+    is_optional: false,
+    applicable_on_admission: true,
+    is_transport_related: false,
+    starts_from_month_id: null,
+    ends_at_month_id: null,
+    billing_month_id: null,
+    billing_year: null,
+});
+const itemOptions = ref<FeeItemOptionValues>(defaultItemOptions());
+
+// "Copy from existing structure": prefill the charges from another structure.
+const copySourceId = ref('');
+const copySourceOptions = computed(() => (props.existingStructures ?? []).map((st) => ({ value: String(st.id), label: `${st.title} (${st.items.length} fee heads)` })));
+const copyFromStructure = (value: string) => {
+    copySourceId.value = value;
+    const source = (props.existingStructures ?? []).find((st) => String(st.id) === value);
+    if (!source) {
+        return;
+    }
+    feeItems.value = source.items.map((item, index) => ({
+        temp_id: Date.now() + index,
+        fee_head_id: item.fee_head_id,
+        amount: Number(item.amount),
+        frequency: item.frequency,
+        is_optional: !!item.is_optional,
+        applicable_on_admission: !!item.applicable_on_admission,
+        is_transport_related: !!item.is_transport_related,
+        starts_from_month_id: item.starts_from_month_id,
+        ends_at_month_id: item.ends_at_month_id,
+        billing_month_id: item.billing_month_id,
+        billing_year: item.billing_year,
+    }));
+};
 
 const showItemForm = ref(false);
 const itemForm = reactive({
@@ -195,7 +271,18 @@ const onClassCreated = async () => {
 };
 
 const sessionOptions = computed(() => props.sessions.map((session) => ({ value: String(session.id), label: session.name })));
-const feeHeadOptions = computed(() => feeHeadsList.value.map((fh) => ({ value: String(fh.id), label: fh.name })));
+// Heads already added to this structure are not offered again.
+const feeHeadOptions = computed(() => feeHeadsList.value
+    .filter((fh) => !feeItems.value.some((item) => item.fee_head_id === fh.id))
+    .map((fh) => ({ value: String(fh.id), label: fh.name })));
+
+// A newly picked head brings its own usual frequency; the office can change it.
+watch(() => itemForm.fee_head_id, (headId) => {
+    const head = feeHeadsList.value.find((fh) => fh.id === Number(headId));
+    if (head?.default_frequency) {
+        itemOptions.value = { ...itemOptions.value, frequency: head.default_frequency };
+    }
+});
 const feeHeadFrequencyOptions = computed(() => props.feeHeadFrequencies.map((freq) => ({ value: freq.value, label: freq.label })));
 const statusOptions = [
     { value: 'draft', label: 'Draft' },
@@ -289,6 +376,10 @@ const validateForm = () => {
     if (selectedClassIds.value.length === 0) {
         errors.value.class_id = 'Pick at least one class';
     }
+    if (feeItems.value.length === 0) {
+        alert.error('Add at least one fee head.');
+        errors.value.items = 'Add at least one fee head.';
+    }
 
     return Object.keys(errors.value).length === 0;
 };
@@ -297,6 +388,7 @@ const validateForm = () => {
 const openAddItemForm = () => {
     itemForm.fee_head_id = '';
     itemForm.amount = '';
+    itemOptions.value = defaultItemOptions();
     itemErrors.value = {};
     showItemForm.value = true;
 };
@@ -313,6 +405,8 @@ const validateItemForm = () => {
     }
     if (!itemForm.amount || Number(itemForm.amount) <= 0) {
         itemErrors.value.amount = 'Valid amount is required';
+    } else if (Number(itemForm.amount) > 9999999.99) {
+        itemErrors.value.amount = 'Amount cannot be more than 9,999,999.99';
     }
     if (itemForm.fee_head_id && feeItems.value.some((item) => item.fee_head_id === Number(itemForm.fee_head_id))) {
         itemErrors.value.fee_head_id = 'This fee head has already been added';
@@ -324,15 +418,11 @@ const validateItemForm = () => {
 const addItem = () => {
     if (!validateItemForm()) return;
     
-    // Get the fee head to auto-fill frequency
-    const feeHead = feeHeadsList.value.find(fh => fh.id === Number(itemForm.fee_head_id));
-    const frequency = feeHead?.default_frequency || 'monthly';
-    
     feeItems.value.push({
         temp_id: Date.now(),
         fee_head_id: Number(itemForm.fee_head_id),
         amount: Number(itemForm.amount),
-        frequency: frequency,
+        ...itemOptions.value,
     });
     
     closeItemForm();
@@ -433,15 +523,20 @@ const cancel = () => {
                         Create a new fee structure for students
                     </p>
                 </div>
-                <div class="flex gap-2">
-                    <Button variant="outline" @click="cancel">
-                        <Icon icon="x" class="mr-2 h-4 w-4" />
-                        Cancel
-                    </Button>
-                    <Button @click="submitForm" :disabled="isSubmitting || !isValid">
-                        <Icon icon="check" class="mr-2 h-4 w-4" />
-                        {{ isSubmitting ? 'Creating...' : 'Create Structure' }}
-                    </Button>
+                <div class="flex flex-col items-end gap-1">
+                    <div class="flex gap-2">
+                        <Button variant="outline" @click="cancel">
+                            <Icon icon="x" class="mr-2 h-4 w-4" />
+                            Cancel
+                        </Button>
+                        <Button @click="submitForm" :disabled="isSubmitting || !isValid">
+                            <Icon icon="check" class="mr-2 h-4 w-4" />
+                            {{ isSubmitting ? 'Creating...' : 'Create Structure' }}
+                        </Button>
+                    </div>
+                    <p v-if="stillNeeded.length" class="text-xs text-muted-foreground">
+                        Still needed: {{ stillNeeded.join(', ') }}
+                    </p>
                 </div>
             </div>
 
@@ -600,6 +695,17 @@ const cancel = () => {
                     </Button>
                 </div>
 
+                <div v-if="copySourceOptions.length" class="mb-4 max-w-md space-y-2">
+                    <Label>Copy from existing structure</Label>
+                    <SearchableSelect
+                        :model-value="copySourceId"
+                        :options="copySourceOptions"
+                        placeholder="Pick a structure to copy its fee heads"
+                        @update:model-value="copyFromStructure"
+                    />
+                    <p class="text-xs text-muted-foreground">Fills the fee heads below. Pick the new class and section above.</p>
+                </div>
+
                 <!-- Add Item Form -->
                 <div v-if="showItemForm" class="mb-6 p-4 bg-muted rounded-lg">
                     <h3 class="font-semibold mb-4">Add New Fee Item</h3>
@@ -632,6 +738,10 @@ const cancel = () => {
                             />
                             <p v-if="itemErrors.amount" class="text-sm text-destructive">{{ itemErrors.amount }}</p>
                         </div>
+                    </div>
+
+                    <div class="mt-4">
+                        <FeeItemOptions v-model="itemOptions" :months="months" />
                     </div>
 
                     <div class="flex flex-wrap justify-end gap-2 mt-4">
@@ -669,6 +779,8 @@ const cancel = () => {
                                     <span :class="['px-2 py-1 text-xs font-medium rounded-full', getFeeHeadColor(item.fee_head_id)]">
                                         {{ getFeeHeadName(item.fee_head_id) }}
                                     </span>
+                                    <span v-if="item.is_optional" class="ml-2 text-xs text-muted-foreground">Optional</span>
+                                    <span v-if="item.is_transport_related" class="ml-2 text-xs text-muted-foreground">Transport</span>
                                 </td>
                                 <td class="px-4 py-3 whitespace-nowrap">
                                     <span :class="['px-2 py-1 text-xs font-medium rounded-full',

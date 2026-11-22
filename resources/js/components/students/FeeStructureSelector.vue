@@ -109,8 +109,15 @@
                             {{ feeStructure.title }}
                         </p>
                         <p class="text-sm text-primary">
-                            Monthly: <span class="font-semibold">Rs. {{ feeStructure.monthly_fee?.toLocaleString() }}</span> | 
-                            Annual: <span class="font-semibold">Rs. {{ feeStructure.annual_fee?.toLocaleString() }}</span>
+                            Monthly: <span class="font-semibold">Rs. {{ headerTotals.monthly.toLocaleString() }}</span> |
+                            Annual: <span class="font-semibold">Rs. {{ headerTotals.yearly.toLocaleString() }}</span> |
+                            One-time: <span class="font-semibold">Rs. {{ headerTotals.once.toLocaleString() }}</span>
+                        </p>
+                        <p v-if="headerTotals.yearly > 0 && feeStructure.annual_billed_in" class="mt-1 text-xs text-primary">
+                            Annual fee is billed in {{ feeStructure.annual_billed_in }}. A voucher for any other month will not include it.
+                        </p>
+                        <p v-if="headerTotals.once > 0" class="mt-1 text-xs text-primary">
+                            One-time fees go on the first voucher only.
                         </p>
                     </div>
                     <span class="rounded-full bg-success/10 px-3 py-1 text-xs font-medium text-success">
@@ -226,7 +233,7 @@
                         v-for="item in feeStructure.items"
                         :key="item.id"
                         class="rounded-lg border border-border p-4"
-                        :class="{ 'border-destructive/40 bg-destructive/10': !item.is_optional && !manualFeeEntries.some(e => e.fee_head_id === item.fee_head_id) }"
+                        :class="{ 'border-destructive/40 bg-destructive/10': !item.is_optional && !item.is_transport_related && !manualFeeEntries.some(e => e.fee_head_id === item.fee_head_id) }"
                     >
                         <div class="flex items-start gap-3">
                             <div class="mt-1 flex h-5 items-center">
@@ -244,8 +251,9 @@
                                         <Label :for="'manual_' + item.fee_head_id" class="cursor-pointer font-medium">
                                             {{ item.fee_head }}
                                         </Label>
-                                        <span v-if="!item.is_optional" class="ml-2 text-xs text-destructive">*Mandatory</span>
+                                        <span v-if="!item.is_optional && !item.is_transport_related" class="ml-2 text-xs text-destructive">*Mandatory</span>
                                         <span v-else class="ml-2 text-xs text-warning">(Optional)</span>
+                                        <span v-if="item.is_transport_related" class="ml-2 text-xs text-warning">(Transport - tick only if the student uses it)</span>
                                     </div>
                                     <div class="text-right">
                                         <p class="text-sm text-muted-foreground">
@@ -409,6 +417,37 @@ function formatManualAmount(feeHeadId: number) {
     localManualAmounts[feeHeadId] = String(Math.round(amount * 100) / 100);
     setManualFeeAmountDebounced(feeHeadId, amount);
 }
+
+/**
+ * Header totals follow what will really be charged: ticked fee heads at the
+ * typed amount in Fee Heads mode, otherwise every compulsory head. Optional
+ * heads that are not ticked are left out.
+ */
+const headerTotals = computed(() => {
+    const totals = { monthly: 0, yearly: 0, once: 0 };
+    for (const item of feeStructure.value?.items ?? []) {
+        let amount: number;
+        if (feeMode.value === 'manual') {
+            if (!manualSelectedFeeHeads.value.includes(item.fee_head_id)) {
+                continue;
+            }
+            amount = Number(manualFeeAmounts.value[item.fee_head_id] ?? item.amount) || 0;
+        } else {
+            if (item.is_optional || item.is_transport_related) {
+                continue;
+            }
+            amount = Number(item.amount) || 0;
+        }
+        if (item.frequency === 'monthly') {
+            totals.monthly += amount;
+        } else if (item.frequency === 'yearly') {
+            totals.yearly += amount;
+        } else if (item.frequency === 'once') {
+            totals.once += amount;
+        }
+    }
+    return totals;
+});
 
 // Initialize on mount
 onMounted(async () => {

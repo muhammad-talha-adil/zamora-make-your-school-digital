@@ -12,6 +12,7 @@ import { Input } from '@/components/ui/input';
 import { ComboboxInput } from '@/components/ui/combobox';
 import Icon from '@/components/Icon.vue';
 import SearchableSelect from '@/components/ui/searchable-select/SearchableSelect.vue';
+import FeeItemOptions, { type FeeItemOptionValues } from '@/components/fee/FeeItemOptions.vue';
 
 interface FeeStructureItem {
     id: number;
@@ -21,6 +22,11 @@ interface FeeStructureItem {
     frequency: string;
     is_optional: boolean;
     applicable_on_admission: boolean;
+    is_transport_related?: boolean;
+    starts_from_month_id?: number | null;
+    ends_at_month_id?: number | null;
+    billing_month_id?: number | null;
+    billing_year?: number | null;
 }
 
 interface FeeStructure {
@@ -109,12 +115,31 @@ const { isValid } = useFormValidity(form, ['title', 'session_id', 'campus_id', '
 // Fee Item Form
 const showItemForm = ref(false);
 const editingItem = ref<number | null>(null);
+const defaultItemOptions = (): FeeItemOptionValues => ({
+    frequency: 'monthly',
+    is_optional: false,
+    applicable_on_admission: true,
+    is_transport_related: false,
+    starts_from_month_id: null,
+    ends_at_month_id: null,
+    billing_month_id: null,
+    billing_year: null,
+});
 const itemForm = reactive({
     fee_head_id: '',
     amount: '',
-    frequency: 'monthly',
-    is_optional: false,
-    applicable_on_admission: false,
+});
+const itemOptions = ref<FeeItemOptionValues>(defaultItemOptions());
+
+// Picking a head fills its own usual frequency; the office can still change it.
+watch(() => itemForm.fee_head_id, (headId) => {
+    if (editingItem.value || !headId) {
+        return;
+    }
+    const head = props.feeHeads.find((fh) => fh.id === Number(headId));
+    if (head?.default_frequency) {
+        itemOptions.value = { ...itemOptions.value, frequency: head.default_frequency };
+    }
 });
 
 const itemErrors = ref<Record<string, string>>({});
@@ -302,8 +327,6 @@ const submitForm = () => {
         campus_id: form.campus_id ? Number(form.campus_id) : null,
         class_id: form.class_id ? Number(form.class_id) : null,
         section_ids: sectionIds,
-        effective_from: form.effective_from,
-        effective_to: form.effective_to || null,
         status: form.status,
         notes: form.notes,
     }, {
@@ -329,6 +352,7 @@ const openAddItemForm = () => {
     editingItem.value = null;
     itemForm.fee_head_id = '';
     itemForm.amount = '';
+    itemOptions.value = defaultItemOptions();
     itemErrors.value = {};
     showItemForm.value = true;
 };
@@ -337,9 +361,16 @@ const openEditItemForm = (item: FeeStructureItem) => {
     editingItem.value = item.id;
     itemForm.fee_head_id = String(item.fee_head_id);
     itemForm.amount = String(item.amount);
-    itemForm.frequency = item.frequency;
-    itemForm.is_optional = item.is_optional;
-    itemForm.applicable_on_admission = item.applicable_on_admission;
+    itemOptions.value = {
+        frequency: item.frequency,
+        is_optional: !!item.is_optional,
+        applicable_on_admission: !!item.applicable_on_admission,
+        is_transport_related: !!item.is_transport_related,
+        starts_from_month_id: item.starts_from_month_id ?? null,
+        ends_at_month_id: item.ends_at_month_id ?? null,
+        billing_month_id: item.billing_month_id ?? null,
+        billing_year: item.billing_year ?? null,
+    };
     itemErrors.value = {};
     showItemForm.value = true;
 };
@@ -357,6 +388,8 @@ const validateItemForm = () => {
     }
     if (!itemForm.amount || Number(itemForm.amount) <= 0) {
         itemErrors.value.amount = 'Valid amount is required';
+    } else if (Number(itemForm.amount) > 9999999.99) {
+        itemErrors.value.amount = 'Amount cannot be more than 9,999,999.99';
     }
     if (
         itemForm.fee_head_id &&
@@ -384,6 +417,7 @@ const submitItemForm = () => {
         data: {
             fee_head_id: Number(itemForm.fee_head_id),
             amount: Number(itemForm.amount),
+            ...itemOptions.value,
         },
         onSuccess: () => {
             isItemSubmitting.value = false;
@@ -560,36 +594,6 @@ const getFrequencyLabel = (freq: string) => {
                         </div>
                     </div>
 
-                    <!-- Effective Dates -->
-                    <div class="grid gap-4 md:grid-cols-2">
-                        <div class="space-y-2">
-                            <Label for="effective_from">Effective From <span class="text-destructive">*</span></Label>
-                            <Input
-                                id="effective_from"
-                                v-model="form.effective_from"
-                                type="date"
-                                disabled
-                                :class="{ 'border-destructive': errors.effective_from }"
-                            />
-                            <!-- Hidden input to ensure value is submitted -->
-                            <input type="hidden" name="effective_from" :value="form.effective_from" />
-                            <p v-if="errors.effective_from" class="text-sm text-destructive">{{ errors.effective_from }}</p>
-                        </div>
-
-                        <div class="space-y-2">
-                            <Label for="effective_to">Effective To</Label>
-                            <Input
-                                id="effective_to"
-                                v-model="form.effective_to"
-                                type="date"
-                                disabled
-                            />
-                            <!-- Hidden input to ensure value is submitted -->
-                            <input type="hidden" name="effective_to" :value="form.effective_to" />
-                            <p class="text-xs text-muted-foreground">Leave empty for indefinite</p>
-                        </div>
-                    </div>
-
                     <!-- Notes -->
                     <div class="space-y-2">
                         <Label for="notes">Notes (Optional)</Label>
@@ -656,12 +660,10 @@ const getFrequencyLabel = (freq: string) => {
                             <p v-if="itemErrors.amount" class="text-sm text-destructive">{{ itemErrors.amount }}</p>
                         </div>
 
-                        <div class="space-y-2">
-                            <Label>Frequency</Label>
-                            <div class="text-sm text-muted-foreground p-2 bg-muted rounded">
-                                Auto-set from Fee Head
-                            </div>
-                        </div>
+                    </div>
+
+                    <div class="mt-4">
+                        <FeeItemOptions v-model="itemOptions" :months="months" />
                     </div>
 
                     <div class="flex flex-wrap justify-end gap-2 mt-4">
@@ -697,6 +699,11 @@ const getFrequencyLabel = (freq: string) => {
                             <tr v-for="item in structure.items" :key="item.id" class="transition-colors hover:bg-accent">
                                 <td class="px-4 py-3 whitespace-nowrap">
                                     <div class="text-sm font-medium text-foreground">{{ item.fee_head?.name || 'N/A' }}</div>
+                                    <div v-if="item.is_optional || item.is_transport_related" class="text-xs text-muted-foreground">
+                                        <span v-if="item.is_optional">Optional</span>
+                                        <span v-if="item.is_optional && item.is_transport_related"> · </span>
+                                        <span v-if="item.is_transport_related">Transport</span>
+                                    </div>
                                 </td>
                                 <td class="px-4 py-3 whitespace-nowrap">
                                     <span :class="['px-2 py-1 text-xs font-medium rounded-full', 

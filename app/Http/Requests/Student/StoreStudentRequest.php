@@ -60,6 +60,8 @@ class StoreStudentRequest extends FormRequest
             'section_id.exists' => 'The selected section is invalid.',
             'guardian_id.exists' => 'The selected guardian is invalid.',
             'father_name.required' => 'The guardian name is required.',
+            'name.regex' => "Name can only have letters, spaces and . ' - @",
+            'father_name.regex' => "Guardian name can only have letters, spaces and . ' - @",
             'father_name.max' => 'The guardian name may not be greater than 255 characters.',
             'father_email.email' => 'The guardian email must be a valid email address.',
             'father_email.max' => 'The guardian email may not be greater than 255 characters.',

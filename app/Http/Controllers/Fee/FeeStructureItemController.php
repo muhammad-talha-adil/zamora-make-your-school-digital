@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Fee;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Fee\SaveFeeStructureItemRequest;
 use App\Models\Fee\FeeHead;
 use App\Models\Fee\FeeStructure;
 use App\Models\Fee\FeeStructureItem;
@@ -13,18 +14,9 @@ class FeeStructureItemController extends Controller
     /**
      * Store a newly created fee structure item.
      */
-    public function store(Request $request, FeeStructure $feeStructure)
+    public function store(SaveFeeStructureItemRequest $request, FeeStructure $feeStructure)
     {
-        $validated = $request->validate([
-            'fee_head_id' => 'required|exists:fee_heads,id',
-            'amount' => 'required|numeric|min:0',
-            'frequency' => 'nullable|in:monthly,yearly,once',
-            'is_optional' => 'nullable|boolean',
-            'applicable_on_admission' => 'nullable|boolean',
-            'starts_from_month_id' => 'nullable|exists:months,id',
-            'ends_at_month_id' => 'nullable|exists:months,id',
-            'notes' => 'nullable|string',
-        ]);
+        $validated = $request->validated();
 
         // The same head twice in one structure bills it twice on every voucher.
         $alreadyCharged = $feeStructure->items()
@@ -47,6 +39,7 @@ class FeeStructureItemController extends Controller
 
         $validated['is_optional'] = $validated['is_optional'] ?? false;
         $validated['applicable_on_admission'] = $validated['applicable_on_admission'] ?? true;
+        $validated['is_transport_related'] = $validated['is_transport_related'] ?? false;
 
         FeeStructureItem::create($validated);
 
@@ -60,20 +53,11 @@ class FeeStructureItemController extends Controller
      * route declares it, and a method that leaves it out has the route's
      * arguments handed to it in the wrong order.
      */
-    public function update(Request $request, FeeStructure $feeStructure, FeeStructureItem $item)
+    public function update(SaveFeeStructureItemRequest $request, FeeStructure $feeStructure, FeeStructureItem $item)
     {
         $this->assertBelongsToStructure($feeStructure, $item);
 
-        $validated = $request->validate([
-            'fee_head_id' => 'required|exists:fee_heads,id',
-            'amount' => 'required|numeric|min:0',
-            'frequency' => 'nullable|in:monthly,yearly,once',
-            'is_optional' => 'nullable|boolean',
-            'applicable_on_admission' => 'nullable|boolean',
-            'starts_from_month_id' => 'nullable|exists:months,id',
-            'ends_at_month_id' => 'nullable|exists:months,id',
-            'notes' => 'nullable|string',
-        ]);
+        $validated = $request->validated();
 
         // Auto-set frequency from FeeHead if not provided
         if (empty($validated['frequency'])) {
@@ -87,6 +71,10 @@ class FeeStructureItemController extends Controller
         $validated['applicable_on_admission'] = $request->boolean(
             'applicable_on_admission',
             (bool) $item->applicable_on_admission
+        );
+        $validated['is_transport_related'] = $request->boolean(
+            'is_transport_related',
+            (bool) $item->is_transport_related
         );
 
         $item->update($validated);

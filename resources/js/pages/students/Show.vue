@@ -140,7 +140,7 @@
                                     <div>
                                         <p class="text-xs text-muted-foreground">Monthly Fee</p>
                                         <p class="text-sm font-medium text-foreground">
-                                            {{ formatCurrency(currentEnrollment?.monthly_fee) }}
+                                            {{ formatCurrency(student?.fee_summary?.monthly ?? currentEnrollment?.monthly_fee) }}
                                         </p>
                                     </div>
                                 </div>
@@ -149,7 +149,7 @@
                                     <div>
                                         <p class="text-xs text-muted-foreground">Annual Fee</p>
                                         <p class="text-sm font-medium text-foreground">
-                                            {{ formatCurrency(currentEnrollment?.annual_fee) }}
+                                            {{ formatCurrency(student?.fee_summary?.annual ?? currentEnrollment?.annual_fee) }}
                                         </p>
                                     </div>
                                 </div>
@@ -252,6 +252,57 @@
                     </div>
 
                     <!-- Enrollment History Card -->
+                    <!-- Fee Card -->
+                    <div v-if="student?.fee_summary" class="bg-card rounded-lg border border-border p-6">
+                        <h3 class="text-lg font-semibold text-foreground mb-1 flex items-center gap-2">
+                            <Icon icon="dollar-sign" class="h-5 w-5 text-primary" />
+                            Fee
+                        </h3>
+                        <p class="mb-4 text-sm text-muted-foreground">{{ student.fee_summary.structure_title || 'No fee structure' }}</p>
+                        <div class="grid grid-cols-2 gap-3 md:grid-cols-4">
+                            <div>
+                                <p class="text-xs text-muted-foreground">Monthly</p>
+                                <p class="text-sm font-medium text-foreground">{{ formatCurrency(student.fee_summary.monthly) }}</p>
+                            </div>
+                            <div>
+                                <p class="text-xs text-muted-foreground">Annual</p>
+                                <p class="text-sm font-medium text-foreground">{{ formatCurrency(student.fee_summary.annual) }}</p>
+                            </div>
+                            <div>
+                                <p class="text-xs text-muted-foreground">One-time</p>
+                                <p class="text-sm font-medium text-foreground">{{ formatCurrency(student.fee_summary.one_time) }}</p>
+                            </div>
+                            <div>
+                                <p class="text-xs text-muted-foreground">Discount</p>
+                                <p class="text-sm font-medium text-foreground">{{ formatCurrency(student.fee_summary.discount) }}</p>
+                            </div>
+                        </div>
+                        <div v-if="student.fee_summary.vouchers.length" class="mt-4 overflow-x-auto">
+                            <table class="w-full text-sm">
+                                <thead>
+                                    <tr class="text-left text-xs text-muted-foreground border-b border-border">
+                                        <th class="pb-2 pr-4 font-medium">Voucher</th>
+                                        <th class="pb-2 pr-4 font-medium">Month</th>
+                                        <th class="pb-2 pr-4 font-medium">Amount</th>
+                                        <th class="pb-2 font-medium">Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr v-for="voucher in student.fee_summary.vouchers" :key="voucher.id" class="border-b border-border last:border-0">
+                                        <td class="py-2 pr-4">
+                                            <Link :href="route('fee.vouchers.show', voucher.id)" class="text-primary hover:underline">{{ voucher.voucher_no }}</Link>
+                                        </td>
+                                        <td class="py-2 pr-4 text-foreground">{{ voucher.period }}</td>
+                                        <td class="py-2 pr-4 text-foreground">{{ formatCurrency(voucher.net_amount) }}</td>
+                                        <td class="py-2 text-foreground capitalize">{{ voucher.status }}</td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <p v-else class="mt-4 text-sm text-muted-foreground">No vouchers yet.</p>
+                    </div>
+
+                    <!-- Enrollment History -->
                     <div v-if="student?.enrollment_records?.length" class="bg-card rounded-lg border border-border p-6">
                         <h3 class="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
                             <Icon icon="history" class="h-5 w-5 text-primary" />
@@ -367,7 +418,7 @@
 
 <script setup lang="ts">
 import { computed, reactive } from 'vue';
-import { router } from '@inertiajs/vue3';
+import { Link, router } from '@inertiajs/vue3';
 import { Head } from '@inertiajs/vue3';
 import axios from 'axios';
 import { route } from 'ziggy-js';
@@ -443,6 +494,14 @@ interface Props {
         guardians?: GuardianData[];
         enrollment_records?: EnrollmentRecord[];
         documents?: StudentDocumentRow[];
+        fee_summary?: {
+            structure_title: string | null;
+            monthly: number;
+            annual: number;
+            one_time: number;
+            discount: number;
+            vouchers: Array<{ id: number; voucher_no: string; period: string; net_amount: number; status: string }>;
+        } | null;
     };
     relations: Array<{
         id: number;

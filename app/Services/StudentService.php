@@ -337,12 +337,91 @@ class StudentService
                 'path' => $document->path,
                 'uploadedBy' => $document->uploadedBy ? ['name' => $document->uploadedBy->name] : null,
             ])->values()->toArray(),
+            'fee_summary' => $this->feeSummaryFor($student),
         ];
 
         return [
             'student' => $studentData,
             'relations' => $lookupData['relations'],
             'documentTypes' => StudentDocumentType::where('is_active', true)->orderBy('name')->get(['id', 'name', 'is_required']),
+        ];
+    }
+
+    /**
+     * What the student is charged, worked out from the fee structure and any
+     * amounts agreed at admission, plus the latest vouchers.
+     *
+     * The enrollment's own monthly_fee / annual_fee columns stay 0 when a fee
+     * structure is used, so they cannot be shown on the profile.
+     *
+     * @return array<string, mixed>|null
+     */
+    public function feeSummaryFor(Student $student): ?array
+    {
+        $enrollment = $student->enrollmentRecords
+            ->sortByDesc('admission_date')
+            ->first(fn ($record) => $record->leave_date === null)
+            ?? $student->enrollmentRecords->sortByDesc('admission_date')->first();
+
+        if (! $enrollment) {
+            return null;
+        }
+
+        $enrollment->loadMissing(['feeStructure.items.feeHead', 'discounts']);
+
+        $agreed = [];
+        $mode = $enrollment->fee_mode instanceof \BackedEnum ? $enrollment->fee_mode->value : $enrollment->fee_mode;
+        if ($mode === 'manual') {
+            foreach ($enrollment->custom_fee_entries ?? [] as $entry) {
+                if (isset($entry['fee_head_id'])) {
+                    $agreed[(int) $entry['fee_head_id']] = (float) ($entry['amount'] ?? 0);
+                }
+            }
+        }
+
+        $totals = ['monthly' => 0.0, 'yearly' => 0.0, 'once' => 0.0];
+        $discount = 0.0;
+
+        foreach ($enrollment->feeStructure?->items ?? [] as $item) {
+            $frequency = $item->frequency instanceof \BackedEnum ? $item->frequency->value : (string) $item->frequency;
+            $original = (float) $item->amount;
+            $amount = $agreed[$item->fee_head_id] ?? $original;
+
+            $headDiscount = max(0.0, $original - $amount);
+            foreach ($enrollment->discounts->where('fee_head_id', $item->fee_head_id) as $row) {
+                $valueType = $row->value_type instanceof \BackedEnum ? $row->value_type->value : $row->value_type;
+                $headDiscount += $valueType === 'percent' ? $amount * ((float) $row->value / 100) : (float) $row->value;
+            }
+            $headDiscount = min($headDiscount, $original);
+
+            if (isset($totals[$frequency])) {
+                $totals[$frequency] += $original;
+            }
+            $discount += $headDiscount;
+        }
+
+        $vouchers = $student->feeVouchers()
+            ->with('voucherMonth:id,name')
+            ->latest('id')
+            ->limit(5)
+            ->get()
+            ->map(fn ($voucher) => [
+                'id' => $voucher->id,
+                'voucher_no' => $voucher->voucher_no,
+                'period' => trim(($voucher->voucherMonth?->name ?? '').' '.$voucher->voucher_year),
+                'net_amount' => (float) $voucher->net_amount,
+                'status' => $voucher->status instanceof \BackedEnum ? $voucher->status->value : $voucher->status,
+            ])
+            ->values()
+            ->all();
+
+        return [
+            'structure_title' => $enrollment->feeStructure?->title,
+            'monthly' => $totals['monthly'],
+            'annual' => $totals['yearly'],
+            'one_time' => $totals['once'],
+            'discount' => round($discount, 2),
+            'vouchers' => $vouchers,
         ];
     }
 
