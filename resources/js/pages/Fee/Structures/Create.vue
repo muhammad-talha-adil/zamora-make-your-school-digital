@@ -571,12 +571,14 @@ const cancel = () => {
                             v-model="form.title"
                             :placeholder="'e.g. Class 1 Annual Fee Structure'"
                             :search-url="titleSearchUrl"
+                            :max-length="200"
                             :value-type="'name'"
                             display-key="title"
                             :show-empty-message="false"
                             classMinWidth="w-full"
                             @update:modelValue="onTitleChange"
                         />
+                        <p v-if="String(form.title || '').length >= 170" class="text-xs text-muted-foreground">{{ String(form.title || '').length }}/200</p>
                         <p class="text-xs text-muted-foreground">
                             A short, descriptive name for this fee structure (e.g. "Class 1 Annual Fee Structure", "Grade 5 Term 1 Fees").
                         </p>

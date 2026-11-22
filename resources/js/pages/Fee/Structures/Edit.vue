@@ -52,6 +52,7 @@ interface Props {
     sections: Array<{ id: number; name: string; class_id: number }>;
     months: Array<{ id: number; name: string; month_number: number }>;
     feeHeads: Array<{ id: number; name: string; category: string; default_frequency: string }>;
+    usage?: { enrollments: number; vouchers: number };
 }
 
 const props = defineProps<Props>();
@@ -441,10 +442,10 @@ const submitItemForm = () => {
         },
         onSuccess: () => {
             isItemSubmitting.value = false;
+            const wasEditing = !!editingItem.value;
             closeItemForm();
-            // Reload to get updated items
             router.reload({ only: ['structure'] });
-            alert.success(editingItem.value ? 'Fee item updated successfully!' : 'Fee item added successfully!');
+            alert.success(wasEditing ? 'Fee item updated successfully!' : 'Fee item added successfully!');
         },
         onError: (err) => {
             isItemSubmitting.value = false;
@@ -519,6 +520,10 @@ const getFrequencyLabel = (freq: string) => {
                 </div>
             </div>
 
+            <p v-if="usage && (usage.vouchers > 0 || usage.enrollments > 0)" class="rounded-lg border border-border bg-muted p-3 text-sm text-foreground">
+                {{ usage.vouchers }} voucher(s) already made from this structure. Changes apply to new vouchers only.
+            </p>
+
             <!-- Structure Details Form -->
             <div class="bg-card rounded-lg border border-border p-4 md:p-6">
                 <form @submit.prevent="submitForm" class="space-y-6">
@@ -531,6 +536,7 @@ const getFrequencyLabel = (freq: string) => {
                                 v-model="form.title"
                                 :placeholder="'Search or enter title...'"
                                 :search-url="titleSearchUrl"
+                                :max-length="200"
                                 :initial-items="titleInitialItems"
                                 :value-type="'name'"
                                 display-key="title"
@@ -538,6 +544,7 @@ const getFrequencyLabel = (freq: string) => {
                                 classMinWidth="w-full"
                                 @update:modelValue="onTitleChange"
                             />
+                            <p v-if="String(form.title || '').length >= 170" class="text-xs text-muted-foreground">{{ String(form.title || '').length }}/200</p>
                             <p v-if="errors.title" class="text-sm text-destructive">{{ errors.title }}</p>
                         </div>
 
@@ -583,20 +590,18 @@ const getFrequencyLabel = (freq: string) => {
                     <!-- Class & Section -->
                     <div class="grid gap-4 md:grid-cols-2">
                         <div class="space-y-2">
-                            <Label for="class">Class (Optional)</Label>
+                            <Label for="class">Class <span class="text-destructive">*</span></Label>
                             <SearchableSelect
                                 id="class"
                                 v-model="form.class_id"
                                 :options="classOptions"
                                 placeholder="Select Class"
-                                clearable
                                 @update:modelValue="onClassChange"
                             />
-                            <p class="text-xs text-muted-foreground">Leave empty to apply to all classes</p>
                         </div>
 
                         <div class="space-y-2">
-                            <Label for="section">Section (Optional)</Label>
+                            <Label for="section">Section</Label>
                             <SearchableSelect
                                 id="section"
                                 v-model="form.section_id"

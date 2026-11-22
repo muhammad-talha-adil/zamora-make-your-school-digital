@@ -200,8 +200,8 @@ const sendStatusChange = (structure: FeeStructure, actionText: string) => {
         );
 
         alert.success(`Fee structure ${actionText}d successfully!`);
-    }).catch(() => {
-        alert.error('Failed to update status. Please try again.');
+    }).catch((error) => {
+        alert.error(error?.response?.data?.message || 'Failed to update status. Please try again.');
     });
 };
 
@@ -344,7 +344,7 @@ const deleteStructure = (structure: FeeStructure) => {
                             <div class="font-medium text-foreground">{{ displayTitle(structure) }}</div>
                             <div class="text-xs text-muted-foreground">{{ structure.session?.name || '-' }}</div>
                         </div>
-                        <StatusToggle :active="structure.status === 'active'" @toggle="toggleStatus(structure)" />
+                        <StatusToggle :active="structure.status === 'active'" :inactive-label="structure.status === 'draft' ? 'Draft' : 'Inactive'" @toggle="toggleStatus(structure)" />
                     </div>
                     <div class="text-sm text-muted-foreground space-y-1 pt-2 border-t border-border">
                         <div>Campus: {{ structure.campus?.name || '-' }}</div>
@@ -377,28 +377,25 @@ const deleteStructure = (structure: FeeStructure) => {
                     <table class="min-w-full divide-y divide-border">
                         <thead class="bg-muted">
                             <tr>
-                                <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">
+                                <th scope="col" class="px-3 py-2 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">
                                     Sr#
                                 </th>
-                                <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">
+                                <th scope="col" class="px-3 py-2 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">
                                     Title
                                 </th>
-                                <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">
+                                <th scope="col" class="px-3 py-2 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">
                                     Session
                                 </th>
-                                <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">
-                                    Campus
-                                </th>
-                                <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">
+                                <th scope="col" class="px-3 py-2 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">
                                     Class / Section
                                 </th>
-                                <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">
+                                <th scope="col" class="px-3 py-2 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">
                                     Status
                                 </th>
-                                <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">
+                                <th scope="col" class="px-3 py-2 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">
                                     Items
                                 </th>
-                                <th scope="col" class="px-4 py-3 text-right text-xs font-semibold tracking-wider text-muted-foreground uppercase">
+                                <th scope="col" class="sticky right-0 bg-muted px-3 py-2 text-right text-xs font-semibold tracking-wider text-muted-foreground uppercase">
                                     Actions
                                 </th>
                             </tr>
@@ -409,19 +406,16 @@ const deleteStructure = (structure: FeeStructure) => {
                                 :key="structure.id"
                                 class="transition-colors hover:bg-accent"
                             >
-                                <td class="px-4 py-3 whitespace-nowrap">
+                                <td class="px-3 py-2 whitespace-nowrap">
                                     <div class="text-sm font-medium text-foreground">{{ ((pagination.from || 1) - 1) + index + 1 }}</div>
                                 </td>
-                                <td class="px-4 py-3 whitespace-nowrap">
+                                <td class="px-3 py-2 whitespace-nowrap">
                                     <div class="text-sm font-medium text-foreground">{{ displayTitle(structure) }}</div>
                                 </td>
-                                <td class="px-4 py-3 whitespace-nowrap">
+                                <td class="px-3 py-2 whitespace-nowrap">
                                     <div class="text-sm text-muted-foreground">{{ structure.session?.name || '-' }}</div>
                                 </td>
-                                <td class="px-4 py-3 whitespace-nowrap">
-                                    <div class="text-sm text-muted-foreground">{{ structure.campus?.name || '-' }}</div>
-                                </td>
-                                <td class="px-4 py-3 whitespace-nowrap">
+                                <td class="px-3 py-2 whitespace-nowrap">
                                     <div class="flex items-center gap-2 text-sm">
                                         <span class="font-medium text-foreground">{{ structure.class?.name || 'All Classes' }}</span>
                                         <span class="rounded-full border border-border bg-muted px-2 py-0.5 text-xs text-muted-foreground">
@@ -429,13 +423,13 @@ const deleteStructure = (structure: FeeStructure) => {
                                         </span>
                                     </div>
                                 </td>
-                                <td class="px-4 py-3 whitespace-nowrap">
-                                    <StatusToggle :active="structure.status === 'active'" @toggle="toggleStatus(structure)" />
+                                <td class="px-3 py-2 whitespace-nowrap">
+                                    <StatusToggle :active="structure.status === 'active'" :inactive-label="structure.status === 'draft' ? 'Draft' : 'Inactive'" @toggle="toggleStatus(structure)" />
                                 </td>
-                                <td class="px-4 py-3 whitespace-nowrap">
+                                <td class="px-3 py-2 whitespace-nowrap">
                                     <div class="text-sm text-muted-foreground">{{ structure.items_count }}</div>
                                 </td>
-                                <td class="px-4 py-3 text-sm font-medium whitespace-nowrap">
+                                <td class="sticky right-0 bg-card px-3 py-2 text-sm font-medium whitespace-nowrap">
                                     <RowActions>
                                         <RowAction kind="view" @click="router.visit(route('fee.structures.show', structure.id))" />
                                         <RowAction kind="edit" @click="router.visit(route('fee.structures.edit', structure.id))" />

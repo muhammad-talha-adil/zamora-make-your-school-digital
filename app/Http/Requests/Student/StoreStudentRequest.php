@@ -480,6 +480,12 @@ class StoreStudentRequest extends FormRequest
     public function withValidator($validator): void
     {
         $validator->after(function ($validator) {
+            foreach ((array) $this->input('discounts', []) as $index => $discount) {
+                if (is_array($discount) && ($discount['value_type'] ?? null) === 'percent' && is_numeric($discount['value'] ?? null) && (float) $discount['value'] > 100) {
+                    $validator->errors()->add("discounts.{$index}.value", 'A percentage discount cannot be more than 100.');
+                }
+            }
+
             // Cross-field validation: Phone numbers must be unique across guardians
             $fatherPhone = ! empty($this->father_phone)
                 ? preg_replace('/\D/', '', $this->father_phone)

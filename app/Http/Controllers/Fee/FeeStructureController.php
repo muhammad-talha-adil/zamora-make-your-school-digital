@@ -724,6 +724,12 @@ class FeeStructureController extends Controller
         );
 
         if ($message) {
+            $message = str_replace(
+                ['A fee structure already exists for ', ' Edit it instead.'],
+                ['Another active structure already covers ', ' Make it Inactive first.'],
+                $message,
+            );
+
             return response()->json(['success' => false, 'message' => $message], 422);
         }
 

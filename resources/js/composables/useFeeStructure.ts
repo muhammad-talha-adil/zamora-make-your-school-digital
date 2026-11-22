@@ -147,7 +147,9 @@ export function useFeeStructure() {
                 fee_head_id: feeHeadId,
                 fee_head: item?.fee_head || '',
                 discount_type_id: selectedDiscountType.value as number,
-                value: discountValue.value,
+                value: (selectedDiscountTypeObj.value?.value_type || 'percent') === 'percent'
+                    ? Math.min(100, Math.max(0, Number(discountValue.value) || 0))
+                    : discountValue.value,
                 value_type: selectedDiscountTypeObj.value?.value_type || 'percent',
             };
         });
