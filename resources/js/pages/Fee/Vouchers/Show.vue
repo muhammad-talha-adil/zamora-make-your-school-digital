@@ -18,6 +18,7 @@ interface FeeVoucher {
     issue_date: string;
     due_date: string;
     status: string;
+    concessions?: Concession[];
     gross_amount: number;
     discount_amount: number;
     fine_amount: number;
@@ -75,6 +76,12 @@ interface OtherVoucher {
     status: string;
     net_amount: number;
     balance_amount: number;
+}
+
+interface Concession {
+    receipt_no: string;
+    amount: number;
+    reason: string | null;
 }
 
 interface Props {
@@ -272,6 +279,13 @@ const handleCancel = () => {
                                 </tfoot>
                             </table>
                         </div>
+                    </div>
+
+                    <div v-if="voucher.concessions?.length" class="bg-card rounded-lg border border-border p-4 md:p-6">
+                        <h2 class="text-lg font-semibold mb-2">Concession</h2>
+                        <p v-for="concession in voucher.concessions" :key="concession.receipt_no" class="text-sm">
+                            {{ formatCurrency(concession.amount) }} on {{ concession.receipt_no }} - Reason: {{ concession.reason || 'Not given' }}
+                        </p>
                     </div>
 
                     <!-- Payment History -->

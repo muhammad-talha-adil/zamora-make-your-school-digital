@@ -303,6 +303,16 @@ const effectiveCharges = computed(() => {
         });
 });
 
+const selectedBalance = computed(() => form.charges
+    .filter((charge) => charge.enabled)
+    .reduce((sum, charge) => sum + Math.min(Number(charge.amount || 0), itemBalance(charge.voucher_id, charge.fee_voucher_item_id)), 0));
+
+const concessionError = computed(() => (
+    Number(form.concession) > Math.round(selectedBalance.value * 100) / 100
+        ? `Concession cannot be more than the balance (Rs ${selectedBalance.value.toLocaleString()}).`
+        : ''
+));
+
 const totalAllocated = computed(() => effectiveCharges.value.reduce((sum, charge) => sum + charge.amount, 0));
 
 watch([totalAllocated, () => form.late_fee], ([total, lateFee]) => {
@@ -347,6 +357,11 @@ const submitForm = () => {
 
     if (charges.length === 0 || Number(form.received_amount) <= 0) {
         alert.error('Please select at least one due item with a payment amount.');
+        return;
+    }
+
+    if (concessionError.value) {
+        alert.error(concessionError.value);
         return;
     }
 
@@ -529,6 +544,7 @@ const submitForm = () => {
                     <div>
                         <Label for="concession">Concession (optional)</Label>
                         <Input id="concession" v-model="form.concession" type="number" step="0.01" min="0" />
+                        <p v-if="concessionError" class="text-sm text-destructive">{{ concessionError }}</p>
                     </div>
 
                     <div v-if="Number(form.concession) > 0" class="md:col-span-2">

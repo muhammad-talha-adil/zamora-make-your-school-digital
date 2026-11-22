@@ -50,13 +50,18 @@ const lines = reactive(
         child.vouchers.map((voucher) => ({
             voucher_id: voucher.id,
             balance: voucher.balance_amount,
-            amount: voucher.balance_amount,
-            enabled: true,
+            amount: '' as number | string,
+            enabled: false,
         })),
     ),
 );
 
 const lineFor = (voucherId: number) => lines.find((line) => line.voucher_id === voucherId)!;
+
+const toggleLine = (voucherId: number) => {
+    const line = lineFor(voucherId);
+    line.amount = line.enabled ? line.balance : '';
+};
 
 const total = computed(() => lines.filter((line) => line.enabled).reduce((sum, line) => sum + Number(line.amount || 0), 0));
 const isSubmitting = ref(false);
@@ -136,7 +141,7 @@ const submit = () => {
                 <h2 class="font-semibold text-foreground">{{ child.name }} <span class="text-sm font-normal text-muted-foreground">{{ child.registration_number }}</span></h2>
                 <p v-if="child.vouchers.length === 0" class="mt-2 text-sm text-muted-foreground">No unpaid vouchers.</p>
                 <div v-for="voucher in child.vouchers" :key="voucher.id" class="mt-3 grid grid-cols-[auto_1fr_auto] items-center gap-x-3 gap-y-1 sm:grid-cols-[auto_minmax(14rem,1fr)_11rem_8rem]">
-                    <input v-model="lineFor(voucher.id).enabled" type="checkbox" :aria-label="`Pay ${voucher.voucher_no}`" />
+                    <input v-model="lineFor(voucher.id).enabled" type="checkbox" @change="toggleLine(voucher.id)" :aria-label="`Pay ${voucher.voucher_no}`" />
                     <span class="text-sm">{{ voucher.voucher_no }} - {{ voucher.month }} {{ voucher.year }}</span>
                     <span class="text-sm text-muted-foreground sm:text-right">Balance {{ formatCurrency(voucher.balance_amount) }}</span>
                     <Input
@@ -154,7 +159,7 @@ const submit = () => {
             <div class="flex items-center justify-between">
                 <p class="text-lg font-bold text-foreground">Total {{ formatCurrency(total) }}</p>
                 <Button type="submit" :disabled="isSubmitting || total <= 0">
-                    {{ isSubmitting ? 'Processing...' : 'Record Payment' }}
+                    {{ isSubmitting ? 'Processing...' : `Pay selected (${formatCurrency(total)})` }}
                 </Button>
             </div>
         </form>

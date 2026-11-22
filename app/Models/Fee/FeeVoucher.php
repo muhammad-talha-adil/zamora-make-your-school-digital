@@ -311,4 +311,26 @@ class FeeVoucher extends Model
 
         return $query->where('campus_id', $campusId);
     }
+
+    /**
+     * Brings the voucher totals back in line with its items.
+     *
+     * Gross is the fee items only; a late fee is shown separately as `fine_amount`
+     * and still counts in the net. Balance is what is left after payments.
+     */
+    public function recalculateTotals(): void
+    {
+        $items = $this->items()->with('feeHead:id,code')->get();
+        $lateFees = $items->filter(fn (FeeVoucherItem $item) => $item->feeHead?->code === 'LATE_FINE');
+
+        $net = round((float) $items->sum('net_amount'), 2);
+
+        $this->update([
+            'gross_amount' => $items->diff($lateFees)->sum('amount'),
+            'discount_amount' => $items->sum('discount_amount'),
+            'fine_amount' => $lateFees->sum('net_amount'),
+            'net_amount' => $net,
+            'balance_amount' => max(0, round($net - (float) $this->paid_amount, 2)),
+        ]);
+    }
 }

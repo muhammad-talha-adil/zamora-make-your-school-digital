@@ -32,6 +32,9 @@ interface FeePayment {
     received_amount: number;
     allocated_amount: number;
     excess_amount: number;
+    late_fee_amount?: number | string;
+    concession_amount?: number | string;
+    concession_reason?: string | null;
     status: string;
     notes?: string;
     student?: {
@@ -182,6 +185,14 @@ const getPaymentMethodLabel = (method: string): string => {
                     <div class="flex justify-between mb-2">
                         <span class="text-gray-600 dark:text-gray-400">Total Received:</span>
                         <span class="font-medium text-gray-900 dark:text-white">{{ formatCurrency(props.payment.received_amount) }}</span>
+                    </div>
+                    <div v-if="Number(props.payment.late_fee_amount) > 0" class="flex justify-between mb-2">
+                        <span class="text-gray-600 dark:text-gray-400">Late fee included:</span>
+                        <span class="font-medium text-gray-900 dark:text-white">{{ formatCurrency(Number(props.payment.late_fee_amount)) }}</span>
+                    </div>
+                    <div v-if="Number(props.payment.concession_amount) > 0" class="flex justify-between mb-2">
+                        <span class="text-gray-600 dark:text-gray-400">Concession given ({{ props.payment.concession_reason || 'no reason' }}):</span>
+                        <span class="font-medium text-gray-900 dark:text-white">{{ formatCurrency(Number(props.payment.concession_amount)) }}</span>
                     </div>
                     <div class="flex justify-between mb-2">
                         <span class="text-gray-600 dark:text-gray-400">Allocated to Vouchers:</span>

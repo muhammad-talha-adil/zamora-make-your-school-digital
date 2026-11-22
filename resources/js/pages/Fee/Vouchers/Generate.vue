@@ -96,7 +96,6 @@ const breadcrumbItems: BreadcrumbItem[] = [
 
 // Current date info
 const currentDate = new Date();
-const currentMonthNumber = currentDate.getMonth() + 1; // 1-12
 const currentYear = currentDate.getFullYear();
 
 const urlParams = new URLSearchParams(window.location.search);
@@ -117,11 +116,6 @@ const form = reactive({
     }>,
 });
 
-// Auto-select current month on mount
-const currentMonth = props.months.find(m => m.month_number === currentMonthNumber);
-if (currentMonth) {
-    form.month_ids.push(currentMonth.id);
-}
 
 const isGenerating = ref(false);
 const showCustomFeeModal = ref(false);

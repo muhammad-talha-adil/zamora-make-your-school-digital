@@ -19,7 +19,7 @@ beforeEach(function () {
     $this->world = FeeWorld::make();
     $this->actingAs($this->world->school->actor);
     $this->world->structureWithAllFrequencies();
-    $this->items = $this->world->generate(1);
+    $this->items = $this->world->generate(4);
 });
 
 function recordAPayment(): FeePayment

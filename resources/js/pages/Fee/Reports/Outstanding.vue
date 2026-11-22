@@ -16,6 +16,7 @@ interface Props {
     };
     byClass: Array<{
         class_id: number;
+        section_id?: number | null;
         total: number;
         count: number;
         class?: { id: number; name: string };
@@ -140,7 +141,7 @@ const resetFilters = () => {
                             </tr>
                         </thead>
                         <tbody>
-                            <tr v-for="item in props.byClass" :key="item.class_id" class="border-b border-border">
+                            <tr v-for="item in props.byClass" :key="`${item.class_id}-${item.section_id}`" class="border-b border-border">
                                 <td class="py-2 text-foreground">{{ item.class?.name || 'N/A' }}</td>
                                 <td class="py-2 text-right text-muted-foreground">{{ item.count }}</td>
                                 <td class="py-2 text-right text-destructive font-medium">{{ formatCurrency(item.total) }}</td>

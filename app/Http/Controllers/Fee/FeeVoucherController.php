@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Fee;
 
 use App\Enums\Fee\AdjustmentType;
 use App\Enums\Fee\FineType;
+use App\Enums\Fee\PaymentStatus;
 use App\Enums\Fee\VoucherStatus;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Fee\AddVoucherAdjustmentRequest;
@@ -16,6 +17,7 @@ use App\Http\Requests\Fee\UpdateVoucherItemRequest;
 use App\Models\Campus;
 use App\Models\Fee\FeeFineRule;
 use App\Models\Fee\FeeHead;
+use App\Models\Fee\FeePayment;
 use App\Models\Fee\FeeStructure;
 use App\Models\Fee\FeeVoucher;
 use App\Models\Fee\FeeVoucherItem;
@@ -500,6 +502,34 @@ class FeeVoucherController extends Controller
     }
 
     /**
+     * Concessions given at the counter on this voucher, with the reason.
+     *
+     * @return array<int, array{receipt_no: string, amount: float, reason: string|null}>
+     */
+    protected function concessionsFor(FeeVoucher $voucher): array
+    {
+        $itemIds = $voucher->items->pluck('id')->all();
+
+        return FeePayment::query()
+            ->where('student_id', $voucher->student_id)
+            ->where('concession_amount', '>', 0)
+            ->where('status', '!=', PaymentStatus::REVERSED->value)
+            ->get()
+            ->map(function (FeePayment $payment) use ($itemIds) {
+                $amount = collect($payment->concession_breakdown ?? [])
+                    ->filter(fn (array $row) => in_array($row['item_id'], $itemIds, true))
+                    ->sum('amount');
+
+                return $amount > 0
+                    ? ['receipt_no' => $payment->receipt_no, 'amount' => (float) $amount, 'reason' => $payment->concession_reason]
+                    : null;
+            })
+            ->filter()
+            ->values()
+            ->all();
+    }
+
+    /**
      * Display the specified voucher.
      */
     public function show(FeeVoucher $voucher)
@@ -570,6 +600,7 @@ class FeeVoucherController extends Controller
                 'campus' => $voucher->campus,
                 'class' => $voucher->schoolClass,
                 'section' => $voucher->section,
+                'concessions' => $this->concessionsFor($voucher),
                 'items' => $voucher->items->map(function (FeeVoucherItem $item) {
                     return [
                         'id' => $item->id,
@@ -1297,18 +1328,7 @@ class FeeVoucherController extends Controller
      */
     protected function recalculateVoucherTotals(FeeVoucher $voucher): void
     {
-        $items = $voucher->items;
-
-        $grossAmount = $items->sum('amount');
-        $discountAmount = $items->sum('discount_amount');
-        $netAmount = $items->sum('net_amount');
-
-        $voucher->update([
-            'gross_amount' => $grossAmount,
-            'discount_amount' => $discountAmount,
-            'net_amount' => $netAmount,
-            'balance_amount' => $netAmount - $voucher->paid_amount,
-        ]);
+        $voucher->recalculateTotals();
     }
 
     /**

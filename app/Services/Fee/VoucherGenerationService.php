@@ -116,7 +116,9 @@ class VoucherGenerationService
                         continue;
                     }
 
-                    $this->generateVoucherForStudent(
+                    // Own transaction per student: if one fails half way, its
+                    // half-made voucher is rolled back instead of left with Rs 0 totals.
+                    DB::transaction(fn () => $this->generateVoucherForStudent(
                         $enrollment,
                         $monthId,
                         $monthNumber,
@@ -125,7 +127,7 @@ class VoucherGenerationService
                         $includePreviousUnpaid,
                         $includeInventoryDues,
                         $includeTransportDues
-                    );
+                    ));
                     $generated++;
                 } catch (\Exception $e) {
                     $errors[] = [
@@ -1191,18 +1193,7 @@ class VoucherGenerationService
      */
     protected function calculateVoucherTotals(FeeVoucher $voucher): void
     {
-        $items = $voucher->items()->get();
-
-        $grossAmount = $items->sum('amount');
-        $discountAmount = $items->sum('discount_amount');
-        $netAmount = $items->sum('net_amount');
-
-        $voucher->update([
-            'gross_amount' => $grossAmount,
-            'discount_amount' => $discountAmount,
-            'net_amount' => $netAmount,
-            'balance_amount' => $netAmount,
-        ]);
+        $voucher->recalculateTotals();
     }
 
     protected function createBilledVoucherCharge(

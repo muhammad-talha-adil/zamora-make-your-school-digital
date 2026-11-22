@@ -30,9 +30,10 @@ class FeeLedgerController extends Controller
             ->get();
 
         foreach ($vouchers as $voucher) {
+            $billedOn = sprintf('%04d-%02d-01', $voucher->voucher_year, $voucher->voucherMonth?->month_number ?? 1);
             $label = trim(($voucher->voucherMonth?->name ?? '').' '.$voucher->voucher_year);
             $entries->push([
-                'date' => $voucher->issue_date?->toDateString() ?? $voucher->created_at->toDateString(),
+                'date' => $billedOn,
                 'order' => 0,
                 'type' => 'Voucher',
                 'reference' => $voucher->voucher_no,
@@ -43,7 +44,7 @@ class FeeLedgerController extends Controller
 
             if ($voucher->status === VoucherStatus::ADJUSTED) {
                 $entries->push([
-                    'date' => $voucher->updated_at->toDateString(),
+                    'date' => $billedOn,
                     'order' => 1,
                     'type' => 'Carried forward',
                     'reference' => $voucher->voucher_no,

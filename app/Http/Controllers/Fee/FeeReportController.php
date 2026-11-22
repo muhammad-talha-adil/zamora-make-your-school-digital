@@ -136,18 +136,22 @@ class FeeReportController extends Controller
             ->visibleTo($request->user())
             ->select(
                 'class_id',
+                'section_id',
                 DB::raw('SUM(balance_amount) as total'),
                 DB::raw('COUNT(*) as count')
             )
             ->whereIn('status', ['unpaid', 'partial', 'overdue'])
-            ->groupBy('class_id')
-            ->with('schoolClass:id,name')
+            ->groupBy('class_id', 'section_id')
+            ->with(['schoolClass:id,name', 'section:id,name'])
             ->get()
             ->map(fn (FeeVoucher $row) => [
                 'class_id' => $row->class_id,
+                'section_id' => $row->section_id,
                 'total' => $row->total,
                 'count' => $row->count,
-                'class' => $row->schoolClass ? ['id' => $row->schoolClass->id, 'name' => $row->schoolClass->name] : null,
+                'class' => $row->schoolClass
+                    ? ['id' => $row->schoolClass->id, 'name' => trim($row->schoolClass->name.($row->section ? ' - '.$row->section->name : ''))]
+                    : null,
             ]);
 
         // Get top defaulters

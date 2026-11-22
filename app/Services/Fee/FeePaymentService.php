@@ -332,7 +332,7 @@ class FeePaymentService
         $totalBalance = collect($items)->sum(fn (FeeVoucherItem $item) => $this->studentBillingService->getVoucherItemBalance($item));
 
         if ($concession > round($totalBalance, 2)) {
-            throw ValidationException::withMessages(['concession' => 'Concession cannot be more than the balance.']);
+            throw ValidationException::withMessages(['concession' => 'Concession cannot be more than the balance (Rs '.number_format($totalBalance, 2).').']);
         }
 
         $remaining = $concession;
@@ -400,7 +400,6 @@ class FeePaymentService
         ]);
 
         $voucher->refresh()->update([
-            'gross_amount' => (float) $voucher->gross_amount + $amount,
             'fine_amount' => (float) $voucher->fine_amount + $amount,
             'net_amount' => (float) $voucher->net_amount + $amount,
         ]);
@@ -427,7 +426,6 @@ class FeePaymentService
             $voucher = FeeVoucher::query()->find($item->fee_voucher_id);
             $amount = (float) $item->net_amount;
             $voucher->update([
-                'gross_amount' => (float) $voucher->gross_amount - $amount,
                 'fine_amount' => (float) $voucher->fine_amount - $amount,
                 'net_amount' => (float) $voucher->net_amount - $amount,
             ]);
