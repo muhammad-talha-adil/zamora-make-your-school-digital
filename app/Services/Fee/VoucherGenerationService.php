@@ -7,7 +7,6 @@ use App\Enums\Fee\FeeFrequency;
 use App\Enums\Fee\ValueType;
 use App\Enums\Fee\VoucherItemSource;
 use App\Enums\Fee\VoucherStatus;
-use App\Models\Fee\FeeFineRule;
 use App\Models\Fee\FeeHead;
 use App\Models\Fee\FeePolicy;
 use App\Models\Fee\FeeStructure;
@@ -346,109 +345,10 @@ class VoucherGenerationService
                 ]
             );
 
-            // Fines are worked out before the old vouchers are closed, while
-            // their balance and due date still describe what was outstanding.
-            $this->addLateFines($voucher, $enrollment, $previousVouchers);
-
             $this->supersedeCarriedVouchers($previousVouchers, $voucher);
         }
 
         return $previousVoucherIds;
-    }
-
-    /**
-     * Charges a late fine on each overdue voucher being carried forward.
-     *
-     * `fee_fine_rules` and `FeeFineRule::calculateFine()` already existed but
-     * nothing ever called them, so a school could define "Rs 50 a day after 5
-     * grace days" and never collect a rupee of it.
-     *
-     * The fine is charged once, on the voucher that carries the arrears, using
-     * the days between the old voucher's due date and this one's issue date.
-     *
-     * @param  Collection<int, FeeVoucher>  $overdue
-     */
-    protected function addLateFines(
-        FeeVoucher $voucher,
-        StudentEnrollmentRecord $enrollment,
-        $overdue
-    ): void {
-        $rule = $this->applicableFineRule($enrollment, $voucher->issue_date);
-
-        if (! $rule) {
-            return;
-        }
-
-        $fineHead = FeeHead::where('code', 'LATE_FINE')->first();
-
-        if (! $fineHead) {
-            Log::warning('Late fine rule found but no LATE_FINE fee head is seeded', [
-                'rule_id' => $rule->id,
-            ]);
-
-            return;
-        }
-
-        foreach ($overdue as $old) {
-            if (! $old->due_date || (float) $old->balance_amount <= 0) {
-                continue;
-            }
-
-            $daysLate = $old->due_date->diffInDays($voucher->issue_date, absolute: false);
-
-            if ($daysLate <= 0) {
-                continue;
-            }
-
-            $fine = $rule->calculateFine((float) $old->balance_amount, (int) $daysLate);
-
-            if ($fine <= 0) {
-                continue;
-            }
-
-            $this->createBilledVoucherCharge(
-                $voucher,
-                $enrollment,
-                $fineHead,
-                'Late Fee - voucher '.$old->voucher_no.' ('.$daysLate.' days late)',
-                $fine,
-                0,
-                VoucherItemSource::ARREARS,
-                'late_fine',
-                $old->id,
-                $rule->id,
-                'fine',
-                false,
-                [
-                    'fine_rule_id' => $rule->id,
-                    'fine_type' => $rule->fine_type?->value,
-                    'days_late' => $daysLate,
-                    'grace_days' => $rule->grace_days,
-                    'overdue_voucher_no' => $old->voucher_no,
-                ]
-            );
-        }
-    }
-
-    /**
-     * The fine rule that applies to this enrollment.
-     *
-     * Rules can be scoped to a campus, session, class or section; the most
-     * specific match wins so a class-level rule overrides a campus-wide one.
-     */
-    protected function applicableFineRule(StudentEnrollmentRecord $enrollment, $onDate): ?FeeFineRule
-    {
-        return FeeFineRule::active()
-            ->effectiveOn($onDate)
-            // Campus and session are required on a rule; class and section are
-            // optional, and leaving them null makes the rule campus-wide.
-            ->where('campus_id', $enrollment->campus_id)
-            ->where('session_id', $enrollment->session_id)
-            ->where(fn ($q) => $q->whereNull('class_id')->orWhere('class_id', $enrollment->class_id))
-            ->where(fn ($q) => $q->whereNull('section_id')->orWhere('section_id', $enrollment->section_id))
-            ->orderByRaw('(section_id IS NOT NULL) DESC')
-            ->orderByRaw('(class_id IS NOT NULL) DESC')
-            ->first();
     }
 
     /**

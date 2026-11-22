@@ -13,12 +13,14 @@ import { alert } from '@/utils';
 const page = usePage();
 
 watch(
-  () => page.props.flash as { warning?: string | null; error?: string | null } | undefined,
+  () => page.props.flash as { success?: string | null; warning?: string | null; error?: string | null } | undefined,
   (flash) => {
     if (flash?.warning) {
       alert.warning(flash.warning);
     } else if (flash?.error) {
       alert.error(flash.error);
+    } else if (flash?.success) {
+      alert.success(flash.success);
     }
   },
   { immediate: true },

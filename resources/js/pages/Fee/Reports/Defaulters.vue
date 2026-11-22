@@ -13,6 +13,8 @@ interface Defaulter {
     voucher_no: string;
     student_id: number;
     due_date: string;
+    days_overdue: number;
+    class_name: string;
     net_amount: number;
     paid_amount: number;
     balance_amount: number;
@@ -69,13 +71,6 @@ const formatCurrency = (amount: number): string => {
 
 const formatDate = (date: string): string => {
     return new Date(date).toLocaleDateString('en-PK');
-};
-
-const getDaysOverdue = (dueDate: string): number => {
-    const due = new Date(dueDate);
-    const today = new Date();
-    const diffTime = Math.abs(today.getTime() - due.getTime());
-    return Math.ceil(diffTime / (1000 * 60 * 60 * 24));
 };
 
 const getStatusColor = (status: string): string => {
@@ -178,6 +173,7 @@ const changePage = (page: number) => {
                             <tr>
                                 <th class="text-left py-3 px-4 text-muted-foreground">#</th>
                                 <th class="text-left py-3 px-4 text-muted-foreground">Student</th>
+                                <th class="text-left py-3 px-4 text-muted-foreground">Class</th>
                                 <th class="text-left py-3 px-4 text-muted-foreground">Voucher No</th>
                                 <th class="text-left py-3 px-4 text-muted-foreground">Month</th>
                                 <th class="text-right py-3 px-4 text-muted-foreground">Due Date</th>
@@ -199,12 +195,13 @@ const changePage = (page: number) => {
                                         {{ defaulter.student?.registration_number }}
                                     </div>
                                 </td>
+                                <td class="py-3 px-4 text-muted-foreground">{{ defaulter.class_name }}</td>
                                 <td class="py-3 px-4 text-foreground">{{ defaulter.voucher_no }}</td>
                                 <td class="py-3 px-4 text-muted-foreground">{{ defaulter.voucherMonth?.name }}</td>
                                 <td class="py-3 px-4 text-right text-muted-foreground">{{ formatDate(defaulter.due_date) }}</td>
                                 <td class="py-3 px-4 text-right">
                                     <span class="text-warning font-medium">
-                                        {{ getDaysOverdue(defaulter.due_date) }} days
+                                        {{ defaulter.days_overdue }} days
                                     </span>
                                 </td>
                                 <td class="py-3 px-4 text-right text-destructive font-medium">

@@ -194,7 +194,7 @@ class FeeReportController extends Controller
     {
         Gate::authorize('viewAny', FeeVoucher::class);
 
-        $query = FeeVoucher::with(['student.user:id,name', 'voucherMonth'])
+        $query = FeeVoucher::with(['student.user:id,name', 'voucherMonth', 'schoolClass:id,name', 'section:id,name'])
             ->visibleTo($request->user())
             ->whereIn('status', ['unpaid', 'partial', 'overdue'])
             ->where('balance_amount', '>', 0)
@@ -219,7 +219,11 @@ class FeeReportController extends Controller
         }
 
         $defaulters = $query->orderBy('due_date')->paginate(50);
-        $defaulters->getCollection()->each(fn (FeeVoucher $voucher) => $voucher->student?->append(['name', 'registration_number']));
+        $defaulters->getCollection()->each(function (FeeVoucher $voucher): void {
+            $voucher->student?->append(['name', 'registration_number']);
+            $voucher->setAttribute('days_overdue', (int) $voucher->due_date->copy()->startOfDay()->diffInDays(today()));
+            $voucher->setAttribute('class_name', trim($voucher->schoolClass?->name.' '.$voucher->section?->name));
+        });
 
         return Inertia::render('Fee/Reports/Defaulters', [
             'defaulters' => $defaulters,

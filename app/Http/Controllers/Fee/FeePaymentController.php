@@ -285,6 +285,12 @@ class FeePaymentController extends Controller
                 ->orderBy('id')
                 ->get();
 
+            $carried = FeeVoucher::query()->whereIn('id', $amounts->keys())->where('status', 'adjusted')->exists();
+
+            if ($carried) {
+                throw ValidationException::withMessages(['vouchers' => 'This voucher was carried forward to a newer voucher; pay that one.']);
+            }
+
             if ($vouchers->count() !== $amounts->count()) {
                 throw ValidationException::withMessages(['vouchers' => 'A selected voucher is not unpaid or is not in this family.']);
             }

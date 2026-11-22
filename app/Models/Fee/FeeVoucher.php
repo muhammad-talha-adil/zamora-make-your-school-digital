@@ -321,7 +321,7 @@ class FeeVoucher extends Model
     public function recalculateTotals(): void
     {
         $items = $this->items()->with('feeHead:id,code')->get();
-        $lateFees = $items->filter(fn (FeeVoucherItem $item) => $item->feeHead?->code === 'LATE_FINE');
+        $lateFees = $items->filter(fn (FeeVoucherItem $item) => $item->feeHead?->code === 'LATE_FINE' || str_starts_with((string) $item->description, 'Late fee'));
 
         $net = round((float) $items->sum('net_amount'), 2);
 

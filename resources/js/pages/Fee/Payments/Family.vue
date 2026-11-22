@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Head, router } from '@inertiajs/vue3';
+import { Head, router, usePage } from '@inertiajs/vue3';
 import { computed, reactive, ref } from 'vue';
 import { route } from 'ziggy-js';
 import AppLayout from '@/layouts/AppLayout.vue';
@@ -66,6 +66,17 @@ const toggleLine = (voucherId: number) => {
 const total = computed(() => lines.filter((line) => line.enabled).reduce((sum, line) => sum + Number(line.amount || 0), 0));
 const isSubmitting = ref(false);
 
+const page = usePage();
+const paymentDateError = computed(() => {
+    const errors = (page.props.errors ?? {}) as Record<string, string>;
+    const key = Object.keys(errors).find((name) => name.endsWith('payment_date'));
+
+    return key ? errors[key] : '';
+});
+
+const isOverBalance = (line: { amount: number | string; balance: number }) => Number(line.amount) > line.balance;
+const hasBadAmount = computed(() => lines.some((line) => line.enabled && (Number(line.amount) <= 0 || isOverBalance(line))));
+
 const submit = () => {
     if (isSubmitting.value) {
         return;
@@ -115,6 +126,7 @@ const submit = () => {
                 <div>
                     <Label for="family_date">Payment date</Label>
                     <Input id="family_date" v-model="form.payment_date" type="date" :max="today" required />
+                    <p v-if="paymentDateError" class="text-sm text-destructive">{{ paymentDateError }}</p>
                 </div>
                 <div>
                     <Label for="family_method">Method</Label>
@@ -153,12 +165,13 @@ const submit = () => {
                         class="w-full text-right"
                         :disabled="!lineFor(voucher.id).enabled"
                     />
+                    <p v-if="lineFor(voucher.id).enabled && isOverBalance(lineFor(voucher.id))" class="col-span-full text-right text-sm text-destructive">More than the balance</p>
                 </div>
             </div>
 
             <div class="flex items-center justify-between">
                 <p class="text-lg font-bold text-foreground">Total {{ formatCurrency(total) }}</p>
-                <Button type="submit" :disabled="isSubmitting || total <= 0">
+                <Button type="submit" :disabled="isSubmitting || total <= 0 || hasBadAmount">
                     {{ isSubmitting ? 'Processing...' : `Pay selected (${formatCurrency(total)})` }}
                 </Button>
             </div>

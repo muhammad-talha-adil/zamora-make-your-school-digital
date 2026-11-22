@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Head, router } from '@inertiajs/vue3';
+import { Head, router, usePage } from '@inertiajs/vue3';
 import { computed, reactive, ref, watch } from 'vue';
 import { route } from 'ziggy-js';
 import axios from 'axios';
@@ -98,6 +98,14 @@ const searchResults = ref<StudentSearchResult[]>([]);
 const isSearching = ref(false);
 const isLoadingVouchers = ref(false);
 const isSubmitting = ref(false);
+
+const page = usePage();
+const paymentDateError = computed(() => {
+    const errors = (page.props.errors ?? {}) as Record<string, string>;
+    const key = Object.keys(errors).find((name) => name.endsWith('payment_date'));
+
+    return key ? errors[key] : '';
+});
 const now = new Date();
 const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
 const selectedStudent = ref<StudentSearchResult | null>(props.selectedStudent || null);
@@ -504,6 +512,7 @@ const submitForm = () => {
                             :max="today"
                             required
                         />
+                        <p v-if="paymentDateError" class="text-sm text-destructive">{{ paymentDateError }}</p>
                     </div>
 
                     <div>

@@ -3,6 +3,7 @@
 namespace App\Services\Fee;
 
 use App\Enums\Fee\VoucherItemSource;
+use App\Enums\Fee\VoucherStatus;
 use App\Enums\Fee\WalletDirection;
 use App\Enums\Fee\WalletTransactionType;
 use App\Models\Fee\FeeHead;
@@ -78,6 +79,23 @@ class FeePaymentService
             ->keyBy('id');
 
         if ($vouchers->count() !== $voucherIds->count()) {
+            $missing = FeeVoucher::query()
+                ->whereIn('id', $voucherIds->diff($vouchers->keys()))
+                ->where('student_id', $data['student_id'])
+                ->pluck('status');
+
+            if ($missing->contains(VoucherStatus::ADJUSTED)) {
+                throw ValidationException::withMessages([
+                    'vouchers' => 'This voucher was carried forward to a newer voucher; pay that one.',
+                ]);
+            }
+
+            if ($missing->contains(VoucherStatus::PAID)) {
+                throw ValidationException::withMessages([
+                    'vouchers' => 'This voucher is already paid.',
+                ]);
+            }
+
             throw ValidationException::withMessages([
                 'vouchers' => 'One or more selected vouchers do not belong to this student or are no longer unpaid.',
             ]);

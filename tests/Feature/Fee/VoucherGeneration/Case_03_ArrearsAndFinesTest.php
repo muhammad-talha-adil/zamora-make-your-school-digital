@@ -132,7 +132,7 @@ it('leaves only the newest voucher outstanding', function () {
     expect($outstanding)->toHaveCount(1);
 });
 
-it('charges a per-day late fee once the grace period has passed', function () {
+it('does not add a per-day late fee on its own once the grace period has passed', function () {
     FeeFineRule::create([
         'name' => 'Standard late fee',
         'campus_id' => $this->world->school->campus->id,
@@ -149,13 +149,9 @@ it('charges a per-day late fee once the grace period has passed', function () {
 
     $may = generateCarryingArrears(5);
 
-    $fine = FeeVoucherItem::where('fee_voucher_id', $may->id)
+    expect(FeeVoucherItem::where('fee_voucher_id', $may->id)
         ->where('fee_head_id', $this->fineHead->id)
-        ->first();
-
-    // 15 days late, 5 forgiven, 10 chargeable at Rs 50.
-    expect($fine)->not->toBeNull()
-        ->and((float) $fine->amount)->toBe(500.0);
+        ->exists())->toBeFalse();
 });
 
 it('charges nothing while the voucher is still inside the grace period', function () {
@@ -180,7 +176,7 @@ it('charges nothing while the voucher is still inside the grace period', functio
         ->exists())->toBeFalse();
 });
 
-it('charges a flat late fee when the rule is fixed once', function () {
+it('does not add a flat late fee on its own', function () {
     FeeFineRule::create([
         'name' => 'Flat late fee',
         'campus_id' => $this->world->school->campus->id,
@@ -197,12 +193,9 @@ it('charges a flat late fee when the rule is fixed once', function () {
 
     $may = generateCarryingArrears(5);
 
-    $fine = FeeVoucherItem::where('fee_voucher_id', $may->id)
+    expect(FeeVoucherItem::where('fee_voucher_id', $may->id)
         ->where('fee_head_id', $this->fineHead->id)
-        ->first();
-
-    // Flat, however late it is.
-    expect((float) $fine->amount)->toBe(300.0);
+        ->exists())->toBeFalse();
 });
 
 it('charges no fine when the school has not configured one', function () {
@@ -238,7 +231,7 @@ it('ignores a fine rule that is switched off', function () {
         ->exists())->toBeFalse();
 });
 
-it('prefers a class-level fine rule over a campus-wide one', function () {
+it('does not add a late fee even when class-level and campus-wide rules exist', function () {
     FeeFineRule::create([
         'name' => 'Campus wide',
         'campus_id' => $this->world->school->campus->id,
@@ -267,11 +260,9 @@ it('prefers a class-level fine rule over a campus-wide one', function () {
 
     $may = generateCarryingArrears(5);
 
-    $fine = FeeVoucherItem::where('fee_voucher_id', $may->id)
+    expect(FeeVoucherItem::where('fee_voucher_id', $may->id)
         ->where('fee_head_id', $this->fineHead->id)
-        ->first();
-
-    expect((float) $fine->amount)->toBe(250.0);
+        ->exists())->toBeFalse();
 });
 
 it('still carries arrears when the previous balance head was never seeded', function () {

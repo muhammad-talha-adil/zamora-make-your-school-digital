@@ -17,11 +17,12 @@ class RepairFeeVouchers extends Command
     {
         $totalsFixed = 0;
         $datesFixed = 0;
+        $removedFines = 0;
 
         FeeVoucher::query()
             ->with('voucherMonth')
             ->whereIn('status', [VoucherStatus::UNPAID, VoucherStatus::PARTIAL, VoucherStatus::OVERDUE])
-            ->each(function (FeeVoucher $voucher) use (&$totalsFixed, &$datesFixed) {
+            ->each(function (FeeVoucher $voucher) use (&$totalsFixed, &$datesFixed, &$removedFines) {
                 $before = [(float) $voucher->net_amount, (float) $voucher->balance_amount, (float) $voucher->gross_amount, (float) $voucher->fine_amount];
                 $dueDate = Carbon::create($voucher->voucher_year, $voucher->voucherMonth->month_number, 10)->startOfDay();
 
@@ -32,6 +33,10 @@ class RepairFeeVouchers extends Command
                     if (! $this->option('dry-run')) {
                         $voucher->update(['due_date' => $dueDate]);
                     }
+                }
+
+                if (! $this->option('dry-run')) {
+                    $removedFines += $this->removeAutoLateFees($voucher);
                 }
 
                 if ($voucher->items()->doesntExist()) {
@@ -51,8 +56,29 @@ class RepairFeeVouchers extends Command
                 }
             });
 
-        $this->info("Totals fixed: {$totalsFixed}. Due dates fixed: {$datesFixed}.");
+        $this->info("Totals fixed: {$totalsFixed}. Due dates fixed: {$datesFixed}. Auto late fees removed: {$removedFines}.");
 
         return self::SUCCESS;
+    }
+
+    /**
+     * Late fees nobody asked for, added to a voucher while it was generated.
+     * Only on vouchers with no payment, so nothing already collected changes.
+     */
+    protected function removeAutoLateFees(FeeVoucher $voucher): int
+    {
+        if ((float) $voucher->paid_amount > 0 || $voucher->paymentAllocations()->exists()) {
+            return 0;
+        }
+
+        $items = $voucher->items()->where('description', 'like', 'Late Fee - voucher %')->get();
+
+        foreach ($items as $item) {
+            $item->studentAccountCharge?->delete();
+            $item->delete();
+            $this->line("{$voucher->voucher_no}: removed auto late fee {$item->description}");
+        }
+
+        return $items->count();
     }
 }
