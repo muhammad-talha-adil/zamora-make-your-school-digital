@@ -387,6 +387,11 @@ class StudentService
         foreach ($enrollment->feeStructure?->items ?? [] as $item) {
             $frequency = $item->frequency instanceof \BackedEnum ? $item->frequency->value : (string) $item->frequency;
             $original = (float) $item->amount;
+
+            if (($item->is_optional || $item->is_transport_related) && ! isset($agreed[$item->fee_head_id])) {
+                continue;
+            }
+
             $amount = $agreed[$item->fee_head_id] ?? $original;
 
             $headDiscount = max(0.0, $original - $amount);

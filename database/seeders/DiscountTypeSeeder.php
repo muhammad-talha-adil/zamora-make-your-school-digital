@@ -113,6 +113,15 @@ class DiscountTypeSeeder extends Seeder
                 'requires_approval' => true,
                 'is_active' => true,
             ],
+            [
+                'name' => 'Other Discount',
+                'code' => 'OTHER',
+                'value_type' => 'percent',
+                'default_value' => null,
+                'description' => 'General discount for any other reason',
+                'requires_approval' => false,
+                'is_active' => true,
+            ],
         ];
 
         // Keyed on the code so the seeder can be run again without duplicating

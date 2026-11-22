@@ -630,6 +630,18 @@ class UpdateStudentRequest extends FormRequest
 
                 if ($customEntries->isEmpty()) {
                     $validator->errors()->add('custom_fee_entries', 'At least one custom fee entry is required for manual mode.');
+                } elseif (blank($this->manual_discount_reason)) {
+                    $structureAmounts = $feeStructure->items()->pluck('amount', 'fee_head_id');
+                    $needsReason = $customEntries->contains(function ($entry) use ($structureAmounts) {
+                        $amount = (float) ($entry['amount'] ?? 0);
+                        $original = $structureAmounts->get($entry['fee_head_id'] ?? 0);
+
+                        return $amount <= 0 || $original === null || abs($amount - (float) $original) > 0.001;
+                    });
+
+                    if ($needsReason) {
+                        $validator->errors()->add('manual_discount_reason', 'Please write the reason.');
+                    }
                 }
             }
 
@@ -718,6 +730,10 @@ class UpdateStudentRequest extends FormRequest
      */
     protected function prepareForValidation(): void
     {
+        if (in_array($this->input('manual_discount_percentage'), ['null', 'undefined', ''], true)) {
+            $this->merge(['manual_discount_percentage' => null]);
+        }
+
         /*
          * The admission number is pinned to what the student already has.
          *

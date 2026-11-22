@@ -135,6 +135,17 @@ class VoucherGenerationService
     }
 
     /**
+     * Due date is the 10th of the billing month, never before today.
+     */
+    protected function dueDateFor(int $monthNumber, int $year): Carbon
+    {
+        $today = now()->startOfDay();
+        $due = Carbon::create($year, $monthNumber, 10)->startOfDay();
+
+        return $due->lt($today) ? $today : $due;
+    }
+
+    /**
      * Generate voucher for a single student
      *
      * @throws \Exception
@@ -187,7 +198,7 @@ class VoucherGenerationService
             'voucher_month_id' => $monthId,
             'voucher_year' => $year,
             'issue_date' => now(),
-            'due_date' => now()->addDays(15),
+            'due_date' => $this->dueDateFor($monthNumber, $year),
             'status' => VoucherStatus::UNPAID,
             'generated_by' => auth()->id(),
         ]);

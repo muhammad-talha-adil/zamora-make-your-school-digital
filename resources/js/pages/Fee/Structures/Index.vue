@@ -386,7 +386,10 @@ const deleteStructure = (structure: FeeStructure) => {
                                     Session
                                 </th>
                                 <th scope="col" class="px-3 py-2 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">
-                                    Class / Section
+                                    Class
+                                </th>
+                                <th scope="col" class="px-3 py-2 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">
+                                    Section
                                 </th>
                                 <th scope="col" class="px-3 py-2 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">
                                     Status
@@ -415,12 +418,12 @@ const deleteStructure = (structure: FeeStructure) => {
                                     <div class="text-sm text-muted-foreground">{{ structure.session?.name || '-' }}</div>
                                 </td>
                                 <td class="px-3 py-2 whitespace-nowrap">
-                                    <div class="flex items-center gap-2 text-sm">
-                                        <span class="font-medium text-foreground">{{ structure.class?.name || 'All Classes' }}</span>
-                                        <span class="rounded-full border border-border bg-muted px-2 py-0.5 text-xs text-muted-foreground">
-                                            {{ structure.section ? 'Section ' + structure.section.name : 'All sections' }}
-                                        </span>
-                                    </div>
+                                    <span class="text-sm font-medium text-foreground">{{ structure.class?.name || 'All Classes' }}</span>
+                                </td>
+                                <td class="px-3 py-2 whitespace-nowrap">
+                                    <span class="rounded-full border border-border bg-muted px-2 py-0.5 text-xs text-muted-foreground">
+                                        {{ structure.section ? structure.section.name : 'All sections' }}
+                                    </span>
                                 </td>
                                 <td class="px-3 py-2 whitespace-nowrap">
                                     <StatusToggle :active="structure.status === 'active'" :inactive-label="structure.status === 'draft' ? 'Draft' : 'Inactive'" @toggle="toggleStatus(structure)" />

@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { Head, router } from '@inertiajs/vue3';
-import { reactive, ref, computed, watch } from 'vue';
+import { reactive, ref, computed, watch, onMounted } from 'vue';
 import { route } from 'ziggy-js';
 import axios from 'axios';
 import AppLayout from '@/layouts/AppLayout.vue';
@@ -266,8 +266,14 @@ watch(
     }
 );
 
-watch(() => form.class_id, () => {
-    form.section_id = '';
+watch(() => form.class_id, (value, oldValue) => {
+    if (oldValue) {
+        form.section_id = '';
+    }
+});
+
+onMounted(() => {
+    fetchFeeStructure();
 });
 
 // Available years (2000 to current year + 1)

@@ -321,6 +321,7 @@
                         class="w-full rounded-md border border-border bg-card px-3 py-2 text-foreground"
                         placeholder="Explain why manual entry is being used..."
                     ></textarea>
+                    <p v-if="manualReasonRequired && !manualReason.trim()" class="text-sm text-destructive">Please write the reason.</p>
                 </div>
 
                 <!-- Manual Entry Summary -->
@@ -395,6 +396,7 @@ const {
     manualSelectedFeeHeads,
     manualFeeAmounts,
     manualReason,
+    manualReasonRequired,
     structureCandidates,
     chosenStructureId,
     selectedDiscountTypeObj,

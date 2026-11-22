@@ -800,6 +800,9 @@ const lookupFatherGuardian = async () => {
 };
 
 const submitForm = () => {
+    if (processing.value) {
+        return;
+    }
     processing.value = true;
     errors.value = {};
     const validationErrors: Record<string, string> = {};
@@ -954,7 +957,7 @@ const submitForm = () => {
                 formData.set('custom_fee_entries', JSON.stringify(feePayload.custom_fee_entries));
             }
 
-            if (typeof feePayload.manual_discount_percentage !== 'undefined') {
+            if (feePayload.manual_discount_percentage !== undefined && feePayload.manual_discount_percentage !== null) {
                 formData.set('manual_discount_percentage', String(feePayload.manual_discount_percentage));
             }
 

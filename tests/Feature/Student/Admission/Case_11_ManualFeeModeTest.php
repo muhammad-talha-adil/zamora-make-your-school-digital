@@ -27,6 +27,7 @@ it('accepts manual mode when every mandatory head is priced', function () {
     $this->post(route('students.store'), $this->world->payload([
         'fee_structure_id' => $this->structure->id,
         'fee_mode' => 'manual',
+        'manual_discount_reason' => 'Agreed with parent',
         'custom_fee_entries' => [
             ['fee_head_id' => $this->world->monthlyHead->id, 'amount' => 4000],
             ['fee_head_id' => $this->world->annualHead->id, 'amount' => 9000],
@@ -40,6 +41,7 @@ it('stores the typed amounts on the enrollment', function () {
     $this->post(route('students.store'), $this->world->payload([
         'fee_structure_id' => $this->structure->id,
         'fee_mode' => 'manual',
+        'manual_discount_reason' => 'Agreed with parent',
         'custom_fee_entries' => [
             ['fee_head_id' => $this->world->monthlyHead->id, 'amount' => 4000],
             ['fee_head_id' => $this->world->annualHead->id, 'amount' => 9000],
@@ -56,6 +58,7 @@ it('rejects manual mode with no entries at all', function () {
     $this->post(route('students.store'), $this->world->payload([
         'fee_structure_id' => $this->structure->id,
         'fee_mode' => 'manual',
+        'manual_discount_reason' => 'Agreed with parent',
     ]))->assertSessionHasErrors('custom_fee_entries');
 
     expect(Student::count())->toBe(0);
@@ -66,6 +69,7 @@ it('allows manual mode to price only one fee head, leaving another mandatory hea
     $this->post(route('students.store'), $this->world->payload([
         'fee_structure_id' => $this->structure->id,
         'fee_mode' => 'manual',
+        'manual_discount_reason' => 'Agreed with parent',
         'custom_fee_entries' => [
             ['fee_head_id' => $this->world->monthlyHead->id, 'amount' => 4000],
         ],
@@ -82,6 +86,7 @@ it('allows an optional head to be priced alongside the mandatory ones', function
     $this->post(route('students.store'), $this->world->payload([
         'fee_structure_id' => $this->structure->id,
         'fee_mode' => 'manual',
+        'manual_discount_reason' => 'Agreed with parent',
         'custom_fee_entries' => [
             ['fee_head_id' => $this->world->monthlyHead->id, 'amount' => 4000],
             ['fee_head_id' => $this->world->annualHead->id, 'amount' => 9000],
@@ -96,6 +101,7 @@ it('rejects an entry pointing at a fee head that does not exist', function () {
     $this->post(route('students.store'), $this->world->payload([
         'fee_structure_id' => $this->structure->id,
         'fee_mode' => 'manual',
+        'manual_discount_reason' => 'Agreed with parent',
         'custom_fee_entries' => [
             ['fee_head_id' => 999999, 'amount' => 4000],
         ],
@@ -106,6 +112,7 @@ it('rejects a negative amount', function () {
     $this->post(route('students.store'), $this->world->payload([
         'fee_structure_id' => $this->structure->id,
         'fee_mode' => 'manual',
+        'manual_discount_reason' => 'Agreed with parent',
         'custom_fee_entries' => [
             ['fee_head_id' => $this->world->monthlyHead->id, 'amount' => -100],
             ['fee_head_id' => $this->world->annualHead->id, 'amount' => 9000],
@@ -117,6 +124,7 @@ it('accepts a zero amount, which is how a head is waived in manual mode', functi
     $this->post(route('students.store'), $this->world->payload([
         'fee_structure_id' => $this->structure->id,
         'fee_mode' => 'manual',
+        'manual_discount_reason' => 'Agreed with parent',
         'custom_fee_entries' => [
             ['fee_head_id' => $this->world->monthlyHead->id, 'amount' => 0],
             ['fee_head_id' => $this->world->annualHead->id, 'amount' => 9000],
@@ -137,6 +145,7 @@ it('ignores stale discount data left over from the discount tab when manual mode
     $this->post(route('students.store'), $this->world->payload([
         'fee_structure_id' => $this->structure->id,
         'fee_mode' => 'manual',
+        'manual_discount_reason' => 'Agreed with parent',
         'custom_fee_entries' => [
             ['fee_head_id' => $this->world->monthlyHead->id, 'amount' => 0],
             ['fee_head_id' => $this->world->annualHead->id, 'amount' => 9000],
@@ -159,6 +168,7 @@ it('accepts entries sent as a JSON string, as the form posts them', function () 
     $this->post(route('students.store'), $this->world->payload([
         'fee_structure_id' => $this->structure->id,
         'fee_mode' => 'manual',
+        'manual_discount_reason' => 'Agreed with parent',
         'custom_fee_entries' => json_encode([
             ['fee_head_id' => $this->world->monthlyHead->id, 'amount' => 4000],
             ['fee_head_id' => $this->world->annualHead->id, 'amount' => 9000],

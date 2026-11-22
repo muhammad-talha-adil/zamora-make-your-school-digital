@@ -336,6 +336,14 @@ export function useFeeStructure() {
         }
     }
 
+    const manualReasonRequired = computed(() => {
+        return manualFeeEntries.value.some((entry) => {
+            const item = feeStructure.value?.items.find((i: FeeStructureItem) => i.fee_head_id === entry.fee_head_id);
+
+            return Number(entry.amount) <= 0 || Number(entry.amount) !== Number(item?.amount ?? 0);
+        });
+    });
+
     function validateActiveMode(): string | null {
         if (!feeStructure.value) {
             return null;
@@ -367,6 +375,10 @@ export function useFeeStructure() {
         if (feeMode.value === 'manual') {
             if (manualFeeEntries.value.length === 0) {
                 return 'Please add at least one custom fee entry for manual mode.';
+            }
+
+            if (manualReasonRequired.value && !manualReason.value.trim()) {
+                return 'Please write the reason.';
             }
 
             /*
@@ -457,6 +469,7 @@ export function useFeeStructure() {
         structureCandidates,
         chosenStructureId,
         manualReason,
+        manualReasonRequired,
         // Form refs for external control
         formClassId,
         formSessionId,

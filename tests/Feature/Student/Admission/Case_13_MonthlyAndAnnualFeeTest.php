@@ -90,6 +90,7 @@ it('records the fee mode the office chose', function () {
     $this->post(route('students.store'), $this->world->payload([
         'monthly_fee' => 4500,
         'fee_mode' => 'manual',
+        'manual_discount_reason' => 'Agreed with parent',
         'fee_structure_id' => $this->world->feeStructure()->id,
         'custom_fee_entries' => [
             ['fee_head_id' => $this->world->monthlyHead->id, 'amount' => 4500],
