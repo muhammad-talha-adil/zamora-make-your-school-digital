@@ -451,9 +451,9 @@ const submitForm = () => {
                 </p>
             </div>
 
-            <form @submit.prevent="submitForm" class="max-w-5xl space-y-6">
-                <div class="grid grid-cols-1 gap-6 md:grid-cols-2">
-                    <div class="md:col-span-2">
+            <form @submit.prevent="submitForm" class="max-w-7xl space-y-6">
+                <div class="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-4">
+                    <div class="md:col-span-2 xl:col-span-4">
                         <Label for="student_search">Student or Voucher No *</Label>
                         <div class="relative">
                             <Input
@@ -547,12 +547,12 @@ const submitForm = () => {
                         <p v-if="concessionError" class="text-sm text-destructive">{{ concessionError }}</p>
                     </div>
 
-                    <div v-if="Number(form.concession) > 0" class="md:col-span-2">
+                    <div v-if="Number(form.concession) > 0" class="md:col-span-2 xl:col-span-4">
                         <Label for="concession_reason">Concession reason *</Label>
                         <Input id="concession_reason" v-model="form.concession_reason" maxlength="255" required />
                     </div>
 
-                    <div class="md:col-span-2">
+                    <div class="md:col-span-2 xl:col-span-2">
                         <Label for="received_amount">Received Amount *</Label>
                         <Input
                             id="received_amount"
