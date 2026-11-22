@@ -514,7 +514,7 @@ export function useStudentForm(
 
                     if (relationName === 'father') {
                         form.value.father_name = guardian.name;
-                        form.value.father_phone = guardian.phone;
+                        form.value.father_phone = formatPhone(guardian.phone || '');
                         form.value.father_email = guardian.email;
                         form.value.father_cnic = guardian.cnic;
                         form.value.father_occupation = guardian.occupation || '';
@@ -523,7 +523,7 @@ export function useStudentForm(
                     } else {
                         // For any non-father guardian, treat as other guardian
                         form.value.other_name = guardian.name;
-                        form.value.other_phone = guardian.phone;
+                        form.value.other_phone = formatPhone(guardian.phone || '');
                         form.value.other_email = guardian.email;
                         form.value.other_cnic = guardian.cnic;
                         form.value.other_relation_id = String(relationId);

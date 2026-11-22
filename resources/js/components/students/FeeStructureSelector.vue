@@ -487,7 +487,7 @@ onMounted(async () => {
     await fetchDiscountTypes();
     
     // Load enrollment data if provided (edit mode)
-    if (props.enrollment && props.enrollment.fee_structure_id) {
+    if (props.enrollment && (props.enrollment.fee_structure_id || props.enrollment.discounts?.length)) {
         loadEnrollmentData(props.enrollment);
     } else if (props.classId && props.sessionId && props.campusId) {
         // Also fetch if all required props are available (create mode)

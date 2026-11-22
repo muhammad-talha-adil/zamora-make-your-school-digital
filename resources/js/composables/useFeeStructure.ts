@@ -1,4 +1,4 @@
-import { ref, computed, watch } from 'vue';
+import { ref, computed, watch, nextTick } from 'vue';
 import axios from 'axios';
 import { route } from 'ziggy-js';
 import { router } from '@inertiajs/vue3';
@@ -309,31 +309,35 @@ export function useFeeStructure() {
         manual_discount_percentage?: number | null;
         manual_discount_reason?: string | null;
     }) {
-        if (enrollment.fee_structure_id) {
-            fetchFeeStructure().then(() => {
-                if (enrollment.fee_mode) {
-                    feeMode.value = enrollment.fee_mode as 'structure' | 'discount' | 'manual';
-                    
-                    if (enrollment.fee_mode === 'manual' && enrollment.custom_fee_entries) {
-                        manualSelectedFeeHeads.value = enrollment.custom_fee_entries.map((e: any) => e.fee_head_id);
-                        enrollment.custom_fee_entries.forEach((entry: any) => {
-                            manualFeeAmounts.value[entry.fee_head_id] = entry.amount;
-                        });
-                        manualReason.value = enrollment.manual_discount_reason || '';
-                    }
-                    
-                    if (enrollment.fee_mode === 'discount' && enrollment.discounts?.length) {
-                        selectedDiscountType.value = enrollment.discounts[0].discount_type_id;
-                        discountValue.value = enrollment.discounts[0].value;
-                        discountValueType.value = enrollment.discounts[0].value_type === 'fixed' ? 'fixed' : 'percent';
-                        discountReason.value = enrollment.discounts[0].reason || '';
-                        discountSelectedFeeHeads.value = enrollment.discounts
-                            .map((discount) => discount.fee_head_id)
-                            .filter((feeHeadId): feeHeadId is number => !!feeHeadId);
-                    }
-                }
-            });
-        }
+        const hasDiscounts = !!enrollment.discounts?.length;
+        const mode = enrollment.fee_mode || (hasDiscounts ? 'discount' : null);
+
+        fetchFeeStructure().then(async () => {
+            if (!mode) {
+                return;
+            }
+            feeMode.value = mode as 'structure' | 'discount' | 'manual';
+
+            if (mode === 'manual' && enrollment.custom_fee_entries) {
+                manualSelectedFeeHeads.value = enrollment.custom_fee_entries.map((e: any) => e.fee_head_id);
+                enrollment.custom_fee_entries.forEach((entry: any) => {
+                    manualFeeAmounts.value[entry.fee_head_id] = entry.amount;
+                });
+                manualReason.value = enrollment.manual_discount_reason || '';
+            }
+
+            if (mode === 'discount' && hasDiscounts) {
+                const saved = enrollment.discounts!;
+                selectedDiscountType.value = saved[0].discount_type_id;
+                await nextTick();
+                discountValue.value = Number(saved[0].value);
+                discountValueType.value = saved[0].value_type === 'fixed' ? 'fixed' : 'percent';
+                discountReason.value = saved[0].reason || '';
+                discountSelectedFeeHeads.value = saved
+                    .map((discount) => discount.fee_head_id)
+                    .filter((feeHeadId): feeHeadId is number => !!feeHeadId);
+            }
+        });
     }
 
     const manualReasonRequired = computed(() => {

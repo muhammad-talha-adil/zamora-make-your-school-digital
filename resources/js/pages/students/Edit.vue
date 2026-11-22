@@ -62,6 +62,7 @@
                             <Input
                                 id="name"
                                 v-model="form.name"
+                                maxlength="100"
                                 type="text"
                                 placeholder="Enter student name"
                                 :class="{ 'border-destructive': errors.name }"
@@ -318,6 +319,7 @@
                             <Input
                                 id="father_name"
                                 v-model="form.father_name"
+                                maxlength="100"
                                 type="text"
                                 placeholder="Enter guardian's name"
                                 :class="{ 'border-destructive': errors.father_name }"
@@ -462,6 +464,7 @@
                             <Input
                                 id="other_name"
                                 v-model="form.other_name"
+                                maxlength="100"
                                 type="text"
                                 placeholder="Enter guardian's name"
                             />
@@ -541,7 +544,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, watch, onMounted } from 'vue';
+import { ref, computed, watch, nextTick } from 'vue';
 import { router } from '@inertiajs/vue3';
 import { Head, usePage } from '@inertiajs/vue3';
 import { route } from 'ziggy-js';
@@ -728,14 +731,20 @@ const setupErrorClearWatchers = () => {
 };
 
 // Setup watchers
+initializeForm(props.student);
 setupClassWatcher(processing);
 setupOtherGuardianWatcher();
 setupErrorClearWatchers();
 
-// Initialize form with student data on mount
-onMounted(() => {
-    initializeForm(props.student);
-});
+const scrollToFirstError = async () => {
+    await nextTick();
+    const target = document.querySelector('.border-destructive') ?? document.querySelector('.text-destructive');
+    if (target) {
+        target.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    } else {
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+};
 
 // Guardian lookup loading state
 const guardianLookupLoading = ref(false);
@@ -877,6 +886,7 @@ const submitForm = () => {
     if (Object.keys(validationErrors).length > 0) {
         errors.value = validationErrors;
         processing.value = false;
+        scrollToFirstError();
         return;
     }
 
@@ -979,6 +989,7 @@ const submitForm = () => {
         onError: (err) => {
             errors.value = err as Record<string, string>;
             processing.value = false;
+            scrollToFirstError();
             // Show prominent error alert with all error messages
             const errorMessages = Object.values(err as Record<string, string>);
             if (errorMessages.length > 0) {

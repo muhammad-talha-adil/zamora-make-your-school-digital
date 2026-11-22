@@ -80,6 +80,7 @@ class VoucherGenerationService
             $enrollments = $query->get();
             $generated = 0;
             $skipped = 0;
+            $beforeAdmission = [];
             $errors = [];
 
             // Get custom fee heads for this generation
@@ -88,8 +89,21 @@ class VoucherGenerationService
             $includeInventoryDues = $filters['include_inventory_dues'] ?? false;
             $includeTransportDues = $filters['include_transport_dues'] ?? false;
 
+            $billedMonthStart = Carbon::create($year, $monthNumber, 1)->startOfMonth();
+
             foreach ($enrollments as $enrollment) {
                 try {
+                    $admittedOn = $enrollment->admission_date;
+
+                    if ($admittedOn && $admittedOn->copy()->startOfMonth()->gt($billedMonthStart)) {
+                        $beforeAdmission[] = [
+                            'student_id' => $enrollment->student_id,
+                            'message' => 'Student was admitted in '.$admittedOn->format('F Y').'. Vouchers before that are not allowed.',
+                        ];
+
+                        continue;
+                    }
+
                     // Check if voucher already exists
                     $exists = FeeVoucher::where('student_id', $enrollment->student_id)
                         ->where('voucher_month_id', $monthId)
@@ -128,6 +142,7 @@ class VoucherGenerationService
             return [
                 'generated' => $generated,
                 'skipped' => $skipped,
+                'before_admission' => $beforeAdmission,
                 'errors' => $errors,
                 'total' => $enrollments->count(),
             ];

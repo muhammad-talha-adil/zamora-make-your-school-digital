@@ -35,6 +35,9 @@ class UpdateStudentRequest extends FormRequest
     public function messages(): array
     {
         return [
+            'name.max' => 'Name can be at most 100 characters.',
+            'father_name.max' => 'Guardian name can be at most 100 characters.',
+            'other_name.max' => 'Guardian name can be at most 100 characters.',
             'name.regex' => "Name can only have letters, spaces and . ' - @",
             'father_name.regex' => "Guardian name can only have letters, spaces and . ' - @",
             'admission_no.required' => 'The admission number is required.',
@@ -107,7 +110,7 @@ class UpdateStudentRequest extends FormRequest
             'name' => [
                 'required',
                 'string',
-                'max:255',
+                'max:100',
                 'regex:/^[\p{L}\p{M}\s.\'\-@]+$/u',
             ],
             /*
@@ -300,7 +303,7 @@ class UpdateStudentRequest extends FormRequest
             'father_name' => [
                 'required_without:guardian_id',
                 'string',
-                'max:255',
+                'max:100',
                 'regex:/^[\p{L}\p{M}\s.\'\-@]+$/u',
             ],
             'father_email' => [
@@ -362,7 +365,7 @@ class UpdateStudentRequest extends FormRequest
             'other_name' => [
                 'nullable',
                 'string',
-                'max:255',
+                'max:100',
             ],
             'other_email' => [
                 'nullable',

@@ -175,6 +175,7 @@
                             <Input
                                 id="name"
                                 v-model="form.name"
+                                maxlength="100"
                                 type="text"
                                 placeholder="Enter student name"
                                 :class="{ 'border-destructive': errors.name }"
@@ -487,6 +488,7 @@
                             <Input
                                 id="father_name"
                                 v-model="form.father_name"
+                                maxlength="100"
                                 type="text"
                                 placeholder="Enter guardian's name"
                                 :class="{
@@ -654,6 +656,7 @@
                                 id="other_name"
                                 v-model="form.other_name"
                                 type="text"
+                                maxlength="100"
                                 placeholder="Enter guardian's name"
                             />
                         </div>
@@ -1319,6 +1322,7 @@ const submitForm = () => {
     // If there are validation errors, show them
     if (Object.keys(validationErrors).length > 0) {
         errors.value = validationErrors;
+        nextTick(() => (document.querySelector('.border-destructive') ?? document.querySelector('.text-destructive'))?.scrollIntoView({ behavior: 'smooth', block: 'center' }));
         processing.value = false;
         return;
     }
@@ -1483,6 +1487,7 @@ const submitForm = () => {
         },
         onError: (err) => {
             errors.value = err as Record<string, string>;
+            nextTick(() => (document.querySelector('.border-destructive') ?? document.querySelector('.text-destructive'))?.scrollIntoView({ behavior: 'smooth', block: 'center' }));
             scrollToFirstError();
             // Show prominent error alert with all error messages
             const errorMessages = Object.values(err as Record<string, string>);

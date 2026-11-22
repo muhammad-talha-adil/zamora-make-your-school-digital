@@ -376,6 +376,7 @@ class FeeVoucherController extends Controller
 
         $totalGenerated = 0;
         $totalSkipped = 0;
+        $beforeAdmission = [];
         $allErrors = [];
 
         // Sort month numbers to process in order
@@ -390,10 +391,26 @@ class FeeVoucherController extends Controller
 
             $totalGenerated += $result['generated'];
             $totalSkipped += $result['skipped'];
+            $beforeAdmission = array_merge($beforeAdmission, $result['before_admission']);
 
             if (! empty($result['errors'])) {
                 $allErrors = array_merge($allErrors, $result['errors']);
             }
+        }
+
+        if ($totalGenerated === 0 && $beforeAdmission !== [] && empty($allErrors)) {
+            $reason = count($beforeAdmission) === 1
+                ? $beforeAdmission[0]['message']
+                : count($beforeAdmission).' students were admitted after this month. Vouchers before admission are not allowed.';
+
+            return back()->with('error', $reason);
+        }
+
+        if ($beforeAdmission !== []) {
+            return back()->with('warning',
+                "Generated {$totalGenerated} vouchers. {$totalSkipped} skipped. ".
+                count($beforeAdmission).' students skipped (admitted later).'
+            );
         }
 
         if (empty($allErrors)) {
@@ -426,6 +443,7 @@ class FeeVoucherController extends Controller
 
         $totalGenerated = 0;
         $totalSkipped = 0;
+        $totalBeforeAdmission = 0;
         $allErrors = [];
 
         foreach ($classIds as $classId) {
@@ -443,6 +461,7 @@ class FeeVoucherController extends Controller
 
                 $totalGenerated += $result['generated'];
                 $totalSkipped += $result['skipped'];
+                $totalBeforeAdmission += count($result['before_admission']);
 
                 if (! empty($result['errors'])) {
                     $allErrors = array_merge($allErrors, $result['errors']);
@@ -450,9 +469,11 @@ class FeeVoucherController extends Controller
             }
         }
 
+        $admissionNote = $totalBeforeAdmission > 0 ? " {$totalBeforeAdmission} skipped (admitted later)." : '';
+
         return redirect()->route('fee.vouchers.index')->with(
             empty($allErrors) ? 'success' : 'warning',
-            "Generated {$totalGenerated} vouchers across {$classIds->count()} classes. {$totalSkipped} skipped."
+            "Generated {$totalGenerated} vouchers across {$classIds->count()} classes. {$totalSkipped} skipped.{$admissionNote}"
         );
     }
 

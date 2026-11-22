@@ -37,7 +37,6 @@ class StoreStudentRequest extends FormRequest
             'admission_no.unique' => 'The admission number has already been taken.',
             'admission_no.max' => 'The admission number may not be greater than 50 characters.',
             'name.required' => 'The student name is required.',
-            'name.max' => 'The student name may not be greater than 255 characters.',
             'dob.required' => 'The date of birth is required.',
             'dob.date' => 'The date of birth must be a valid date.',
             'dob.before' => 'The date of birth must be before today.',
@@ -61,9 +60,11 @@ class StoreStudentRequest extends FormRequest
             'section_id.exists' => 'The selected section is invalid.',
             'guardian_id.exists' => 'The selected guardian is invalid.',
             'father_name.required' => 'The guardian name is required.',
+            'name.max' => 'Name can be at most 100 characters.',
+            'father_name.max' => 'Guardian name can be at most 100 characters.',
+            'other_name.max' => 'Guardian name can be at most 100 characters.',
             'name.regex' => "Name can only have letters, spaces and . ' - @",
             'father_name.regex' => "Guardian name can only have letters, spaces and . ' - @",
-            'father_name.max' => 'The guardian name may not be greater than 255 characters.',
             'father_email.email' => 'The guardian email must be a valid email address.',
             'father_email.max' => 'The guardian email may not be greater than 255 characters.',
             'father_phone.max' => 'The guardian phone may not be greater than 20 characters.',
@@ -72,7 +73,6 @@ class StoreStudentRequest extends FormRequest
             'father_occupation.max' => 'The guardian occupation may not be greater than 255 characters.',
             'father_relation_id.required' => 'Please select the relationship to father/guardian.',
             'father_relation_id.exists' => 'The selected relationship is invalid.',
-            'other_name.max' => 'The other guardian name may not be greater than 255 characters.',
             'other_email.email' => 'The other guardian email must be a valid email address.',
             'other_email.max' => 'The other guardian email may not be greater than 255 characters.',
             'other_phone.max' => 'The other guardian phone may not be greater than 20 characters.',
@@ -107,7 +107,7 @@ class StoreStudentRequest extends FormRequest
             'name' => [
                 'required',
                 'string',
-                'max:255',
+                'max:100',
                 'regex:/^[\p{L}\p{M}\s.\'\-@]+$/u',
             ],
             'student_email' => [
@@ -342,7 +342,7 @@ class StoreStudentRequest extends FormRequest
             'father_name' => [
                 'required_without:guardian_id',
                 'string',
-                'max:255',
+                'max:100',
                 'regex:/^[\p{L}\p{M}\s.\'\-@]+$/u',
             ],
             'father_email' => [
@@ -429,7 +429,7 @@ class StoreStudentRequest extends FormRequest
             'other_name' => [
                 'nullable',
                 'string',
-                'max:255',
+                'max:100',
             ],
             'other_email' => [
                 'nullable',
