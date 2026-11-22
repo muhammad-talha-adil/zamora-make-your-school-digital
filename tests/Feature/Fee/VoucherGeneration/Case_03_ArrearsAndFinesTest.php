@@ -13,6 +13,7 @@ use App\Enums\Fee\FineType;
 use App\Enums\Fee\VoucherStatus;
 use App\Models\Fee\FeeFineRule;
 use App\Models\Fee\FeeHead;
+use App\Models\Fee\FeeStructure;
 use App\Models\Fee\FeeVoucher;
 use App\Models\Fee\FeeVoucherItem;
 use App\Models\Month;
@@ -271,4 +272,25 @@ it('prefers a class-level fine rule over a campus-wide one', function () {
         ->first();
 
     expect((float) $fine->amount)->toBe(250.0);
+});
+
+it('still carries arrears when the previous balance head was never seeded', function () {
+    $april = generateCarryingArrears(4);
+    makeOverdueBy($april, 20);
+    FeeHead::where('code', 'PREVIOUS_BALANCE')->delete();
+
+    $result = app(VoucherGenerationService::class)->generateMonthlyVouchers(5, 2026, ['include_previous_unpaid' => true]);
+
+    expect($result['errors'])->toBe([])
+        ->and(FeeHead::where('code', 'PREVIOUS_BALANCE')->count())->toBe(1);
+});
+
+it('reports a failed student by name with a plain reason', function () {
+    FeeStructure::query()->delete();
+
+    $result = app(VoucherGenerationService::class)->generateMonthlyVouchers(6, 2026);
+
+    expect($result['errors'])->not->toBeEmpty()
+        ->and($result['errors'][0]['reason'])->toBe('no fee structure found for this class')
+        ->and($result['errors'][0]['student_name'])->not->toBeEmpty();
 });

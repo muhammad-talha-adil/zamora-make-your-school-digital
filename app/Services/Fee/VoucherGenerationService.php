@@ -130,7 +130,9 @@ class VoucherGenerationService
                 } catch (\Exception $e) {
                     $errors[] = [
                         'student_id' => $enrollment->student_id,
+                        'student_name' => $enrollment->student?->name ?? 'Student #'.$enrollment->student_id,
                         'error' => $e->getMessage(),
+                        'reason' => $this->friendlyReason($e->getMessage()),
                     ];
                     Log::error('Voucher generation failed for student', [
                         'student_id' => $enrollment->student_id,
@@ -147,6 +149,20 @@ class VoucherGenerationService
                 'total' => $enrollments->count(),
             ];
         });
+    }
+
+    /**
+     * A short plain-words reason for the cashier; the technical text only goes to the log.
+     */
+    protected function friendlyReason(string $technicalMessage): string
+    {
+        return match (true) {
+            str_contains($technicalMessage, 'No fee structure') => 'no fee structure found for this class',
+            str_contains($technicalMessage, 'More than one fee structure') => 'more than one fee structure matches, choose one',
+            str_contains($technicalMessage, 'not active') => 'student is not active',
+            str_contains($technicalMessage, 'has left') => 'student has left the school',
+            default => 'something went wrong, please try again or contact support',
+        };
     }
 
     /**
@@ -296,13 +312,19 @@ class VoucherGenerationService
             // Seeded by FeeHeadSeeder. It used to be created here on the fly
             // with category 'other', which the FeeHeadCategory enum does not
             // have, so the first student to fall behind killed generation.
-            $previousBalanceHead = FeeHead::where('code', 'PREVIOUS_BALANCE')->first();
-
-            if (! $previousBalanceHead) {
-                throw new \RuntimeException(
-                    'The PREVIOUS_BALANCE fee head is missing; run the fee head seeder.'
-                );
-            }
+            $previousBalanceHead = FeeHead::firstOrCreate(
+                ['code' => 'PREVIOUS_BALANCE'],
+                [
+                    'name' => 'Previous Balance',
+                    'category' => 'misc',
+                    'is_recurring' => false,
+                    'default_frequency' => 'once',
+                    'is_optional' => false,
+                    'sort_order' => 60,
+                    'is_active' => true,
+                    'description' => 'Unpaid balance brought forward from earlier vouchers',
+                ]
+            );
 
             $this->createBilledVoucherCharge(
                 $voucher,

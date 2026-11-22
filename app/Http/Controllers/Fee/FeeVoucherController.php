@@ -402,7 +402,7 @@ class FeeVoucherController extends Controller
             }
         }
 
-        if ($totalGenerated === 0 && $beforeAdmission !== [] && empty($allErrors)) {
+        if ($totalGenerated === 0 && $beforeAdmission !== [] && empty($allErrors) && $totalSkipped === 0) {
             $reason = count($beforeAdmission) === 1
                 ? $beforeAdmission[0]['message']
                 : count($beforeAdmission).' students were admitted after this month. Vouchers before admission are not allowed.';
@@ -410,22 +410,42 @@ class FeeVoucherController extends Controller
             return back()->with('error', $reason);
         }
 
-        if ($beforeAdmission !== []) {
-            return redirect()->route('fee.vouchers.index')->with('warning',
-                "Generated {$totalGenerated} vouchers. ".
-                count($beforeAdmission).' skipped: admitted later.'
-            );
+        $message = $this->generationSummary($totalGenerated, $totalSkipped, count($beforeAdmission), $allErrors);
+
+        if ($allErrors !== []) {
+            return back()->with($totalGenerated === 0 ? 'error' : 'warning', $message);
         }
 
-        if (empty($allErrors)) {
-            return redirect()->route('fee.vouchers.index')
-                ->with('success', "Generated {$totalGenerated} vouchers. Skipped {$totalSkipped} existing vouchers.");
+        return redirect()->route('fee.vouchers.index')
+            ->with($beforeAdmission !== [] ? 'warning' : 'success', $message);
+    }
+
+    /**
+     * Plain-words result of a generation run, one clause per reason.
+     *
+     * @param  array<int, array{student_name?: string, reason?: string}>  $errors
+     */
+    protected function generationSummary(int $generated, int $alreadyMade, int $admittedLater, array $errors): string
+    {
+        $parts = ["Created {$generated} ".($generated === 1 ? 'voucher' : 'vouchers').'.'];
+
+        if ($alreadyMade > 0) {
+            $parts[] = "{$alreadyMade} skipped: already made.";
         }
 
-        return back()->with('warning',
-            "Generated {$totalGenerated} vouchers. {$totalSkipped} skipped. ".
-            count($allErrors).' errors occurred.'
-        );
+        if ($admittedLater > 0) {
+            $parts[] = "{$admittedLater} skipped: admitted later.";
+        }
+
+        if ($errors !== []) {
+            $parts[] = count($errors).' could not be made: '.collect($errors)
+                ->take(3)
+                ->map(fn (array $error): string => ($error['student_name'] ?? 'Student').' ('.($error['reason'] ?? 'something went wrong').')')
+                ->implode(', ')
+                .(count($errors) > 3 ? ' and '.(count($errors) - 3).' more.' : '.');
+        }
+
+        return implode(' ', $parts);
     }
 
     /**
@@ -473,11 +493,9 @@ class FeeVoucherController extends Controller
             }
         }
 
-        $admissionNote = $totalBeforeAdmission > 0 ? " {$totalBeforeAdmission} skipped (admitted later)." : '';
-
         return redirect()->route('fee.vouchers.index')->with(
             empty($allErrors) ? 'success' : 'warning',
-            "Generated {$totalGenerated} vouchers across {$classIds->count()} classes. {$totalSkipped} skipped.{$admissionNote}"
+            $this->generationSummary($totalGenerated, $totalSkipped, $totalBeforeAdmission, $allErrors)
         );
     }
 
