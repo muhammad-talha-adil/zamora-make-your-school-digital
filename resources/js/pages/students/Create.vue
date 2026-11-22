@@ -181,6 +181,7 @@
                                 :class="{ 'border-destructive': errors.name }"
                                 required
                             />
+                            <p v-if="(form.name || '').length > 80" class="text-xs text-muted-foreground">{{ form.name.length }}/100</p>
                             <InputError :message="errors.name" />
                         </div>
 
@@ -496,6 +497,7 @@
                                 }"
                                 required
                             />
+                            <p v-if="(form.father_name || '').length > 80" class="text-xs text-muted-foreground">{{ form.father_name.length }}/100</p>
                             <InputError :message="errors.father_name" />
                         </div>
 
@@ -659,6 +661,7 @@
                                 maxlength="100"
                                 placeholder="Enter guardian's name"
                             />
+                            <p v-if="(form.other_name || '').length > 80" class="text-xs text-muted-foreground">{{ form.other_name.length }}/100</p>
                         </div>
 
                         <!-- Other Guardian Phone with Auto-formatting -->

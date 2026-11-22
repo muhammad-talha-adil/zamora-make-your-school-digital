@@ -56,3 +56,12 @@ it('skips vouchers for months before the admission month and allows the admissio
 
     expect($service->generateMonthlyVouchers(11, 2026)['generated'])->toBe(1);
 });
+
+it('shares the warning flash message with the page', function () {
+    $world = FeeWorld::make();
+    $this->actingAs($world->school->actor);
+
+    $this->withSession(['warning' => '1 students skipped (admitted later).'])
+        ->get(route('fee.vouchers.generate.form'))
+        ->assertInertia(fn ($page) => $page->where('flash.warning', '1 students skipped (admitted later).'));
+});

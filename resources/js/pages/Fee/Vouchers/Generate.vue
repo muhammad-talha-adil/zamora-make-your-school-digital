@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Head, router } from '@inertiajs/vue3';
+import { Head, router, usePage } from '@inertiajs/vue3';
 import { reactive, ref, computed, watch, onMounted } from 'vue';
 import { route } from 'ziggy-js';
 import axios from 'axios';
@@ -420,6 +420,19 @@ const generateVouchers = () => {
         }
     );
 };
+
+const page = usePage();
+const flashMessage = computed(() => {
+    const flash = (page.props.flash ?? {}) as { error?: string; warning?: string; success?: string };
+
+    return flash.error
+        ? { type: 'error', text: flash.error }
+        : flash.warning
+          ? { type: 'warning', text: flash.warning }
+          : flash.success
+            ? { type: 'success', text: flash.success }
+            : null;
+});
 </script>
 
 <template>
@@ -427,6 +440,18 @@ const generateVouchers = () => {
         <Head title="Generate Fee Vouchers" />
 
         <div class="space-y-6 p-4 md:p-6">
+            <div
+                v-if="flashMessage"
+                data-testid="flash-message"
+                :class="[
+                    'rounded-md border p-3 text-sm',
+                    flashMessage.type === 'error' ? 'border-destructive/40 bg-destructive/10 text-destructive' : '',
+                    flashMessage.type === 'warning' ? 'border-warning/40 bg-warning/10 text-warning' : '',
+                    flashMessage.type === 'success' ? 'border-success/40 bg-success/10 text-success' : '',
+                ]"
+            >
+                {{ flashMessage.text }}
+            </div>
             <!-- Header -->
             <div>
                 <h1 class="text-lg md:text-2xl font-bold text-foreground">
