@@ -4,6 +4,7 @@ use App\Http\Controllers\Fee\DiscountApprovalController;
 use App\Http\Controllers\Fee\DiscountTypeController;
 use App\Http\Controllers\Fee\FeeDashboardController;
 use App\Http\Controllers\Fee\FeeHeadController;
+use App\Http\Controllers\Fee\FeeLedgerController;
 use App\Http\Controllers\Fee\FeePaymentController;
 use App\Http\Controllers\Fee\FeeReportController;
 use App\Http\Controllers\Fee\FeeSettingsController;
@@ -225,6 +226,10 @@ Route::prefix('fee')->name('fee.')->middleware([...$middleware, 'campus.exists']
             ->middleware('permission:fee.payment.collect');
         Route::post('/', [FeePaymentController::class, 'store'])->name('store')
             ->middleware('permission:fee.payment.collect');
+        Route::get('/family/{student}', [FeePaymentController::class, 'family'])->name('family')
+            ->middleware('permission:fee.payment.collect');
+        Route::post('/family', [FeePaymentController::class, 'storeFamily'])->name('store-family')
+            ->middleware('permission:fee.payment.collect');
         Route::post('/bulk', [FeePaymentController::class, 'storeBulk'])->name('store-bulk')
             ->middleware('permission:fee.payment.collect');
         // `fee.view.own` lets a child or their family read their own receipt;
@@ -251,6 +256,10 @@ Route::prefix('fee')->name('fee.')->middleware([...$middleware, 'campus.exists']
         Route::get('/voucher/{voucher}', [FeePaymentController::class, 'getByVoucher'])->name('by-voucher')
             ->middleware('permission:fee.view|fee.payment.collect');
     });
+
+    // ==================== STUDENT FEE LEDGER ====================
+    Route::get('/ledger/{student}', [FeeLedgerController::class, 'show'])->name('ledger.show')
+        ->middleware('permission:fee.view|fee.payment.collect|fee.view.own');
 
     // ==================== REPORTS ====================
     Route::prefix('reports')->name('reports.')->middleware('permission:fee.reports')->group(function () {

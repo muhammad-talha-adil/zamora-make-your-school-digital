@@ -2,15 +2,19 @@
 
 namespace App\Services\Fee;
 
+use App\Enums\Fee\VoucherItemSource;
 use App\Enums\Fee\WalletDirection;
 use App\Enums\Fee\WalletTransactionType;
+use App\Models\Fee\FeeHead;
 use App\Models\Fee\FeePayment;
 use App\Models\Fee\FeeVoucher;
+use App\Models\Fee\FeeVoucherItem;
 use App\Models\Fee\StudentFeeWalletTransaction;
 use App\Models\Finance\StudentAccountCharge;
 use App\Models\Student;
 use App\Services\Finance\StudentBillingService;
 use App\Services\Finance\UnifiedAccountingService;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
 
@@ -51,12 +55,25 @@ class FeePaymentService
      */
     public function record(array $data): FeePayment
     {
+        return DB::transaction(fn () => $this->recordWithLock($data));
+    }
+
+    /**
+     * Runs inside one transaction with the vouchers locked, so two submits
+     * (a double click, or two tabs) are handled one after the other and the
+     * second sees the balance the first left behind.
+     *
+     * @param  array<string, mixed>  $data
+     */
+    protected function recordWithLock(array $data): FeePayment
+    {
         $voucherIds = collect($data['charges'])->pluck('voucher_id')->unique()->values();
 
         $vouchers = FeeVoucher::query()
             ->whereIn('id', $voucherIds)
             ->where('student_id', $data['student_id'])
             ->whereIn('status', ['unpaid', 'partial', 'overdue'])
+            ->lockForUpdate()
             ->get()
             ->keyBy('id');
 
@@ -65,6 +82,14 @@ class FeePaymentService
                 'vouchers' => 'One or more selected vouchers do not belong to this student or are no longer unpaid.',
             ]);
         }
+
+        $this->rejectDuplicate($data);
+
+        $concessionBreakdown = $this->applyConcession($data, $vouchers);
+        $data['charges'] = collect($data['charges'])
+            ->filter(fn (array $charge) => (float) $charge['amount'] > 0)
+            ->values()
+            ->all();
 
         $chargeIds = collect($data['charges'])->pluck('student_account_charge_id')->filter()->unique()->values();
 
@@ -106,6 +131,25 @@ class FeePaymentService
             }
         }
 
+        $lateFee = round((float) ($data['late_fee'] ?? 0), 2);
+        $lateFeeItem = $lateFee > 0 ? $this->addLateFee($vouchers->first(), $lateFee) : null;
+
+        if ($lateFeeItem) {
+            $data['charges'][] = [
+                'voucher_id' => $lateFeeItem->fee_voucher_id,
+                'fee_voucher_item_id' => $lateFeeItem->id,
+                'student_account_charge_id' => null,
+                'source_module' => 'fee',
+                'amount' => $lateFee,
+            ];
+        }
+
+        if ($data['charges'] === []) {
+            throw ValidationException::withMessages([
+                'charges' => 'Enter an amount to pay.',
+            ]);
+        }
+
         $totalAllocated = (float) collect($data['charges'])->sum('amount');
         if ($totalAllocated > (float) $data['received_amount']) {
             throw ValidationException::withMessages([
@@ -127,7 +171,7 @@ class FeePaymentService
             ]);
         }
 
-        return DB::transaction(function () use ($data, $totalAllocated) {
+        return DB::transaction(function () use ($data, $totalAllocated, $lateFee, $lateFeeItem, $concessionBreakdown) {
             $student = Student::with(['currentEnrollment.class', 'currentEnrollment.section'])->findOrFail($data['student_id']);
             $enrollment = $student->currentEnrollment;
 
@@ -157,6 +201,11 @@ class FeePaymentService
                 'received_amount' => $data['received_amount'],
                 'allocated_amount' => $totalAllocated,
                 'excess_amount' => $walletAmount,
+                'late_fee_amount' => $lateFee,
+                'concession_amount' => round((float) collect($concessionBreakdown)->sum('amount'), 2),
+                'concession_reason' => $concessionBreakdown === [] ? null : ($data['concession_reason'] ?? null),
+                'concession_breakdown' => $concessionBreakdown === [] ? null : $concessionBreakdown,
+                'late_fee_item_id' => $lateFeeItem?->id,
                 'remaining_unallocated_amount' => $walletAmount,
                 'status' => 'posted',
                 'notes' => $data['remarks'] ?? null,
@@ -219,6 +268,171 @@ class FeePaymentService
 
             return $payment;
         });
+    }
+
+    /**
+     * A second identical submit a moment after the first (double click) is
+     * refused instead of recorded again.
+     *
+     * @param  array<string, mixed>  $data
+     *
+     * @throws ValidationException
+     */
+    protected function rejectDuplicate(array $data): void
+    {
+        $recent = FeePayment::query()
+            ->where('student_id', $data['student_id'])
+            ->where('payment_method', $data['payment_method'])
+            ->where('received_amount', $data['received_amount'])
+            ->where('status', 'posted')
+            ->where('created_at', '>=', now()->subSeconds(5))
+            ->exists();
+
+        if ($recent) {
+            throw ValidationException::withMessages([
+                'charges' => 'This payment was just recorded. Please check the payments list.',
+            ]);
+        }
+    }
+
+    /**
+     * Takes the concession off the selected items, oldest first, and returns
+     * what was taken from each so a reversal can put it back.
+     *
+     * @param  array<string, mixed>  $data
+     * @param  Collection<int, FeeVoucher>  $vouchers
+     * @return array<int, array{item_id: int, amount: float}>
+     *
+     * @throws ValidationException
+     */
+    protected function applyConcession(array &$data, $vouchers): array
+    {
+        $concession = round((float) ($data['concession'] ?? 0), 2);
+
+        if ($concession <= 0) {
+            return [];
+        }
+
+        if (blank($data['concession_reason'] ?? null)) {
+            throw ValidationException::withMessages(['concession_reason' => 'Give a reason for the concession.']);
+        }
+
+        $items = [];
+        foreach ($data['charges'] as $chargeData) {
+            $item = FeeVoucherItem::query()
+                ->with('studentAccountCharge')
+                ->where('fee_voucher_id', $chargeData['voucher_id'])
+                ->find($chargeData['fee_voucher_item_id']);
+
+            if ($item) {
+                $items[$item->id] = $item;
+            }
+        }
+
+        $totalBalance = collect($items)->sum(fn (FeeVoucherItem $item) => $this->studentBillingService->getVoucherItemBalance($item));
+
+        if ($concession > round($totalBalance, 2)) {
+            throw ValidationException::withMessages(['concession' => 'Concession cannot be more than the balance.']);
+        }
+
+        $remaining = $concession;
+        $breakdown = [];
+
+        foreach ($items as $item) {
+            if ($remaining <= 0) {
+                break;
+            }
+
+            $take = round(min($remaining, $this->studentBillingService->getVoucherItemBalance($item)), 2);
+
+            if ($take <= 0) {
+                continue;
+            }
+
+            $this->shiftItemDiscount($item, $take);
+            $breakdown[] = ['item_id' => $item->id, 'amount' => $take];
+            $remaining = round($remaining - $take, 2);
+        }
+
+        return $breakdown;
+    }
+
+    /**
+     * Moves an item's discount by `$amount` (negative puts it back), keeping
+     * its charge and its voucher in step.
+     */
+    public function shiftItemDiscount(FeeVoucherItem $item, float $amount): void
+    {
+        $item->update([
+            'discount_amount' => (float) $item->discount_amount + $amount,
+            'net_amount' => (float) $item->net_amount - $amount,
+        ]);
+
+        $charge = $item->studentAccountCharge;
+        if ($charge) {
+            $charge->update([
+                'discount_amount' => (float) $charge->discount_amount + $amount,
+                'net_amount' => (float) $charge->net_amount - $amount,
+            ]);
+        }
+
+        $voucher = FeeVoucher::query()->lockForUpdate()->find($item->fee_voucher_id);
+        $voucher->update([
+            'discount_amount' => (float) $voucher->discount_amount + $amount,
+            'net_amount' => (float) $voucher->net_amount - $amount,
+        ]);
+    }
+
+    /**
+     * Adds a late fee line to the voucher and its fine total.
+     */
+    protected function addLateFee(FeeVoucher $voucher, float $amount): FeeVoucherItem
+    {
+        $item = $voucher->items()->create([
+            'fee_head_id' => FeeHead::query()->where('code', 'LATE_FINE')->value('id'),
+            'description' => 'Late fee',
+            'amount' => $amount,
+            'discount_amount' => 0,
+            'fine_amount' => 0,
+            'net_amount' => $amount,
+            'source_type' => VoucherItemSource::MANUAL,
+            'source_module' => 'fee',
+        ]);
+
+        $voucher->refresh()->update([
+            'gross_amount' => (float) $voucher->gross_amount + $amount,
+            'fine_amount' => (float) $voucher->fine_amount + $amount,
+            'net_amount' => (float) $voucher->net_amount + $amount,
+        ]);
+
+        return $item;
+    }
+
+    /**
+     * Takes the late fee and concession of a payment off the vouchers again.
+     */
+    public function undoLateFeeAndConcession(FeePayment $payment): void
+    {
+        foreach ($payment->concession_breakdown ?? [] as $row) {
+            $item = FeeVoucherItem::query()->with('studentAccountCharge')->find($row['item_id']);
+
+            if ($item) {
+                $this->shiftItemDiscount($item, -1 * (float) $row['amount']);
+            }
+        }
+
+        $item = $payment->late_fee_item_id ? FeeVoucherItem::query()->find($payment->late_fee_item_id) : null;
+
+        if ($item) {
+            $voucher = FeeVoucher::query()->find($item->fee_voucher_id);
+            $amount = (float) $item->net_amount;
+            $voucher->update([
+                'gross_amount' => (float) $voucher->gross_amount - $amount,
+                'fine_amount' => (float) $voucher->fine_amount - $amount,
+                'net_amount' => (float) $voucher->net_amount - $amount,
+            ]);
+            $item->delete();
+        }
     }
 
     /**

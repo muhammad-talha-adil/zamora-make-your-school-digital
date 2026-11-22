@@ -21,7 +21,7 @@ class StoreBulkFeePaymentRequest extends FormRequest
         return [
             'payments' => ['required', 'array', 'min:1'],
             'payments.*.student_id' => ['required', 'distinct', 'exists:students,id'],
-            'payments.*.payment_date' => ['required', 'date'],
+            'payments.*.payment_date' => ['required', 'date', 'before_or_equal:today'],
             'payments.*.payment_method' => ['required', 'in:cash,bank,online,jazzcash,easypaisa,cheque'],
             'payments.*.reference_no' => ['nullable', 'string', 'max:100'],
             'payments.*.bank_name' => ['nullable', 'string', 'max:100'],
@@ -33,6 +33,16 @@ class StoreBulkFeePaymentRequest extends FormRequest
             'payments.*.charges.*.source_module' => ['nullable', 'string', 'max:50'],
             'payments.*.charges.*.amount' => ['required', 'numeric', 'gt:0'],
             'payments.*.remarks' => ['nullable', 'string'],
+        ];
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return [
+            'payments.*.payment_date.before_or_equal' => 'Payment date cannot be in the future.',
         ];
     }
 }

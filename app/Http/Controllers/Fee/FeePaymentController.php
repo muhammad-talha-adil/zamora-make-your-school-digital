@@ -8,11 +8,13 @@ use App\Enums\Fee\WalletTransactionType;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\Fee\ReverseFeePaymentRequest;
 use App\Http\Requests\Fee\StoreBulkFeePaymentRequest;
+use App\Http\Requests\Fee\StoreFamilyFeePaymentRequest;
 use App\Http\Requests\Fee\StoreFeePaymentRequest;
 use App\Models\Campus;
 use App\Models\Fee\FeePayment;
 use App\Models\Fee\FeePaymentAllocation;
 use App\Models\Fee\FeeVoucher;
+use App\Models\Fee\FeeVoucherItem;
 use App\Models\Fee\StudentFeeWalletTransaction;
 use App\Models\Finance\StudentAccountCharge;
 use App\Models\Ledger\Ledger;
@@ -25,6 +27,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\ValidationException;
 use Inertia\Inertia;
 
 class FeePaymentController extends Controller
@@ -42,7 +45,7 @@ class FeePaymentController extends Controller
     {
         Gate::authorize('viewAny', FeePayment::class);
 
-        $query = FeePayment::query()->visibleTo($request->user())->with(['student', 'campus']);
+        $query = FeePayment::query()->visibleTo($request->user())->with(['student.user:id,name', 'campus']);
 
         // Apply campus filter (required for multi-campus security)
         if ($request->filled('campus_id')) {
@@ -65,14 +68,27 @@ class FeePaymentController extends Controller
         if ($request->filled('search')) {
             $query->where(function ($q) use ($request) {
                 $q->where('receipt_no', 'like', '%'.$request->search.'%')
+                    ->orWhere('student_name_snapshot', 'like', '%'.$request->search.'%')
+                    ->orWhere('registration_no_snapshot', 'like', '%'.$request->search.'%')
                     ->orWhereHas('student', function ($sq) use ($request) {
-                        $sq->where('name', 'like', '%'.$request->search.'%')
-                            ->orWhere('registration_number', 'like', '%'.$request->search.'%');
+                        $sq->where('registration_no', 'like', '%'.$request->search.'%')
+                            ->orWhereHas('user', fn ($uq) => $uq->where('name', 'like', '%'.$request->search.'%'));
                     });
             });
         }
 
-        $payments = $query->latest('payment_date')->paginate(50);
+        $payments = $query->orderByDesc('payment_date')->orderByDesc('id')->paginate(50);
+
+        $payments->getCollection()->transform(function (FeePayment $payment) {
+            $row = $payment->toArray();
+            $row['student'] = [
+                'id' => $payment->student_id,
+                'name' => $payment->student_name_snapshot ?? $payment->student?->name,
+                'registration_number' => $payment->registration_no_snapshot ?? $payment->student?->registration_number,
+            ];
+
+            return $row;
+        });
 
         return Inertia::render('Fee/Payments/Index', [
             'payments' => $payments,
@@ -217,6 +233,102 @@ class FeePaymentController extends Controller
     }
 
     /**
+     * One payment form for every child of the same guardians.
+     */
+    public function family(Student $student, SiblingService $siblingService)
+    {
+        Gate::authorize('create', [FeePayment::class, $student->id]);
+
+        $children = collect([$student->loadMissing('user:id,name')])
+            ->merge($siblingService->siblingsOf($student))
+            ->map(fn (Student $child) => [
+                'id' => $child->id,
+                'name' => $child->name,
+                'registration_number' => $child->registration_number,
+                'vouchers' => collect($this->getUnpaidVouchersForStudent($child->id))
+                    ->map(fn (array $voucher) => [
+                        'id' => $voucher['id'],
+                        'voucher_no' => $voucher['voucher_no'],
+                        'month' => $voucher['voucher_month']['name'] ?? null,
+                        'year' => $voucher['voucher_year'],
+                        'balance_amount' => (float) collect($voucher['items'])->sum('balance_amount'),
+                    ])->values()->all(),
+            ])->values()->all();
+
+        return Inertia::render('Fee/Payments/Family', [
+            'student' => ['id' => $student->id, 'name' => $student->name],
+            'children' => $children,
+        ]);
+    }
+
+    /**
+     * Pays the ticked vouchers of a family in one go: oldest voucher first,
+     * one payment (and receipt) per child, all in one database transaction.
+     */
+    public function storeFamily(StoreFamilyFeePaymentRequest $request, SiblingService $siblingService)
+    {
+        $anchor = Student::findOrFail($request->integer('student_id'));
+        Gate::authorize('create', [FeePayment::class, $anchor->id]);
+
+        $familyIds = $siblingService->siblingsOf($anchor)->pluck('id')->push($anchor->id);
+
+        $payments = DB::transaction(function () use ($request, $familyIds) {
+            $amounts = collect($request->validated('vouchers'))->pluck('amount', 'voucher_id');
+
+            $vouchers = FeeVoucher::query()
+                ->whereIn('id', $amounts->keys())
+                ->whereIn('student_id', $familyIds)
+                ->whereIn('status', ['unpaid', 'partial', 'overdue'])
+                ->lockForUpdate()
+                ->orderBy('voucher_year')
+                ->orderBy('voucher_month_id')
+                ->orderBy('id')
+                ->get();
+
+            if ($vouchers->count() !== $amounts->count()) {
+                throw ValidationException::withMessages(['vouchers' => 'A selected voucher is not unpaid or is not in this family.']);
+            }
+
+            $byStudent = [];
+            foreach ($vouchers as $voucher) {
+                $amount = (float) $amounts[$voucher->id];
+
+                if ($amount > (float) $voucher->balance_amount) {
+                    throw ValidationException::withMessages([
+                        'vouchers' => "Amount is more than the balance of {$voucher->voucher_no}.",
+                    ]);
+                }
+
+                $byStudent[$voucher->student_id] = array_merge(
+                    $byStudent[$voucher->student_id] ?? [],
+                    $this->feePaymentService->allocateAcrossVoucherItems($voucher, $amount)
+                );
+            }
+
+            $recorded = [];
+            foreach ($byStudent as $studentId => $charges) {
+                Gate::authorize('create', [FeePayment::class, (int) $studentId]);
+
+                $recorded[] = $this->feePaymentService->record([
+                    'student_id' => $studentId,
+                    'payment_date' => $request->validated('payment_date'),
+                    'payment_method' => $request->validated('payment_method'),
+                    'reference_no' => $request->validated('reference_no'),
+                    'bank_name' => $request->validated('bank_name'),
+                    'remarks' => $request->validated('remarks'),
+                    'received_amount' => (float) collect($charges)->sum('amount'),
+                    'charges' => $charges,
+                ]);
+            }
+
+            return $recorded;
+        });
+
+        return redirect()->route('fee.payments.show', $payments[0]->id)
+            ->with('success', count($payments).' payment(s) recorded for the family.');
+    }
+
+    /**
      * Generate unique receipt number with race condition protection.
      */
     protected function generateReceiptNumber(int $campusId): string
@@ -354,6 +466,13 @@ class FeePaymentController extends Controller
             }
 
             FeePaymentAllocation::where('fee_payment_id', $payment->id)->delete();
+
+            $this->feePaymentService->undoLateFeeAndConcession($payment);
+
+            $conceded = collect($payment->concession_breakdown ?? [])->pluck('item_id');
+            foreach (FeeVoucherItem::whereIn('id', $conceded)->pluck('fee_voucher_id') as $voucherId) {
+                $affectedVoucherIds[$voucherId] = $voucherId;
+            }
 
             foreach ($affectedChargeIds as $chargeId) {
                 $charge = StudentAccountCharge::find($chargeId);

@@ -14,6 +14,9 @@ interface Props {
         total_allocated: number;
         total_wallet: number;
         payment_count: number;
+        total_late_fee?: number;
+        total_concession?: number;
+        reversed_total?: number;
     };
     byMethod: Array<{
         payment_method: string;
@@ -139,6 +142,18 @@ const resetFilters = () => {
                 <div class="bg-card rounded-lg border border-border p-4">
                     <p class="text-sm text-muted-foreground">Total Transactions</p>
                     <p class="text-2xl font-bold text-foreground">{{ props.summary.payment_count }}</p>
+                </div>
+                <div class="bg-card rounded-lg border border-border p-4">
+                    <p class="text-sm text-muted-foreground">Late fee collected</p>
+                    <p class="text-2xl font-bold text-foreground">{{ formatCurrency(props.summary.total_late_fee ?? 0) }}</p>
+                </div>
+                <div class="bg-card rounded-lg border border-border p-4">
+                    <p class="text-sm text-muted-foreground">Concession given</p>
+                    <p class="text-2xl font-bold text-foreground">{{ formatCurrency(props.summary.total_concession ?? 0) }}</p>
+                </div>
+                <div class="bg-card rounded-lg border border-border p-4">
+                    <p class="text-sm text-muted-foreground">Reversed (not counted)</p>
+                    <p class="text-2xl font-bold text-muted-foreground">{{ formatCurrency(props.summary.reversed_total ?? 0) }}</p>
                 </div>
             </div>
 

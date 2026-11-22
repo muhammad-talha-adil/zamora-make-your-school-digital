@@ -150,14 +150,12 @@ class VoucherGenerationService
     }
 
     /**
-     * Due date is the 10th of the billing month, never before today.
+     * Due date is always the 10th of the billing month, even when that is
+     * already past, so an old month's voucher is overdue from the start.
      */
     protected function dueDateFor(int $monthNumber, int $year): Carbon
     {
-        $today = now()->startOfDay();
-        $due = Carbon::create($year, $monthNumber, 10)->startOfDay();
-
-        return $due->lt($today) ? $today : $due;
+        return Carbon::create($year, $monthNumber, 10)->startOfDay();
     }
 
     /**
@@ -279,7 +277,7 @@ class VoucherGenerationService
                             ->where('voucher_month_id', '<', $currentMonthId);
                     });
             })
-            ->whereIn('status', [VoucherStatus::UNPAID, VoucherStatus::PARTIAL])
+            ->whereIn('status', [VoucherStatus::UNPAID, VoucherStatus::PARTIAL, VoucherStatus::OVERDUE])
             ->get();
 
         if ($previousVouchers->isEmpty()) {
@@ -290,7 +288,9 @@ class VoucherGenerationService
         $previousVoucherIds = $previousVouchers->pluck('id')->toArray();
 
         // Calculate total previous balance
-        $totalPreviousBalance = $previousVouchers->sum('balance_amount');
+        $totalPreviousBalance = $previousVouchers->sum(
+            fn (FeeVoucher $old) => max(0, (float) $old->net_amount - (float) $old->paid_amount)
+        );
 
         if ($totalPreviousBalance > 0) {
             // Seeded by FeeHeadSeeder. It used to be created here on the fly
@@ -1169,7 +1169,7 @@ class VoucherGenerationService
      */
     protected function calculateVoucherTotals(FeeVoucher $voucher): void
     {
-        $items = $voucher->items;
+        $items = $voucher->items()->get();
 
         $grossAmount = $items->sum('amount');
         $discountAmount = $items->sum('discount_amount');

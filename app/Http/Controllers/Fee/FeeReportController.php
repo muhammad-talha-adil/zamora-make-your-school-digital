@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\Fee;
 
+use App\Enums\Fee\PaymentStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Fee\FeePayment;
 use App\Models\Fee\FeeVoucher;
@@ -29,7 +30,7 @@ class FeeReportController extends Controller
     {
         Gate::authorize('viewAny', FeePayment::class);
 
-        $query = FeePayment::query()->visibleTo($request->user());
+        $query = FeePayment::query()->visibleTo($request->user())->where('status', '!=', PaymentStatus::REVERSED->value);
 
         // Apply filters
         if ($request->filled('date_from')) {
@@ -53,11 +54,20 @@ class FeeReportController extends Controller
             // thrown on every load of this report.
             'total_wallet' => $query->sum('excess_amount'),
             'payment_count' => $query->count(),
+            'total_late_fee' => $query->sum('late_fee_amount'),
+            'total_concession' => $query->sum('concession_amount'),
+            'reversed_total' => FeePayment::query()
+                ->visibleTo($request->user())
+                ->where('status', PaymentStatus::REVERSED->value)
+                ->when($request->filled('date_from'), fn ($q) => $q->whereDate('payment_date', '>=', $request->date_from))
+                ->when($request->filled('date_to'), fn ($q) => $q->whereDate('payment_date', '<=', $request->date_to))
+                ->sum('received_amount'),
         ];
 
         // Get payment method breakdown
         $byMethod = FeePayment::query()
             ->visibleTo($request->user())
+            ->where('status', '!=', PaymentStatus::REVERSED->value)
             ->select('payment_method', DB::raw('SUM(received_amount) as total'))
             ->when($request->filled('date_from'), function ($q) use ($request) {
                 $q->whereDate('payment_date', '>=', $request->date_from);
@@ -71,6 +81,7 @@ class FeeReportController extends Controller
         // Get daily collection
         $dailyCollection = FeePayment::query()
             ->visibleTo($request->user())
+            ->where('status', '!=', PaymentStatus::REVERSED->value)
             ->select(
                 DB::raw('DATE(payment_date) as date'),
                 DB::raw('SUM(received_amount) as total')
@@ -100,7 +111,7 @@ class FeeReportController extends Controller
     {
         Gate::authorize('viewAny', FeeVoucher::class);
 
-        $query = FeeVoucher::with(['student', 'voucherMonth'])
+        $query = FeeVoucher::with(['student.user:id,name', 'voucherMonth'])
             ->visibleTo($request->user())
             ->whereIn('status', ['unpaid', 'partial', 'overdue']);
 
@@ -117,7 +128,7 @@ class FeeReportController extends Controller
         $summary = [
             'total_outstanding' => $query->sum('balance_amount'),
             'voucher_count' => $query->count(),
-            'student_count' => $query->distinct('student_id')->count(),
+            'student_count' => (clone $query)->distinct()->count('student_id'),
         ];
 
         // Get outstanding by class
@@ -130,8 +141,14 @@ class FeeReportController extends Controller
             )
             ->whereIn('status', ['unpaid', 'partial', 'overdue'])
             ->groupBy('class_id')
-            ->with('class:id,name')
-            ->get();
+            ->with('schoolClass:id,name')
+            ->get()
+            ->map(fn (FeeVoucher $row) => [
+                'class_id' => $row->class_id,
+                'total' => $row->total,
+                'count' => $row->count,
+                'class' => $row->schoolClass ? ['id' => $row->schoolClass->id, 'name' => $row->schoolClass->name] : null,
+            ]);
 
         // Get top defaulters
         $topDefaulters = FeeVoucher::query()
@@ -143,10 +160,20 @@ class FeeReportController extends Controller
             )
             ->whereIn('status', ['unpaid', 'partial', 'overdue'])
             ->groupBy('student_id')
-            ->with('student:id,name,registration_number')
+            ->with('student.user:id,name')
             ->orderByDesc('total_outstanding')
             ->limit(20)
-            ->get();
+            ->get()
+            ->map(fn (FeeVoucher $row) => [
+                'student_id' => $row->student_id,
+                'total_outstanding' => $row->total_outstanding,
+                'voucher_count' => $row->voucher_count,
+                'student' => $row->student ? [
+                    'id' => $row->student->id,
+                    'name' => $row->student->name,
+                    'registration_number' => $row->student->registration_number,
+                ] : null,
+            ]);
 
         return Inertia::render('Fee/Reports/Outstanding', [
             'summary' => $summary,
@@ -163,9 +190,11 @@ class FeeReportController extends Controller
     {
         Gate::authorize('viewAny', FeeVoucher::class);
 
-        $query = FeeVoucher::with(['student', 'voucherMonth'])
+        $query = FeeVoucher::with(['student.user:id,name', 'voucherMonth'])
             ->visibleTo($request->user())
-            ->where('status', 'overdue');
+            ->whereIn('status', ['unpaid', 'partial', 'overdue'])
+            ->where('balance_amount', '>', 0)
+            ->whereDate('due_date', '<', now()->toDateString());
 
         // Apply filters
         if ($request->filled('campus_id')) {
@@ -186,6 +215,7 @@ class FeeReportController extends Controller
         }
 
         $defaulters = $query->orderBy('due_date')->paginate(50);
+        $defaulters->getCollection()->each(fn (FeeVoucher $voucher) => $voucher->student?->append(['name', 'registration_number']));
 
         return Inertia::render('Fee/Reports/Defaulters', [
             'defaulters' => $defaulters,
@@ -200,7 +230,7 @@ class FeeReportController extends Controller
     {
         Gate::authorize('viewAny', FeePayment::class);
 
-        $query = FeePayment::query()->visibleTo($request->user());
+        $query = FeePayment::query()->visibleTo($request->user())->where('status', '!=', PaymentStatus::REVERSED->value);
 
         // Apply filters
         if ($request->filled('date_from')) {

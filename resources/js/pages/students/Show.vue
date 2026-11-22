@@ -159,6 +159,10 @@
                                         </p>
                                     </div>
                                 </div>
+                                <div class="flex flex-wrap items-center gap-3 text-sm sm:col-span-2">
+                                    <Link :href="route('fee.ledger.show', student?.id)" class="text-primary hover:underline">Fee ledger</Link>
+                                    <Link :href="route('fee.payments.family', student?.id)" class="text-primary hover:underline">Pay family fees</Link>
+                                </div>
                                 <div class="flex items-center gap-3">
                                     <Icon icon="calendar" class="h-5 w-5 text-muted-foreground shrink-0" />
                                     <div>

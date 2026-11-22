@@ -98,6 +98,8 @@ const searchResults = ref<StudentSearchResult[]>([]);
 const isSearching = ref(false);
 const isLoadingVouchers = ref(false);
 const isSubmitting = ref(false);
+const now = new Date();
+const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
 const selectedStudent = ref<StudentSearchResult | null>(props.selectedStudent || null);
 
 // Sibling bulk payment (#115): let the cashier settle several siblings'
@@ -106,8 +108,11 @@ const siblings = ref<SiblingPayment[]>([]);
 const isLoadingSiblings = ref(false);
 
 const form = reactive({
+    late_fee: '' as string | number,
+    concession: '' as string | number,
+    concession_reason: '',
     student_id: props.studentId || '',
-    payment_date: new Date().toISOString().split('T')[0],
+    payment_date: today,
     payment_method: 'cash',
     reference_no: '',
     bank_name: '',
@@ -273,18 +278,35 @@ const toggleCharge = (voucherId: number, item: VoucherDueItem) => {
     allocation.amount = allocation.enabled ? Number(item.balance_amount) : 0;
 };
 
-const totalAllocated = computed(() => {
-    return form.charges.reduce((sum, charge) => {
-        if (!charge.enabled) {
-            return sum;
-        }
+const itemBalance = (voucherId: number, itemId: number): number => {
+    const item = availableVouchers.value
+        .find((voucher) => voucher.id === voucherId)
+        ?.items.find((due) => due.id === itemId);
 
-        return sum + Number(charge.amount || 0);
-    }, 0);
+    return Number(item?.balance_amount || 0);
+};
+
+/**
+ * The concession is taken off the selected dues oldest first, the same way
+ * the server applies it, so what is left to pay per line is shown here.
+ */
+const effectiveCharges = computed(() => {
+    let remaining = Math.max(0, Number(form.concession) || 0);
+
+    return form.charges
+        .filter((charge) => charge.enabled)
+        .map((charge) => {
+            const take = Math.min(remaining, itemBalance(charge.voucher_id, charge.fee_voucher_item_id));
+            remaining = Math.round((remaining - take) * 100) / 100;
+
+            return { ...charge, amount: Math.max(0, Math.round((Number(charge.amount || 0) - take) * 100) / 100) };
+        });
 });
 
-watch(totalAllocated, (total) => {
-    form.received_amount = total;
+const totalAllocated = computed(() => effectiveCharges.value.reduce((sum, charge) => sum + charge.amount, 0));
+
+watch([totalAllocated, () => form.late_fee], ([total, lateFee]) => {
+    form.received_amount = Math.round((total + (Number(lateFee) || 0)) * 100) / 100;
 }, { immediate: true });
 
 const remainingAmount = computed(() => form.received_amount - totalAllocated.value);
@@ -305,13 +327,16 @@ watch(() => form.payment_method, (method) => {
 });
 
 const submitForm = () => {
+    if (isSubmitting.value) {
+        return;
+    }
+
     if (!form.student_id) {
         alert.error('Please select a student first.');
         return;
     }
 
-    const charges = form.charges
-        .filter((charge) => charge.enabled && Number(charge.amount) > 0)
+    const charges = effectiveCharges.value
         .map((charge) => ({
             voucher_id: charge.voucher_id,
             fee_voucher_item_id: charge.fee_voucher_item_id,
@@ -320,13 +345,13 @@ const submitForm = () => {
             amount: Number(charge.amount),
         }));
 
-    if (charges.length === 0) {
+    if (charges.length === 0 || Number(form.received_amount) <= 0) {
         alert.error('Please select at least one due item with a payment amount.');
         return;
     }
 
-    if (totalAllocated.value > Number(form.received_amount)) {
-        alert.error('Allocated voucher amount cannot be greater than the received amount.');
+    if (Number(form.concession) > 0 && !form.concession_reason.trim()) {
+        alert.error('Give a reason for the concession.');
         return;
     }
 
@@ -385,6 +410,9 @@ const submitForm = () => {
     router.post(route('fee.payments.store'), {
         ...form,
         ...sharedFields,
+        late_fee: Number(form.late_fee) || 0,
+        concession: Number(form.concession) || 0,
+        concession_reason: Number(form.concession) > 0 ? form.concession_reason : '',
         charges,
     }, {
         onFinish: () => {
@@ -458,6 +486,7 @@ const submitForm = () => {
                             id="payment_date"
                             v-model="form.payment_date"
                             type="date"
+                            :max="today"
                             required
                         />
                     </div>
@@ -490,6 +519,21 @@ const submitForm = () => {
                             placeholder="Bank name"
                             required
                         />
+                    </div>
+
+                    <div>
+                        <Label for="late_fee">Late fee (optional)</Label>
+                        <Input id="late_fee" v-model="form.late_fee" type="number" step="0.01" min="0" />
+                    </div>
+
+                    <div>
+                        <Label for="concession">Concession (optional)</Label>
+                        <Input id="concession" v-model="form.concession" type="number" step="0.01" min="0" />
+                    </div>
+
+                    <div v-if="Number(form.concession) > 0" class="md:col-span-2">
+                        <Label for="concession_reason">Concession reason *</Label>
+                        <Input id="concession_reason" v-model="form.concession_reason" maxlength="255" required />
                     </div>
 
                     <div class="md:col-span-2">

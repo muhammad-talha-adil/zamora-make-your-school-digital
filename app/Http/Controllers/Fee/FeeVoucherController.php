@@ -47,7 +47,7 @@ class FeeVoucherController extends Controller
     {
         Gate::authorize('viewAny', FeeVoucher::class);
 
-        $query = FeeVoucher::query()->visibleTo($request->user())->with(['student', 'voucherMonth', 'campus']);
+        $query = FeeVoucher::query()->visibleTo($request->user())->with(['student.user:id,name', 'voucherMonth', 'campus']);
 
         // Apply campus filter
         if ($request->filled('campus_id')) {
@@ -78,9 +78,11 @@ class FeeVoucherController extends Controller
         if ($request->filled('search')) {
             $query->where(function ($q) use ($request) {
                 $q->where('voucher_no', 'like', '%'.$request->search.'%')
+                    ->orWhere('student_name_snapshot', 'like', '%'.$request->search.'%')
+                    ->orWhere('registration_no_snapshot', 'like', '%'.$request->search.'%')
                     ->orWhereHas('student', function ($sq) use ($request) {
-                        $sq->where('name', 'like', '%'.$request->search.'%')
-                            ->orWhere('registration_number', 'like', '%'.$request->search.'%');
+                        $sq->where('registration_no', 'like', '%'.$request->search.'%')
+                            ->orWhereHas('user', fn ($uq) => $uq->where('name', 'like', '%'.$request->search.'%'));
                     });
             });
         }
@@ -127,7 +129,7 @@ class FeeVoucherController extends Controller
     {
         Gate::authorize('viewAny', FeeVoucher::class);
 
-        $query = FeeVoucher::query()->visibleTo($request->user())->with(['student', 'voucherMonth', 'campus']);
+        $query = FeeVoucher::query()->visibleTo($request->user())->with(['student.user:id,name', 'voucherMonth', 'campus']);
 
         // Apply campus filter (required for multi-campus security)
         if ($request->filled('campus_id')) {
@@ -158,9 +160,11 @@ class FeeVoucherController extends Controller
         if ($request->filled('search')) {
             $query->where(function ($q) use ($request) {
                 $q->where('voucher_no', 'like', '%'.$request->search.'%')
+                    ->orWhere('student_name_snapshot', 'like', '%'.$request->search.'%')
+                    ->orWhere('registration_no_snapshot', 'like', '%'.$request->search.'%')
                     ->orWhereHas('student', function ($sq) use ($request) {
-                        $sq->where('name', 'like', '%'.$request->search.'%')
-                            ->orWhere('registration_number', 'like', '%'.$request->search.'%');
+                        $sq->where('registration_no', 'like', '%'.$request->search.'%')
+                            ->orWhereHas('user', fn ($uq) => $uq->where('name', 'like', '%'.$request->search.'%'));
                     });
             });
         }
@@ -407,9 +411,9 @@ class FeeVoucherController extends Controller
         }
 
         if ($beforeAdmission !== []) {
-            return back()->with('warning',
-                "Generated {$totalGenerated} vouchers. {$totalSkipped} skipped. ".
-                count($beforeAdmission).' students skipped (admitted later).'
+            return redirect()->route('fee.vouchers.index')->with('warning',
+                "Generated {$totalGenerated} vouchers. ".
+                count($beforeAdmission).' skipped: admitted later.'
             );
         }
 
@@ -978,7 +982,7 @@ class FeeVoucherController extends Controller
                             ->whereIn('status', ['unpaid', 'partial']);
                     });
             })
-            ->with(['student', 'voucherMonth', 'campus']);
+            ->with(['student.user:id,name', 'voucherMonth', 'campus']);
 
         if ($request->filled('campus_id')) {
             $query->where('campus_id', $request->campus_id);

@@ -87,8 +87,8 @@ it('has a generic Other Discount type', function () {
     expect(DiscountType::where('code', 'OTHER')->where('name', 'Other Discount')->exists())->toBeTrue();
 });
 
-it('sets the voucher due date from the billing month, never in the past', function () {
-    Carbon::setTestNow('2026-04-02 09:00:00');
+it('sets the voucher due date to the 10th of the billing month, even when that is past', function () {
+    Carbon::setTestNow('2026-06-02 09:00:00');
     $fee = FeeWorld::make();
     $this->actingAs($fee->school->actor);
     $fee->structureWithAllFrequencies(['monthly' => 5000]);

@@ -16,7 +16,7 @@ class StoreFeePaymentRequest extends FormRequest
     {
         return [
             'student_id' => 'required|exists:students,id',
-            'payment_date' => 'required|date',
+            'payment_date' => 'required|date|before_or_equal:today',
             'payment_method' => 'required|in:cash,bank,online,jazzcash,easypaisa,cheque',
             'reference_no' => [
                 'nullable',
@@ -37,8 +37,26 @@ class StoreFeePaymentRequest extends FormRequest
             'charges.*.fee_voucher_item_id' => 'required|exists:fee_voucher_items,id',
             'charges.*.student_account_charge_id' => 'nullable|exists:student_account_charges,id',
             'charges.*.source_module' => 'nullable|string|max:50',
-            'charges.*.amount' => 'required|numeric|gt:0',
+            'charges.*.amount' => 'required|numeric|min:0',
+            'late_fee' => 'nullable|numeric|min:0|decimal:0,2',
+            'concession' => 'nullable|numeric|min:0|decimal:0,2',
+            'concession_reason' => ['nullable', 'string', 'max:255', Rule::requiredIf(fn () => (float) $this->input('concession') > 0)],
             'remarks' => 'nullable|string',
+        ];
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return [
+            'payment_date.before_or_equal' => 'Payment date cannot be in the future.',
+            'late_fee.min' => 'Late fee cannot be negative.',
+            'late_fee.decimal' => 'Late fee can have up to 2 decimals.',
+            'concession.min' => 'Concession cannot be negative.',
+            'concession.decimal' => 'Concession can have up to 2 decimals.',
+            'concession_reason.required' => 'Give a reason for the concession.',
         ];
     }
 }

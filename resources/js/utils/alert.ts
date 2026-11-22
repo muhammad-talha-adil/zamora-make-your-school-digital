@@ -41,6 +41,21 @@ export const alert = {
         });
     },
 
+    warning: (message: string, title = 'Please note') => {
+        return Swal.fire({
+            title,
+            text: message,
+            icon: 'warning',
+            confirmButtonText: 'OK',
+            didOpen: () => {
+                const popup = Swal.getPopup();
+                if (popup) {
+                    popup.style.zIndex = '999999';
+                }
+            },
+        });
+    },
+
     error: (message: string, title = 'Error') => {
         return Swal.fire({
             title,
