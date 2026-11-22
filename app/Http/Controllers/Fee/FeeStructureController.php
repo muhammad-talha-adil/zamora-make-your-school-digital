@@ -763,30 +763,6 @@ class FeeStructureController extends Controller
     }
 
     /**
-     * Set the specified fee structure as default.
-     */
-    public function setDefault(Request $request, FeeStructure $feeStructure): JsonResponse
-    {
-        abort_unless($feeStructure->campus_id === $request->user()->campusId(), 404);
-
-        FeeStructure::where('session_id', $feeStructure->session_id)
-            ->where('campus_id', $feeStructure->campus_id)
-            ->where('class_id', $feeStructure->class_id)
-            ->where('section_id', $feeStructure->section_id)
-            ->update(['is_default' => false]);
-
-        $feeStructure->update([
-            'is_default' => true,
-        ]);
-
-        return response()->json([
-            'success' => true,
-            'message' => 'Default fee structure updated successfully.',
-            'structure' => $this->transformStructure($feeStructure->fresh(['session', 'campus', 'class', 'section'])->loadCount('items')),
-        ]);
-    }
-
-    /**
      * Get fee structure by scope (class/session/campus)
      * Used by admission form to auto-populate fees
      */
@@ -813,7 +789,6 @@ class FeeStructureController extends Controller
             ->with(['items.feeHead'])
             ->where('session_id', $sessionId)
             ->where('campus_id', $campusId)
-            ->orderByDesc('is_default')
             ->orderByDesc('effective_from')
             ->orderByDesc('id');
 
@@ -1047,7 +1022,6 @@ class FeeStructureController extends Controller
             'effective_from' => $structure->effective_from?->toDateString(),
             'effective_to' => $structure->effective_to?->toDateString(),
             'items_count' => $structure->items_count,
-            'is_default' => (bool) $structure->is_default,
         ];
     }
 }

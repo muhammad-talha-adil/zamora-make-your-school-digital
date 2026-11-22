@@ -31,7 +31,6 @@ class FeeStructure extends Model
         'campus_id',
         'class_id',
         'section_id',
-        'is_default',
         'effective_from',
         'effective_to',
         'status',
@@ -40,7 +39,6 @@ class FeeStructure extends Model
     ];
 
     protected $casts = [
-        'is_default' => 'boolean',
         'effective_from' => 'date',
         'effective_to' => 'date',
         'status' => FeeStructureStatus::class,
@@ -140,14 +138,6 @@ class FeeStructure extends Model
     public function scopeForSection($query, int $sectionId)
     {
         return $query->where('section_id', $sectionId);
-    }
-
-    /**
-     * Scope: Default structures
-     */
-    public function scopeDefault($query)
-    {
-        return $query->where('is_default', true);
     }
 
     /**

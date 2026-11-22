@@ -108,8 +108,6 @@ Route::prefix('fee')->name('fee.')->middleware([...$middleware, 'campus.exists']
             ->middleware('permission:fee.structure.manage');
         Route::patch('/{feeStructure}/deactivate', [FeeStructureController::class, 'deactivate'])->name('deactivate')
             ->middleware('permission:fee.structure.manage');
-        Route::patch('/{feeStructure}/set-default', [FeeStructureController::class, 'setDefault'])->name('set-default')
-            ->middleware('permission:fee.structure.manage');
 
         // API endpoints
         Route::get('/by-scope/get', [FeeStructureController::class, 'getByScope'])->name('by-scope')

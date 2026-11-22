@@ -895,7 +895,7 @@ class StudentRepository
                 'effective_to' => null,
                 'approval_status' => $requiresApproval ? ApprovalStatus::PENDING : ApprovalStatus::APPROVED,
                 'approved_by' => $requiresApproval ? null : auth()->id(),
-                'reason' => 'Applied at admission',
+                'reason' => filled($discountData['reason'] ?? null) ? $discountData['reason'] : 'Applied at admission',
             ]);
         }
 

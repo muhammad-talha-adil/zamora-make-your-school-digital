@@ -44,7 +44,6 @@ class FeeStructureSeeder extends Seeder
                     ],
                     [
                         'title' => sprintf('%s Fee Plan - %s', $class->name, $campus->name),
-                        'is_default' => true,
                         'effective_from' => now()->startOfYear()->toDateString(),
                         'effective_to' => now()->endOfYear()->toDateString(),
                         'status' => FeeStructureStatus::ACTIVE,

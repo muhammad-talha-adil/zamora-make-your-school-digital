@@ -4,6 +4,7 @@ namespace App\Http\Requests\Student;
 
 use App\Enums\Fee\FeeStructureStatus;
 use App\Models\Fee\FeeStructure;
+use App\Models\Fee\FeeStructureItem;
 use App\Models\Guardian;
 use App\Models\Section;
 use App\Models\StudentEnrollmentRecord;
@@ -222,6 +223,7 @@ class StoreStudentRequest extends FormRequest
                 'numeric',
                 'min:0',
             ],
+            'discounts.*.reason' => ['nullable', 'string', 'max:255'],
             'discounts.*.value_type' => [
                 'required_with:discounts',
                 'string',
@@ -480,6 +482,18 @@ class StoreStudentRequest extends FormRequest
     public function withValidator($validator): void
     {
         $validator->after(function ($validator) {
+            foreach ((array) $this->input('discounts', []) as $index => $discount) {
+                if (is_array($discount) && ($discount['value_type'] ?? null) === 'fixed' && is_numeric($discount['value'] ?? null)) {
+                    $headAmount = FeeStructureItem::query()
+                        ->where('fee_structure_id', $this->input('fee_structure_id'))
+                        ->where('fee_head_id', $discount['fee_head_id'] ?? 0)
+                        ->value('amount');
+                    if ($headAmount !== null && (float) $discount['value'] > (float) $headAmount) {
+                        $validator->errors()->add("discounts.{$index}.value", 'The discount cannot be more than the fee amount.');
+                    }
+                }
+            }
+
             foreach ((array) $this->input('discounts', []) as $index => $discount) {
                 if (is_array($discount) && ($discount['value_type'] ?? null) === 'percent' && is_numeric($discount['value'] ?? null) && (float) $discount['value'] > 100) {
                     $validator->errors()->add("discounts.{$index}.value", 'A percentage discount cannot be more than 100.');

@@ -212,6 +212,7 @@ class StudentService
                     'discount_type_id' => $discount->discount_type_id,
                     'value' => (float) $discount->value,
                     'value_type' => $discount->value_type,
+                    'reason' => $discount->reason,
                 ])->values()->toArray(),
                 'custom_fee_entries' => $currentEnrollment->custom_fee_entries,
                 'manual_discount_percentage' => $currentEnrollment->manual_discount_percentage,

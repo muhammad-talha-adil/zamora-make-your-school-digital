@@ -27,7 +27,6 @@ interface FeeStructure {
     effective_from: string;
     effective_to?: string;
     items_count: number;
-    is_default?: boolean;
 }
 
 /**

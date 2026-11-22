@@ -68,7 +68,6 @@ interface FeeStructure {
     title: string;
     effective_from: string | null;
     effective_to: string | null;
-    is_default: boolean;
     items: FeeStructureItem[];
     total_monthly: number;
     total_optional_monthly?: number;
@@ -225,7 +224,6 @@ const fetchFeeStructure = async () => {
                 title: data.title,
                 effective_from: null,
                 effective_to: null,
-                is_default: false,
                 items: data.items.map((item: any) => ({
                     id: item.id,
                     fee_head_id: item.fee_head_id,

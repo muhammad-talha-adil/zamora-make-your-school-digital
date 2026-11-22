@@ -153,23 +153,36 @@
                         />
                     </div>
                     <div class="space-y-2">
-                        <Label for="discount_value">Discount Value</Label>
+                        <Label for="discount_value_type">Discount In</Label>
+                        <select
+                            id="discount_value_type"
+                            v-model="discountValueType"
+                            class="h-11 w-full rounded-md border border-input bg-background px-3 text-sm"
+                        >
+                            <option value="percent">Percentage (%)</option>
+                            <option value="fixed">Fixed amount (Rs.)</option>
+                        </select>
+                    </div>
+                    <div class="space-y-2">
+                        <Label for="discount_value">{{ discountValueType === 'percent' ? 'Percent off' : 'Rs. off each ticked fee' }}</Label>
                         <div class="flex items-center gap-2">
                             <Input
                                 id="discount_value"
                                 v-model.number="discountValue"
                                 type="number"
                                 min="0"
-                                :max="selectedDiscountTypeObj?.value_type === 'percent' ? 100 : undefined"
+                                :max="discountValueType === 'percent' ? 100 : undefined"
                                 step="0.01"
                                 placeholder="0.00"
-                                readonly
-                                class="bg-muted"
                             />
                             <span class="text-sm text-muted-foreground whitespace-nowrap">
-                                {{ selectedDiscountTypeObj?.value_type === 'percent' ? '%' : 'Rs.' }}
+                                {{ discountValueType === 'percent' ? '%' : 'Rs.' }}
                             </span>
                         </div>
+                    </div>
+                    <div class="space-y-2">
+                        <Label for="discount_reason">Reason</Label>
+                        <Input id="discount_reason" v-model="discountReason" maxlength="255" placeholder="e.g. Staff child, scholarship" />
                     </div>
                 </div>
 
@@ -216,6 +229,10 @@
                             • {{ discount.fee_head }}: {{ discount.value }}{{ discount.value_type === 'percent' ? '%' : ' Rs.' }} off
                         </li>
                     </ul>
+                    <p class="mt-2 text-sm font-semibold text-success">
+                        Monthly: Rs. {{ discountPreview.originalMonthly.toLocaleString() }} - Rs. {{ discountPreview.monthlyOff.toLocaleString() }} discount
+                        = Rs. {{ (discountPreview.originalMonthly - discountPreview.monthlyOff).toLocaleString() }}
+                    </p>
                 </div>
             </div>
 
@@ -344,6 +361,7 @@ interface Props {
             discount_type_id: number;
             value: number;
             value_type: string;
+            reason?: string | null;
         }> | null;
         custom_fee_entries?: Array<{ fee_head_id: number; amount: number }> | null;
         manual_discount_percentage?: number | null;
@@ -370,6 +388,8 @@ const {
     discountTypes,
     selectedDiscountType,
     discountValue,
+    discountValueType,
+    discountReason,
     discountSelectedFeeHeads,
     manualSelectedFeeHeads,
     manualFeeAmounts,
@@ -494,9 +514,28 @@ function handleCreateFeeStructure() {
     createFeeStructure();
 }
 
-// Handle discount type change - auto-populate the value
+/** Monthly fee before and discount from the ticked heads, for the preview. */
+const discountPreview = computed(() => {
+    let originalMonthly = 0;
+    let monthlyOff = 0;
+    for (const item of feeStructure.value?.items ?? []) {
+        if (item.frequency !== 'monthly' || item.is_optional || item.is_transport_related) {
+            continue;
+        }
+        const amount = Number(item.amount) || 0;
+        originalMonthly += amount;
+        if (discountSelectedFeeHeads.value.includes(item.fee_head_id) && selectedDiscountType.value) {
+            const value = Number(discountValue.value) || 0;
+            monthlyOff += Math.min(amount, discountValueType.value === 'percent' ? (amount * Math.min(100, value)) / 100 : value);
+        }
+    }
+    return { originalMonthly, monthlyOff: Math.round(monthlyOff * 100) / 100 };
+});
+
+// Handle discount type change - suggest the type's kind and value (still editable)
 const onDiscountTypeChange = () => {
     if (selectedDiscountTypeObj.value) {
+        discountValueType.value = selectedDiscountTypeObj.value.value_type === 'fixed' ? 'fixed' : 'percent';
         discountValue.value = selectedDiscountTypeObj.value.default_value;
     } else {
         discountValue.value = 0;
@@ -504,6 +543,10 @@ const onDiscountTypeChange = () => {
 };
 
 watch(selectedDiscountType, () => {
+    const saved = props.enrollment?.discounts?.[0];
+    if (saved && saved.discount_type_id === selectedDiscountType.value && Number(saved.value) === Number(discountValue.value)) {
+        return;
+    }
     onDiscountTypeChange();
 });
 

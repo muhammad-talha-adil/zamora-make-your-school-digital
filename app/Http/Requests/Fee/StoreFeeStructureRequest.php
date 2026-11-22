@@ -52,7 +52,6 @@ class StoreFeeStructureRequest extends FormRequest
             'classes.*.section_ids.*' => ['integer', Rule::exists('sections', 'id')],
 
             'status' => ['required', Rule::enum(FeeStructureStatus::class)],
-            'is_default' => ['nullable', 'boolean'],
             'notes' => ['nullable', 'string', 'max:2000'],
 
             'items' => $this->itemsRules(),

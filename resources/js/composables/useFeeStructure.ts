@@ -36,6 +36,7 @@ export interface AppliedDiscount {
     discount_type_id: number;
     value: number;
     value_type: string;
+    reason: string;
 }
 
 export interface EnrollmentDiscount {
@@ -43,6 +44,7 @@ export interface EnrollmentDiscount {
     discount_type_id: number;
     value: number;
     value_type: string;
+    reason?: string | null;
 }
 
 export interface ManualFeeEntry {
@@ -74,6 +76,8 @@ export function useFeeStructure() {
     const discountTypes = ref<DiscountType[]>([]);
     const selectedDiscountType = ref<number | ''>('');
     const discountValue = ref<number>(0);
+    const discountValueType = ref<'percent' | 'fixed'>('percent');
+    const discountReason = ref('');
     const discountSelectedFeeHeads = ref<number[]>([]);
     const manualSelectedFeeHeads = ref<number[]>([]);
     const manualFeeAmounts = ref<Record<number, number>>({});
@@ -147,10 +151,11 @@ export function useFeeStructure() {
                 fee_head_id: feeHeadId,
                 fee_head: item?.fee_head || '',
                 discount_type_id: selectedDiscountType.value as number,
-                value: (selectedDiscountTypeObj.value?.value_type || 'percent') === 'percent'
+                value: discountValueType.value === 'percent'
                     ? Math.min(100, Math.max(0, Number(discountValue.value) || 0))
-                    : discountValue.value,
-                value_type: selectedDiscountTypeObj.value?.value_type || 'percent',
+                    : Math.max(0, Number(discountValue.value) || 0),
+                value_type: discountValueType.value,
+                reason: discountReason.value.trim(),
             };
         });
     });
@@ -320,6 +325,8 @@ export function useFeeStructure() {
                     if (enrollment.fee_mode === 'discount' && enrollment.discounts?.length) {
                         selectedDiscountType.value = enrollment.discounts[0].discount_type_id;
                         discountValue.value = enrollment.discounts[0].value;
+                        discountValueType.value = enrollment.discounts[0].value_type === 'fixed' ? 'fixed' : 'percent';
+                        discountReason.value = enrollment.discounts[0].reason || '';
                         discountSelectedFeeHeads.value = enrollment.discounts
                             .map((discount) => discount.fee_head_id)
                             .filter((feeHeadId): feeHeadId is number => !!feeHeadId);
@@ -341,6 +348,19 @@ export function useFeeStructure() {
 
             if (discountSelectedFeeHeads.value.length === 0) {
                 return 'Please select at least one fee head for discount mode.';
+            }
+
+            if (discountValueType.value === 'percent' && Number(discountValue.value) > 100) {
+                return 'A percentage discount cannot be more than 100.';
+            }
+
+            const tooBig = discountSelectedFeeHeads.value.some((feeHeadId) => {
+                const item = feeStructure.value!.items.find((i: FeeStructureItem) => i.fee_head_id === feeHeadId);
+
+                return discountValueType.value === 'fixed' && Number(discountValue.value) > Number(item?.amount ?? 0);
+            });
+            if (tooBig) {
+                return 'The discount cannot be more than the fee amount.';
             }
         }
 
@@ -373,7 +393,7 @@ export function useFeeStructure() {
 
         if (feeMode.value === 'discount') {
             payload.discounts = appliedDiscounts.value;
-            payload.manual_discount_percentage = discountValue.value;
+            payload.manual_discount_percentage = discountValueType.value === 'percent' ? discountValue.value : null;
         }
 
         if (feeMode.value === 'manual') {
@@ -402,7 +422,7 @@ export function useFeeStructure() {
 
         if (feeMode.value === 'discount' && appliedDiscounts.value.length > 0) {
             (data as any).discounts = appliedDiscounts.value;
-            (data as any).manual_discount_percentage = discountValue.value;
+            (data as any).manual_discount_percentage = discountValueType.value === 'percent' ? discountValue.value : null;
         }
 
         if (feeMode.value === 'manual' && manualFeeEntries.value.length > 0) {
@@ -429,6 +449,8 @@ export function useFeeStructure() {
         discountTypes,
         selectedDiscountType,
         discountValue,
+        discountValueType,
+        discountReason,
         discountSelectedFeeHeads,
         manualSelectedFeeHeads,
         manualFeeAmounts,

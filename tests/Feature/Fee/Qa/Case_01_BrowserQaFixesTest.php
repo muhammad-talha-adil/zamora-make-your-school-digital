@@ -83,7 +83,7 @@ it('returns a structure overlap as a form error, not raw JSON', function () {
 
 it('does not bill silently when two structures match the class', function () {
     $this->world->structureWithAllFrequencies();
-    $this->world->school->feeStructure(['title' => 'Duplicate', 'is_default' => false]);
+    $this->world->school->feeStructure(['title' => 'Duplicate']);
 
     app(VoucherGenerationService::class)->generateMonthlyVouchers(4, 2026);
 
@@ -92,7 +92,7 @@ it('does not bill silently when two structures match the class', function () {
 
 it('bills with the chosen structure when one is picked', function () {
     $this->world->structureWithAllFrequencies();
-    $second = $this->world->school->feeStructure(['title' => 'Duplicate', 'is_default' => false]);
+    $second = $this->world->school->feeStructure(['title' => 'Duplicate']);
 
     $result = app(VoucherGenerationService::class)->generateMonthlyVouchers(4, 2026, ['fee_structure_id' => $second->id]);
 

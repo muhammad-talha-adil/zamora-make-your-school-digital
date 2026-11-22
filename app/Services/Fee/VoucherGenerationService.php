@@ -440,7 +440,6 @@ class VoucherGenerationService
             ->with('items')
             ->where('session_id', $enrollment->session_id)
             ->where('campus_id', $enrollment->campus_id)
-            ->orderByDesc('is_default')
             ->orderByDesc('effective_from')
             ->orderByDesc('id');
 

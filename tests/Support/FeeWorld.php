@@ -115,7 +115,6 @@ class FeeWorld
             'session_id' => $this->school->session->id,
             'class_id' => $this->school->class->id,
             'section_id' => null,
-            'is_default' => true,
             'status' => 'active',
             'effective_from' => '2026-04-01',
             'effective_to' => '2027-03-31',

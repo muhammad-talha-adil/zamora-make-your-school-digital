@@ -338,7 +338,6 @@ class FeeVoucherController extends Controller
             'title' => $structure->title,
             'effective_from' => $structure->effective_from?->format('Y-m-d'),
             'effective_to' => $structure->effective_to?->format('Y-m-d'),
-            'is_default' => $structure->is_default,
             'items' => $items,
             'total_monthly' => $items->where('frequency', 'monthly')->sum('amount'),
             'total_annual' => $items->where('frequency', 'yearly')->sum('amount'),

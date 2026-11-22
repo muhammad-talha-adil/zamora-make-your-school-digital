@@ -396,7 +396,6 @@ class AdmissionWorld
             'session_id' => $this->session->id,
             'class_id' => $this->class->id,
             'section_id' => null,
-            'is_default' => true,
             'status' => 'active',
             'effective_from' => now()->startOfYear()->toDateString(),
         ], $overrides));
@@ -472,7 +471,6 @@ class AdmissionWorld
                 'campus_id' => $campusId,
                 'session_id' => $sessionId,
                 'class_id' => $classId,
-                'is_default' => false,
             ]);
         } catch (\Throwable) {
             return null;

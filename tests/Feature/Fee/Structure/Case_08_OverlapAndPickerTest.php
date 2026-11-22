@@ -51,7 +51,7 @@ it('allows a draft, and a different section, alongside an active structure', fun
 
 it('asks for a choice when several structures match the admission lookup', function () {
     $first = $this->world->feeStructure(['title' => 'Standard']);
-    $second = $this->world->feeStructure(['title' => 'Scholarship', 'is_default' => false]);
+    $second = $this->world->feeStructure(['title' => 'Scholarship']);
     $query = [
         'session_id' => $this->world->session->id,
         'campus_id' => $this->world->campus->id,
