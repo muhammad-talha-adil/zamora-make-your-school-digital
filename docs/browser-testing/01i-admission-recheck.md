@@ -3,6 +3,7 @@
 Same browser chat mein paste karein. Ctrl+Shift+R. Login pehle se hai to logout/login MAT karo.
 
 ```
+LOGIN: pehle check karo owner login hai ya nahi. Na ho ya session expire ho to hi login karo: Email owner@school.com / Password 123456. Warna logout/login mat karo.
 FOCUS: sirf Student Admission + voucher + structure list. Baaqi kuch nahi. DB reset/delete nahi. Naye students "T-<number> ...". "T-4 Class 6 huge amount" delete mat karo. MASTER PROMPT P1-P10.
 Har item PASS/FAIL + ek line. Har student ke baad: form total = voucher = profile Fee card?
 
