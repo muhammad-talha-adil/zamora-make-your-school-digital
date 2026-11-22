@@ -567,7 +567,7 @@ class FeeStructureController extends Controller
                 ? sprintf('Used by %d %s. You can make it Inactive instead.', $inUse['vouchers'], $inUse['vouchers'] === 1 ? 'voucher' : 'vouchers')
                 : sprintf('Used by %d %s. You can make it Inactive instead.', $inUse['enrollments'], $inUse['enrollments'] === 1 ? 'student' : 'students');
 
-            if ($feeStructure->status !== 'active') {
+            if ($feeStructure->status === 'inactive') {
                 $message = str_replace('You can make it Inactive instead.', 'It is already Inactive, so no new fees use it.', $message);
             }
 
