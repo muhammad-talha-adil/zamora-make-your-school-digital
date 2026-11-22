@@ -135,17 +135,17 @@ const submit = () => {
             <div v-for="child in props.children" :key="child.id" class="rounded-lg border border-border bg-card p-4">
                 <h2 class="font-semibold text-foreground">{{ child.name }} <span class="text-sm font-normal text-muted-foreground">{{ child.registration_number }}</span></h2>
                 <p v-if="child.vouchers.length === 0" class="mt-2 text-sm text-muted-foreground">No unpaid vouchers.</p>
-                <div v-for="voucher in child.vouchers" :key="voucher.id" class="mt-3 flex flex-wrap items-center gap-3">
+                <div v-for="voucher in child.vouchers" :key="voucher.id" class="mt-3 grid grid-cols-[auto_1fr_auto] items-center gap-x-3 gap-y-1 sm:grid-cols-[auto_minmax(14rem,1fr)_11rem_8rem]">
                     <input v-model="lineFor(voucher.id).enabled" type="checkbox" :aria-label="`Pay ${voucher.voucher_no}`" />
-                    <span class="min-w-48 text-sm">{{ voucher.voucher_no }} - {{ voucher.month }} {{ voucher.year }}</span>
-                    <span class="text-sm text-muted-foreground">Balance {{ formatCurrency(voucher.balance_amount) }}</span>
+                    <span class="text-sm">{{ voucher.voucher_no }} - {{ voucher.month }} {{ voucher.year }}</span>
+                    <span class="text-sm text-muted-foreground sm:text-right">Balance {{ formatCurrency(voucher.balance_amount) }}</span>
                     <Input
                         v-model="lineFor(voucher.id).amount"
                         type="number"
                         step="0.01"
                         min="0"
                         :max="voucher.balance_amount"
-                        class="w-32"
+                        class="w-full text-right"
                         :disabled="!lineFor(voucher.id).enabled"
                     />
                 </div>
