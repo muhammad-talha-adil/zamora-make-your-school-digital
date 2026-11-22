@@ -179,6 +179,7 @@
                                 {{ discountValueType === 'percent' ? '%' : 'Rs.' }}
                             </span>
                         </div>
+                        <p v-if="discountValueType === 'percent' && Number(discountValue) > 100" class="text-xs text-destructive">Percentage can be 0 to 100 only.</p>
                     </div>
                     <div class="space-y-2">
                         <Label for="discount_reason">Reason</Label>

@@ -111,6 +111,7 @@ const showCampusField = computed(() => !academicScope.value?.isCampusRestricted)
 const errors = ref<Record<string, string>>({});
 const isSubmitting = ref(false);
 
+const titleLength = ref(0);
 const { isValid } = useFormValidity(form, ['title', 'session_id', 'campus_id', 'status']);
 
 // Fee Item Form
@@ -537,6 +538,7 @@ const getFrequencyLabel = (freq: string) => {
                                 :placeholder="'Search or enter title...'"
                                 :search-url="titleSearchUrl"
                                 :max-length="200"
+                            @typing="(t: string) => (titleLength = t.length)"
                                 :initial-items="titleInitialItems"
                                 :value-type="'name'"
                                 display-key="title"
@@ -544,7 +546,7 @@ const getFrequencyLabel = (freq: string) => {
                                 classMinWidth="w-full"
                                 @update:modelValue="onTitleChange"
                             />
-                            <p v-if="String(form.title || '').length >= 170" class="text-xs text-muted-foreground">{{ String(form.title || '').length }}/200</p>
+                            <p v-if="Math.max(titleLength, String(form.title || '').length) >= 170" class="text-xs text-muted-foreground">{{ Math.max(titleLength, String(form.title || '').length) }}/200</p>
                             <p v-if="errors.title" class="text-sm text-destructive">{{ errors.title }}</p>
                         </div>
 

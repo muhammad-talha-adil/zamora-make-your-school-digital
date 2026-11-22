@@ -72,6 +72,7 @@ const props = withDefaults(defineProps<Props>(), {
 
 const emit = defineEmits<{
   'update:modelValue': [value: number | string | null]
+  typing: [text: string]
 }>()
 
 const containerRef = ref<HTMLElement | null>(null)
@@ -164,6 +165,7 @@ const searchItems = async (searchQuery: string) => {
 
 const onInput = () => {
   isOpen.value = true
+  emit('typing', query.value)
 
   if (
     props.valueType === 'id' &&
