@@ -94,7 +94,7 @@ const filters = reactive({
 const staff = ref<Paginated<StaffRow>>({ data: [], current_page: 1, last_page: 1, total: 0 });
 const loading = ref(false);
 
-const hasFilters = computed(() => Boolean(filters.search || filters.campus_id || filters.designation_id || filters.status !== 'active'));
+const hasFilters = computed(() => Boolean(filters.search || filters.designation_id || filters.status !== 'active'));
 const designationOptions = computed(() => props.designations.map((designation) => ({ value: String(designation.id), label: designation.name })));
 const campusOptions = computed(() => props.campuses.map((campus) => ({ value: String(campus.id), label: campus.name })));
 
@@ -171,10 +171,6 @@ const toggleStaff = async (member: StaffRow) => {
                         <Input v-model="filters.search" placeholder="Name, employee no, CNIC, phone..." />
                     </div>
                     <div>
-                        <label class="mb-2 block text-sm font-medium text-muted-foreground">Campus</label>
-                        <SearchableSelect v-model="filters.campus_id" :options="campusOptions" placeholder="All Campuses" clearable />
-                    </div>
-                    <div>
                         <label class="mb-2 block text-sm font-medium text-muted-foreground">Position</label>
                         <SearchableSelect v-model="filters.designation_id" :options="designationOptions" placeholder="All Positions" clearable />
                     </div>
@@ -194,7 +190,6 @@ const toggleStaff = async (member: StaffRow) => {
                                 <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">#</th>
                                 <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Employee</th>
                                 <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Designation</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Campus</th>
                                 <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Jobs</th>
                                 <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Status</th>
                                 <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">Actions</th>
@@ -214,7 +209,6 @@ const toggleStaff = async (member: StaffRow) => {
                                     </div>
                                 </td>
                                 <td class="px-4 py-3 text-sm text-muted-foreground">{{ member.designation?.name || '-' }}</td>
-                                <td class="px-4 py-3 text-sm text-muted-foreground">{{ member.campus?.name || '-' }}</td>
                                 <td class="px-4 py-3 text-sm text-muted-foreground">{{ member.jobs_count }}</td>
                                 <td class="px-4 py-3">
                                     <StatusToggle :active="member.is_active" @toggle="toggleStaff(member)" />
@@ -226,7 +220,7 @@ const toggleStaff = async (member: StaffRow) => {
                                 </td>
                             </tr>
                             <tr v-if="!loading && staff.data.length === 0">
-                                <td colspan="7" class="px-4 py-10 text-center text-sm text-muted-foreground">{{ hasFilters ? 'No staff match these filters. Clear a filter to see more.' : 'No staff members yet. Use Add Staff to add the first one.' }}</td>
+                                <td colspan="6" class="px-4 py-10 text-center text-sm text-muted-foreground">{{ hasFilters ? 'No staff match these filters. Clear a filter to see more.' : 'No staff members yet. Use Add Staff to add the first one.' }}</td>
                             </tr>
                         </tbody>
                     </table>
