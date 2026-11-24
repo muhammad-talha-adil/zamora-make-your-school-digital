@@ -266,7 +266,7 @@ const onAdvanceGiven = () => {
                     class="overflow-hidden rounded-2xl border border-border bg-card shadow-sm transition-shadow hover:shadow-md"
                     :class="run.status === 'paid' ? 'border-l-4 border-l-success' : 'border-l-4 border-l-warning'"
                 >
-                    <div class="flex flex-col gap-4 px-5 py-4 sm:flex-row sm:items-center sm:justify-between">
+                    <div class="flex flex-col gap-4 px-5 py-4 2xl:flex-row 2xl:items-center 2xl:justify-between">
                         <div class="flex min-w-0 items-center gap-3">
                             <div class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-primary/10 text-primary">
                                 <Icon icon="calendar-days" class="h-5 w-5" />
@@ -277,8 +277,8 @@ const onAdvanceGiven = () => {
                             </div>
                         </div>
 
-                        <div class="flex items-center gap-6">
-                            <div class="hidden text-right sm:block">
+                        <div class="flex flex-wrap items-center justify-between gap-x-6 gap-y-3 2xl:justify-end">
+                            <div class="text-left 2xl:text-right">
                                 <p class="text-xs text-muted-foreground">Gross <span class="font-medium text-foreground">{{ formatMoney(run.total_gross) }}</span></p>
                                 <p class="text-xs text-muted-foreground">Deductions <span class="font-medium text-destructive">{{ formatMoney(run.total_deductions) }}</span></p>
                             </div>
@@ -296,9 +296,6 @@ const onAdvanceGiven = () => {
                         </div>
                     </div>
 
-                    <div class="flex items-center justify-between gap-3 border-t border-border bg-muted/30 px-5 py-2.5 sm:hidden">
-                        <p class="text-xs text-muted-foreground">Gross {{ formatMoney(run.total_gross) }} &middot; Deductions <span class="text-destructive">{{ formatMoney(run.total_deductions) }}</span></p>
-                    </div>
 
                     <div class="flex items-center justify-between gap-3 border-t border-border px-5 py-2.5">
                         <p class="text-xs text-muted-foreground">Processed {{ formatDate(run.processed_at) }}</p>
