@@ -29,7 +29,7 @@
         </td>
 
         <!-- Admission No -->
-        <td class="px-2 md:px-4 py-3 whitespace-nowrap hidden md:table-cell">
+        <td class="px-2 md:px-4 py-3 whitespace-nowrap hidden xl:table-cell">
             <div class="text-sm text-muted-foreground">{{ student.admission_no }}</div>
         </td>
 
@@ -45,7 +45,7 @@
         </td>
 
         <!-- Check In Time -->
-        <td class="px-2 md:px-4 py-3 whitespace-nowrap hidden sm:table-cell">
+        <td class="px-2 md:px-4 py-3 whitespace-nowrap hidden md:table-cell">
             <input
                 :value="modelValue.check_in"
                 @input="onCheckInChange"
@@ -57,7 +57,7 @@
         </td>
 
         <!-- Check Out Time -->
-        <td class="px-2 md:px-4 py-3 whitespace-nowrap hidden sm:table-cell">
+        <td class="px-2 md:px-4 py-3 whitespace-nowrap hidden md:table-cell">
             <input
                 :value="modelValue.check_out"
                 @input="onCheckOutChange"
@@ -70,7 +70,7 @@
         </td>
 
         <!-- Leave Type (shown when status is Leave) -->
-        <td class="px-2 md:px-4 py-3 whitespace-nowrap hidden lg:table-cell">
+        <td class="px-2 md:px-4 py-3 whitespace-nowrap hidden xl:table-cell">
             <div v-if="isLeaveStatus" class="text-sm">
                 <SearchableSelect
                     v-model="leaveTypeId"
@@ -88,7 +88,7 @@
         </td>
 
         <!-- Remarks -->
-        <td class="px-2 md:px-4 py-3 whitespace-nowrap hidden lg:table-cell">
+        <td class="px-2 md:px-4 py-3 whitespace-nowrap hidden xl:table-cell">
             <input
                 :value="modelValue.remarks"
                 @input="onRemarksChange"

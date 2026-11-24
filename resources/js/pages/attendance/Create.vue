@@ -168,12 +168,12 @@
                             <tr>
                                 <th class="px-2 md:px-4 py-2 md:py-3 text-left text-xs font-semibold text-muted-foreground uppercase w-12 md:w-16">Sr#</th>
                                 <th class="px-2 md:px-4 py-2 md:py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Student</th>
-                                <th class="px-2 md:px-4 py-2 md:py-3 text-left text-xs font-semibold text-muted-foreground uppercase hidden md:table-cell">Admission No</th>
+                                <th class="px-2 md:px-4 py-2 md:py-3 text-left text-xs font-semibold text-muted-foreground uppercase hidden xl:table-cell">Admission No</th>
                                 <th class="px-2 md:px-4 py-2 md:py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Status</th>
-                                <th class="px-2 md:px-4 py-2 md:py-3 text-left text-xs font-semibold text-muted-foreground uppercase hidden sm:table-cell">Check In</th>
-                                <th class="px-2 md:px-4 py-2 md:py-3 text-left text-xs font-semibold text-muted-foreground uppercase hidden sm:table-cell">Check Out</th>
-                                <th class="px-2 md:px-4 py-2 md:py-3 text-left text-xs font-semibold text-muted-foreground uppercase hidden lg:table-cell">Leave Type</th>
-                                <th class="px-2 md:px-4 py-2 md:py-3 text-left text-xs font-semibold text-muted-foreground uppercase hidden lg:table-cell">Remarks</th>
+                                <th class="px-2 md:px-4 py-2 md:py-3 text-left text-xs font-semibold text-muted-foreground uppercase hidden md:table-cell">Check In</th>
+                                <th class="px-2 md:px-4 py-2 md:py-3 text-left text-xs font-semibold text-muted-foreground uppercase hidden md:table-cell">Check Out</th>
+                                <th class="px-2 md:px-4 py-2 md:py-3 text-left text-xs font-semibold text-muted-foreground uppercase hidden md:table-cell">Leave Type</th>
+                                <th class="px-2 md:px-4 py-2 md:py-3 text-left text-xs font-semibold text-muted-foreground uppercase hidden md:table-cell">Remarks</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-border bg-card">
