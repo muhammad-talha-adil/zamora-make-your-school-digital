@@ -811,7 +811,7 @@ const generateDues = async () => {
                 </div>
             </div>
 
-            <div v-if="activeTab === 'vehicles'" class="grid gap-6 xl:grid-cols-[360px_minmax(0,1fr)]">
+            <div v-if="activeTab === 'vehicles'" class="grid gap-6 2xl:grid-cols-[360px_minmax(0,1fr)]">
                 <div class="rounded-2xl border border-border bg-card p-5 shadow-sm">
                     <h2 class="mb-4 text-lg font-semibold text-foreground">{{ vehicleForm.id ? 'Edit Vehicle' : 'Create Vehicle' }}</h2>
                     <div class="space-y-4">
@@ -913,7 +913,7 @@ const generateDues = async () => {
                 </div>
             </div>
 
-            <div v-if="activeTab === 'routes'" class="grid gap-6 xl:grid-cols-[380px_minmax(0,1fr)]">
+            <div v-if="activeTab === 'routes'" class="grid gap-6 2xl:grid-cols-[380px_minmax(0,1fr)]">
                 <div class="rounded-2xl border border-border bg-card p-5 shadow-sm">
                     <h2 class="mb-4 text-lg font-semibold text-foreground">{{ routeForm.id ? 'Edit Route' : 'Create Route' }}</h2>
                     <div class="space-y-4">
@@ -978,7 +978,7 @@ const generateDues = async () => {
                                 <tr v-for="(routeRow, routeIndex) in filteredRoutes" :key="routeRow.id">
                                     <td class="px-4 py-3 text-sm text-muted-foreground">{{ routeIndex + 1 }}</td>
                                     <td class="px-4 py-3">
-                                        <div class="font-medium text-foreground">{{ routeRow.name }}</div>
+                                        <div class="min-w-[9rem] font-medium text-foreground">{{ routeRow.name }}</div>
                                         <div class="text-xs text-muted-foreground">{{ routeRow.notes || '-' }}</div>
                                     </td>
                                     <td class="px-4 py-3 text-sm text-muted-foreground">
@@ -999,7 +999,7 @@ const generateDues = async () => {
                 </div>
             </div>
 
-            <div v-if="activeTab === 'stops'" class="grid gap-6 xl:grid-cols-[360px_minmax(0,1fr)]">
+            <div v-if="activeTab === 'stops'" class="grid gap-6 2xl:grid-cols-[360px_minmax(0,1fr)]">
                 <div class="rounded-2xl border border-border bg-card p-5 shadow-sm">
                     <h2 class="mb-4 text-lg font-semibold text-foreground">{{ stopForm.id ? 'Edit Stop' : 'Create Stop' }}</h2>
                     <div class="space-y-4">
@@ -1064,7 +1064,7 @@ const generateDues = async () => {
                 </div>
             </div>
 
-            <div v-if="activeTab === 'assignments'" class="grid gap-6 xl:grid-cols-[380px_minmax(0,1fr)]">
+            <div v-if="activeTab === 'assignments'" class="grid gap-6 2xl:grid-cols-[380px_minmax(0,1fr)]">
                 <div class="rounded-2xl border border-border bg-card p-5 shadow-sm">
                     <h2 class="mb-4 text-lg font-semibold text-foreground">{{ assignmentForm.id ? 'Edit Assignment' : 'Create Assignment' }}</h2>
                     <div class="space-y-4">
@@ -1163,7 +1163,7 @@ const generateDues = async () => {
                 </div>
             </div>
 
-            <div v-if="activeTab === 'expenses'" class="grid gap-6 xl:grid-cols-[380px_minmax(0,1fr)]">
+            <div v-if="activeTab === 'expenses'" class="grid gap-6 2xl:grid-cols-[380px_minmax(0,1fr)]">
                 <div class="rounded-2xl border border-border bg-card p-5 shadow-sm">
                     <h2 class="mb-4 text-lg font-semibold text-foreground">{{ expenseForm.id ? 'Edit Expense' : 'Record Expense' }}</h2>
                     <div class="space-y-4">
@@ -1247,7 +1247,7 @@ const generateDues = async () => {
                 </div>
             </div>
 
-            <div v-if="activeTab === 'dues'" class="grid gap-6 xl:grid-cols-[380px_minmax(0,1fr)]">
+            <div v-if="activeTab === 'dues'" class="grid gap-6 2xl:grid-cols-[380px_minmax(0,1fr)]">
                 <div class="rounded-2xl border border-border bg-card p-5 shadow-sm">
                     <h2 class="mb-4 text-lg font-semibold text-foreground">Generate Monthly Transport Dues</h2>
                     <div class="space-y-4">
