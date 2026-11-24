@@ -370,6 +370,7 @@ const syncOpenMenuWithCurrentRoute = () => {
 const toggleSidebar = () => {
   if (window.innerWidth < 768) {
     isOpen.value = !isOpen.value
+    tempExpand.value = isOpen.value
   } else {
     collapsed.value = !collapsed.value
   }
@@ -377,6 +378,7 @@ const toggleSidebar = () => {
 
 const closeSidebar = () => {
   isOpen.value = false
+  if (window.innerWidth < 768) tempExpand.value = false
 }
 
 const onMouseEnter = () => {
