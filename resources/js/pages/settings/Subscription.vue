@@ -87,7 +87,7 @@ const submit = () => {
                     </span>
                 </div>
 
-                <form @submit.prevent="submit" class="max-w-2xl space-y-6">
+                <form @submit.prevent="submit" class="max-w-4xl grid gap-6 2xl:grid-cols-2">
                     <div class="grid gap-2">
                         <Label for="status">Status</Label>
                         <SearchableSelect
@@ -135,7 +135,7 @@ const submit = () => {
                         <p v-if="form.errors.block_reason" class="text-sm text-destructive">{{ form.errors.block_reason }}</p>
                     </div>
 
-                    <div class="grid gap-2">
+                    <div class="grid gap-2 2xl:col-span-2">
                         <Label for="block_reason_note">Block reason note</Label>
                         <textarea
                             id="block_reason_note"
@@ -147,7 +147,7 @@ const submit = () => {
                         <p v-if="form.errors.block_reason_note" class="text-sm text-destructive">{{ form.errors.block_reason_note }}</p>
                     </div>
 
-                    <div class="grid gap-2">
+                    <div class="grid gap-2 2xl:col-span-2">
                         <Label for="notes">Internal notes</Label>
                         <textarea
                             id="notes"
@@ -159,7 +159,7 @@ const submit = () => {
                         <p v-if="form.errors.notes" class="text-sm text-destructive">{{ form.errors.notes }}</p>
                     </div>
 
-                    <div class="flex items-center gap-4">
+                    <div class="flex items-center gap-4 2xl:col-span-2">
                         <Button v-if="props.canEdit" type="submit" :disabled="form.processing">Save subscription</Button>
                         <p v-else class="text-sm text-muted-foreground">Only the system vendor can change the subscription.</p>
                         <p v-show="form.recentlySuccessful" class="text-sm text-muted-foreground">Saved.</p>

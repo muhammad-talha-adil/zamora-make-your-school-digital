@@ -21,7 +21,7 @@ class SubscriptionController extends Controller
      */
     public function index(Request $request): Response
     {
-        abort_unless($request->user()?->isSuperAdmin(), 403, 'Unauthorized action. You do not have permission to access this resource.');
+        abort_unless($request->user()?->isDeveloper(), 403, 'Unauthorized action. You do not have permission to access this resource.');
 
         return Inertia::render('settings/Subscription', [
             'subscription' => Subscription::current(),
