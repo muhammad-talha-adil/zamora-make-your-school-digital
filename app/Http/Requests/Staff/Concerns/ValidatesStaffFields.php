@@ -39,7 +39,7 @@ trait ValidatesStaffFields
 
     protected function uniqueAmongStaff(string $column, string $label, ?StaffProfile $ignore): Closure
     {
-        return function (string $attribute, mixed $value, Closure $fail) use ($column, $label, $ignore): void {
+        return function (string $attribute, mixed $value, Closure $fail) use ($column, $ignore): void {
             if ($value === null || $value === '') {
                 return;
             }
@@ -51,7 +51,7 @@ trait ValidatesStaffFields
                 ->first();
 
             if ($existing) {
-                $fail("A staff member with this {$label} already exists: ".($existing->user?->name ?? $existing->employee_no));
+                $fail('Already used by '.($existing->user?->name ?? $existing->employee_no));
             }
         };
     }

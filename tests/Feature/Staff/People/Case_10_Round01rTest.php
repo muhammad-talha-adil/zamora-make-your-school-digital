@@ -96,11 +96,11 @@ it('blocks a duplicate CNIC and phone naming the existing staff member', functio
 
     $this->postJson(route('staff.members.store'), validStaffPayload(['cnic' => '3520212345671']))
         ->assertUnprocessable()
-        ->assertJsonPath('errors.cnic.0', 'A staff member with this CNIC already exists: T-r Teacher');
+        ->assertJsonPath('errors.cnic.0', 'Already used by T-r Teacher');
 
     $this->postJson(route('staff.members.store'), validStaffPayload(['phone' => '+92 333 1112233']))
         ->assertUnprocessable()
-        ->assertJsonPath('errors.phone.0', 'A staff member with this phone number already exists: T-r Teacher');
+        ->assertJsonPath('errors.phone.0', 'Already used by T-r Teacher');
 });
 
 it('lets a person keep their own CNIC when saving their personal file', function () {

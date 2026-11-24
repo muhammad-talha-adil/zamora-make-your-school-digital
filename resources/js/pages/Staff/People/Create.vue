@@ -49,7 +49,7 @@
                         </div>
                         <div class="space-y-2">
                             <Label for="photo">Photo</Label>
-                            <input id="photo" type="file" accept="image/*" class="w-full text-sm text-foreground" @change="onPhoto" />
+                            <input id="photo" type="file" accept="image/*" class="w-full text-sm text-foreground file:mr-3 file:rounded-md file:border-0 file:bg-primary file:px-3 file:py-1.5 file:text-sm file:text-primary-foreground" @change="onPhoto" />
                         </div>
                         <div v-if="campuses.length" class="space-y-2">
                             <Label for="campus_id">Campus</Label>
@@ -180,7 +180,7 @@
                                 <input
                                     type="file"
                                     accept=".pdf,.jpg,.jpeg,.png"
-                                    class="w-full text-sm text-foreground"
+                                    class="w-full text-sm text-foreground file:mr-3 file:rounded-md file:border-0 file:bg-primary file:px-3 file:py-1.5 file:text-sm file:text-primary-foreground"
                                     @change="onDocumentFile(type.id, $event)"
                                 />
                             </div>
