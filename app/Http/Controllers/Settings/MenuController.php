@@ -220,13 +220,11 @@ class MenuController extends Controller
     }
 
     /**
-     * Sidebar menu show/hide is developer-only - it is a system-level
-     * control over navigation structure, not a school-management ability,
-     * so it is kept out of `school.menu.manage` (which owner also holds).
+     * Sidebar menu changes need the developer role or `school.menu.manage` (owner holds it).
      */
     private function assertDeveloper(): void
     {
-        abort_unless(auth()->user()?->isDeveloper(), 403, 'Only the developer can manage sidebar menus.');
+        abort_unless(auth()->user()?->isDeveloper() || auth()->user()?->can('school.menu.manage'), 403, 'You do not have permission to manage sidebar menus.');
     }
 
     /**

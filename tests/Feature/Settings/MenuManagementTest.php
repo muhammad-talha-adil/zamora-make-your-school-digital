@@ -45,7 +45,7 @@ test('a user with school.menu.manage can create a menu', function () {
     expect(Menu::where('title', 'Reports')->exists())->toBeTrue();
 });
 
-test('the owner can open menu-settings', function () {
+test('the owner can open menu-settings and manage menus', function () {
     Permission::firstOrCreate(['name' => 'school.menu.manage', 'guard_name' => 'web']);
     Role::firstOrCreate(
         ['name' => 'owner', 'guard_name' => 'web'],
@@ -61,9 +61,12 @@ test('the owner can open menu-settings', function () {
 
     $this->actingAs($user)->get(route('menus.index'))->assertOk();
 
+    $this->actingAs($user)->patch(route('menus.inactivate', $menu->id))->assertRedirect();
+
     $this->actingAs($user)
         ->delete(route('menus.destroy', $menu->id))
-        ->assertForbidden();
+        ->assertRedirect();
+
 });
 
 test('a menu cannot be reparented onto one of its own descendants', function () {
