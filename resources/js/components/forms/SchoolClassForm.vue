@@ -171,7 +171,7 @@ const submit = () => {
                     );
                     const firstError = Object.values(errors.value)[0];
                     if (firstError) {
-                        alert.error(firstError);
+                        alert.warning(firstError);
                     }
                 } else {
                     alert.error(err instanceof Error ? err.message : 'Could not save class. Please try again.');
@@ -198,7 +198,7 @@ const submit = () => {
                     );
                     const firstError = Object.values(errors.value)[0];
                     if (firstError) {
-                        alert.error(firstError);
+                        alert.warning(firstError);
                     }
                 } else {
                     alert.error(err instanceof Error ? err.message : 'Could not save class. Please try again.');

@@ -19,13 +19,8 @@
             <div class="bg-card rounded-lg border border-border p-4 md:p-6">
                 <!-- Mobile: Stacked filters, Desktop: Horizontal -->
                 <div class="flex flex-col gap-4">
-                    <!-- Row 1: Campus, Session, Class -->
+                    <!-- Row 1: Session, Class -->
                     <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                        <!-- Campus -->
-                        <div v-if="showCampusField">
-                            <label class="block text-sm font-medium text-muted-foreground mb-1">Campus</label>
-                            <SearchableSelect v-model="selectedCampusId" :options="campusOptions" placeholder="Select Campus" clearable />
-                        </div>
 
                         <!-- Session -->
                         <div>
@@ -57,6 +52,7 @@
                         <div>
                             <label class="block text-sm font-medium text-muted-foreground mb-1">Date</label>
                             <input v-model="selectedDate" type="date" :max="new Date().toISOString().split('T')[0]" class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm" />
+                            <p v-if="futureDateError" class="mt-1 text-xs text-destructive">{{ futureDateError }}</p>
                         </div>
 
                         <!-- Load Students Button & Reset -->
@@ -83,7 +79,7 @@
                 </div>
 
                 <!-- Bulk Actions and Global Check In/Out -->
-                <div class="mt-6 flex flex-col gap-4">
+                <div v-if="students.length > 0" class="mt-6 flex flex-col gap-4">
                     <!-- Bulk Action Buttons -->
                     <div class="flex flex-wrap gap-2">
                         <Button variant="outline" size="sm" @click="markAllPresent">Mark All Present</Button>
@@ -92,8 +88,8 @@
                     </div>
 
                     <!-- Global Check In/Out Times -->
-                    <div class="flex flex-col sm:flex-row gap-3 sm:items-end">
-                        <div class="flex-1">
+                    <div class="grid grid-cols-1 gap-3 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
+                        <div class="min-w-0">
                             <label class="block text-sm font-medium text-muted-foreground mb-1">Global Check In</label>
                             <input
                                 v-model="globalCheckIn"
@@ -101,7 +97,7 @@
                                 class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm"
                             />
                         </div>
-                        <div class="flex-1">
+                        <div class="min-w-0">
                             <label class="block text-sm font-medium text-muted-foreground mb-1">Global Check Out</label>
                             <input
                                 v-model="globalCheckOut"
@@ -112,7 +108,7 @@
                                 :class="{ 'opacity-50 cursor-not-allowed': checkoutDisabled }"
                             />
                         </div>
-                        <Button variant="secondary" size="sm" @click="applyGlobalTimes" class="w-full sm:w-auto">Apply Times</Button>
+                        <Button variant="secondary" @click="applyGlobalTimes" class="w-full sm:w-auto">Apply Times</Button>
                     </div>
                     <p v-if="props.shiftTiming" class="text-xs text-muted-foreground">
                         Shift "{{ props.shiftTiming.name }}": {{ props.shiftTiming.check_in }}
@@ -204,7 +200,7 @@
             <!-- No Students Message -->
             <div v-else-if="selectedClassId && selectedSectionId" class="bg-card rounded-lg border border-border p-6 md:p-8 text-center">
                 <Icon icon="users" class="h-10 w-10 md:h-12 md:w-12 text-muted-foreground mx-auto mb-3 md:mb-4" />
-                <p class="text-sm md:text-base text-muted-foreground">No students found for the selected class and section.</p>
+                <p class="text-sm md:text-base text-muted-foreground">{{ isFutureSelected ? 'Attendance cannot be marked for a future date.' : 'No students found for the selected class and section.' }}</p>
             </div>
         </div>
     </AppLayout>
@@ -214,6 +210,7 @@
 import { Head, router, usePage } from '@inertiajs/vue3';
 import { reactive, computed, watch, ref, onMounted } from 'vue';
 import { route } from 'ziggy-js';
+import { alert } from '@/utils';
 import AppLayout from '@/layouts/AppLayout.vue';
 import AttendanceFormRow from '@/components/attendance/AttendanceFormRow.vue';
 import Icon from '@/components/Icon.vue';
@@ -385,8 +382,22 @@ const formatDate = (date: string) => {
     });
 };
 
+const todayIso = () => new Date().toISOString().split('T')[0];
+const futureDateError = ref('');
+const isFutureSelected = computed(() => selectedDate.value > todayIso());
+watch(selectedDate, () => { futureDateError.value = ''; });
+
 const loadStudents = () => {
     if (!selectedClassId.value) return;
+
+    if (selectedDate.value > todayIso()) {
+        futureDateError.value = 'Attendance cannot be marked for a future date.';
+        alert.warning(futureDateError.value);
+
+        return;
+    }
+
+    futureDateError.value = '';
     
     // If "all" is selected, pass empty string to load all sections
     const sectionId = selectedSectionId.value === 'all' ? '' : selectedSectionId.value;
@@ -408,17 +419,35 @@ const loadStudents = () => {
 
 const markAllPresent = () => {
     const presentStatus = props.attendanceStatuses.find((s) => s.code === 'P');
-    if (presentStatus) formData.attendances.forEach((a) => { a.attendance_status_id = presentStatus.id; });
+    if (!presentStatus) {
+        alert.warning('That status is not set up in Attendance settings.');
+
+        return;
+    }
+
+    formData.attendances = formData.attendances.map((a) => ({ ...a, attendance_status_id: presentStatus.id }));
 };
 
 const markAllAbsent = () => {
     const absentStatus = props.attendanceStatuses.find((s) => s.code === 'A');
-    if (absentStatus) formData.attendances.forEach((a) => { a.attendance_status_id = absentStatus.id; });
+    if (!absentStatus) {
+        alert.warning('That status is not set up in Attendance settings.');
+
+        return;
+    }
+
+    formData.attendances = formData.attendances.map((a) => ({ ...a, attendance_status_id: absentStatus.id }));
 };
 
 const markAllLeave = () => {
     const leaveStatus = props.attendanceStatuses.find((s) => s.code === 'L');
-    if (leaveStatus) formData.attendances.forEach((a) => { a.attendance_status_id = leaveStatus.id; });
+    if (!leaveStatus) {
+        alert.warning('That status is not set up in Attendance settings.');
+
+        return;
+    }
+
+    formData.attendances = formData.attendances.map((a) => ({ ...a, attendance_status_id: leaveStatus.id }));
 };
 
 const applyGlobalTimes = () => {
@@ -437,6 +466,12 @@ const submitAttendance = () => {
     formData.section_id = selectedSectionId.value === 'all' ? 0 : (Number(selectedSectionId.value) || 0);
     router.post(route('attendance.store'), { ...formData, stay: true }, {
         preserveScroll: true,
+        onError: (errors) => {
+            if (errors.attendance_date) {
+                futureDateError.value = errors.attendance_date;
+                alert.warning(errors.attendance_date);
+            }
+        },
     });
 };
 </script>

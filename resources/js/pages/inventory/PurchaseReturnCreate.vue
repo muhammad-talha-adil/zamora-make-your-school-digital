@@ -420,7 +420,7 @@ const submitForm = () => {
                 errors.value = err.response.data.errors;
                 const errorValues = Object.values(err.response.data.errors) as string[];
                 const firstError = errorValues[0] || 'An error occurred';
-                alert.error(firstError);
+                alert.warning(firstError);
             } else if (err.response?.data?.message) {
                 alert.error(err.response.data.message);
             } else {

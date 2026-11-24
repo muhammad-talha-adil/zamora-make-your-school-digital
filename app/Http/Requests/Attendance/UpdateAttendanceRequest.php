@@ -54,6 +54,10 @@ class UpdateAttendanceRequest extends FormRequest
     public function withValidator($validator): void
     {
         $validator->after(function ($validator) {
+            if ($this->route('attendance')?->attendance_date?->isFuture()) {
+                $validator->errors()->add('attendance_date', 'Attendance cannot be marked for a future date.');
+            }
+
             foreach ($this->input('attendances', []) as $index => $row) {
                 $in = $row['check_in'] ?? null;
                 $out = $row['check_out'] ?? null;

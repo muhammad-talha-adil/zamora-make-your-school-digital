@@ -113,7 +113,7 @@ const submit = () => {
                 errors.value = error.response?.data?.errors ?? {};
                 if (Object.keys(errors.value).length > 0) {
                     const firstError = Object.values(errors.value)[0];
-                    alert.error(firstError);
+                    alert.warning(firstError);
                 } else {
                     alert.error('Could not save subject. Check the form.');
                 }
@@ -133,7 +133,7 @@ const submit = () => {
                 errors.value = error.response?.data?.errors ?? {};
                 if (Object.keys(errors.value).length > 0) {
                     const firstError = Object.values(errors.value)[0];
-                    alert.error(firstError);
+                    alert.warning(firstError);
                 } else {
                     alert.error('Could not save subject. Check the form.');
                 }

@@ -111,7 +111,7 @@ const saveNewSystem = () => {
       createErrors.value = err as Record<string, string>
       if (Object.keys(createErrors.value).length > 0) {
         const firstError = Object.values(createErrors.value)[0]
-        alert.error(firstError)
+        alert.warning(firstError)
       }
     }
   })

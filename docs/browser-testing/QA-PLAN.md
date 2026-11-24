@@ -120,3 +120,8 @@ Har module ke liye pehle poora sweep: agent code mein hi pehle woh checks chalay
 - Each page: search, Add dialog, inline "X is required." + toast, header campus switch reloads data, 400px width without sideways scroll, dark mode.
 - Student detail shows a Transport card (route, fee, Assign/Change).
 - Dues generation still reports "Added Rs X transport to N existing vouchers"; running it twice creates 0 new.
+
+## Deferred (attendance / transport pass)
+- "Mark All Present shows Select" not reproduced from code; rows now replaced immutably and warn if the status is missing. Re-check in browser.
+- Duplicate route labels: older data may hold same-name routes (no data deleted); labels now include vehicle and fee.
+- Platform-wide: other raw `alert.error(` calls on non-validation failures still use the big modal by design.

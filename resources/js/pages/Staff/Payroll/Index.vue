@@ -16,7 +16,6 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
-import CampusSelect from '@/components/ui/CampusSelect.vue';
 import SearchableSelect from '@/components/ui/searchable-select/SearchableSelect.vue';
 import { alert } from '@/utils';
 import GiveAdvanceDialog from '@/components/Staff/GiveAdvanceDialog.vue';
@@ -82,7 +81,6 @@ const breadcrumbItems: BreadcrumbItem[] = [
 
 
 const expandedRunId = ref<number | null>(null);
-const campusFilter = ref('');
 
 const yearOptions = useYearOptions();
 const yearSelectOptions = yearOptions.map((y: number) => ({ value: y, label: String(y) }));
@@ -114,19 +112,15 @@ const formatDate = (value?: string | null) => {
     return new Date(value).toLocaleDateString('en-PK', { year: 'numeric', month: 'short', day: 'numeric' });
 };
 
-const campusOptions = computed(() => props.campuses.map((campus) => ({ value: String(campus.id), label: campus.name })));
 const monthOptions = computed(() => props.months.map((month) => ({ value: String(month.id), label: month.name })));
 
 const filteredRuns = computed(() => {
-    if (!campusFilter.value) return props.payrollRuns;
-    return props.payrollRuns.filter((run) => String(run.campus_id ?? '') === campusFilter.value);
+    return props.payrollRuns;
 });
 
 const generatePayroll = async () => {
-    const campusId = payrollForm.campus_id || null;
     const existing = props.payrollRuns.find(
         (run) =>
-            String(run.campus_id ?? '') === String(campusId ?? '') &&
             String(run.payroll_month_id) === String(payrollForm.payroll_month_id) &&
             String(run.payroll_year) === String(payrollForm.payroll_year),
     );
@@ -145,7 +139,7 @@ const generatePayroll = async () => {
     }
 
     try {
-        await axios.post(route('staff.payroll.generate'), { ...payrollForm, campus_id: campusId, confirm_replace: Boolean(existing) });
+        await axios.post(route('staff.payroll.generate'), { ...payrollForm, campus_id: null, confirm_replace: Boolean(existing) });
         alert.success('Payroll generated successfully.');
         router.reload({ only: ['payrollRuns'] });
     } catch (error: any) {
@@ -219,11 +213,7 @@ const onAdvanceGiven = () => {
             </div>
 
             <div class="rounded-2xl border border-border bg-card p-5 shadow-sm">
-                <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
-                    <div>
-                        <label class="mb-2 block text-sm font-medium text-muted-foreground">Campus</label>
-                        <CampusSelect v-model="payrollForm.campus_id" :options="campusOptions" placeholder="All Campuses" clearable />
-                    </div>
+                <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
                     <div>
                         <label class="mb-2 block text-sm font-medium text-muted-foreground">Month</label>
                         <SearchableSelect v-model="payrollForm.payroll_month_id" :options="monthOptions" placeholder="Select month" clearable />
@@ -232,7 +222,7 @@ const onAdvanceGiven = () => {
                         <label class="mb-2 block text-sm font-medium text-muted-foreground">Year</label>
                         <SearchableSelect v-model="payrollYearModel" :options="yearSelectOptions" placeholder="Select year" />
                     </div>
-                    <div class="xl:col-span-2">
+                    <div>
                         <label class="mb-2 block text-sm font-medium text-muted-foreground">Title</label>
                         <Input v-model="payrollForm.title" placeholder="Optional payroll title" />
                     </div>
@@ -243,11 +233,6 @@ const onAdvanceGiven = () => {
                         Generate Payroll
                     </Button>
                 </div>
-            </div>
-
-            <div>
-                <label class="mb-2 block text-sm font-medium text-muted-foreground">Filter by Campus</label>
-                <SearchableSelect v-model="campusFilter" :options="campusOptions" placeholder="All Campuses" clearable class="max-w-65" />
             </div>
 
             <div class="space-y-4">

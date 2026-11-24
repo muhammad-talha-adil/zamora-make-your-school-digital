@@ -516,7 +516,7 @@ const submitForm = () => {
             isSubmitting.value = false;
             errors.value = err as Record<string, string>;
             const firstError = Object.values(err)[0];
-            alert.error(firstError);
+            alert.warning(firstError);
         },
     });
 };

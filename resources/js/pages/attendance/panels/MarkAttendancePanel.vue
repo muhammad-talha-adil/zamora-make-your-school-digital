@@ -16,13 +16,8 @@
         <div class="bg-card rounded-lg border border-border p-4 md:p-6">
             <!-- Mobile: Stacked filters, Desktop: Horizontal -->
             <div class="flex flex-col gap-4">
-                <!-- Row 1: Campus, Session, Class -->
+                <!-- Row 1: Session, Class -->
                 <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
-                    <!-- Campus -->
-                    <div v-if="!isCampusLocked">
-                        <label class="block text-sm font-medium text-muted-foreground mb-1">Campus</label>
-                        <SearchableSelect v-model="selectedCampusId" :options="campusOptions" placeholder="Select Campus" clearable />
-                    </div>
 
                     <!-- Session -->
                     <div>
@@ -54,6 +49,7 @@
                     <div>
                         <label class="block text-sm font-medium text-muted-foreground mb-1">Date</label>
                         <input v-model="selectedDate" type="date" class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm" />
+                            <p v-if="futureDateError" class="mt-1 text-xs text-destructive">{{ futureDateError }}</p>
                     </div>
 
                     <!-- Load Students Button & Reset -->
@@ -210,6 +206,7 @@
 import { router, usePage } from '@inertiajs/vue3';
 import { reactive, computed, watch, ref, onMounted } from 'vue';
 import { route } from 'ziggy-js';
+import { alert } from '@/utils';
 import AttendanceFormRow from '@/components/attendance/AttendanceFormRow.vue';
 import Icon from '@/components/Icon.vue';
 import { Button } from '@/components/ui/button';
@@ -385,8 +382,21 @@ const formatDate = (date: string) => {
     });
 };
 
+const todayIso = () => new Date().toISOString().split('T')[0];
+const futureDateError = ref('');
+watch(selectedDate, () => { futureDateError.value = ''; });
+
 const loadStudents = () => {
     if (!selectedClassId.value) return;
+
+    if (selectedDate.value > todayIso()) {
+        futureDateError.value = 'Attendance cannot be marked for a future date.';
+        alert.warning(futureDateError.value);
+
+        return;
+    }
+
+    futureDateError.value = '';
 
     // If "all" is selected, pass empty string to load all sections
     const sectionId = selectedSectionId.value === 'all' ? '' : selectedSectionId.value;
@@ -408,17 +418,35 @@ const loadStudents = () => {
 
 const markAllPresent = () => {
     const presentStatus = props.attendanceStatuses.find((s) => s.code === 'P');
-    if (presentStatus) formData.attendances.forEach((a) => { a.attendance_status_id = presentStatus.id; });
+    if (!presentStatus) {
+        alert.warning('That status is not set up in Attendance settings.');
+
+        return;
+    }
+
+    formData.attendances = formData.attendances.map((a) => ({ ...a, attendance_status_id: presentStatus.id }));
 };
 
 const markAllAbsent = () => {
     const absentStatus = props.attendanceStatuses.find((s) => s.code === 'A');
-    if (absentStatus) formData.attendances.forEach((a) => { a.attendance_status_id = absentStatus.id; });
+    if (!absentStatus) {
+        alert.warning('That status is not set up in Attendance settings.');
+
+        return;
+    }
+
+    formData.attendances = formData.attendances.map((a) => ({ ...a, attendance_status_id: absentStatus.id }));
 };
 
 const markAllLeave = () => {
     const leaveStatus = props.attendanceStatuses.find((s) => s.code === 'L');
-    if (leaveStatus) formData.attendances.forEach((a) => { a.attendance_status_id = leaveStatus.id; });
+    if (!leaveStatus) {
+        alert.warning('That status is not set up in Attendance settings.');
+
+        return;
+    }
+
+    formData.attendances = formData.attendances.map((a) => ({ ...a, attendance_status_id: leaveStatus.id }));
 };
 
 const applyGlobalTimes = () => {
@@ -436,6 +464,12 @@ const submitAttendance = () => {
     formData.class_id = Number(selectedClassId.value) || 0;
     formData.section_id = selectedSectionId.value === 'all' ? 0 : (Number(selectedSectionId.value) || 0);
     router.post(route('attendance.store'), formData, {
+        onError: (errors) => {
+            if (errors.attendance_date) {
+                futureDateError.value = errors.attendance_date;
+                alert.warning(errors.attendance_date);
+            }
+        },
         onSuccess: () => router.visit(route('attendance.index')),
     });
 };

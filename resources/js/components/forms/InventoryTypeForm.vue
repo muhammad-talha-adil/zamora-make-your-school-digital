@@ -216,7 +216,7 @@ const submit = () => {
             if (err.response?.data?.errors) {
                 errors.value = err.response.data.errors;
                 const firstError = Object.values(err.response.data.errors)[0];
-                alert.error(firstError);
+                alert.warning(firstError);
             } else {
                 alert.error('Failed to update inventory type. Please try again.');
             }
@@ -236,7 +236,7 @@ const submit = () => {
             if (err.response?.data?.errors) {
                 errors.value = err.response.data.errors;
                 const firstError = Object.values(err.response.data.errors)[0];
-                alert.error(firstError);
+                alert.warning(firstError);
             } else {
                 alert.error('Failed to create inventory type. Please try again.');
             }

@@ -1010,7 +1010,7 @@ const submitForm = () => {
             const errorMessages = Object.values(err as Record<string, string>);
             if (errorMessages.length > 0) {
                 const firstError = errorMessages[0];
-                alert.error(firstError);
+                alert.warning(firstError);
             } else {
                 alert.error('Failed to update student. Please check the errors and try again.');
             }

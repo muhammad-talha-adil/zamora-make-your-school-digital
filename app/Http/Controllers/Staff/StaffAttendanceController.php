@@ -80,12 +80,14 @@ class StaffAttendanceController extends Controller
         Gate::authorize('markAttendance', StaffProfile::class);
 
         $validated = $request->validate([
-            'attendance_date' => ['required', 'date'],
+            'attendance_date' => ['required', 'date', 'before_or_equal:today'],
             'attendance_status_id' => ['required', 'integer', 'exists:attendance_statuses,id'],
             'check_in_at' => ['nullable', 'date_format:H:i'],
             'check_out_at' => ['nullable', 'date_format:H:i'],
             'campus_id' => ['nullable', 'integer', 'exists:campuses,id'],
             'remarks' => ['nullable', 'string', 'max:255'],
+        ], [
+            'attendance_date.before_or_equal' => 'Attendance cannot be marked for a future date.',
         ]);
 
         $row = $this->attendance->mark(
@@ -110,7 +112,7 @@ class StaffAttendanceController extends Controller
         Gate::authorize('markAttendance', StaffProfile::class);
 
         $validated = $request->validate([
-            'attendance_date' => ['required', 'date'],
+            'attendance_date' => ['required', 'date', 'before_or_equal:today'],
             'campus_id' => ['nullable', 'integer', 'exists:campuses,id'],
             'rows' => ['required', 'array', 'min:1'],
             'rows.*.staff_profile_id' => ['required', 'integer', 'exists:staff_profiles,id'],
@@ -118,6 +120,8 @@ class StaffAttendanceController extends Controller
             'rows.*.check_in_at' => ['nullable', 'date_format:H:i'],
             'rows.*.check_out_at' => ['nullable', 'date_format:H:i'],
             'rows.*.remarks' => ['nullable', 'string', 'max:255'],
+        ], [
+            'attendance_date.before_or_equal' => 'Attendance cannot be marked for a future date.',
         ]);
 
         $marked = $this->attendance->markMany(
@@ -138,8 +142,10 @@ class StaffAttendanceController extends Controller
         Gate::authorize('markAttendance', StaffProfile::class);
 
         $validated = $request->validate([
-            'attendance_date' => ['required', 'date'],
+            'attendance_date' => ['required', 'date', 'before_or_equal:today'],
             'campus_id' => ['nullable', 'integer', 'exists:campuses,id'],
+        ], [
+            'attendance_date.before_or_equal' => 'Attendance cannot be marked for a future date.',
         ]);
 
         $locked = $this->attendance->lockDay($validated['attendance_date'], $validated['campus_id'] ?? null);

@@ -225,14 +225,14 @@ const submit = async () => {
             <div class="space-y-3 rounded-lg border border-dashed border-border p-3">
                 <p class="text-sm font-medium text-foreground">Need a new stop?</p>
                 <TransportField label="Stop name" :error="stopError">
-                    <Input v-model="newStop.name" placeholder="e.g. Main Market" />
+                    <Input v-model="newStop.name" placeholder="e.g. Main Market" @keydown.enter.prevent.stop="addStop" />
                 </TransportField>
                 <div class="grid gap-3 sm:grid-cols-2">
                     <TransportField label="Pick-up time">
-                        <Input v-model="newStop.pickup_time" type="time" />
+                        <Input v-model="newStop.pickup_time" type="time" @keydown.enter.prevent.stop="addStop" />
                     </TransportField>
                     <TransportField label="Drop time">
-                        <Input v-model="newStop.drop_time" type="time" />
+                        <Input v-model="newStop.drop_time" type="time" @keydown.enter.prevent.stop="addStop" />
                     </TransportField>
                 </div>
                 <Button type="button" variant="outline" size="sm" :class="{ 'opacity-70': addingStop }" @click="addStop">Add stop</Button>

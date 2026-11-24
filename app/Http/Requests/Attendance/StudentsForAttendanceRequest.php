@@ -34,7 +34,7 @@ class StudentsForAttendanceRequest extends FormRequest
             'section_id' => ['nullable', Rule::exists('sections', 'id')],
             'session_id' => ['nullable', 'integer', Rule::exists('academic_sessions', 'id')],
             'campus_id' => ['nullable', 'integer', Rule::exists('campuses', 'id')],
-            'date' => ['nullable', 'date'],
+            'date' => ['nullable', 'date', 'before_or_equal:today'],
         ];
     }
 
@@ -45,5 +45,15 @@ class StudentsForAttendanceRequest extends FormRequest
         if (in_array($this->input('section_id'), ['all', '', '0', 0], true)) {
             $this->merge(['section_id' => null]);
         }
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return [
+            'date.before_or_equal' => 'Attendance cannot be marked for a future date.',
+        ];
     }
 }

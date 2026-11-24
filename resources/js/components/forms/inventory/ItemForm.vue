@@ -182,7 +182,7 @@ const submitForm = () => {
                 if (err.response?.data?.errors) {
                     errors.value = err.response.data.errors;
                     const firstError = Object.values(err.response.data.errors)[0];
-                    alert.error(firstError);
+                    alert.warning(firstError);
                 } else if (err.response?.data?.message) {
                     alert.error(err.response.data.message);
                 } else {
@@ -204,7 +204,7 @@ const submitForm = () => {
                 if (err.response?.data?.errors) {
                     errors.value = err.response.data.errors;
                     const firstError = Object.values(err.response.data.errors)[0];
-                    alert.error(firstError);
+                    alert.warning(firstError);
                 } else if (err.response?.data?.message) {
                     alert.error(err.response.data.message);
                 } else {

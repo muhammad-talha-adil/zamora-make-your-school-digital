@@ -360,6 +360,7 @@ class AttendanceController extends Controller
 
         // Check if selected date is a Sunday
         $isSunday = Carbon::parse($selectedDate)->dayOfWeek === Carbon::SUNDAY;
+        $isFutureDate = Carbon::parse($selectedDate)->startOfDay()->isAfter(today());
 
         // Check if selected date is a holiday
         $holiday = null;
@@ -369,7 +370,7 @@ class AttendanceController extends Controller
 
         // Get students for the selected class/section if all required params are present
         $students = [];
-        if ($selectedClassId && ($selectedSectionId === 'all' || $selectedSectionId) && ! $isSunday && ! $holiday) {
+        if ($selectedClassId && ($selectedSectionId === 'all' || $selectedSectionId) && ! $isSunday && ! $holiday && ! $isFutureDate) {
             $students = $this->attendanceService->getEligibleStudents(
                 $selectedClassId,
                 $selectedSectionId === 'all' ? null : $selectedSectionId,

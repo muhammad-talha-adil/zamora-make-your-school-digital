@@ -46,11 +46,14 @@ export const alert = {
             title,
             text: message,
             icon: 'warning',
-            confirmButtonText: 'OK',
+            timer: 4000,
+            showConfirmButton: false,
+            toast: true,
+            position: 'top-end',
             didOpen: () => {
                 const popup = Swal.getPopup();
                 if (popup) {
-                    popup.style.zIndex = '999999';
+                    popup.style.zIndex = '99999';
                 }
             },
         });

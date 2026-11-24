@@ -88,7 +88,7 @@ const submitForm = () => {
         onError: (err) => {
             isSubmitting.value = false;
             const firstError = Object.values(err)[0];
-            alert.error(firstError);
+            alert.warning(firstError);
         },
     });
 };

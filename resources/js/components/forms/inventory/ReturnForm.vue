@@ -161,7 +161,7 @@ const submitForm = () => {
             errors.value = err as Record<string, string>;
             if (Object.keys(errors.value).length > 0) {
                 const firstError = Object.values(errors.value)[0];
-                alert.error(firstError);
+                alert.warning(firstError);
             } else {
                 alert.error('Failed to process return. Please check the errors.');
             }

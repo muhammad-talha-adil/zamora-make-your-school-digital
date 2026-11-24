@@ -142,7 +142,7 @@ class TransportController extends Controller
                 ->visibleTo($viewer)
                 ->latest()
                 ->get(),
-            'routes' => TransportRoute::with('stops')
+            'routes' => TransportRoute::with(['stops', 'vehicle'])
                 ->visibleTo($viewer)
                 ->where('is_active', true)
                 ->when($campusId, fn ($query) => $query->where('campus_id', $campusId))
@@ -150,6 +150,10 @@ class TransportController extends Controller
                 ->get(),
             'students' => Student::with(['user', 'currentEnrollment.class', 'currentEnrollment.section'])
                 ->visibleTo($viewer)
+                ->when($campusId, fn ($query) => $query->whereHas(
+                    'currentEnrollment',
+                    fn ($enrollment) => $enrollment->where('campus_id', $campusId)
+                ))
                 ->orderByDesc('id')
                 ->take(500)
                 ->get()
@@ -583,6 +587,7 @@ class TransportController extends Controller
         $mergedCount = 0;
         $mergedAmount = 0.0;
         $blockedCount = 0;
+        $alreadyBilledCount = 0;
 
         foreach ($assignments as $assignment) {
             $voucher = $this->studentBillingService->voucherForPeriod(
@@ -614,13 +619,27 @@ class TransportController extends Controller
                 $mergedCount++;
                 $mergedAmount += (float) $charge->net_amount;
             }
+
+            if (! $charge->wasRecentlyCreated) {
+                $alreadyBilledCount++;
+            }
         }
+
+        $skippedReasons = array_filter([
+            'voucher already paid or closed' => $blockedCount,
+            'already billed' => $alreadyBilledCount,
+        ]);
+        $skippedCount = array_sum($skippedReasons);
+        $skippedText = $skippedCount === 0
+            ? ''
+            : ', skipped '.$skippedCount.' ('.collect($skippedReasons)->map(fn ($count, $reason) => $count.' '.$reason)->implode(', ').')';
 
         return response()->json([
             'success' => true,
             'message' => 'Added Rs '.number_format($mergedAmount).' transport to '.$mergedCount.' existing '
                 .($mergedCount === 1 ? 'voucher' : 'vouchers').', created '.$generated.' new '
-                .($generated === 1 ? 'due' : 'dues').', skipped '.$blockedCount.'.',
+                .($generated === 1 ? 'due' : 'dues').$skippedText.'.',
+            'skipped_reasons' => $skippedReasons,
             'merged_count' => $mergedCount,
             'blocked_count' => $blockedCount,
             'generated_count' => $generated,

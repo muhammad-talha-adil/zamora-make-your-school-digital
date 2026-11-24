@@ -247,7 +247,7 @@ const submitForm = () => {
         } else if (response?.data?.errors) {
             errors.value = response.data.errors;
             const firstError = Object.values(response.data.errors)[0];
-            alert.error(Array.isArray(firstError) ? firstError[0] : firstError);
+            alert.warning(Array.isArray(firstError) ? firstError[0] : firstError);
         } else {
             alert.error('Failed to process return. Please check the errors.');
         }

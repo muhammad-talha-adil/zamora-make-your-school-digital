@@ -26,6 +26,7 @@ interface RouteOption {
     id: number;
     name: string;
     monthly_fee: number | string;
+    vehicle?: { vehicle_no: string } | null;
     stops: { id: number; name: string }[];
 }
 
@@ -86,7 +87,7 @@ const form = reactive(blankForm());
 useClearErrorsOnEdit(form, fieldErrors);
 
 const studentOptions = computed(() => props.students.map((student) => ({ value: String(student.id), label: student.display })));
-const routeOptions = computed(() => props.routes.map((row) => ({ value: String(row.id), label: row.name })));
+const routeOptions = computed(() => props.routes.map((row) => ({ value: String(row.id), label: [row.name, row.vehicle?.vehicle_no, formatMoney(row.monthly_fee)].filter(Boolean).join(' · ') })));
 const stopOptions = computed(() => {
     const selected = props.routes.find((row) => String(row.id) === form.transport_route_id);
 

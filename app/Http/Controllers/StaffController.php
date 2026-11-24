@@ -147,10 +147,8 @@ class StaffController extends Controller
 
         $payrollRuns = PayrollRun::with(['campus', 'month', 'items.staffProfile.user'])
             ->when(
-                $viewer && ! $viewer->isSuperAdmin() && $viewer->campusId(),
-                fn ($query) => $query->where(function ($q) use ($viewer) {
-                    $q->whereNull('campus_id')->orWhere('campus_id', $viewer->campusId());
-                })
+                $viewer?->campusId(),
+                fn ($query, $campusId) => $query->where('campus_id', $campusId)
             )
             ->latest()
             ->take(12)
@@ -380,6 +378,10 @@ class StaffController extends Controller
 
     public function generatePayroll(Request $request)
     {
+        if ($request->user()?->campusId() !== null) {
+            $request->merge(['campus_id' => $request->user()->campusId()]);
+        }
+
         $data = $request->validate([
             'campus_id' => 'nullable|exists:campuses,id',
             'payroll_month_id' => 'required|exists:months,id',
