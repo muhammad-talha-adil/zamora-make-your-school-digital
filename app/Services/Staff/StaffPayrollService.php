@@ -118,7 +118,7 @@ class StaffPayrollService
             $kept = $run->items()->get();
             foreach ($kept as $keptItem) {
                 $totals['gross'] += (float) $keptItem->gross_salary + (float) $keptItem->allowance_amount;
-                $totals['deductions'] += (float) $keptItem->deduction_amount;
+                $totals['deductions'] += $keptItem->totalDeductionAmount();
                 $totals['net'] += (float) $keptItem->net_salary;
             }
             $keptStaffIds = $kept->pluck('staff_profile_id')->all();
@@ -140,10 +140,11 @@ class StaffPayrollService
                 ]);
 
                 $this->applyAdvanceDeduction($item, $to);
+                $item->refresh();
 
                 $totals['gross'] += $figures['gross'];
-                $totals['deductions'] += $figures['deduction'];
-                $totals['net'] += $figures['net'];
+                $totals['deductions'] += $item->totalDeductionAmount();
+                $totals['net'] += (float) $item->net_salary;
             }
 
             $run->update([
@@ -176,7 +177,7 @@ class StaffPayrollService
             : $due;
 
         $newPaid = round((float) $item->amount_paid + $amount, 2);
-        $payable = round((float) $item->net_salary - (float) $item->advance_deduction_amount, 2);
+        $payable = round((float) $item->net_salary, 2);
 
         DB::transaction(function () use ($item, $data, $newPaid, $payable) {
             $item->update([
@@ -263,7 +264,10 @@ class StaffPayrollService
         }
 
         DB::transaction(function () use ($item, $advance, $installment, $monthEnd) {
-            $item->update(['advance_deduction_amount' => $installment]);
+            $item->update([
+                'advance_deduction_amount' => $installment,
+                'net_salary' => round((float) $item->net_salary - $installment, 2),
+            ]);
 
             $advance->update([
                 'balance_remaining' => round((float) $advance->balance_remaining - $installment, 2),

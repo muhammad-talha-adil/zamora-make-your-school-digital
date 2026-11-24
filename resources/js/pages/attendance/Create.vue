@@ -162,7 +162,7 @@
                     <table class="min-w-full divide-y divide-border">
                         <thead class="bg-muted">
                             <tr>
-                                <th class="px-2 md:px-4 py-2 md:py-3 text-left text-xs font-semibold text-muted-foreground uppercase w-12 md:w-16">Sr#</th>
+                                <th class="px-2 md:px-4 py-2 md:py-3 text-left text-xs font-semibold text-muted-foreground uppercase w-12 md:w-16">#</th>
                                 <th class="px-2 md:px-4 py-2 md:py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Student</th>
                                 <th class="px-2 md:px-4 py-2 md:py-3 text-left text-xs font-semibold text-muted-foreground uppercase hidden xl:table-cell">Admission No</th>
                                 <th class="px-2 md:px-4 py-2 md:py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Status</th>
@@ -194,6 +194,7 @@
                         <Icon v-if="isSubmitting" icon="loader" class="mr-1 animate-spin" />
                         {{ isSubmitting ? 'Submitting...' : 'Submit Attendance' }}
                     </Button>
+                    <p v-if="markError" class="mt-2 text-sm text-destructive">{{ markError }}</p>
                 </div>
             </div>
 
@@ -462,7 +463,18 @@ const applyGlobalTimes = () => {
     }
 };
 
+const markError = ref('');
+watch(() => formData.attendances.map((a) => a.attendance_status_id).join(','), () => { markError.value = ''; });
+
 const submitAttendance = () => {
+    if (!formData.attendances.some((a) => a.attendance_status_id)) {
+        markError.value = 'Mark at least one student.';
+        alert.warning(markError.value);
+
+        return;
+    }
+
+    markError.value = '';
     formData.campus_id = Number(selectedCampusId.value) || 0;
     formData.session_id = Number(selectedSessionId.value) || 0;
     formData.class_id = Number(selectedClassId.value) || 0;

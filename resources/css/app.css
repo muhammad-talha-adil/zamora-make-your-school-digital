@@ -511,3 +511,21 @@
 .swal2-popup {
     pointer-events: auto !important;
 }
+
+@media print {
+    body * {
+        visibility: hidden;
+    }
+
+    #class-report-print,
+    #class-report-print * {
+        visibility: visible;
+    }
+
+    #class-report-print {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+    }
+}

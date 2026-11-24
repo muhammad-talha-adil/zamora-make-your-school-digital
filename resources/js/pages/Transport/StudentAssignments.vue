@@ -226,7 +226,7 @@ const submit = async () => {
                             <th class="px-4 py-3 text-right font-medium">Monthly fee</th>
                             <th class="px-4 py-3 font-medium">From</th>
                             <th class="px-4 py-3 font-medium">Status</th>
-                            <th class="px-4 py-3 text-right font-medium">Action</th>
+                            <th class="px-4 py-3 text-right font-medium">Actions</th>
                         </tr>
                     </thead>
                     <tbody>
@@ -262,7 +262,7 @@ const submit = async () => {
                 <SearchableSelect v-model="form.student_id" :options="studentOptions" placeholder="Pick a student" :disabled="!!form.id" />
             </TransportField>
             <div class="grid gap-4 sm:grid-cols-2">
-                <TransportField label="Route" required :error="fieldErrors.transport_route_id">
+                <TransportField label="Route" required class="sm:col-span-2" :error="fieldErrors.transport_route_id">
                     <SearchableSelect v-model="form.transport_route_id" :options="routeOptions" placeholder="Pick a route" />
                 </TransportField>
                 <TransportField label="Stop" :error="fieldErrors.transport_stop_id">

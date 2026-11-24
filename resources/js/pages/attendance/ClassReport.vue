@@ -77,13 +77,17 @@
                         <Icon icon="file-text" class="mr-1" />
                         Generate Report
                     </Button>
+                    <Button v-if="showReport" variant="outline" @click="printReport">
+                        <Icon icon="printer" class="mr-1" />
+                        Print
+                    </Button>
                 </div>
             </div>
 
             <!-- Report Results -->
-            <div v-if="showReport" class="space-y-4">
+            <div v-if="showReport" id="class-report-print" class="space-y-4">
                 <!-- Summary Stats -->
-                <div class="grid grid-cols-2 md:grid-cols-5 gap-4">
+                <div class="grid grid-cols-2 md:grid-cols-6 gap-4">
                     <div class="bg-card rounded-lg border border-border p-4">
                         <div class="text-2xl font-bold text-foreground">{{ summary.length }}</div>
                         <div class="text-sm text-muted-foreground">Total Students</div>
@@ -99,6 +103,10 @@
                     <div class="bg-card rounded-lg border border-border p-4">
                         <div class="text-2xl font-bold text-warning">{{ totalLeave }}</div>
                         <div class="text-sm text-muted-foreground">Leave Days</div>
+                    </div>
+                    <div class="bg-card rounded-lg border border-border p-4">
+                        <div class="text-2xl font-bold text-primary">{{ totalLate }}</div>
+                        <div class="text-sm text-muted-foreground">Late Days</div>
                     </div>
                     <div class="bg-card rounded-lg border border-border p-4">
                         <div class="text-2xl font-bold text-primary">{{ attendancePercentage }}%</div>
@@ -239,13 +247,16 @@ const canGenerate = computed(() => {
 const totalPresent = computed(() => props.summary.reduce((sum, s) => sum + s.present, 0));
 const totalAbsent = computed(() => props.summary.reduce((sum, s) => sum + s.absent, 0));
 const totalLeave = computed(() => props.summary.reduce((sum, s) => sum + s.leave, 0));
+const totalLate = computed(() => props.summary.reduce((sum, s) => sum + s.late, 0));
 
 const attendancePercentage = computed(() => {
     if (!props.summary.length) return 0;
     const totalDays = props.summary.reduce((sum, s) => sum + s.total, 0);
     if (totalDays === 0) return 0;
-    return Math.round((totalPresent.value / totalDays) * 100);
+    return Math.round(((totalPresent.value + totalLate.value) / totalDays) * 100);
 });
+
+const printReport = () => window.print();
 
 const generateReport = () => {
     if (!canGenerate.value) return;
@@ -269,7 +280,7 @@ const generateReport = () => {
 
 const getPercentage = (student: any): number => {
     if (student.total === 0) return 0;
-    return Math.round((student.present / student.total) * 100);
+    return Math.round(((student.present + student.late) / student.total) * 100);
 };
 
 const getPercentageClass = (student: any): string => {

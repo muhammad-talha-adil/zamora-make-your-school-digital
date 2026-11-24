@@ -59,6 +59,37 @@ class AttendanceService
     }
 
     /**
+     * Every holiday name falling on a date, joined by ", " — two holidays
+     * sharing a day both show in the banner, not just the first one found.
+     */
+    public function holidayTitles(string $date, ?int $campusId = null): ?string
+    {
+        $holiday = $this->getHoliday($date, $campusId);
+
+        if (! $holiday) {
+            return null;
+        }
+
+        $titles = Holiday::where(function ($query) use ($campusId) {
+            $query->where('is_national', true)
+                ->orWhere(function ($q) use ($campusId) {
+                    if ($campusId) {
+                        $q->where('campus_id', $campusId);
+                    }
+                });
+        })
+            ->whereDate('start_date', '<=', $date)
+            ->whereDate('end_date', '>=', $date)
+            ->where(fn ($q) => $q->whereNull('recurrence_type')->orWhere('recurrence_type', 'none'))
+            ->orderBy('id')
+            ->pluck('title')
+            ->unique()
+            ->values();
+
+        return $titles->isEmpty() ? $holiday->title : $titles->implode(', ');
+    }
+
+    /**
      * Get holiday details for a date and campus.
      * Uses caching for performance.
      * Includes support for recurring holidays.
@@ -173,8 +204,8 @@ class AttendanceService
     {
         return StudentLeave::where('student_id', $studentId)
             ->approved()
-            ->where('start_date', '<=', $date)
-            ->where('end_date', '>=', $date)
+            ->whereDate('start_date', '<=', $date)
+            ->whereDate('end_date', '>=', $date)
             ->first();
     }
 
@@ -416,7 +447,16 @@ class AttendanceService
             }
         }
 
-        return $students->map(function ($student) use ($existingAttendance) {
+        $leaveStatusId = $this->getStatusId(AttendanceStatusCode::LEAVE->value);
+        $leavesByStudent = StudentLeave::query()
+            ->whereIn('student_id', $students->pluck('id'))
+            ->approved()
+            ->whereDate('start_date', '<=', $onDate)
+            ->whereDate('end_date', '>=', $onDate)
+            ->get()
+            ->keyBy('student_id');
+
+        return $students->map(function ($student) use ($existingAttendance, $leavesByStudent, $leaveStatusId) {
             // Get name from user relationship or fallback to Student #
             $studentName = 'Student #'.$student->registration_no;
             if ($student->user && ! empty($student->user->name)) {
@@ -425,6 +465,20 @@ class AttendanceService
 
             // Check if this student has existing attendance
             $existingRecord = $existingAttendance[$student->id] ?? null;
+            $approvedLeave = $leavesByStudent->get($student->id);
+
+            if ($existingRecord === null && $approvedLeave && $leaveStatusId) {
+                $prefilled = [
+                    'id' => null,
+                    'attendance_status_id' => $leaveStatusId,
+                    'attendance_status_code' => AttendanceStatusCode::LEAVE->value,
+                    'leave_type_id' => $approvedLeave->leave_type_id ?? null,
+                    'check_in' => null,
+                    'check_out' => null,
+                    'remarks' => null,
+                    'student_leave_id' => $approvedLeave->id,
+                ];
+            }
 
             return [
                 'id' => $student->id,
@@ -435,7 +489,7 @@ class AttendanceService
                 'current_enrollment' => $student->currentEnrollment,
                 'student_leaves' => $student->studentLeaves,
                 // Existing attendance data
-                'existing_attendance' => $existingRecord,
+                'existing_attendance' => $existingRecord ?? ($prefilled ?? null),
                 'has_existing_attendance' => $existingRecord !== null,
             ];
         });

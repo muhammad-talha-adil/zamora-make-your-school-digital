@@ -2,8 +2,10 @@
 
 namespace App\Http\Requests\Attendance;
 
+use App\Enums\AttendanceStatusCode;
 use App\Models\AttendanceTiming;
 use App\Models\Section;
+use App\Services\AttendanceService;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Support\Carbon;
@@ -35,6 +37,39 @@ class StoreBulkAttendanceRequest extends FormRequest
         // Authorisation is the controller's: it has to check `update` against
         // each register that already exists, which is what enforces the lock.
         return true;
+    }
+
+    /**
+     * A row sent without a status for a child on approved leave that day is
+     * saved as Leave rather than rejected.
+     */
+    protected function prepareForValidation(): void
+    {
+        $date = $this->input('attendance_date');
+        $rows = $this->input('attendances');
+
+        if (! is_array($rows) || ! $date || strtotime((string) $date) === false) {
+            return;
+        }
+
+        $service = app(AttendanceService::class);
+        $leaveStatusId = $service->getStatusId(AttendanceStatusCode::LEAVE->value);
+
+        if (! $leaveStatusId) {
+            return;
+        }
+
+        foreach ($rows as $index => $row) {
+            if (! empty($row['attendance_status_id']) || empty($row['student_id'])) {
+                continue;
+            }
+
+            if ($service->detectStudentLeave((int) $row['student_id'], (string) $date)) {
+                $rows[$index]['attendance_status_id'] = $leaveStatusId;
+            }
+        }
+
+        $this->merge(['attendances' => $rows]);
     }
 
     /**

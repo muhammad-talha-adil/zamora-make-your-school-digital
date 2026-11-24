@@ -12,9 +12,6 @@
                         <div class="font-medium text-foreground">
                             {{ formatDate(attendance.attendance_date) }}
                         </div>
-                        <div class="text-xs text-muted-foreground">
-                            {{ attendance.campus?.name }}
-                        </div>
                     </div>
                     <span
                         :class="[
@@ -80,7 +77,6 @@
                         <tr>
                             <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase w-16">#</th>
                             <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">Date</th>
-                            <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">Campus</th>
                             <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">Class / Section</th>
                             <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">Stats</th>
                             <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">Status</th>
@@ -94,9 +90,6 @@
                             </td>
                             <td class="px-4 py-3 whitespace-nowrap">
                                 <div class="text-sm font-medium text-foreground">{{ formatDate(attendance.attendance_date) }}</div>
-                            </td>
-                            <td class="px-4 py-3 whitespace-nowrap">
-                                <div class="text-sm text-muted-foreground">{{ attendance.campus?.name }}</div>
                             </td>
                             <td class="px-4 py-3 whitespace-nowrap">
                                 <div class="text-sm text-muted-foreground">{{ attendance.class?.name }}</div>

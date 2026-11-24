@@ -1,14 +1,6 @@
 <template>
     <FilterCard>
-        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-2 md:gap-3">
-            <!-- Campus Filter -->
-            <SearchableSelect
-                v-model="filters.campus_id"
-                :options="campusOptions"
-                placeholder="All Campuses"
-                clearable
-            />
-
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2 md:gap-3">
             <!-- Session Filter -->
             <SearchableSelect
                 v-model="filters.session_id"
@@ -77,7 +69,7 @@ import SearchableSelect from '@/components/ui/searchable-select/SearchableSelect
 import type { Campus, Session, SchoolClass, Section, AttendanceFilters } from '@/types/attendance';
 
 interface Props {
-    campuses: Campus[];
+    campuses?: Campus[];
     sessions: Session[];
     classes: SchoolClass[];
     sections: Section[];
@@ -87,7 +79,6 @@ interface Props {
 const props = defineProps<Props>();
 
 const filters = reactive<AttendanceFilters>({
-    campus_id: props.filters?.campus_id || '',
     session_id: props.filters?.session_id || '',
     class_id: props.filters?.class_id || '',
     section_id: props.filters?.section_id || '',
@@ -105,7 +96,6 @@ const filteredSections = computed(() => {
     );
 });
 
-const campusOptions = computed(() => props.campuses.map((campus) => ({ value: campus.id, label: campus.name })));
 const sessionOptions = computed(() => props.sessions.map((session) => ({ value: session.id, label: session.name })));
 const classOptions = computed(() => props.classes.map((cls) => ({ value: cls.id, label: cls.name })));
 const sectionOptions = computed(() => filteredSections.value.map((section) => ({ value: section.id, label: section.name })));
@@ -122,7 +112,6 @@ const onClassChange = () => {
 const buildQueryString = () => {
     const params = new URLSearchParams();
     params.append('load', '1'); // Mark as loaded
-    if (filters.campus_id) params.append('campus_id', filters.campus_id);
     if (filters.session_id) params.append('session_id', filters.session_id);
     if (filters.class_id) params.append('class_id', filters.class_id);
     if (filters.section_id) params.append('section_id', filters.section_id);
@@ -138,7 +127,6 @@ const applyFilters = () => {
 };
 
 const resetFilters = () => {
-    filters.campus_id = '';
     filters.session_id = '';
     filters.class_id = '';
     filters.section_id = '';

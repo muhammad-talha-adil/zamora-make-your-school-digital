@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Staff\UpdateStaffPersonalRequest;
 use App\Models\Campus;
 use App\Models\Gender;
+use App\Models\PayrollRunItem;
 use App\Models\Permission;
 use App\Models\Role;
 use App\Models\School;
@@ -181,6 +182,20 @@ class StaffProfileController extends Controller
                 ->whereNotNull('ended_on')
                 ->orderByDesc('ended_on')
                 ->get(),
+            'payrollHistory' => $request->user()?->can('viewSalary', $staffProfile)
+                ? PayrollRunItem::query()
+                    ->where('staff_profile_id', $staffProfile->id)
+                    ->with('payrollRun.month:id,name')
+                    ->latest('id')
+                    ->get()
+                    ->map(fn (PayrollRunItem $item) => [
+                        'id' => $item->id,
+                        'period' => trim(($item->payrollRun?->month?->name ?? '').' '.($item->payrollRun?->payroll_year ?? '')),
+                        'net_salary' => (float) $item->net_salary,
+                        'amount_paid' => (float) $item->amount_paid,
+                        'status' => $item->status,
+                    ])->values()
+                : [],
             'classes' => $this->teaching->classesOf($staffProfile),
             'serviceMonths' => $this->employment->serviceMonths($staffProfile),
 

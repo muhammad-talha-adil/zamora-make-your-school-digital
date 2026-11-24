@@ -38,6 +38,7 @@ interface PayrollItem {
     gross_salary: number | string;
     allowance_amount: number | string;
     deduction_amount: number | string;
+    total_deduction_amount?: number | string;
     net_salary: number | string;
     amount_paid?: number | string;
     advance_deduction_amount?: number | string;
@@ -179,8 +180,7 @@ const payDialog = reactive({
 });
 
 const amountDue = (item: PayrollItem) => {
-    const payable = Number(item.net_salary || 0) - Number(item.advance_deduction_amount || 0);
-    return Math.max(payable - Number(item.amount_paid || 0), 0);
+    return Math.max(Number(item.net_salary || 0) - Number(item.amount_paid || 0), 0);
 };
 
 const openPayDialog = (item: PayrollItem) => {
@@ -273,7 +273,7 @@ const onAdvanceGiven = () => {
                             </div>
                             <div class="min-w-0">
                                 <h3 class="truncate text-base font-semibold text-foreground">{{ run.month?.name || 'Month' }} {{ run.payroll_year }}</h3>
-                                <p class="mt-0.5 truncate text-sm text-muted-foreground">{{ run.title }} &middot; {{ run.campus?.name || 'All Campuses' }}</p>
+                                <p class="mt-0.5 truncate text-sm text-muted-foreground">{{ run.title }}</p>
                             </div>
                         </div>
 
@@ -306,13 +306,13 @@ const onAdvanceGiven = () => {
                     </div>
 
                     <div v-if="expandedRunId === run.id" class="overflow-x-auto">
-                        <table class="min-w-full divide-y divide-border">
+                        <table class="w-full divide-y divide-border">
                             <thead class="bg-muted">
                                 <tr>
                                     <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">#</th>
                                     <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Staff</th>
-                                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Basic</th>
-                                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Allowance</th>
+                                    <th class="hidden px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground lg:table-cell">Basic</th>
+                                    <th class="hidden px-3 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground lg:table-cell">Allowance</th>
                                     <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Deduction</th>
                                     <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Net</th>
                                     <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Status</th>
@@ -322,20 +322,20 @@ const onAdvanceGiven = () => {
                             <tbody class="divide-y divide-border bg-card">
                                 <tr v-for="(item, itemIndex) in run.items" :key="item.id" class="hover:bg-accent">
                                     <td class="px-4 py-3 text-sm text-muted-foreground">{{ itemIndex + 1 }}</td>
-                                    <td class="min-w-[10rem] px-4 py-3">
+                                    <td class="px-3 py-3">
                                         <div class="font-medium text-foreground">{{ item.staff_profile?.user?.name || '-' }}</div>
                                         <div class="text-xs text-muted-foreground">{{ item.staff_profile?.employee_no || '-' }}</div>
                                         <div v-if="item.notes" class="text-xs text-warning">{{ item.notes }}</div>
                                     </td>
-                                    <td class="whitespace-nowrap px-4 py-3 text-sm text-muted-foreground">{{ formatMoney(item.gross_salary) }}</td>
-                                    <td class="whitespace-nowrap px-4 py-3 text-sm text-muted-foreground">{{ formatMoney(item.allowance_amount) }}</td>
-                                    <td class="px-4 py-3 text-sm text-destructive">{{ formatMoney(item.deduction_amount) }}</td>
+                                    <td class="hidden whitespace-nowrap px-3 py-3 text-sm text-muted-foreground lg:table-cell">{{ formatMoney(item.gross_salary) }}</td>
+                                    <td class="hidden whitespace-nowrap px-3 py-3 text-sm text-muted-foreground lg:table-cell">{{ formatMoney(item.allowance_amount) }}</td>
+                                    <td class="px-4 py-3 text-sm text-destructive">{{ formatMoney(item.total_deduction_amount ?? item.deduction_amount) }}</td>
                                     <td class="px-4 py-3 text-sm font-medium text-primary">{{ formatMoney(item.net_salary) }}</td>
                                     <td class="px-4 py-3">
                                         <span :class="item.status === 'paid' ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'" class="inline-flex rounded-full px-2.5 py-1 text-xs font-medium uppercase">{{ item.status }}</span>
                                     </td>
                                     <td class="px-4 py-3">
-                                        <div class="flex flex-nowrap justify-end gap-2 whitespace-nowrap">
+                                        <div class="flex flex-col items-end gap-2 whitespace-nowrap 2xl:flex-row 2xl:justify-end">
                                             <Button variant="outline" size="sm" @click="router.visit(route('staff.payroll.items.slip', item.id))">
                                                 <Icon icon="printer" class="mr-1.5 h-3.5 w-3.5" />
                                                 Salary slip

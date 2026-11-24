@@ -111,3 +111,43 @@ it('stops future deductions once an advance is returned early', function () {
     $item = PayrollRunItem::where('staff_profile_id', $staff->id)->firstOrFail();
     expect((float) $item->advance_deduction_amount)->toBe(0.0);
 });
+
+it('keeps item net, run totals, slip and amount due on one figure when an advance is deducted', function () {
+    $staff = $this->world->person('Bilal Khan', salary: 50000);
+    $actor = $this->world->school->actor;
+
+    $this->actingAs($actor)->postJson(route('staff.advances.store'), [
+        'staff_profile_id' => $staff->id,
+        'amount' => 30000,
+        'disbursed_date' => '2026-04-01',
+        'monthly_deduction_amount' => 2000,
+    ])->assertSuccessful();
+
+    $this->actingAs($actor)->postJson(route('staff.payroll.generate'), [
+        'payroll_month_id' => $this->april->id,
+        'payroll_year' => 2026,
+    ])->assertSuccessful();
+
+    $item = PayrollRunItem::firstOrFail();
+    $run = $item->payrollRun;
+
+    $expectedNet = (float) $item->gross_salary + (float) $item->allowance_amount
+        - (float) $item->deduction_amount - (float) $item->advance_deduction_amount;
+
+    expect((float) $item->net_salary)->toBe($expectedNet)
+        ->and($item->amountDue())->toBe($expectedNet)
+        ->and($item->totalDeductionAmount())->toBe((float) $item->deduction_amount + 2000.0)
+        ->and((float) $run->total_net)->toBe($expectedNet)
+        ->and((float) $run->total_deductions)->toBe($item->totalDeductionAmount());
+
+    $this->actingAs($actor)->get(route('staff.payroll.items.slip', $item))
+        ->assertInertia(fn ($page) => $page
+            ->where('slip.net_salary', (int) $expectedNet)
+            ->where('slip.amount_due', (int) $expectedNet));
+
+    $this->actingAs($actor)->postJson(route('staff.payroll.items.pay', $item), ['payment_method' => 'bank'])
+        ->assertSuccessful();
+
+    expect((float) $item->fresh()->amount_paid)->toBe($expectedNet)
+        ->and($item->fresh()->status)->toBe('paid');
+});

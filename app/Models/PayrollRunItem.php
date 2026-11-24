@@ -27,6 +27,8 @@ class PayrollRunItem extends Model
         'notes',
     ];
 
+    protected $appends = ['total_deduction_amount'];
+
     protected $casts = [
         'gross_salary' => 'decimal:2',
         'allowance_amount' => 'decimal:2',
@@ -36,6 +38,11 @@ class PayrollRunItem extends Model
         'advance_deduction_amount' => 'decimal:2',
         'paid_at' => 'datetime',
     ];
+
+    public function getTotalDeductionAmountAttribute(): float
+    {
+        return $this->totalDeductionAmount();
+    }
 
     public function payrollRun(): BelongsTo
     {
@@ -53,14 +60,21 @@ class PayrollRunItem extends Model
     }
 
     /**
-     * What is still owed on this item: the net salary, minus whatever advance
-     * installment already reduced what is payable, minus what has actually
-     * been paid so far.
+     * Every deduction taken from this item: the regular ones plus the advance
+     * instalment. `net_salary` is already net of both, so
+     * gross + allowances - totalDeductionAmount() === net_salary.
+     */
+    public function totalDeductionAmount(): float
+    {
+        return round((float) $this->deduction_amount + (float) $this->advance_deduction_amount, 2);
+    }
+
+    /**
+     * What is still owed on this item: the net salary (already after the
+     * advance instalment) minus what has actually been paid so far.
      */
     public function amountDue(): float
     {
-        $payable = (float) $this->net_salary - (float) $this->advance_deduction_amount;
-
-        return max(round($payable - (float) $this->amount_paid, 2), 0.0);
+        return max(round((float) $this->net_salary - (float) $this->amount_paid, 2), 0.0);
     }
 }

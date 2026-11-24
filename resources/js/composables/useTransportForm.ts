@@ -84,13 +84,13 @@ interface RouteOptionSource {
 }
 
 /**
- * Dropdown options for transport routes: "Name – Vehicle • Rs fee/mo".
+ * Dropdown options for transport routes: "Name • Rs fee/mo – Vehicle" (fee first so a narrow select never cuts it).
  * Two routes that still read the same get their number appended so they
  * can be told apart.
  */
 export const buildRouteOptions = (routes: RouteOptionSource[]): { value: string; label: string }[] => {
     const labels = routes.map(
-        (row) => `${row.name} – ${row.vehicle?.vehicle_no ?? 'No vehicle'} • ${formatMoney(row.monthly_fee)}/mo`,
+        (row) => `${row.name} • ${formatMoney(row.monthly_fee)}/mo – ${row.vehicle?.vehicle_no ?? 'No vehicle'}`,
     );
 
     return routes.map((row, index) => ({

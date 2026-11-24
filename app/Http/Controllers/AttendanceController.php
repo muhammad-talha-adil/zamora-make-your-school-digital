@@ -355,7 +355,7 @@ class AttendanceController extends Controller
         $selectedSessionId = $request->filled('session_id') ? $request->session_id : null;
         $selectedClassId = $request->filled('class_id') ? $request->class_id : null;
         // Handle empty string for "all sections" - use special value to indicate all sections
-        $selectedSectionId = $request->has('section_id') && $request->section_id !== '' ? $request->section_id : 'all';
+        $selectedSectionId = $request->filled('section_id') ? $request->section_id : 'all';
         $selectedDate = $request->filled('date') ? $request->date : now()->toDateString();
 
         // Check if selected date is a Sunday
@@ -402,7 +402,7 @@ class AttendanceController extends Controller
             'selectedDate' => $selectedDate,
             'isSunday' => $isSunday,
             'holiday' => $holiday ? [
-                'title' => $holiday->title,
+                'title' => $this->attendanceService->holidayTitles($selectedDate, $selectedCampusId) ?? $holiday->title,
                 'start_date' => $holiday->start_date,
                 'end_date' => $holiday->end_date,
                 'is_national' => $holiday->is_national,

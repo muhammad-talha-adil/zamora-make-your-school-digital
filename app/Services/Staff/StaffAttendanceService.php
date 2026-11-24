@@ -3,6 +3,7 @@
 namespace App\Services\Staff;
 
 use App\Enums\AttendanceStatusCode;
+use App\Models\AttendancePolicy;
 use App\Models\Staff\StaffAttendance;
 use App\Models\StaffProfile;
 use App\Models\User;
@@ -161,6 +162,7 @@ class StaffAttendanceService
             ->get();
 
         $expected = $this->workingDays->workingDaysBetween($from, $to, $staff->campus_id);
+        $unmarked = $this->unmarkedWorkingDays($staff, $from, $to, $rows->map(fn (StaffAttendance $r) => $r->attendance_date->toDateString())->all());
 
         return [
             'present' => $rows->filter(fn (StaffAttendance $r) => $r->status?->hasCode(AttendanceStatusCode::PRESENT))->count(),
@@ -169,7 +171,29 @@ class StaffAttendanceService
             'late' => $rows->filter(fn (StaffAttendance $r) => $r->status?->hasCode(AttendanceStatusCode::LATE))->count(),
             'expected_days' => $expected,
             'marked_days' => $rows->count(),
-            'unmarked_days' => max($expected - $rows->count(), 0),
+            'unmarked_days' => $unmarked,
         ];
+    }
+
+    /**
+     * Working days up to today with no record: the weekly off and holidays are
+     * not working days, and days still to come cannot be missing yet.
+     *
+     * @param  array<int, string>  $markedDates
+     */
+    private function unmarkedWorkingDays(StaffProfile $staff, Carbon $from, Carbon $to, array $markedDates): int
+    {
+        $policy = AttendancePolicy::resolve($staff->campus_id, null);
+        $last = $to->copy()->min(today());
+        $marked = array_flip($markedDates);
+        $count = 0;
+
+        for ($date = $from->copy(); $date->lessThanOrEqualTo($last); $date->addDay()) {
+            if (! isset($marked[$date->toDateString()]) && $this->workingDays->isWorkingDay($date, $policy, $staff->campus_id)) {
+                $count++;
+            }
+        }
+
+        return $count;
     }
 }

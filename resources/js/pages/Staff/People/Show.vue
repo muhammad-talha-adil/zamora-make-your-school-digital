@@ -119,6 +119,7 @@ interface Props {
     subjectOptions: Lookup[];
     classOptions: Lookup[];
     sessions: Lookup[];
+    payrollHistory: { id: number; period: string; net_salary: number; amount_paid: number; status: string }[];
     can: {
         isOwn: boolean;
         edit: boolean;
@@ -161,7 +162,7 @@ const sessionOptions = computed(() => props.sessions.map((s) => ({ value: String
 const classSelectOptions = computed(() => props.classOptions.map((c) => ({ value: String(c.id), label: c.name })));
 const subjectSelectOptions = computed(() => props.subjectOptions.map((s) => ({ value: String(s.id), label: s.name })));
 
-type TabKey = 'personal' | 'jobs' | 'leave' | 'salary' | 'advances';
+type TabKey = 'personal' | 'jobs' | 'leave' | 'salary' | 'advances' | 'payroll';
 const activeTab = ref<TabKey>('personal');
 
 const tabs: { key: TabKey; label: string; icon: any; show: boolean }[] = [
@@ -170,6 +171,7 @@ const tabs: { key: TabKey; label: string; icon: any; show: boolean }[] = [
     { key: 'leave', label: 'Leave', icon: 'calendar-x', show: props.can.viewAttendance || props.can.applyForLeave },
     { key: 'salary', label: 'Salary', icon: 'wallet', show: props.can.viewSalary },
     { key: 'advances', label: 'Advances', icon: 'banknote', show: props.can.viewSalary },
+    { key: 'payroll', label: 'Payroll', icon: 'receipt', show: props.can.viewSalary },
 ];
 
 const formatMoney = (amount: number | string | null | undefined) => {
@@ -1198,6 +1200,42 @@ const activeJobsCount = computed(() => props.jobs.length);
             </div>
 
             <!-- Advances & Payments -->
+            <div v-if="activeTab === 'payroll'" class="space-y-4">
+                <h2 class="text-lg font-semibold text-foreground">Payroll History</h2>
+                <div class="overflow-x-auto rounded-2xl border border-border bg-card shadow-sm">
+                    <table class="min-w-full divide-y divide-border">
+                        <thead class="bg-muted">
+                            <tr>
+                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase text-muted-foreground">#</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase text-muted-foreground">Month</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase text-muted-foreground">Net</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase text-muted-foreground">Paid</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase text-muted-foreground">Status</th>
+                                <th class="px-4 py-3 text-right text-xs font-semibold uppercase text-muted-foreground">Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-border">
+                            <tr v-for="(row, rowIndex) in props.payrollHistory" :key="row.id">
+                                <td class="px-4 py-3 text-sm text-muted-foreground">{{ rowIndex + 1 }}</td>
+                                <td class="px-4 py-3 text-sm text-foreground">{{ row.period }}</td>
+                                <td class="px-4 py-3 text-sm font-medium text-primary">{{ formatMoney(row.net_salary) }}</td>
+                                <td class="px-4 py-3 text-sm text-muted-foreground">{{ formatMoney(row.amount_paid) }}</td>
+                                <td class="px-4 py-3">
+                                    <span :class="row.status === 'paid' ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'" class="inline-flex rounded-full px-2.5 py-1 text-xs font-medium uppercase">{{ row.status }}</span>
+                                </td>
+                                <td class="px-4 py-3 text-right">
+                                    <Button variant="outline" size="sm" @click="router.visit(route('staff.payroll.items.slip', row.id))">
+                                        <Icon icon="printer" class="mr-1.5 h-3.5 w-3.5" />
+                                        Salary slip
+                                    </Button>
+                                </td>
+                            </tr>
+                            <tr v-if="props.payrollHistory.length === 0"><td colspan="6" class="px-4 py-6 text-center text-sm text-muted-foreground">No payroll yet.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
             <div v-if="activeTab === 'advances'" class="space-y-4">
                 <div class="flex items-center justify-between">
                     <h2 class="text-lg font-semibold text-foreground">Advances & Payments</h2>

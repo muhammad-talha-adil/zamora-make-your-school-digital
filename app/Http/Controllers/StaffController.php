@@ -98,11 +98,19 @@ class StaffController extends Controller
                 'pending_payroll' => $pendingPayroll,
                 'present_today' => StaffAttendance::whereDate('attendance_date', $today)
                     ->whereHas('staffProfile', fn ($q) => $q->visibleTo($viewer))
-                    ->whereHas('status', fn ($q) => $q->where('code', '!=', 'A'))
+                    ->whereHas('status', fn ($q) => $q->whereIn('code', ['P', 'LT', 'HD']))
                     ->count(),
-                'on_leave_today' => StaffLeave::approved()
-                    ->overlapping($today, $today)
+                'on_leave_today' => StaffAttendance::whereDate('attendance_date', $today)
                     ->whereHas('staffProfile', fn ($q) => $q->visibleTo($viewer))
+                    ->whereHas('status', fn ($q) => $q->where('code', 'L'))
+                    ->pluck('staff_profile_id')
+                    ->merge(
+                        StaffLeave::approved()
+                            ->overlapping($today, $today)
+                            ->whereHas('staffProfile', fn ($q) => $q->visibleTo($viewer))
+                            ->pluck('staff_profile_id')
+                    )
+                    ->unique()
                     ->count(),
                 'pending_leave_requests' => StaffLeave::where('status', StaffLeave::STATUS_PENDING)
                     ->whereHas('staffProfile', fn ($q) => $q->visibleTo($viewer))

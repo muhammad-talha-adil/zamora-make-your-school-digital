@@ -56,7 +56,7 @@ class StaffAttendanceController extends Controller
             'staff' => $staff,
             'existing' => $existing,
             'date' => $date,
-            'holiday' => $holiday ? ['title' => $holiday->title] : null,
+            'holiday' => $holiday ? ['title' => $this->studentAttendance->holidayTitles(Carbon::parse($date)->toDateString(), $request->user()->campusId()) ?? $holiday->title] : null,
             'statuses' => AttendanceStatus::orderBy('name')->get(['id', 'name', 'code']),
         ]);
     }
