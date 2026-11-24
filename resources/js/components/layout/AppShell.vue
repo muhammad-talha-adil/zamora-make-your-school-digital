@@ -230,7 +230,7 @@
       </header>
 
       <!-- Main Content -->
-      <main class="flex-1 min-w-0 p-4 sm:p-6 overflow-y-auto overflow-x-hidden" :style="{ backgroundColor: 'var(--content-bg)', color: 'var(--content-text)' }">
+      <main class="flex flex-1 flex-col min-w-0 p-4 sm:p-6 overflow-y-auto overflow-x-hidden" :style="{ backgroundColor: 'var(--content-bg)', color: 'var(--content-text)' }">
         <div
           v-if="pageProps.hasCampuses === false"
           class="mb-4 flex items-start gap-3 rounded-lg border border-warning/40 bg-warning/10 p-4"
@@ -286,7 +286,7 @@
 
         <slot />
 
-        <FooterBar class="-mx-4 -mb-4 mt-6 sm:-mx-6 sm:-mb-6" />
+        <div class="mt-auto pt-6 -mx-4 -mb-4 sm:-mx-6 sm:-mb-6"><FooterBar /></div>
       </main>
     </div>
   </div>
