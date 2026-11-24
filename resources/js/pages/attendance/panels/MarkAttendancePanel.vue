@@ -1,17 +1,5 @@
 <template>
     <div class="space-y-4 md:space-y-6">
-        <!-- Header -->
-        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 md:gap-4">
-            <div>
-                <h1 class="text-lg md:text-2xl font-bold text-foreground">
-                    Mark Attendance
-                </h1>
-                <p class="mt-1 text-xs md:text-sm text-muted-foreground">
-                    Record attendance for students
-                </p>
-            </div>
-        </div>
-
         <!-- Selection Form -->
         <div class="bg-card rounded-lg border border-border p-4 md:p-6">
             <!-- Mobile: Stacked filters, Desktop: Horizontal -->
@@ -76,7 +64,7 @@
             </div>
 
             <!-- Bulk Actions and Global Check In/Out -->
-            <div class="mt-6 flex flex-col gap-4">
+            <div v-if="students.length > 0" class="mt-6 flex flex-col gap-4">
                 <!-- Bulk Action Buttons -->
                 <div class="flex flex-wrap gap-2">
                     <Button variant="outline" size="sm" @click="markAllPresent">Mark All Present</Button>
@@ -85,8 +73,8 @@
                 </div>
 
                 <!-- Global Check In/Out Times -->
-                <div class="flex flex-col sm:flex-row gap-3 sm:items-end">
-                    <div class="flex-1">
+                <div class="grid grid-cols-1 gap-3 sm:grid-cols-[1fr_1fr_auto] sm:items-end">
+                    <div class="min-w-0">
                         <label class="block text-sm font-medium text-muted-foreground mb-1">Global Check In</label>
                         <input
                             v-model="globalCheckIn"
@@ -94,7 +82,7 @@
                             class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm"
                         />
                     </div>
-                    <div class="flex-1">
+                    <div class="min-w-0">
                         <label class="block text-sm font-medium text-muted-foreground mb-1">Global Check Out</label>
                         <input
                             v-model="globalCheckOut"
@@ -105,7 +93,7 @@
                             :class="{ 'opacity-50 cursor-not-allowed': checkoutDisabled }"
                         />
                     </div>
-                    <Button variant="secondary" size="sm" @click="applyGlobalTimes" class="w-full sm:w-auto">Apply Times</Button>
+                    <Button variant="secondary" @click="applyGlobalTimes" class="w-full sm:w-auto">Apply Times</Button>
                 </div>
                 <p v-if="props.shiftTiming" class="text-xs text-muted-foreground">
                     Shift "{{ props.shiftTiming.name }}": {{ props.shiftTiming.check_in }}
@@ -197,7 +185,7 @@
         <!-- No Students Message -->
         <div v-else-if="selectedClassId && selectedSectionId" class="bg-card rounded-lg border border-border p-6 md:p-8 text-center">
             <Icon icon="users" class="h-10 w-10 md:h-12 md:w-12 text-muted-foreground mx-auto mb-3 md:mb-4" />
-            <p class="text-sm md:text-base text-muted-foreground">No students found for the selected class and section.</p>
+            <p class="text-sm md:text-base text-muted-foreground">{{ isFutureSelected ? 'Attendance cannot be marked for a future date.' : 'No students found for the selected class and section.' }}</p>
         </div>
     </div>
 </template>
@@ -384,6 +372,7 @@ const formatDate = (date: string) => {
 
 const todayIso = () => new Date().toISOString().split('T')[0];
 const futureDateError = ref('');
+const isFutureSelected = computed(() => selectedDate.value > todayIso());
 watch(selectedDate, () => { futureDateError.value = ''; });
 
 const loadStudents = () => {
