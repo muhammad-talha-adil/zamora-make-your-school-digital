@@ -8,6 +8,8 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import { Button } from '@/components/ui/button';
 import type { BreadcrumbItem } from '@/types';
 import { formatDate } from '@/utils/date';
+import { formatCurrency } from '@/utils/currency';
+import Icon from '@/components/Icon.vue';
 import InventoryTypeForm from '@/components/forms/InventoryTypeForm.vue';
 import SupplierForm from '@/components/forms/inventory/SupplierForm.vue';
 import ItemForm from '@/components/forms/inventory/ItemForm.vue';
@@ -296,7 +298,7 @@ const statCards = computed(() => [
     },
     {
         title: 'Value',
-        value: `$${stats.value.totalPurchaseValue.toLocaleString()}`,
+        value: formatCurrency(stats.value.totalPurchaseValue, { minimumFractionDigits: 0, maximumFractionDigits: 0 }),
         icon: 'dollar-sign',
         color: 'text-success',
         bgColor: 'bg-success/10',

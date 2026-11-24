@@ -263,7 +263,7 @@
                                         {{ getPrimaryGuardian(student).guardian?.user?.name || getPrimaryGuardian(student).relation?.name || 'Guardian' }}
                                     </div>
                                     <div v-if="getPrimaryGuardian(student)?.guardian?.phone" class="text-xs text-muted-foreground">
-                                        {{ getPrimaryGuardian(student).guardian.phone }}
+                                        {{ formatPhone(getPrimaryGuardian(student).guardian.phone) }}
                                     </div>
                                     <span v-if="!getPrimaryGuardian(student)" class="text-xs text-muted-foreground">No guardians</span>
                                 </td>
@@ -328,6 +328,7 @@
 </template>
 
 <script setup lang="ts">
+import { formatPhone } from '@/utils/phone';
 import { Head, router } from '@inertiajs/vue3';
 import { computed, reactive, ref, watch } from 'vue';
 import { debounce } from 'lodash';

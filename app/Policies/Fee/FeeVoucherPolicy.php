@@ -3,6 +3,7 @@
 namespace App\Policies\Fee;
 
 use App\Models\Fee\FeeVoucher;
+use App\Models\Student;
 use App\Models\User;
 use App\Policies\Concerns\ChecksSchoolReach;
 use Illuminate\Auth\Access\HandlesAuthorization;
@@ -53,7 +54,11 @@ class FeeVoucherPolicy
             return $this->may($user, 'fee.view.own', 'fee.view', 'fee.voucher.view');
         }
 
-        return $this->may($user, 'fee.view', 'fee.voucher.view');
+        if (! $this->may($user, 'fee.view', 'fee.voucher.view')) {
+            return false;
+        }
+
+        return $this->reaches($user, Student::find($studentId)?->currentEnrollment?->campus_id);
     }
 
     /**

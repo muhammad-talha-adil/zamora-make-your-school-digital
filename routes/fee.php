@@ -297,6 +297,7 @@ Route::prefix('fee')->name('fee.')->middleware([...$middleware, 'campus.exists']
     });
 
     // ==================== DASHBOARD ====================
+    Route::redirect('/', '/fee/dashboard');
     Route::get('/dashboard', [FeeDashboardController::class, 'index'])->name('dashboard')
         ->middleware('permission:fee.view');
     Route::get('/dashboard/stats', [FeeDashboardController::class, 'stats'])->name('dashboard.stats')

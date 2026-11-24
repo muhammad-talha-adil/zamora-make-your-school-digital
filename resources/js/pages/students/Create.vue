@@ -943,6 +943,19 @@ if (!form.value.session_id && cascadeSessionId.value) {
 }
 watch(() => form.value.session_id, (value) => { cascadeSessionId.value = value; });
 
+// A class with exactly one section needs no choice: pick it (runs after the
+// class watcher so a later reset cannot leave the field empty).
+watch(
+    () => [form.value.class_id, filteredSections.value.length],
+    () => {
+        if (form.value.class_id && filteredSections.value.length === 1 && !form.value.section_id) {
+            form.value.section_id = String(filteredSections.value[0].id);
+        }
+    },
+    { flush: 'post', immediate: true },
+);
+
+
 const otherRelationOptions = computed(() =>
     otherRelations.value.map((relation) => ({ value: relation.id, label: relation.name })),
 );

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { formatPhone } from '@/utils/phone';
 import { Link, usePage } from '@inertiajs/vue3';
 import { computed } from 'vue';
 import Icon from '@/components/Icon.vue';
@@ -94,7 +95,7 @@ const { scrollTo } = useLenis();
                         </li>
                         <li v-if="school?.contact_phone" class="flex gap-2">
                             <Icon icon="phone" class="mt-0.5 h-4 w-4 shrink-0" />
-                            <span>{{ school.contact_phone }}</span>
+                            <span>{{ formatPhone(school.contact_phone) }}</span>
                         </li>
                         <li v-if="school?.contact_email" class="flex gap-2">
                             <Icon icon="mail" class="mt-0.5 h-4 w-4 shrink-0" />

@@ -26,6 +26,7 @@ use App\Services\Finance\StudentBillingService;
 use App\Services\Finance\UnifiedAccountingService;
 use App\Services\Student\SiblingService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Log;
@@ -431,15 +432,61 @@ class FeePaymentController extends Controller
             $paymentData['student']['admission_no'] = $payment->student?->admission_no;
         }
 
-        $vouchers = $payment->allocations->pluck('voucher')->filter()->unique('id');
+        $rows = $this->allocationRows($payment);
 
-        $paymentData['items_summary'] = $vouchers->flatMap(fn ($voucher) => $voucher->items)
-            ->reject(fn ($item) => $item->isLateFee())
-            ->map(fn ($item) => ['description' => $item->description, 'amount' => (float) $item->net_amount])
+        $vouchers = $rows->groupBy('voucher_id');
+
+        $paymentData['allocations'] = $vouchers->map(fn ($group, $voucherId): array => [
+            'id' => (int) $voucherId,
+            'allocated_amount' => round((float) $group->where('is_late_fee', false)->sum('amount'), 2),
+            'voucher' => [
+                'id' => (int) $voucherId,
+                'voucher_no' => $group->first()['voucher_no'],
+                'voucher_year' => $group->first()['voucher_year'],
+                'voucher_month' => ['name' => $group->first()['month_name']],
+            ],
+        ])->values()->all();
+
+        $paymentData['items_summary'] = $rows->where('is_late_fee', false)->where('description', '!=', null)
+            ->map(fn (array $row): array => ['description' => $row['description'], 'amount' => $row['amount']])
             ->values()->all();
-        $paymentData['remaining_balance'] = round((float) $vouchers->sum(fn (FeeVoucher $voucher) => $this->currentVoucherBalance($voucher)), 2);
+
+        $balanceSource = FeeVoucher::query()->whereIn('id', $vouchers->keys())->get();
+        $paymentData['remaining_balance'] = $balanceSource->isNotEmpty()
+            ? round((float) $balanceSource->sum(fn (FeeVoucher $voucher) => $this->currentVoucherBalance($voucher)), 2)
+            : round((float) FeeVoucher::query()->where('student_id', $payment->student_id)
+                ->whereNotIn('status', [VoucherStatus::ADJUSTED, VoucherStatus::CANCELLED, VoucherStatus::PAID])
+                ->sum('balance_amount'), 2);
 
         return $paymentData;
+    }
+
+    /**
+     * What this payment settled, item by item: live allocations while the
+     * payment stands, the snapshot taken at reversal once they are deleted.
+     *
+     * @return Collection<int, array{voucher_id: int, voucher_no: string, voucher_year: mixed, month_name: ?string, description: ?string, amount: float, is_late_fee: bool}>
+     */
+    protected function allocationRows(FeePayment $payment): Collection
+    {
+        if ($payment->allocations->isNotEmpty()) {
+            return $payment->allocations->map(function (FeePaymentAllocation $allocation): array {
+                $voucher = $allocation->voucher;
+                $item = $voucher?->items->firstWhere('id', $allocation->fee_voucher_item_id);
+
+                return [
+                    'voucher_id' => (int) $allocation->fee_voucher_id,
+                    'voucher_no' => (string) $voucher?->voucher_no,
+                    'voucher_year' => $voucher?->voucher_year,
+                    'month_name' => $voucher?->voucherMonth?->name,
+                    'description' => $item?->description,
+                    'amount' => (float) $allocation->allocated_amount,
+                    'is_late_fee' => (bool) $item?->isLateFee(),
+                ];
+            })->values();
+        }
+
+        return collect($payment->allocation_snapshot ?? []);
     }
 
     /**
@@ -521,7 +568,10 @@ class FeePaymentController extends Controller
 
         $validated = $request->validated();
 
-        DB::transaction(function () use ($payment, $validated) {
+        $payment->load('allocations.voucher.voucherMonth', 'allocations.voucher.items.feeHead');
+        $snapshot = $this->allocationRows($payment)->all();
+
+        DB::transaction(function () use ($payment, $validated, $snapshot) {
             $affectedVoucherIds = [];
             $affectedChargeIds = [];
 
@@ -589,6 +639,7 @@ class FeePaymentController extends Controller
 
             $payment->update([
                 'status' => PaymentStatus::REVERSED,
+                'allocation_snapshot' => $snapshot,
                 'allocated_amount' => 0,
                 'excess_amount' => 0,
                 'remaining_unallocated_amount' => 0,

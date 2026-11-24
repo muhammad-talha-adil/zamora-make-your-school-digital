@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { formatPhone } from '@/utils/phone';
 import PhoneInput from '@/components/ui/PhoneInput.vue';
 /**
  * The follow-up list a school actually works from in admission season.
@@ -407,7 +408,7 @@ const admitEnquiry = async (enquiry: EnquiryRow) => {
                             <div class="flex flex-wrap gap-2 justify-between items-start">
                                 <div>
                                     <div class="font-medium text-foreground">{{ enquiry.student_name }}</div>
-                                    <div class="text-xs text-muted-foreground">{{ enquiry.phone }}</div>
+                                    <div class="text-xs text-muted-foreground">{{ formatPhone(enquiry.phone) }}</div>
                                 </div>
                                 <span class="px-2 py-1 text-xs font-medium rounded-full shrink-0" :class="statusColor(enquiry.status)">
                                     {{ enquiry.status }}
@@ -479,7 +480,7 @@ const admitEnquiry = async (enquiry: EnquiryRow) => {
                                         <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-foreground">
                                             {{ enquiry.student_name }}
                                         </td>
-                                        <td class="px-4 py-3 whitespace-nowrap text-sm text-muted-foreground">{{ enquiry.phone }}</td>
+                                        <td class="px-4 py-3 whitespace-nowrap text-sm text-muted-foreground">{{ formatPhone(enquiry.phone) }}</td>
                                         <td class="px-4 py-3 whitespace-nowrap">
                                             <div class="text-sm text-muted-foreground">{{ enquiry.campus?.name || 'Not placed yet' }}</div>
                                             <div class="text-xs text-muted-foreground">{{ enquiry.class?.name || 'N/A' }}</div>

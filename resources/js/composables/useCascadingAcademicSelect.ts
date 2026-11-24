@@ -108,7 +108,7 @@ export function useCascadingAcademicSelect(options: UseCascadingAcademicSelectOp
     const isCampusLocked = computed(() => scope.value.isCampusRestricted);
     const lockedCampusId = computed(() => scope.value.campusId);
 
-    const initialCampus = options.initialCampusId ?? lockedCampusId.value ?? '';
+    const initialCampus = (options.initialCampusId === '' ? null : options.initialCampusId) ?? lockedCampusId.value ?? '';
     const selectedCampusId = ref<number | string>(initialCampus === null ? '' : initialCampus);
 
     if (isCampusLocked.value && lockedCampusId.value) {
@@ -118,10 +118,25 @@ export function useCascadingAcademicSelect(options: UseCascadingAcademicSelectOp
     const selectedClassId = ref<number | string>(options.initialClassId ?? '');
     const selectedSectionId = ref<number | string>(options.initialSectionId ?? '');
 
+    /** The one session to pick when nothing else decides: the only active one, or the only one. */
+    function singleActiveSessionId(): number | null {
+        const all = unwrap(options.sessions);
+        const active = all.filter((session) => session.is_active === true || session.is_active === 1);
+
+        if (active.length === 1) {
+            return active[0].id;
+        }
+
+        return all.length === 1 ? all[0].id : null;
+    }
+
+    const blankToNull = <T>(value: T | '' | null | undefined): T | null => (value === '' || value === undefined ? null : (value as T | null));
+
     const initialSessionId =
-        options.initialSessionId ??
+        blankToNull(options.initialSessionId) ??
         readStoredSessionId() ??
         scope.value.activeSessionId ??
+        singleActiveSessionId() ??
         '';
     const selectedSessionId = ref<number | string>(initialSessionId === null ? '' : initialSessionId);
 
@@ -164,6 +179,10 @@ export function useCascadingAcademicSelect(options: UseCascadingAcademicSelectOp
 
     watch(selectedClassId, () => {
         selectedSectionId.value = '';
+
+        if (availableSections.value.length === 1 && selectedClassId.value) {
+            selectedSectionId.value = availableSections.value[0].id;
+        }
     });
 
     return {

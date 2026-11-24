@@ -62,7 +62,11 @@ class FeePaymentPolicy
             return $this->may($user, 'fee.view.own', 'fee.view', 'fee.payment.collect');
         }
 
-        return $this->may($user, 'fee.view', 'fee.payment.collect');
+        if (! $this->may($user, 'fee.view', 'fee.payment.collect')) {
+            return false;
+        }
+
+        return $this->reaches($user, Student::find($studentId)?->currentEnrollment?->campus_id);
     }
 
     /**

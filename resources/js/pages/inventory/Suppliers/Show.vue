@@ -40,7 +40,7 @@
             </div>
             <div>
               <dt class="text-sm text-muted-foreground">Phone</dt>
-              <dd class="text-sm font-medium text-foreground">{{ supplier.phone || '-' }}</dd>
+              <dd class="text-sm font-medium text-foreground">{{ formatPhone(supplier.phone) || '-' }}</dd>
             </div>
             <div>
               <dt class="text-sm text-muted-foreground">Email</dt>
@@ -138,6 +138,7 @@
 </template>
 
 <script setup lang="ts">
+import { formatPhone } from '@/utils/phone';
 const props = defineProps({
   supplier: {
     type: Object,

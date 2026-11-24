@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { formatPhone } from '@/utils/phone';
 import { Head, Link } from '@inertiajs/vue3';
 import PortalLayout from '@/layouts/PortalLayout.vue';
 import Icon from '@/components/Icon.vue';
@@ -202,7 +203,7 @@ onMounted(() => {
                         <h4 class="font-medium text-foreground mb-2">{{ props.voucher.campus.name }}</h4>
                         <div class="text-sm text-muted-foreground space-y-1">
                             <p v-if="props.voucher.campus.address">{{ props.voucher.campus.address }}</p>
-                            <p v-if="props.voucher.campus.phone">Phone: {{ props.voucher.campus.phone }}</p>
+                            <p v-if="props.voucher.campus.phone">Phone: {{ formatPhone(props.voucher.campus.phone) }}</p>
                         </div>
                     </div>
                 </CardContent>
@@ -263,7 +264,7 @@ onMounted(() => {
                     <div class="text-center mb-6">
                         <h2 class="text-2xl font-bold">{{ props.voucher.campus?.name ?? 'School' }}</h2>
                         <p class="text-sm text-muted-foreground">{{ props.voucher.campus?.address ?? '' }}</p>
-                        <p class="text-sm text-muted-foreground">Phone: {{ props.voucher.campus?.phone ?? '' }}</p>
+                        <p class="text-sm text-muted-foreground">Phone: {{ formatPhone(props.voucher.campus?.phone) }}</p>
                     </div>
                     <hr class="mb-4" />
                     <div class="grid grid-cols-2 gap-4 mb-4 text-sm">

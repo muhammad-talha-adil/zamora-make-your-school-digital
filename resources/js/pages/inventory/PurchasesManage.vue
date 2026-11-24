@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { formatPhone } from '@/utils/phone';
 import { Head } from '@inertiajs/vue3';
 import { computed, ref, watch } from 'vue';
 import { alert, formatDate, formatCurrency } from '@/utils';
@@ -439,7 +440,7 @@ fetchPurchases();
                                     <td class="px-3 md:px-6 py-4 whitespace-nowrap text-sm font-medium text-foreground">{{ suppliersPagination.from + index }}</td>
                                     <td class="px-3 md:px-6 py-4 whitespace-nowrap text-sm font-medium text-foreground">{{ supplier.name }}</td>
                                     <td class="px-3 md:px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">{{ supplier.contact_person || '-' }}</td>
-                                    <td class="px-3 md:px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">{{ supplier.phone || '-' }}</td>
+                                    <td class="px-3 md:px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">{{ formatPhone(supplier.phone) || '-' }}</td>
                                     <td class="px-3 md:px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">{{ supplier.email || '-' }}</td>
                                     <td class="px-3 md:px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">{{ supplier.campus?.name || 'All Campuses' }}</td>
                                     <td class="px-3 md:px-6 py-4 whitespace-nowrap">

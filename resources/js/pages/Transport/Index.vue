@@ -397,6 +397,8 @@ const monthOptions = computed(() => props.months.map((month) => ({ value: String
 const studentOptions = computed(() => filteredStudents.value.map((student) => ({ value: String(student.id), label: student.display })));
 const availableRouteStopOptions = computed(() => availableRouteStops.value.map((stop) => ({ value: String(stop.id), label: stop.name })));
 
+const submitting = ref(false);
+
 const reloadPage = (only: string[] = ['vehicles', 'routes', 'stops', 'assignments', 'expenses', 'summary']) => {
     router.reload({
         only,
@@ -557,6 +559,12 @@ watch(
 );
 
 const submitVehicle = async () => {
+    if (submitting.value) {
+        return;
+    }
+
+    submitting.value = true;
+
     try {
         const payload = {
             ...vehicleForm,
@@ -579,10 +587,18 @@ const submitVehicle = async () => {
         reloadPage(['vehicles', 'summary']);
     } catch (error: any) {
         alert.error(error?.response?.data?.message || 'Failed to save vehicle.');
+    } finally {
+        submitting.value = false;
     }
 };
 
 const submitStop = async () => {
+    if (submitting.value) {
+        return;
+    }
+
+    submitting.value = true;
+
     try {
         const payload = {
             ...stopForm,
@@ -603,10 +619,18 @@ const submitStop = async () => {
         reloadPage(['stops', 'routes']);
     } catch (error: any) {
         alert.error(error?.response?.data?.message || 'Failed to save stop.');
+    } finally {
+        submitting.value = false;
     }
 };
 
 const submitRoute = async () => {
+    if (submitting.value) {
+        return;
+    }
+
+    submitting.value = true;
+
     try {
         const payload = {
             ...routeForm,
@@ -628,10 +652,18 @@ const submitRoute = async () => {
         reloadPage(['routes', 'summary']);
     } catch (error: any) {
         alert.error(error?.response?.data?.message || 'Failed to save route.');
+    } finally {
+        submitting.value = false;
     }
 };
 
 const submitAssignment = async () => {
+    if (submitting.value) {
+        return;
+    }
+
+    submitting.value = true;
+
     try {
         const payload = {
             ...assignmentForm,
@@ -653,10 +685,18 @@ const submitAssignment = async () => {
         reloadPage(['assignments', 'summary']);
     } catch (error: any) {
         alert.error(error?.response?.data?.message || 'Failed to save assignment.');
+    } finally {
+        submitting.value = false;
     }
 };
 
 const submitExpense = async () => {
+    if (submitting.value) {
+        return;
+    }
+
+    submitting.value = true;
+
     try {
         const payload = {
             ...expenseForm,
@@ -678,10 +718,18 @@ const submitExpense = async () => {
         reloadPage(['expenses', 'summary']);
     } catch (error: any) {
         alert.error(error?.response?.data?.message || 'Failed to save transport expense.');
+    } finally {
+        submitting.value = false;
     }
 };
 
 const generateDues = async () => {
+    if (submitting.value) {
+        return;
+    }
+
+    submitting.value = true;
+
     try {
         const response = await axios.post(route('transport.generate-dues'), {
             campus_id: duesForm.campus_id || null,
@@ -693,6 +741,8 @@ const generateDues = async () => {
         alert.success(response.data?.message || 'Transport dues generated successfully.');
     } catch (error: any) {
         alert.error(error?.response?.data?.message || 'Failed to generate transport dues.');
+    } finally {
+        submitting.value = false;
     }
 };
 </script>
@@ -803,7 +853,7 @@ const generateDues = async () => {
                             Vehicle is active
                         </label>
                         <div class="flex flex-wrap gap-2">
-                            <Button @click="submitVehicle">{{ vehicleForm.id ? 'Update Vehicle' : 'Create Vehicle' }}</Button>
+                            <Button :disabled="submitting" @click="submitVehicle">{{ vehicleForm.id ? 'Update Vehicle' : 'Create Vehicle' }}</Button>
                             <Button variant="outline" @click="resetVehicleForm">Clear</Button>
                         </div>
                     </div>
@@ -895,7 +945,7 @@ const generateDues = async () => {
                             Route is active
                         </label>
                         <div class="flex flex-wrap gap-2">
-                            <Button @click="submitRoute">{{ routeForm.id ? 'Update Route' : 'Create Route' }}</Button>
+                            <Button :disabled="submitting" @click="submitRoute">{{ routeForm.id ? 'Update Route' : 'Create Route' }}</Button>
                             <Button variant="outline" @click="resetRouteForm">Clear</Button>
                         </div>
                     </div>
@@ -966,7 +1016,7 @@ const generateDues = async () => {
                             Stop is active
                         </label>
                         <div class="flex flex-wrap gap-2">
-                            <Button @click="submitStop">{{ stopForm.id ? 'Update Stop' : 'Create Stop' }}</Button>
+                            <Button :disabled="submitting" @click="submitStop">{{ stopForm.id ? 'Update Stop' : 'Create Stop' }}</Button>
                             <Button variant="outline" @click="resetStopForm">Clear</Button>
                         </div>
                     </div>
@@ -1053,7 +1103,7 @@ const generateDues = async () => {
                             </label>
                         </div>
                         <div class="flex flex-wrap gap-2">
-                            <Button @click="submitAssignment">{{ assignmentForm.id ? 'Update Assignment' : 'Create Assignment' }}</Button>
+                            <Button :disabled="submitting" @click="submitAssignment">{{ assignmentForm.id ? 'Update Assignment' : 'Create Assignment' }}</Button>
                             <Button variant="outline" @click="resetAssignmentForm">Clear</Button>
                         </div>
                     </div>
@@ -1146,7 +1196,7 @@ const generateDues = async () => {
                             <textarea v-model="expenseForm.description" :class="textareaClass" />
                         </div>
                         <div class="flex flex-wrap gap-2">
-                            <Button @click="submitExpense">{{ expenseForm.id ? 'Update Expense' : 'Record Expense' }}</Button>
+                            <Button :disabled="submitting" @click="submitExpense">{{ expenseForm.id ? 'Update Expense' : 'Record Expense' }}</Button>
                             <Button variant="outline" @click="resetExpenseForm">Clear</Button>
                         </div>
                     </div>
@@ -1210,7 +1260,7 @@ const generateDues = async () => {
                             <Input v-model="duesForm.due_date" type="date" />
                         </div>
                         <div class="flex flex-wrap gap-2">
-                            <Button @click="generateDues">
+                            <Button :disabled="submitting" @click="generateDues">
                                 <Icon icon="receipt-text" class="h-4 w-4" />
                                 Generate Transport Dues
                             </Button>

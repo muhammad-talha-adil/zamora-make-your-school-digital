@@ -34,12 +34,12 @@ const form = reactive({
     date_to: props.filters.date_to || '',
 });
 
-const formatCurrency = (amount: number): string => {
+const formatCurrency = (amount: number | string): string => {
     return new Intl.NumberFormat('en-PK', {
         style: 'currency',
         currency: 'PKR',
         minimumFractionDigits: 0,
-    }).format(amount);
+    }).format(Number(amount) || 0);
 };
 
 const getPaymentMethodLabel = (method: string): string => {
@@ -67,11 +67,11 @@ const getPaymentMethodColor = (method: string): string => {
 };
 
 const calculateTotal = (): number => {
-    return props.byMethod.reduce((sum, method) => sum + method.total, 0);
+    return props.byMethod.reduce((sum, method) => sum + Number(method.total), 0);
 };
 
 const calculateCount = (): number => {
-    return props.byMethod.reduce((sum, method) => sum + method.count, 0);
+    return props.byMethod.reduce((sum, method) => sum + Number(method.count), 0);
 };
 
 const applyFilters = () => {
@@ -162,9 +162,9 @@ const resetFilters = () => {
                                     </span>
                                 </td>
                                 <td class="py-3 px-4 text-right text-foreground">{{ method.count }}</td>
-                                <td class="py-3 px-4 text-right text-foreground font-medium">{{ formatCurrency(method.total) }}</td>
+                                <td class="py-3 px-4 text-right text-foreground font-medium">{{ formatCurrency(Number(method.total)) }}</td>
                                 <td class="py-3 px-4 text-right text-muted-foreground">
-                                    {{ calculateTotal() > 0 ? ((method.total / calculateTotal()) * 100).toFixed(1) : 0 }}%
+                                    {{ calculateTotal() > 0 ? ((Number(method.total) / calculateTotal()) * 100).toFixed(1) : 0 }}%
                                 </td>
                             </tr>
                         </tbody>

@@ -192,7 +192,7 @@
                             </div>
                             <div>
                                 <p class="text-xs text-muted-foreground">Phone</p>
-                                <p class="text-sm font-medium text-foreground">{{ getGuardianByRelation('father')?.phone || '-' }}</p>
+                                <p class="text-sm font-medium text-foreground">{{ formatPhone(getGuardianByRelation('father')?.phone) || '-' }}</p>
                             </div>
                             <div>
                                 <p class="text-xs text-muted-foreground">Email</p>
@@ -218,7 +218,7 @@
                             </div>
                             <div>
                                 <p class="text-xs text-muted-foreground">Phone</p>
-                                <p class="text-sm font-medium text-foreground">{{ getGuardianByRelation('mother')?.phone || '-' }}</p>
+                                <p class="text-sm font-medium text-foreground">{{ formatPhone(getGuardianByRelation('mother')?.phone) || '-' }}</p>
                             </div>
                             <div>
                                 <p class="text-xs text-muted-foreground">Email</p>
@@ -248,7 +248,7 @@
                             </div>
                             <div>
                                 <p class="text-xs text-muted-foreground">Phone</p>
-                                <p class="text-sm font-medium text-foreground">{{ otherGuardian.phone || '-' }}</p>
+                                <p class="text-sm font-medium text-foreground">{{ formatPhone(otherGuardian.phone) || '-' }}</p>
                             </div>
                             <div>
                                 <p class="text-xs text-muted-foreground">Email</p>
@@ -432,6 +432,7 @@
 </template>
 
 <script setup lang="ts">
+import { formatPhone } from '@/utils/phone';
 import { computed, reactive } from 'vue';
 import { Link, router } from '@inertiajs/vue3';
 import { Head } from '@inertiajs/vue3';

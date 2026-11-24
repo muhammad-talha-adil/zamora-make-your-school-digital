@@ -395,7 +395,22 @@ class TransportController extends Controller
         $generated = 0;
         $totalAmount = 0;
 
+        $mergedCount = 0;
+        $blockedCount = 0;
+
         foreach ($assignments as $assignment) {
+            $voucher = $this->studentBillingService->voucherForPeriod(
+                (int) $assignment->student_id,
+                (int) $data['month_id'],
+                (int) $data['year']
+            );
+
+            if ($voucher && ! $this->studentBillingService->voucherAcceptsNewLines($voucher)) {
+                $blockedCount++;
+
+                continue;
+            }
+
             $charge = $this->studentBillingService->createTransportCharge(
                 $assignment,
                 (int) $data['month_id'],
@@ -408,13 +423,28 @@ class TransportController extends Controller
                 $generated++;
                 $totalAmount += (float) $charge->net_amount;
             }
+
+            if ($voucher && $this->studentBillingService->attachTransportChargeToVoucher($charge, $voucher)) {
+                $mergedCount++;
+            }
+        }
+
+        $notes = [];
+        if ($mergedCount > 0) {
+            $notes[] = "{$mergedCount} added to the month's existing voucher";
+        }
+        if ($blockedCount > 0) {
+            $notes[] = "{$blockedCount} skipped because that month's voucher is already paid, cancelled or carried forward";
         }
 
         return response()->json([
             'success' => true,
-            'message' => $generated > 0
+            'message' => ($generated > 0
                 ? "Generated {$generated} transport dues successfully."
-                : 'No new transport dues were generated for the selected period.',
+                : 'No new transport dues were generated for the selected period.')
+                .($notes === [] ? '' : ' ('.implode('; ', $notes).'.)'),
+            'merged_count' => $mergedCount,
+            'blocked_count' => $blockedCount,
             'generated_count' => $generated,
             'generated_amount' => $totalAmount,
         ]);

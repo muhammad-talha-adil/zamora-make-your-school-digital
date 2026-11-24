@@ -274,8 +274,14 @@ onMounted(() => {
 // Available years (2000 to current year + 1)
 const years = useYearOptions();
 
-// Auto-select current year
+// Auto-select current year and month
 form.year = currentYear;
+if (form.month_ids.length === 0) {
+    const currentMonth = props.months.find((month) => month.month_number === currentDate.getMonth() + 1);
+    if (currentMonth) {
+        form.month_ids.push(currentMonth.id);
+    }
+}
 
 // Toggle month selection
 // Yearly charges are billed only in the first month of the session and

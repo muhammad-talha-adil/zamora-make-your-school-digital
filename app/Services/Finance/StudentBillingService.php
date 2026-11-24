@@ -2,6 +2,7 @@
 
 namespace App\Services\Finance;
 
+use App\Enums\Fee\VoucherItemSource;
 use App\Models\Fee\FeePaymentAllocation;
 use App\Models\Fee\FeeVoucher;
 use App\Models\Fee\FeeVoucherItem;
@@ -187,6 +188,68 @@ class StudentBillingService
             'created_by' => auth()->id(),
             'approved_by' => auth()->id(),
         ]);
+    }
+
+    /**
+     * The voucher a student already has for this month, if any.
+     */
+    public function voucherForPeriod(int $studentId, int $monthId, int $year): ?FeeVoucher
+    {
+        return FeeVoucher::query()
+            ->where('student_id', $studentId)
+            ->where('voucher_month_id', $monthId)
+            ->where('voucher_year', $year)
+            ->where('status', '!=', 'cancelled')
+            ->latest('id')
+            ->first();
+    }
+
+    /**
+     * Whether a voucher can still take a new line: unpaid, partly paid or
+     * overdue. Paid, cancelled and carried-forward vouchers are closed.
+     */
+    public function voucherAcceptsNewLines(FeeVoucher $voucher): bool
+    {
+        $status = $voucher->status instanceof \BackedEnum ? $voucher->status->value : (string) $voucher->status;
+
+        return in_array($status, ['unpaid', 'partial', 'overdue'], true);
+    }
+
+    /**
+     * Adds an unbilled transport charge to the voucher already issued for its
+     * month, so a student is not billed twice for the same month. Calling it
+     * again for a charge that is already on a voucher changes nothing.
+     */
+    public function attachTransportChargeToVoucher(StudentAccountCharge $charge, FeeVoucher $voucher): bool
+    {
+        if ($charge->voucher_id !== null || $charge->billing_status === 'billed') {
+            return false;
+        }
+
+        $item = $voucher->items()->create([
+            'student_account_charge_id' => $charge->id,
+            'fee_head_id' => null,
+            'description' => $charge->title,
+            'amount' => (float) $charge->amount,
+            'discount_amount' => (float) $charge->discount_amount,
+            'fine_amount' => (float) $charge->fine_amount,
+            'net_amount' => (float) $charge->net_amount,
+            'source_type' => VoucherItemSource::MANUAL,
+            'source_module' => 'transport',
+            'reference_id' => $charge->source_id,
+            'reference_item_id' => $charge->source_item_id,
+        ]);
+
+        $charge->update([
+            'billing_status' => 'billed',
+            'voucher_id' => $voucher->id,
+            'voucher_item_id' => $item->id,
+        ]);
+
+        $voucher->recalculateTotals();
+        $this->syncVoucherSettlement($voucher->fresh());
+
+        return true;
     }
 
     public function applyInventoryReturn(StudentInventory $record, StudentInventoryReturn $returnRecord, Collection $returnedItems, float $creditAmount): ?StudentAccountAdjustment

@@ -205,7 +205,9 @@ watch(() => props.vouchers, (newVouchers) => {
 }, { deep: true });
 
 // Toggle select all
-const toggleSelectAll = () => {
+const toggleSelectAll = (event: Event) => {
+    selectAll.value = (event.target as HTMLInputElement).checked;
+
     if (selectAll.value) {
         selectedVouchers.value = vouchersData.value.map((voucher) => voucher.id);
     } else {

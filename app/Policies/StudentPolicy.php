@@ -201,10 +201,6 @@ class StudentPolicy
      */
     private function covers(User $user, Student $student): bool
     {
-        if ($user->isSuperAdmin()) {
-            return true;
-        }
-
         $enrollment = $student->relationLoaded('currentEnrollment')
             ? $student->currentEnrollment
             : null;
@@ -214,6 +210,10 @@ class StudentPolicy
             ->orderByDesc('admission_date')
             ->orderByDesc('id')
             ->first();
+
+        if (! $enrollment && $user->isSuperAdmin()) {
+            return true;
+        }
 
         if (! $enrollment) {
             // A child with no enrolment at all is a data anomaly, not a child

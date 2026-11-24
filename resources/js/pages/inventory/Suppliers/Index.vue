@@ -73,7 +73,7 @@
                         </div>
                         <div v-if="supplier.phone" class="flex items-center gap-2">
                             <Icon icon="phone" class="h-4 w-4" />
-                            <span>{{ supplier.phone }}</span>
+                            <span>{{ formatPhone(supplier.phone) }}</span>
                         </div>
                         <div v-if="supplier.email" class="flex items-center gap-2">
                             <Icon icon="mail" class="h-4 w-4" />
@@ -143,7 +143,7 @@
                                     <div class="text-sm text-muted-foreground">{{ supplier.contact_person || '-' }}</div>
                                 </td>
                                 <td class="px-4 py-3 whitespace-nowrap">
-                                    <div class="text-sm text-muted-foreground">{{ supplier.phone || '-' }}</div>
+                                    <div class="text-sm text-muted-foreground">{{ formatPhone(supplier.phone) || '-' }}</div>
                                 </td>
                                 <td class="px-4 py-3 whitespace-nowrap">
                                     <div class="text-sm text-muted-foreground truncate max-w-[200px]">{{ supplier.email || '-' }}</div>
@@ -181,6 +181,7 @@
 </template>
 
 <script setup lang="ts">
+import { formatPhone } from '@/utils/phone';
 import { Head, router } from '@inertiajs/vue3';
 import TablePagination from '@/components/tables/TablePagination.vue';
 import { computed, reactive, watch } from 'vue';

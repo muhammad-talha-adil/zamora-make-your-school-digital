@@ -317,7 +317,13 @@ class FeeReportController extends Controller
             DB::raw('SUM(received_amount) as total')
         )
             ->groupBy('payment_method')
-            ->get();
+            ->get()
+            ->map(fn ($row): array => [
+                'payment_method' => $row->payment_method instanceof \BackedEnum ? $row->payment_method->value : (string) $row->payment_method,
+                'count' => (int) $row->count,
+                'total' => (float) $row->total,
+            ])
+            ->values();
 
         return Inertia::render('Fee/Reports/PaymentMethods', [
             'byMethod' => $byMethod,

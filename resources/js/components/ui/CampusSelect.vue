@@ -44,6 +44,14 @@ const applyDefault = () => {
 
 onMounted(applyDefault);
 watch(() => props.options, applyDefault);
+watch(
+    () => props.modelValue,
+    (value) => {
+        if (value === null || value === undefined || value === '') {
+            applyDefault();
+        }
+    },
+);
 </script>
 
 <template>
