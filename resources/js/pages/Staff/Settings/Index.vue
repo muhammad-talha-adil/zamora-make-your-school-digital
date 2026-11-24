@@ -328,7 +328,7 @@ const deactivateDocumentType = async (type: Lookup) => {
                 </div>
 
                 <!-- Mobile Card View -->
-                <div class="block 2xl:hidden space-y-3">
+                <div class="block lg:hidden space-y-3">
                     <div
                         v-for="designation in designationsList.items.value"
                         :key="designation.id"
@@ -357,7 +357,7 @@ const deactivateDocumentType = async (type: Lookup) => {
                 </div>
 
                 <!-- Desktop Table View -->
-                <div class="hidden 2xl:block overflow-hidden rounded-lg border border-border bg-card shadow-sm">
+                <div class="hidden lg:block overflow-hidden rounded-lg border border-border bg-card shadow-sm">
                     <div class="overflow-x-auto">
                         <table class="min-w-full divide-y divide-border">
                             <thead class="bg-muted">
@@ -420,7 +420,7 @@ const deactivateDocumentType = async (type: Lookup) => {
                 </div>
 
                 <!-- Mobile Card View -->
-                <div class="block 2xl:hidden space-y-3">
+                <div class="block lg:hidden space-y-3">
                     <div
                         v-for="type in documentTypesList.items.value"
                         :key="type.id"
@@ -451,7 +451,7 @@ const deactivateDocumentType = async (type: Lookup) => {
                 </div>
 
                 <!-- Desktop Table View -->
-                <div class="hidden 2xl:block overflow-hidden rounded-lg border border-border bg-card shadow-sm">
+                <div class="hidden lg:block overflow-hidden rounded-lg border border-border bg-card shadow-sm">
                     <div class="overflow-x-auto">
                         <table class="min-w-full divide-y divide-border">
                             <thead class="bg-muted">
