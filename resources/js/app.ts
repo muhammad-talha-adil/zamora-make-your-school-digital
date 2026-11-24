@@ -6,6 +6,7 @@ import type { DefineComponent } from 'vue';
 import { createApp, h } from 'vue';
 import { createPinia } from 'pinia';
 import { initializeTheme } from './composables/useAppearance';
+import { blockNegativeNumbers } from './lib/blockNegativeNumbers';
 import { route } from 'ziggy-js';
 import './ziggy'; // Import for window.route setup
 
@@ -21,6 +22,10 @@ const routePlugin = {
         app.provide('route', route);
     },
 };
+
+if (typeof document !== 'undefined') {
+    blockNegativeNumbers();
+}
 
 createInertiaApp({
     title: (title) => (title ? `${title} - ${appName}` : appName),
