@@ -265,6 +265,11 @@ class UnifiedAccountingService
         });
     }
 
+    public function removePayrollRunJournal(PayrollRun $payrollRun): void
+    {
+        $this->deleteSourceJournal('staff', 'payroll_run', $payrollRun->id);
+    }
+
     public function postPayrollPaymentJournal(PayrollRunItem $payrollItem): ?JournalEntry
     {
         if ((float) $payrollItem->net_salary <= 0) {

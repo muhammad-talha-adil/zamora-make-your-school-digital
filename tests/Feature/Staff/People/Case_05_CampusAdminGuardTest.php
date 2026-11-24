@@ -44,7 +44,7 @@ it('lets the owner assign a campus_admin where the campus has none yet', functio
 
     $response = $this->postJson(route('staff.members.store'), campusAdminPayload([
         'campus_id' => $this->world->school->campus->id,
-        'designation_id' => $this->adminPost->id,
+        'role' => 'campus_admin',
     ]));
 
     $response->assertSuccessful();
@@ -56,8 +56,8 @@ it('refuses a non-owner trying to assign campus_admin', function () {
 
     $this->actingAs($clerk->user)->postJson(route('staff.members.store'), campusAdminPayload([
         'campus_id' => $this->world->school->campus->id,
-        'designation_id' => $this->adminPost->id,
-    ]))->assertForbidden();
+        'role' => 'campus_admin',
+    ]))->assertUnprocessable();
 });
 
 it('blocks a second campus_admin on a campus that already has one', function () {
@@ -65,13 +65,13 @@ it('blocks a second campus_admin on a campus that already has one', function () 
 
     $first = $this->postJson(route('staff.members.store'), campusAdminPayload([
         'campus_id' => $this->world->school->campus->id,
-        'designation_id' => $this->adminPost->id,
+        'role' => 'campus_admin',
     ]));
     $first->assertSuccessful();
 
     $second = $this->postJson(route('staff.members.store'), campusAdminPayload([
         'campus_id' => $this->world->school->campus->id,
-        'designation_id' => $this->adminPost->id,
+        'role' => 'campus_admin',
         'name' => 'Second Hire',
     ]));
 

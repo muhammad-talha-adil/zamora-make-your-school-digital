@@ -529,7 +529,7 @@
                     <Button type="button" variant="outline" @click="router.visit(route('students.index'))">
                         Cancel
                     </Button>
-                    <Button type="submit" :disabled="processing || !isValid">
+                    <Button type="submit" :disabled="processing">
                         <Icon v-if="processing" icon="loader" class="mr-2 h-4 w-4 animate-spin" />
                         <Icon v-else icon="check" class="mr-2 h-4 w-4" />
                         Update Student
@@ -541,6 +541,7 @@
 </template>
 
 <script setup lang="ts">
+import type { Ref } from 'vue';
 import CampusSelect from '@/components/ui/CampusSelect.vue';
 import PhoneInput from '@/components/ui/PhoneInput.vue';
 import { ref, computed, watch, nextTick } from 'vue';
@@ -556,7 +557,7 @@ import { Label } from '@/components/ui/label';
 import InputError from '@/components/InputError.vue';
 import Icon from '@/components/Icon.vue';
 import { useStudentForm } from '@/composables/useStudentForm';
-import { useFormValidity } from '@/composables/useFormValidity';
+import { requiredErrors, useClearErrorsOnEdit, useFormValidity } from '@/composables/useFormValidity';
 import FeeStructureSelector from '@/components/students/FeeStructureSelector.vue';
 import SearchableSelect from '@/components/ui/searchable-select/SearchableSelect.vue';
 import { alert } from '@/utils/alert';
@@ -688,6 +689,7 @@ const { isValid } = useFormValidity(form, [
     'father_name',
     'father_phone',
 ]);
+useClearErrorsOnEdit(form, errors as Ref<Record<string, string>>);
 
 // Fee Structure Selector Ref
 const feeStructureSelector = ref<InstanceType<typeof FeeStructureSelector> | null>(null);
@@ -808,6 +810,21 @@ const lookupFatherGuardian = async () => {
 };
 
 const submitForm = () => {
+    const missing = requiredErrors(form, [
+    'name',
+    'dob',
+    'gender_id',
+    'campus_id',
+    'session_id',
+    'class_id',
+    'father_name',
+    'father_phone',
+]);
+    if (Object.keys(missing).length > 0) {
+        errors.value = missing as typeof errors.value;
+        return;
+    }
+
     if (processing.value) {
         return;
     }

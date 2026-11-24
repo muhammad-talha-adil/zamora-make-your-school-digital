@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { headerCampusId } from '@/utils/campus';
 import { Head, router } from '@inertiajs/vue3';
 import { alert, formatCurrency } from '@/utils';
 import { ref, watch, computed } from 'vue';
@@ -71,7 +72,7 @@ watch(showItemForm, (open) => {
 
 // Filter states
 const showDeleted = ref(false);
-const campusFilter = ref(props.filters?.campus_id || '');
+const campusFilter = ref(props.filters?.campus_id || headerCampusId());
 const typeFilter = ref('');
 const perPage = ref(25);
 const inventoryItemsData = ref(props.inventoryItems.data || []);
@@ -144,8 +145,8 @@ const toggleActive = (item: InventoryItemData) => {
                         alert.success(`Inventory item ${action}d successfully!`);
                         reloadWithFilters();
                     },
-                    onError: () => {
-                        alert.error(`Failed to ${action} inventory item. Please try again.`);
+                    onError: (errors) => {
+                        alert.error((Object.values(errors ?? {})[0] as string | undefined) || `Failed to ${action} inventory item. Please try again.`);
                     },
                 });
             }
@@ -160,8 +161,8 @@ const restoreItem = (item: InventoryItemData) => {
             alert.success('Inventory item restored successfully!');
             reloadWithFilters();
         },
-        onError: () => {
-            alert.error('Failed to restore inventory item. Please try again.');
+        onError: (errors) => {
+            alert.error((Object.values(errors ?? {})[0] as string | undefined) || 'Failed to restore inventory item. Please try again.');
         },
     });
 };
@@ -180,8 +181,8 @@ const forceDeleteItem = (item: InventoryItemData) => {
                         alert.success('Inventory item permanently deleted successfully!');
                         reloadWithFilters();
                     },
-                    onError: () => {
-                        alert.error('Failed to permanently delete inventory item. Please try again.');
+                    onError: (errors) => {
+                        alert.error((Object.values(errors ?? {})[0] as string | undefined) || 'Failed to permanently delete inventory item. Please try again.');
                     },
                 });
             }

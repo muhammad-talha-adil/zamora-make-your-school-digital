@@ -24,7 +24,7 @@
                 </Button>
             </div>
 
-            <form @submit.prevent="submitStaff" class="space-y-6">
+            <form novalidate @submit.prevent="submitStaff" class="space-y-6">
                 <div class="rounded-lg border border-border bg-card p-6">
                     <h2 class="mb-4 flex items-center gap-2 text-lg font-semibold text-foreground">
                         <Icon icon="user" class="h-5 w-5 text-primary" />
@@ -82,7 +82,7 @@
                         </div>
                         <div class="space-y-2">
                             <Label for="hire_date">Hire Date</Label>
-                            <Input id="hire_date" v-model="form.hire_date" type="date" :max="today" />
+                            <Input id="hire_date" v-model="form.hire_date" type="date" />
                             <InputError :message="errors.hire_date" />
                         </div>
                     </div>
@@ -103,11 +103,7 @@
                             <Input id="email" v-model="form.email" type="email" placeholder="Leave empty to make one from the name" />
                             <InputError :message="errors.email" />
                         </div>
-                        <div v-if="linkedRoleLabel" class="space-y-2">
-                            <Label>Access level</Label>
-                            <p class="text-sm text-muted-foreground">Set from the position: {{ linkedRoleLabel }}.</p>
-                        </div>
-                        <div v-else class="space-y-2">
+                        <div class="space-y-2">
                             <Label for="role">Access level (what this person can see/do)</Label>
                             <SearchableSelect id="role" v-model="form.role" :options="roleOptions" placeholder="Select access level" clearable />
                         </div>
@@ -124,12 +120,12 @@
                     <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
                         <div class="space-y-2">
                             <Label for="basic_salary">Basic Salary <span class="text-destructive">*</span></Label>
-                            <Input id="basic_salary" v-model="form.basic_salary" type="number" min="0" max="10000000" placeholder="e.g. 50000" />
+                            <Input id="basic_salary" v-model="form.basic_salary" type="number" min="0" placeholder="e.g. 50000" />
                             <InputError :message="errors.basic_salary" />
                         </div>
                         <div class="space-y-2">
                             <Label for="allowance_amount">Allowance</Label>
-                            <Input id="allowance_amount" v-model="form.allowance_amount" type="number" min="0" max="10000000" placeholder="e.g. 5000" />
+                            <Input id="allowance_amount" v-model="form.allowance_amount" type="number" min="0" placeholder="e.g. 5000" />
                             <InputError :message="errors.allowance_amount" />
                         </div>
                         <div class="space-y-2">
@@ -329,22 +325,6 @@ const campusOptions = computed(() => campuses.value.map((c) => ({ value: String(
 const roleOptions = computed(() => (props.roles ?? []).map((r) => ({ value: r.name, label: r.label || r.name })));
 const documentTypes = computed(() => props.documentTypes ?? []);
 
-/** The access role the chosen position already carries, if Staff Settings links one. */
-const linkedRole = computed(() => designationList.value.find((d) => String(d.id) === form.designation_id)?.role ?? null);
-const linkedRoleLabel = computed(() => {
-    if (!linkedRole.value) {
-        return '';
-    }
-    const role = (props.roles ?? []).find((r) => r.name === linkedRole.value);
-    return role?.label || role?.name || linkedRole.value;
-});
-
-watch(linkedRole, (role) => {
-    if (role) {
-        form.role = '';
-    }
-});
-
 interface DocumentEntry {
     file: File | null;
     issued_on: string;
@@ -363,6 +343,17 @@ const onDocumentFile = (typeId: number, event: Event) => {
 
 const errors = reactive<Record<string, string>>({});
 const today = new Date().toISOString().slice(0, 10);
+
+watch(
+    () => ({ ...form }),
+    (now, before) => {
+        (Object.keys(now) as (keyof typeof now)[]).forEach((key) => {
+            if (now[key] !== before[key]) {
+                delete errors[key as string];
+            }
+        });
+    },
+);
 
 const clearErrors = () => Object.keys(errors).forEach((key) => delete errors[key]);
 

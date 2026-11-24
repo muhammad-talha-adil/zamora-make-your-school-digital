@@ -21,7 +21,7 @@ interface Lookup {
     id: number;
     name: string;
     description?: string | null;
-    role?: string | null;
+    permission_template?: string[] | null;
     is_required?: boolean;
     is_active: boolean;
 }
@@ -35,7 +35,7 @@ interface RoleOption {
 interface Props {
     designations: Lookup[];
     documentTypes: Lookup[];
-    roles: RoleOption[];
+    permissionGroups: Record<string, { name: string; label: string }[]>;
 }
 
 const props = defineProps<Props>();
@@ -112,13 +112,12 @@ const documentTypesList = usePagedList(() => props.documentTypes);
 // --------------------------------------------------------------- designation
 const showDesignationModal = ref(false);
 const editingDesignation = ref<Lookup | null>(null);
-const designationForm = ref({ name: '', description: '', role: '' as string | null, is_active: true });
-const designationRoleOptions = computed(() => props.roles.map((r) => ({ value: r.name, label: r.label || r.name })));
+const designationForm = ref({ name: '', description: '', permission_template: [] as string[], is_active: true });
 const designationErrors = ref<Record<string, string>>({});
 
 const openCreateDesignation = () => {
     editingDesignation.value = null;
-    designationForm.value = { name: '', description: '', role: '', is_active: true };
+    designationForm.value = { name: '', description: '', permission_template: [], is_active: true };
     designationErrors.value = {};
     showDesignationModal.value = true;
 };
@@ -128,7 +127,7 @@ const openEditDesignation = (designation: Lookup) => {
     designationForm.value = {
         name: designation.name,
         description: designation.description ?? '',
-        role: designation.role ?? '',
+        permission_template: [...(designation.permission_template ?? [])],
         is_active: designation.is_active,
     };
     designationErrors.value = {};
@@ -146,7 +145,7 @@ const submitDesignation = async () => {
         designationErrors.value = { name: 'Name is required.' };
         return;
     }
-    const payload = { ...designationForm.value, role: designationForm.value.role || null };
+    const payload = { ...designationForm.value };
 
     try {
         if (editingDesignation.value) {
@@ -190,7 +189,7 @@ const toggleDesignationStatus = async (designation: Lookup) => {
         await axios.put(route('staff.designations.update', designation.id), {
             name: designation.name,
             description: designation.description ?? '',
-            role: designation.role ?? null,
+            permission_template: designation.permission_template ?? [],
             is_active: nextActive,
         });
         alert.success(nextActive ? 'Designation activated.' : 'Designation deactivated.');
@@ -320,7 +319,7 @@ const deactivateDocumentType = async (type: Lookup) => {
                 <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
                     <div>
                         <h2 class="text-lg font-semibold text-foreground">Designations</h2>
-                        <p class="mt-1 text-xs text-muted-foreground">The job titles staff are assigned, optionally tied to a system role.</p>
+                        <p class="mt-1 text-xs text-muted-foreground">The job titles staff are assigned, each with the permissions a new person in that job starts with.</p>
                     </div>
                     <Button @click="openCreateDesignation">
                         <Icon icon="plus" class="mr-2 h-4 w-4" />
@@ -338,7 +337,7 @@ const deactivateDocumentType = async (type: Lookup) => {
                         <div class="flex flex-wrap gap-2 justify-between items-start">
                             <div>
                                 <div class="font-medium text-foreground">{{ designation.name }}</div>
-                                <div v-if="designation.role" class="text-xs text-muted-foreground">Role: {{ designation.role }}</div>
+                                <div class="text-xs text-muted-foreground">{{ designation.permission_template?.length ?? 0 }} default permissions</div>
                             </div>
                             <StatusToggle :active="designation.is_active" @toggle="toggleDesignationStatus(designation)" />
                         </div>
@@ -366,7 +365,7 @@ const deactivateDocumentType = async (type: Lookup) => {
                                     <th scope="col" class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">#</th>
                                     <th scope="col" class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Name</th>
                                     <th scope="col" class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Description</th>
-                                    <th scope="col" class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">System Role</th>
+                                    <th scope="col" class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Default permissions</th>
                                     <th scope="col" class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Status</th>
                                     <th scope="col" class="px-4 py-3 text-right text-xs font-semibold text-muted-foreground uppercase">Actions</th>
                                 </tr>
@@ -378,7 +377,7 @@ const deactivateDocumentType = async (type: Lookup) => {
                                     </td>
                                     <td class="px-4 py-3 text-sm font-medium text-foreground">{{ designation.name }}</td>
                                     <td class="px-4 py-3 text-sm text-muted-foreground max-w-xs truncate">{{ designation.description || '—' }}</td>
-                                    <td class="px-4 py-3 text-sm text-muted-foreground">{{ designation.role || '—' }}</td>
+                                    <td class="px-4 py-3 text-sm text-muted-foreground">{{ designation.permission_template?.length ?? 0 }}</td>
                                     <td class="px-4 py-3">
                                         <StatusToggle :active="designation.is_active" @toggle="toggleDesignationStatus(designation)" />
                                     </td>
@@ -527,14 +526,18 @@ const deactivateDocumentType = async (type: Lookup) => {
                         />
                     </div>
                     <div class="space-y-2">
-                        <Label for="designation-role">System Role</Label>
-                        <SearchableSelect
-                            id="designation-role"
-                            v-model="designationForm.role"
-                            :options="designationRoleOptions"
-                            placeholder="— none —"
-                            clearable
-                        />
+                        <Label>Default permissions</Label>
+                        <p class="text-xs text-muted-foreground">Copied to each new staff member with this position. Changing this later does not change people already added.</p>
+                        <div class="max-h-64 space-y-3 overflow-y-auto rounded-md border border-border p-3">
+                            <div v-for="(items, group) in props.permissionGroups" :key="group">
+                                <p class="mb-1 text-xs font-semibold uppercase text-muted-foreground">{{ group }}</p>
+                                <label v-for="item in items" :key="item.name" class="flex items-center gap-2 py-0.5 text-sm text-foreground">
+                                    <input v-model="designationForm.permission_template" type="checkbox" :value="item.name" class="h-4 w-4 rounded border-border text-primary" />
+                                    {{ item.label }}
+                                </label>
+                            </div>
+                        </div>
+                        <p v-if="designationErrors.permission_template" class="text-xs text-destructive">{{ designationErrors.permission_template }}</p>
                     </div>
                     <DialogFooter>
                         <Button type="button" variant="outline" @click="closeDesignationModal">Cancel</Button>

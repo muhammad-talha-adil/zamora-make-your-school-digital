@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers;
 
+use App\Http\Controllers\Staff\StaffProfileController;
 use App\Http\Requests\Staff\GiveStaffAdvanceRequest;
 use App\Http\Requests\Staff\PayPayrollItemRequest;
 use App\Http\Requests\Staff\ReturnStaffAdvanceRequest;
@@ -12,6 +13,7 @@ use App\Models\Campus;
 use App\Models\Month;
 use App\Models\PayrollRun;
 use App\Models\PayrollRunItem;
+use App\Models\Permission;
 use App\Models\Role;
 use App\Models\Staff\StaffAssignment;
 use App\Models\Staff\StaffAttendance;
@@ -64,14 +66,14 @@ class StaffController extends Controller
             && ($viewer->isSuperAdmin() || $viewer->hasPermission('staff.salary.manage'));
 
         $pendingPayroll = $maySeeSalary
-            ? (float) PayrollRun::where('status', '!=', 'paid')
-                ->when(
-                    $viewer && ! $viewer->isSuperAdmin() && $viewer->campusId(),
-                    fn ($query) => $query->where(function ($q) use ($viewer) {
-                        $q->whereNull('campus_id')->orWhere('campus_id', $viewer->campusId());
-                    })
-                )
-                ->sum('total_net')
+            ? round((float) PayrollRunItem::query()
+                ->where('status', '!=', 'paid')
+                ->whereHas('payrollRun', fn ($run) => $run->when(
+                    $viewer && $viewer->campusId(),
+                    fn ($query) => $query->where(fn ($q) => $q->whereNull('campus_id')->orWhere('campus_id', $viewer->campusId()))
+                ))
+                ->get()
+                ->sum(fn (PayrollRunItem $item) => $item->amountDue()), 2)
             : null;
 
         $today = now()->toDateString();
@@ -129,12 +131,11 @@ class StaffController extends Controller
         // restriction User::assignRole() already enforces when the role is
         // actually applied, surfaced here so the dropdown doesn't offer an
         // option that would just abort on save.
-        $excludedRoles = auth()->user()?->isSuperAdmin() ? ['developer', 'owner'] : ['developer', 'owner', 'campus_admin'];
 
         return Inertia::render('Staff/Settings/Index', [
             'designations' => StaffDesignation::orderBy('name')->get(),
             'documentTypes' => StaffDocumentType::orderBy('name')->get(),
-            'roles' => Role::where('scope_level', '!=', Role::SCOPE_SELF)->whereNotIn('name', $excludedRoles)->orderBy('name')->get(['id', 'name', 'label']),
+            'permissionGroups' => StaffProfileController::groupedPermissions(),
         ]);
     }
 
@@ -198,22 +199,9 @@ class StaffController extends Controller
         ]);
     }
 
-    /**
-     * Self-scoped roles (student, guardian) are never valid for a staff
-     * designation, developer/owner are platform-level roles no designation
-     * should be able to grant, and campus_admin is excluded for anyone who
-     * isn't themselves allowed to hand it out (User::assignRole() aborts on
-     * it anyway when the designation is actually assigned to someone, but
-     * failing here gives a clear validation error instead of a 403 later).
-     */
-    private function excludedDesignationRoles(): array
-    {
-        return auth()->user()?->isSuperAdmin() ? ['developer', 'owner'] : ['developer', 'owner', 'campus_admin'];
-    }
-
     public function storeDesignation(SaveDesignationRequest $request)
     {
-        $designation = StaffDesignation::create($request->safe()->except('is_active') + ['is_active' => true]);
+        $designation = StaffDesignation::create($this->withSafeTemplate($request->safe()->except('is_active')) + ['is_active' => true]);
 
         return response()->json([
             'success' => true,
@@ -224,7 +212,7 @@ class StaffController extends Controller
 
     public function updateDesignation(SaveDesignationRequest $request, StaffDesignation $designation)
     {
-        $designation->update($request->validated());
+        $designation->update($this->withSafeTemplate($request->validated()));
 
         return response()->json([
             'success' => true,
@@ -304,9 +292,9 @@ class StaffController extends Controller
 
             if (! empty($data['role'])) {
                 $user->assignRole($data['role']);
-            } else {
-                $this->assignDesignationRole($user, $data['designation_id'] ?? null);
             }
+
+            $this->copyDesignationTemplate($user, $data['designation_id'] ?? null);
 
             $login = $wantsLogin
                 ? $this->logins->issue($user->refresh(), $email)
@@ -345,8 +333,6 @@ class StaffController extends Controller
         $data = $request->validated();
 
         DB::transaction(function () use ($staffProfile, $data) {
-            $previousDesignationId = $staffProfile->designation_id;
-
             $staffProfile->user->update([
                 'name' => $data['name'],
                 'email' => $data['email'] ?: $staffProfile->user->email,
@@ -369,14 +355,6 @@ class StaffController extends Controller
                 'account_no' => $data['account_no'] ?? null,
                 'is_active' => $data['is_active'] ?? true,
             ]);
-
-            // Only touch roles when the designation actually changed in this
-            // request — an admin may have granted extra roles by hand, and
-            // resaving unrelated fields (salary, bank details, ...) must not
-            // silently re-run the designation's role grant every time.
-            if (($data['designation_id'] ?? null) !== $previousDesignationId) {
-                $this->assignDesignationRole($staffProfile->user, $data['designation_id'] ?? null);
-            }
         });
 
         return response()->json([
@@ -411,21 +389,31 @@ class StaffController extends Controller
 
         Gate::authorize('runPayroll', [StaffProfile::class, $data['campus_id'] ?? null]);
 
-        $existing = PayrollRun::query()
-            ->where('campus_id', $data['campus_id'] ?? null)
-            ->where('payroll_month_id', $data['payroll_month_id'])
-            ->where('payroll_year', $data['payroll_year'])
-            ->first();
+        $campusId = isset($data['campus_id']) ? (int) $data['campus_id'] : null;
+        $overlapping = $this->payroll->overlappingRuns($campusId, (int) $data['payroll_month_id'], (int) $data['payroll_year']);
+        $monthName = Month::find($data['payroll_month_id'])?->name;
 
-        if ($existing && ! $request->boolean('confirm_replace')) {
-            $monthName = Month::find($data['payroll_month_id'])?->name;
-
+        if ($overlapping->isNotEmpty() && ! $request->boolean('confirm_replace')) {
             return response()->json([
                 'success' => false,
                 'requires_confirmation' => true,
                 'message' => "This will replace the existing run for {$monthName} {$data['payroll_year']}. Anything already paid is kept.",
             ], 409);
         }
+
+        $otherScope = $overlapping->filter(fn (PayrollRun $run) => $run->campus_id !== $campusId);
+        $blocking = $otherScope->first(fn (PayrollRun $run) => $this->payroll->hasPayments($run));
+
+        if ($blocking) {
+            $scope = $blocking->campus?->name ?? 'All Campuses';
+
+            return response()->json([
+                'success' => false,
+                'message' => "The {$scope} run for {$monthName} {$data['payroll_year']} already has payments, so it cannot be replaced by a different campus run.",
+            ], 422);
+        }
+
+        $otherScope->each(fn (PayrollRun $run) => $this->payroll->retireRun($run));
 
         $run = $this->payroll->generateRun($data, auth()->id());
 
@@ -522,17 +510,36 @@ class StaffController extends Controller
      * enforced centrally in {@see User::assignRole()} so every grant path
      * (not just this one) is covered.
      */
-    protected function assignDesignationRole(User $user, ?int $designationId): void
+    /**
+     * Copies the designation's permission template onto this user's own
+     * permissions. A copy, not a link: editing the user later, or the
+     * template later, never touches the other.
+     */
+    protected function copyDesignationTemplate(User $user, ?int $designationId): void
     {
         if (! $designationId) {
             return;
         }
 
-        $role = StaffDesignation::find($designationId)?->role;
+        $names = StaffDesignation::find($designationId)?->permission_template ?? [];
+        $names = array_values(array_diff($names, StaffProfileController::ownerOnlyPermissions()));
 
-        if ($role) {
-            $user->assignRole($role);
+        if ($names !== []) {
+            $user->givePermissionTo(Permission::whereIn('name', $names)->pluck('name')->all());
         }
+    }
+
+    /**
+     * @param  array<string, mixed>  $data
+     * @return array<string, mixed>
+     */
+    protected function withSafeTemplate(array $data): array
+    {
+        if (isset($data['permission_template'])) {
+            $data['permission_template'] = array_values(array_diff($data['permission_template'], StaffProfileController::ownerOnlyPermissions()));
+        }
+
+        return $data;
     }
 
     protected function generateEmployeeNo(): string

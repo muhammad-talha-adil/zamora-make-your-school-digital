@@ -1,8 +1,9 @@
 <script setup lang="ts">
+import type { Ref } from 'vue';
 import { router } from '@inertiajs/vue3';
 import { ref, computed } from 'vue';
 import { alert } from '@/utils';
-import { useFormValidity } from '@/composables/useFormValidity';
+import { requiredErrors, useClearErrorsOnEdit, useFormValidity } from '@/composables/useFormValidity';
 
 // Components
 import InputError from '@/components/InputError.vue';
@@ -57,6 +58,7 @@ const form = ref({
 
 const isEditing = computed(() => !!props.leaveType?.id);
 const { isValid } = useFormValidity(form, ['name']);
+useClearErrorsOnEdit(form, errors as Ref<Record<string, string>>);
 
 const openModal = () => {
     if (props.leaveType) {
@@ -81,6 +83,12 @@ const closeModal = () => {
 };
 
 const submit = () => {
+    const missing = requiredErrors(form, ['name']);
+    if (Object.keys(missing).length > 0) {
+        errors.value = missing as typeof errors.value;
+        return;
+    }
+
     processing.value = true;
     errors.value = {};
 
@@ -186,7 +194,7 @@ const submit = () => {
                     </Button>
                     <Button
                         type="submit"
-                        :disabled="processing || !isValid"
+                        :disabled="processing"
                         @click="submit"
                     >
                         <Icon

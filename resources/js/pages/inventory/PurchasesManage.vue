@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { headerCampusId } from '@/utils/campus';
 import { formatPhone } from '@/utils/phone';
 import { Head } from '@inertiajs/vue3';
 import { computed, ref, watch } from 'vue';
@@ -25,7 +26,7 @@ interface Props {
 
 const props = defineProps<Props>();
 const activeTab = ref('purchases');
-const campusFilter = ref('');
+const campusFilter = ref(headerCampusId());
 const campusOptions = computed(() => props.campuses.map((campus) => ({ value: campus.id, label: campus.name })));
 
 watch(campusFilter, () => {

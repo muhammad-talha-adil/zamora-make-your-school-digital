@@ -11,6 +11,7 @@ use App\Models\StaffProfile;
 use App\Services\Attendance\WorkingDayCalculator;
 use App\Services\Finance\UnifiedAccountingService;
 use Illuminate\Support\Carbon;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -34,6 +35,40 @@ class StaffPayrollService
         private WorkingDayCalculator $workingDays,
         private UnifiedAccountingService $accounting
     ) {}
+
+    /**
+     * Runs for the same month and year whose campus scope overlaps the one
+     * being generated: a school-wide run overlaps every campus, and a campus
+     * run overlaps the school-wide run and itself.
+     *
+     * @return Collection<int, PayrollRun>
+     */
+    public function overlappingRuns(?int $campusId, int $monthId, int $year): Collection
+    {
+        return PayrollRun::query()
+            ->where('payroll_month_id', $monthId)
+            ->where('payroll_year', $year)
+            ->when($campusId !== null, fn ($q) => $q->where(fn ($inner) => $inner->whereNull('campus_id')->orWhere('campus_id', $campusId)))
+            ->get();
+    }
+
+    /**
+     * Removes an overlapping run of a different scope so two runs never pay
+     * the same person twice. Refuses when anything in it is already paid.
+     */
+    public function retireRun(PayrollRun $run): void
+    {
+        DB::transaction(function () use ($run) {
+            $run->items()->forceDelete();
+            $this->accounting->removePayrollRunJournal($run);
+            $run->forceDelete();
+        });
+    }
+
+    public function hasPayments(PayrollRun $run): bool
+    {
+        return $run->items()->where(fn ($q) => $q->where('amount_paid', '>', 0)->orWhereIn('status', ['paid', 'partial']))->exists();
+    }
 
     /**
      * Generates (or regenerates) a run for a campus, month and year.

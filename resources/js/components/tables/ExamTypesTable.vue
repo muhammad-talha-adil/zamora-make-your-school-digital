@@ -79,10 +79,8 @@ const inactivateExamType = (examType: any) => {
                         alert.success('Exam type deactivated successfully!');
                         fetchExamTypes();
                     },
-                    onError: () => {
-                        alert.error(
-                            'Failed to deactivate exam type. Please try again.',
-                        );
+                    onError: (errors) => {
+                        alert.error((Object.values(errors ?? {})[0] as string | undefined) || 'Failed to deactivate exam type. Please try again.');
                     },
                 });
             }
@@ -96,8 +94,8 @@ const activateExamType = (examType: any) => {
             alert.success('Exam type activated successfully!');
             fetchExamTypes();
         },
-        onError: () => {
-            alert.error('Failed to activate exam type. Please try again.');
+        onError: (errors) => {
+            alert.error((Object.values(errors ?? {})[0] as string | undefined) || 'Failed to activate exam type. Please try again.');
         },
     });
 };
@@ -116,10 +114,8 @@ const forceDeleteExamType = (examType: any) => {
                         alert.success('Exam type permanently deleted successfully!');
                         fetchExamTypes();
                     },
-                    onError: () => {
-                        alert.error(
-                            'Failed to permanently delete exam type. Please try again.',
-                        );
+                    onError: (errors) => {
+                        alert.error((Object.values(errors ?? {})[0] as string | undefined) || 'Failed to permanently delete exam type. Please try again.');
                     },
                 });
             }

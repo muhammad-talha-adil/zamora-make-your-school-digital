@@ -1,9 +1,10 @@
 <script setup lang="ts">
+import type { Ref } from 'vue';
 import CampusSelect from '@/components/ui/CampusSelect.vue';
 import axios from 'axios';
 import { alert } from '@/utils';
 import { ref, computed, reactive, watch } from 'vue';
-import { useFormValidity } from '@/composables/useFormValidity';
+import { requiredErrors, useClearErrorsOnEdit, useFormValidity } from '@/composables/useFormValidity';
 
 // Components
 import InputError from '@/components/InputError.vue';
@@ -136,6 +137,7 @@ const form = reactive({
 const errors = ref<Record<string, string>>({});
 const processing = ref(false);
 const { isValid } = useFormValidity(form, ['campus_id', 'supplier_id', 'return_date']);
+useClearErrorsOnEdit(form, errors as Ref<Record<string, string>>);
 const loading = ref(false);
 
 // Dynamic data
@@ -468,6 +470,12 @@ const validateItems = (): boolean => {
 };
 
 const submitForm = () => {
+    const missing = requiredErrors(form, ['campus_id', 'supplier_id', 'return_date']);
+    if (Object.keys(missing).length > 0) {
+        errors.value = missing as typeof errors.value;
+        return;
+    }
+
     if (!validateItems()) {
         return;
     }

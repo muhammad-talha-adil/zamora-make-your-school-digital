@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { headerCampusId } from '@/utils/campus';
 import { Head, router } from '@inertiajs/vue3';
 import { computed, ref, watch } from 'vue';
 import axios from 'axios';
@@ -21,7 +22,7 @@ interface Props {
 
 const props = defineProps<Props>();
 const activeTab = ref('assigned');
-const campusFilter = ref(props.campuses[0]?.id || '');
+const campusFilter = ref(Number(headerCampusId()) || props.campuses[0]?.id || '');
 const campusOptions = computed(() => props.campuses.map((campus) => ({ value: campus.id, label: campus.name })));
 
 watch(campusFilter, () => {

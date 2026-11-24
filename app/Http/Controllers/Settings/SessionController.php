@@ -7,6 +7,7 @@ use App\Http\Requests\Settings\StoreSessionRequest;
 use App\Http\Requests\Settings\UpdateSessionRequest;
 use App\Models\Campus;
 use App\Models\Session;
+use App\Models\StudentEnrollmentRecord;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
@@ -49,6 +50,7 @@ class SessionController extends Controller
 
         return Inertia::render('settings/Sessions/Index', [
             'tableSessions' => $sessions,
+            'latestSessionEnd' => Session::query()->max('end_date'),
             'isSuperAdmin' => $request->user()?->isSuperAdmin() ?? false,
             'campuses' => $request->user()?->isSuperAdmin()
                 ? Campus::query()->orderBy('name')->get(['id', 'name'])
@@ -176,6 +178,16 @@ class SessionController extends Controller
             }
 
             return redirect()->route('sessions.index')->with('error', $message);
+        }
+
+        $students = StudentEnrollmentRecord::where('session_id', $session->id)->count();
+
+        if ($students > 0) {
+            $message = "{$session->name} cannot be deleted because {$students} student record".($students === 1 ? '' : 's').' belong to it.';
+
+            return request()->expectsJson()
+                ? response()->json(['success' => false, 'message' => $message], 422)
+                : redirect()->route('sessions.index')->with('error', $message);
         }
 
         $session->delete();

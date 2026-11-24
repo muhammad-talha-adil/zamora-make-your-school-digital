@@ -6,6 +6,7 @@ import AppLayout from '@/layouts/AppLayout.vue';
 import LineChart from '@/components/charts/LineChart.vue';
 import type { BreadcrumbItem } from '@/types';
 import { formatCurrency } from '@/utils/format';
+import { formatDate } from '@/utils/date';
 
 // Types
 interface Stats {
@@ -14,6 +15,8 @@ interface Stats {
     overdueVouchers: number;
     totalCollected: number;
     totalOutstanding: number;
+    overdueAmount: number;
+    overdueStudents: number;
     monthlyCollection: number;
     activeDiscounts: number;
     pendingApprovals: number;
@@ -58,6 +61,8 @@ const stats = ref<Stats>(props.stats || {
     overdueVouchers: 0,
     totalCollected: 0,
     totalOutstanding: 0,
+    overdueAmount: 0,
+    overdueStudents: 0,
     monthlyCollection: 0,
     activeDiscounts: 0,
     pendingApprovals: 0,
@@ -159,9 +164,9 @@ onMounted(() => {
                 <div class="bg-card rounded-lg border border-border p-4">
                     <div class="flex flex-wrap gap-2 items-center justify-between">
                         <div>
-                            <p class="text-sm text-muted-foreground">Overdue</p>
+                            <p class="text-sm text-muted-foreground">Overdue ({{ stats.overdueStudents }} students)</p>
                             <p class="text-2xl font-bold text-destructive mt-1">
-                                {{ stats.overdueVouchers }}
+                                {{ formatCurrency(stats.overdueAmount) }}
                             </p>
                         </div>
                         <div class="p-3 bg-destructive/10 rounded-lg">
@@ -170,6 +175,11 @@ onMounted(() => {
                             </svg>
                         </div>
                     </div>
+                </div>
+
+                <div class="bg-card rounded-lg border border-border p-4">
+                    <p class="text-sm text-muted-foreground">Total Outstanding</p>
+                    <p class="text-2xl font-bold text-foreground mt-1">{{ formatCurrency(stats.totalOutstanding) }}</p>
                 </div>
 
                 <!-- Total Collected -->
@@ -221,7 +231,7 @@ onMounted(() => {
                                 <p class="font-semibold text-success">
                                     {{ formatCurrency(payment.amount) }}
                                 </p>
-                                <p class="text-xs text-muted-foreground">{{ payment.payment_date }}</p>
+                                <p class="text-xs text-muted-foreground">{{ formatDate(payment.payment_date) }}</p>
                             </div>
                         </div>
                     </div>

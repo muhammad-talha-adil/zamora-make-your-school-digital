@@ -103,8 +103,8 @@ const deleteCampus = (campus: any) => {
                 }).then(() => {
                     alert.success('Campus deleted successfully!');
                     fetchCampuses();
-                }).catch(() => {
-                    alert.error('Failed to delete campus. Please try again.');
+                }).catch((error) => {
+                    alert.error(error?.response?.data?.message || 'Failed to delete campus. Please try again.');
                 });
             }
         });
@@ -119,8 +119,8 @@ const activateCampus = (campus: any) => {
         if (idx !== -1) {
             campusesData.value.splice(idx, 1, { ...campusesData.value[idx], is_active: true });
         }
-    }).catch(() => {
-        alert.error('Failed to activate campus. Please try again.');
+    }).catch((error) => {
+        alert.error(error?.response?.data?.message || 'Failed to activate campus. Please try again.');
     });
 };
 
@@ -141,8 +141,8 @@ const inactivateCampus = (campus: any) => {
                     if (idx !== -1) {
                         campusesData.value.splice(idx, 1, { ...campusesData.value[idx], is_active: false });
                     }
-                }).catch(() => {
-                    alert.error('Failed to deactivate campus. Please try again.');
+                }).catch((error) => {
+                    alert.error(error?.response?.data?.message || 'Failed to deactivate campus. Please try again.');
                 });
             }
         });

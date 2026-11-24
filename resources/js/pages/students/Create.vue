@@ -727,7 +727,7 @@
                     >
                         Cancel
                     </Button>
-                    <Button type="submit" :disabled="processing || !isValid">
+                    <Button type="submit" :disabled="processing">
                         <Icon
                             v-if="processing"
                             icon="loader"
@@ -781,6 +781,7 @@
 </template>
 
 <script setup lang="ts">
+import type { Ref } from 'vue';
 import PhoneInput from '@/components/ui/PhoneInput.vue';
 import Icon from '@/components/Icon.vue';
 import InputError from '@/components/InputError.vue';
@@ -796,7 +797,7 @@ import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '
 import { route } from 'ziggy-js';
 import { useStudentForm } from '@/composables/useStudentForm';
 import { useCascadingAcademicSelect } from '@/composables/useCascadingAcademicSelect';
-import { useFormValidity } from '@/composables/useFormValidity';
+import { requiredErrors, useClearErrorsOnEdit, useFormValidity } from '@/composables/useFormValidity';
 import FeeStructureSelector from '@/components/students/FeeStructureSelector.vue';
 import SearchableSelect from '@/components/ui/searchable-select/SearchableSelect.vue';
 import { alert } from '@/utils/alert';
@@ -990,6 +991,7 @@ const { isValid } = useFormValidity(form, [
     'father_name',
     'father_phone',
 ]);
+useClearErrorsOnEdit(form, errors as Ref<Record<string, string>>);
 
 const requiredFieldLabels: Record<string, string> = {
     name: 'student name',
@@ -1254,6 +1256,22 @@ const useSimilarGuardian = () => {
 };
 
 const submitForm = () => {
+    const missing = requiredErrors(form, [
+    'name',
+    'admission_no',
+    'dob',
+    'gender_id',
+    'campus_id',
+    'session_id',
+    'class_id',
+    'father_name',
+    'father_phone',
+]);
+    if (Object.keys(missing).length > 0) {
+        errors.value = missing as typeof errors.value;
+        return;
+    }
+
     if (processing.value) {
         return;
     }

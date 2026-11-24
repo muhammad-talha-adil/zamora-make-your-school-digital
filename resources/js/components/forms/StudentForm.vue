@@ -1,7 +1,8 @@
 <script setup lang="ts">
+import type { Ref } from 'vue';
 import { router } from '@inertiajs/vue3';
 import { ref } from 'vue';
-import { useFormValidity } from '@/composables/useFormValidity';
+import { requiredErrors, useClearErrorsOnEdit, useFormValidity } from '@/composables/useFormValidity';
 import { alert } from '@/utils';
 
 // Components
@@ -122,6 +123,7 @@ const form = ref({
 const errors = ref({});
 const processing = ref(false);
 const { isValid } = useFormValidity(form, ['name', 'admission_no']);
+useClearErrorsOnEdit(form, errors as Ref<Record<string, string>>);
 
 // Dialog
 const open = ref(false);
@@ -134,6 +136,12 @@ const statusOptions = [
 
 // Methods
 const submit = () => {
+    const missing = requiredErrors(form, ['name', 'admission_no']);
+    if (Object.keys(missing).length > 0) {
+        errors.value = missing as typeof errors.value;
+        return;
+    }
+
     processing.value = true;
     errors.value = {};
 
@@ -469,7 +477,7 @@ const resetForm = () => {
                 </div>
 
                 <DialogFooter>
-                    <Button type="submit" :disabled="processing || !isValid">
+                    <Button type="submit" :disabled="processing">
                         {{ student ? 'Update' : 'Create' }}
                     </Button>
                 </DialogFooter>

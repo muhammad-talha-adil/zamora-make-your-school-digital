@@ -40,7 +40,7 @@ const toggleTimingActive = (timing: any) => {
                 router.post(`/attendance/settings/shift-timings/${timing.id}/toggle-active`, {}, {
                     preserveScroll: true,
                     onSuccess: () => alert.success(`Shift timing ${actionText}d successfully!`),
-                    onError: () => alert.error('Failed to update status. Please try again.'),
+                    onError: (errors) => alert.error((Object.values(errors ?? {})[0] as string | undefined) || 'Failed to update status. Please try again.'),
                 });
             }
         });
@@ -52,7 +52,7 @@ const deleteTiming = (timing: any) => {
             router.delete(`/attendance/settings/shift-timings/${timing.id}`, {
                 preserveScroll: true,
                 onSuccess: () => alert.success('Shift timing deleted successfully!'),
-                onError: () => alert.error('Failed to delete shift timing. Please try again.'),
+                onError: (errors) => alert.error((Object.values(errors ?? {})[0] as string | undefined) || 'Failed to delete shift timing. Please try again.'),
             });
         }
     });

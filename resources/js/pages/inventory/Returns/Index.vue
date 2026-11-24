@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { headerCampusId } from '@/utils/campus';
 import { Head, router } from '@inertiajs/vue3';
 import { formatCurrency } from '@/utils';
 import { computed, ref, watch } from 'vue';
@@ -46,7 +47,7 @@ interface Props {
 const props = defineProps<Props>();
 
 const perPage = ref(10);
-const campusFilter = ref('');
+const campusFilter = ref(headerCampusId());
 const campusOptions = computed(() => props.campuses.map((campus) => ({ value: campus.id, label: campus.name })));
 const returnsData = ref(props.returns.data || []);
 const pagination = ref(props.returns);

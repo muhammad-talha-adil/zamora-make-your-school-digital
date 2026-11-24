@@ -401,7 +401,7 @@ const switchCampus = (campusId: string | number | null) => {
     return
   }
 
-  router.post(route('switch-campus.update'), { campus_id: campusId }, { preserveScroll: true })
+  router.post(route('switch-campus.update'), { campus_id: campusId }, { preserveScroll: true, onSuccess: () => window.location.reload() })
 }
 
 const campusSwitcherOptions = computed(() =>

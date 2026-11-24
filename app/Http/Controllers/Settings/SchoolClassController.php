@@ -8,6 +8,7 @@ use App\Http\Requests\Settings\StoreSchoolClassRequest;
 use App\Http\Requests\Settings\UpdateSchoolClassRequest;
 use App\Models\Campus;
 use App\Models\SchoolClass;
+use App\Models\StudentEnrollmentRecord;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Pagination\LengthAwarePaginator;
@@ -274,6 +275,16 @@ class SchoolClassController extends Controller
     public function destroy(SchoolClass $schoolClass)
     {
         Gate::authorize('delete', $schoolClass);
+
+        $students = StudentEnrollmentRecord::where('class_id', $schoolClass->id)->count();
+
+        if ($students > 0) {
+            $message = "{$schoolClass->name} cannot be deleted because {$students} student record".($students === 1 ? '' : 's').' use it. Move them to another class first.';
+
+            return request()->expectsJson()
+                ? response()->json(['success' => false, 'message' => $message], 422)
+                : redirect()->route('school-classes.index')->with('error', $message);
+        }
 
         $schoolClass->delete();
 

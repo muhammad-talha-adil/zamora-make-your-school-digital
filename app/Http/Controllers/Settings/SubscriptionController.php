@@ -14,17 +14,18 @@ use Inertia\Response;
 class SubscriptionController extends Controller
 {
     /**
-     * Vendor-only tooling: gated purely on the `developer` role, the same
+     * The owner may read the subscription; only the vendor (developer) may change it. Gated purely on the `developer` role, the same
      * reasoning as {@see EnsureArtisanUiAccess} - this
      * manages the installation's own access lock, so it deliberately has no
      * Spatie permission of its own.
      */
     public function index(Request $request): Response
     {
-        $this->authorizeUser($request);
+        abort_unless($request->user()?->isSuperAdmin(), 403, 'Unauthorized action. You do not have permission to access this resource.');
 
         return Inertia::render('settings/Subscription', [
             'subscription' => Subscription::current(),
+            'canEdit' => (bool) $request->user()?->isDeveloper(),
         ]);
     }
 

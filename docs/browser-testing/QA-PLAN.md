@@ -101,3 +101,9 @@ Suggestion: Settings (3) ko Staff (2) ke saath ya foran baad karein, kyunke Atte
 
 ## Ek module = ek round rule
 Har module ke liye pehle poora sweep: agent code mein hi pehle woh checks chalaye jo browser karega (har form: required, negative, duplicate, max, future date, campus scope, 403, phone/CNIC format, inline messages, placeholders, double-submit, 500 test) aur invariant tests likhe. Browser report ke baad ek hi fix pass. Maqsad: module ek ya do round mein SATISFIED.
+
+## Deferred (from 01r/01s)
+- Transport submenu proposal: Dashboard, Vehicles, Routes & Stops, Assignments, Monthly Dues (with list), Expenses, Reports.
+- Fee Print dialog.
+- Transport "added to N vouchers" case (merged dues on a voucher that already has payments).
+- Logo upload, password change, menu toggle effect, pagination.

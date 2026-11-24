@@ -92,10 +92,8 @@ const deleteHoliday = (holiday: any) => {
                         alert.success('Holiday deleted successfully!');
                         fetchHolidays();
                     },
-                    onError: () => {
-                        alert.error(
-                            'Failed to delete holiday. Please try again.',
-                        );
+                    onError: (errors) => {
+                        alert.error((Object.values(errors ?? {})[0] as string | undefined) || 'Failed to delete holiday. Please try again.');
                     },
                 });
             }

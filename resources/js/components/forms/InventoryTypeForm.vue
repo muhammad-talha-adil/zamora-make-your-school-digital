@@ -1,10 +1,11 @@
 <script setup lang="ts">
+import type { Ref } from 'vue';
 import CampusSelect from '@/components/ui/CampusSelect.vue';
 import { ref, watch, computed } from 'vue';
 import { usePage } from '@inertiajs/vue3';
 import { alert } from '@/utils';
 import axios from 'axios';
-import { useFormValidity } from '@/composables/useFormValidity';
+import { requiredErrors, useClearErrorsOnEdit, useFormValidity } from '@/composables/useFormValidity';
 
 // Components
 import InputError from '@/components/InputError.vue';
@@ -71,6 +72,7 @@ const processing = ref(false);
 const nameExistsError = ref('');
 const checkingName = ref(false);
 const { isValid } = useFormValidity(form, ['name', 'campus_id']);
+useClearErrorsOnEdit(form, errors as Ref<Record<string, string>>);
 
 // Modal states
 const internalOpen = ref(false);
@@ -184,6 +186,12 @@ const checkDuplicateName = async () => {
 
 // Methods
 const submit = () => {
+    const missing = requiredErrors(form, ['name', 'campus_id']);
+    if (Object.keys(missing).length > 0) {
+        errors.value = missing as typeof errors.value;
+        return;
+    }
+
     processing.value = true;
     errors.value = {};
     nameExistsError.value = '';

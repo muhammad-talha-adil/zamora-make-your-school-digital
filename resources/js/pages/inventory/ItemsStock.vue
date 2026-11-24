@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { headerCampusId } from '@/utils/campus';
 import { Head } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 import { route } from 'ziggy-js';
@@ -98,7 +99,7 @@ interface Props {
 const props = defineProps<Props>();
 
 const activeTab = ref<'stocks' | 'items' | 'adjustments' | 'types'>('stocks');
-const campusFilter = ref('');
+const campusFilter = ref(headerCampusId());
 const statusFilter = ref<'active' | 'inactive'>('active');
 const searchQuery = ref('');
 const lowStockOnly = ref(false);

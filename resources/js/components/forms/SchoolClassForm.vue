@@ -1,8 +1,9 @@
 <script setup lang="ts">
+import type { Ref } from 'vue';
 import axios from 'axios';
 import { computed, ref, watch } from 'vue';
 import { alert } from '@/utils';
-import { useFormValidity } from '@/composables/useFormValidity';
+import { requiredErrors, useClearErrorsOnEdit, useFormValidity } from '@/composables/useFormValidity';
 
 // Components
 import InputError from '@/components/InputError.vue';
@@ -113,6 +114,7 @@ const applyPrefix = () => {
 const errors = ref<Record<string, string>>({});
 const processing = ref(false);
 const { isValid } = useFormValidity(form, ['name']);
+useClearErrorsOnEdit(form, errors as Ref<Record<string, string>>);
 
 // Dialog
 const open = ref(false);
@@ -133,6 +135,12 @@ watch(open, (isOpen) => {
 
 // Methods
 const submit = () => {
+    const missing = requiredErrors(form, ['name']);
+    if (Object.keys(missing).length > 0) {
+        errors.value = missing as typeof errors.value;
+        return;
+    }
+
     processing.value = true;
     errors.value = {};
 
@@ -313,7 +321,7 @@ const resetForm = () => {
                 </div>
 
                 <DialogFooter>
-                    <Button type="submit" :disabled="processing || !isValid">
+                    <Button type="submit" :disabled="processing">
                         {{ processing ? 'Saving...' : (schoolClass ? 'Update' : 'Create') }}
                     </Button>
                 </DialogFooter>

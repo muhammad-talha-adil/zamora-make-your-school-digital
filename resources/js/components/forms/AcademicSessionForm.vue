@@ -1,8 +1,10 @@
 <script setup lang="ts">
+import { usePage } from '@inertiajs/vue3';
+import type { Ref } from 'vue';
 import axios from 'axios';
 import { computed, ref, watch } from 'vue';
 import { alert } from '@/utils';
-import { useFormValidity } from '@/composables/useFormValidity';
+import { requiredErrors, useClearErrorsOnEdit, useFormValidity } from '@/composables/useFormValidity';
 
 // Components
 import InputError from '@/components/InputError.vue';
@@ -62,13 +64,30 @@ const academicYearStart = now.getMonth() < 3 ? now.getFullYear() - 1 : now.getFu
 // Form data
 const defaultEndDate = (startYear: number, endYear: number) => (endYear > startYear ? `${endYear}-03-31` : `${endYear}-12-31`);
 
+const latestSessionEnd = (usePage().props as { latestSessionEnd?: string | null }).latestSessionEnd ?? null;
+
+/** A new session starts the day after the latest one ends and runs one year. */
+const nextSessionDates = () => {
+    if (props.session || !latestSessionEnd) {
+        return null;
+    }
+    const start = new Date(`${String(latestSessionEnd).slice(0, 10)}T00:00:00Z`);
+    start.setUTCDate(start.getUTCDate() + 1);
+    const end = new Date(start);
+    end.setUTCFullYear(end.getUTCFullYear() + 1);
+    end.setUTCDate(end.getUTCDate() - 1);
+    const iso = (d: Date) => d.toISOString().slice(0, 10);
+
+    return { start: iso(start), end: iso(end), startYear: start.getUTCFullYear(), endYear: end.getUTCFullYear() };
+};
+
 const getInitialForm = () => ({
     name: props.session?.name || '',
-    start_year: props.session?.start_year || academicYearStart,
-    end_year: props.session?.end_year || academicYearStart + 1,
+    start_year: props.session?.start_year || nextSessionDates()?.startYear || academicYearStart,
+    end_year: props.session?.end_year || nextSessionDates()?.endYear || academicYearStart + 1,
     is_active: props.session?.is_active ?? false,
-    start_date: props.session?.start_date || '',
-    end_date: props.session?.end_date || '',
+    start_date: props.session?.start_date || nextSessionDates()?.start || '',
+    end_date: props.session?.end_date || nextSessionDates()?.end || '',
     // Editing an existing session starts from the campuses it's already
     // attached to; a new one defaults to every campus selected (the common
     // case), since nothing has been chosen yet.
@@ -82,6 +101,7 @@ const form = ref(getInitialForm());
 const errors = ref<Record<string, string>>({});
 const processing = ref(false);
 const { isValid } = useFormValidity(form, ['name', 'start_year', 'end_year', 'start_date', 'end_date']);
+useClearErrorsOnEdit(form, errors as Ref<Record<string, string>>);
 
 // Dialog
 const open = ref(false);
@@ -189,6 +209,12 @@ const startDateReadable = computed(() => formatReadableDate(form.value.start_dat
 const endDateReadable = computed(() => formatReadableDate(form.value.end_date));
 
 const submit = () => {
+    const missing = requiredErrors(form, ['name', 'start_year', 'end_year', 'start_date', 'end_date']);
+    if (Object.keys(missing).length > 0) {
+        errors.value = missing as typeof errors.value;
+        return;
+    }
+
     processing.value = true;
     errors.value = {};
 
@@ -391,7 +417,7 @@ const resetForm = () => {
                 </div>
 
                 <DialogFooter>
-                    <Button type="submit" :disabled="processing || !isValid">
+                    <Button type="submit" :disabled="processing">
                         {{ processing ? 'Saving...' : (session ? 'Update' : 'Create') }}
                     </Button>
                 </DialogFooter>

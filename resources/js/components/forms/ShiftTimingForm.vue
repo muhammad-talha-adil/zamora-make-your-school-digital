@@ -1,8 +1,9 @@
 <script setup lang="ts">
+import type { Ref } from 'vue';
 import { router } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 import { alert } from '@/utils';
-import { useFormValidity } from '@/composables/useFormValidity';
+import { requiredErrors, useClearErrorsOnEdit, useFormValidity } from '@/composables/useFormValidity';
 
 import InputError from '@/components/InputError.vue';
 import { Button } from '@/components/ui/button';
@@ -70,6 +71,7 @@ const defaultForm = () => ({
 const form = ref(defaultForm());
 
 const { isValid } = useFormValidity(form, ['name', 'starts_on', 'ends_on', 'day_starts_at', 'late_after']);
+useClearErrorsOnEdit(form, errors as Ref<Record<string, string>>);
 
 const isEditing = computed(() => !!props.shiftTiming?.id);
 
@@ -93,6 +95,12 @@ const toggleClass = (classId: number) => {
 };
 
 const submit = () => {
+    const missing = requiredErrors(form, ['name', 'starts_on', 'ends_on', 'day_starts_at', 'late_after']);
+    if (Object.keys(missing).length > 0) {
+        errors.value = missing as typeof errors.value;
+        return;
+    }
+
     processing.value = true;
     errors.value = {};
 
@@ -216,7 +224,7 @@ const submit = () => {
                 </CardContent>
                 <CardFooter class="flex flex-wrap justify-end gap-2">
                     <Button variant="outline" @click="closeModal">Cancel</Button>
-                    <Button type="submit" :disabled="processing || !isValid" @click="submit">
+                    <Button type="submit" :disabled="processing" @click="submit">
                         <Icon v-if="processing" icon="loader" class="mr-2 h-4 w-4 animate-spin" />
                         {{ isEditing ? 'Update' : 'Create' }}
                     </Button>

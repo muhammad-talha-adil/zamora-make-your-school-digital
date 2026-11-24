@@ -11,11 +11,13 @@ class StaffDesignation extends Model
         'name',
         'description',
         'role',
+        'permission_template',
         'is_active',
     ];
 
     protected $casts = [
         'is_active' => 'boolean',
+        'permission_template' => 'array',
     ];
 
     public function staffProfiles(): HasMany

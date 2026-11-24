@@ -1,10 +1,11 @@
 <script setup lang="ts">
+import type { Ref } from 'vue';
 import CampusSelect from '@/components/ui/CampusSelect.vue';
 import axios from 'axios';
 import { alert } from '@/utils';
 import { ref, computed, reactive } from 'vue';
 import { usePage } from '@inertiajs/vue3';
-import { useFormValidity } from '@/composables/useFormValidity';
+import { requiredErrors, useClearErrorsOnEdit, useFormValidity } from '@/composables/useFormValidity';
 
 // Components
 import InputError from '@/components/InputError.vue';
@@ -71,6 +72,7 @@ const form = reactive({
 });
 
 const { isValid } = useFormValidity(form, ['campus_id', 'inventory_item_id', 'type', 'reason']);
+useClearErrorsOnEdit(form, errors as Ref<Record<string, string>>);
 
 const errors = ref<Record<string, string>>({});
 const processing = ref(false);
@@ -124,6 +126,12 @@ const closeModal = () => {
 };
 
 const submitForm = () => {
+    const missing = requiredErrors(form, ['campus_id', 'inventory_item_id', 'type', 'reason']);
+    if (Object.keys(missing).length > 0) {
+        errors.value = missing as typeof errors.value;
+        return;
+    }
+
     processing.value = true;
     errors.value = {};
 
@@ -327,7 +335,7 @@ const submitForm = () => {
 
                 <!-- Actions -->
                 <div class="flex flex-wrap justify-end gap-3 pt-2">
-                    <Button type="submit" :disabled="processing || !isValid" class="h-10">
+                    <Button type="submit" :disabled="processing" class="h-10">
                         <Icon v-if="processing" icon="loader" class="mr-2 h-4 w-4 animate-spin" />
                         <Icon v-else icon="check" class="mr-2 h-4 w-4" />
                         Create Adjustment

@@ -7,6 +7,7 @@
  */
 
 use App\Models\Month;
+use App\Models\PayrollRun;
 use App\Models\PayrollRunItem;
 use App\Models\StaffDesignation;
 use App\Models\StaffProfile;
@@ -231,4 +232,43 @@ it('says a designation name is required and unique', function () {
     StaffDesignation::create(['name' => 'Clerk', 'is_active' => true]);
     $this->postJson(route('staff.designations.store'), ['name' => 'Clerk'])
         ->assertUnprocessable()->assertJsonPath('errors.name.0', 'A position with this name already exists.');
+});
+
+it('asks to confirm and replaces an overlapping school-wide run when a campus run is generated', function () {
+    $month = Month::firstOrCreate(['month_number' => 4], ['name' => 'April']);
+    $this->world->person('Overlap Person');
+    $payload = ['payroll_month_id' => $month->id, 'payroll_year' => 2026];
+
+    $this->postJson(route('staff.payroll.generate'), $payload)->assertSuccessful();
+
+    $campusPayload = $payload + ['campus_id' => $this->world->school->campus->id];
+    $this->postJson(route('staff.payroll.generate'), $campusPayload)->assertStatus(409);
+
+    $this->postJson(route('staff.payroll.generate'), $campusPayload + ['confirm_replace' => true])->assertSuccessful();
+
+    expect(PayrollRun::count())->toBe(1)->and(PayrollRun::first()->campus_id)->toBe($this->world->school->campus->id);
+});
+
+it('does not let a campus run replace an overlapping run that already has payments', function () {
+    $month = Month::firstOrCreate(['month_number' => 4], ['name' => 'April']);
+    $this->world->person('Paid Person');
+    $payload = ['payroll_month_id' => $month->id, 'payroll_year' => 2026];
+
+    $this->postJson(route('staff.payroll.generate'), $payload)->assertSuccessful();
+    $this->postJson(route('staff.payroll.items.pay', PayrollRunItem::firstOrFail()), ['payment_method' => 'bank'])->assertSuccessful();
+
+    $this->postJson(route('staff.payroll.generate'), $payload + ['campus_id' => $this->world->school->campus->id, 'confirm_replace' => true])
+        ->assertUnprocessable();
+
+    expect(PayrollRun::count())->toBe(1);
+});
+
+it('counts pending payroll payable once, from unpaid items only', function () {
+    $month = Month::firstOrCreate(['month_number' => 4], ['name' => 'April']);
+    $this->world->person('Pending Person', salary: 50000);
+
+    $this->postJson(route('staff.payroll.generate'), ['payroll_month_id' => $month->id, 'payroll_year' => 2026])->assertSuccessful();
+
+    $pending = $this->get(route('staff.index'))->viewData('page')['props']['summary']['pending_payroll'];
+    expect((float) $pending)->toBe((float) PayrollRunItem::get()->sum(fn ($i) => $i->amountDue()));
 });

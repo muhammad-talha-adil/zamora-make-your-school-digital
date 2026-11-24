@@ -2,7 +2,6 @@
 
 namespace App\Http\Requests\Staff;
 
-use App\Models\Role;
 use App\Models\StaffDesignation;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
@@ -24,7 +23,6 @@ class SaveDesignationRequest extends FormRequest
     public function rules(): array
     {
         $designation = $this->route('designation');
-        $excluded = $this->user()?->isSuperAdmin() ? ['developer', 'owner'] : ['developer', 'owner', 'campus_admin'];
 
         return [
             'name' => [
@@ -32,7 +30,8 @@ class SaveDesignationRequest extends FormRequest
                 Rule::unique('staff_designations', 'name')->ignore($designation instanceof StaffDesignation ? $designation->id : null),
             ],
             'description' => 'nullable|string|max:255',
-            'role' => ['nullable', 'string', Rule::exists('roles', 'name')->where(fn ($q) => $q->where('scope_level', '!=', Role::SCOPE_SELF)->whereNotIn('name', $excluded))],
+            'permission_template' => ['nullable', 'array'],
+            'permission_template.*' => ['string', 'exists:permissions,name'],
             'is_active' => 'boolean',
         ];
     }
@@ -46,7 +45,7 @@ class SaveDesignationRequest extends FormRequest
             'name.required' => 'Name is required.',
             'name.unique' => 'A position with this name already exists.',
             'name.max' => 'Name can be at most 100 letters.',
-            'role.exists' => 'Pick an access level from the list.',
+            'permission_template.*.exists' => 'One of the chosen permissions no longer exists.',
         ];
     }
 }

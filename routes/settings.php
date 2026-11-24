@@ -69,9 +69,8 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('settings/two-factor', [TwoFactorAuthenticationController::class, 'show'])
         ->name('two-factor.show');
 
-    // Menu Settings Routes — developer-only (not even owner), since sidebar
-    // structure is system-level configuration rather than a school setting.
-    Route::middleware('role.only:developer')->group(function (): void {
+    // Menu Settings Routes — owner and developer.
+    Route::middleware('role.only:owner|developer')->group(function (): void {
         Route::get('settings/menu-settings', [MenuController::class, 'index'])->name('menus.index');
         Route::get('settings/menus/all', [MenuController::class, 'apiIndex'])->name('menus.all');
         Route::get('settings/menus/create', [MenuController::class, 'create'])->name('menus.create')->middleware('permission:school.menu.manage');

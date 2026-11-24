@@ -1,8 +1,9 @@
 <script setup lang="ts">
+import type { Ref } from 'vue';
 import { router, usePage } from '@inertiajs/vue3';
 import { ref, computed, watch } from 'vue';
 import { alert } from '@/utils';
-import { useFormValidity } from '@/composables/useFormValidity';
+import { requiredErrors, useClearErrorsOnEdit, useFormValidity } from '@/composables/useFormValidity';
 
 // Components
 import InputError from '@/components/InputError.vue';
@@ -80,6 +81,7 @@ const form = ref({
 });
 
 const { isValid } = useFormValidity(form, ['title', 'start_date', 'end_date']);
+useClearErrorsOnEdit(form, errors as Ref<Record<string, string>>);
 
 // Options for recurrence
 const recurrenceOptions = [
@@ -134,6 +136,12 @@ const closeModal = () => {
 };
 
 const submit = () => {
+    const missing = requiredErrors(form, ['title', 'start_date', 'end_date']);
+    if (Object.keys(missing).length > 0) {
+        errors.value = missing as typeof errors.value;
+        return;
+    }
+
     processing.value = true;
     errors.value = {};
 
@@ -330,7 +338,7 @@ const submit = () => {
                     </Button>
                     <Button
                         type="submit"
-                        :disabled="processing || !isValid"
+                        :disabled="processing"
                         @click="submit"
                     >
                         <Icon

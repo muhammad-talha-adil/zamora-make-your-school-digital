@@ -35,6 +35,7 @@ interface Subscription {
 }
 
 interface Props {
+    canEdit?: boolean;
     subscription: Subscription;
 }
 
@@ -159,7 +160,8 @@ const submit = () => {
                     </div>
 
                     <div class="flex items-center gap-4">
-                        <Button type="submit" :disabled="form.processing">Save subscription</Button>
+                        <Button v-if="props.canEdit" type="submit" :disabled="form.processing">Save subscription</Button>
+                        <p v-else class="text-sm text-muted-foreground">Only the system vendor can change the subscription.</p>
                         <p v-show="form.recentlySuccessful" class="text-sm text-muted-foreground">Saved.</p>
                     </div>
                 </form>

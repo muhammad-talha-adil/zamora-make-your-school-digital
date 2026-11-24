@@ -351,8 +351,8 @@ const deleteRule = (rule: FineRule) => {
                 }).then(() => {
                     alert.success('Fine rule deleted successfully!');
                     fetchFineRules();
-                }).catch(() => {
-                    alert.error('Failed to delete fine rule. Please try again.');
+                }).catch((error) => {
+                    alert.error(error?.response?.data?.message || 'Failed to delete fine rule. Please try again.');
                 });
             }
         });
@@ -388,8 +388,8 @@ const toggleStatus = (rule: FineRule) => {
                     );
                     
                     alert.success(`Fine rule ${actionText}d successfully!`);
-                }).catch(() => {
-                    alert.error('Failed to update status. Please try again.');
+                }).catch((error) => {
+                    alert.error(error?.response?.data?.message || 'Failed to update status. Please try again.');
                 });
             }
         });

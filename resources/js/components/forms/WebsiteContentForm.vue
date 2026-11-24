@@ -10,6 +10,16 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import Icon from '@/components/Icon.vue';
+import SearchableSelect from '@/components/ui/searchable-select/SearchableSelect.vue';
+
+const iconOptions = [
+    { value: 'UserGroupIcon', label: 'People' },
+    { value: 'AcademicCapIcon', label: 'Graduation cap' },
+    { value: 'BeakerIcon', label: 'Science' },
+    { value: 'TrophyIcon', label: 'Trophy' },
+    { value: 'ShieldCheckIcon', label: 'Shield' },
+    { value: 'HeartIcon', label: 'Heart' },
+];
 import RepeaterList from '@/components/forms/RepeaterList.vue';
 
 /** Fixed platforms shown as their own labeled field (not the free-text repeater), so the footer's icon lookup never depends on how an admin spelled "facebook". */
@@ -187,7 +197,7 @@ const submit = () => {
             </CardHeader>
             <CardContent>
                 <p class="mb-3 text-xs text-muted-foreground">
-                    Valid icon values: UserGroupIcon, AcademicCapIcon, BeakerIcon, TrophyIcon, ShieldCheckIcon, HeartIcon.
+                    Pick one of the icons from the list.
                 </p>
                 <RepeaterList
                     v-model="form.home_features"
@@ -203,7 +213,7 @@ const submit = () => {
                             </div>
                             <div class="space-y-1">
                                 <Label>Icon</Label>
-                                <Input v-model="row.icon" placeholder="UserGroupIcon" />
+                                <SearchableSelect v-model="row.icon" :options="iconOptions" placeholder="Pick an icon" clearable />
                             </div>
                             <div class="space-y-1 md:col-span-2">
                                 <Label>Description</Label>
@@ -238,7 +248,7 @@ const submit = () => {
                 </div>
                 <div>
                     <Label class="mb-2 block">Values</Label>
-                    <p class="mb-3 text-xs text-muted-foreground">Icon is stored but not yet rendered visually on the public page — free text is fine.</p>
+                    <p class="mb-3 text-xs text-muted-foreground">Icon is stored but not yet shown on the public page.</p>
                     <RepeaterList
                         v-model="form.values"
                         add-label="Add value"
@@ -253,7 +263,7 @@ const submit = () => {
                                 </div>
                                 <div class="space-y-1">
                                     <Label>Icon</Label>
-                                    <Input v-model="row.icon" />
+                                    <SearchableSelect v-model="row.icon" :options="iconOptions" placeholder="Pick an icon" clearable />
                                 </div>
                                 <div class="space-y-1 md:col-span-2">
                                     <Label>Description</Label>

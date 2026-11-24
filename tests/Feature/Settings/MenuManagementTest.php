@@ -45,7 +45,7 @@ test('a user with school.menu.manage can create a menu', function () {
     expect(Menu::where('title', 'Reports')->exists())->toBeTrue();
 });
 
-test('a non-developer cannot reach menu-settings at all, even holding school.menu.manage', function () {
+test('the owner can open menu-settings', function () {
     Permission::firstOrCreate(['name' => 'school.menu.manage', 'guard_name' => 'web']);
     Role::firstOrCreate(
         ['name' => 'owner', 'guard_name' => 'web'],
@@ -59,15 +59,7 @@ test('a non-developer cannot reach menu-settings at all, even holding school.men
 
     $menu = Menu::create(['title' => 'Reports', 'type' => 'main', 'path' => '/reports']);
 
-    $this->actingAs($user)->get(route('menus.index'))->assertForbidden();
-
-    $this->actingAs($user)
-        ->post(route('menus.store'), ['title' => 'New', 'type' => 'main'])
-        ->assertForbidden();
-
-    $this->actingAs($user)
-        ->patch(route('menus.update', $menu->id), ['title' => 'Renamed', 'type' => 'main'])
-        ->assertForbidden();
+    $this->actingAs($user)->get(route('menus.index'))->assertOk();
 
     $this->actingAs($user)
         ->delete(route('menus.destroy', $menu->id))

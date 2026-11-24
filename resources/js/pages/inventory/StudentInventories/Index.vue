@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { headerCampusId } from '@/utils/campus';
 import { Head, router } from '@inertiajs/vue3';
 import { alert, formatCurrency } from '@/utils';
 import { computed, ref, watch } from 'vue';
@@ -52,7 +53,7 @@ const props = defineProps<Props>();
 
 // Filter states
 const perPage = ref(10);
-const campusFilter = ref('');
+const campusFilter = ref(headerCampusId());
 const campusOptions = computed(() => props.campuses.map((campus) => ({ value: campus.id, label: campus.name })));
 const statusFilter = ref('');
 const statusOptions = [

@@ -4,7 +4,7 @@ import InputError from '@/components/InputError.vue';
 import PhoneInput from '@/components/ui/PhoneInput.vue';
 import { Head, router, usePage } from '@inertiajs/vue3';
 import axios from 'axios';
-import { computed, reactive, ref } from 'vue';
+import { computed, reactive, ref, watch } from 'vue';
 import { route } from 'ziggy-js';
 import AppLayout from '@/layouts/AppLayout.vue';
 import Icon from '@/components/Icon.vue';
@@ -218,6 +218,19 @@ const giveLogin = async () => {
 const personalErrors = reactive<Record<string, string>>({});
 const employmentErrors = reactive<Record<string, string>>({});
 
+const clearOnEdit = (form: Record<string, unknown>, errors: Record<string, string>) =>
+    watch(
+        () => ({ ...form }),
+        (now, before) => {
+            Object.keys(now).forEach((key) => {
+                if (now[key] !== before[key]) {
+                    delete errors[key];
+                }
+            });
+        },
+    );
+clearOnEdit(personalForm, personalErrors);
+
 const fillErrors = (target: Record<string, string>, error: any, fallback: string) => {
     Object.keys(target).forEach((key) => delete target[key]);
     const serverErrors = error?.response?.data?.errors as Record<string, string[]> | undefined;
@@ -282,6 +295,8 @@ const employmentForm = reactive({
     account_no: props.staff.account_no || '',
     is_active: props.staff.is_active,
 });
+
+clearOnEdit(employmentForm, employmentErrors);
 
 const savingEmployment = ref(false);
 
@@ -752,7 +767,7 @@ const activeJobsCount = computed(() => props.jobs.length);
                         <div class="grid gap-4 md:grid-cols-2">
                             <div>
                                 <label class="mb-2 block text-sm font-medium text-muted-foreground">Date of Birth</label>
-                                <Input v-model="personalForm.dob" type="date" :max="new Date().toISOString().slice(0, 10)" :disabled="!props.can.edit" />
+                                <Input v-model="personalForm.dob" type="date" :disabled="!props.can.edit" />
                                 <InputError :message="personalErrors.dob" />
                             </div>
                             <div>
@@ -861,7 +876,7 @@ const activeJobsCount = computed(() => props.jobs.length);
                             </div>
                             <div>
                                 <label class="mb-2 block text-sm font-medium text-muted-foreground">Hire Date</label>
-                                <Input v-model="employmentForm.hire_date" type="date" :max="new Date().toISOString().slice(0, 10)" />
+                                <Input v-model="employmentForm.hire_date" type="date" />
                                 <InputError :message="employmentErrors.hire_date" />
                             </div>
                         </div>
@@ -869,12 +884,12 @@ const activeJobsCount = computed(() => props.jobs.length);
                         <div class="grid gap-4 md:grid-cols-3">
                             <div>
                                 <label class="mb-2 block text-sm font-medium text-muted-foreground">Basic Salary <span class="text-destructive">*</span></label>
-                                <Input v-model="employmentForm.basic_salary" type="number" min="0" max="10000000" placeholder="e.g. 50000" />
+                                <Input v-model="employmentForm.basic_salary" type="number" min="0" placeholder="e.g. 50000" />
                                 <InputError :message="employmentErrors.basic_salary" />
                             </div>
                             <div>
                                 <label class="mb-2 block text-sm font-medium text-muted-foreground">Allowance</label>
-                                <Input v-model="employmentForm.allowance_amount" type="number" min="0" max="10000000" placeholder="e.g. 5000" />
+                                <Input v-model="employmentForm.allowance_amount" type="number" min="0" placeholder="e.g. 5000" />
                                 <InputError :message="employmentErrors.allowance_amount" />
                             </div>
                             <div>

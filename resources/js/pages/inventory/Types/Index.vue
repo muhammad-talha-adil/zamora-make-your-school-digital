@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { headerCampusId } from '@/utils/campus';
 import { Head, router } from '@inertiajs/vue3';
 import { alert } from '@/utils';
 import { computed, ref, watch } from 'vue';
@@ -50,7 +51,7 @@ const props = defineProps<Props>();
 // Filter states
 const showInactive = ref(props.filters?.show_inactive || false);
 const perPage = ref(25);
-const campusFilter = ref(props.filters?.campus_id || '');
+const campusFilter = ref(props.filters?.campus_id || headerCampusId());
 const inventoryTypesData = ref(props.inventoryTypes.data || []);
 const pagination = ref(props.inventoryTypes);
 
@@ -124,8 +125,8 @@ const toggleActive = (type: typeof props.inventoryTypes.data[0]) => {
                         alert.success(`Inventory type ${action}d successfully!`);
                         fetchInventoryTypes();
                     },
-                    onError: () => {
-                        alert.error(`Failed to ${action} inventory type. Please try again.`);
+                    onError: (errors) => {
+                        alert.error((Object.values(errors ?? {})[0] as string | undefined) || `Failed to ${action} inventory type. Please try again.`);
                     },
                 });
             }
@@ -139,8 +140,8 @@ const restoreType = (type: typeof props.inventoryTypes.data[0]) => {
             alert.success('Inventory type restored successfully!');
             fetchInventoryTypes();
         },
-        onError: () => {
-            alert.error('Failed to restore inventory type. Please try again.');
+        onError: (errors) => {
+            alert.error((Object.values(errors ?? {})[0] as string | undefined) || 'Failed to restore inventory type. Please try again.');
         },
     });
 };
@@ -159,8 +160,8 @@ const forceDeleteType = (type: typeof props.inventoryTypes.data[0]) => {
                         alert.success('Inventory type permanently deleted successfully!');
                         fetchInventoryTypes();
                     },
-                    onError: () => {
-                        alert.error('Failed to permanently delete inventory type. Please try again.');
+                    onError: (errors) => {
+                        alert.error((Object.values(errors ?? {})[0] as string | undefined) || 'Failed to permanently delete inventory type. Please try again.');
                     },
                 });
             }

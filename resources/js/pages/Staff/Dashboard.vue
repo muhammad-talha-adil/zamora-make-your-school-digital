@@ -9,6 +9,7 @@ interface RecentJoiner {
     id: number;
     employee_no: string;
     hire_date?: string | null;
+    created_at?: string | null;
     user?: { name: string } | null;
     campus?: { name: string } | null;
     designation?: { name: string } | null;
@@ -144,7 +145,7 @@ const quickLinks = [
                                 </td>
                                 <td class="px-4 py-3 text-sm text-muted-foreground">{{ member.designation?.name || '-' }}</td>
                                 <td class="px-4 py-3 text-sm text-muted-foreground">{{ member.campus?.name || '-' }}</td>
-                                <td class="px-4 py-3 text-sm text-muted-foreground">{{ formatDate(member.hire_date) }}</td>
+                                <td class="px-4 py-3 text-sm text-muted-foreground">{{ formatDate(member.hire_date || member.created_at) }}</td>
                             </tr>
                             <tr v-if="props.recentJoiners.length === 0">
                                 <td colspan="4" class="px-4 py-10 text-center text-sm text-muted-foreground">No staff records yet.</td>

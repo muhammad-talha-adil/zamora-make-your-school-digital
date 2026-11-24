@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { headerCampusId } from '@/utils/campus';
 import { Head, router } from '@inertiajs/vue3';
 import { alert, formatCurrency } from '@/utils';
 import { ref, computed, watch } from 'vue';
@@ -80,7 +81,7 @@ const props = defineProps<Props>();
 const activeTab = ref('types');
 
 // Types state
-const campusFilter = ref(props.filters?.campus_id || '');
+const campusFilter = ref(props.filters?.campus_id || headerCampusId());
 const inventoryTypesData = ref(props.inventoryTypes.data || []);
 const paginationTypes = ref(props.inventoryTypes);
 const perPageTypes = ref(25);

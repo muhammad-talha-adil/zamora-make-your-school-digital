@@ -7,6 +7,9 @@ use App\Http\Requests\Settings\StoreCampusRequest;
 use App\Http\Requests\Settings\UpdateCampusRequest;
 use App\Models\Campus;
 use App\Models\CampusType;
+use App\Models\SchoolClass;
+use App\Models\StaffProfile;
+use App\Models\StudentEnrollmentRecord;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Support\Facades\Gate;
@@ -130,6 +133,23 @@ class CampusController extends Controller
     public function destroy(Campus $campus)
     {
         Gate::authorize('delete', $campus);
+
+        $students = StudentEnrollmentRecord::where('campus_id', $campus->id)->count();
+        $staff = StaffProfile::where('campus_id', $campus->id)->count();
+        $classes = SchoolClass::where('campus_id', $campus->id)->count();
+
+        if ($students + $staff + $classes > 0) {
+            $parts = array_filter([
+                $students ? "{$students} student record".($students === 1 ? '' : 's') : null,
+                $staff ? "{$staff} staff member".($staff === 1 ? '' : 's') : null,
+                $classes ? "{$classes} class".($classes === 1 ? '' : 'es') : null,
+            ]);
+
+            return response()->json([
+                'success' => false,
+                'message' => "{$campus->name} cannot be deleted because it still has ".implode(', ', $parts).'. Move or remove them first.',
+            ], 422);
+        }
 
         $campus->delete();
 

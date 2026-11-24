@@ -1,9 +1,10 @@
 <script setup lang="ts">
+import type { Ref } from 'vue';
 import { router } from '@inertiajs/vue3';
 import axios from 'axios';
 import { ref, watch, computed, nextTick } from 'vue';
 import { alert } from '@/utils';
-import { useFormValidity } from '@/composables/useFormValidity';
+import { requiredErrors, useClearErrorsOnEdit, useFormValidity } from '@/composables/useFormValidity';
 
 // Components
 import InputError from '@/components/InputError.vue';
@@ -49,6 +50,7 @@ const allCampusTypes = ref<Array<{ id: number; name: string; campuses_count?: nu
 const loading = ref(false);
 const editingId = ref<number | null>(null);
 const { isValid } = useFormValidity(form, ['name']);
+useClearErrorsOnEdit(form, errors as Ref<Record<string, string>>);
 
 // Pagination
 const currentPage = ref(1);
@@ -106,6 +108,12 @@ const goToPage = (page: number) => {
 
 // Methods
 const submit = () => {
+    const missing = requiredErrors(form, ['name']);
+    if (Object.keys(missing).length > 0) {
+        errors.value = missing as typeof errors.value;
+        return;
+    }
+
     processing.value = true;
     errors.value = {};
 
@@ -239,7 +247,7 @@ const deleteCampusType = (campusType: { id: number; name: string }) => {
                                     <Icon icon="x" class="h-4 w-4 mr-1" />
                                     Cancel
                                 </Button>
-                                <Button type="submit" :disabled="processing || !isValid">
+                                <Button type="submit" :disabled="processing">
                                     <Icon v-if="processing" icon="loader" class="mr-2 h-4 w-4 animate-spin" />
                                     <Icon v-else :icon="editingId ? 'check' : 'plus'" class="mr-2 h-4 w-4" />
                                     {{ editingId ? 'Update' : 'Add' }}

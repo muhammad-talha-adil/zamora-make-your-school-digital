@@ -1,9 +1,10 @@
 <script setup lang="ts">
+import type { Ref } from 'vue';
 import CampusSelect from '@/components/ui/CampusSelect.vue';
 import axios from 'axios';
 import { ref, computed, reactive, watch, nextTick } from 'vue';
 import { usePage } from '@inertiajs/vue3';
-import { useFormValidity } from '@/composables/useFormValidity';
+import { requiredErrors, useClearErrorsOnEdit, useFormValidity } from '@/composables/useFormValidity';
 import { alert, formatCurrency, themeToken } from '@/utils';
 import Swal from 'sweetalert2';
 
@@ -119,6 +120,7 @@ const errors = ref<Record<string, string>>({});
 const processing = ref(false);
 const loadingItems = ref(false);
 const { isValid } = useFormValidity(form, ['campus_id', 'supplier_id', 'purchase_date', 'purchase_items']);
+useClearErrorsOnEdit(form, errors as Ref<Record<string, string>>);
 
 // Generate unique idempotency key for this form session
 const idempotencyKey = ref<string | null>(null);
@@ -423,6 +425,12 @@ const closeModal = () => {
 };
 
 const submitForm = () => {
+    const missing = requiredErrors(form, ['campus_id', 'supplier_id', 'purchase_date', 'purchase_items']);
+    if (Object.keys(missing).length > 0) {
+        errors.value = missing as typeof errors.value;
+        return;
+    }
+
     // Filter out empty/incomplete items (items without valid item selected)
     const validItems = form.purchase_items.filter(item => item.inventory_item_id > 0);
     

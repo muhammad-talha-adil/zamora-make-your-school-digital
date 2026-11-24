@@ -90,8 +90,8 @@ const toggleLeaveTypeActive = (leaveType: any) => {
                         alert.success(`Leave type ${actionText}d successfully!`);
                         fetchLeaveTypes();
                     },
-                    onError: () => {
-                        alert.error('Failed to update status. Please try again.');
+                    onError: (errors) => {
+                        alert.error((Object.values(errors ?? {})[0] as string | undefined) || 'Failed to update status. Please try again.');
                     },
                 });
             }
@@ -112,10 +112,8 @@ const deleteLeaveType = (leaveType: any) => {
                         alert.success('Leave type deleted successfully!');
                         fetchLeaveTypes();
                     },
-                    onError: () => {
-                        alert.error(
-                            'Failed to delete leave type. Please try again.',
-                        );
+                    onError: (errors) => {
+                        alert.error((Object.values(errors ?? {})[0] as string | undefined) || 'Failed to delete leave type. Please try again.');
                     },
                 });
             }

@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests\Settings;
 
+use App\Models\Session;
 use Closure;
 use Illuminate\Contracts\Validation\ValidationRule;
 use Illuminate\Foundation\Http\FormRequest;
@@ -39,6 +40,17 @@ class StoreSessionRequest extends FormRequest
                 'required',
                 'date',
                 'after_or_equal:start_date',
+                function (string $attribute, mixed $value, Closure $fail): void {
+                    $clash = Session::query()
+                        ->whereDate('start_date', '<=', (string) $value)
+                        ->whereDate('end_date', '>=', (string) $this->input('start_date'))
+                        ->when(null, fn ($query, $id) => $query->where('id', '!=', $id))
+                        ->first();
+
+                    if ($clash) {
+                        $fail("These dates overlap {$clash->name} ({$clash->start_date->format('j M Y')} to {$clash->end_date->format('j M Y')}). Pick dates after it ends.");
+                    }
+                },
                 function (string $attribute, mixed $value, Closure $fail): void {
                     $start = strtotime((string) $this->input('start_date'));
                     $end = strtotime((string) $value);

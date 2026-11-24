@@ -1,10 +1,11 @@
 <script setup lang="ts">
+import type { Ref } from 'vue';
 import CampusSelect from '@/components/ui/CampusSelect.vue';
 import PhoneInput from '@/components/ui/PhoneInput.vue';
 import { alert } from '@/utils';
 import axios from 'axios';
 import { computed, ref, watch } from 'vue';
-import { useFormValidity } from '@/composables/useFormValidity';
+import { requiredErrors, useClearErrorsOnEdit, useFormValidity } from '@/composables/useFormValidity';
 
 // Components
 import Icon from '@/components/Icon.vue';
@@ -75,6 +76,7 @@ const form = ref({
 
 const errors = ref<Record<string, string>>({});
 const { isValid } = useFormValidity(form, ['name', 'campus_id']);
+useClearErrorsOnEdit(form, errors as Ref<Record<string, string>>);
 const processing = ref(false);
 const nameChecking = ref(false);
 const nameExists = ref(false);
@@ -214,6 +216,12 @@ const checkDuplicateName = async () => {
 };
 
 const submit = () => {
+    const missing = requiredErrors(form, ['name', 'campus_id']);
+    if (Object.keys(missing).length > 0) {
+        errors.value = missing as typeof errors.value;
+        return;
+    }
+
     // Check for duplicate name before submitting
     if (nameExists.value) {
         alert.error('This supplier name already exists. Please use a different name.');
@@ -532,7 +540,7 @@ const resetForm = () => {
 
                 <!-- Actions -->
                 <div class="flex flex-wrap justify-end gap-3 pt-2">
-                    <Button type="submit" :disabled="processing || !isValid" class="h-10">
+                    <Button type="submit" :disabled="processing" class="h-10">
                         <Icon
                             v-if="processing"
                             icon="loader"

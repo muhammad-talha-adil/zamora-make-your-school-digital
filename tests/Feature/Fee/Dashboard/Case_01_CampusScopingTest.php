@@ -159,3 +159,32 @@ it('renders with recent payments and overdue vouchers under either campus', func
 
     $response->assertOk();
 })->with(['campus' => ['campus'], 'other campus' => ['otherCampus']]);
+
+it('shows outstanding and overdue totals that match the Outstanding report, per campus', function () {
+    raiseVoucherIn($this->world, $this->world->school->campus->id, 'V-MATCH-A');
+    raiseVoucherIn($this->world, $this->world->school->otherCampus->id, 'V-MATCH-B1');
+    raiseVoucherIn($this->world, $this->world->school->otherCampus->id, 'V-MATCH-B2');
+
+    foreach (['campus', 'otherCampus'] as $key) {
+        $campusId = $this->world->school->{$key}->id;
+        $viewer = User::create([
+            'name' => 'Match '.$key, 'username' => 'match.'.$key.uniqid(),
+            'email' => 'match.'.$key.uniqid().'@school.test', 'password' => bcrypt('password'), 'is_active' => true,
+        ]);
+        $viewer->givePermissionTo(['fee.view', 'fee.reports']);
+        app(PermissionRegistrar::class)->forgetCachedPermissions();
+        StaffProfile::create([
+            'user_id' => $viewer->id, 'employee_no' => 'EMP-M-'.$key, 'campus_id' => $campusId,
+            'employment_type' => 'permanent', 'hire_date' => '2026-04-01', 'is_active' => true,
+        ]);
+
+        $stats = $this->actingAs($viewer)->get(route('fee.dashboard'))->viewData('page')['props']['stats'];
+        $report = $this->actingAs($viewer)->get(route('fee.reports.outstanding'))->viewData('page')['props']['summary'];
+
+        expect((float) $stats['totalOutstanding'])->toBe((float) $report['total_outstanding'])
+            ->and((float) $stats['overdueAmount'])->toBe((float) $report['total_overdue']);
+        $totals[$key] = (float) $stats['totalOutstanding'];
+    }
+
+    expect($totals['campus'])->not->toBe($totals['otherCampus']);
+});

@@ -143,8 +143,8 @@ const toggleActive = (menu: any) => {
                         alert.success(`Menu ${action}d successfully!`);
                         fetchMenus();
                     },
-                    onError: () => {
-                        alert.error(`Failed to ${action} menu. Please try again.`);
+                    onError: (errors) => {
+                        alert.error((Object.values(errors ?? {})[0] as string | undefined) || `Failed to ${action} menu. Please try again.`);
                     },
                 });
             }
@@ -165,8 +165,8 @@ const deleteMenu = (menu: any) => {
                         alert.success('Menu deleted successfully!');
                         fetchMenus();
                     },
-                    onError: () => {
-                        alert.error('Failed to delete menu. Please try again.');
+                    onError: (errors) => {
+                        alert.error((Object.values(errors ?? {})[0] as string | undefined) || 'Failed to delete menu. Please try again.');
                     },
                 });
             }
@@ -180,8 +180,8 @@ const restoreMenu = (menu: any) => {
             alert.success('Menu restored successfully!');
             fetchMenus();
         },
-        onError: () => {
-            alert.error('Failed to restore menu. Please try again.');
+        onError: (errors) => {
+            alert.error((Object.values(errors ?? {})[0] as string | undefined) || 'Failed to restore menu. Please try again.');
         },
     });
 };
@@ -200,8 +200,8 @@ const forceDeleteMenu = (menu: any) => {
                         alert.success('Menu permanently deleted successfully!');
                         fetchMenus();
                     },
-                    onError: () => {
-                        alert.error('Failed to permanently delete menu. Please try again.');
+                    onError: (errors) => {
+                        alert.error((Object.values(errors ?? {})[0] as string | undefined) || 'Failed to permanently delete menu. Please try again.');
                     },
                 });
             }

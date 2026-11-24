@@ -25,6 +25,7 @@ use App\Services\Staff\StaffIdCardService;
 use App\Services\Staff\StaffLoginService;
 use App\Services\Staff\TeacherAssignmentService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Validation\Rule;
 use Inertia\Inertia;
@@ -408,6 +409,20 @@ class StaffProfileController extends Controller
      *
      * @return list<string>
      */
+    public static function groupedPermissions(): Collection
+    {
+        $ownerOnly = self::ownerOnlyPermissions();
+
+        return Permission::orderBy('name')->get(['name', 'label', 'module'])
+            ->reject(fn ($permission) => in_array($permission->name, $ownerOnly, true))
+            ->groupBy(fn ($permission) => explode('.', $permission->name)[0])
+            ->map(fn ($group) => $group->map(fn ($permission) => [
+                'name' => $permission->name,
+                'label' => $permission->label ?: ucfirst(str_replace(['.', '_', '-'], ' ', $permission->name)),
+            ])->values())
+            ->sortKeys();
+    }
+
     public static function ownerOnlyPermissions(): array
     {
         return [
@@ -438,14 +453,7 @@ class StaffProfileController extends Controller
 
         // [{ name, label }] per module, so the page reads plain words instead
         // of keys like `academics.class.manage`.
-        $grouped = Permission::orderBy('name')->get(['name', 'label', 'module'])
-            ->reject(fn ($permission) => in_array($permission->name, $ownerOnly, true))
-            ->groupBy(fn ($permission) => explode('.', $permission->name)[0])
-            ->map(fn ($group) => $group->map(fn ($permission) => [
-                'name' => $permission->name,
-                'label' => $permission->label ?: ucfirst(str_replace(['.', '_', '-'], ' ', $permission->name)),
-            ])->values())
-            ->sortKeys();
+        $grouped = self::groupedPermissions();
 
         return Inertia::render('Staff/People/Permissions', [
             'staffProfile' => $staffProfile->load('user:id,name'),

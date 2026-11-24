@@ -157,7 +157,7 @@ const submit = () => {
                 </div>
 
                 <DialogFooter>
-                    <Button type="submit" :disabled="processing || !isValid">
+                    <Button type="submit" :disabled="processing">
                         {{ processing ? 'Creating...' : 'Create Classes' }}
                     </Button>
                 </DialogFooter>

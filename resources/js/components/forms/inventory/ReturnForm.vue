@@ -1,8 +1,9 @@
 <script setup lang="ts">
+import type { Ref } from 'vue';
 import CampusSelect from '@/components/ui/CampusSelect.vue';
 import { router } from '@inertiajs/vue3';
 import { ref, computed } from 'vue';
-import { useFormValidity } from '@/composables/useFormValidity';
+import { requiredErrors, useClearErrorsOnEdit, useFormValidity } from '@/composables/useFormValidity';
 import { alert, formatCurrency } from '@/utils';
 
 // Components
@@ -70,6 +71,7 @@ const form = ref({
 const errors = ref<Record<string, string>>({});
 const processing = ref(false);
 const { isValid } = useFormValidity(form, ['campus_id', 'student_inventory_id', 'return_date']);
+useClearErrorsOnEdit(form, errors as Ref<Record<string, string>>);
 
 // Modal state
 const dialogOpen = ref(false);
@@ -134,6 +136,12 @@ const closeModal = () => {
 };
 
 const submitForm = () => {
+    const missing = requiredErrors(form, ['campus_id', 'student_inventory_id', 'return_date']);
+    if (Object.keys(missing).length > 0) {
+        errors.value = missing as typeof errors.value;
+        return;
+    }
+
     if (form.value.quantity > maxReturnable.value) {
         alert.error(`You can only return up to ${maxReturnable.value} items.`);
         return;
@@ -321,7 +329,7 @@ const submitForm = () => {
 
                 <!-- Actions -->
                 <div class="flex flex-wrap justify-end gap-3 pt-2">
-                    <Button type="submit" :disabled="processing || !isValid" class="h-10">
+                    <Button type="submit" :disabled="processing" class="h-10">
                         <Icon v-if="processing" icon="loader" class="mr-2 h-4 w-4 animate-spin" />
                         <Icon v-else icon="check" class="mr-2 h-4 w-4" />
                         Process Return

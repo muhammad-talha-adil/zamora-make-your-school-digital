@@ -1,9 +1,10 @@
 <script setup lang="ts">
+import type { Ref } from 'vue';
 import { router } from '@inertiajs/vue3';
 import { computed, ref, watch } from 'vue';
 import { route } from 'ziggy-js';
 import { alert } from '@/utils';
-import { useFormValidity } from '@/composables/useFormValidity';
+import { requiredErrors, useClearErrorsOnEdit, useFormValidity } from '@/composables/useFormValidity';
 
 // Components
 import InputError from '@/components/InputError.vue';
@@ -74,6 +75,7 @@ const sessionOptions = computed(() => props.sessions.map((session) => ({ value: 
 const errors = ref<Record<string, string>>({});
 const processing = ref(false);
 const { isValid } = useFormValidity(form, ['name', 'exam_type_id', 'session_id', 'start_date', 'end_date']);
+useClearErrorsOnEdit(form, errors as Ref<Record<string, string>>);
 
 // Dialog
 const open = ref(false);
@@ -93,6 +95,12 @@ watch(open, (isOpen) => {
 
 // Methods
 const submit = () => {
+    const missing = requiredErrors(form, ['name', 'exam_type_id', 'session_id', 'start_date', 'end_date']);
+    if (Object.keys(missing).length > 0) {
+        errors.value = missing as typeof errors.value;
+        return;
+    }
+
     processing.value = true;
     errors.value = {};
 
@@ -242,7 +250,7 @@ const resetForm = () => {
                 </div>
 
                 <DialogFooter>
-                    <Button type="submit" :disabled="processing || !isValid">
+                    <Button type="submit" :disabled="processing">
                         {{ processing ? 'Saving...' : (exam ? 'Update Exam' : 'Create Exam') }}
                     </Button>
                 </DialogFooter>

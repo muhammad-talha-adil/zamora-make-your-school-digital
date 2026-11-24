@@ -44,8 +44,8 @@ class UpdateCampusRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'name.unique' => 'This name is already used.',
-            'name.required' => 'Please enter a name.',
+            'name.unique' => 'A campus named "'.$this->input('name').'" already exists.',
+            'name.required' => 'Name is required.',
         ];
     }
 }

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { headerCampusId } from '@/utils/campus';
 import { Head } from '@inertiajs/vue3';
 import { ref, watch, computed, reactive } from 'vue';
 import axios from 'axios';
@@ -61,7 +62,7 @@ const props = defineProps<Props>();
 
 // Filter states
 const perPage = ref(25);
-const campusFilter = ref('');
+const campusFilter = ref(headerCampusId());
 const campusOptions = computed(() => props.campuses.map((campus) => ({ value: campus.id, label: campus.name })));
 
 watch(campusFilter, () => fetchStocks());

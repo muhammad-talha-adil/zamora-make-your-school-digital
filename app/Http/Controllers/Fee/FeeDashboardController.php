@@ -72,12 +72,16 @@ class FeeDashboardController extends Controller
      */
     private function getStats(?User $user): array
     {
+        $balances = collect(app(StudentBalanceService::class)->forStudents($this->voucherQuery($user)));
+
         return [
+            'overdueAmount' => round((float) $balances->sum('overdue'), 2),
+            'overdueStudents' => $balances->filter(fn (array $row) => $row['overdue'] > 0)->count(),
             'totalVouchers' => $this->voucherQuery($user)->count(),
             'unpaidVouchers' => $this->voucherQuery($user)->where('status', 'unpaid')->count(),
             'overdueVouchers' => $this->voucherQuery($user)->where('status', 'overdue')->count(),
             'totalCollected' => $this->paymentQuery($user)->where('status', 'posted')->sum('received_amount'),
-            'totalOutstanding' => round((float) collect(app(StudentBalanceService::class)->forStudents($this->voucherQuery($user)))->sum('outstanding'), 2),
+            'totalOutstanding' => round((float) $balances->sum('outstanding'), 2),
             'monthlyCollection' => $this->paymentQuery($user)
                 ->where('status', 'posted')
                 ->whereDate('payment_date', '>=', now()->startOfMonth()->toDateString())

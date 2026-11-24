@@ -137,11 +137,11 @@ it('lets a developer view and update the subscription row', function () {
     expect($subscription->updated_by)->toBe($developer->id);
 });
 
-it('turns away a non-developer from the subscription management page', function (string $role) {
+it('turns away a non-developer from changing the subscription, and a campus admin from reading it', function (string $role) {
     $user = makeSubscriptionUserWithRole($role);
 
-    $this->actingAs($user)->get(route('subscription.index'))->assertForbidden();
     $this->actingAs($user)->patch(route('subscription.update'), ['status' => 'active'])->assertForbidden();
+    expect($this->actingAs($user)->get(route('subscription.index'))->getStatusCode())->toBe($role === 'owner' ? 200 : 403);
 })->with(['owner', 'campus_admin']);
 
 it('carries the 10-day warning banner data when within the window, not outside it', function () {
