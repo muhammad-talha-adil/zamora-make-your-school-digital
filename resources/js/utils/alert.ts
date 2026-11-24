@@ -57,6 +57,30 @@ export const alert = {
     },
 
     error: (message: string, title = 'Error') => {
+        if (/please check the errors/i.test(message)) {
+            setTimeout(() => {
+                document
+                    .querySelector<HTMLElement>('[data-invalid="true"], .text-red-600, .text-destructive')
+                    ?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }, 100);
+
+            return Swal.fire({
+                title: 'Some fields need fixing',
+                text: 'See the red messages under the fields.',
+                icon: 'warning',
+                timer: 3500,
+                showConfirmButton: false,
+                toast: true,
+                position: 'top-end',
+                didOpen: () => {
+                    const popup = Swal.getPopup();
+                    if (popup) {
+                        popup.style.zIndex = '99999';
+                    }
+                },
+            });
+        }
+
         return Swal.fire({
             title,
             text: message,
