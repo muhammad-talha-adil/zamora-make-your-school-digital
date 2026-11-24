@@ -104,7 +104,7 @@ const getPaymentMethodLabel = (method: string): string => {
 
         <div class="space-y-6 p-4 md:p-6">
             <!-- Actions -->
-            <div class="mx-auto flex w-full max-w-3xl flex-wrap items-center justify-between gap-2 print:hidden">
+            <div class="mx-auto flex w-full max-w-4xl flex-wrap items-center justify-between gap-2 print:hidden">
                 <Button variant="outline" @click="router.visit(route('fee.payments.index'))">
                     <Icon icon="arrow-left" class="mr-2 h-4 w-4" />
                     Back to Payments
@@ -116,7 +116,7 @@ const getPaymentMethodLabel = (method: string): string => {
             </div>
 
             <!-- Receipt -->
-            <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 sm:p-6 md:p-8 w-full max-w-3xl mx-auto print:border-0 print:p-0">
+            <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 sm:p-6 md:p-8 w-full max-w-4xl mx-auto print:border-0 print:p-0">
                 <!-- Header -->
                 <div class="text-center mb-8">
                     <h1 v-if="props.schoolName" class="text-xl font-bold text-gray-900 dark:text-white">{{ props.schoolName }}</h1>

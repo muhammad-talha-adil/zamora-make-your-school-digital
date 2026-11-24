@@ -185,7 +185,7 @@ const submitReverse = () => {
                     <div class="bg-card rounded-lg border border-border p-4 sm:p-6">
                         <h2 class="text-lg font-semibold mb-4">Payment Details</h2>
                         
-                        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 break-words">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 break-words">
                             <div>
                                 <p class="text-sm text-muted-foreground">Student</p>
                                 <p class="font-medium">{{ payment.student?.name || 'N/A' }}</p>
@@ -245,6 +245,11 @@ const submitReverse = () => {
                                     </tr>
                                 </thead>
                                 <tbody class="divide-y divide-border">
+                                    <tr v-if="!payment.allocations?.length">
+                                        <td colspan="4" class="px-4 py-6 text-center text-sm text-muted-foreground">
+                                            {{ payment.status === 'reversed' ? 'This payment was reversed, so its voucher allocations were released.' : 'No voucher allocations.' }}
+                                        </td>
+                                    </tr>
                                     <tr v-for="(allocation, allocationIndex) in payment.allocations" :key="allocation.id" class="hover:bg-accent">
                                         <td class="px-4 py-3 text-muted-foreground">{{ allocationIndex + 1 }}</td>
                                         <td class="px-4 py-3 font-medium">{{ allocation.voucher.voucher_no }}</td>
