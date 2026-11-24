@@ -299,7 +299,7 @@ class FeeVoucher extends Model
      */
     public function scopeVisibleTo($query, ?User $user)
     {
-        if (! $user || $user->isSuperAdmin()) {
+        if (! $user) {
             return $query;
         }
 

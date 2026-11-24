@@ -428,6 +428,7 @@ class FeePaymentController extends Controller
         if (isset($paymentData['student'])) {
             $paymentData['student']['name'] = $payment->student_name_snapshot ?? $payment->student?->name;
             $paymentData['student']['registration_number'] = $payment->registration_no_snapshot ?? $payment->student?->registration_number;
+            $paymentData['student']['admission_no'] = $payment->student?->admission_no;
         }
 
         $vouchers = $payment->allocations->pluck('voucher')->filter()->unique('id');
@@ -436,9 +437,28 @@ class FeePaymentController extends Controller
             ->reject(fn ($item) => $item->isLateFee())
             ->map(fn ($item) => ['description' => $item->description, 'amount' => (float) $item->net_amount])
             ->values()->all();
-        $paymentData['remaining_balance'] = round((float) $vouchers->sum('balance_amount'), 2);
+        $paymentData['remaining_balance'] = round((float) $vouchers->sum(fn (FeeVoucher $voucher) => $this->currentVoucherBalance($voucher)), 2);
 
         return $paymentData;
+    }
+
+    /**
+     * What is still owed on a voucher right now. A voucher whose balance was
+     * carried forward owes nothing itself; its money lives on the newer voucher.
+     */
+    protected function currentVoucherBalance(FeeVoucher $voucher, int $depth = 0): float
+    {
+        if ($voucher->status !== VoucherStatus::ADJUSTED || $depth > 12) {
+            return (float) $voucher->balance_amount;
+        }
+
+        if (! preg_match('/carried forward to voucher (\S+?)\.?(\s|$)/', (string) $voucher->notes, $match)) {
+            return (float) $voucher->balance_amount;
+        }
+
+        $newer = FeeVoucher::query()->where('student_id', $voucher->student_id)->where('voucher_no', $match[1])->first();
+
+        return $newer ? $this->currentVoucherBalance($newer, $depth + 1) : (float) $voucher->balance_amount;
     }
 
     /**

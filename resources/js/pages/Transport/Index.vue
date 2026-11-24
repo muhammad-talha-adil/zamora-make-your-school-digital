@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import CampusSelect from '@/components/ui/CampusSelect.vue';
 import { Head, router } from '@inertiajs/vue3';
 import axios from 'axios';
 import { computed, reactive, ref, watch } from 'vue';
@@ -757,7 +758,7 @@ const generateDues = async () => {
                     <div class="space-y-4">
                         <div>
                             <label class="mb-2 block text-sm font-medium text-muted-foreground">Campus</label>
-                            <SearchableSelect v-model="vehicleForm.campus_id" :options="campusOptions" placeholder="Select campus" />
+                            <CampusSelect v-model="vehicleForm.campus_id" :options="campusOptions" placeholder="Select campus" />
                         </div>
                         <div>
                             <label class="mb-2 block text-sm font-medium text-muted-foreground">Vehicle No</label>
@@ -859,7 +860,7 @@ const generateDues = async () => {
                     <div class="space-y-4">
                         <div>
                             <label class="mb-2 block text-sm font-medium text-muted-foreground">Campus</label>
-                            <SearchableSelect v-model="routeForm.campus_id" :options="campusOptions" placeholder="Select campus" />
+                            <CampusSelect v-model="routeForm.campus_id" :options="campusOptions" placeholder="Select campus" />
                         </div>
                         <div>
                             <label class="mb-2 block text-sm font-medium text-muted-foreground">Route Name</label>
@@ -944,7 +945,7 @@ const generateDues = async () => {
                     <div class="space-y-4">
                         <div>
                             <label class="mb-2 block text-sm font-medium text-muted-foreground">Campus</label>
-                            <SearchableSelect v-model="stopForm.campus_id" :options="campusOptions" placeholder="Select campus" />
+                            <CampusSelect v-model="stopForm.campus_id" :options="campusOptions" placeholder="Select campus" />
                         </div>
                         <div>
                             <label class="mb-2 block text-sm font-medium text-muted-foreground">Stop Name</label>
@@ -1014,7 +1015,7 @@ const generateDues = async () => {
                         <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-1">
                             <div>
                                 <label class="mb-2 block text-sm font-medium text-muted-foreground">Campus</label>
-                                <SearchableSelect v-model="assignmentForm.campus_id" :options="campusOptions" placeholder="Select campus" />
+                                <CampusSelect v-model="assignmentForm.campus_id" :options="campusOptions" placeholder="Select campus" />
                             </div>
                             <div>
                                 <label class="mb-2 block text-sm font-medium text-muted-foreground">Route</label>
@@ -1109,7 +1110,7 @@ const generateDues = async () => {
                         <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-1">
                             <div>
                                 <label class="mb-2 block text-sm font-medium text-muted-foreground">Campus</label>
-                                <SearchableSelect v-model="expenseForm.campus_id" :options="campusOptions" placeholder="Select campus" />
+                                <CampusSelect v-model="expenseForm.campus_id" :options="campusOptions" placeholder="Select campus" />
                             </div>
                             <div>
                                 <label class="mb-2 block text-sm font-medium text-muted-foreground">Vehicle</label>

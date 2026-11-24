@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import PhoneInput from '@/components/ui/PhoneInput.vue';
 import { router, usePage } from '@inertiajs/vue3';
 import { onBeforeUnmount, ref } from 'vue';
 import { alert } from '@/utils';
@@ -170,7 +171,7 @@ const submit = () => {
                         <Icon icon="phone" class="mr-1 h-4 w-4" />
                         Phone
                     </Label>
-                    <Input id="phone" v-model="form.phone" maxlength="20" placeholder="0300-1234567" :class="{ 'border-destructive': (errors as any).phone }" />
+                    <PhoneInput id="phone" v-model="form.phone" :class="{ 'border-destructive': (errors as any).phone }" />
                     <InputError :message="(errors as any).phone" />
                 </div>
 

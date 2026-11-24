@@ -5,7 +5,6 @@ import { route } from 'ziggy-js';
 import axios from 'axios';
 import { alert } from '@/utils';
 import SchoolClassForm from '@/components/forms/SchoolClassForm.vue';
-import { useFormValidity } from '@/composables/useFormValidity';
 import AppLayout from '@/layouts/AppLayout.vue';
 import type { BreadcrumbItem } from '@/types';
 import { Button } from '@/components/ui/button';
@@ -129,8 +128,6 @@ const errors = ref<Record<string, string>>({});
 const isSubmitting = ref(false);
 
 const titleLength = ref(0);
-const { isValid: isBaseValid } = useFormValidity(form, ['title', 'session_id', 'campus_id', 'status']);
-const isValid = computed(() => isBaseValid.value && selectedClassIds.value.length > 0 && feeItems.value.length > 0);
 
 const stillNeeded = computed(() => {
     const missing: string[] = [];
@@ -550,7 +547,7 @@ const cancel = () => {
                             <Icon icon="x" class="mr-2 h-4 w-4" />
                             Cancel
                         </Button>
-                        <Button @click="submitForm" :disabled="isSubmitting || !isValid">
+                        <Button @click="submitForm" :disabled="isSubmitting">
                             <Icon icon="check" class="mr-2 h-4 w-4" />
                             {{ isSubmitting ? 'Creating...' : 'Create Structure' }}
                         </Button>
@@ -563,7 +560,7 @@ const cancel = () => {
 
             <!-- Basic Information Form -->
             <div class="bg-card rounded-lg border border-border p-4 md:p-6">
-                <form @submit.prevent="submitForm" class="space-y-6">
+                <form novalidate @submit.prevent="submitForm" class="space-y-6">
                     <!-- Basic Information -->
                     <div class="space-y-2">
                         <Label for="title">Title <span class="text-destructive">*</span></Label>

@@ -46,8 +46,8 @@ class FineRuleController extends Controller
         $query = FeeFineRule::with(['campus', 'session', 'schoolClass', 'section', 'feeHead']);
 
         // Apply filters
-        if ($request->filled('campus_id')) {
-            $query->where('campus_id', $request->campus_id);
+        if ($request->user()->campusId() !== null) {
+            $query->where('campus_id', $request->user()->campusId());
         }
 
         if ($request->filled('session_id')) {

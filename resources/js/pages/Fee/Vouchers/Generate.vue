@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import CampusSelect from '@/components/ui/CampusSelect.vue';
 import { Head, router, usePage } from '@inertiajs/vue3';
 import { reactive, ref, computed, watch, onMounted } from 'vue';
 import { route } from 'ziggy-js';
@@ -477,7 +478,7 @@ const flashMessage = computed(() => {
                              everywhere else a Campus field appears. -->
                         <div v-if="!isCampusLocked">
                             <Label for="campus_id">Campus *</Label>
-                            <SearchableSelect
+                            <CampusSelect
                                 id="campus_id"
                                 v-model="form.campus_id"
                                 :options="campusOptions"

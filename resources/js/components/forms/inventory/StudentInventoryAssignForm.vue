@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import CampusSelect from '@/components/ui/CampusSelect.vue';
 import { router } from '@inertiajs/vue3';
 import { ref, computed } from 'vue';
 import { useFormValidity } from '@/composables/useFormValidity';
@@ -236,7 +237,7 @@ const submitForm = () => {
                             </div>
                             Campus <span class="text-destructive">*</span>
                         </Label>
-                        <SearchableSelect
+                        <CampusSelect
                             id="campus_id"
                             v-model="form.campus_id"
                             :options="campusOptions"

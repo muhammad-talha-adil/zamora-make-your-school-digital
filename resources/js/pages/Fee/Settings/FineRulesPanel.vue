@@ -504,7 +504,7 @@ const activeStatusOptions = [
                 <DialogHeader>
                     <DialogTitle>{{ editingRule ? 'Edit Fine Rule' : 'Add Fine Rule' }}</DialogTitle>
                 </DialogHeader>
-                <form @submit.prevent="submitForm" class="space-y-4">
+                <form novalidate @submit.prevent="submitForm" class="space-y-4">
                     <!-- Rule Name -->
                     <div class="space-y-2">
                         <Label for="name">Rule Name *</Label>

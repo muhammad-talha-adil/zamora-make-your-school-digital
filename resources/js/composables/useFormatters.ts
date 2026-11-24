@@ -1,22 +1,11 @@
+import { formatPhone as formatSharedPhone } from '@/utils/phone';
 /**
  * Composable for formatting phone numbers in Pakistani format
  * Format: XXXX-XXXXXXX (4 digits prefix, 7 digits local)
  */
 export function usePhoneFormatter() {
-    const formatPhone = (value: string): string => {
-        // Remove all non-digits
-        const digits = value.replace(/\D/g, '');
-        
-        // Format with dashes: XXXX-XXXXXXX
-        if (digits.length <= 4) {
-            return digits;
-        } else if (digits.length <= 11) {
-            return `${digits.slice(0, 4)}-${digits.slice(4)}`;
-        } else {
-            return `${digits.slice(0, 4)}-${digits.slice(4, 11)}`;
-        }
-    };
-    
+    const formatPhone = (value: string): string => formatSharedPhone(value);
+
     const isValidPhone = (value: string): boolean => {
         const digits = value.replace(/\D/g, '');
         return digits.length >= 10 && digits.length <= 15;

@@ -120,6 +120,12 @@ const validateForm = (): boolean => {
     if (!form.value.default_value) {
         formErrors.value.default_value = 'Default value is required';
         isValid = false;
+    } else if (form.value.default_value_type === 'percent' && Number(form.value.default_value) > 100) {
+        formErrors.value.default_value = 'A percentage cannot be more than 100.';
+        isValid = false;
+    } else if (form.value.default_value_type !== 'percent' && Number(form.value.default_value) > 10000000) {
+        formErrors.value.default_value = 'Amount cannot be more than Rs 10,000,000.';
+        isValid = false;
     }
 
     return isValid;
@@ -339,7 +345,7 @@ const deleteDiscountType = (discountType: DiscountType) => {
                 <DialogHeader>
                     <DialogTitle>{{ editingDiscountType ? 'Edit Discount Type' : 'Create Discount Type' }}</DialogTitle>
                 </DialogHeader>
-                <form @submit.prevent="submitForm" class="space-y-4">
+                <form novalidate @submit.prevent="submitForm" class="space-y-4">
                     <!-- Name -->
                     <div class="space-y-2">
                         <Label for="dt-name">Name *</Label>

@@ -57,7 +57,7 @@ it('saves cnic, phone and photo on the same form', function () {
     $profile = StaffProfile::findOrFail($response->json('staff.id'));
 
     expect($profile->cnic)->toBe('35202-1234567-1')
-        ->and($profile->phone)->toBe('0300 1234567')
+        ->and($profile->phone)->toBe('0300-1234567')
         ->and($profile->photo)->toStartWith('/storage/staff/photos/');
 });
 

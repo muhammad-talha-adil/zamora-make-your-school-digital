@@ -3,9 +3,9 @@
 namespace App\Http\Controllers\Fee;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Fee\SaveDiscountTypeRequest;
 use App\Models\Fee\DiscountType;
 use Illuminate\Database\QueryException;
-use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -34,15 +34,9 @@ class DiscountTypeController extends Controller
     /**
      * Store a newly created discount type.
      */
-    public function store(Request $request)
+    public function store(SaveDiscountTypeRequest $request)
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:100',
-            'default_value_type' => 'required|in:fixed,percent',
-            'default_value' => 'required|numeric|min:0',
-            'requires_approval' => 'boolean',
-            'is_active' => 'boolean',
-        ]);
+        $validated = $request->validated();
 
         // Map default_value_type to value_type for the database
         $data = $validated;
@@ -69,15 +63,9 @@ class DiscountTypeController extends Controller
     /**
      * Update the specified discount type.
      */
-    public function update(Request $request, DiscountType $discountType)
+    public function update(SaveDiscountTypeRequest $request, DiscountType $discountType)
     {
-        $validated = $request->validate([
-            'name' => 'required|string|max:100',
-            'default_value_type' => 'required|in:fixed,percent',
-            'default_value' => 'required|numeric|min:0',
-            'requires_approval' => 'boolean',
-            'is_active' => 'boolean',
-        ]);
+        $validated = $request->validated();
 
         // Map default_value_type to value_type for the database. Code is set
         // once at creation and never re-derived on edit, since it may already

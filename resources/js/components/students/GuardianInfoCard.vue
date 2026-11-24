@@ -40,12 +40,9 @@
                         <span class="text-destructive">*</span></Label
                     >
                     <div class="relative">
-                        <Input
+                        <PhoneInput
                             id="father_phone"
                             v-model="form.father_phone"
-                            type="text"
-                            placeholder="0321-1234567"
-                            maxlength="12"
                             @input="onFatherPhoneInput"
                             :disabled="guardianLookupLoading"
                             :class="{
@@ -201,12 +198,9 @@
                 <!-- Other Guardian Phone with Auto-formatting -->
                 <div class="space-y-2">
                     <Label for="other_phone">Guardian Phone</Label>
-                    <Input
+                    <PhoneInput
                         id="other_phone"
                         v-model="form.other_phone"
-                        type="text"
-                        placeholder="0321-1234567"
-                        maxlength="12"
                         @input="handleOtherPhoneInput"
                     />
                     <p class="text-xs text-muted-foreground"></p>
@@ -260,6 +254,7 @@
 </template>
 
 <script setup lang="ts">
+import PhoneInput from '@/components/ui/PhoneInput.vue';
 import { computed } from 'vue';
 import Icon from '@/components/Icon.vue';
 import InputError from '@/components/InputError.vue';

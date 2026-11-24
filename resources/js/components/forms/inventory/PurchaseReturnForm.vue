@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import CampusSelect from '@/components/ui/CampusSelect.vue';
 import axios from 'axios';
 import { alert } from '@/utils';
 import { ref, computed, reactive, watch } from 'vue';
@@ -585,7 +586,7 @@ watch(() => form.purchase_id, (newPurchaseId) => {
                                 </div>
                                 Campus <span class="text-destructive">*</span>
                             </Label>
-                            <SearchableSelect
+                            <CampusSelect
                                 id="campus_id"
                                 v-model="form.campus_id"
                                 :options="campusOptions"

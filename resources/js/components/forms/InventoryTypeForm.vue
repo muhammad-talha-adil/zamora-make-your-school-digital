@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import CampusSelect from '@/components/ui/CampusSelect.vue';
 import { ref, watch, computed } from 'vue';
 import { usePage } from '@inertiajs/vue3';
 import { alert } from '@/utils';
@@ -313,7 +314,7 @@ const resetForm = () => {
                             </div>
                             Campus <span class="text-destructive">*</span>
                         </Label>
-                        <SearchableSelect
+                        <CampusSelect
                             id="campus"
                             v-model="form.campus_id"
                             :options="campusOptions"

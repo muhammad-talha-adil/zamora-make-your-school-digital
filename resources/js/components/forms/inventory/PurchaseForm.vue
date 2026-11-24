@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import CampusSelect from '@/components/ui/CampusSelect.vue';
 import axios from 'axios';
 import { ref, computed, reactive, watch, nextTick } from 'vue';
 import { usePage } from '@inertiajs/vue3';
@@ -536,7 +537,7 @@ watch(() => form.purchase_items.length, (len) => {
                                 </div>
                                 Campus <span class="text-destructive">*</span>
                             </Label>
-                            <SearchableSelect
+                            <CampusSelect
                                 id="campus_id"
                                 v-model="form.campus_id"
                                 :options="campusOptions"

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import PhoneInput from '@/components/ui/PhoneInput.vue';
 /**
  * The follow-up list a school actually works from in admission season.
  *
@@ -537,7 +538,7 @@ const admitEnquiry = async (enquiry: EnquiryRow) => {
 
                         <div class="space-y-2">
                             <Label for="phone">Phone <span class="text-destructive">*</span></Label>
-                            <Input id="phone" v-model="enquiryForm.phone" type="text" placeholder="03001234567" maxlength="11" required />
+                            <PhoneInput id="phone" v-model="enquiryForm.phone" required />
                             <InputError :message="formErrors.phone" />
                         </div>
 

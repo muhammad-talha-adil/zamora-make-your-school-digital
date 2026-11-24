@@ -453,7 +453,7 @@ const getFrequencyLabel = (frequency: string) => {
                 <DialogHeader>
                     <DialogTitle>{{ editingFeeHead ? 'Edit Fee Head' : 'Create Fee Head' }}</DialogTitle>
                 </DialogHeader>
-                <form @submit.prevent="submitForm" class="space-y-4">
+                <form novalidate @submit.prevent="submitForm" class="space-y-4">
                     <!-- Name -->
                     <div class="space-y-2">
                         <Label for="fh-name">Name *</Label>

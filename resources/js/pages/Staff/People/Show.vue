@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import PhoneInput from '@/components/ui/PhoneInput.vue';
 import { Head, router, usePage } from '@inertiajs/vue3';
 import axios from 'axios';
 import { computed, reactive, ref } from 'vue';
@@ -714,7 +715,7 @@ const activeJobsCount = computed(() => props.jobs.length);
                             </div>
                             <div>
                                 <label class="mb-2 block text-sm font-medium text-muted-foreground">Phone</label>
-                                <Input v-model="personalForm.phone" maxlength="20" :disabled="!props.can.edit" />
+                                <PhoneInput v-model="personalForm.phone" :disabled="!props.can.edit" />
                             </div>
                         </div>
                         <div class="grid gap-4 md:grid-cols-2">
@@ -742,7 +743,7 @@ const activeJobsCount = computed(() => props.jobs.length);
                             </div>
                             <div>
                                 <label class="mb-2 block text-sm font-medium text-muted-foreground">Phone</label>
-                                <Input v-model="personalForm.emergency_contact_phone" maxlength="20" :disabled="!props.can.edit" />
+                                <PhoneInput v-model="personalForm.emergency_contact_phone" :disabled="!props.can.edit" />
                             </div>
                             <div>
                                 <label class="mb-2 block text-sm font-medium text-muted-foreground">Relationship to Staff Member</label>

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import CampusSelect from '@/components/ui/CampusSelect.vue';
 import { Head } from '@inertiajs/vue3';
 import { router } from '@inertiajs/vue3';
 import { ref, computed, reactive, watch } from 'vue';
@@ -394,7 +395,7 @@ initializeForm();
                                 <Icon icon="building" class="h-4 w-4" />
                                 Campus <span class="text-destructive">*</span>
                             </Label>
-                            <SearchableSelect
+                            <CampusSelect
                                 id="campus_id"
                                 v-model="form.campus_id"
                                 :options="campusOptions"

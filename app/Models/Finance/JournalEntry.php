@@ -98,7 +98,7 @@ class JournalEntry extends Model
      */
     public function scopeVisibleTo(Builder $query, ?User $user): Builder
     {
-        if (! $user || $user->isSuperAdmin()) {
+        if (! $user) {
             return $query;
         }
 

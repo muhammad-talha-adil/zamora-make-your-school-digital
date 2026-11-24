@@ -42,6 +42,7 @@ interface FeePayment {
         id: number;
         name: string;
         registration_number: string;
+        admission_no?: string | null;
         father_name: string;
         phone?: string;
     };
@@ -103,7 +104,7 @@ const getPaymentMethodLabel = (method: string): string => {
 
         <div class="space-y-6 p-4 md:p-6">
             <!-- Actions -->
-            <div class="flex justify-between items-center print:hidden">
+            <div class="mx-auto flex w-full max-w-3xl flex-wrap items-center justify-between gap-2 print:hidden">
                 <Button variant="outline" @click="router.visit(route('fee.payments.index'))">
                     <Icon icon="arrow-left" class="mr-2 h-4 w-4" />
                     Back to Payments
@@ -115,29 +116,30 @@ const getPaymentMethodLabel = (method: string): string => {
             </div>
 
             <!-- Receipt -->
-            <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 md:p-8 max-w-2xl mx-auto print:border-0 print:p-0">
+            <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-4 sm:p-6 md:p-8 w-full max-w-3xl mx-auto print:border-0 print:p-0">
                 <!-- Header -->
                 <div class="text-center mb-8">
                     <h1 v-if="props.schoolName" class="text-xl font-bold text-gray-900 dark:text-white">{{ props.schoolName }}</h1>
                     <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Fee Payment Receipt</h2>
                     <p class="text-gray-600 dark:text-gray-400">Receipt No: {{ props.payment.receipt_no }}</p>
+                    <span v-if="props.payment.status === 'reversed'" class="mt-2 inline-block rounded-full bg-red-100 px-3 py-1 text-sm font-bold uppercase tracking-wide text-red-700">Reversed</span>
                 </div>
 
                 <!-- Payment Info -->
                 <div class="grid gap-4 mb-6">
-                    <div class="flex justify-between">
+                    <div class="flex flex-wrap justify-between gap-x-4 gap-y-1">
                         <span class="text-gray-600 dark:text-gray-400">Payment Date:</span>
                         <span class="font-medium text-gray-900 dark:text-white">{{ formatDate(props.payment.payment_date) }}</span>
                     </div>
-                    <div class="flex justify-between">
+                    <div class="flex flex-wrap justify-between gap-x-4 gap-y-1">
                         <span class="text-gray-600 dark:text-gray-400">Payment Method:</span>
                         <span class="font-medium text-gray-900 dark:text-white">{{ getPaymentMethodLabel(props.payment.payment_method) }}</span>
                     </div>
-                    <div v-if="props.payment.reference_no" class="flex justify-between">
+                    <div v-if="props.payment.reference_no" class="flex flex-wrap justify-between gap-x-4 gap-y-1">
                         <span class="text-gray-600 dark:text-gray-400">Reference No:</span>
                         <span class="font-medium text-gray-900 dark:text-white">{{ props.payment.reference_no }}</span>
                     </div>
-                    <div v-if="props.payment.bank_name" class="flex justify-between">
+                    <div v-if="props.payment.bank_name" class="flex flex-wrap justify-between gap-x-4 gap-y-1">
                         <span class="text-gray-600 dark:text-gray-400">Bank Name:</span>
                         <span class="font-medium text-gray-900 dark:text-white">{{ props.payment.bank_name }}</span>
                     </div>
@@ -147,15 +149,15 @@ const getPaymentMethodLabel = (method: string): string => {
                 <div class="border-t border-b border-gray-200 dark:border-gray-700 py-4 mb-6">
                     <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-3">Student Information</h2>
                     <div class="grid gap-2">
-                        <div class="flex justify-between">
+                        <div class="flex flex-wrap justify-between gap-x-4 gap-y-1">
                             <span class="text-gray-600 dark:text-gray-400">Name:</span>
                             <span class="font-medium text-gray-900 dark:text-white">{{ props.payment.student?.name || 'N/A' }}</span>
                         </div>
-                        <div class="flex justify-between">
+                        <div class="flex flex-wrap justify-between gap-x-4 gap-y-1">
                             <span class="text-gray-600 dark:text-gray-400">Admission No:</span>
-                            <span class="font-medium text-gray-900 dark:text-white">{{ props.payment.student?.registration_number || 'N/A' }}</span>
+                            <span class="font-medium text-gray-900 dark:text-white">{{ props.payment.student?.admission_no || props.payment.student?.registration_number || 'N/A' }}</span>
                         </div>
-                        <div v-if="props.payment.student?.father_name" class="flex justify-between">
+                        <div v-if="props.payment.student?.father_name" class="flex flex-wrap justify-between gap-x-4 gap-y-1">
                             <span class="text-gray-600 dark:text-gray-400">Father Name:</span>
                             <span class="font-medium text-gray-900 dark:text-white">{{ props.payment.student?.father_name || 'N/A' }}</span>
                         </div>
@@ -165,7 +167,7 @@ const getPaymentMethodLabel = (method: string): string => {
                 <!-- Vouchers -->
                 <div class="mb-6">
                     <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-3">Vouchers Paid</h2>
-                    <table class="w-full text-sm">
+                    <div class="overflow-x-auto"><table class="w-full min-w-[20rem] text-sm">
                         <thead>
                             <tr class="border-b border-gray-200 dark:border-gray-700">
                                 <th class="text-left py-2 text-gray-500 dark:text-gray-400">Voucher No</th>
@@ -180,12 +182,12 @@ const getPaymentMethodLabel = (method: string): string => {
                                 <td class="py-2 text-right text-gray-900 dark:text-white font-medium">{{ formatCurrency(allocation.allocated_amount) }}</td>
                             </tr>
                         </tbody>
-                    </table>
+                    </table></div>
                 </div>
 
                 <div v-if="props.payment.items_summary?.length" class="mb-6">
                     <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-3">Fee Items</h2>
-                    <div v-for="(item, index) in props.payment.items_summary" :key="index" class="flex justify-between gap-2 py-1 text-sm">
+                    <div v-for="(item, index) in props.payment.items_summary" :key="index" class="flex flex-wrap justify-between gap-x-4 gap-y-1 py-1 text-sm">
                         <span class="text-gray-700 dark:text-gray-300">{{ item.description }}</span>
                         <span class="text-gray-900 dark:text-white">{{ formatCurrency(item.amount) }}</span>
                     </div>
@@ -193,32 +195,32 @@ const getPaymentMethodLabel = (method: string): string => {
 
                 <!-- Totals -->
                 <div class="border-t border-gray-200 dark:border-gray-700 pt-4">
-                    <div class="flex justify-between mb-2">
+                    <div class="flex flex-wrap justify-between gap-x-4 gap-y-1 mb-2">
                         <span class="text-gray-600 dark:text-gray-400">Total Received:</span>
                         <span class="font-medium text-gray-900 dark:text-white">{{ formatCurrency(props.payment.received_amount) }}</span>
                     </div>
-                    <div v-if="Number(props.payment.late_fee_amount) > 0" class="flex justify-between mb-2">
+                    <div v-if="Number(props.payment.late_fee_amount) > 0" class="flex flex-wrap justify-between gap-x-4 gap-y-1 mb-2">
                         <span class="text-gray-600 dark:text-gray-400">Late fee included:</span>
                         <span class="font-medium text-gray-900 dark:text-white">{{ formatCurrency(Number(props.payment.late_fee_amount)) }}</span>
                     </div>
-                    <div v-if="Number(props.payment.concession_amount) > 0" class="flex justify-between mb-2">
+                    <div v-if="Number(props.payment.concession_amount) > 0" class="flex flex-wrap justify-between gap-x-4 gap-y-1 mb-2">
                         <span class="text-gray-600 dark:text-gray-400">Concession given ({{ props.payment.concession_reason || 'no reason' }}):</span>
                         <span class="font-medium text-gray-900 dark:text-white">{{ formatCurrency(Number(props.payment.concession_amount)) }}</span>
                     </div>
-                    <div class="flex justify-between mb-2">
+                    <div class="flex flex-wrap justify-between gap-x-4 gap-y-1 mb-2">
                         <span class="text-gray-600 dark:text-gray-400">Allocated to Vouchers:</span>
                         <span class="font-medium text-gray-900 dark:text-white">{{ formatCurrency(props.payment.allocated_amount) }}</span>
                     </div>
-                    <div v-if="props.payment.excess_amount > 0" class="flex justify-between mb-2">
+                    <div v-if="props.payment.excess_amount > 0" class="flex flex-wrap justify-between gap-x-4 gap-y-1 mb-2">
                         <span class="text-gray-600 dark:text-gray-400">Excess (Wallet):</span>
                         <span class="font-medium text-green-600 dark:text-green-400">{{ formatCurrency(props.payment.excess_amount) }}</span>
                     </div>
-                    <div class="flex justify-between pt-2 border-t border-gray-200 dark:border-gray-700">
-                        <span class="font-semibold text-gray-900 dark:text-white">Net Paid:</span>
+                    <div class="flex flex-wrap justify-between gap-x-4 gap-y-1 pt-2 border-t border-gray-200 dark:border-gray-700">
+                        <span class="font-semibold text-gray-900 dark:text-white">{{ props.payment.status === 'reversed' ? 'Net Paid (reversed):' : 'Net Paid:' }}</span>
                         <span class="font-bold text-lg text-gray-900 dark:text-white">{{ formatCurrency(props.payment.allocated_amount) }}</span>
                     </div>
-                    <div class="flex justify-between pt-2">
-                        <span class="text-gray-600 dark:text-gray-400">Remaining Balance:</span>
+                    <div class="flex flex-wrap justify-between gap-x-4 gap-y-1 pt-2">
+                        <span class="text-gray-600 dark:text-gray-400">{{ props.payment.status === 'reversed' ? 'Remaining Balance (now):' : 'Remaining Balance:' }}</span>
                         <span class="font-medium text-gray-900 dark:text-white">{{ formatCurrency(props.payment.remaining_balance ?? 0) }}</span>
                     </div>
                 </div>

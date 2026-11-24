@@ -35,7 +35,7 @@ class DiscountApprovalController extends Controller
         $pending = StudentDiscount::query()
             ->pending()
             ->with(['student.user', 'discountType', 'enrollmentRecord.campus'])
-            ->when(! $user->isSuperAdmin(), function ($query) use ($user) {
+            ->when($user->campusId() !== null, function ($query) use ($user) {
                 $query->whereHas('enrollmentRecord', function ($enrollment) use ($user) {
                     $enrollment->where('campus_id', $user->campusId());
                 });

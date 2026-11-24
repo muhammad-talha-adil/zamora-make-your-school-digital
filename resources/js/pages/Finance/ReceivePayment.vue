@@ -1,4 +1,5 @@
 Fee<script setup lang="ts">
+import CampusSelect from '@/components/ui/CampusSelect.vue';
 import { Head, router, usePage } from '@inertiajs/vue3';
 import { ref, computed, watch } from 'vue';
 import AppLayout from '@/layouts/AppLayout.vue';
@@ -279,7 +280,7 @@ const formatMoney = (amount: number) => {
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
                         <div v-if="showCampusField">
                             <Label for="campus_id">Campus *</Label>
-                            <SearchableSelect
+                            <CampusSelect
                                 id="campus_id"
                                 v-model="form.campus_id"
                                 :options="campusOptions"

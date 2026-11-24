@@ -155,7 +155,7 @@
                         <!-- Campus -->
                         <div class="space-y-2">
                             <Label for="campus_id">Campus <span class="text-destructive">*</span></Label>
-                            <SearchableSelect
+                            <CampusSelect
                                 id="campus_id"
                                 v-model="form.campus_id"
                                 :options="campusOptions"
@@ -334,12 +334,9 @@
                         <div class="space-y-2 relative">
                             <Label for="father_phone">Phone <span class="text-destructive">*</span></Label>
                             <div class="relative">
-                                <Input
+                                <PhoneInput
                                     id="father_phone"
                                     v-model="form.father_phone"
-                                    type="text"
-                                    placeholder="0321-1234567"
-                                    maxlength="12"
                                     @input="onFatherPhoneInput"
                                     :disabled="guardianLookupLoading"
                                     :class="{ 'border-destructive': errors.father_phone }"
@@ -476,12 +473,9 @@
                         <!-- Other Guardian Phone -->
                         <div class="space-y-2">
                             <Label for="other_phone">Guardian Phone</Label>
-                            <Input
+                            <PhoneInput
                                 id="other_phone"
                                 v-model="form.other_phone"
-                                type="text"
-                                placeholder="0321-1234567"
-                                maxlength="12"
                                 @input="handleOtherPhoneInput"
                             />
                             <p class="text-xs text-muted-foreground">Format: 0300-1234567</p>
@@ -547,6 +541,8 @@
 </template>
 
 <script setup lang="ts">
+import CampusSelect from '@/components/ui/CampusSelect.vue';
+import PhoneInput from '@/components/ui/PhoneInput.vue';
 import { ref, computed, watch, nextTick } from 'vue';
 import { router } from '@inertiajs/vue3';
 import { Head, usePage } from '@inertiajs/vue3';

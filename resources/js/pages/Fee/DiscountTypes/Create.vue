@@ -3,7 +3,6 @@ import { Head, router } from '@inertiajs/vue3';
 import { reactive, ref, computed } from 'vue';
 import { route } from 'ziggy-js';
 import { alert } from '@/utils';
-import { useFormValidity } from '@/composables/useFormValidity';
 import AppLayout from '@/layouts/AppLayout.vue';
 import type { BreadcrumbItem } from '@/types';
 import { Button } from '@/components/ui/button';
@@ -51,7 +50,7 @@ const isActiveModel = computed({
     set: (val: string) => { form.is_active = val === 'true'; },
 });
 
-const { isValid } = useFormValidity(form, ['name', 'default_value']);
+
 
 const getFirstErrorMessage = (value: unknown) => {
     if (Array.isArray(value)) {
@@ -69,6 +68,10 @@ const validateForm = () => {
     }
     if (!form.default_value) {
         errors.value.default_value = 'Default value is required';
+    } else if (form.default_value_type === 'percent' && Number(form.default_value) > 100) {
+        errors.value.default_value = 'A percentage cannot be more than 100.';
+    } else if (form.default_value_type !== 'percent' && Number(form.default_value) > 10000000) {
+        errors.value.default_value = 'Amount cannot be more than Rs 10,000,000.';
     }
     
     return Object.keys(errors.value).length === 0;
@@ -123,7 +126,7 @@ const cancel = () => {
                         <Icon icon="x" class="mr-2 h-4 w-4" />
                         Cancel
                     </Button>
-                    <Button @click="submitForm" :disabled="isSubmitting || !isValid">
+                    <Button @click="submitForm" :disabled="isSubmitting">
                         <Icon icon="check" class="mr-2 h-4 w-4" />
                         {{ isSubmitting ? 'Creating...' : 'Create' }}
                     </Button>
@@ -132,7 +135,7 @@ const cancel = () => {
 
             <!-- Form -->
             <div class="bg-card rounded-lg border border-border p-4 md:p-6">
-                <form @submit.prevent="submitForm" class="space-y-6">
+                <form novalidate @submit.prevent="submitForm" class="space-y-6">
                     <!-- Name -->
                     <div class="space-y-2">
                         <Label for="name">Name <span class="text-destructive">*</span></Label>
@@ -197,7 +200,7 @@ const cancel = () => {
                         <Button type="button" variant="outline" @click="cancel">
                             Cancel
                         </Button>
-                        <Button type="submit" :disabled="isSubmitting || !isValid">
+                        <Button type="submit" :disabled="isSubmitting">
                             <Icon icon="check" class="mr-2 h-4 w-4" />
                             {{ isSubmitting ? 'Creating...' : 'Create' }}
                         </Button>

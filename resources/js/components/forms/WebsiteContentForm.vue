@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import PhoneInput from '@/components/ui/PhoneInput.vue';
 import { router } from '@inertiajs/vue3';
 import { ref } from 'vue';
 import { alert } from '@/utils';
@@ -388,7 +389,7 @@ const submit = () => {
                     </div>
                     <div class="space-y-2">
                         <Label for="contact_phone">Phone</Label>
-                        <Input id="contact_phone" v-model="form.contact_phone" />
+                        <PhoneInput id="contact_phone" v-model="form.contact_phone" />
                     </div>
                     <div class="space-y-2">
                         <Label for="contact_email">Email</Label>

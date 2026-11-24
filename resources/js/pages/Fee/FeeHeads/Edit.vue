@@ -3,7 +3,6 @@ import { Head, router } from '@inertiajs/vue3';
 import { reactive, ref, computed } from 'vue';
 import { route } from 'ziggy-js';
 import { alert } from '@/utils';
-import { useFormValidity } from '@/composables/useFormValidity';
 import AppLayout from '@/layouts/AppLayout.vue';
 import type { BreadcrumbItem } from '@/types';
 import { Button } from '@/components/ui/button';
@@ -70,7 +69,7 @@ const formOptionalModel = computed({
     set: (val: string) => { form.is_optional = val === 'true'; },
 });
 
-const { isValid } = useFormValidity(form, ['name', 'default_frequency']);
+
 
 const validateForm = () => {
     errors.value = {};
@@ -131,7 +130,7 @@ const cancel = () => {
 
             <!-- Form -->
             <div class="bg-card rounded-lg border border-border p-4 md:p-6">
-                <form @submit.prevent="submitForm" class="space-y-6">
+                <form novalidate @submit.prevent="submitForm" class="space-y-6">
                     <!-- Name -->
                     <div class="space-y-2">
                         <Label for="name">Name <span class="text-destructive">*</span></Label>
@@ -207,7 +206,7 @@ const cancel = () => {
                         <Button type="button" variant="outline" @click="cancel">
                             Cancel
                         </Button>
-                        <Button type="submit" :disabled="isSubmitting || !isValid">
+                        <Button type="submit" :disabled="isSubmitting">
                             <Icon icon="check" class="mr-2 h-4 w-4" />
                             {{ isSubmitting ? 'Saving...' : 'Save Changes' }}
                         </Button>

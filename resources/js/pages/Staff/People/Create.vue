@@ -42,7 +42,7 @@
                         </div>
                         <div class="space-y-2">
                             <Label for="phone">Phone</Label>
-                            <Input id="phone" v-model="form.phone" placeholder="0300 1234567" maxlength="20" />
+                            <PhoneInput id="phone" v-model="form.phone" />
                         </div>
                         <div class="space-y-2">
                             <Label for="photo">Photo</Label>
@@ -50,7 +50,7 @@
                         </div>
                         <div v-if="campuses.length" class="space-y-2">
                             <Label for="campus_id">Campus</Label>
-                            <SearchableSelect id="campus_id" v-model="form.campus_id" :options="campusOptions" placeholder="Select campus" />
+                            <CampusSelect id="campus_id" v-model="form.campus_id" :options="campusOptions" placeholder="Select campus" />
                         </div>
                         <div class="space-y-2">
                             <Label for="employee_no">Employee No</Label>
@@ -200,6 +200,8 @@
 </template>
 
 <script setup lang="ts">
+import CampusSelect from '@/components/ui/CampusSelect.vue';
+import PhoneInput from '@/components/ui/PhoneInput.vue';
 import Icon from '@/components/Icon.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';

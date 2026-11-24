@@ -13,7 +13,7 @@ import { formatDate } from '@/utils/date';
 interface FeePayment {
     id: number;
     receipt_no: string;
-    student: { id: number; name: string; registration_number: string };
+    student: { id: number; name: string; registration_number: string; admission_no?: string | null };
     campus: { id: number; name: string };
     payment_date: string;
     payment_method: string;
@@ -118,7 +118,7 @@ const submitReverse = () => {
     <AppLayout :breadcrumbs="breadcrumbItems">
         <Head :title="`Payment ${payment.receipt_no}`" />
 
-        <div class="space-y-6 p-4 md:p-6">
+        <div class="mx-auto w-full max-w-6xl space-y-6 p-4 md:p-6">
             <!-- Header -->
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 md:gap-4">
                 <div>
@@ -127,7 +127,7 @@ const submitReverse = () => {
                             Payment Receipt
                         </h1>
                         <span :class="['inline-block px-2 py-1 text-xs font-medium rounded-full', getStatusColor(payment.status)]">
-                            {{ formatStatus(payment.status) }}
+                            {{ payment.status === 'reversed' ? 'REVERSED' : formatStatus(payment.status) }}
                         </span>
                     </div>
                     <p v-if="schoolName" class="mt-1 text-sm font-semibold text-foreground">{{ schoolName }}</p>
@@ -182,14 +182,15 @@ const submitReverse = () => {
                 <!-- Payment Details -->
                 <div class="lg:col-span-2 space-y-6">
                     <!-- Details Card -->
-                    <div class="bg-card rounded-lg border border-border p-6">
+                    <div class="bg-card rounded-lg border border-border p-4 sm:p-6">
                         <h2 class="text-lg font-semibold mb-4">Payment Details</h2>
                         
-                        <div class="grid grid-cols-2 md:grid-cols-3 gap-4">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 break-words">
                             <div>
                                 <p class="text-sm text-muted-foreground">Student</p>
                                 <p class="font-medium">{{ payment.student?.name || 'N/A' }}</p>
-                                <p class="text-sm text-muted-foreground">{{ payment.student?.registration_number || 'N/A' }}</p>
+                                <p class="text-sm text-muted-foreground">Admission No: {{ payment.student?.admission_no || 'N/A' }}</p>
+                                <p class="text-sm text-muted-foreground">Reg No: {{ payment.student?.registration_number || 'N/A' }}</p>
                             </div>
                             <div>
                                 <p class="text-sm text-muted-foreground">Campus</p>
@@ -266,7 +267,7 @@ const submitReverse = () => {
 
                 <!-- Summary Sidebar -->
                 <div class="space-y-6">
-                    <div class="bg-card rounded-lg border border-border p-6">
+                    <div class="bg-card rounded-lg border border-border p-4 sm:p-6">
                         <h2 class="text-lg font-semibold mb-4">Payment Summary</h2>
                         <div class="space-y-3">
                             <div class="flex flex-wrap gap-2 justify-between">
@@ -282,11 +283,11 @@ const submitReverse = () => {
                                 <span>{{ formatCurrency(Number(payment.concession_amount)) }}</span>
                             </div>
                             <div class="flex flex-wrap gap-2 justify-between text-primary">
-                                <span>Paid Amount (allocated to vouchers)</span>
+                                <span>{{ payment.status === 'reversed' ? 'Paid Amount (reversed)' : 'Paid Amount (allocated to vouchers)' }}</span>
                                 <span>{{ formatCurrency(payment.allocated_amount) }}</span>
                             </div>
                             <div class="flex flex-wrap gap-2 justify-between">
-                                <span class="text-muted-foreground">Remaining Balance</span>
+                                <span class="text-muted-foreground">{{ payment.status === 'reversed' ? 'Remaining Balance (now)' : 'Remaining Balance' }}</span>
                                 <span class="font-medium">{{ formatCurrency(payment.remaining_balance ?? 0) }}</span>
                             </div>
                             <div class="border-t border-border pt-3 flex flex-wrap gap-2 justify-between">

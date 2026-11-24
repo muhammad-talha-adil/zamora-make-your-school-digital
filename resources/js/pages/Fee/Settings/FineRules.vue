@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import CampusSelect from '@/components/ui/CampusSelect.vue';
 import { Head } from '@inertiajs/vue3';
 import { ref, computed, watch } from 'vue';
 import { route } from 'ziggy-js';
@@ -575,7 +576,7 @@ const activeStatusOptions = [
                     <h2 class="text-lg font-semibold text-foreground mb-4">
                         {{ editingRule ? 'Edit Fine Rule' : 'Add Fine Rule' }}
                     </h2>
-                    <form @submit.prevent="submitForm" class="space-y-4">
+                    <form novalidate @submit.prevent="submitForm" class="space-y-4">
                         <!-- Rule Name -->
                         <div class="space-y-2">
                             <Label for="name">Rule Name *</Label>
@@ -593,7 +594,7 @@ const activeStatusOptions = [
                         <div class="grid gap-4 md:grid-cols-2">
                             <div class="space-y-2">
                                 <Label for="campus_id">Campus *</Label>
-                                <SearchableSelect
+                                <CampusSelect
                                     id="campus_id"
                                     v-model="form.campus_id"
                                     :options="campusOptions"

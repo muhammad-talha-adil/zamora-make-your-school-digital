@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import CampusSelect from '@/components/ui/CampusSelect.vue';
+import PhoneInput from '@/components/ui/PhoneInput.vue';
 import { alert } from '@/utils';
 import axios from 'axios';
 import { computed, ref, watch } from 'vue';
@@ -402,7 +404,7 @@ const resetForm = () => {
                             </div>
                             Campus <span class="text-destructive">*</span>
                         </Label>
-                        <SearchableSelect
+                        <CampusSelect
                             id="campus"
                             v-model="form.campus_id"
                             :options="campusOptions"
@@ -454,11 +456,9 @@ const resetForm = () => {
                                 Phone
                             </Label>
                             <div class="relative">
-                                <Input
+                                <PhoneInput
                                     id="phone"
                                     v-model="form.phone"
-                                    placeholder="Enter phone number"
-                                    maxlength="11"
                                     class="h-11 pl-10"
                                 />
                                 <Icon

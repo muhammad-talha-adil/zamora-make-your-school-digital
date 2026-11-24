@@ -63,18 +63,26 @@ class FeeLedgerController extends Controller
 
             if ($voucher->status === VoucherStatus::ADJUSTED) {
                 $carriedOn = $postedOn[$voucher->id];
+                $carriedBucket = 2;
+                $carriedId = $voucher->id;
+                $carriedSub = 0;
                 if (preg_match('/carried forward to voucher (\S+?)\.?(\s|$)/', (string) $voucher->notes, $match)) {
                     $newer = $vouchers->firstWhere('voucher_no', $match[1]);
                     if ($newer) {
                         $carriedOn = max($carriedOn, $postedOn[$newer->id]);
+                        if ($carriedOn === $postedOn[$newer->id]) {
+                            $carriedBucket = 0;
+                            $carriedId = $newer->id;
+                            $carriedSub = -1;
+                        }
                     }
                 }
 
                 $entries->push([
                     'date' => $carriedOn,
-                    'bucket' => 2,
-                    'id' => $voucher->id,
-                    'sub' => 0,
+                    'bucket' => $carriedBucket,
+                    'id' => $carriedId,
+                    'sub' => $carriedSub,
                     'type' => 'Carried forward',
                     'reference' => $voucher->voucher_no,
                     'description' => 'Balance moved to a newer voucher',

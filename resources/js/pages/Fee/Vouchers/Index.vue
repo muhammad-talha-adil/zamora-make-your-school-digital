@@ -145,8 +145,8 @@ const buildParams = (page = 1) => {
 };
 
 const syncSelection = () => {
-    selectedVouchers.value = vouchersData.value.map((voucher) => voucher.id);
-    selectAll.value = vouchersData.value.length > 0;
+    selectedVouchers.value = [];
+    selectAll.value = false;
 };
 
 const fetchVouchers = (page = 1) => {

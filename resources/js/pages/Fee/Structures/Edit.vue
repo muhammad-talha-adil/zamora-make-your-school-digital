@@ -1,9 +1,9 @@
 <script setup lang="ts">
+import CampusSelect from '@/components/ui/CampusSelect.vue';
 import { Head, router, usePage } from '@inertiajs/vue3';
 import { reactive, ref, computed, watch, onMounted, nextTick } from 'vue';
 import { route } from 'ziggy-js';
 import { alert } from '@/utils';
-import { useFormValidity } from '@/composables/useFormValidity';
 import AppLayout from '@/layouts/AppLayout.vue';
 import type { BreadcrumbItem } from '@/types';
 import { Button } from '@/components/ui/button';
@@ -112,7 +112,6 @@ const errors = ref<Record<string, string>>({});
 const isSubmitting = ref(false);
 
 const titleLength = ref(0);
-const { isValid } = useFormValidity(form, ['title', 'session_id', 'campus_id', 'status']);
 
 // Fee Item Form
 const showItemForm = ref(false);
@@ -514,7 +513,7 @@ const getFrequencyLabel = (freq: string) => {
                         <Icon icon="x" class="mr-2 h-4 w-4" />
                         Cancel
                     </Button>
-                    <Button @click="submitForm" :disabled="isSubmitting || !isValid">
+                    <Button @click="submitForm" :disabled="isSubmitting">
                         <Icon icon="check" class="mr-2 h-4 w-4" />
                         {{ isSubmitting ? 'Saving...' : 'Save Changes' }}
                     </Button>
@@ -527,7 +526,7 @@ const getFrequencyLabel = (freq: string) => {
 
             <!-- Structure Details Form -->
             <div class="bg-card rounded-lg border border-border p-4 md:p-6">
-                <form @submit.prevent="submitForm" class="space-y-6">
+                <form novalidate @submit.prevent="submitForm" class="space-y-6">
                     <!-- Basic Information -->
                     <div class="grid gap-4 md:grid-cols-2">
                         <div class="space-y-2">
@@ -578,7 +577,7 @@ const getFrequencyLabel = (freq: string) => {
 
                         <div v-if="showCampusField" class="space-y-2">
                             <Label for="campus">Campus <span class="text-destructive">*</span></Label>
-                            <SearchableSelect
+                            <CampusSelect
                                 id="campus"
                                 v-model="form.campus_id"
                                 :options="campusOptions"
@@ -638,7 +637,7 @@ const getFrequencyLabel = (freq: string) => {
                         <Button type="button" variant="outline" @click="cancel">
                             Cancel
                         </Button>
-                        <Button type="submit" :disabled="isSubmitting || !isValid">
+                        <Button type="submit" :disabled="isSubmitting">
                             <Icon icon="check" class="mr-2 h-4 w-4" />
                             {{ isSubmitting ? 'Saving...' : 'Save Changes' }}
                         </Button>

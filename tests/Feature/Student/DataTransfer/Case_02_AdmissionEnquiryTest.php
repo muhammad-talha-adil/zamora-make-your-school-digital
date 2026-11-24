@@ -44,7 +44,7 @@ it('records a walk-in with only a name and a number', function () {
 
     expect(AdmissionEnquiry::count())->toBe(1)
         // The one thing a counter conversation reliably produces.
-        ->and(AdmissionEnquiry::first()->phone)->toBe('03001234567');
+        ->and(AdmissionEnquiry::first()->phone)->toBe('0300-1234567');
 });
 
 it('refuses an enquiry with no way of reaching them', function () {
@@ -123,7 +123,7 @@ it('fills the admission form in rather than making the school retype it', functi
         ->assertSuccessful()
         ->assertJsonPath('data.name', 'Hamza Tariq')
         ->assertJsonPath('data.father_name', 'Tariq Mehmood')
-        ->assertJsonPath('data.father_phone', '03001234567')
+        ->assertJsonPath('data.father_phone', '0300-1234567')
         ->assertJsonPath('data.class_id', $this->world->class->id);
 });
 

@@ -9,6 +9,7 @@ use App\Http\Middleware\EnsureSchoolActive;
 use App\Http\Middleware\EnsureSubscriptionActive;
 use App\Http\Middleware\HandleAppearance;
 use App\Http\Middleware\HandleInertiaRequests;
+use App\Http\Middleware\NormalizePhoneInput;
 use App\Http\Middleware\RedirectPortalUsersFromDashboard;
 use App\Http\Middleware\RequiresPasswordConfirmation;
 use Illuminate\Foundation\Application;
@@ -49,6 +50,7 @@ $app = Application::configure(basePath: $basePath)
             EnsureSubscriptionActive::class,
             EnsureSchoolActive::class,
         ]);
+        $middleware->prependToGroup('web', NormalizePhoneInput::class);
 
         $middleware->alias([
             'campus.exists' => EnsureCampusExists::class,
