@@ -601,7 +601,7 @@ class FeeVoucherController extends Controller
                 'class' => $voucher->schoolClass,
                 'section' => $voucher->section,
                 'concessions' => $this->concessionsFor($voucher),
-                'items' => $voucher->items->reject(fn (FeeVoucherItem $item) => $item->feeHead?->code === 'LATE_FINE' && $item->description === 'Late fee')->values()->map(function (FeeVoucherItem $item) {
+                'items' => $voucher->items->reject(fn (FeeVoucherItem $item) => $item->isLateFee())->values()->map(function (FeeVoucherItem $item) {
                     return [
                         'id' => $item->id,
                         'fee_head_id' => $item->fee_head_id,
@@ -1100,7 +1100,7 @@ class FeeVoucherController extends Controller
                     'id' => $voucher->section->id,
                     'name' => $voucher->section->name,
                 ] : null,
-                'items' => $voucher->items->map(function ($item) {
+                'items' => $voucher->items->reject(fn (FeeVoucherItem $item) => $item->isLateFee())->map(function ($item) {
                     return [
                         'id' => $item->id,
                         'fee_head_id' => $item->fee_head_id,

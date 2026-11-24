@@ -107,7 +107,7 @@ class FeeReportController extends Controller
         if ($request->boolean('export')) {
             return $this->csv('collection-report.csv', ['Date', 'Receipt', 'Student', 'Method', 'Received'],
                 (clone $query)->with('student')->orderBy('payment_date')->get()
-                    ->map(fn (FeePayment $p) => [$p->payment_date->toDateString(), $p->receipt_no, $p->student?->name, $p->payment_method, $p->received_amount])->all());
+                    ->map(fn (FeePayment $p) => [$p->payment_date?->toDateString(), $p->receipt_no, $p->student?->name, $p->payment_method?->value ?? $p->payment_method, $p->received_amount])->all());
         }
 
         return Inertia::render('Fee/Reports/Collection', [
@@ -261,8 +261,18 @@ class FeeReportController extends Controller
      */
     protected function filterOptions(): array
     {
+        $classes = SchoolClass::query()
+            ->visibleTo(request()->user())
+            ->with('campus:id,name')
+            ->orderBy('name')
+            ->get(['id', 'name', 'campus_id']);
+        $showCampus = $classes->pluck('campus_id')->unique()->count() > 1;
+
         return [
-            'classOptions' => SchoolClass::query()->orderBy('name')->get(['id', 'name']),
+            'classOptions' => $classes->map(fn (SchoolClass $class) => [
+                'id' => $class->id,
+                'name' => $showCampus && $class->campus ? $class->name.' ('.$class->campus->name.')' : $class->name,
+            ])->values(),
             'monthOptions' => Month::query()->orderBy('month_number')->get(['id', 'name']),
         ];
     }

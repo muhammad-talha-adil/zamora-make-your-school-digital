@@ -47,10 +47,10 @@ class StoreFamilyFeePaymentRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'payment_date.before_or_equal' => 'Payment date cannot be in the future.',
-            'vouchers.required' => 'Select at least one voucher.',
-            'vouchers.min' => 'Select at least one voucher.',
-            'vouchers.*.amount.gt' => 'Amount must be more than zero.',
+            'payment_date.before_or_equal' => 'Date cannot be in the future.',
+            'vouchers.required' => 'Please tick at least one voucher.',
+            'vouchers.min' => 'Please tick at least one voucher.',
+            'vouchers.*.amount.gt' => 'Please enter the amount to pay.',
         ];
     }
 }

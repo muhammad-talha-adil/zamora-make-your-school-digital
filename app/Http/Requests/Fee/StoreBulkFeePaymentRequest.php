@@ -42,7 +42,7 @@ class StoreBulkFeePaymentRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'payments.*.payment_date.before_or_equal' => 'Payment date cannot be in the future.',
+            'payments.*.payment_date.before_or_equal' => 'Date cannot be in the future.',
         ];
     }
 }

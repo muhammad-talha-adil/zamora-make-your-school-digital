@@ -6,6 +6,7 @@ use App\Enums\Fee\PaymentStatus;
 use App\Enums\Fee\VoucherStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Fee\FeePayment;
+use App\Models\Fee\FeePaymentAllocation;
 use App\Models\Student;
 use App\Services\Fee\StudentBalanceService;
 use Illuminate\Http\Request;
@@ -30,12 +31,29 @@ class FeeLedgerController extends Controller
             ->with('voucherMonth')
             ->get();
 
+        $firstPaymentOn = FeePaymentAllocation::query()
+            ->whereIn('fee_voucher_id', $vouchers->pluck('id'))
+            ->join('new_fee_payments', 'new_fee_payments.id', '=', 'fee_payment_allocations.fee_payment_id')
+            ->groupBy('fee_payment_allocations.fee_voucher_id')
+            ->selectRaw('fee_payment_allocations.fee_voucher_id as voucher_id, MIN(DATE(new_fee_payments.payment_date)) as first_date')
+            ->pluck('first_date', 'voucher_id');
+
+        $postedOn = [];
+
         foreach ($vouchers as $voucher) {
             $billedOn = sprintf('%04d-%02d-01', $voucher->voucher_year, $voucher->voucherMonth?->month_number ?? 1);
+            $postedOn[$voucher->id] = collect([$billedOn, $voucher->created_at?->toDateString(), $firstPaymentOn->get($voucher->id)])
+                ->filter()
+                ->min();
+        }
+
+        foreach ($vouchers as $voucher) {
             $label = trim(($voucher->voucherMonth?->name ?? '').' '.$voucher->voucher_year);
             $entries->push([
-                'date' => $billedOn,
-                'order' => 0,
+                'date' => $postedOn[$voucher->id],
+                'bucket' => 0,
+                'id' => $voucher->id,
+                'sub' => 0,
                 'type' => 'Voucher',
                 'reference' => $voucher->voucher_no,
                 'description' => $label,
@@ -44,17 +62,19 @@ class FeeLedgerController extends Controller
             ]);
 
             if ($voucher->status === VoucherStatus::ADJUSTED) {
-                $carriedOn = $billedOn;
+                $carriedOn = $postedOn[$voucher->id];
                 if (preg_match('/carried forward to voucher (\S+?)\.?(\s|$)/', (string) $voucher->notes, $match)) {
-                    $newer = $student->feeVouchers()->where('voucher_no', $match[1])->first();
+                    $newer = $vouchers->firstWhere('voucher_no', $match[1]);
                     if ($newer) {
-                        $carriedOn = max($carriedOn, $newer->created_at->toDateString());
+                        $carriedOn = max($carriedOn, $postedOn[$newer->id]);
                     }
                 }
 
                 $entries->push([
                     'date' => $carriedOn,
-                    'order' => 3,
+                    'bucket' => 2,
+                    'id' => $voucher->id,
+                    'sub' => 0,
                     'type' => 'Carried forward',
                     'reference' => $voucher->voucher_no,
                     'description' => 'Balance moved to a newer voucher',
@@ -72,24 +92,39 @@ class FeeLedgerController extends Controller
                 (float) $payment->concession_amount > 0 ? 'Concession '.number_format((float) $payment->concession_amount, 2) : null,
             ])->filter()->implode(', ');
 
+            $isReversed = $payment->status === PaymentStatus::REVERSED;
+
+            $applied = round(
+                (float) $payment->received_amount - (float) $payment->excess_amount
+                - ($isReversed ? (float) $payment->late_fee_amount - (float) $payment->concession_amount : 0),
+                2
+            );
+            $applied = max(0.0, $applied);
+
+            $paidOn = $payment->payment_date->toDateString();
+
             $entries->push([
-                'date' => $payment->payment_date->toDateString(),
-                'order' => 1,
+                'date' => $paidOn,
+                'bucket' => 1,
+                'id' => $payment->id,
+                'sub' => 0,
                 'type' => 'Payment',
                 'reference' => $payment->receipt_no,
                 'description' => $notes,
                 'debit' => 0.0,
-                'credit' => (float) $payment->received_amount,
+                'credit' => $applied,
             ]);
 
-            if ($payment->status === PaymentStatus::REVERSED) {
+            if ($isReversed) {
                 $entries->push([
-                    'date' => $payment->updated_at->toDateString(),
-                    'order' => 2,
+                    'date' => max($paidOn, $payment->updated_at->toDateString()),
+                    'bucket' => 1,
+                    'id' => $payment->id,
+                    'sub' => 1,
                     'type' => 'Reversal',
                     'reference' => $payment->receipt_no,
                     'description' => 'Payment reversed',
-                    'debit' => (float) $payment->received_amount,
+                    'debit' => $applied,
                     'credit' => 0.0,
                 ]);
             }
@@ -97,10 +132,11 @@ class FeeLedgerController extends Controller
 
         $balance = 0.0;
         $rows = $entries
-            ->sortBy([['date', 'asc'], ['order', 'asc']])
+            ->sortBy([['date', 'asc'], ['bucket', 'asc'], ['id', 'asc'], ['sub', 'asc']])
             ->values()
             ->map(function (array $entry) use (&$balance) {
                 $balance = round($balance + $entry['debit'] - $entry['credit'], 2);
+                unset($entry['bucket'], $entry['id'], $entry['sub']);
 
                 return $entry + ['balance' => $balance];
             })

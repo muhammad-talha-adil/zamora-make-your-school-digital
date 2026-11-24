@@ -175,17 +175,11 @@ class FeePaymentService
             ]);
         }
 
-        /*
-         * Overpayment used to fall through to a wallet "advance" credit for
-         * whatever was left over. Issue #121: for now this is disallowed
-         * outright — the office should not be able to submit more than the
-         * outstanding due being paid against. If an advance-deposit feature
-         * is wanted later, it needs its own explicit flow rather than being
-         * an accidental side effect of typing a bigger number here.
-         */
-        if ((float) $data['received_amount'] > $totalAllocated) {
+        if ((float) $data['received_amount'] > $totalAllocated && ! filter_var($data['confirm_wallet_credit'] ?? false, FILTER_VALIDATE_BOOLEAN)) {
+            $extra = round((float) $data['received_amount'] - $totalAllocated, 2);
+
             throw ValidationException::withMessages([
-                'received_amount' => 'Received amount cannot exceed the total due amount being paid ('.number_format($totalAllocated, 2).').',
+                'received_amount' => 'This will add Rs '.number_format($extra, 2).' to wallet credit. Tick the box to confirm.',
             ]);
         }
 
@@ -332,7 +326,7 @@ class FeePaymentService
         }
 
         if (blank($data['concession_reason'] ?? null)) {
-            throw ValidationException::withMessages(['concession_reason' => 'Give a reason for the concession.']);
+            throw ValidationException::withMessages(['concession_reason' => 'Please give a reason for the concession.']);
         }
 
         $items = [];

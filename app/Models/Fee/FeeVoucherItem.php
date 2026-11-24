@@ -43,6 +43,17 @@ class FeeVoucherItem extends Model
     ];
 
     /**
+     * A late fee line shows as the voucher's Fine, never as a fee item.
+     * Matches on the description as well as the head because older lines
+     * were saved without a fee head.
+     */
+    public function isLateFee(): bool
+    {
+        return $this->feeHead?->code === 'LATE_FINE'
+            || str_contains(strtolower((string) $this->description), 'late fee');
+    }
+
+    /**
      * Get the parent voucher
      */
     public function voucher(): BelongsTo

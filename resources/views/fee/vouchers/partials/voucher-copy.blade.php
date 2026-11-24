@@ -53,7 +53,7 @@
             </tr>
         </thead>
         <tbody>
-            @forelse($voucher->items as $index => $item)
+            @forelse($voucher->items->reject(fn ($line) => $line->isLateFee())->values() as $index => $item)
             <tr>
                 <td>{{ $index + 1 }}</td>
                 <td>{{ $item->feeHead->name ?? 'Fee' }}</td>
@@ -68,6 +68,12 @@
             @endforelse
         </tbody>
         <tfoot>
+            @if((float) $voucher->fine_amount > 0)
+            <tr>
+                <td colspan="4" class="amount">Fine</td>
+                <td class="amount">{{ number_format((float) $voucher->fine_amount, 0) }}</td>
+            </tr>
+            @endif
             <tr class="total-row">
                 <td colspan="4" class="amount">Total Amount</td>
                 <td class="amount">{{ number_format((float) $voucher->net_amount, 0) }}</td>

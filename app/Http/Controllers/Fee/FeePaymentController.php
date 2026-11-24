@@ -22,7 +22,6 @@ use App\Models\Ledger\Ledger;
 use App\Models\School;
 use App\Models\Student;
 use App\Services\Fee\FeePaymentService;
-use App\Services\Fee\StudentBalanceService;
 use App\Services\Finance\StudentBillingService;
 use App\Services\Finance\UnifiedAccountingService;
 use App\Services\Student\SiblingService;
@@ -401,25 +400,45 @@ class FeePaymentController extends Controller
     {
         Gate::authorize('view', $payment);
 
+        return Inertia::render('Fee/Payments/Show', [
+            'schoolName' => School::query()->value('name'),
+            'payment' => $this->receiptPayload($payment),
+        ]);
+    }
+
+    /**
+     * Everything a receipt screen shows, in one place so the detail page, the
+     * receipt page and the print route can never drift apart.
+     *
+     * @return array<string, mixed>
+     */
+    protected function receiptPayload(FeePayment $payment): array
+    {
         $payment->load([
             'student.user:id,name',
             'campus',
-            'allocations.voucher.voucherMonth',
             'receivedBy',
+            'allocations.voucher.voucherMonth',
+            'allocations.voucher.items.feeHead',
         ]);
 
-        /*
-         * `name` and `registration_number` on Student are accessors, not
-         * columns, and are not in the model's $appends — so they were
-         * silently missing from this JSON payload even with the relation
-         * loaded. Show.vue reads `payment.student.name` and
-         * `.registration_number` directly (issues #117, #118).
-         */
         $payment->student?->append(['name', 'registration_number']);
 
-        return Inertia::render('Fee/Payments/Show', [
-            'payment' => $payment,
-        ]);
+        $paymentData = $payment->toArray();
+        if (isset($paymentData['student'])) {
+            $paymentData['student']['name'] = $payment->student_name_snapshot ?? $payment->student?->name;
+            $paymentData['student']['registration_number'] = $payment->registration_no_snapshot ?? $payment->student?->registration_number;
+        }
+
+        $vouchers = $payment->allocations->pluck('voucher')->filter()->unique('id');
+
+        $paymentData['items_summary'] = $vouchers->flatMap(fn ($voucher) => $voucher->items)
+            ->reject(fn ($item) => $item->isLateFee())
+            ->map(fn ($item) => ['description' => $item->description, 'amount' => (float) $item->net_amount])
+            ->values()->all();
+        $paymentData['remaining_balance'] = round((float) $vouchers->sum('balance_amount'), 2);
+
+        return $paymentData;
     }
 
     /**
@@ -429,35 +448,9 @@ class FeePaymentController extends Controller
     {
         Gate::authorize('view', $payment);
 
-        $payment->load([
-            'student.user:id,name',
-            'campus',
-            'allocations.voucher.voucherMonth',
-            'allocations.voucher.items.feeHead',
-        ]);
-
-        $payment->student?->append(['name', 'registration_number']);
-
-        // A receipt must show the student's name/registration as they were
-        // at the moment of payment, not whatever they are today — a later
-        // name correction or re-enrollment must never rewrite a receipt
-        // already handed to a parent. Older payments recorded before this
-        // snapshot existed fall back to the live value.
-        $paymentData = $payment->toArray();
-        if (isset($paymentData['student'])) {
-            $paymentData['student']['name'] = $payment->student_name_snapshot ?? $payment->student?->name;
-            $paymentData['student']['registration_number'] = $payment->registration_no_snapshot ?? $payment->student?->registration_number;
-        }
-
-        $paymentData['items_summary'] = $payment->allocations->flatMap(fn ($allocation) => $allocation->voucher?->items ?? collect())
-            ->reject(fn ($item) => $item->feeHead?->code === 'LATE_FINE')
-            ->map(fn ($item) => ['description' => $item->description, 'amount' => (float) $item->net_amount])
-            ->values()->all();
-        $paymentData['remaining_balance'] = app(StudentBalanceService::class)->forStudent((int) $payment->student_id)['outstanding'];
-
         return Inertia::render('Fee/Payments/Receipt', [
             'schoolName' => School::query()->value('name'),
-            'payment' => $paymentData,
+            'payment' => $this->receiptPayload($payment),
         ]);
     }
 

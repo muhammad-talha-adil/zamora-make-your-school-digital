@@ -41,6 +41,7 @@ class StoreFeePaymentRequest extends FormRequest
             'late_fee' => 'nullable|numeric|min:0|decimal:0,2',
             'concession' => 'nullable|numeric|min:0|decimal:0,2',
             'concession_reason' => ['nullable', 'string', 'max:255', Rule::requiredIf(fn () => (float) $this->input('concession') > 0)],
+            'confirm_wallet_credit' => 'nullable|boolean',
             'remarks' => 'nullable|string',
         ];
     }
@@ -51,21 +52,21 @@ class StoreFeePaymentRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'received_amount.required' => 'Enter the amount received.',
-            'received_amount.gt' => 'Amount must be greater than 0.',
-            'received_amount.min' => 'Negative amount is not allowed.',
-            'received_amount.max' => 'Amount is too large. The most you can enter is Rs 10,000,000.',
-            'received_amount.numeric' => 'Enter a valid amount.',
-            'payment_method.required' => 'Choose how the money was received.',
-            'charges.*.amount.min' => 'Negative amount is not allowed.',
-            'charges.*.amount.max' => 'Amount is too large.',
-            'charges.required' => 'Tick at least one due item to pay.',
-            'payment_date.before_or_equal' => 'Payment date cannot be in the future.',
+            'received_amount.required' => 'Please enter the amount received.',
+            'received_amount.gt' => 'Please enter the amount received.',
+            'received_amount.min' => 'Amount cannot be negative.',
+            'received_amount.max' => 'Amount is too large (max Rs 10,000,000).',
+            'received_amount.numeric' => 'Please enter a valid amount.',
+            'payment_method.required' => 'Please choose how the money was received.',
+            'charges.*.amount.min' => 'Amount cannot be negative.',
+            'charges.*.amount.max' => 'Amount is too large (max Rs 10,000,000).',
+            'charges.required' => 'Please tick at least one due item to pay.',
+            'payment_date.before_or_equal' => 'Date cannot be in the future.',
             'late_fee.min' => 'Late fee cannot be negative.',
             'late_fee.decimal' => 'Late fee can have up to 2 decimals.',
             'concession.min' => 'Concession cannot be negative.',
             'concession.decimal' => 'Concession can have up to 2 decimals.',
-            'concession_reason.required' => 'Give a reason for the concession.',
+            'concession_reason.required' => 'Please give a reason for the concession.',
         ];
     }
 }

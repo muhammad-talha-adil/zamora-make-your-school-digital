@@ -37,11 +37,14 @@ interface FeePayment {
         };
         allocated_amount: number;
     }>;
+    items_summary?: Array<{ description: string; amount: number }>;
+    remaining_balance?: number;
     created_at: string;
 }
 
 interface Props {
     payment: FeePayment;
+    schoolName?: string | null;
 }
 
 const props = defineProps<Props>();
@@ -127,6 +130,7 @@ const submitReverse = () => {
                             {{ formatStatus(payment.status) }}
                         </span>
                     </div>
+                    <p v-if="schoolName" class="mt-1 text-sm font-semibold text-foreground">{{ schoolName }}</p>
                     <p class="mt-1 text-xs md:text-sm text-muted-foreground">
                         Receipt #: {{ payment.receipt_no }}
                     </p>
@@ -250,6 +254,14 @@ const submitReverse = () => {
                             </table>
                         </div>
                     </div>
+
+                    <div v-if="payment.items_summary?.length" class="bg-card rounded-lg border border-border p-6">
+                        <h2 class="text-lg font-semibold mb-4">Fee Items</h2>
+                        <div v-for="(item, index) in payment.items_summary" :key="index" class="flex justify-between gap-2 py-1 text-sm">
+                            <span class="text-muted-foreground">{{ item.description }}</span>
+                            <span class="font-medium">{{ formatCurrency(item.amount) }}</span>
+                        </div>
+                    </div>
                 </div>
 
                 <!-- Summary Sidebar -->
@@ -270,8 +282,12 @@ const submitReverse = () => {
                                 <span>{{ formatCurrency(Number(payment.concession_amount)) }}</span>
                             </div>
                             <div class="flex flex-wrap gap-2 justify-between text-primary">
-                                <span>Allocated to Vouchers</span>
-                                <span>- {{ formatCurrency(payment.allocated_amount) }}</span>
+                                <span>Paid Amount (allocated to vouchers)</span>
+                                <span>{{ formatCurrency(payment.allocated_amount) }}</span>
+                            </div>
+                            <div class="flex flex-wrap gap-2 justify-between">
+                                <span class="text-muted-foreground">Remaining Balance</span>
+                                <span class="font-medium">{{ formatCurrency(payment.remaining_balance ?? 0) }}</span>
                             </div>
                             <div class="border-t border-border pt-3 flex flex-wrap gap-2 justify-between">
                                 <span class="font-semibold">Advance/Wallet Credit</span>

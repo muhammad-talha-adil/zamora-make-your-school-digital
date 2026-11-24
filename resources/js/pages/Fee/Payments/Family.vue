@@ -65,7 +65,7 @@ const toggleLine = (voucherId: number) => {
 
 const total = computed(() => lines.filter((line) => line.enabled).reduce((sum, line) => sum + Number(line.amount || 0), 0));
 const isSubmitting = ref(false);
-const futureDateMessage = computed(() => (form.payment_date > today ? 'Payment date cannot be in the future.' : ''));
+const futureDateMessage = computed(() => (form.payment_date > today ? 'Date cannot be in the future.' : ''));
 
 const page = usePage();
 const paymentDateError = computed(() => {
@@ -79,30 +79,29 @@ const lineError = (line: { amount: number | string; balance: number }): string =
     const amount = Number(line.amount);
 
     if (line.amount === '' || !Number.isFinite(amount)) {
-        return 'Enter the amount to pay.';
+        return 'Please enter the amount to pay.';
     }
 
     if (amount < 0) {
-        return 'Negative amount is not allowed.';
+        return 'Amount cannot be negative.';
     }
 
     if (amount === 0) {
-        return 'Amount must be greater than 0.';
+        return 'Please enter the amount to pay.';
     }
 
     return amount > line.balance ? `Amount is more than the balance (Rs ${line.balance.toLocaleString()}).` : '';
 };
+
+const anyLineError = computed(() => lines.some((line) => line.enabled && lineError(line) !== ''));
+const canSubmit = computed(() => !isSubmitting.value && total.value > 0 && !anyLineError.value && !futureDateMessage.value);
 
 const submit = () => {
     if (isSubmitting.value) {
         return;
     }
 
-    const firstError = lines.filter((line) => line.enabled).map(lineError).find((message) => message !== '');
-
-    if (firstError) {
-        alert.error(firstError);
-
+    if (anyLineError.value) {
         return;
     }
 
@@ -111,14 +110,6 @@ const submit = () => {
         .map((line) => ({ voucher_id: line.voucher_id, amount: Number(line.amount) }));
 
     if (vouchers.length === 0) {
-        alert.error('Select at least one voucher.');
-
-        return;
-    }
-
-    if (lines.some((line) => line.enabled && Number(line.amount) > line.balance)) {
-        alert.error('Amount is more than the balance.');
-
         return;
     }
 
@@ -180,10 +171,10 @@ const submit = () => {
             <div v-for="child in props.children" :key="child.id" class="rounded-lg border border-border bg-card p-4">
                 <h2 class="font-semibold text-foreground">{{ child.name }} <span class="text-sm font-normal text-muted-foreground">{{ child.registration_number }}</span></h2>
                 <p v-if="child.vouchers.length === 0" class="mt-2 text-sm text-muted-foreground">No unpaid vouchers.</p>
-                <div v-for="voucher in child.vouchers" :key="voucher.id" class="mt-3 grid grid-cols-[auto_1fr_auto] items-center gap-x-3 gap-y-1 sm:grid-cols-[auto_minmax(14rem,1fr)_11rem_8rem]">
+                <div v-for="voucher in child.vouchers" :key="voucher.id" class="mt-3 grid grid-cols-[auto_1fr] items-center gap-x-3 gap-y-2 rounded-md border border-border p-3 sm:grid-cols-[auto_minmax(14rem,1fr)_11rem_8rem] sm:border-0 sm:p-0">
                     <input v-model="lineFor(voucher.id).enabled" type="checkbox" @change="toggleLine(voucher.id)" :aria-label="`Pay ${voucher.voucher_no}`" />
                     <span class="text-sm">{{ voucher.voucher_no }} - {{ voucher.month }} {{ voucher.year }}</span>
-                    <span class="text-sm text-muted-foreground sm:text-right">Balance {{ formatCurrency(voucher.balance_amount) }}</span>
+                    <span class="col-start-2 text-sm text-muted-foreground sm:col-start-auto sm:text-right">Balance {{ formatCurrency(voucher.balance_amount) }}</span>
                     <Input
                         v-model="lineFor(voucher.id).amount"
                         type="number"
@@ -191,16 +182,17 @@ const submit = () => {
                         min="0"
                         :max="voucher.balance_amount"
                         placeholder="Enter amount to pay"
-                        class="w-full text-right"
+                        class="col-span-full w-full text-right sm:col-span-1"
                         :disabled="!lineFor(voucher.id).enabled"
                     />
                     <p v-if="lineFor(voucher.id).enabled && lineError(lineFor(voucher.id))" class="col-span-full text-right text-sm text-destructive">{{ lineError(lineFor(voucher.id)) }}</p>
                 </div>
             </div>
 
-            <div class="flex items-center justify-between">
+            <div class="flex flex-wrap items-center justify-between gap-2">
                 <p class="text-lg font-bold text-foreground">Total {{ formatCurrency(total) }}</p>
-                <Button type="submit" :disabled="isSubmitting">
+                <p v-if="total <= 0" class="w-full text-sm text-muted-foreground">Tick a voucher and enter the amount to pay.</p>
+                <Button type="submit" :disabled="!canSubmit">
                     {{ isSubmitting ? 'Processing...' : `Pay selected (${formatCurrency(total)})` }}
                 </Button>
             </div>

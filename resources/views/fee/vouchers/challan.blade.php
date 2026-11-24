@@ -204,7 +204,7 @@
                     </tr>
                 </thead>
                 <tbody>
-                    @forelse($voucher->items as $item)
+                    @forelse($voucher->items->reject(fn ($line) => $line->isLateFee()) as $item)
                     <tr>
                         <td>{{ $item->feeHead->name ?? 'Fee' }}</td>
                         <td class="amount">{{ number_format((float) $item->net_amount, 0) }}</td>

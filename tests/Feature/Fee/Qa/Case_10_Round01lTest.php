@@ -127,7 +127,7 @@ it('rejects a typed future payment date with a message on the date field', funct
     $voucher = $this->world->voucherFor(4);
 
     $this->post(route('fee.payments.store'), lPayOf($voucher, 100, ['payment_date' => now()->addDays(3)->toDateString()]))
-        ->assertSessionHasErrors(['payment_date' => 'Payment date cannot be in the future.']);
+        ->assertSessionHasErrors(['payment_date' => 'Date cannot be in the future.']);
 });
 
 it('refuses a family payment above the balance with a clear message', function () {

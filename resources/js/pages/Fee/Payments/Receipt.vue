@@ -14,7 +14,8 @@ interface FeePaymentAllocation {
     voucher?: {
         id: number;
         voucher_no: string;
-        voucherMonth?: { id: number; name: string };
+        voucher_month?: { id: number; name: string };
+        voucher_year?: number;
         net_amount: number;
         paid_amount: number;
         balance_amount: number;
@@ -175,7 +176,7 @@ const getPaymentMethodLabel = (method: string): string => {
                         <tbody>
                             <tr v-for="allocation in props.payment.allocations" :key="allocation.id" class="border-b border-gray-100 dark:border-gray-700">
                                 <td class="py-2 text-gray-900 dark:text-white">{{ allocation.voucher?.voucher_no }}</td>
-                                <td class="py-2 text-gray-600 dark:text-gray-300">{{ allocation.voucher?.voucherMonth?.name }}</td>
+                                <td class="py-2 text-gray-600 dark:text-gray-300">{{ allocation.voucher?.voucher_month?.name }} {{ allocation.voucher?.voucher_year }}</td>
                                 <td class="py-2 text-right text-gray-900 dark:text-white font-medium">{{ formatCurrency(allocation.allocated_amount) }}</td>
                             </tr>
                         </tbody>

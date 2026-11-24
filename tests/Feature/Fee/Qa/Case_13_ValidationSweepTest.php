@@ -25,12 +25,12 @@ it('explains each bad payment field', function (array $over, string $field, stri
     $this->post(route('fee.payments.store'), ($this->payload)($over))
         ->assertSessionHasErrors([$field => $message]);
 })->with([
-    'zero amount' => [['received_amount' => 0], 'received_amount', 'Amount must be greater than 0.'],
-    'negative amount' => [['received_amount' => -5], 'received_amount', 'Amount must be greater than 0.'],
-    'huge amount' => [['received_amount' => 99999999], 'received_amount', 'Amount is too large. The most you can enter is Rs 10,000,000.'],
-    'missing method' => [['payment_method' => ''], 'payment_method', 'Choose how the money was received.'],
-    'future date' => [['payment_date' => '2999-01-01'], 'payment_date', 'Payment date cannot be in the future.'],
-    'concession without reason' => [['concession' => 100], 'concession_reason', 'Give a reason for the concession.'],
+    'zero amount' => [['received_amount' => 0], 'received_amount', 'Please enter the amount received.'],
+    'negative amount' => [['received_amount' => -5], 'received_amount', 'Please enter the amount received.'],
+    'huge amount' => [['received_amount' => 99999999], 'received_amount', 'Amount is too large (max Rs 10,000,000).'],
+    'missing method' => [['payment_method' => ''], 'payment_method', 'Please choose how the money was received.'],
+    'future date' => [['payment_date' => '2999-01-01'], 'payment_date', 'Date cannot be in the future.'],
+    'concession without reason' => [['concession' => 100], 'concession_reason', 'Please give a reason for the concession.'],
     'negative concession' => [['concession' => -1], 'concession', 'Concession cannot be negative.'],
     'negative late fee' => [['late_fee' => -1], 'late_fee', 'Late fee cannot be negative.'],
 ]);

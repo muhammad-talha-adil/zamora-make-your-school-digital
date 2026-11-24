@@ -68,7 +68,7 @@ it('rejects a payment dated in the future', function () {
     $voucher = $this->world->voucherFor(4);
 
     $this->post(route('fee.payments.store'), paymentFor($voucher, 1000, ['payment_date' => now()->addDay()->toDateString()]))
-        ->assertSessionHasErrors(['payment_date' => 'Payment date cannot be in the future.']);
+        ->assertSessionHasErrors(['payment_date' => 'Date cannot be in the future.']);
 
     expect(FeePayment::count())->toBe(0);
 });

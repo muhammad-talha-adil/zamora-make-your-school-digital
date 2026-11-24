@@ -114,7 +114,7 @@ const changePage = (page: number) => {
 
             <!-- Filters -->
             <div class="bg-card rounded-lg border border-border p-4">
-                <div class="grid gap-4 md:grid-cols-5">
+                <div class="flex flex-wrap items-end gap-4 [&>div.space-y-2]:min-w-40 [&>div.space-y-2]:flex-1">
                     <div class="space-y-2">
                         <Label for="campus_id">Campus</Label>
                         <Input
@@ -148,7 +148,7 @@ const changePage = (page: number) => {
                             placeholder="e.g. 30"
                         />
                     </div>
-                    <div class="flex items-end gap-2">
+                    <div class="flex flex-wrap items-end gap-2">
                         <Button @click="applyFilters">Apply Filters</Button>
                         <Button variant="outline" @click="resetFilters">Reset</Button>
                         <a :href="route('fee.reports.defaulters', { ...props.filters, export: 1 })" class="inline-flex h-9 items-center rounded-md border border-input px-3 text-sm text-foreground">Export CSV</a>

@@ -104,6 +104,11 @@ const showSubmitError = (errors: Record<string, string>) => {
     submitError.value = String(Object.values(errors)[0] ?? 'Could not record the payment.');
     alert.error(submitError.value);
 };
+const serverError = (field: string): string => {
+    const errors = (usePage().props.errors ?? {}) as Record<string, string>;
+
+    return errors[field] ?? '';
+};
 const notice = computed(() => props.carriedForwardNotice ?? '');
 const noticeVoucher = computed(() => props.carriedForwardTo ?? null);
 
@@ -117,7 +122,7 @@ const paymentDateError = computed(() => {
 const now = new Date();
 const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
 const selectedStudent = ref<StudentSearchResult | null>(props.selectedStudent || null);
-const futureDateMessage = computed(() => (form.payment_date > today ? 'Payment date cannot be in the future.' : ''));
+const futureDateMessage = computed(() => (form.payment_date > today ? 'Date cannot be in the future.' : ''));
 const submitError = ref('');
 const submitAttempted = ref(false);
 const walletConfirmed = ref(false);
@@ -132,13 +137,13 @@ const chargeErrors = computed(() => {
         const due = itemBalance(charge.voucher_id, charge.fee_voucher_item_id);
 
         if (!Number.isFinite(amount)) {
-            errors[key] = 'Enter a valid amount.';
+            errors[key] = 'Please enter a valid amount.';
         } else if (amount < 0) {
-            errors[key] = 'Negative amount is not allowed.';
+            errors[key] = 'Amount cannot be negative.';
         } else if (amount === 0) {
-            errors[key] = 'Amount must be greater than 0.';
+            errors[key] = 'Please enter the amount to pay.';
         } else if (amount > due) {
-            errors[key] = `Amount is more than the due (Rs ${due.toLocaleString()}).`;
+            errors[key] = `Amount is more than what is due (Rs ${due.toLocaleString()}).`;
         }
     });
 
@@ -146,26 +151,33 @@ const chargeErrors = computed(() => {
 });
 
 const lateFeeError = computed(() => (Number(form.late_fee) < 0 ? 'Late fee cannot be negative.' : ''));
-const receivedAmountError = computed(() => {
+const receivedTouched = ref(false);
+const showAmountError = computed(() => Boolean(form.student_id) && (submitAttempted.value || receivedTouched.value));
+const rawReceivedError = computed(() => {
     const amount = Number(form.received_amount);
 
     if (!Number.isFinite(amount) || amount < 0) {
-        return 'Negative amount is not allowed.';
+        return 'Amount cannot be negative.';
     }
 
     if (amount === 0) {
-        return 'Amount must be greater than 0. Tick a due item or enter the amount received.';
+        return 'Please enter the amount received.';
     }
 
     if (amount > MAX_AMOUNT) {
-        return `Amount is too large. The most you can enter is Rs ${MAX_AMOUNT.toLocaleString()}.`;
+        return `Amount is too large (max Rs ${MAX_AMOUNT.toLocaleString()}).`;
     }
 
     return '';
 });
-const methodError = computed(() => (form.payment_method ? '' : 'Choose how the money was received.'));
-const concessionReasonError = computed(() => (Number(form.concession) > 0 && !form.concession_reason.trim() ? 'Write why this concession is given.' : ''));
-const walletWarning = computed(() => (remainingAmount.value > 0.005 ? `This will add Rs ${remainingAmount.value.toLocaleString()} to wallet credit.` : ''));
+const receivedAmountError = computed(() => (showAmountError.value ? rawReceivedError.value : ''));
+const methodError = computed(() => (form.payment_method ? '' : 'Please choose how the money was received.'));
+const concessionReasonError = computed(() => (Number(form.concession) > 0 && !form.concession_reason.trim() ? 'Please give a reason for the concession.' : ''));
+const walletWarning = computed(() => (walletExtra.value > 0.005 ? `This will add Rs ${walletExtra.value.toLocaleString()} to wallet credit.` : ''));
+const canSubmit = computed(() => !isSubmitting.value
+    && !rawReceivedError.value
+    && !futureDateMessage.value
+    && !(walletWarning.value && !walletConfirmed.value));
 
 // Sibling bulk payment (#115): let the cashier settle several siblings'
 // vouchers in one go instead of repeating this whole form per child.
@@ -384,7 +396,14 @@ watch([totalAllocated, () => form.late_fee], ([total, lateFee]) => {
     form.received_amount = Math.round((total + (Number(lateFee) || 0)) * 100) / 100;
 }, { immediate: true });
 
-const remainingAmount = computed(() => form.received_amount - totalAllocated.value);
+const walletExtra = computed(() => Math.round((Number(form.received_amount) - totalAllocated.value - (Number(form.late_fee) || 0)) * 100) / 100);
+const remainingAmount = computed(() => Math.max(0, walletExtra.value));
+
+watch(walletExtra, (extra) => {
+    if (extra <= 0.005) {
+        walletConfirmed.value = false;
+    }
+});
 
 watch(() => props.studentId, (newId) => {
     if (newId) {
@@ -407,7 +426,7 @@ const submitForm = () => {
     }
 
     if (!form.student_id) {
-        alert.error('Please select a student first.');
+        alert.error('Please pick a student first.');
         return;
     }
 
@@ -422,32 +441,9 @@ const submitForm = () => {
 
     submitAttempted.value = true;
 
-    if (charges.length === 0 || receivedAmountError.value || Object.keys(chargeErrors.value).length > 0 || lateFeeError.value || methodError.value) {
-        alert.error(receivedAmountError.value || Object.values(chargeErrors.value)[0] || lateFeeError.value || methodError.value || 'Please select at least one due item with a payment amount.');
-        return;
-    }
-
-    if (walletWarning.value && !walletConfirmed.value) {
-        alert.error('Tick the box to confirm the extra goes to wallet credit.');
-        return;
-    }
-
-    if (concessionError.value) {
-        alert.error(concessionError.value);
-        return;
-    }
-
-    if (Number(form.concession) > 0 && !form.concession_reason.trim()) {
-        alert.error('Give a reason for the concession.');
-        return;
-    }
-
-    if (form.payment_method !== 'cash' && !form.reference_no.trim()) {
-        alert.error('Reference number is required for non-cash payments.');
-        return;
-    }
-
-    if (futureDateMessage.value) {
+    if (charges.length === 0 || receivedAmountError.value || Object.keys(chargeErrors.value).length > 0 || lateFeeError.value || methodError.value
+        || (walletWarning.value && !walletConfirmed.value) || concessionError.value || concessionReasonError.value
+        || (form.payment_method !== 'cash' && !form.reference_no.trim()) || futureDateMessage.value) {
         return;
     }
 
@@ -506,6 +502,7 @@ const submitForm = () => {
         late_fee: Number(form.late_fee) || 0,
         concession: Number(form.concession) || 0,
         concession_reason: Number(form.concession) > 0 ? form.concession_reason : '',
+        confirm_wallet_credit: walletConfirmed.value,
         charges,
     }, {
         onError: showSubmitError,
@@ -535,7 +532,6 @@ const submitForm = () => {
                     {{ notice }}
                     <Link v-if="noticeVoucher" :href="route('fee.vouchers.show', noticeVoucher.id)" class="font-medium underline">Open {{ noticeVoucher.voucher_no }}</Link>
                 </div>
-                <p v-if="submitError" class="rounded-md border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive">{{ submitError }}</p>
                 <div class="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-4">
                     <div class="md:col-span-2 xl:col-span-4">
                         <Label for="student_search">Student or Voucher No *</Label>
@@ -587,7 +583,7 @@ const submitForm = () => {
                             type="date"
                             required
                         />
-                        <p v-if="futureDateMessage || paymentDateError" class="text-sm text-destructive">{{ futureDateMessage || paymentDateError }}</p>
+                        <p v-if="futureDateMessage || paymentDateError" class="mt-1 text-sm text-destructive">{{ futureDateMessage || paymentDateError }}</p>
                     </div>
 
                     <div>
@@ -609,6 +605,7 @@ const submitForm = () => {
                             placeholder="Bank transaction ID, cheque number, etc."
                             required
                         />
+                        <p v-if="submitAttempted && !form.reference_no.trim()" class="mt-1 text-sm text-destructive">Please enter the reference number.</p>
                     </div>
 
                     <div v-if="['bank', 'cheque'].includes(form.payment_method)">
@@ -624,19 +621,19 @@ const submitForm = () => {
                     <div>
                         <Label for="late_fee">Late fee (optional)</Label>
                         <Input id="late_fee" v-model="form.late_fee" type="number" step="0.01" min="0" placeholder="0.00 (optional)" />
-                        <p v-if="lateFeeError" class="mt-1 text-sm text-destructive">{{ lateFeeError }}</p>
+                        <p v-if="lateFeeError || serverError('late_fee')" class="mt-1 text-sm text-destructive">{{ lateFeeError || serverError('late_fee') }}</p>
                     </div>
 
                     <div>
                         <Label for="concession">Concession (optional)</Label>
                         <Input id="concession" v-model="form.concession" type="number" step="0.01" min="0" placeholder="0.00 (optional)" />
-                        <p v-if="concessionError" class="text-sm text-destructive">{{ concessionError }}</p>
+                        <p v-if="concessionError || serverError('concession')" class="mt-1 text-sm text-destructive">{{ concessionError || serverError('concession') }}</p>
                     </div>
 
                     <div v-if="Number(form.concession) > 0" class="md:col-span-2 xl:col-span-4">
                         <Label for="concession_reason">Concession reason *</Label>
                         <Input id="concession_reason" v-model="form.concession_reason" maxlength="255" placeholder="Why is this concession given? (required)" />
-                        <p v-if="concessionReasonError && (submitAttempted || form.concession_reason !== '')" class="mt-1 text-sm text-destructive">{{ concessionReasonError }}</p>
+                        <p v-if="concessionReasonError || serverError('concession_reason')" class="mt-1 text-sm text-destructive">{{ concessionReasonError || serverError('concession_reason') }}</p>
                     </div>
 
                     <div class="md:col-span-2 xl:col-span-2">
@@ -648,9 +645,10 @@ const submitForm = () => {
                             step="0.01"
                             min="0"
                             placeholder="Enter amount received"
+                            @input="receivedTouched = true"
                         />
-                        <p v-if="receivedAmountError" class="mt-1 text-sm text-destructive">{{ receivedAmountError }}</p>
-                        <label v-if="walletWarning" class="mt-1 flex items-start gap-2 text-sm text-warning">
+                        <p v-if="receivedAmountError || serverError('received_amount')" class="mt-1 text-sm text-destructive">{{ receivedAmountError || serverError('received_amount') }}</p>
+                        <label v-if="walletWarning" class="mt-2 flex items-start gap-2 rounded-md border border-amber-400 bg-amber-50 px-3 py-2 text-sm font-medium text-amber-900 dark:border-amber-500/60 dark:bg-amber-500/15 dark:text-amber-200">
                             <input v-model="walletConfirmed" type="checkbox" class="mt-1 rounded" />
                             <span>{{ walletWarning }} Tick to confirm.</span>
                         </label>
@@ -673,7 +671,45 @@ const submitForm = () => {
                         No unpaid voucher dues found for the selected student.
                     </div>
 
-                    <div v-else class="overflow-x-auto">
+                    <div v-else class="divide-y divide-border md:hidden">
+                        <template v-for="voucher in availableVouchers" :key="`card-${voucher.id}`">
+                            <div class="bg-muted/60 px-4 py-2">
+                                <div class="font-medium text-foreground">{{ voucher.voucher_no }}</div>
+                                <div class="text-xs text-muted-foreground">
+                                    {{ voucher.voucher_month?.name || 'N/A' }} {{ voucher.voucher_year }} - balance {{ formatCurrency(voucher.balance_amount) }}
+                                </div>
+                            </div>
+                            <div v-for="item in voucher.items" :key="`card-${item.id}`" class="space-y-2 px-4 py-3">
+                                <label class="flex items-start gap-3">
+                                    <input
+                                        type="checkbox"
+                                        :checked="getChargeAllocation(voucher.id, item.id)?.enabled"
+                                        class="mt-1 rounded"
+                                        @change="toggleCharge(voucher.id, item)"
+                                    />
+                                    <span class="min-w-0 flex-1">
+                                        <span class="block break-words font-medium text-foreground">{{ item.fee_head_name || item.description }}</span>
+                                        <span class="block break-words text-sm text-muted-foreground">{{ item.description }}</span>
+                                        <span class="block text-sm text-muted-foreground">Due: {{ formatCurrency(item.balance_amount) }}</span>
+                                    </span>
+                                </label>
+                                <Input
+                                    :model-value="String(getChargeAllocation(voucher.id, item.id)?.amount ?? item.balance_amount)"
+                                    @update:model-value="(value) => { const allocation = getChargeAllocation(voucher.id, item.id); if (allocation) allocation.amount = Number(value); }"
+                                    type="number"
+                                    :max="item.balance_amount"
+                                    step="0.01"
+                                    min="0"
+                                    :disabled="!getChargeAllocation(voucher.id, item.id)?.enabled"
+                                    class="w-full"
+                                    placeholder="Pay amount"
+                                />
+                                <p v-if="chargeErrors[`${voucher.id}-${item.id}`]" class="text-xs text-destructive">{{ chargeErrors[`${voucher.id}-${item.id}`] }}</p>
+                            </div>
+                        </template>
+                    </div>
+
+                    <div v-if="!isLoadingVouchers && availableVouchers.length > 0" class="hidden overflow-x-auto md:block">
                         <table class="min-w-[520px] w-full table-fixed divide-y divide-border">
                             <colgroup>
 <col class="w-12" />
@@ -863,7 +899,7 @@ const submitForm = () => {
                     <Button type="button" variant="outline" @click="router.visit(route('fee.payments.index'))">
                         Cancel
                     </Button>
-                    <Button type="submit" :disabled="isSubmitting">
+                    <Button type="submit" :disabled="!canSubmit">
                         <Icon v-if="isSubmitting" icon="loader" class="mr-2 h-4 w-4 animate-spin" />
                         {{ isSubmitting ? 'Processing...' : 'Record Payment' }}
                     </Button>
