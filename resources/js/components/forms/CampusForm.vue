@@ -113,18 +113,14 @@ const submit = () => {
             },
             onError: (err) => {
                 // Inertia validation errors are in err.errors
-                const errorResponse = err as any;
-                if (errorResponse?.errors) {
+                const errorResponse = { errors: (err as any)?.errors ?? err } as any;
+                if (errorResponse.errors && Object.keys(errorResponse.errors).length) {
                     errors.value = Object.fromEntries(
                         Object.entries(errorResponse.errors).map(([key, value]) => [
                             key,
                             Array.isArray(value) ? value[0] : (value as string),
                         ])
                     );
-                    const firstError = Object.values(errors.value)[0];
-                    if (firstError) {
-                        alert.error(firstError);
-                    }
                 } else {
                     alert.error(err instanceof Error ? err.message : 'Could not save campus. Please try again.');
                 }
@@ -146,8 +142,8 @@ const submit = () => {
             },
             onError: (err) => {
                 // Inertia validation errors are in err.errors
-                const errorResponse = err as any;
-                if (errorResponse?.errors) {
+                const errorResponse = { errors: (err as any)?.errors ?? err } as any;
+                if (errorResponse.errors && Object.keys(errorResponse.errors).length) {
                     // Flatten array errors to first message per field
                     errors.value = Object.fromEntries(
                         Object.entries(errorResponse.errors).map(([key, value]) => [
@@ -156,10 +152,6 @@ const submit = () => {
                         ])
                     );
                     // Show first error as alert for visibility
-                    const firstError = Object.values(errors.value)[0];
-                    if (firstError) {
-                        alert.error(firstError);
-                    }
                 } else {
                     // Non-validation error (500, network, etc)
                     alert.error(err instanceof Error ? err.message : 'Could not save campus. Please try again.');
