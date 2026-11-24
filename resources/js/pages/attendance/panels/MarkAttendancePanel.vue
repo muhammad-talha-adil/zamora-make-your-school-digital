@@ -57,11 +57,11 @@
                     </div>
 
                     <!-- Load Students Button & Reset -->
-                    <div class="flex items-end gap-2">
+                    <div class="flex flex-wrap items-end gap-2 sm:col-span-2 md:col-span-3">
                         <Button
                             @click="loadStudents"
                             :disabled="!selectedClassId || props.isSunday || !!props.holiday"
-                            class="flex-1"
+                            class="flex-1 sm:flex-none"
                         >
                             <Icon icon="users" class="mr-1" />
                             Load Students
@@ -69,7 +69,7 @@
                         <Button
                             variant="outline"
                             @click="resetFilters"
-                            class="flex-1"
+                            class="flex-1 sm:flex-none"
                             title="Reset Filters"
                         >
                             <Icon icon="rotate-ccw" class="mr-1" />
