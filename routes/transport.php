@@ -23,6 +23,15 @@ Route::prefix('transport')->name('transport.')->middleware($middleware)->group(f
     Route::get('/', [TransportController::class, 'index'])->name('index')
         ->middleware('permission:transport.view|transport.view.own|transport.vehicle.manage|transport.route.manage|transport.assignment.manage|transport.expense.manage');
 
+    Route::get('/vehicles', [TransportController::class, 'vehicles'])->name('vehicles.index')
+        ->middleware('permission:transport.view|transport.vehicle.manage');
+    Route::get('/routes', [TransportController::class, 'routes'])->name('routes.index')
+        ->middleware('permission:transport.view|transport.route.manage');
+    Route::get('/expenses', [TransportController::class, 'expenses'])->name('expenses.index')
+        ->middleware('permission:transport.view|transport.expense.manage');
+    Route::get('/reports', [TransportController::class, 'reports'])->name('reports.index')
+        ->middleware('permission:transport.view');
+
     Route::post('/vehicles', [TransportController::class, 'storeVehicle'])->name('vehicles.store')
         ->middleware('permission:transport.vehicle.manage');
     Route::put('/vehicles/{vehicle}', [TransportController::class, 'updateVehicle'])->name('vehicles.update')

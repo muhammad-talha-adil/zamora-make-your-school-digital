@@ -349,6 +349,29 @@
                         </div>
                     </div>
 
+                    <!-- Transport Card -->
+                    <div class="bg-card rounded-lg border border-border p-6">
+                        <div class="mb-4 flex flex-wrap items-center justify-between gap-2">
+                            <h3 class="text-lg font-semibold text-foreground flex items-center gap-2">
+                                <Icon icon="bus" class="h-5 w-5 text-primary" />
+                                Transport
+                            </h3>
+                            <Link
+                                v-if="can?.manageTransport"
+                                :href="route('students.transport.index', { student: student.id })"
+                                class="rounded-md bg-primary px-3 py-1.5 text-sm font-medium text-white hover:bg-primary/90"
+                            >
+                                {{ transport ? 'Change' : 'Assign' }}
+                            </Link>
+                        </div>
+                        <p v-if="!transport" class="text-sm text-muted-foreground">No transport assigned.</p>
+                        <dl v-else class="grid gap-3 text-sm sm:grid-cols-3">
+                            <div><dt class="text-muted-foreground">Route</dt><dd class="text-foreground">{{ transport.route || '-' }}{{ transport.stop ? ' / ' + transport.stop : '' }}</dd></div>
+                            <div><dt class="text-muted-foreground">Monthly fee</dt><dd class="text-foreground">Rs {{ transport.monthly_fee.toLocaleString() }}</dd></div>
+                            <div><dt class="text-muted-foreground">Since</dt><dd class="text-foreground">{{ transport.effective_from ? formatDate(transport.effective_from) : '-' }}</dd></div>
+                        </dl>
+                    </div>
+
                     <!-- Documents Card -->
                     <div class="bg-card rounded-lg border border-border p-6">
                         <h3 class="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">
@@ -530,7 +553,9 @@ interface Props {
     documentTypes?: DocumentType[];
     can?: {
         manageDocuments: boolean;
+        manageTransport?: boolean;
     };
+    transport?: { route?: string | null; stop?: string | null; monthly_fee: number; effective_from?: string | null } | null;
 }
 
 const props = defineProps<Props>();

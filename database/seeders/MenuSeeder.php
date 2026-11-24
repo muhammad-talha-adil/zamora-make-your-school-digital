@@ -4,6 +4,7 @@ namespace Database\Seeders;
 
 use App\Models\Menu;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\Route;
 
 class MenuSeeder extends Seeder
@@ -519,6 +520,9 @@ class MenuSeeder extends Seeder
             'url' => '/transport',
             'role' => 'developer,owner,campus_admin,driver,receptionist',
         ]);
+
+        // Vehicles, Routes & Stops, Expenses, Reports and the two Students > Transport entries.
+        Artisan::call('transport:sync-menus');
 
         // ==================== FINANCE MENU ====================
         $finance = Menu::create([

@@ -5,6 +5,7 @@ use App\Http\Controllers\StudentController;
 use App\Http\Controllers\StudentDocumentController;
 use App\Http\Controllers\StudentDocumentTypeController;
 use App\Http\Controllers\StudentPromotionController;
+use App\Http\Controllers\TransportController;
 use App\Models\Student;
 use Illuminate\Support\Facades\Route;
 
@@ -102,6 +103,12 @@ Route::prefix('students')->name('students.')->middleware([...$middleware, 'campu
     Route::delete('/enquiries/{id}', [AdmissionEnquiryController::class, 'destroy'])
         ->name('enquiries.destroy')
         ->middleware('permission:students.create');
+
+    // Transport assignment and monthly dues live in the student module.
+    Route::get('/transport', [TransportController::class, 'studentAssignments'])->name('transport.index')
+        ->middleware('permission:transport.view|transport.assignment.manage');
+    Route::get('/transport-dues', [TransportController::class, 'studentDues'])->name('transport-dues.index')
+        ->middleware('permission:transport.view|transport.assignment.manage');
 
     // ID cards — a section at a time, eight to a page.
     Route::get('/id-cards', [StudentController::class, 'idCards'])

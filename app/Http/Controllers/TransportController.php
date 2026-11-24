@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\Campus;
+use App\Models\Finance\StudentAccountCharge;
 use App\Models\Month;
 use App\Models\Student;
 use App\Models\StudentEnrollmentRecord;
@@ -13,6 +13,7 @@ use App\Models\TransportVehicle;
 use App\Models\TransportVehicleExpense;
 use App\Services\Finance\StudentBillingService;
 use App\Services\Finance\UnifiedAccountingService;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
@@ -26,30 +27,131 @@ class TransportController extends Controller
         protected UnifiedAccountingService $accountingService
     ) {}
 
+    /**
+     * Dashboard: summary cards only, no forms.
+     */
     public function index(Request $request)
+    {
+        if ($redirect = $this->legacyTab($request)) {
+            return $redirect;
+        }
+
+        $viewer = $request->user();
+        $monthStart = now()->startOfMonth();
+
+        return Inertia::render('Transport/Index', [
+            'summary' => [
+                'vehicles' => TransportVehicle::visibleTo($viewer)->where('is_active', true)->count(),
+                'routes' => TransportRoute::visibleTo($viewer)->where('is_active', true)->count(),
+                'assigned_students' => TransportStudentAssignment::visibleTo($viewer)->where('status', 'active')->count(),
+                'month_dues' => (float) StudentAccountCharge::query()
+                    ->where('source_module', 'transport')
+                    ->where('billing_period_month_id', (int) now()->format('n'))
+                    ->where('billing_period_year', (int) now()->format('Y'))
+                    ->when($viewer?->campusId(), fn ($query, $campusId) => $query->where('campus_id', $campusId))
+                    ->sum('net_amount'),
+                'month_expenses' => (float) TransportVehicleExpense::visibleTo($viewer)
+                    ->whereBetween('expense_date', [$monthStart->toDateString(), now()->endOfMonth()->toDateString()])
+                    ->sum('amount'),
+            ],
+        ]);
+    }
+
+    public function vehicles(Request $request)
+    {
+        return Inertia::render('Transport/Vehicles', [
+            'vehicles' => TransportVehicle::with('campus')->visibleTo($request->user())->latest()->get(),
+        ]);
+    }
+
+    public function routes(Request $request)
     {
         $viewer = $request->user();
 
-        $vehicles = TransportVehicle::with('campus')->visibleTo($viewer)->latest()->get();
-        $routes = TransportRoute::with(['campus', 'vehicle', 'stops'])->visibleTo($viewer)->latest()->get();
-        $stops = TransportStop::with('campus')->visibleTo($viewer)->orderBy('name')->get();
-        $assignments = TransportStudentAssignment::with(['student.user', 'route', 'stop', 'campus'])
-            ->visibleTo($viewer)
-            ->latest()
-            ->get();
-        $expenses = TransportVehicleExpense::with(['vehicle', 'campus'])->visibleTo($viewer)->latest()->take(20)->get();
+        return Inertia::render('Transport/Routes', [
+            'routes' => TransportRoute::with(['campus', 'vehicle', 'stops'])->visibleTo($viewer)->latest()->get(),
+            'stops' => TransportStop::visibleTo($viewer)->orderBy('name')->get(),
+            'vehicles' => TransportVehicle::visibleTo($viewer)->where('is_active', true)->orderBy('vehicle_no')->get(['id', 'vehicle_no']),
+        ]);
+    }
 
-        return Inertia::render('Transport/Index', [
-            'vehicles' => $vehicles,
-            'routes' => $routes,
-            'stops' => $stops,
-            'assignments' => $assignments,
-            'expenses' => $expenses,
-            'campuses' => Campus::select('id', 'name')->orderBy('name')->get(),
+    public function expenses(Request $request)
+    {
+        $viewer = $request->user();
+
+        return Inertia::render('Transport/Expenses', [
+            'expenses' => TransportVehicleExpense::with(['vehicle', 'campus'])->visibleTo($viewer)->latest('expense_date')->take(200)->get(),
+            'vehicles' => TransportVehicle::visibleTo($viewer)->orderBy('vehicle_no')->get(['id', 'vehicle_no']),
+        ]);
+    }
+
+    /**
+     * Route-wise students, dues and expenses for the header campus.
+     */
+    public function reports(Request $request)
+    {
+        $viewer = $request->user();
+
+        $routes = TransportRoute::visibleTo($viewer)->orderBy('name')->get();
+        $assignments = TransportStudentAssignment::visibleTo($viewer)->where('status', 'active')->get();
+        $dues = StudentAccountCharge::query()
+            ->where('source_module', 'transport')
+            ->when($viewer?->campusId(), fn ($query, $campusId) => $query->where('campus_id', $campusId))
+            ->get(['source_id', 'net_amount', 'status', 'billing_period_month_id', 'billing_period_year'])
+            ->groupBy('source_id');
+        $assignmentRoute = $assignments->pluck('transport_route_id', 'id');
+        $dueByRoute = [];
+
+        foreach ($dues as $assignmentId => $charges) {
+            $routeId = $assignmentRoute[$assignmentId] ?? null;
+
+            if ($routeId !== null) {
+                $dueByRoute[$routeId] = ($dueByRoute[$routeId] ?? 0) + (float) $charges->sum('net_amount');
+            }
+        }
+
+        $expenseByVehicle = TransportVehicleExpense::visibleTo($viewer)
+            ->selectRaw('transport_vehicle_id, SUM(amount) as total')
+            ->groupBy('transport_vehicle_id')
+            ->pluck('total', 'transport_vehicle_id');
+
+        return Inertia::render('Transport/Reports', [
+            'rows' => $routes->map(fn (TransportRoute $route) => [
+                'id' => $route->id,
+                'name' => $route->name,
+                'vehicle_no' => $route->vehicle?->vehicle_no,
+                'monthly_fee' => (float) $route->monthly_fee,
+                'students' => $assignments->where('transport_route_id', $route->id)->count(),
+                'dues' => (float) ($dueByRoute[$route->id] ?? 0),
+                'expenses' => (float) ($route->transport_vehicle_id ? ($expenseByVehicle[$route->transport_vehicle_id] ?? 0) : 0),
+            ])->values(),
+            'unassigned_expenses' => (float) ($expenseByVehicle[''] ?? 0),
+        ]);
+    }
+
+    /**
+     * Student side: assignments list with the assign dialog.
+     */
+    public function studentAssignments(Request $request)
+    {
+        $viewer = $request->user();
+        $campusId = $viewer?->campusId();
+
+        return Inertia::render('Transport/StudentAssignments', [
+            'assignments' => TransportStudentAssignment::with(['student.user', 'route', 'stop', 'campus'])
+                ->visibleTo($viewer)
+                ->latest()
+                ->get(),
+            'routes' => TransportRoute::with('stops')
+                ->visibleTo($viewer)
+                ->where('is_active', true)
+                ->when($campusId, fn ($query) => $query->where('campus_id', $campusId))
+                ->orderBy('name')
+                ->get(),
             'students' => Student::with(['user', 'currentEnrollment.class', 'currentEnrollment.section'])
                 ->visibleTo($viewer)
                 ->orderByDesc('id')
-                ->take(200)
+                ->take(500)
                 ->get()
                 ->map(fn (Student $student) => [
                     'id' => $student->id,
@@ -64,16 +166,51 @@ class TransportController extends Controller
                         $student->currentEnrollment?->section?->name,
                     ])->filter()->implode(' | ')),
                 ]),
-            'months' => Month::select('id', 'name')->orderBy('id')->get(),
-            'summary' => [
-                'active_vehicles' => $vehicles->where('is_active', true)->count(),
-                'active_routes' => $routes->where('is_active', true)->count(),
-                'active_assignments' => $assignments->where('status', 'active')->count(),
-                'this_month_expense' => (float) $expenses
-                    ->whereBetween('expense_date', [now()->startOfMonth(), now()->endOfMonth()])
-                    ->sum('amount'),
-            ],
+            'preselectStudentId' => $request->integer('student') ?: null,
         ]);
+    }
+
+    public function studentDues(Request $request)
+    {
+        $viewer = $request->user();
+
+        return Inertia::render('Transport/StudentDues', [
+            'months' => Month::select('id', 'name')->orderBy('id')->get(),
+            'charges' => StudentAccountCharge::with('student.user')
+                ->where('source_module', 'transport')
+                ->when($viewer?->campusId(), fn ($query, $campusId) => $query->where('campus_id', $campusId))
+                ->latest('id')
+                ->take(200)
+                ->get()
+                ->map(fn (StudentAccountCharge $charge) => [
+                    'id' => $charge->id,
+                    'student' => $charge->student?->name,
+                    'registration_no' => $charge->student?->registration_no,
+                    'title' => $charge->title,
+                    'month_id' => $charge->billing_period_month_id,
+                    'year' => $charge->billing_period_year,
+                    'amount' => (float) $charge->net_amount,
+                    'status' => $charge->billing_status,
+                ]),
+        ]);
+    }
+
+    /**
+     * Old `/transport?tab=...` bookmarks land on the page that replaced the tab.
+     */
+    private function legacyTab(Request $request): ?RedirectResponse
+    {
+        $target = match ($request->query('tab')) {
+            'vehicles' => route('transport.vehicles.index'),
+            'routes', 'stops' => route('transport.routes.index'),
+            'assignments' => route('students.transport.index'),
+            'expenses' => route('transport.expenses.index'),
+            'dues' => route('students.transport-dues.index'),
+            'reports' => route('transport.reports.index'),
+            default => null,
+        };
+
+        return $target ? redirect($target) : null;
     }
 
     public function storeVehicle(Request $request)

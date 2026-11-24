@@ -113,3 +113,10 @@ Har module ke liye pehle poora sweep: agent code mein hi pehle woh checks chalay
 
 ## NOT TESTED (01t)
 - Print dialog, in-use designation delete, paid-run replace refuse, logo upload, password change, Subscription save, Campus Type / Exam Type / Month / Fine Rule / Inventory forms empty-submit.
+
+## Transport restructure (browser QA to run)
+- Sidebar Transport has 5 items (Dashboard, Vehicles, Routes & Stops, Expenses, Reports); Students has Transport Assignment (`/students/transport`) and Transport Monthly Dues (`/students/transport-dues`). Run `php artisan transport:sync-menus` on any existing DB (idempotent).
+- Old `/transport?tab=...` URLs redirect to the new pages.
+- Each page: search, Add dialog, inline "X is required." + toast, header campus switch reloads data, 400px width without sideways scroll, dark mode.
+- Student detail shows a Transport card (route, fee, Assign/Change).
+- Dues generation still reports "Added Rs X transport to N existing vouchers"; running it twice creates 0 new.

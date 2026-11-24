@@ -9,6 +9,7 @@ use App\Models\School;
 use App\Models\Student;
 use App\Models\StudentDocument;
 use App\Models\StudentEnrollmentRecord;
+use App\Models\TransportStudentAssignment;
 use App\Repositories\StudentRepository;
 use App\Services\Student\AdmissionCredentials;
 use App\Services\Student\IdCardService;
@@ -193,7 +194,7 @@ class StudentController extends Controller
      *
      * @throws AuthorizationException
      */
-    public function show(Student $student): InertiaResponse
+    public function show(Request $request, Student $student): InertiaResponse
     {
         Gate::authorize('view', $student);
 
@@ -205,7 +206,19 @@ class StudentController extends Controller
         $data = $this->service->getShowData($student);
         $data['can'] = [
             'manageDocuments' => Gate::check('create', [StudentDocument::class, $student]),
+            'manageTransport' => (bool) $request->user()?->hasPermission('transport.assignment.manage'),
         ];
+        $assignment = TransportStudentAssignment::with(['route', 'stop'])
+            ->where('student_id', $student->id)
+            ->where('status', 'active')
+            ->latest('effective_from')
+            ->first();
+        $data['transport'] = $assignment ? [
+            'route' => $assignment->route?->name,
+            'stop' => $assignment->stop?->name,
+            'monthly_fee' => (float) $assignment->monthly_fee,
+            'effective_from' => $assignment->effective_from?->format('Y-m-d'),
+        ] : null;
 
         return Inertia::render('students/Show', $data);
     }
