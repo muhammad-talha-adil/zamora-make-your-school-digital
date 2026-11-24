@@ -253,7 +253,7 @@ const paymentMethodOptions = [
                             {{ payment.status }}
                         </span>
                     </div>
-                    <div class="space-y-1 border-t border-border pt-2 text-sm text-muted-foreground">
+                    <div class="grid grid-cols-1 gap-x-6 gap-y-1 border-t border-border pt-2 text-sm text-muted-foreground sm:grid-cols-2 md:grid-cols-5">
                         <div>Campus: {{ payment.campus?.name || 'N/A' }}</div>
                         <div>Date: {{ formatDate(payment.payment_date) }}</div>
                         <div>Method: {{ getPaymentMethodLabel(payment.payment_method) }}</div>

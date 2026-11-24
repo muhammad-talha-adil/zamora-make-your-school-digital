@@ -417,7 +417,7 @@ const isOverdueVoucher = (voucher: FeeVoucher) => {
                             {{ voucher.status }}
                         </span>
                     </div>
-                    <div class="text-sm text-muted-foreground space-y-1 pt-2 border-t border-border">
+                    <div class="grid grid-cols-1 gap-x-6 gap-y-1 border-t border-border pt-2 text-sm text-muted-foreground sm:grid-cols-2 md:grid-cols-4">
                         <div>Month: {{ voucher.voucher_month?.name || 'N/A' }} {{ voucher.voucher_year }}</div>
                         <div>Due: {{ formatDate(voucher.due_date) }}</div>
                         <div>Amount: {{ formatCurrency(voucher.net_amount) }}</div>
