@@ -41,6 +41,7 @@ class UpdateSessionRequest extends FormRequest
             'end_date' => [
                 'required',
                 'date',
+                'bail',
                 'after_or_equal:start_date',
                 function (string $attribute, mixed $value, Closure $fail): void {
                     $clash = Session::query()

@@ -2,7 +2,7 @@
 import { usePage } from '@inertiajs/vue3';
 import type { Ref } from 'vue';
 import axios from 'axios';
-import { computed, ref, watch } from 'vue';
+import { computed, nextTick, ref, watch } from 'vue';
 import { alert } from '@/utils';
 import { requiredErrors, useClearErrorsOnEdit, useFormValidity } from '@/composables/useFormValidity';
 
@@ -240,12 +240,9 @@ const submit = () => {
                 emit('saved');
             }).catch((error) => {
                 errors.value = error.response?.data?.errors ?? {};
-                if (Object.keys(errors.value).length > 0) {
-                    const firstError = Object.values(errors.value)[0];
-                    alert.error(firstError);
-                } else {
-                    alert.error('Could not save session. Check the form.');
-                }
+                errors.value = Object.fromEntries(Object.entries(errors.value).map(([k, v]) => [k, Array.isArray(v) ? v.join(" ") : v])) as typeof errors.value;
+                alert.warning(Object.keys(errors.value).length > 0 ? "Please fix the highlighted fields." : "Could not save session. Please try again.");
+                nextTick(() => document.querySelector(".border-destructive")?.scrollIntoView({ behavior: "smooth", block: "center" }));
             }).finally(() => {
                 processing.value = false;
             });
@@ -260,12 +257,9 @@ const submit = () => {
                 emit('saved');
             }).catch((error) => {
                 errors.value = error.response?.data?.errors ?? {};
-                if (Object.keys(errors.value).length > 0) {
-                    const firstError = Object.values(errors.value)[0];
-                    alert.error(firstError);
-                } else {
-                    alert.error('Could not save session. Check the form.');
-                }
+                errors.value = Object.fromEntries(Object.entries(errors.value).map(([k, v]) => [k, Array.isArray(v) ? v.join(" ") : v])) as typeof errors.value;
+                alert.warning(Object.keys(errors.value).length > 0 ? "Please fix the highlighted fields." : "Could not save session. Please try again.");
+                nextTick(() => document.querySelector(".border-destructive")?.scrollIntoView({ behavior: "smooth", block: "center" }));
             }).finally(() => {
                 processing.value = false;
             });
@@ -386,7 +380,7 @@ const resetForm = () => {
                             />
                             <Label for="campus_ids_all" class="font-normal">All Campuses</Label>
                         </div>
-                        <div class="grid max-h-40 grid-cols-2 gap-2 overflow-y-auto">
+                        <div class="grid max-h-40 grid-cols-1 gap-2 overflow-y-auto">
                             <div v-for="campus in campuses" :key="campus.id" class="flex items-center gap-2">
                                 <input
                                     :id="`campus_ids_${campus.id}`"
