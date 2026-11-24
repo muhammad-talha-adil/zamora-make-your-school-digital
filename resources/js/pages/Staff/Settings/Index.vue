@@ -332,24 +332,24 @@ const deactivateDocumentType = async (type: Lookup) => {
                     <div
                         v-for="designation in designationsList.items.value"
                         :key="designation.id"
-                        class="bg-card rounded-lg border border-border p-4 space-y-2"
+                        class="bg-card rounded-lg border border-border px-4 py-3 space-y-1"
                     >
-                        <div class="flex flex-wrap gap-2 justify-between items-start">
-                            <div>
+                        <div class="flex items-center justify-between gap-3">
+                            <div class="min-w-0">
                                 <div class="font-medium text-foreground">{{ designation.name }}</div>
                                 <div class="text-xs text-muted-foreground">{{ designation.permission_template?.length ?? 0 }} default permissions</div>
                             </div>
-                            <StatusToggle :active="designation.is_active" @toggle="toggleDesignationStatus(designation)" />
+                            <div class="flex shrink-0 items-center gap-3">
+                                <StatusToggle :active="designation.is_active" @toggle="toggleDesignationStatus(designation)" />
+                                <RowActions>
+                                    <RowAction kind="edit" @click="openEditDesignation(designation)" />
+                                    <RowAction kind="delete" @click="deleteDesignation(designation)" />
+                                </RowActions>
+                            </div>
                         </div>
-                        <p v-if="designation.description" class="text-sm text-muted-foreground pt-2 border-t border-border">
+                        <p v-if="designation.description" class="text-sm text-muted-foreground">
                             {{ designation.description }}
                         </p>
-                        <div class="flex justify-end pt-2">
-                            <RowActions>
-                                <RowAction kind="edit" @click="openEditDesignation(designation)" />
-                                <RowAction kind="delete" @click="deleteDesignation(designation)" />
-                            </RowActions>
-                        </div>
                     </div>
                     <div v-if="designationsList.items.value.length === 0" class="text-center py-8 text-muted-foreground">
                         No designations yet.
