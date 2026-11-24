@@ -282,7 +282,8 @@ const onAdvanceGiven = () => {
                                 <tr>
                                     <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">#</th>
                                     <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Staff</th>
-                                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Gross</th>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Basic</th>
+                                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Allowance</th>
                                     <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Deduction</th>
                                     <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Net</th>
                                     <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Status</th>
@@ -292,19 +293,20 @@ const onAdvanceGiven = () => {
                             <tbody class="divide-y divide-border bg-card">
                                 <tr v-for="(item, itemIndex) in run.items" :key="item.id" class="hover:bg-accent">
                                     <td class="px-4 py-3 text-sm text-muted-foreground">{{ itemIndex + 1 }}</td>
-                                    <td class="px-4 py-3">
+                                    <td class="min-w-[10rem] px-4 py-3">
                                         <div class="font-medium text-foreground">{{ item.staff_profile?.user?.name || '-' }}</div>
                                         <div class="text-xs text-muted-foreground">{{ item.staff_profile?.employee_no || '-' }}</div>
                                         <div v-if="item.notes" class="text-xs text-warning">{{ item.notes }}</div>
                                     </td>
-                                    <td class="px-4 py-3 text-sm text-muted-foreground">{{ formatMoney(item.gross_salary) }}</td>
+                                    <td class="whitespace-nowrap px-4 py-3 text-sm text-muted-foreground">{{ formatMoney(item.gross_salary) }}</td>
+                                    <td class="whitespace-nowrap px-4 py-3 text-sm text-muted-foreground">{{ formatMoney(item.allowance_amount) }}</td>
                                     <td class="px-4 py-3 text-sm text-destructive">{{ formatMoney(item.deduction_amount) }}</td>
                                     <td class="px-4 py-3 text-sm font-medium text-primary">{{ formatMoney(item.net_salary) }}</td>
                                     <td class="px-4 py-3">
                                         <span :class="item.status === 'paid' ? 'bg-success/10 text-success' : 'bg-warning/10 text-warning'" class="inline-flex rounded-full px-2.5 py-1 text-xs font-medium uppercase">{{ item.status }}</span>
                                     </td>
                                     <td class="px-4 py-3">
-                                        <div class="flex flex-wrap justify-end gap-2">
+                                        <div class="flex flex-nowrap justify-end gap-2 whitespace-nowrap">
                                             <Button variant="outline" size="sm" @click="router.visit(route('staff.payroll.items.slip', item.id))">
                                                 <Icon icon="printer" class="mr-1.5 h-3.5 w-3.5" />
                                                 Salary slip

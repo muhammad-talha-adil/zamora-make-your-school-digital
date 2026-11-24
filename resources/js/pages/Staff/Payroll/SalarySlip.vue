@@ -44,7 +44,7 @@ const money = (amount: number) =>
     new Intl.NumberFormat('en-PK', { style: 'currency', currency: 'PKR', minimumFractionDigits: 0 }).format(amount);
 
 const earnings = [
-    { label: 'Gross salary', value: props.slip.gross_salary },
+    { label: 'Basic salary', value: props.slip.gross_salary },
     { label: 'Allowances', value: props.slip.allowance_amount },
 ];
 const deductions = [
