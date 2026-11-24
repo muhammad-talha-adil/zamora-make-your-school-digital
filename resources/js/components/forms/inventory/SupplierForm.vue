@@ -358,7 +358,7 @@ const resetForm = () => {
                 </DialogTitle>
             </DialogHeader>
 
-            <form @submit.prevent="submit" class="space-y-5">
+            <form novalidate @submit.prevent="submit" class="space-y-5">
                 <!-- Form Card -->
                 <div class="space-y-4 rounded-lg border bg-card p-5">
                     <!-- Supplier Name -->

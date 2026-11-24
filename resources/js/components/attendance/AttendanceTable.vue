@@ -141,7 +141,6 @@
 
 <script setup lang="ts">
 import TablePagination from '@/components/tables/TablePagination.vue';
-import { computed } from 'vue';
 import { router } from '@inertiajs/vue3';
 import { route } from 'ziggy-js';
 import Icon from '@/components/Icon.vue';
@@ -159,27 +158,12 @@ const formatDate = (dateString: string): string => {
     return date.toLocaleDateString('en-US', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric' });
 };
 
-// Pre-computed statistics for each attendance record
-const attendanceStats = computed(() => {
-    const stats: Record<number, { present: number; absent: number }> = {};
-    
-    props.attendances.data.forEach((attendance) => {
-        const students = attendance.attendance_students || [];
-        stats[attendance.id] = {
-            present: students.filter((s: { attendance_status?: { code?: string } }) => s.attendance_status?.code === 'P').length,
-            absent: students.filter((s: { attendance_status?: { code?: string } }) => s.attendance_status?.code === 'A').length,
-        };
-    });
-    
-    return stats;
-});
-
 const getPresentCount = (attendance: Attendance): number => {
-    return attendanceStats.value[attendance.id]?.present || 0;
+    return (attendance as Attendance & { present_count?: number }).present_count ?? 0;
 };
 
 const getAbsentCount = (attendance: Attendance): number => {
-    return attendanceStats.value[attendance.id]?.absent || 0;
+    return (attendance as Attendance & { absent_count?: number }).absent_count ?? 0;
 };
 
 const viewAttendance = (attendance: Attendance) => {

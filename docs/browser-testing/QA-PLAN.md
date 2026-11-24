@@ -107,3 +107,9 @@ Har module ke liye pehle poora sweep: agent code mein hi pehle woh checks chalay
 - Fee Print dialog.
 - Transport "added to N vouchers" case (merged dues on a voucher that already has payments).
 - Logo upload, password change, menu toggle effect, pagination.
+
+## Deferred (01t)
+- Transport sidebar submenu still pending: Dashboard, Vehicles, Routes & Stops, Assignments, Monthly Dues, Expenses, Reports.
+
+## NOT TESTED (01t)
+- Print dialog, in-use designation delete, paid-run replace refuse, logo upload, password change, Subscription save, Campus Type / Exam Type / Month / Fine Rule / Inventory forms empty-submit.

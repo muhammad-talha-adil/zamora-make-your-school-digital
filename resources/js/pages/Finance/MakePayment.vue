@@ -111,7 +111,7 @@ const formatMoney = (amount: number) => {
             </div>
 
             <!-- Form -->
-            <form @submit.prevent="submitForm" class="space-y-6 bg-card rounded-lg border border-border p-6">
+            <form novalidate @submit.prevent="submitForm" class="space-y-6 bg-card rounded-lg border border-border p-6">
                 <!-- Purchase -->
                 <div>
                     <Label for="purchase_id">Select Purchase</Label>

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+const moduleLabel = (module: string | null | undefined): string => ({ inventory: 'Inventory', transport: 'Transport' })[module ?? ''] ?? 'Fee';
 import { Head, Link, router, usePage } from '@inertiajs/vue3';
 import { computed, reactive, ref, watch } from 'vue';
 import { route } from 'ziggy-js';
@@ -769,11 +770,11 @@ const submitForm = () => {
                                         </td>
                                         <td class="px-4 py-3 align-top">
                                             <span
-                                                :class="item.source_module === 'inventory'
+                                                :class="item.source_module === 'inventory' || item.source_module === 'transport'
                                                     ? 'inline-flex rounded-full bg-warning/10 px-2 py-1 text-xs font-medium text-warning'
                                                     : 'inline-flex rounded-full bg-primary/10 px-2 py-1 text-xs font-medium text-primary'"
                                             >
-                                                {{ item.source_module === 'inventory' ? 'Inventory' : 'Fee' }}
+                                                {{ moduleLabel(item.source_module) }}
                                             </span>
                                         </td>
                                         <td class="px-4 py-3 align-top">

@@ -247,7 +247,7 @@ const formatMoney = (amount: number) => {
 
             <!-- Form -->
             <div class="bg-card rounded-lg border border-border p-6">
-                <form @submit.prevent="submitForm" class="space-y-6">
+                <form novalidate @submit.prevent="submitForm" class="space-y-6">
                     
                     <!-- Payment Type Radio Buttons -->
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-6">

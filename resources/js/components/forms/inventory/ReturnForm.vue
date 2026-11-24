@@ -191,7 +191,7 @@ const submitForm = () => {
                 </DialogTitle>
             </DialogHeader>
 
-            <form @submit.prevent="submitForm" class="space-y-5">
+            <form novalidate @submit.prevent="submitForm" class="space-y-5">
                 <!-- Form Card -->
                 <div class="bg-card rounded-lg border p-5 space-y-4">
                     <!-- Campus -->

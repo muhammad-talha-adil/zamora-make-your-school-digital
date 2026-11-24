@@ -468,7 +468,7 @@ const removeItem = async (item: FeeVoucherItem) => {
             <div class="bg-card rounded-lg border border-border p-4 md:p-6">
                 <h3 class="text-sm font-medium text-foreground mb-4">Edit Voucher Details</h3>
                 
-                <form @submit.prevent="submitForm" class="space-y-4">
+                <form novalidate @submit.prevent="submitForm" class="space-y-4">
                     <!-- Due Date -->
                     <div class="grid gap-4 md:grid-cols-2">
                         <div class="space-y-2">
@@ -676,7 +676,7 @@ const removeItem = async (item: FeeVoucherItem) => {
                     </Button>
                 </div>
 
-                <form @submit.prevent="addItem" class="space-y-4">
+                <form novalidate @submit.prevent="addItem" class="space-y-4">
                     <!-- Fee Head Selection -->
                     <div class="space-y-2">
                         <Label for="fee_head_id">Fee Head <span class="text-destructive">*</span></Label>

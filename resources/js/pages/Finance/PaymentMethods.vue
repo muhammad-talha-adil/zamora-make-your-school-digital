@@ -124,7 +124,7 @@ const toggleMethodActive = async (method: PaymentMethod) => {
                     <h3 class="text-lg font-semibold mb-4">
                         {{ editingMethod ? 'Edit Payment Method' : 'Add Payment Method' }}
                     </h3>
-                    <form @submit.prevent="submitForm" class="space-y-4">
+                    <form novalidate @submit.prevent="submitForm" class="space-y-4">
                         <div>
                             <Label>Name</Label>
                             <Input v-model="form.name" required />

@@ -529,7 +529,7 @@ const admitEnquiry = async (enquiry: EnquiryRow) => {
                     <DialogTitle>{{ isEditing ? 'Edit Enquiry' : 'New Enquiry' }}</DialogTitle>
                 </DialogHeader>
 
-                <form @submit.prevent="submitEnquiryForm" class="space-y-4">
+                <form novalidate @submit.prevent="submitEnquiryForm" class="space-y-4">
                     <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-4">
                         <div class="space-y-2">
                             <Label for="student_name">Child's Name <span class="text-destructive">*</span></Label>

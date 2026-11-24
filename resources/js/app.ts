@@ -8,6 +8,7 @@ import { createPinia } from 'pinia';
 import { initializeTheme } from './composables/useAppearance';
 import { blockNegativeNumbers } from './lib/blockNegativeNumbers';
 import { route } from 'ziggy-js';
+import { alert } from './utils/alert';
 import './ziggy'; // Import for window.route setup
 
 // Falls back to the build-time env name until the shared `name` prop (the
@@ -50,6 +51,17 @@ createInertiaApp({
                 .getPropertyValue('--primary')
                 .trim() || '#2563eb',
     },
+});
+
+router.on('invalid', (event) => {
+    const status = event.detail.response.status;
+
+    if (status === 403 || status === 419) {
+        event.preventDefault();
+        alert.warning(
+            status === 403 ? 'You do not have permission to do that.' : 'Your session expired. Please refresh the page and try again.',
+        );
+    }
 });
 
 router.on('navigate', (event) => {

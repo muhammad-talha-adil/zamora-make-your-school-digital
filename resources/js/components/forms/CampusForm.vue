@@ -236,7 +236,7 @@ const handleCampusTypeSaved = (campusType: { id: number; name: string } | undefi
                 </DialogDescription>
             </DialogHeader>
 
-            <form @submit.prevent="submit" class="space-y-5">
+            <form novalidate @submit.prevent="submit" class="space-y-5">
                 <!-- Form Card -->
                 <div class="bg-card rounded-lg border p-5 space-y-4">
                     <!-- Campus Name -->

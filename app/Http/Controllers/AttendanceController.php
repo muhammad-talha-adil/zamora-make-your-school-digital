@@ -134,6 +134,8 @@ class AttendanceController extends Controller
             ->paginate(15)
             ->withQueryString();
 
+        $attendances->getCollection()->each->append(['present_count', 'absent_count']);
+
         $campuses = Campus::orderBy('name')->get(['id', 'name']);
         $sessions = Session::where('is_active', true)->orderBy('name')->get(['id', 'name']);
         $classes = SchoolClass::visibleTo($request->user())->orderBy('id', 'asc')->get(['id', 'name']);
@@ -349,7 +351,7 @@ class AttendanceController extends Controller
         $leaveTypes = LeaveType::where('is_active', true)->orderBy('name')->get(['id', 'name']);
 
         // Pre-select values if provided in request
-        $selectedCampusId = $request->filled('campus_id') ? $request->campus_id : null;
+        $selectedCampusId = $request->user()->campusId() ?? ($request->filled('campus_id') ? $request->campus_id : null);
         $selectedSessionId = $request->filled('session_id') ? $request->session_id : null;
         $selectedClassId = $request->filled('class_id') ? $request->class_id : null;
         // Handle empty string for "all sections" - use special value to indicate all sections
@@ -847,6 +849,8 @@ class AttendanceController extends Controller
             ->where('attendance_id', $attendance->id)
             ->orderBy('id')
             ->get();
+
+        $attendanceStudents->each(fn (AttendanceStudent $row) => $row->student?->append('name'));
 
         $attendanceStatuses = AttendanceStatus::all();
 

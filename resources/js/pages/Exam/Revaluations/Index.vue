@@ -117,7 +117,7 @@
             <div v-if="showCreateModal" class="fixed inset-0 bg-black/50 flex items-center justify-center z-50 p-4">
                 <div class="bg-card rounded-lg p-6 w-full max-w-md">
                     <h2 class="text-xl font-bold mb-4">New Revaluation Request</h2>
-                    <form @submit.prevent="submitRequest">
+                    <form novalidate @submit.prevent="submitRequest">
                         <div class="mb-4">
                             <label class="block text-sm font-medium mb-1">Exam</label>
                             <SearchableSelect
@@ -161,7 +161,7 @@
                         </DialogDescription>
                     </DialogHeader>
 
-                    <form @submit.prevent="submitApprove" class="space-y-4">
+                    <form novalidate @submit.prevent="submitApprove" class="space-y-4">
                         <div class="space-y-2">
                             <Label for="new_marks">Corrected Marks <span class="text-destructive">*</span></Label>
                             <input
@@ -208,7 +208,7 @@
                         </DialogDescription>
                     </DialogHeader>
 
-                    <form @submit.prevent="submitReject" class="space-y-4">
+                    <form novalidate @submit.prevent="submitReject" class="space-y-4">
                         <div class="space-y-2">
                             <Label for="reject_note">Reason</Label>
                             <textarea

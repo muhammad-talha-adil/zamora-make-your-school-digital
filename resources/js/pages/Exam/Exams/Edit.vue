@@ -2,7 +2,7 @@
     <AppLayout :breadcrumbs="breadcrumbItems">
         <Head title="Edit Exam" />
 
-        <div class="space-y-6 p-4 md:p-6 max-w-3xl">
+        <div class="space-y-6 p-4 md:p-6">
             <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 md:gap-4">
                 <div>
                     <h1 class="text-lg md:text-2xl font-bold text-foreground">
@@ -90,7 +90,7 @@
                     <Button type="button" variant="outline" @click="router.visit(route('exam.index-page'))">
                         Cancel
                     </Button>
-                    <Button type="submit" :disabled="form.processing || !isValid">
+                    <Button type="submit" :disabled="form.processing">
                         Update Exam
                     </Button>
                 </div>
@@ -102,7 +102,7 @@
 <script setup lang="ts">
 import { Head, router } from '@inertiajs/vue3';
 import { useForm } from '@inertiajs/vue3';
-import { computed } from 'vue';
+import { computed, watch } from 'vue';
 import { route } from 'ziggy-js';
 import AppLayout from '@/layouts/AppLayout.vue';
 import type { BreadcrumbItem } from '@/types';
@@ -111,7 +111,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import InputError from '@/components/InputError.vue';
 import SearchableSelect from '@/components/ui/searchable-select/SearchableSelect.vue';
-import { useFormValidity } from '@/composables/useFormValidity';
+import { requiredErrors } from '@/composables/useFormValidity';
 import type { ExamEditProps } from '@/types/exam';
 
 const props = defineProps<ExamEditProps>();
@@ -140,9 +140,33 @@ const form = useForm({
     status: props.exam.status,
 });
 
-const { isValid } = useFormValidity(form, ['name', 'exam_type_id', 'session_id', 'start_date', 'end_date']);
+const requiredFields = ['name', 'exam_type_id', 'session_id', 'start_date', 'end_date'] as const;
+
+watch(
+    () => ({ ...form.data() }),
+    (now, before) => {
+        requiredFields.forEach((field) => {
+            if (now[field] !== before[field]) {
+                form.clearErrors(field);
+            }
+        });
+    },
+);
+
+const hasMissingRequired = (): boolean => {
+    const errors = requiredErrors(form.data(), [...requiredFields]);
+    if (Object.keys(errors).length === 0) {
+        return false;
+    }
+    form.setError(errors);
+    return true;
+};
 
 const submitForm = () => {
+    if (hasMissingRequired()) {
+        return;
+    }
+
     form.put(route('exam.update', props.exam.id), {
         onSuccess: () => {
             router.visit(route('exam.index-page'));

@@ -43,7 +43,7 @@ class StoreBulkAttendanceRequest extends FormRequest
     public function rules(): array
     {
         return [
-            'attendance_date' => ['required', 'date'],
+            'attendance_date' => ['required', 'date', 'before_or_equal:today'],
             'campus_id' => ['required', 'integer', Rule::exists('campuses', 'id')],
             'session_id' => ['required', 'integer', Rule::exists('academic_sessions', 'id')],
             'class_id' => ['required', 'integer', Rule::exists('school_classes', 'id')],
@@ -181,6 +181,7 @@ class StoreBulkAttendanceRequest extends FormRequest
     public function messages(): array
     {
         return [
+            'attendance_date.before_or_equal' => 'Attendance cannot be marked for a future date.',
             'attendances.required' => 'Mark at least one student before saving.',
             'attendances.*.attendance_status_id.required' => 'Every student needs a status.',
             'section_id.required' => 'Choose a section, or the whole class.',

@@ -47,7 +47,7 @@
                 </div>
             </div>
 
-            <form @submit.prevent="submitForm" class="space-y-6" enctype="multipart/form-data">
+            <form novalidate @submit.prevent="submitForm" class="space-y-6" enctype="multipart/form-data">
                 <!-- Student Information Card -->
                 <div class="bg-card rounded-lg border border-border p-6">
                     <h2 class="text-lg font-semibold text-foreground mb-4 flex items-center gap-2">

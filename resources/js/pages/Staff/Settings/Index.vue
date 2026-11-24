@@ -93,7 +93,7 @@ function usePagedList(source: () => Lookup[]) {
             per_page: perPage.value,
             links: Array.from({ length: lastPage.value }, (_, i) => ({
                 label: String(i + 1),
-                url: '#',
+                url: `?page=${i + 1}`,
                 active: i + 1 === page.value,
             })),
         };

@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { computed, watch } from 'vue';
 import { useForm } from '@inertiajs/vue3';
-import { useFormValidity } from '@/composables/useFormValidity';
+import { requiredErrors } from '@/composables/useFormValidity';
 import InputError from '@/components/InputError.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -100,7 +100,27 @@ const syncForm = () => {
     form.clearErrors();
 };
 
-const { isValid } = useFormValidity(form, ['title']);
+const requiredFields = ['title'] as const;
+
+watch(
+    () => ({ ...form.data() }),
+    (now, before) => {
+        requiredFields.forEach((field) => {
+            if (now[field] !== before[field]) {
+                form.clearErrors(field);
+            }
+        });
+    },
+);
+
+const hasMissingRequired = (): boolean => {
+    const errors = requiredErrors(form.data(), [...requiredFields]);
+    if (Object.keys(errors).length === 0) {
+        return false;
+    }
+    form.setError(errors);
+    return true;
+};
 
 watch(
     () => [props.open, props.mode, props.menu?.id],
@@ -117,6 +137,10 @@ const closeModal = () => {
 };
 
 const submitForm = () => {
+    if (hasMissingRequired()) {
+        return;
+    }
+
     form.parent_id = form.parent_id || null;
 
     const requestOptions = {
@@ -158,7 +182,7 @@ watch(
                 </DialogDescription>
             </DialogHeader>
 
-            <form @submit.prevent="submitForm">
+            <form novalidate @submit.prevent="submitForm">
                 <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-6">
                     <div class="grid gap-2">
                         <Label for="title">Title</Label>
@@ -247,7 +271,7 @@ watch(
                 </div>
 
                 <DialogFooter>
-                    <Button type="submit" :disabled="form.processing || !isValid">
+                    <Button type="submit" :disabled="form.processing">
                         {{ buttonText }}
                     </Button>
                 </DialogFooter>

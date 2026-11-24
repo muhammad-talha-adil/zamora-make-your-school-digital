@@ -56,7 +56,7 @@
                         <!-- Date -->
                         <div>
                             <label class="block text-sm font-medium text-muted-foreground mb-1">Date</label>
-                            <input v-model="selectedDate" type="date" class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm" />
+                            <input v-model="selectedDate" type="date" :max="new Date().toISOString().split('T')[0]" class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm" />
                         </div>
 
                         <!-- Load Students Button & Reset -->

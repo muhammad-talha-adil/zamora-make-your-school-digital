@@ -384,7 +384,7 @@ initializeForm();
             </div>
 
             <!-- Form -->
-            <form @submit.prevent="submitForm" class="space-y-6">
+            <form novalidate @submit.prevent="submitForm" class="space-y-6">
                 <!-- Basic Info Card -->
                 <div class="bg-card rounded-lg border p-4 md:p-5 space-y-4">
                     <h2 class="text-lg font-semibold">Basic Information</h2>

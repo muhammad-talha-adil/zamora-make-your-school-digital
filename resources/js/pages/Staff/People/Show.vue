@@ -672,7 +672,7 @@ const activeJobsCount = computed(() => props.jobs.length);
 
             <Dialog v-model:open="showLeaveDialog">
                 <DialogContent class="sm:max-w-[480px]">
-                    <form @submit.prevent="markAsLeft" class="space-y-4">
+                    <form novalidate @submit.prevent="markAsLeft" class="space-y-4">
                         <DialogHeader>
                             <DialogTitle>Mark as Left</DialogTitle>
                             <DialogDescription>
@@ -704,7 +704,7 @@ const activeJobsCount = computed(() => props.jobs.length);
 
             <Dialog v-model:open="showRejoinDialog">
                 <DialogContent class="sm:max-w-[480px]">
-                    <form @submit.prevent="rejoinStaff" class="space-y-4">
+                    <form novalidate @submit.prevent="rejoinStaff" class="space-y-4">
                         <DialogHeader>
                             <DialogTitle>Rejoin</DialogTitle>
                             <DialogDescription>

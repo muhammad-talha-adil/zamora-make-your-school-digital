@@ -1,7 +1,8 @@
 <script setup lang="ts">
-import CampusSelect from '@/components/ui/CampusSelect.vue';
 import { Head, router } from '@inertiajs/vue3';
 import axios from 'axios';
+import InputError from '@/components/InputError.vue';
+import { useClearErrorsOnEdit } from '@/composables/useFormValidity';
 import { computed, reactive, ref, watch } from 'vue';
 import { route } from 'ziggy-js';
 import AppLayout from '@/layouts/AppLayout.vue';
@@ -564,6 +565,7 @@ const submitVehicle = async () => {
     }
 
     submitting.value = true;
+    fieldErrors.value = {};
 
     try {
         const payload = {
@@ -586,7 +588,7 @@ const submitVehicle = async () => {
         resetVehicleForm();
         reloadPage(['vehicles', 'summary']);
     } catch (error: any) {
-        alert.error(error?.response?.data?.message || 'Failed to save vehicle.');
+        reportSaveError(error, 'Failed to save vehicle.');
     } finally {
         submitting.value = false;
     }
@@ -598,6 +600,7 @@ const submitStop = async () => {
     }
 
     submitting.value = true;
+    fieldErrors.value = {};
 
     try {
         const payload = {
@@ -618,13 +621,29 @@ const submitStop = async () => {
         resetStopForm();
         reloadPage(['stops', 'routes']);
     } catch (error: any) {
-        alert.error(error?.response?.data?.message || 'Failed to save stop.');
+        reportSaveError(error, 'Failed to save stop.');
     } finally {
         submitting.value = false;
     }
 };
 
 const routeNameError = ref('');
+const fieldErrors = ref<Record<string, string>>({});
+
+const reportSaveError = (error: any, fallback: string) => {
+    const errors = error?.response?.data?.errors as Record<string, string[]> | undefined;
+
+    if (error?.response?.status === 422 && errors) {
+        fieldErrors.value = Object.fromEntries(Object.entries(errors).map(([key, messages]) => [key, messages[0]]));
+        alert.error('Please check the errors in the form.');
+
+        return;
+    }
+
+    alert.error(error?.response?.data?.message || fallback);
+};
+
+[vehicleForm, stopForm, routeForm, assignmentForm, expenseForm, duesForm].forEach((form) => useClearErrorsOnEdit(form, fieldErrors));
 
 const submitRoute = async () => {
     if (submitting.value) {
@@ -634,6 +653,7 @@ const submitRoute = async () => {
     routeNameError.value = '';
 
     submitting.value = true;
+    fieldErrors.value = {};
 
     try {
         const payload = {
@@ -659,7 +679,7 @@ const submitRoute = async () => {
         if (nameErrors?.length) {
             routeNameError.value = nameErrors[0];
         } else {
-            alert.error(error?.response?.data?.message || 'Failed to save route.');
+            reportSaveError(error, 'Failed to save route.');
         }
     } finally {
         submitting.value = false;
@@ -672,6 +692,7 @@ const submitAssignment = async () => {
     }
 
     submitting.value = true;
+    fieldErrors.value = {};
 
     try {
         const payload = {
@@ -693,7 +714,7 @@ const submitAssignment = async () => {
         resetAssignmentForm();
         reloadPage(['assignments', 'summary']);
     } catch (error: any) {
-        alert.error(error?.response?.data?.message || 'Failed to save assignment.');
+        reportSaveError(error, 'Failed to save assignment.');
     } finally {
         submitting.value = false;
     }
@@ -705,6 +726,7 @@ const submitExpense = async () => {
     }
 
     submitting.value = true;
+    fieldErrors.value = {};
 
     try {
         const payload = {
@@ -726,7 +748,7 @@ const submitExpense = async () => {
         resetExpenseForm();
         reloadPage(['expenses', 'summary']);
     } catch (error: any) {
-        alert.error(error?.response?.data?.message || 'Failed to save transport expense.');
+        reportSaveError(error, 'Failed to save transport expense.');
     } finally {
         submitting.value = false;
     }
@@ -738,6 +760,7 @@ const generateDues = async () => {
     }
 
     submitting.value = true;
+    fieldErrors.value = {};
 
     try {
         const response = await axios.post(route('transport.generate-dues'), {
@@ -749,7 +772,7 @@ const generateDues = async () => {
 
         alert.success(response.data?.message || 'Transport dues generated successfully.');
     } catch (error: any) {
-        alert.error(error?.response?.data?.message || 'Failed to generate transport dues.');
+        reportSaveError(error, 'Failed to generate transport dues.');
     } finally {
         submitting.value = false;
     }
@@ -816,41 +839,44 @@ const generateDues = async () => {
                     <h2 class="mb-4 text-lg font-semibold text-foreground">{{ vehicleForm.id ? 'Edit Vehicle' : 'Create Vehicle' }}</h2>
                     <div class="space-y-4">
                         <div>
-                            <label class="mb-2 block text-sm font-medium text-muted-foreground">Campus</label>
-                            <CampusSelect v-model="vehicleForm.campus_id" :options="campusOptions" placeholder="Select campus" />
-                        </div>
-                        <div>
                             <label class="mb-2 block text-sm font-medium text-muted-foreground">Vehicle No</label>
                             <Input v-model="vehicleForm.vehicle_no" placeholder="ABC-123" />
+                            <InputError :message="fieldErrors.vehicle_no" />
                         </div>
                         <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-1">
                             <div>
                                 <label class="mb-2 block text-sm font-medium text-muted-foreground">Type</label>
                                 <SearchableSelect v-model="vehicleForm.vehicle_type" :options="vehicleTypeOptions" placeholder="Select type" />
+                                <InputError :message="fieldErrors.vehicle_type" />
                             </div>
                             <div>
                                 <label class="mb-2 block text-sm font-medium text-muted-foreground">Capacity</label>
                                 <Input v-model="vehicleForm.capacity" type="number" min="0" />
+                                <InputError :message="fieldErrors.capacity" />
                             </div>
                         </div>
                         <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-1">
                             <div>
                                 <label class="mb-2 block text-sm font-medium text-muted-foreground">Driver</label>
                                 <Input v-model="vehicleForm.driver_name" placeholder="Driver name" />
+                                <InputError :message="fieldErrors.driver_name" />
                             </div>
                             <div>
                                 <label class="mb-2 block text-sm font-medium text-muted-foreground">Attendant</label>
                                 <Input v-model="vehicleForm.attendant_name" placeholder="Attendant name" />
+                                <InputError :message="fieldErrors.attendant_name" />
                             </div>
                         </div>
                         <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-1">
                             <div>
                                 <label class="mb-2 block text-sm font-medium text-muted-foreground">Status</label>
                                 <SearchableSelect v-model="vehicleForm.status" :options="vehicleStatusOptions" placeholder="Select status" />
+                                <InputError :message="fieldErrors.status" />
                             </div>
                             <div>
                                 <label class="mb-2 block text-sm font-medium text-muted-foreground">Purchase Date</label>
                                 <Input v-model="vehicleForm.purchase_date" type="date" />
+                                <InputError :message="fieldErrors.purchase_date" />
                             </div>
                         </div>
                         <div>
@@ -918,22 +944,21 @@ const generateDues = async () => {
                     <h2 class="mb-4 text-lg font-semibold text-foreground">{{ routeForm.id ? 'Edit Route' : 'Create Route' }}</h2>
                     <div class="space-y-4">
                         <div>
-                            <label class="mb-2 block text-sm font-medium text-muted-foreground">Campus</label>
-                            <CampusSelect v-model="routeForm.campus_id" :options="campusOptions" placeholder="Select campus" />
-                        </div>
-                        <div>
                             <label class="mb-2 block text-sm font-medium text-muted-foreground">Route Name</label>
                             <Input v-model="routeForm.name" placeholder="North Route" />
+                            <InputError :message="fieldErrors.name" />
                             <p v-if="routeNameError" class="mt-1 text-sm text-destructive">{{ routeNameError }}</p>
                         </div>
                         <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-1">
                             <div>
                                 <label class="mb-2 block text-sm font-medium text-muted-foreground">Vehicle</label>
                                 <SearchableSelect v-model="routeForm.transport_vehicle_id" :options="vehicleOptions" placeholder="Select vehicle" />
+                                <InputError :message="fieldErrors.transport_vehicle_id" />
                             </div>
                             <div>
                                 <label class="mb-2 block text-sm font-medium text-muted-foreground">Monthly Fee</label>
                                 <Input v-model="routeForm.monthly_fee" type="number" min="0" />
+                                <InputError :message="fieldErrors.monthly_fee" />
                             </div>
                         </div>
                         <div>
@@ -1004,21 +1029,20 @@ const generateDues = async () => {
                     <h2 class="mb-4 text-lg font-semibold text-foreground">{{ stopForm.id ? 'Edit Stop' : 'Create Stop' }}</h2>
                     <div class="space-y-4">
                         <div>
-                            <label class="mb-2 block text-sm font-medium text-muted-foreground">Campus</label>
-                            <CampusSelect v-model="stopForm.campus_id" :options="campusOptions" placeholder="Select campus" />
-                        </div>
-                        <div>
                             <label class="mb-2 block text-sm font-medium text-muted-foreground">Stop Name</label>
                             <Input v-model="stopForm.name" placeholder="Stop name" />
+                            <InputError :message="fieldErrors.name" />
                         </div>
                         <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-1">
                             <div>
                                 <label class="mb-2 block text-sm font-medium text-muted-foreground">Pickup Time</label>
                                 <Input v-model="stopForm.pickup_time" type="time" />
+                                <InputError :message="fieldErrors.pickup_time" />
                             </div>
                             <div>
                                 <label class="mb-2 block text-sm font-medium text-muted-foreground">Drop Time</label>
                                 <Input v-model="stopForm.drop_time" type="time" />
+                                <InputError :message="fieldErrors.drop_time" />
                             </div>
                         </div>
                         <label class="flex items-center gap-2 text-sm text-muted-foreground">
@@ -1071,41 +1095,44 @@ const generateDues = async () => {
                         <div>
                             <label class="mb-2 block text-sm font-medium text-muted-foreground">Student</label>
                             <SearchableSelect v-model="assignmentForm.student_id" :options="studentOptions" placeholder="Select student" />
+                            <InputError :message="fieldErrors.student_id" />
                         </div>
                         <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-1">
                             <div>
-                                <label class="mb-2 block text-sm font-medium text-muted-foreground">Campus</label>
-                                <CampusSelect v-model="assignmentForm.campus_id" :options="campusOptions" placeholder="Select campus" />
-                            </div>
-                            <div>
                                 <label class="mb-2 block text-sm font-medium text-muted-foreground">Route</label>
                                 <SearchableSelect v-model="assignmentForm.transport_route_id" :options="routeOptions" placeholder="Select route" />
+                                <InputError :message="fieldErrors.transport_route_id" />
                             </div>
                         </div>
                         <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-1">
                             <div>
                                 <label class="mb-2 block text-sm font-medium text-muted-foreground">Stop</label>
                                 <SearchableSelect v-model="assignmentForm.transport_stop_id" :options="availableRouteStopOptions" placeholder="Select stop" />
+                                <InputError :message="fieldErrors.transport_stop_id" />
                             </div>
                             <div>
                                 <label class="mb-2 block text-sm font-medium text-muted-foreground">Monthly Fee</label>
                                 <Input v-model="assignmentForm.monthly_fee" type="number" min="0" />
+                                <InputError :message="fieldErrors.monthly_fee" />
                             </div>
                         </div>
                         <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-1">
                             <div>
                                 <label class="mb-2 block text-sm font-medium text-muted-foreground">Effective From</label>
                                 <Input v-model="assignmentForm.effective_from" type="date" />
+                                <InputError :message="fieldErrors.effective_from" />
                             </div>
                             <div>
                                 <label class="mb-2 block text-sm font-medium text-muted-foreground">Effective To</label>
                                 <Input v-model="assignmentForm.effective_to" type="date" />
+                                <InputError :message="fieldErrors.effective_to" />
                             </div>
                         </div>
                         <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-1">
                             <div>
                                 <label class="mb-2 block text-sm font-medium text-muted-foreground">Status</label>
                                 <SearchableSelect v-model="assignmentForm.status" :options="assignmentStatusOptions" placeholder="Select status" />
+                                <InputError :message="fieldErrors.status" />
                             </div>
                             <label class="flex items-center gap-2 self-end text-sm text-muted-foreground">
                                 <input v-model="assignmentForm.generate_dues" type="checkbox" class="h-4 w-4 rounded border-border text-primary" />
@@ -1169,37 +1196,39 @@ const generateDues = async () => {
                     <div class="space-y-4">
                         <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-1">
                             <div>
-                                <label class="mb-2 block text-sm font-medium text-muted-foreground">Campus</label>
-                                <CampusSelect v-model="expenseForm.campus_id" :options="campusOptions" placeholder="Select campus" />
-                            </div>
-                            <div>
                                 <label class="mb-2 block text-sm font-medium text-muted-foreground">Vehicle</label>
                                 <SearchableSelect v-model="expenseForm.transport_vehicle_id" :options="vehicleOptions" placeholder="Select vehicle" />
+                                <InputError :message="fieldErrors.transport_vehicle_id" />
                             </div>
                         </div>
                         <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-1">
                             <div>
                                 <label class="mb-2 block text-sm font-medium text-muted-foreground">Expense Type</label>
                                 <SearchableSelect v-model="expenseForm.expense_type" :options="expenseTypeOptions" placeholder="Select type" />
+                                <InputError :message="fieldErrors.expense_type" />
                             </div>
                             <div>
                                 <label class="mb-2 block text-sm font-medium text-muted-foreground">Expense Date</label>
                                 <Input v-model="expenseForm.expense_date" type="date" />
+                                <InputError :message="fieldErrors.expense_date" />
                             </div>
                         </div>
                         <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-1">
                             <div>
                                 <label class="mb-2 block text-sm font-medium text-muted-foreground">Amount</label>
                                 <Input v-model="expenseForm.amount" type="number" min="0.01" step="0.01" />
+                                <InputError :message="fieldErrors.amount" />
                             </div>
                             <div>
                                 <label class="mb-2 block text-sm font-medium text-muted-foreground">Payment Method</label>
                                 <SearchableSelect v-model="expenseForm.payment_method" :options="paymentMethodOptions" placeholder="Select method" />
+                                <InputError :message="fieldErrors.payment_method" />
                             </div>
                         </div>
                         <div>
                             <label class="mb-2 block text-sm font-medium text-muted-foreground">Reference No</label>
                             <Input v-model="expenseForm.reference_no" placeholder="Reference / receipt no" />
+                            <InputError :message="fieldErrors.reference_no" />
                         </div>
                         <div>
                             <label class="mb-2 block text-sm font-medium text-muted-foreground">Description</label>
@@ -1254,20 +1283,24 @@ const generateDues = async () => {
                         <div>
                             <label class="mb-2 block text-sm font-medium text-muted-foreground">Campus</label>
                             <SearchableSelect v-model="duesForm.campus_id" :options="campusOptions" placeholder="All Campuses" clearable />
+                            <InputError :message="fieldErrors.campus_id" />
                         </div>
                         <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-1">
                             <div>
                                 <label class="mb-2 block text-sm font-medium text-muted-foreground">Month</label>
                                 <SearchableSelect v-model="duesForm.month_id" :options="monthOptions" placeholder="Select month" />
+                                <InputError :message="fieldErrors.month_id" />
                             </div>
                             <div>
                                 <label class="mb-2 block text-sm font-medium text-muted-foreground">Year</label>
                                 <Input v-model="duesForm.year" type="number" min="2020" max="2100" />
+                                <InputError :message="fieldErrors.year" />
                             </div>
                         </div>
                         <div>
                             <label class="mb-2 block text-sm font-medium text-muted-foreground">Due Date</label>
                             <Input v-model="duesForm.due_date" type="date" />
+                            <InputError :message="fieldErrors.due_date" />
                         </div>
                         <div class="flex flex-wrap gap-2">
                             <Button :disabled="submitting" @click="generateDues">

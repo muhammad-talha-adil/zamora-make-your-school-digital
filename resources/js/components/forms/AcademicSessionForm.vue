@@ -129,14 +129,10 @@ watch(open, (isOpen) => {
 // Selectable years for the start/end year dropdowns (issue #25): 2000 up to
 // next year, so a session starting or ending next year can still be planned.
 const currentYear = new Date().getFullYear();
-const startYearOptions = Array.from(
-    { length: currentYear - 2000 + 1 },
-    (_, i) => 2000 + i,
-);
-const endYearOptions = Array.from(
-    { length: currentYear + 1 - 2000 + 1 },
-    (_, i) => 2000 + i,
-);
+const lastSelectableYear = Math.max(currentYear + 10, form.value.start_year || 0, form.value.end_year || 0);
+const yearRange = Array.from({ length: lastSelectableYear - 2000 + 1 }, (_, i) => 2000 + i);
+const startYearOptions = yearRange;
+const endYearOptions = yearRange;
 // Newest year first - the most likely pick for a new session, so it is
 // what the office sees without scrolling.
 const startYearSelectOptions = startYearOptions.map((year) => ({ value: year, label: String(year) })).reverse();
@@ -292,7 +288,7 @@ const resetForm = () => {
             </Button>
         </DialogTrigger>
         <DialogContent class="sm:max-w-[425px]">
-            <form
+            <form novalidate
                 @submit.prevent="submit"
                 class="space-y-4"
             >

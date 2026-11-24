@@ -483,7 +483,7 @@ const summaryStats = computed(() => {
                     </DialogTitle>
                 </DialogHeader>
 
-                <form @submit.prevent="submitAction" class="space-y-5">
+                <form novalidate @submit.prevent="submitAction" class="space-y-5">
                     <div class="bg-card rounded-lg border border-border p-5 space-y-4">
                         <div class="text-sm text-muted-foreground">
                             <span class="font-medium text-foreground">{{ actionStock?.item_name }}</span>

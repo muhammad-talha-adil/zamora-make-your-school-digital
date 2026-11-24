@@ -80,6 +80,8 @@ class TransportController extends Controller
     {
         Gate::authorize('create', TransportVehicle::class);
 
+        $this->applyHeaderCampus($request);
+
         $data = $request->validate([
             'campus_id' => 'nullable|exists:campuses,id',
             'vehicle_no' => 'required|string|max:100|unique:transport_vehicles,vehicle_no',
@@ -103,6 +105,8 @@ class TransportController extends Controller
     public function updateVehicle(Request $request, TransportVehicle $vehicle)
     {
         Gate::authorize('update', $vehicle);
+
+        $this->applyHeaderCampus($request);
 
         $data = $request->validate([
             'campus_id' => 'nullable|exists:campuses,id',
@@ -130,6 +134,8 @@ class TransportController extends Controller
     {
         Gate::authorize('create', TransportStop::class);
 
+        $this->applyHeaderCampus($request);
+
         $data = $request->validate([
             'campus_id' => 'nullable|exists:campuses,id',
             'name' => 'required|string|max:150',
@@ -149,6 +155,8 @@ class TransportController extends Controller
     public function updateStop(Request $request, TransportStop $stop)
     {
         Gate::authorize('update', $stop);
+
+        $this->applyHeaderCampus($request);
 
         $data = $request->validate([
             'campus_id' => 'nullable|exists:campuses,id',
@@ -170,6 +178,8 @@ class TransportController extends Controller
     public function storeRoute(Request $request)
     {
         Gate::authorize('create', TransportRoute::class);
+
+        $this->applyHeaderCampus($request);
 
         $data = $request->validate([
             'campus_id' => 'nullable|exists:campuses,id',
@@ -216,6 +226,8 @@ class TransportController extends Controller
     {
         Gate::authorize('update', $route);
 
+        $this->applyHeaderCampus($request);
+
         $data = $request->validate([
             'campus_id' => 'nullable|exists:campuses,id',
             'transport_vehicle_id' => 'nullable|exists:transport_vehicles,id',
@@ -252,6 +264,19 @@ class TransportController extends Controller
             'message' => 'Route updated successfully.',
             'route' => $route->fresh(['campus', 'vehicle', 'stops']),
         ]);
+    }
+
+    /**
+     * Records always belong to the campus picked in the header switcher, so
+     * forms never ask for a campus and a stale client value is ignored.
+     */
+    private function applyHeaderCampus(Request $request): void
+    {
+        $campusId = $request->user()?->campusId();
+
+        if ($campusId !== null) {
+            $request->merge(['campus_id' => $campusId]);
+        }
     }
 
     private function assertRouteNameFree(string $name, ?int $campusId, ?int $ignoreId = null): void
@@ -340,6 +365,8 @@ class TransportController extends Controller
     {
         Gate::authorize('create', TransportVehicleExpense::class);
 
+        $this->applyHeaderCampus($request);
+
         $data = $request->validate([
             'campus_id' => 'nullable|exists:campuses,id',
             'transport_vehicle_id' => 'nullable|exists:transport_vehicles,id',
@@ -365,6 +392,8 @@ class TransportController extends Controller
     {
         Gate::authorize('update', $expense);
 
+        $this->applyHeaderCampus($request);
+
         $data = $request->validate([
             'campus_id' => 'nullable|exists:campuses,id',
             'transport_vehicle_id' => 'nullable|exists:transport_vehicles,id',
@@ -389,6 +418,8 @@ class TransportController extends Controller
     public function generateDues(Request $request)
     {
         Gate::authorize('generateDues', TransportStudentAssignment::class);
+
+        $this->applyHeaderCampus($request);
 
         $data = $request->validate([
             'campus_id' => 'nullable|exists:campuses,id',

@@ -452,7 +452,7 @@ const submitForm = () => {
         </div>
 
         <!-- Form -->
-        <form @submit.prevent="submitForm" class="space-y-6">
+        <form novalidate @submit.prevent="submitForm" class="space-y-6">
             <!-- Basic Info Card -->
             <div class="bg-card rounded-lg border p-6 space-y-4">
                 <h2 class="text-lg font-semibold mb-4">Assignment Details</h2>
