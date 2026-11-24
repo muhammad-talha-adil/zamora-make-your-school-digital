@@ -183,9 +183,9 @@ const handleCancel = () => {
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div class="grid grid-cols-1 2xl:grid-cols-3 gap-6">
                 <!-- Voucher Details -->
-                <div class="lg:col-span-2 space-y-6">
+                <div class="2xl:col-span-2 space-y-6">
                     <!-- Status Card -->
                     <div class="bg-card rounded-lg border border-border p-4 md:p-6">
                         <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-3 mb-4">
@@ -195,7 +195,7 @@ const handleCancel = () => {
                             </span>
                         </div>
                         
-                        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 2xl:grid-cols-3 gap-4">
                             <div>
                                 <Label class="text-muted-foreground text-xs md:text-sm">Month</Label>
                                 <p class="font-medium text-sm md:text-base">{{ voucher.voucher_month?.name }} {{ voucher.voucher_year }}</p>
