@@ -43,6 +43,12 @@ const printSlip = () => {
 const money = (amount: number) =>
     new Intl.NumberFormat('en-PK', { style: 'currency', currency: 'PKR', minimumFractionDigits: 0 }).format(amount);
 
+const info = [
+    { label: 'Name', value: props.slip.staff_name },
+    { label: 'Employee no.', value: props.slip.employee_no },
+    { label: 'Designation', value: props.slip.designation || '-' },
+    { label: 'Campus', value: props.slip.campus || 'School-wide' },
+];
 const earnings = [
     { label: 'Basic salary', value: props.slip.gross_salary },
     { label: 'Allowances', value: props.slip.allowance_amount },
@@ -72,28 +78,24 @@ const deductions = [
                     <p class="mt-2 text-sm font-semibold uppercase tracking-wide">Salary Slip - {{ props.slip.period }}</p>
                 </div>
 
-                <dl class="grid grid-cols-2 gap-x-6 gap-y-2 py-4 text-sm">
-                    <dt class="text-muted-foreground">Name</dt>
-                    <dd class="font-medium">{{ props.slip.staff_name }}</dd>
-                    <dt class="text-muted-foreground">Employee no.</dt>
-                    <dd class="font-medium">{{ props.slip.employee_no }}</dd>
-                    <dt class="text-muted-foreground">Designation</dt>
-                    <dd class="font-medium">{{ props.slip.designation || '-' }}</dd>
-                    <dt class="text-muted-foreground">Campus</dt>
-                    <dd class="font-medium">{{ props.slip.campus || 'School-wide' }}</dd>
+                <dl class="space-y-2 py-4 text-sm">
+                    <div v-for="row in info" :key="row.label" class="flex justify-between gap-4">
+                        <dt class="text-muted-foreground">{{ row.label }}</dt>
+                        <dd class="text-right font-medium">{{ row.value }}</dd>
+                    </div>
                 </dl>
 
-                <div class="grid gap-6 border-t border-border pt-4 sm:grid-cols-2">
+                <div class="grid gap-6 border-t border-border pt-4 grid-cols-1 2xl:grid-cols-2">
                     <div>
                         <h2 class="mb-2 text-sm font-semibold">Earnings</h2>
-                        <div v-for="row in earnings" :key="row.label" class="flex justify-between py-1 text-sm">
+                        <div v-for="row in earnings" :key="row.label" class="flex justify-between gap-4 py-1 text-sm">
                             <span class="text-muted-foreground">{{ row.label }}</span>
                             <span>{{ money(row.value) }}</span>
                         </div>
                     </div>
                     <div>
                         <h2 class="mb-2 text-sm font-semibold">Deductions</h2>
-                        <div v-for="row in deductions" :key="row.label" class="flex justify-between py-1 text-sm">
+                        <div v-for="row in deductions" :key="row.label" class="flex justify-between gap-4 py-1 text-sm">
                             <span class="text-muted-foreground">{{ row.label }}</span>
                             <span>{{ money(row.value) }}</span>
                         </div>
