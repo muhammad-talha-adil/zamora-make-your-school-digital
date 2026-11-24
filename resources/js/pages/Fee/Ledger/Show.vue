@@ -20,6 +20,7 @@ const props = defineProps<{
     student: { id: number; name: string; registration_number: string };
     rows: LedgerRow[];
     closingBalance: number;
+    balances?: { outstanding: number; overdue: number; not_yet_due: number; days_overdue: number };
 }>();
 
 const breadcrumbItems: BreadcrumbItem[] = [
@@ -45,6 +46,7 @@ const breadcrumbItems: BreadcrumbItem[] = [
             <div class="rounded-lg border border-border bg-card p-4">
                 <p class="text-sm text-muted-foreground">Balance due</p>
                 <p class="text-2xl font-bold text-foreground" data-testid="closing-balance">{{ formatCurrency(props.closingBalance) }}</p>
+                <p v-if="props.balances && props.balances.overdue > 0" class="text-xs text-destructive">{{ formatCurrency(props.balances.overdue) }} overdue ({{ props.balances.days_overdue }} days)</p>
             </div>
 
             <div class="overflow-x-auto rounded-lg border border-border bg-card">

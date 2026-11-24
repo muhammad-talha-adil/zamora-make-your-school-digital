@@ -120,6 +120,7 @@ const resetFilters = () => {
                     </div>
                     <div class="flex items-end gap-2">
                         <Button @click="applyFilters">Apply Filters</Button>
+                        <a :href="route('fee.reports.collection', { ...props.filters, export: 1 })" class="inline-flex h-9 items-center rounded-md border border-input px-3 text-sm text-foreground">Export CSV</a>
                         <Button variant="outline" @click="resetFilters">Reset</Button>
                     </div>
                 </div>

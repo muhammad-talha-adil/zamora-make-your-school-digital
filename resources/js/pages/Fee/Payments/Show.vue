@@ -145,7 +145,7 @@ const submitReverse = () => {
 
             <Dialog v-model:open="showReverseDialog">
                 <DialogContent class="sm:max-w-[480px]">
-                    <form @submit.prevent="submitReverse" class="space-y-4">
+                    <form novalidate @submit.prevent="submitReverse" class="space-y-4">
                         <DialogHeader>
                             <DialogTitle>Reverse Payment</DialogTitle>
                             <DialogDescription>

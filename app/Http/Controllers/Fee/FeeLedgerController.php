@@ -7,6 +7,7 @@ use App\Enums\Fee\VoucherStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Fee\FeePayment;
 use App\Models\Student;
+use App\Services\Fee\StudentBalanceService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
@@ -43,9 +44,17 @@ class FeeLedgerController extends Controller
             ]);
 
             if ($voucher->status === VoucherStatus::ADJUSTED) {
+                $carriedOn = $billedOn;
+                if (preg_match('/carried forward to voucher (\S+?)\.?(\s|$)/', (string) $voucher->notes, $match)) {
+                    $newer = $student->feeVouchers()->where('voucher_no', $match[1])->first();
+                    if ($newer) {
+                        $carriedOn = max($carriedOn, $newer->created_at->toDateString());
+                    }
+                }
+
                 $entries->push([
-                    'date' => $billedOn,
-                    'order' => 1,
+                    'date' => $carriedOn,
+                    'order' => 3,
                     'type' => 'Carried forward',
                     'reference' => $voucher->voucher_no,
                     'description' => 'Balance moved to a newer voucher',
@@ -97,7 +106,10 @@ class FeeLedgerController extends Controller
             })
             ->all();
 
+        $balances = app(StudentBalanceService::class)->forStudent($student->id);
+
         return Inertia::render('Fee/Ledger/Show', [
+            'balances' => $balances,
             'student' => [
                 'id' => $student->id,
                 'name' => $student->name,

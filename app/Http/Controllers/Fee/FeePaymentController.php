@@ -19,8 +19,10 @@ use App\Models\Fee\FeeVoucherItem;
 use App\Models\Fee\StudentFeeWalletTransaction;
 use App\Models\Finance\StudentAccountCharge;
 use App\Models\Ledger\Ledger;
+use App\Models\School;
 use App\Models\Student;
 use App\Services\Fee\FeePaymentService;
+use App\Services\Fee\StudentBalanceService;
 use App\Services\Finance\StudentBillingService;
 use App\Services\Finance\UnifiedAccountingService;
 use App\Services\Student\SiblingService;
@@ -146,8 +148,18 @@ class FeePaymentController extends Controller
         }
 
         $newer = null;
-        if (preg_match('/carried forward to voucher (\S+?)\.?(\s|$)/', (string) $old->notes, $match)) {
-            $newer = FeeVoucher::query()->where('student_id', $old->student_id)->where('voucher_no', $match[1])->first(['id', 'voucher_no']);
+        $current = $old;
+        $seen = [];
+        while ($current && $current->status === VoucherStatus::ADJUSTED && ! in_array($current->id, $seen, true)) {
+            $seen[] = $current->id;
+            $next = null;
+            if (preg_match('/carried forward to voucher (\S+?)\.?(\s|$)/', (string) $current->notes, $match)) {
+                $next = FeeVoucher::query()->where('student_id', $current->student_id)->where('voucher_no', $match[1])->first();
+            }
+            $current = $next;
+        }
+        if ($current && $current->status !== VoucherStatus::ADJUSTED) {
+            $newer = $current;
         }
 
         return [
@@ -421,6 +433,7 @@ class FeePaymentController extends Controller
             'student.user:id,name',
             'campus',
             'allocations.voucher.voucherMonth',
+            'allocations.voucher.items.feeHead',
         ]);
 
         $payment->student?->append(['name', 'registration_number']);
@@ -436,7 +449,14 @@ class FeePaymentController extends Controller
             $paymentData['student']['registration_number'] = $payment->registration_no_snapshot ?? $payment->student?->registration_number;
         }
 
+        $paymentData['items_summary'] = $payment->allocations->flatMap(fn ($allocation) => $allocation->voucher?->items ?? collect())
+            ->reject(fn ($item) => $item->feeHead?->code === 'LATE_FINE')
+            ->map(fn ($item) => ['description' => $item->description, 'amount' => (float) $item->net_amount])
+            ->values()->all();
+        $paymentData['remaining_balance'] = app(StudentBalanceService::class)->forStudent((int) $payment->student_id)['outstanding'];
+
         return Inertia::render('Fee/Payments/Receipt', [
+            'schoolName' => School::query()->value('name'),
             'payment' => $paymentData,
         ]);
     }

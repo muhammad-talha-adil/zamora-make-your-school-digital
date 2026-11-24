@@ -5,10 +5,11 @@ namespace App\Http\Controllers\Settings;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Cache;
 
 /**
  * Lets a school-wide user (owner/developer) narrow the whole admin panel to
- * one campus at a time from the header switcher. Stored in the session only
+ * one campus at a time from the header switcher. Stored in the session, and remembered per user so the next login restores it
  * — every controller that already calls
  * `ScopesCampusForUser::resolveCampusId()` or `ChecksSchoolReach::reaches()`
  * picks this up automatically, so no other page needed to change for the
@@ -28,6 +29,7 @@ class CampusSwitchController extends Controller
         ]);
 
         $request->session()->put('viewing_campus_id', $validated['campus_id']);
+        Cache::forever('viewing_campus.'.$request->user()->id, (int) $validated['campus_id']);
 
         return redirect()->back();
     }

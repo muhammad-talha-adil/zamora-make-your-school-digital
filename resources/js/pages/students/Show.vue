@@ -273,6 +273,7 @@
                             <div>
                                 <p class="text-xs text-muted-foreground">Outstanding balance</p>
                                 <p class="text-sm font-semibold" :class="student.fee_summary.outstanding > 0 ? 'text-destructive' : 'text-foreground'">{{ formatCurrency(student.fee_summary.outstanding ?? 0) }}</p>
+                                <p v-if="(student.fee_summary.overdue ?? 0) > 0" class="text-xs text-destructive">{{ formatCurrency(student.fee_summary.overdue ?? 0) }} overdue ({{ student.fee_summary.days_overdue }} days)</p>
                             </div>
                             <div>
                                 <p class="text-xs text-muted-foreground">Monthly</p>
@@ -512,6 +513,8 @@ interface Props {
             structure_title: string | null;
             monthly_net?: number;
             outstanding?: number;
+            overdue?: number;
+            days_overdue?: number;
             monthly: number;
             annual: number;
             one_time: number;

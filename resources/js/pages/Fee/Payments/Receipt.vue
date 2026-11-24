@@ -49,7 +49,8 @@ interface FeePayment {
 }
 
 interface Props {
-    payment: FeePayment;
+    payment: FeePayment & { items_summary?: Array<{ description: string; amount: number }>; remaining_balance?: number };
+    schoolName?: string | null;
 }
 
 const props = defineProps<Props>();
@@ -116,7 +117,8 @@ const getPaymentMethodLabel = (method: string): string => {
             <div class="bg-white dark:bg-gray-800 rounded-lg border border-gray-200 dark:border-gray-700 p-6 md:p-8 max-w-2xl mx-auto print:border-0 print:p-0">
                 <!-- Header -->
                 <div class="text-center mb-8">
-                    <h1 class="text-2xl font-bold text-gray-900 dark:text-white">Fee Payment Receipt</h1>
+                    <h1 v-if="props.schoolName" class="text-xl font-bold text-gray-900 dark:text-white">{{ props.schoolName }}</h1>
+                    <h2 class="text-2xl font-bold text-gray-900 dark:text-white">Fee Payment Receipt</h2>
                     <p class="text-gray-600 dark:text-gray-400">Receipt No: {{ props.payment.receipt_no }}</p>
                 </div>
 
@@ -180,6 +182,14 @@ const getPaymentMethodLabel = (method: string): string => {
                     </table>
                 </div>
 
+                <div v-if="props.payment.items_summary?.length" class="mb-6">
+                    <h2 class="text-lg font-semibold text-gray-900 dark:text-white mb-3">Fee Items</h2>
+                    <div v-for="(item, index) in props.payment.items_summary" :key="index" class="flex justify-between gap-2 py-1 text-sm">
+                        <span class="text-gray-700 dark:text-gray-300">{{ item.description }}</span>
+                        <span class="text-gray-900 dark:text-white">{{ formatCurrency(item.amount) }}</span>
+                    </div>
+                </div>
+
                 <!-- Totals -->
                 <div class="border-t border-gray-200 dark:border-gray-700 pt-4">
                     <div class="flex justify-between mb-2">
@@ -205,6 +215,10 @@ const getPaymentMethodLabel = (method: string): string => {
                     <div class="flex justify-between pt-2 border-t border-gray-200 dark:border-gray-700">
                         <span class="font-semibold text-gray-900 dark:text-white">Net Paid:</span>
                         <span class="font-bold text-lg text-gray-900 dark:text-white">{{ formatCurrency(props.payment.allocated_amount) }}</span>
+                    </div>
+                    <div class="flex justify-between pt-2">
+                        <span class="text-gray-600 dark:text-gray-400">Remaining Balance:</span>
+                        <span class="font-medium text-gray-900 dark:text-white">{{ formatCurrency(props.payment.remaining_balance ?? 0) }}</span>
                     </div>
                 </div>
 

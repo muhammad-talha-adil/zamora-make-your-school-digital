@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Fee\FeePayment;
 use App\Models\Fee\FeeVoucher;
 use App\Models\User;
+use App\Services\Fee\StudentBalanceService;
 use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
@@ -76,7 +77,7 @@ class FeeDashboardController extends Controller
             'unpaidVouchers' => $this->voucherQuery($user)->where('status', 'unpaid')->count(),
             'overdueVouchers' => $this->voucherQuery($user)->where('status', 'overdue')->count(),
             'totalCollected' => $this->paymentQuery($user)->where('status', 'posted')->sum('received_amount'),
-            'totalOutstanding' => $this->voucherQuery($user)->whereIn('status', ['unpaid', 'partial', 'overdue'])->sum('balance_amount'),
+            'totalOutstanding' => round((float) collect(app(StudentBalanceService::class)->forStudents($this->voucherQuery($user)))->sum('outstanding'), 2),
             'monthlyCollection' => $this->paymentQuery($user)
                 ->where('status', 'posted')
                 ->whereDate('payment_date', '>=', now()->startOfMonth()->toDateString())

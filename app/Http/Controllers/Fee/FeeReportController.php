@@ -6,11 +6,18 @@ use App\Enums\Fee\PaymentStatus;
 use App\Http\Controllers\Controller;
 use App\Models\Fee\FeePayment;
 use App\Models\Fee\FeeVoucher;
+use App\Models\Month;
+use App\Models\SchoolClass;
+use App\Models\Student;
+use App\Services\Fee\StudentBalanceService;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Http\Request;
-use Illuminate\Support\Carbon;
+use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
+use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class FeeReportController extends Controller
 {
@@ -97,6 +104,12 @@ class FeeReportController extends Controller
             ->orderBy('date')
             ->get();
 
+        if ($request->boolean('export')) {
+            return $this->csv('collection-report.csv', ['Date', 'Receipt', 'Student', 'Method', 'Received'],
+                (clone $query)->with('student')->orderBy('payment_date')->get()
+                    ->map(fn (FeePayment $p) => [$p->payment_date->toDateString(), $p->receipt_no, $p->student?->name, $p->payment_method, $p->received_amount])->all());
+        }
+
         return Inertia::render('Fee/Reports/Collection', [
             'summary' => $summary,
             'byMethod' => $byMethod,
@@ -106,42 +119,73 @@ class FeeReportController extends Controller
     }
 
     /**
+     * Open vouchers the viewer may see, narrowed by the report filters.
+     *
+     * @return Builder<FeeVoucher>
+     */
+    protected function balanceScope(Request $request)
+    {
+        $query = FeeVoucher::query()->visibleTo($request->user());
+
+        foreach (['campus_id', 'class_id', 'voucher_month_id'] as $column) {
+            if ($request->filled($column)) {
+                $query->where($column, $request->input($column));
+            }
+        }
+
+        return $query;
+    }
+
+    /**
+     * Per-student balances for the filtered scope, from the one balance service.
+     *
+     * @return Collection<int, array<string, mixed>>
+     */
+    protected function studentBalanceRows(Request $request): Collection
+    {
+        $balances = app(StudentBalanceService::class)->forStudents($this->balanceScope($request));
+        $students = Student::query()
+            ->whereIn('id', array_keys($balances))
+            ->with(['user:id,name', 'currentEnrollment.class:id,name', 'currentEnrollment.section:id,name'])
+            ->get()
+            ->keyBy('id');
+
+        return collect($balances)->map(function (array $balance, int $studentId) use ($students) {
+            $student = $students->get($studentId);
+
+            return $balance + [
+                'id' => $studentId,
+                'student_id' => $studentId,
+                'student' => $student ? [
+                    'id' => $student->id,
+                    'name' => $student->name,
+                    'registration_number' => $student->registration_number,
+                ] : null,
+                'class_name' => trim(($student?->currentEnrollment?->class?->name ?? '').' '.($student?->currentEnrollment?->section?->name ?? '')),
+            ];
+        })->values();
+    }
+
+    /**
      * Display outstanding report.
      */
     public function outstanding(Request $request)
     {
         Gate::authorize('viewAny', FeeVoucher::class);
 
-        $query = FeeVoucher::with(['student.user:id,name', 'voucherMonth'])
-            ->visibleTo($request->user())
-            ->whereIn('status', ['unpaid', 'partial', 'overdue']);
+        $rows = $this->studentBalanceRows($request);
 
-        // Apply filters
-        if ($request->filled('campus_id')) {
-            $query->where('campus_id', $request->campus_id);
-        }
-
-        if ($request->filled('class_id')) {
-            $query->where('class_id', $request->class_id);
-        }
-
-        // Get outstanding summary
         $summary = [
-            'total_outstanding' => $query->sum('balance_amount'),
-            'voucher_count' => $query->count(),
-            'student_count' => (clone $query)->distinct()->count('student_id'),
+            'total_outstanding' => round((float) $rows->sum('outstanding'), 2),
+            'total_overdue' => round((float) $rows->sum('overdue'), 2),
+            'voucher_count' => (int) $rows->sum('voucher_count'),
+            'student_count' => $rows->count(),
         ];
 
-        // Get outstanding by class
-        $byClass = FeeVoucher::query()
-            ->visibleTo($request->user())
-            ->select(
-                'class_id',
-                'section_id',
-                DB::raw('SUM(balance_amount) as total'),
-                DB::raw('COUNT(*) as count')
-            )
+        $byClass = $this->balanceScope($request)
+            ->select('class_id', 'section_id', DB::raw('SUM(balance_amount) as total'), DB::raw('COUNT(*) as count'))
             ->whereIn('status', ['unpaid', 'partial', 'overdue'])
+            ->where('balance_amount', '>', 0)
             ->groupBy('class_id', 'section_id')
             ->with(['schoolClass:id,name', 'section:id,name'])
             ->get()
@@ -155,87 +199,88 @@ class FeeReportController extends Controller
                     : null,
             ]);
 
-        // Get top defaulters
-        $topDefaulters = FeeVoucher::query()
-            ->visibleTo($request->user())
-            ->select(
-                'student_id',
-                DB::raw('SUM(balance_amount) as total_outstanding'),
-                DB::raw('COUNT(*) as voucher_count')
-            )
-            ->whereIn('status', ['unpaid', 'partial', 'overdue'])
-            ->groupBy('student_id')
-            ->with('student.user:id,name')
-            ->orderByDesc('total_outstanding')
-            ->limit(20)
-            ->get()
-            ->map(fn (FeeVoucher $row) => [
-                'student_id' => $row->student_id,
-                'total_outstanding' => $row->total_outstanding,
-                'voucher_count' => $row->voucher_count,
-                'student' => $row->student ? [
-                    'id' => $row->student->id,
-                    'name' => $row->student->name,
-                    'registration_number' => $row->student->registration_number,
-                ] : null,
-            ]);
+        $topDefaulters = $rows->sortByDesc('outstanding')->take(20)->values()->map(fn (array $row) => [
+            'student_id' => $row['student_id'],
+            'total_outstanding' => $row['outstanding'],
+            'overdue' => $row['overdue'],
+            'voucher_count' => $row['voucher_count'],
+            'student' => $row['student'],
+        ]);
+
+        if ($request->boolean('export')) {
+            return $this->csv('outstanding-report.csv', ['Student', 'Reg No', 'Class', 'Outstanding', 'Overdue', 'Not yet due'],
+                $rows->map(fn ($r) => [$r['student']['name'] ?? '', $r['student']['registration_number'] ?? '', $r['class_name'], $r['outstanding'], $r['overdue'], $r['not_yet_due']])->all());
+        }
 
         return Inertia::render('Fee/Reports/Outstanding', [
             'summary' => $summary,
             'byClass' => $byClass,
             'topDefaulters' => $topDefaulters,
-            'filters' => $request->only(['campus_id', 'class_id']),
+            'filters' => $request->only(['campus_id', 'class_id', 'voucher_month_id']),
+            ...$this->filterOptions(),
         ]);
     }
 
     /**
-     * Display defaulters list.
+     * Display defaulters list: one row per student with an overdue balance.
+     * The amount is the overdue part; total outstanding is shown beside it so
+     * the numbers reconcile with the ledger and the Outstanding report.
      */
     public function defaulters(Request $request)
     {
         Gate::authorize('viewAny', FeeVoucher::class);
 
-        $query = FeeVoucher::with(['student.user:id,name', 'voucherMonth', 'schoolClass:id,name', 'section:id,name'])
-            ->visibleTo($request->user())
-            ->whereIn('status', ['unpaid', 'partial', 'overdue'])
-            ->where('balance_amount', '>', 0);
+        $minDays = $request->filled('min_days_overdue') ? max(0, (int) $request->min_days_overdue) : 0;
 
-        $cutoff = $request->filled('min_days_overdue')
-            ? now()->subDays((int) $request->min_days_overdue)->toDateString()
-            : now()->subDay()->toDateString();
+        $rows = $this->studentBalanceRows($request)
+            ->filter(fn (array $row) => $row['overdue'] > 0 && $row['days_overdue'] >= max(1, $minDays))
+            ->sortByDesc('days_overdue')
+            ->values();
 
-        $query->where(function ($due) use ($cutoff) {
-            $due->whereDate('due_date', '<=', $cutoff)
-                ->orWhereHas('items.feeHead', fn ($head) => $head->where('code', 'PREVIOUS_BALANCE'));
-        });
-
-        // Apply filters
-        if ($request->filled('campus_id')) {
-            $query->where('campus_id', $request->campus_id);
+        if ($request->boolean('export')) {
+            return $this->csv('defaulters-report.csv', ['Student', 'Reg No', 'Class', 'Overdue', 'Total outstanding', 'Overdue since', 'Days overdue'],
+                $rows->map(fn ($r) => [$r['student']['name'] ?? '', $r['student']['registration_number'] ?? '', $r['class_name'], $r['overdue'], $r['outstanding'], $r['overdue_since'], $r['days_overdue']])->all());
         }
 
-        if ($request->filled('class_id')) {
-            $query->where('class_id', $request->class_id);
-        }
-
-        $defaulters = $query->orderBy('due_date')->paginate(50);
-        $defaulters->getCollection()->each(function (FeeVoucher $voucher): void {
-            $voucher->student?->append(['name', 'registration_number']);
-            $earliestDue = FeeVoucher::query()
-                ->where('student_id', $voucher->student_id)
-                ->whereIn('status', ['unpaid', 'partial', 'overdue', 'adjusted'])
-                ->where('balance_amount', '>', 0)
-                ->whereDate('due_date', '<', now()->toDateString())
-                ->min('due_date');
-            $dueDate = $earliestDue ? Carbon::parse($earliestDue)->min($voucher->due_date) : $voucher->due_date;
-            $voucher->setAttribute('days_overdue', max(0, (int) $dueDate->copy()->startOfDay()->diffInDays(today())));
-            $voucher->setAttribute('class_name', trim($voucher->schoolClass?->name.' '.$voucher->section?->name));
-        });
+        $page = max(1, (int) $request->input('page', 1));
+        $defaulters = new LengthAwarePaginator($rows->forPage($page, 50)->values(), $rows->count(), 50, $page, ['path' => $request->url()]);
 
         return Inertia::render('Fee/Reports/Defaulters', [
             'defaulters' => $defaulters,
-            'filters' => $request->only(['campus_id', 'class_id', 'min_days_overdue']),
+            'totals' => [
+                'overdue' => round((float) $rows->sum('overdue'), 2),
+                'outstanding' => round((float) $rows->sum('outstanding'), 2),
+            ],
+            'filters' => $request->only(['campus_id', 'class_id', 'voucher_month_id', 'min_days_overdue']),
+            ...$this->filterOptions(),
         ]);
+    }
+
+    /**
+     * @return array{classOptions: Collection, monthOptions: Collection}
+     */
+    protected function filterOptions(): array
+    {
+        return [
+            'classOptions' => SchoolClass::query()->orderBy('name')->get(['id', 'name']),
+            'monthOptions' => Month::query()->orderBy('month_number')->get(['id', 'name']),
+        ];
+    }
+
+    /**
+     * @param  array<int, string>  $header
+     * @param  array<int, array<int, mixed>>  $lines
+     */
+    protected function csv(string $filename, array $header, array $lines): StreamedResponse
+    {
+        return response()->streamDownload(function () use ($header, $lines): void {
+            $out = fopen('php://output', 'w');
+            fputcsv($out, $header);
+            foreach ($lines as $line) {
+                fputcsv($out, $line);
+            }
+            fclose($out);
+        }, $filename, ['Content-Type' => 'text/csv']);
     }
 
     /**

@@ -11,6 +11,7 @@ use App\Models\ThemeSetting;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Str;
 use Inertia\Middleware;
 
@@ -58,7 +59,10 @@ class HandleInertiaRequests extends Middleware
         // "all campuses" option — so the very first request of their session
         // picks one for them rather than leaving the panel unscoped.
         if ($user && $user->isSuperAdmin() && ! $request->session()->has('viewing_campus_id')) {
-            $firstCampusId = Campus::where('is_active', true)->orderBy('name')->value('id');
+            $rememberedId = Cache::get('viewing_campus.'.$user->id);
+            $firstCampusId = ($rememberedId && Campus::where('is_active', true)->whereKey($rememberedId)->exists())
+                ? $rememberedId
+                : Campus::where('is_active', true)->orderBy('name')->value('id');
 
             if ($firstCampusId) {
                 $request->session()->put('viewing_campus_id', $firstCampusId);

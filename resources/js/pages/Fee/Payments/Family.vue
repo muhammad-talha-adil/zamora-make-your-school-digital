@@ -75,11 +75,34 @@ const paymentDateError = computed(() => {
     return key ? errors[key] : '';
 });
 
-const isOverBalance = (line: { amount: number | string; balance: number }) => Number(line.amount) > line.balance;
-const hasBadAmount = computed(() => lines.some((line) => line.enabled && (Number(line.amount) <= 0 || isOverBalance(line))));
+const lineError = (line: { amount: number | string; balance: number }): string => {
+    const amount = Number(line.amount);
+
+    if (line.amount === '' || !Number.isFinite(amount)) {
+        return 'Enter the amount to pay.';
+    }
+
+    if (amount < 0) {
+        return 'Negative amount is not allowed.';
+    }
+
+    if (amount === 0) {
+        return 'Amount must be greater than 0.';
+    }
+
+    return amount > line.balance ? `Amount is more than the balance (Rs ${line.balance.toLocaleString()}).` : '';
+};
 
 const submit = () => {
     if (isSubmitting.value) {
+        return;
+    }
+
+    const firstError = lines.filter((line) => line.enabled).map(lineError).find((message) => message !== '');
+
+    if (firstError) {
+        alert.error(firstError);
+
         return;
     }
 
@@ -124,7 +147,7 @@ const submit = () => {
     <AppLayout :breadcrumbs="breadcrumbItems">
         <Head title="Family Payment" />
 
-        <form class="max-w-4xl space-y-6 p-4 md:p-6" @submit.prevent="submit">
+        <form novalidate class="max-w-4xl space-y-6 p-4 md:p-6" @submit.prevent="submit">
             <h1 class="text-xl font-bold text-foreground md:text-2xl">Family payment</h1>
 
             <div class="grid gap-4 rounded-lg border border-border bg-card p-4 md:grid-cols-2">
@@ -146,11 +169,11 @@ const submit = () => {
                 </div>
                 <div v-if="form.payment_method !== 'cash'">
                     <Label for="family_ref">Reference no</Label>
-                    <Input id="family_ref" v-model="form.reference_no" required />
+                    <Input id="family_ref" v-model="form.reference_no" placeholder="Bank transaction ID, cheque number, etc." />
                 </div>
                 <div v-if="['bank', 'cheque'].includes(form.payment_method)">
                     <Label for="family_bank">Bank name</Label>
-                    <Input id="family_bank" v-model="form.bank_name" required />
+                    <Input id="family_bank" v-model="form.bank_name" placeholder="Bank name" />
                 </div>
             </div>
 
@@ -167,16 +190,17 @@ const submit = () => {
                         step="0.01"
                         min="0"
                         :max="voucher.balance_amount"
+                        placeholder="Enter amount to pay"
                         class="w-full text-right"
                         :disabled="!lineFor(voucher.id).enabled"
                     />
-                    <p v-if="lineFor(voucher.id).enabled && isOverBalance(lineFor(voucher.id))" class="col-span-full text-right text-sm text-destructive">More than the balance</p>
+                    <p v-if="lineFor(voucher.id).enabled && lineError(lineFor(voucher.id))" class="col-span-full text-right text-sm text-destructive">{{ lineError(lineFor(voucher.id)) }}</p>
                 </div>
             </div>
 
             <div class="flex items-center justify-between">
                 <p class="text-lg font-bold text-foreground">Total {{ formatCurrency(total) }}</p>
-                <Button type="submit" :disabled="isSubmitting || total <= 0 || hasBadAmount">
+                <Button type="submit" :disabled="isSubmitting">
                     {{ isSubmitting ? 'Processing...' : `Pay selected (${formatCurrency(total)})` }}
                 </Button>
             </div>

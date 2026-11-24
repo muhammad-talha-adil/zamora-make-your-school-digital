@@ -119,6 +119,53 @@ const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0'
 const selectedStudent = ref<StudentSearchResult | null>(props.selectedStudent || null);
 const futureDateMessage = computed(() => (form.payment_date > today ? 'Payment date cannot be in the future.' : ''));
 const submitError = ref('');
+const submitAttempted = ref(false);
+const walletConfirmed = ref(false);
+const MAX_AMOUNT = 10000000;
+
+const chargeErrors = computed(() => {
+    const errors: Record<string, string> = {};
+
+    form.charges.filter((charge) => charge.enabled).forEach((charge) => {
+        const key = `${charge.voucher_id}-${charge.fee_voucher_item_id}`;
+        const amount = Number(charge.amount);
+        const due = itemBalance(charge.voucher_id, charge.fee_voucher_item_id);
+
+        if (!Number.isFinite(amount)) {
+            errors[key] = 'Enter a valid amount.';
+        } else if (amount < 0) {
+            errors[key] = 'Negative amount is not allowed.';
+        } else if (amount === 0) {
+            errors[key] = 'Amount must be greater than 0.';
+        } else if (amount > due) {
+            errors[key] = `Amount is more than the due (Rs ${due.toLocaleString()}).`;
+        }
+    });
+
+    return errors;
+});
+
+const lateFeeError = computed(() => (Number(form.late_fee) < 0 ? 'Late fee cannot be negative.' : ''));
+const receivedAmountError = computed(() => {
+    const amount = Number(form.received_amount);
+
+    if (!Number.isFinite(amount) || amount < 0) {
+        return 'Negative amount is not allowed.';
+    }
+
+    if (amount === 0) {
+        return 'Amount must be greater than 0. Tick a due item or enter the amount received.';
+    }
+
+    if (amount > MAX_AMOUNT) {
+        return `Amount is too large. The most you can enter is Rs ${MAX_AMOUNT.toLocaleString()}.`;
+    }
+
+    return '';
+});
+const methodError = computed(() => (form.payment_method ? '' : 'Choose how the money was received.'));
+const concessionReasonError = computed(() => (Number(form.concession) > 0 && !form.concession_reason.trim() ? 'Write why this concession is given.' : ''));
+const walletWarning = computed(() => (remainingAmount.value > 0.005 ? `This will add Rs ${remainingAmount.value.toLocaleString()} to wallet credit.` : ''));
 
 // Sibling bulk payment (#115): let the cashier settle several siblings'
 // vouchers in one go instead of repeating this whole form per child.
@@ -373,8 +420,15 @@ const submitForm = () => {
             amount: Number(charge.amount),
         }));
 
-    if (charges.length === 0 || Number(form.received_amount) <= 0) {
-        alert.error('Please select at least one due item with a payment amount.');
+    submitAttempted.value = true;
+
+    if (charges.length === 0 || receivedAmountError.value || Object.keys(chargeErrors.value).length > 0 || lateFeeError.value || methodError.value) {
+        alert.error(receivedAmountError.value || Object.values(chargeErrors.value)[0] || lateFeeError.value || methodError.value || 'Please select at least one due item with a payment amount.');
+        return;
+    }
+
+    if (walletWarning.value && !walletConfirmed.value) {
+        alert.error('Tick the box to confirm the extra goes to wallet credit.');
         return;
     }
 
@@ -476,7 +530,7 @@ const submitForm = () => {
                 </p>
             </div>
 
-            <form @submit.prevent="submitForm" class="max-w-7xl space-y-6">
+            <form novalidate @submit.prevent="submitForm" class="max-w-7xl min-w-0 space-y-6">
                 <div v-if="notice" class="rounded-md border border-warning/40 bg-warning/10 px-4 py-3 text-sm text-foreground">
                     {{ notice }}
                     <Link v-if="noticeVoucher" :href="route('fee.vouchers.show', noticeVoucher.id)" class="font-medium underline">Open {{ noticeVoucher.voucher_no }}</Link>
@@ -490,7 +544,7 @@ const submitForm = () => {
                                 id="student_search"
                                 v-model="searchQuery"
                                 @input="searchStudents"
-                                placeholder="Search by student name, registration no, admission no, or voucher no..."
+                                placeholder="Type student name, reg no or voucher no"
                                 autocomplete="off"
                             />
                             <div v-if="isSearching" class="absolute right-3 top-3">
@@ -544,6 +598,7 @@ const submitForm = () => {
                             :options="paymentMethodOptions"
                             placeholder="Select Payment Method"
                         />
+                        <p v-if="methodError" class="mt-1 text-sm text-destructive">{{ methodError }}</p>
                     </div>
 
                     <div v-if="form.payment_method !== 'cash'">
@@ -568,18 +623,20 @@ const submitForm = () => {
 
                     <div>
                         <Label for="late_fee">Late fee (optional)</Label>
-                        <Input id="late_fee" v-model="form.late_fee" type="number" step="0.01" min="0" />
+                        <Input id="late_fee" v-model="form.late_fee" type="number" step="0.01" min="0" placeholder="0.00 (optional)" />
+                        <p v-if="lateFeeError" class="mt-1 text-sm text-destructive">{{ lateFeeError }}</p>
                     </div>
 
                     <div>
                         <Label for="concession">Concession (optional)</Label>
-                        <Input id="concession" v-model="form.concession" type="number" step="0.01" min="0" />
+                        <Input id="concession" v-model="form.concession" type="number" step="0.01" min="0" placeholder="0.00 (optional)" />
                         <p v-if="concessionError" class="text-sm text-destructive">{{ concessionError }}</p>
                     </div>
 
                     <div v-if="Number(form.concession) > 0" class="md:col-span-2 xl:col-span-4">
                         <Label for="concession_reason">Concession reason *</Label>
-                        <Input id="concession_reason" v-model="form.concession_reason" maxlength="255" required />
+                        <Input id="concession_reason" v-model="form.concession_reason" maxlength="255" placeholder="Why is this concession given? (required)" />
+                        <p v-if="concessionReasonError && (submitAttempted || form.concession_reason !== '')" class="mt-1 text-sm text-destructive">{{ concessionReasonError }}</p>
                     </div>
 
                     <div class="md:col-span-2 xl:col-span-2">
@@ -590,8 +647,13 @@ const submitForm = () => {
                             type="number"
                             step="0.01"
                             min="0"
-                            required
+                            placeholder="Enter amount received"
                         />
+                        <p v-if="receivedAmountError" class="mt-1 text-sm text-destructive">{{ receivedAmountError }}</p>
+                        <label v-if="walletWarning" class="mt-1 flex items-start gap-2 text-sm text-warning">
+                            <input v-model="walletConfirmed" type="checkbox" class="mt-1 rounded" />
+                            <span>{{ walletWarning }} Tick to confirm.</span>
+                        </label>
                     </div>
                 </div>
 
@@ -612,7 +674,7 @@ const submitForm = () => {
                     </div>
 
                     <div v-else class="overflow-x-auto">
-                        <table class="min-w-full divide-y divide-border">
+                        <table class="min-w-[560px] w-full divide-y divide-border">
                             <thead class="bg-muted">
                                 <tr>
                                     <th class="px-4 py-3 text-left text-xs font-semibold uppercase text-muted-foreground">
@@ -691,8 +753,10 @@ const submitForm = () => {
                                                 step="0.01"
                                                 min="0"
                                                 :disabled="!getChargeAllocation(voucher.id, item.id)?.enabled"
-                                                class="ml-auto w-32 text-right"
+                                                class="ml-auto w-28 text-right"
+                                                placeholder="0.00"
                                             />
+                                            <p v-if="chargeErrors[`${voucher.id}-${item.id}`]" class="mt-1 text-right text-xs text-destructive">{{ chargeErrors[`${voucher.id}-${item.id}`] }}</p>
                                             <p class="mt-1 text-right text-[11px] text-muted-foreground">
                                                 Amount to settle now for this due
                                             </p>
@@ -783,6 +847,7 @@ const submitForm = () => {
                         id="remarks"
                         v-model="form.remarks"
                         rows="3"
+                        placeholder="Anything to note about this payment (optional)"
                         class="mt-1 block w-full rounded-md border border-border bg-card px-3 py-2 text-foreground"
                     ></textarea>
                 </div>
@@ -791,7 +856,7 @@ const submitForm = () => {
                     <Button type="button" variant="outline" @click="router.visit(route('fee.payments.index'))">
                         Cancel
                     </Button>
-                    <Button type="submit" :disabled="isSubmitting || !form.student_id || form.received_amount <= 0">
+                    <Button type="submit" :disabled="isSubmitting">
                         <Icon v-if="isSubmitting" icon="loader" class="mr-2 h-4 w-4 animate-spin" />
                         {{ isSubmitting ? 'Processing...' : 'Record Payment' }}
                     </Button>

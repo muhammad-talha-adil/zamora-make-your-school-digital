@@ -11,6 +11,7 @@ import { Input } from '@/components/ui/input';
 interface Props {
     summary: {
         total_outstanding: number;
+        total_overdue: number;
         voucher_count: number;
         student_count: number;
     };
@@ -24,12 +25,16 @@ interface Props {
     topDefaulters: Array<{
         student_id: number;
         total_outstanding: number;
+        overdue: number;
         voucher_count: number;
         student?: { id: number; name: string; registration_number: string };
     }>;
+    classOptions: Array<{ id: number; name: string }>;
+    monthOptions: Array<{ id: number; name: string }>;
     filters: {
         campus_id?: string;
         class_id?: string;
+        voucher_month_id?: string;
     };
 }
 
@@ -45,6 +50,7 @@ const breadcrumbItems: BreadcrumbItem[] = [
 const form = reactive({
     campus_id: props.filters.campus_id || '',
     class_id: props.filters.class_id || '',
+    voucher_month_id: props.filters.voucher_month_id || '',
 });
 
 const formatCurrency = (amount: number): string => {
@@ -59,12 +65,14 @@ const applyFilters = () => {
     router.get(route('fee.reports.outstanding'), {
         campus_id: form.campus_id || undefined,
         class_id: form.class_id || undefined,
+        voucher_month_id: form.voucher_month_id || undefined,
     });
 };
 
 const resetFilters = () => {
     form.campus_id = '';
     form.class_id = '';
+    form.voucher_month_id = '';
     router.get(route('fee.reports.outstanding'));
 };
 </script>
@@ -86,7 +94,7 @@ const resetFilters = () => {
 
             <!-- Filters -->
             <div class="bg-card rounded-lg border border-border p-4">
-                <div class="grid gap-4 md:grid-cols-3">
+                <div class="grid gap-4 md:grid-cols-4">
                     <div class="space-y-2">
                         <Label for="campus_id">Campus</Label>
                         <Input
@@ -98,25 +106,35 @@ const resetFilters = () => {
                     </div>
                     <div class="space-y-2">
                         <Label for="class_id">Class</Label>
-                        <Input
-                            id="class_id"
-                            v-model="form.class_id"
-                            type="text"
-                            placeholder="Filter by class"
-                        />
+                        <select id="class_id" v-model="form.class_id" class="h-9 w-full rounded-md border border-input bg-background px-3 text-sm">
+                            <option value="">All classes</option>
+                            <option v-for="c in props.classOptions" :key="c.id" :value="String(c.id)">{{ c.name }}</option>
+                        </select>
+                    </div>
+                    <div class="space-y-2">
+                        <Label for="voucher_month_id">Month</Label>
+                        <select id="voucher_month_id" v-model="form.voucher_month_id" class="h-9 w-full rounded-md border border-input bg-background px-3 text-sm">
+                            <option value="">All months</option>
+                            <option v-for="m in props.monthOptions" :key="m.id" :value="String(m.id)">{{ m.name }}</option>
+                        </select>
                     </div>
                     <div class="flex items-end gap-2">
                         <Button @click="applyFilters">Apply Filters</Button>
                         <Button variant="outline" @click="resetFilters">Reset</Button>
+                        <a :href="route('fee.reports.outstanding', { ...props.filters, export: 1 })" class="inline-flex h-9 items-center rounded-md border border-input px-3 text-sm text-foreground">Export CSV</a>
                     </div>
                 </div>
             </div>
 
             <!-- Summary Cards -->
-            <div class="grid gap-4 md:grid-cols-3">
+            <div class="grid gap-4 md:grid-cols-4">
                 <div class="bg-card rounded-lg border border-border p-4">
                     <p class="text-sm text-muted-foreground">Total Outstanding</p>
                     <p class="text-2xl font-bold text-destructive">{{ formatCurrency(props.summary.total_outstanding) }}</p>
+                </div>
+                <div class="bg-card rounded-lg border border-border p-4">
+                    <p class="text-sm text-muted-foreground">Overdue</p>
+                    <p class="text-2xl font-bold text-destructive">{{ formatCurrency(props.summary.total_overdue) }}</p>
                 </div>
                 <div class="bg-card rounded-lg border border-border p-4">
                     <p class="text-sm text-muted-foreground">Total Vouchers</p>
@@ -164,6 +182,7 @@ const resetFilters = () => {
                                 <th class="text-left py-2 text-muted-foreground">#</th>
                                 <th class="text-left py-2 text-muted-foreground">Student</th>
                                 <th class="text-right py-2 text-muted-foreground">Vouchers</th>
+                                <th class="text-right py-2 text-muted-foreground">Overdue</th>
                                 <th class="text-right py-2 text-muted-foreground">Outstanding</th>
                             </tr>
                         </thead>
@@ -179,6 +198,7 @@ const resetFilters = () => {
                                     </div>
                                 </td>
                                 <td class="py-2 text-right text-muted-foreground">{{ defaulter.voucher_count }}</td>
+                                <td class="py-2 text-right text-muted-foreground">{{ formatCurrency(defaulter.overdue) }}</td>
                                 <td class="py-2 text-right text-destructive font-medium">{{ formatCurrency(defaulter.total_outstanding) }}</td>
                             </tr>
                         </tbody>

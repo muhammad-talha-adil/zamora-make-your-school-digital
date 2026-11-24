@@ -8,6 +8,7 @@ use App\Models\Section;
 use App\Models\Student;
 use App\Models\StudentDocumentType;
 use App\Repositories\StudentRepository;
+use App\Services\Fee\StudentBalanceService;
 use App\Services\Student\StudentEnrollmentService;
 use App\Services\Student\StudentExportService;
 use App\Services\Student\StudentImportService;
@@ -369,6 +370,7 @@ class StudentService
         }
 
         $enrollment->loadMissing(['feeStructure.items.feeHead', 'discounts']);
+        $balance = app(StudentBalanceService::class)->forStudent($student->id);
 
         $agreed = [];
         $mode = $enrollment->fee_mode instanceof \BackedEnum ? $enrollment->fee_mode->value : $enrollment->fee_mode;
@@ -438,7 +440,9 @@ class StudentService
             'annual' => $totals['yearly'],
             'one_time' => $totals['once'],
             'discount' => round($discount, 2),
-            'outstanding' => round((float) $student->feeVouchers()->whereIn('status', ['unpaid', 'partial', 'overdue'])->sum('balance_amount'), 2),
+            'outstanding' => $balance['outstanding'],
+            'overdue' => $balance['overdue'],
+            'days_overdue' => $balance['days_overdue'],
             'vouchers' => $vouchers,
         ];
     }
