@@ -188,17 +188,17 @@ const submit = async () => {
                     <SearchableSelect v-model="form.transport_vehicle_id" :options="vehicleOptions" placeholder="Any vehicle" clearable />
                 </TransportField>
                 <TransportField label="Amount" required :error="fieldErrors.amount">
-                    <Input v-model="form.amount" type="number" min="0" step="0.01" />
+                    <Input v-model="form.amount" type="number" min="0" step="0.01"  placeholder="e.g. 5000" />
                 </TransportField>
                 <TransportField label="Paid by" required :error="fieldErrors.payment_method">
                     <SearchableSelect v-model="form.payment_method" :options="methodOptions" placeholder="Select" />
                 </TransportField>
                 <TransportField label="Reference" :error="fieldErrors.reference_no">
-                    <Input v-model="form.reference_no" />
+                    <Input v-model="form.reference_no"  placeholder="Bill / receipt no." />
                 </TransportField>
             </div>
             <TransportField label="Note" :error="fieldErrors.description">
-                <Input v-model="form.description" />
+                <Input v-model="form.description"  placeholder="What was this expense for?" />
             </TransportField>
         </TransportFormDialog>
     </AppLayout>

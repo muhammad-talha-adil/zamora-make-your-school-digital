@@ -210,10 +210,10 @@ const submit = async () => {
         >
             <div class="grid gap-4 sm:grid-cols-2">
                 <TransportField label="Route name" required :error="fieldErrors.name">
-                    <Input v-model="form.name" />
+                    <Input v-model="form.name"  placeholder="e.g. Gulberg Morning Route" />
                 </TransportField>
                 <TransportField label="Monthly fee" required :error="fieldErrors.monthly_fee">
-                    <Input v-model="form.monthly_fee" type="number" min="0" />
+                    <Input v-model="form.monthly_fee" type="number" min="0"  placeholder="e.g. 3000" />
                 </TransportField>
             </div>
             <TransportField label="Vehicle" :error="fieldErrors.transport_vehicle_id">

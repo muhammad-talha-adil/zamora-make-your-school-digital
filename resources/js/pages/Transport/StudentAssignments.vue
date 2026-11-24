@@ -268,7 +268,7 @@ const submit = async () => {
                     <SearchableSelect v-model="form.transport_stop_id" :options="stopOptions" placeholder="Pick a stop" clearable />
                 </TransportField>
                 <TransportField label="Monthly fee" required :error="fieldErrors.monthly_fee">
-                    <Input v-model="form.monthly_fee" type="number" min="0" />
+                    <Input v-model="form.monthly_fee" type="number" min="0"  placeholder="e.g. 3000" />
                 </TransportField>
                 <TransportField label="Start date" required :error="fieldErrors.effective_from">
                     <Input v-model="form.effective_from" type="date" />

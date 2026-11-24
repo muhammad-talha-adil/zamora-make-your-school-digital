@@ -125,7 +125,7 @@ const submit = async () => {
                     <SearchableSelect v-model="form.month_id" :options="monthOptions" placeholder="Pick a month" />
                 </TransportField>
                 <TransportField label="Year" required :error="fieldErrors.year">
-                    <Input v-model="form.year" type="number" />
+                    <Input v-model="form.year" type="number"  placeholder="e.g. 2026" />
                 </TransportField>
                 <TransportField label="Due date" :error="fieldErrors.due_date">
                     <Input v-model="form.due_date" type="date" />

@@ -186,13 +186,13 @@ const submit = async () => {
                     <SearchableSelect v-model="form.vehicle_type" :options="typeOptions" placeholder="Select type" />
                 </TransportField>
                 <TransportField label="Seats" required :error="fieldErrors.capacity">
-                    <Input v-model="form.capacity" type="number" min="0" />
+                    <Input v-model="form.capacity" type="number" min="0"  placeholder="e.g. 12" />
                 </TransportField>
                 <TransportField label="Driver" :error="fieldErrors.driver_name">
-                    <Input v-model="form.driver_name" />
+                    <Input v-model="form.driver_name"  placeholder="Driver full name" />
                 </TransportField>
                 <TransportField label="Attendant" :error="fieldErrors.attendant_name">
-                    <Input v-model="form.attendant_name" />
+                    <Input v-model="form.attendant_name"  placeholder="Attendant full name" />
                 </TransportField>
                 <TransportField v-if="form.id" label="Status" :error="fieldErrors.status">
                     <SearchableSelect v-model="form.status" :options="statusOptions" placeholder="Select status" />
