@@ -72,3 +72,49 @@ it('a non-permitted user may not bulk-mark attendance', function () {
         ],
     ])->assertForbidden();
 });
+
+it('the page returns the already-saved status for the day and re-saving does not duplicate', function () {
+    $person = $this->world->person('Zainab Ali');
+    $late = AttendanceStatus::where('code', 'LT')->firstOrFail();
+    $present = AttendanceStatus::where('code', 'P')->firstOrFail();
+    $actor = $this->world->school->actor;
+
+    $this->actingAs($actor)->postJson(route('staff.attendance.bulk'), [
+        'attendance_date' => '2026-05-10',
+        'rows' => [['staff_profile_id' => $person->id, 'attendance_status_id' => $late->id]],
+    ])->assertSuccessful();
+
+    $response = $this->actingAs($actor)->get(route('staff.attendance.page', ['date' => '2026-05-10']));
+    $existing = $response->viewData('page')['props']['existing'];
+    expect($existing[$person->id]['attendance_status_id'])->toBe($late->id);
+
+    $this->actingAs($actor)->postJson(route('staff.attendance.bulk'), [
+        'attendance_date' => '2026-05-10',
+        'rows' => [['staff_profile_id' => $person->id, 'attendance_status_id' => $present->id]],
+    ])->assertSuccessful();
+
+    expect(StaffAttendance::where('staff_profile_id', $person->id)->count())->toBe(1);
+});
+
+it('shows a monthly report with per-person counts', function () {
+    $person = $this->world->person('Zainab Ali');
+    $late = AttendanceStatus::where('code', 'LT')->firstOrFail();
+
+    $this->actingAs($this->world->school->actor)->postJson(route('staff.attendance.bulk'), [
+        'attendance_date' => '2026-05-10',
+        'rows' => [['staff_profile_id' => $person->id, 'attendance_status_id' => $late->id]],
+    ])->assertSuccessful();
+
+    $response = $this->actingAs($this->world->school->actor)
+        ->get(route('staff.attendance.report', ['month' => 5, 'year' => 2026]));
+
+    $response->assertOk();
+    $row = collect($response->viewData('page')['props']['rows'])->firstWhere('id', $person->id);
+    expect($row['late'])->toBe(1)->and($row['present'])->toBe(0);
+});
+
+it('the monthly report needs a staff attendance permission', function () {
+    $viewer = $this->world->person('No Rights', ['staff.view']);
+
+    $this->actingAs($viewer->user)->get(route('staff.attendance.report'))->assertForbidden();
+});

@@ -239,6 +239,8 @@ Route::prefix('staff')->name('staff.')->middleware([...$middleware, 'campus.exis
     Route::controller(StaffAttendanceController::class)->prefix('attendance')->name('attendance.')->group(function () {
         Route::get('/', 'page')->name('page')
             ->middleware('permission:staff.attendance.mark');
+        Route::get('/report', 'monthlyReport')->name('report')
+            ->middleware('permission:staff.attendance.view|staff.attendance.mark');
         Route::get('/statuses', 'statuses')->name('statuses')
             ->middleware('permission:staff.attendance.view|staff.attendance.mark');
         Route::get('/people/{staffProfile}', 'index')->name('index')

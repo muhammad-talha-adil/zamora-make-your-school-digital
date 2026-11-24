@@ -50,7 +50,7 @@ const submit = async () => {
         emit('given');
         close();
     } catch (error: any) {
-        alert.error(error?.response?.data?.message || 'Failed to disburse advance.');
+        alert.warning(error?.response?.data?.message || 'Failed to disburse advance.');
     }
 };
 </script>

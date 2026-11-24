@@ -619,7 +619,7 @@ const returnAdvance = async (advance: Advance, status: 'returned' | 'waived') =>
         alert.success('Advance updated.');
         loadAdvances();
     } catch (error: any) {
-        alert.error(error?.response?.data?.errors?.password?.[0] || error?.response?.data?.message || 'Failed to update the advance.');
+        alert.warning(error?.response?.data?.errors?.password?.[0] || error?.response?.data?.message || 'Failed to update the advance.');
     }
 };
 

@@ -79,8 +79,8 @@ const activeTab = ref(tabs.value[0]?.id ?? 'list');
             </div>
 
             <!-- Tabs -->
-            <div class="border-b border-border overflow-x-auto overflow-hidden">
-                <nav class="-mb-px flex space-x-4 md:space-x-8 min-w-0">
+            <div class="w-full max-w-full min-w-0 overflow-x-auto border-b border-border">
+                <nav class="-mb-px flex w-max min-w-full gap-4 md:gap-8">
                     <button
                         v-for="tab in tabs"
                         :key="tab.id"

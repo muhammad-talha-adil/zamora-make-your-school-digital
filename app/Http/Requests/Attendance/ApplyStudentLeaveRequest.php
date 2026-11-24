@@ -68,7 +68,11 @@ class ApplyStudentLeaveRequest extends FormRequest
     public function messages(): array
     {
         return [
-            'description.required' => 'Say why the leave is needed.',
+            'leave_type_id.required' => 'Leave type is required.',
+            'leave_type_id.exists' => 'Choose a valid leave type.',
+            'start_date.required' => 'Start date is required.',
+            'end_date.required' => 'End date is required.',
+            'description.required' => 'Reason is required.',
             'description.min' => 'Give a little more detail than that.',
             'end_date.after_or_equal' => 'The last day cannot be before the first.',
         ];

@@ -146,8 +146,27 @@ const openApplyDialog = () => {
 };
 
 const submitApply = async () => {
+    const clientErrors: Record<string, string> = {};
     if (!applyForm.student_id) {
-        applyErrors.value = { student_id: 'Select a student.' };
+        clientErrors.student_id = 'Student is required.';
+    }
+    if (!applyForm.leave_type_id) {
+        clientErrors.leave_type_id = 'Leave type is required.';
+    }
+    if (!applyForm.start_date) {
+        clientErrors.start_date = 'Start date is required.';
+    }
+    if (!applyForm.end_date) {
+        clientErrors.end_date = 'End date is required.';
+    }
+    if (!applyForm.description.trim()) {
+        clientErrors.description = 'Reason is required.';
+    }
+
+    if (Object.keys(clientErrors).length > 0) {
+        applyErrors.value = clientErrors;
+        alert.warning('Please fill in the highlighted fields.');
+
         return;
     }
 
@@ -171,10 +190,11 @@ const submitApply = async () => {
             applyErrors.value = Object.fromEntries(
                 Object.entries(responseErrors).map(([key, value]) => [key, Array.isArray(value) ? value[0] : String(value)]),
             );
-            const message = error.response.data?.message;
-            if (message) {
-                alert.error(message);
-            }
+            alert.warning(
+                Object.keys(applyErrors.value).length > 0
+                    ? 'Please check the highlighted fields.'
+                    : (error.response.data?.message ?? 'Please check the form.'),
+            );
         } else {
             alert.error('Failed to submit the application. Please try again.');
         }

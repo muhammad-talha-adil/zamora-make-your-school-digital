@@ -51,7 +51,7 @@
                         <!-- Date -->
                         <div>
                             <label class="block text-sm font-medium text-muted-foreground mb-1">Date</label>
-                            <input v-model="selectedDate" type="date" :max="new Date().toISOString().split('T')[0]" class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm" />
+                            <input v-model="selectedDate" type="date" :max="todayLocal()" class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 text-sm" />
                             <p v-if="futureDateError" class="mt-1 text-xs text-destructive">{{ futureDateError }}</p>
                         </div>
 
@@ -59,7 +59,7 @@
                         <div class="flex flex-wrap items-end gap-2 sm:col-span-2">
                             <Button 
                                 @click="loadStudents" 
-                                :disabled="!selectedClassId || props.isSunday || !!props.holiday"
+                                :disabled="!selectedClassId || showSunday || showHoliday"
                                 class="flex-1 sm:flex-none"
                             >
                                 <Icon icon="users" class="mr-1" />
@@ -119,7 +119,7 @@
             </div>
 
             <!-- Sunday Warning Message -->
-            <div v-if="props.isSunday" class="bg-warning/10 border border-warning/40 rounded-lg p-4 md:p-6">
+            <div v-if="showSunday" class="bg-warning/10 border border-warning/40 rounded-lg p-4 md:p-6">
                 <div class="flex items-start">
                     <Icon icon="calendar-x" class="h-6 w-6 md:h-8 md:w-8 text-warning mr-3 md:mr-4 mt-1" />
                     <div>
@@ -134,7 +134,7 @@
             </div>
 
             <!-- Holiday Warning Message -->
-            <div v-else-if="props.holiday" class="bg-destructive/10 border border-destructive/40 rounded-lg p-4 md:p-6">
+            <div v-else-if="showHoliday && props.holiday" class="bg-destructive/10 border border-destructive/40 rounded-lg p-4 md:p-6">
                 <div class="flex items-start">
                     <Icon icon="celebration" class="h-6 w-6 md:h-8 md:w-8 text-destructive mr-3 md:mr-4 mt-1" />
                     <div class="flex-1">
@@ -210,7 +210,7 @@
 import { Head, router, usePage } from '@inertiajs/vue3';
 import { reactive, computed, watch, ref, onMounted } from 'vue';
 import { route } from 'ziggy-js';
-import { alert } from '@/utils';
+import { alert, todayLocal } from '@/utils';
 import AppLayout from '@/layouts/AppLayout.vue';
 import AttendanceFormRow from '@/components/attendance/AttendanceFormRow.vue';
 import Icon from '@/components/Icon.vue';
@@ -268,7 +268,7 @@ const checkoutDisabled = computed(() => {
     const timing = props.shiftTiming;
     if (!timing || !timing.check_out) return false;
 
-    const today = new Date().toISOString().split('T')[0];
+    const today = todayLocal();
     if (selectedDate.value !== today) return false;
 
     const now = new Date();
@@ -358,7 +358,7 @@ const onSectionReset = () => {
 
 const resetFilters = () => {
     // Get current date in YYYY-MM-DD format
-    const today = new Date().toISOString().split('T')[0];
+    const today = todayLocal();
     
     selectedCampusId.value = '';
     selectedSessionId.value = '';
@@ -382,8 +382,11 @@ const formatDate = (date: string) => {
     });
 };
 
-const todayIso = () => new Date().toISOString().split('T')[0];
+const todayIso = () => todayLocal();
 const futureDateError = ref('');
+const bannerIsForSelectedDate = computed(() => props.selectedDate === selectedDate.value);
+const showSunday = computed(() => bannerIsForSelectedDate.value && !!props.isSunday);
+const showHoliday = computed(() => bannerIsForSelectedDate.value && !!props.holiday);
 const isFutureSelected = computed(() => selectedDate.value > todayIso());
 watch(selectedDate, () => { futureDateError.value = ''; });
 

@@ -42,6 +42,20 @@ function handleDecode(text: string): void {
     window.location.href = text;
 }
 
+const manualCode = ref('');
+
+function submitManual(): void {
+    const code = manualCode.value.trim();
+
+    if (code === '') {
+        lastResult.value = 'Enter the code from the ID card.';
+
+        return;
+    }
+
+    handleDecode(code);
+}
+
 onMounted(async () => {
     hasCamera.value = await QrScanner.hasCamera();
 
@@ -82,21 +96,34 @@ onBeforeUnmount(() => {
                 </p>
             </div>
 
-            <div class="overflow-hidden rounded-lg border border-border bg-black">
+            <div v-show="hasCamera" class="overflow-hidden rounded-lg border border-border bg-black">
                 <video ref="videoEl" class="aspect-square w-full object-cover" muted playsinline></video>
             </div>
 
             <div v-if="!hasCamera" class="rounded-lg border border-border bg-card p-4 text-sm text-muted-foreground">
                 <p class="mb-2 flex items-center gap-2 font-medium text-foreground">
                     <Icon icon="camera-off" class="h-4 w-4" />
-                    No camera available{{ cameraError ? ':' : '' }} {{ cameraError }}
-                </p>
-                <p>
-                    No camera attached? Attendance can still be marked automatically — a phone's own camera app opening
-                    the ID card's QR code, or a USB barcode scanner "typing" it into an open browser tab, both work
-                    without this page.
+                    Camera not available. Allow camera access in your browser, or type the code below.
                 </p>
             </div>
+
+            <form class="space-y-2 rounded-lg border border-border bg-card p-4" @submit.prevent="submitManual">
+                <label for="manual-code" class="text-sm font-medium text-foreground">Type or scan the code</label>
+                <p class="text-xs text-muted-foreground">
+                    Paste the link from the ID card, or use a USB barcode scanner on this box.
+                </p>
+                <div class="flex gap-2">
+                    <input
+                        id="manual-code"
+                        v-model="manualCode"
+                        type="text"
+                        autocomplete="off"
+                        placeholder="Paste the card link or code"
+                        class="min-w-0 flex-1 rounded-md border border-border bg-background px-3 py-2 text-sm"
+                    />
+                    <Button type="submit">Mark</Button>
+                </div>
+            </form>
 
             <p v-if="lastResult" class="rounded-lg border border-border bg-card p-3 text-sm text-foreground">
                 {{ lastResult }}

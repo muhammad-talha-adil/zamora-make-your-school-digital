@@ -132,10 +132,10 @@
                                     <td class="px-4 py-3 whitespace-nowrap">
                                         <div class="flex items-center">
                                             <div class="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center shrink-0">
-                                                <span class="text-primary font-medium">{{ student.student.name.charAt(0) }}</span>
+                                                <span class="text-primary font-medium">{{ (student.name || student.student?.name || 'S').charAt(0) }}</span>
                                             </div>
                                             <div class="ml-3">
-                                                <div class="text-sm font-medium text-foreground">{{ student.student.name }}</div>
+                                                <div class="text-sm font-medium text-foreground">{{ student.name || student.student?.name || '—' }}</div>
                                             </div>
                                         </div>
                                     </td>

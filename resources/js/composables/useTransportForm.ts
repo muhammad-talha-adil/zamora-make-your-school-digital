@@ -75,3 +75,26 @@ export function useTransportForm() {
 
 export const formatMoney = (amount: number | string | null | undefined): string =>
     `Rs ${Number(amount || 0).toLocaleString('en-PK', { maximumFractionDigits: 0 })}`;
+
+interface RouteOptionSource {
+    id: number;
+    name: string;
+    monthly_fee: number | string | null;
+    vehicle?: { vehicle_no: string } | null;
+}
+
+/**
+ * Dropdown options for transport routes: "Name – Vehicle • Rs fee/mo".
+ * Two routes that still read the same get their number appended so they
+ * can be told apart.
+ */
+export const buildRouteOptions = (routes: RouteOptionSource[]): { value: string; label: string }[] => {
+    const labels = routes.map(
+        (row) => `${row.name} – ${row.vehicle?.vehicle_no ?? 'No vehicle'} • ${formatMoney(row.monthly_fee)}/mo`,
+    );
+
+    return routes.map((row, index) => ({
+        value: String(row.id),
+        label: labels.filter((label) => label === labels[index]).length > 1 ? `${labels[index]} (#${row.id})` : labels[index],
+    }));
+};

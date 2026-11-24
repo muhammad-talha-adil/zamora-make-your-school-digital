@@ -9,6 +9,9 @@
                     <h1 class="text-lg md:text-2xl font-bold text-foreground">Mark Staff Attendance</h1>
                     <p class="mt-1 text-xs md:text-sm text-muted-foreground">Record attendance for every active member of staff in one go.</p>
                 </div>
+                <Button as-child variant="outline">
+                    <Link :href="route('staff.attendance.report')">Monthly Report</Link>
+                </Button>
             </div>
 
             <!-- Date + bulk actions -->
@@ -31,16 +34,19 @@
                 </div>
             </div>
 
+            <div v-if="cannotMarkReason" class="rounded-lg border border-border bg-muted p-4 text-sm text-foreground">
+                {{ cannotMarkReason }}
+            </div>
+
             <!-- Staff Table -->
             <div v-if="props.staff.length > 0" class="bg-card rounded-lg border border-border overflow-hidden">
                 <div class="overflow-x-auto -mx-4 md:mx-0">
                     <table class="min-w-full divide-y divide-border">
                         <thead class="bg-muted">
                             <tr>
-                                <th class="px-2 md:px-4 py-2 md:py-3 text-left text-xs font-semibold text-muted-foreground uppercase w-12 md:w-16">Sr#</th>
+                                <th class="px-2 md:px-4 py-2 md:py-3 text-left text-xs font-semibold text-muted-foreground uppercase w-12 md:w-16">#</th>
                                 <th class="px-2 md:px-4 py-2 md:py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Staff</th>
                                 <th class="px-2 md:px-4 py-2 md:py-3 text-left text-xs font-semibold text-muted-foreground uppercase hidden md:table-cell">Designation</th>
-                                <th class="px-2 md:px-4 py-2 md:py-3 text-left text-xs font-semibold text-muted-foreground uppercase hidden md:table-cell">Campus</th>
                                 <th class="px-2 md:px-4 py-2 md:py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Status</th>
                                 <th class="px-2 md:px-4 py-2 md:py-3 text-left text-xs font-semibold text-muted-foreground uppercase hidden sm:table-cell">Check In</th>
                                 <th class="px-2 md:px-4 py-2 md:py-3 text-left text-xs font-semibold text-muted-foreground uppercase hidden sm:table-cell">Check Out</th>
@@ -55,7 +61,6 @@
                                     <div class="text-xs text-muted-foreground">{{ row.employee_no }}</div>
                                 </td>
                                 <td class="px-2 md:px-4 py-2 md:py-3 text-sm text-muted-foreground hidden md:table-cell">{{ row.designation }}</td>
-                                <td class="px-2 md:px-4 py-2 md:py-3 text-sm text-muted-foreground hidden md:table-cell">{{ row.campus }}</td>
                                 <td class="px-2 md:px-4 py-2 md:py-3">
                                     <SearchableSelect v-model="row.attendance_status_id" :options="statusOptions" placeholder="Select status" class="min-w-32" />
                                 </td>
@@ -92,15 +97,16 @@
 </template>
 
 <script setup lang="ts">
-import { Head, router } from '@inertiajs/vue3';
+import { Head, Link, router } from '@inertiajs/vue3';
 import axios from 'axios';
-import { reactive, ref, watch } from 'vue';
+import { computed, reactive, ref, watch } from 'vue';
 import { route } from 'ziggy-js';
 import AppLayout from '@/layouts/AppLayout.vue';
 import Icon from '@/components/Icon.vue';
 import { Button } from '@/components/ui/button';
 import SearchableSelect from '@/components/ui/searchable-select/SearchableSelect.vue';
 import { alert } from '@/utils';
+import { todayLocal } from '@/utils/date';
 import type { BreadcrumbItem } from '@/types';
 
 interface StaffStatus {
@@ -113,12 +119,22 @@ interface StaffRow {
     id: number;
     employee_no: string;
     user?: { id: number; name: string } | null;
-    campus?: { id: number; name: string } | null;
     designation?: { id: number; name: string } | null;
+}
+
+interface ExistingRecord {
+    staff_profile_id: number;
+    attendance_status_id: number;
+    check_in_at: string | null;
+    check_out_at: string | null;
+    remarks: string | null;
+    is_locked: boolean;
 }
 
 interface Props {
     staff: StaffRow[];
+    existing: Record<string, ExistingRecord>;
+    holiday: { title: string } | null;
     date: string;
     statuses: StaffStatus[];
 }
@@ -141,7 +157,6 @@ interface RowFormData {
     name: string;
     employee_no: string;
     designation: string;
-    campus: string;
     attendance_status_id: number | '';
     check_in_at: string;
     check_out_at: string;
@@ -153,27 +168,46 @@ const defaultStatusId = () => {
     return present ? present.id : (props.statuses[0]?.id ?? '');
 };
 
+const trimTime = (value: string | null | undefined): string => (value ? value.slice(0, 5) : '');
+
 const buildRows = (staff: StaffRow[]): RowFormData[] =>
-    staff.map((member) => ({
+    staff.map((member) => {
+        const saved = props.existing?.[String(member.id)];
+
+        return {
         staff_profile_id: member.id,
         name: member.user?.name ?? member.employee_no,
         employee_no: member.employee_no,
         designation: member.designation?.name ?? '-',
-        campus: member.campus?.name ?? '-',
-        attendance_status_id: defaultStatusId(),
-        check_in_at: '',
-        check_out_at: '',
-        remarks: '',
-    }));
+        attendance_status_id: saved?.attendance_status_id ?? defaultStatusId(),
+        check_in_at: trimTime(saved?.check_in_at),
+        check_out_at: trimTime(saved?.check_out_at),
+        remarks: saved?.remarks ?? '',
+        };
+    });
 
 const rows = reactive<RowFormData[]>(buildRows(props.staff));
 
 watch(
-    () => props.staff,
-    (newStaff) => {
-        rows.splice(0, rows.length, ...buildRows(newStaff));
+    () => [props.staff, props.existing, props.date],
+    () => {
+        selectedDate.value = props.date;
+        rows.splice(0, rows.length, ...buildRows(props.staff));
     },
 );
+
+const isSelectedDateInFuture = computed(() => selectedDate.value > todayLocal());
+const cannotMarkReason = computed(() => {
+    if (isSelectedDateInFuture.value) {
+        return 'Attendance cannot be marked for a future date.';
+    }
+
+    if (props.holiday) {
+        return `${props.holiday.title} is a holiday on this date.`;
+    }
+
+    return null;
+});
 
 const markAllByCode = (code: string) => {
     const status = props.statuses.find((s) => s.code === code);
@@ -193,6 +227,18 @@ const loadForDate = () => {
 };
 
 const submitAttendance = async () => {
+    if (cannotMarkReason.value) {
+        alert.warning(cannotMarkReason.value);
+
+        return;
+    }
+
+    if (rows.some((row) => row.attendance_status_id === '')) {
+        alert.warning('Choose a status for every member of staff.');
+
+        return;
+    }
+
     isSubmitting.value = true;
     try {
         await axios.post(route('staff.attendance.bulk'), {
@@ -207,7 +253,9 @@ const submitAttendance = async () => {
         });
         alert.success('Attendance marked.');
     } catch (error: any) {
-        alert.error(error?.response?.data?.message || 'Failed to mark attendance.');
+        const errors = error?.response?.data?.errors;
+        const first = errors ? (Object.values(errors)[0] as string[])[0] : null;
+        alert.warning(first || error?.response?.data?.message || 'Could not save attendance. Please try again.');
     } finally {
         isSubmitting.value = false;
     }

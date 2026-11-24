@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import { Head, router } from '@inertiajs/vue3';
 import axios from 'axios';
-import { computed, reactive, ref } from 'vue';
+import { computed, reactive, ref, watch } from 'vue';
 import { route } from 'ziggy-js';
 import { useYearOptions } from '@/composables/useYearOptions';
 import AppLayout from '@/layouts/AppLayout.vue';
@@ -97,7 +97,6 @@ const paymentMethodOptions = [
 ];
 
 const payrollForm = reactive({
-    campus_id: '',
     payroll_month_id: props.months.find((m) => m.month_number === new Date().getMonth() + 1)?.id?.toString() ?? '',
     payroll_year: String(new Date().getFullYear()),
     title: '',
@@ -118,7 +117,31 @@ const filteredRuns = computed(() => {
     return props.payrollRuns;
 });
 
+const monthError = ref('');
+
+watch(() => payrollForm.payroll_month_id, () => {
+    monthError.value = '';
+});
+
+const warnFromResponse = (error: any, fallback: string): void => {
+    const errors = error?.response?.data?.errors;
+    const first = errors ? (Object.values(errors)[0] as string[])[0] : null;
+
+    if (error?.response?.status === 422) {
+        alert.warning(first || error?.response?.data?.message || fallback);
+    } else {
+        alert.error(error?.response?.data?.message || fallback);
+    }
+};
+
 const generatePayroll = async () => {
+    if (!payrollForm.payroll_month_id) {
+        monthError.value = 'Month is required.';
+        alert.warning('Please choose a month.');
+
+        return;
+    }
+
     const existing = props.payrollRuns.find(
         (run) =>
             String(run.payroll_month_id) === String(payrollForm.payroll_month_id) &&
@@ -139,11 +162,11 @@ const generatePayroll = async () => {
     }
 
     try {
-        await axios.post(route('staff.payroll.generate'), { ...payrollForm, campus_id: null, confirm_replace: Boolean(existing) });
+        await axios.post(route('staff.payroll.generate'), { ...payrollForm, confirm_replace: Boolean(existing) });
         alert.success('Payroll generated successfully.');
         router.reload({ only: ['payrollRuns'] });
     } catch (error: any) {
-        alert.error(error?.response?.data?.message || 'Failed to generate payroll.');
+        warnFromResponse(error, 'Failed to generate payroll.');
     }
 };
 
@@ -184,7 +207,7 @@ const confirmPayrollPaid = async () => {
         payDialog.open = false;
         router.reload({ only: ['payrollRuns'] });
     } catch (error: any) {
-        alert.error(error?.response?.data?.message || 'Failed to record salary payment.');
+        warnFromResponse(error, 'Failed to record salary payment.');
     }
 };
 
@@ -217,6 +240,7 @@ const onAdvanceGiven = () => {
                     <div>
                         <label class="mb-2 block text-sm font-medium text-muted-foreground">Month</label>
                         <SearchableSelect v-model="payrollForm.payroll_month_id" :options="monthOptions" placeholder="Select month" clearable />
+                        <p v-if="monthError" class="mt-1 text-xs text-destructive">{{ monthError }}</p>
                     </div>
                     <div>
                         <label class="mb-2 block text-sm font-medium text-muted-foreground">Year</label>

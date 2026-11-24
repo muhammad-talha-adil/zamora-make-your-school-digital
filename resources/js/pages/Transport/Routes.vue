@@ -106,7 +106,7 @@ const openEdit = (row: RouteRow) => {
 const addStop = async () => {
     if (!newStop.name.trim()) {
         stopError.value = 'Stop name is required.';
-        alert.error('Please check the errors in the form.');
+        alert.warning('Please check the errors in the form.');
 
         return;
     }

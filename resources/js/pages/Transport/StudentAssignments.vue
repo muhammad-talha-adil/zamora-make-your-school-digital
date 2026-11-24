@@ -11,7 +11,7 @@ import TransportField from '@/components/transport/TransportField.vue';
 import TransportFormDialog from '@/components/transport/TransportFormDialog.vue';
 import TransportListHeader from '@/components/transport/TransportListHeader.vue';
 import { useClearErrorsOnEdit } from '@/composables/useFormValidity';
-import { formatMoney, useTransportForm } from '@/composables/useTransportForm';
+import { buildRouteOptions, formatMoney, useTransportForm } from '@/composables/useTransportForm';
 import { alert } from '@/utils';
 import type { BreadcrumbItem } from '@/types';
 
@@ -87,7 +87,7 @@ const form = reactive(blankForm());
 useClearErrorsOnEdit(form, fieldErrors);
 
 const studentOptions = computed(() => props.students.map((student) => ({ value: String(student.id), label: student.display })));
-const routeOptions = computed(() => props.routes.map((row) => ({ value: String(row.id), label: [row.name, row.vehicle?.vehicle_no, formatMoney(row.monthly_fee)].filter(Boolean).join(' · ') })));
+const routeOptions = computed(() => buildRouteOptions(props.routes));
 const stopOptions = computed(() => {
     const selected = props.routes.find((row) => String(row.id) === form.transport_route_id);
 

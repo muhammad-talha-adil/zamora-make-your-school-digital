@@ -4,9 +4,12 @@ namespace App\Http\Controllers\Staff;
 
 use App\Http\Controllers\Controller;
 use App\Models\AttendanceStatus;
+use App\Models\Staff\StaffAttendance;
 use App\Models\StaffProfile;
+use App\Services\AttendanceService;
 use App\Services\Staff\StaffAttendanceService;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -20,7 +23,8 @@ use Inertia\Response;
 class StaffAttendanceController extends Controller
 {
     public function __construct(
-        private StaffAttendanceService $attendance
+        private StaffAttendanceService $attendance,
+        private AttendanceService $studentAttendance
     ) {}
 
     /**
@@ -36,17 +40,59 @@ class StaffAttendanceController extends Controller
         $staff = StaffProfile::query()
             ->visibleTo($request->user())
             ->where('is_active', true)
-            ->with(['user:id,name', 'campus:id,name', 'designation:id,name'])
-            ->withCount([
-                'attendances as marked_today' => fn ($q) => $q->whereDate('attendance_date', $date),
-            ])
+            ->with(['user:id,name', 'designation:id,name'])
             ->orderBy('employee_no')
             ->get(['id', 'user_id', 'employee_no', 'campus_id', 'designation_id']);
 
+        $existing = StaffAttendance::query()
+            ->whereIn('staff_profile_id', $staff->pluck('id'))
+            ->whereDate('attendance_date', $date)
+            ->get(['staff_profile_id', 'attendance_status_id', 'check_in_at', 'check_out_at', 'remarks', 'is_locked'])
+            ->keyBy('staff_profile_id');
+
+        $holiday = $this->studentAttendance->getHoliday(Carbon::parse($date)->toDateString(), $request->user()->campusId());
+
         return Inertia::render('Staff/Attendance/Index', [
             'staff' => $staff,
+            'existing' => $existing,
             'date' => $date,
+            'holiday' => $holiday ? ['title' => $holiday->title] : null,
             'statuses' => AttendanceStatus::orderBy('name')->get(['id', 'name', 'code']),
+        ]);
+    }
+
+    /**
+     * Per-person Present / Absent / Late / Leave counts for one month.
+     */
+    public function monthlyReport(Request $request): Response
+    {
+        $validated = $request->validate([
+            'month' => ['nullable', 'integer', 'min:1', 'max:12'],
+            'year' => ['nullable', 'integer', 'min:2000', 'max:2100'],
+        ]);
+
+        $month = (int) ($validated['month'] ?? now()->month);
+        $year = (int) ($validated['year'] ?? now()->year);
+
+        $staff = StaffProfile::query()
+            ->visibleTo($request->user())
+            ->where('is_active', true)
+            ->with(['user:id,name', 'designation:id,name'])
+            ->orderBy('employee_no')
+            ->get(['id', 'user_id', 'employee_no', 'campus_id', 'designation_id']);
+
+        $rows = $staff->map(fn (StaffProfile $member) => [
+            'id' => $member->id,
+            'name' => $member->user?->name ?? $member->employee_no,
+            'employee_no' => $member->employee_no,
+            'designation' => $member->designation?->name,
+            ...$this->attendance->monthlySummary($member, $month, $month, $year),
+        ])->values();
+
+        return Inertia::render('Staff/Attendance/Report', [
+            'rows' => $rows,
+            'month' => $month,
+            'year' => $year,
         ]);
     }
 

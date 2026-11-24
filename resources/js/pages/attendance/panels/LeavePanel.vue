@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { computed, reactive, ref, onMounted, watch } from 'vue';
+import { computed, nextTick, reactive, ref, onMounted, watch } from 'vue';
 import axios from 'axios';
 import { route } from 'ziggy-js';
 import Icon from '@/components/Icon.vue';
@@ -136,9 +136,42 @@ const openApplyDialog = () => {
     showApplyDialog.value = true;
 };
 
+const focusFirstInvalid = (ids: string[], errors: Record<string, string>): void => {
+    const first = ids.find((id) => errors[id]);
+    if (!first) {
+        return;
+    }
+
+    nextTick(() => {
+        const el = document.getElementById(first === 'student_id' ? 'apply-student' : first);
+        el?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        el?.focus?.();
+    });
+};
+
 const submitApply = async () => {
+    const clientErrors: Record<string, string> = {};
     if (!applyForm.student_id) {
-        applyErrors.value = { student_id: 'Select a student.' };
+        clientErrors.student_id = 'Student is required.';
+    }
+    if (!applyForm.leave_type_id) {
+        clientErrors.leave_type_id = 'Leave type is required.';
+    }
+    if (!applyForm.start_date) {
+        clientErrors.start_date = 'Start date is required.';
+    }
+    if (!applyForm.end_date) {
+        clientErrors.end_date = 'End date is required.';
+    }
+    if (!applyForm.description.trim()) {
+        clientErrors.description = 'Reason is required.';
+    }
+
+    if (Object.keys(clientErrors).length > 0) {
+        applyErrors.value = clientErrors;
+        alert.warning('Please fill in the highlighted fields.');
+        focusFirstInvalid(['student_id', 'leave_type_id', 'start_date', 'end_date', 'description'], clientErrors);
+
         return;
     }
 
@@ -162,10 +195,12 @@ const submitApply = async () => {
             applyErrors.value = Object.fromEntries(
                 Object.entries(responseErrors).map(([key, value]) => [key, Array.isArray(value) ? value[0] : String(value)]),
             );
-            const message = error.response.data?.message;
-            if (message) {
-                alert.error(message);
-            }
+            alert.warning(
+                Object.keys(applyErrors.value).length > 0
+                    ? 'Please check the highlighted fields.'
+                    : (error.response.data?.message ?? 'Please check the form.'),
+            );
+            focusFirstInvalid(['student_id', 'leave_type_id', 'start_date', 'end_date', 'description'], applyErrors.value);
         } else {
             alert.error('Failed to submit the application. Please try again.');
         }
@@ -236,6 +271,7 @@ const submitReject = async () => {
             rejectErrors.value = Object.fromEntries(
                 Object.entries(responseErrors).map(([key, value]) => [key, Array.isArray(value) ? value[0] : String(value)]),
             );
+            alert.warning('Please check the highlighted fields.');
         } else {
             alert.error('Failed to reject the application.');
         }

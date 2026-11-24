@@ -451,6 +451,18 @@ class MenuSeeder extends Seeder
             'role' => 'developer,owner,campus_admin',
         ]);
 
+        Menu::create([
+            'title' => 'Attendance Report',
+            'icon' => 'bar-chart-3',
+            'type' => 'main',
+            'order' => 7,
+            'parent_id' => $staff->id,
+            'is_active' => true,
+            'url' => '/staff/attendance/report',
+            'role' => 'developer,owner,campus_admin',
+            'permission' => 'staff.attendance.view',
+        ]);
+
         // Staff Settings menu removed (#101) - reachable only from the
         // central School Setting hub now.
 
