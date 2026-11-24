@@ -174,7 +174,7 @@ watch(
 
 <template>
     <Dialog :open="props.open" @update:open="emit('update:open', $event)">
-        <DialogContent class="sm:max-w-106.25">
+        <DialogContent class="max-h-[90vh] overflow-y-auto sm:max-w-2xl">
             <DialogHeader>
                 <DialogTitle>{{ title }}</DialogTitle>
                 <DialogDescription>
@@ -183,7 +183,7 @@ watch(
             </DialogHeader>
 
             <form novalidate @submit.prevent="submitForm">
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-6">
+                <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 [&>*]:min-w-0">
                     <div class="grid gap-2">
                         <Label for="title">Title</Label>
                         <Input
