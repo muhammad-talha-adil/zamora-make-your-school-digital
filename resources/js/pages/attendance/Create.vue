@@ -20,7 +20,7 @@
                 <!-- Mobile: Stacked filters, Desktop: Horizontal -->
                 <div class="flex flex-col gap-4">
                     <!-- Row 1: Session, Class -->
-                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
 
                         <!-- Session -->
                         <div>
@@ -36,7 +36,7 @@
                     </div>
 
                     <!-- Row 2: Section, Date, Load Button -->
-                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+                    <div class="grid grid-cols-1 gap-4 sm:grid-cols-2">
                         <!-- Section -->
                         <div>
                             <label class="block text-sm font-medium text-muted-foreground mb-1">Section</label>
@@ -56,7 +56,7 @@
                         </div>
 
                         <!-- Load Students Button & Reset -->
-                        <div class="flex flex-wrap items-end gap-2 sm:col-span-2 md:col-span-3">
+                        <div class="flex flex-wrap items-end gap-2 sm:col-span-2">
                             <Button 
                                 @click="loadStudents" 
                                 :disabled="!selectedClassId || props.isSunday || !!props.holiday"
