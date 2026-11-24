@@ -115,11 +115,11 @@
                     <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
                         <div class="space-y-2">
                             <Label for="basic_salary">Basic Salary</Label>
-                            <Input id="basic_salary" v-model="form.basic_salary" type="number" min="0" />
+                            <Input id="basic_salary" v-model="form.basic_salary" type="number" min="0" placeholder="e.g. 50000" />
                         </div>
                         <div class="space-y-2">
                             <Label for="allowance_amount">Allowance</Label>
-                            <Input id="allowance_amount" v-model="form.allowance_amount" type="number" min="0" />
+                            <Input id="allowance_amount" v-model="form.allowance_amount" type="number" min="0" placeholder="e.g. 5000" />
                         </div>
                         <div class="space-y-2">
                             <Label for="payment_method">Payment Method</Label>

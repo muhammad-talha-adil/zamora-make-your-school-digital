@@ -721,7 +721,7 @@ const activeJobsCount = computed(() => props.jobs.length);
                         <div class="grid gap-4 md:grid-cols-2">
                             <div>
                                 <label class="mb-2 block text-sm font-medium text-muted-foreground">Date of Birth</label>
-                                <Input v-model="personalForm.dob" type="date" :disabled="!props.can.edit" />
+                                <Input v-model="personalForm.dob" type="date" :max="new Date().toISOString().slice(0, 10)" :disabled="!props.can.edit" />
                             </div>
                             <div>
                                 <label class="mb-2 block text-sm font-medium text-muted-foreground">Gender</label>
@@ -734,12 +734,12 @@ const activeJobsCount = computed(() => props.jobs.length);
                         </div>
                         <div>
                             <label class="mb-2 block text-sm font-medium text-muted-foreground">Address</label>
-                            <Input v-model="personalForm.address" :disabled="!props.can.edit" />
+                            <Input v-model="personalForm.address" placeholder="House, street, city" :disabled="!props.can.edit" />
                         </div>
                         <div class="grid gap-4 md:grid-cols-3">
                             <div>
                                 <label class="mb-2 block text-sm font-medium text-muted-foreground">Emergency Contact</label>
-                                <Input v-model="personalForm.emergency_contact_name" :disabled="!props.can.edit" />
+                                <Input v-model="personalForm.emergency_contact_name" placeholder="Full name" :disabled="!props.can.edit" />
                             </div>
                             <div>
                                 <label class="mb-2 block text-sm font-medium text-muted-foreground">Phone</label>
@@ -799,15 +799,15 @@ const activeJobsCount = computed(() => props.jobs.length);
                         <div class="grid gap-4 md:grid-cols-2">
                             <div>
                                 <label class="mb-2 block text-sm font-medium text-muted-foreground">Name</label>
-                                <Input v-model="employmentForm.name" />
+                                <Input v-model="employmentForm.name" placeholder="Full name" />
                             </div>
                             <div>
                                 <label class="mb-2 block text-sm font-medium text-muted-foreground">Email</label>
-                                <Input v-model="employmentForm.email" type="email" />
+                                <Input v-model="employmentForm.email" type="email" placeholder="name@school.com" />
                             </div>
                             <div>
                                 <label class="mb-2 block text-sm font-medium text-muted-foreground">Employee No</label>
-                                <Input v-model="employmentForm.employee_no" />
+                                <Input v-model="employmentForm.employee_no" placeholder="Auto if left empty" />
                             </div>
                             <div v-if="showCampusField">
                                 <label class="mb-2 block text-sm font-medium text-muted-foreground">Campus</label>
@@ -830,11 +830,11 @@ const activeJobsCount = computed(() => props.jobs.length);
                         <div class="grid gap-4 md:grid-cols-3">
                             <div>
                                 <label class="mb-2 block text-sm font-medium text-muted-foreground">Basic Salary</label>
-                                <Input v-model="employmentForm.basic_salary" type="number" min="0" />
+                                <Input v-model="employmentForm.basic_salary" type="number" min="0" placeholder="e.g. 50000" />
                             </div>
                             <div>
                                 <label class="mb-2 block text-sm font-medium text-muted-foreground">Allowance</label>
-                                <Input v-model="employmentForm.allowance_amount" type="number" min="0" />
+                                <Input v-model="employmentForm.allowance_amount" type="number" min="0" placeholder="e.g. 5000" />
                             </div>
                             <div>
                                 <label class="mb-2 block text-sm font-medium text-muted-foreground">Payment Method</label>
