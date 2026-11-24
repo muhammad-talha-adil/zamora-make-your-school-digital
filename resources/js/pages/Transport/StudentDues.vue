@@ -91,6 +91,7 @@ const submit = async () => {
                 <table class="w-full min-w-[640px] text-sm">
                     <thead class="bg-muted/50 text-left text-muted-foreground">
                         <tr>
+                            <th class="w-10 px-4 py-3 font-medium">#</th>
                             <th class="px-4 py-3 font-medium">Student</th>
                             <th class="px-4 py-3 font-medium">Due</th>
                             <th class="px-4 py-3 font-medium">Month</th>
@@ -99,7 +100,8 @@ const submit = async () => {
                         </tr>
                     </thead>
                     <tbody>
-                        <tr v-for="charge in filtered" :key="charge.id" class="border-t border-border">
+                        <tr v-for="(charge, idx) in filtered" :key="charge.id" class="border-t border-border">
+                            <td class="px-4 py-3 text-muted-foreground">{{ idx + 1 }}</td>
                             <td class="px-4 py-3 text-foreground">
                                 <span class="font-medium">{{ charge.student || '-' }}</span>
                                 <span class="block text-xs text-muted-foreground">{{ charge.registration_no }}</span>
@@ -110,7 +112,7 @@ const submit = async () => {
                             <td class="px-4 py-3 capitalize text-foreground">{{ charge.status }}</td>
                         </tr>
                         <tr v-if="filtered.length === 0">
-                            <td colspan="5" class="px-4 py-8 text-center text-muted-foreground">No transport dues yet.</td>
+                            <td colspan="6" class="px-4 py-8 text-center text-muted-foreground">No transport dues yet.</td>
                         </tr>
                     </tbody>
                 </table>

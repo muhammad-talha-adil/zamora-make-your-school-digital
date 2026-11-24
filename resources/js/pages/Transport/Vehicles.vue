@@ -143,6 +143,7 @@ const submit = async () => {
                 <table class="w-full min-w-[640px] text-sm">
                     <thead class="bg-muted/50 text-left text-muted-foreground">
                         <tr>
+                            <th class="w-10 px-4 py-3 font-medium">#</th>
                             <th class="px-4 py-3 font-medium">Vehicle</th>
                             <th class="px-4 py-3 font-medium">Type</th>
                             <th class="px-4 py-3 font-medium">Capacity</th>
@@ -152,7 +153,8 @@ const submit = async () => {
                         </tr>
                     </thead>
                     <tbody>
-                        <tr v-for="vehicle in filtered" :key="vehicle.id" class="border-t border-border">
+                        <tr v-for="(vehicle, idx) in filtered" :key="vehicle.id" class="border-t border-border">
+                            <td class="px-4 py-3 text-muted-foreground">{{ idx + 1 }}</td>
                             <td class="px-4 py-3 font-medium text-foreground">{{ vehicle.vehicle_no }}</td>
                             <td class="px-4 py-3 capitalize text-foreground">{{ vehicle.vehicle_type }}</td>
                             <td class="px-4 py-3 text-foreground">{{ vehicle.capacity }}</td>
@@ -163,7 +165,7 @@ const submit = async () => {
                             </td>
                         </tr>
                         <tr v-if="filtered.length === 0">
-                            <td colspan="6" class="px-4 py-8 text-center text-muted-foreground">No vehicles found.</td>
+                            <td colspan="7" class="px-4 py-8 text-center text-muted-foreground">No vehicles found.</td>
                         </tr>
                     </tbody>
                 </table>

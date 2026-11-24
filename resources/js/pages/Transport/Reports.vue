@@ -53,6 +53,7 @@ const totals = computed(() => ({
                 <table class="w-full min-w-[640px] text-sm">
                     <thead class="bg-muted/50 text-left text-muted-foreground">
                         <tr>
+                            <th class="w-10 px-4 py-3 font-medium">#</th>
                             <th class="px-4 py-3 font-medium">Route</th>
                             <th class="px-4 py-3 font-medium">Vehicle</th>
                             <th class="px-4 py-3 text-right font-medium">Students</th>
@@ -61,7 +62,8 @@ const totals = computed(() => ({
                         </tr>
                     </thead>
                     <tbody>
-                        <tr v-for="row in filtered" :key="row.id" class="border-t border-border">
+                        <tr v-for="(row, idx) in filtered" :key="row.id" class="border-t border-border">
+                            <td class="px-4 py-3 text-muted-foreground">{{ idx + 1 }}</td>
                             <td class="px-4 py-3 font-medium text-foreground">{{ row.name }}</td>
                             <td class="px-4 py-3 text-foreground">{{ row.vehicle_no || '-' }}</td>
                             <td class="px-4 py-3 text-right text-foreground">{{ row.students }}</td>
@@ -69,12 +71,12 @@ const totals = computed(() => ({
                             <td class="px-4 py-3 text-right text-foreground">{{ formatMoney(row.expenses) }}</td>
                         </tr>
                         <tr v-if="filtered.length === 0">
-                            <td colspan="5" class="px-4 py-8 text-center text-muted-foreground">No routes found.</td>
+                            <td colspan="6" class="px-4 py-8 text-center text-muted-foreground">No routes found.</td>
                         </tr>
                     </tbody>
                     <tfoot v-if="filtered.length > 0" class="border-t border-border bg-muted/30 font-semibold">
                         <tr>
-                            <td class="px-4 py-3 text-foreground" colspan="2">Total</td>
+                            <td class="px-4 py-3 text-foreground" colspan="3">Total</td>
                             <td class="px-4 py-3 text-right text-foreground">{{ totals.students }}</td>
                             <td class="px-4 py-3 text-right text-foreground">{{ formatMoney(totals.dues) }}</td>
                             <td class="px-4 py-3 text-right text-foreground">{{ formatMoney(totals.expenses) }}</td>
