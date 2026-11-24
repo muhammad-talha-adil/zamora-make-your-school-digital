@@ -148,7 +148,7 @@ const submit = async () => {
                             <th class="px-4 py-3 font-medium">Vehicle</th>
                             <th class="px-4 py-3 font-medium">Paid by</th>
                             <th class="px-4 py-3 text-right font-medium">Amount</th>
-                            <th class="px-4 py-3 font-medium"></th>
+                            <th class="px-4 py-3 text-right font-medium">Action</th>
                         </tr>
                     </thead>
                     <tbody>

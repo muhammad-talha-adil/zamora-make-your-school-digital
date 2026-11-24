@@ -149,7 +149,7 @@ const submit = async () => {
                             <th class="px-4 py-3 font-medium">Capacity</th>
                             <th class="px-4 py-3 font-medium">Driver</th>
                             <th class="px-4 py-3 font-medium">Status</th>
-                            <th class="px-4 py-3 font-medium"></th>
+                            <th class="px-4 py-3 text-right font-medium">Action</th>
                         </tr>
                     </thead>
                     <tbody>
