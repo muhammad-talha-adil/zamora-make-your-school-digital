@@ -33,7 +33,7 @@ Suggestion: Settings (3) ko Staff (2) ke saath ya foran baad karein, kyunke Atte
 - Student profile Fee card + Ledger (/students/{id})
 
 ### 2 Staff (admin)
-- /staff/people (+list, id-cards), /staff/create
+- /staff (+list, id-cards), /staff/create
 - /staff/settings, /staff/document-types, /staff/leaves/types
 - /staff/teaching (+sections, exams, who-can-teach)
 - /staff/payroll, /staff/attendance
@@ -89,3 +89,15 @@ Suggestion: Settings (3) ko Staff (2) ke saath ya foran baad karein, kyunke Atte
 2. Saare findings ek hi agent se ek pass mein fix (root cause + invariant tests).
 3. Build, commit, push. Agla prompt mein pichle FAIL + NOT TESTED items shamil.
 4. Report mein SATISFIED aaye to TEST-LOG.md mein row bharo aur agla step.
+
+## Deferred (bana nahi, par bhoolna nahi)
+- Staff: Departments, Shifts, Roles pages (Staff mein hain hi nahi).
+- Transport: alag sidebar menu/submenus, Dues tab mein list, form hamesha khula (tabs), page structure.
+- Fee: Inventory due + real Print dialog (R10/R3) abhi NOT TESTED; Fee dashboard vs Outstanding total cross-check.
+- Staff: percent field / deductions field staff form mein nahi; Documents/photo upload (Document Types 0) NOT TESTED.
+- Students: campus field Create mein nahi (header se infer); Section auto sirf 1-section case.
+- Settings: poora 02-settings-setup.md (abhi tak nahi chala).
+- Dashboard overdue widget voucher status se, plain-text Campus filter Defaulters/Outstanding, structure list grouping, timezone, stale getForDropdown cache.
+
+## Ek module = ek round rule
+Har module ke liye pehle poora sweep: agent code mein hi pehle woh checks chalaye jo browser karega (har form: required, negative, duplicate, max, future date, campus scope, 403, phone/CNIC format, inline messages, placeholders, double-submit, 500 test) aur invariant tests likhe. Browser report ke baad ek hi fix pass. Maqsad: module ek ya do round mein SATISFIED.
