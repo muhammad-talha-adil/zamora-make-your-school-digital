@@ -95,7 +95,7 @@ class FeeDashboardController extends Controller
     private function getRecentPayments(?User $user)
     {
         return $this->paymentQuery($user)
-            ->with('student:id,name')
+            ->with('student.user:id,name')
             ->select('id', 'receipt_no', 'student_id', 'received_amount', 'payment_date', 'payment_method')
             ->latest('payment_date')
             ->limit(10)
@@ -118,7 +118,7 @@ class FeeDashboardController extends Controller
     private function getOverdueVouchers(?User $user)
     {
         return $this->voucherQuery($user)
-            ->with(['student:id,name', 'voucherMonth:id,name'])
+            ->with(['student.user:id,name', 'voucherMonth:id,name'])
             ->where('status', 'overdue')
             ->select('id', 'voucher_no', 'student_id', 'voucher_month_id', 'balance_amount', 'due_date')
             ->orderBy('due_date')

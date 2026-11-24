@@ -90,7 +90,7 @@ class StaffSelfServiceController extends Controller
      */
     public function salarySlip(PayrollRunItem $payrollRunItem): Response
     {
-        $payrollRunItem->load(['payrollRun.month', 'payrollRun.campus', 'staffProfile.user', 'staffProfile.designation']);
+        $payrollRunItem->load(['payrollRun.month', 'payrollRun.campus', 'staffProfile.user', 'staffProfile.designation', 'staffProfile.campus']);
         Gate::authorize('viewPayslip', $payrollRunItem->staffProfile);
 
         $item = $payrollRunItem;
@@ -104,7 +104,7 @@ class StaffSelfServiceController extends Controller
                 'staff_name' => $item->staffProfile->user?->name,
                 'employee_no' => $item->staffProfile->employee_no,
                 'designation' => $item->staffProfile->designation?->name,
-                'campus' => $item->payrollRun?->campus?->name,
+                'campus' => $item->staffProfile->campus?->name,
                 'gross_salary' => (float) $item->gross_salary,
                 'allowance_amount' => (float) $item->allowance_amount,
                 'deduction_amount' => (float) $item->deduction_amount,

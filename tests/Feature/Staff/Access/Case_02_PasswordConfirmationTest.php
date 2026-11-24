@@ -1,11 +1,9 @@
 <?php
 
 /**
- * Case 02 — Activating/deactivating a staff member is a sensitive,
- * status-changing action. `RequiresPasswordConfirmation` re-verifies the
- * acting user's own password server-side before `StaffController::toggleStaff`
- * runs — this cannot be bypassed by calling the endpoint directly without a
- * password, regardless of what the frontend confirm modal sends.
+ * Case 02 — Activating/deactivating a staff member is a plain yes/no on the
+ * screen (a confirm dialog); `staff.manage` plus the campus check in the
+ * policy is the gate. No password is asked for.
  */
 
 use Tests\Support\StaffWorld;
@@ -16,36 +14,21 @@ beforeEach(function () {
     $this->actingAs($this->world->school->actor);
 });
 
-it('refuses the toggle when no password is given', function () {
-    $response = $this->patch(route('staff.members.toggle', $this->staff->id));
+it('toggles a staff member without asking for a password', function () {
+    $this->patchJson(route('staff.members.toggle', $this->staff->id))->assertOk();
 
-    $response->assertSessionHasErrors('password');
-    expect($this->staff->fresh()->is_active)->toBeTrue();
-});
-
-it('refuses the toggle when the password is wrong', function () {
-    $response = $this->patch(route('staff.members.toggle', $this->staff->id), [
-        'password' => 'not-the-right-password',
-    ]);
-
-    $response->assertSessionHasErrors('password');
-    expect($this->staff->fresh()->is_active)->toBeTrue();
-});
-
-it('applies the toggle once the correct password is given', function () {
-    $response = $this->patch(route('staff.members.toggle', $this->staff->id), [
-        'password' => 'password',
-    ]);
-
-    $response->assertSessionHasNoErrors();
     expect($this->staff->fresh()->is_active)->toBeFalse();
 });
 
-it('returns a 422 with a clear message for an axios/JSON caller with the wrong password', function () {
-    $response = $this->patchJson(route('staff.members.toggle', $this->staff->id), [
-        'password' => 'nope',
-    ]);
+it('toggles back to active the second time', function () {
+    $this->patchJson(route('staff.members.toggle', $this->staff->id));
+    $this->patchJson(route('staff.members.toggle', $this->staff->id));
 
-    $response->assertUnprocessable();
-    $response->assertJsonValidationErrors('password');
+    expect($this->staff->fresh()->is_active)->toBeTrue();
+});
+
+it('does not let a viewer without staff.manage toggle', function () {
+    $viewer = $this->world->person('Plain Viewer', abilities: ['staff.view']);
+
+    $this->actingAs($viewer->user)->patchJson(route('staff.members.toggle', $this->staff->id))->assertForbidden();
 });

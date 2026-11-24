@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { usePage } from '@inertiajs/vue3';
 import { computed } from 'vue';
 import { route } from 'ziggy-js';
 import Icon from '@/components/Icon.vue';
@@ -10,6 +11,8 @@ interface Props {
 }
 
 const props = defineProps<Props>();
+
+const debug = computed(() => (usePage().props as { debug?: { message: string; file: string } | null }).debug ?? null);
 
 const contentByStatus: Record<number, {
     title: string;
@@ -310,6 +313,11 @@ const windowsClass = computed(() => {
                                 </p>
                             </div>
                         </div>
+                    </div>
+
+                    <div v-if="debug" class="mt-4 rounded-2xl border border-destructive/40 bg-destructive/10 p-4 text-sm text-foreground">
+                        <p class="font-semibold break-words">{{ debug.message }}</p>
+                        <p class="mt-1 font-mono text-xs break-all text-muted-foreground">{{ debug.file }}</p>
                     </div>
 
                     <div class="mt-8 flex flex-col gap-3 sm:flex-row">

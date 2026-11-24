@@ -184,10 +184,6 @@ class StaffProfilePolicy
      */
     private function covers(User $user, StaffProfile $staff): bool
     {
-        if ($user->isSuperAdmin()) {
-            return true;
-        }
-
         // A post with no campus is school-wide and reachable by anybody who may
         // see staff at all.
         if ($staff->campus_id === null) {

@@ -5,11 +5,15 @@ namespace App\Http\Controllers;
 use App\Http\Requests\Staff\GiveStaffAdvanceRequest;
 use App\Http\Requests\Staff\PayPayrollItemRequest;
 use App\Http\Requests\Staff\ReturnStaffAdvanceRequest;
+use App\Http\Requests\Staff\SaveDesignationRequest;
+use App\Http\Requests\Staff\StoreStaffRequest;
+use App\Http\Requests\Staff\UpdateStaffRequest;
 use App\Models\Campus;
 use App\Models\Month;
 use App\Models\PayrollRun;
 use App\Models\PayrollRunItem;
 use App\Models\Role;
+use App\Models\Staff\StaffAssignment;
 use App\Models\Staff\StaffAttendance;
 use App\Models\Staff\StaffDocument;
 use App\Models\Staff\StaffDocumentType;
@@ -21,19 +25,20 @@ use App\Models\StaffProfile;
 use App\Models\User;
 use App\Services\Staff\StaffLoginService;
 use App\Services\Staff\StaffPayrollService;
+use App\Services\Staff\StaffSalaryService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Str;
-use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 
 class StaffController extends Controller
 {
     public function __construct(
         protected StaffPayrollService $payroll,
-        protected StaffLoginService $logins
+        protected StaffLoginService $logins,
+        protected StaffSalaryService $salary
     ) {}
 
     /**
@@ -76,17 +81,17 @@ class StaffController extends Controller
             // which do not belong on a dashboard nobody's viewSalary was checked
             // for.
             'recentJoiners' => StaffProfile::query()
-                ->select(['id', 'user_id', 'employee_no', 'hire_date', 'campus_id', 'designation_id'])
+                ->select(['id', 'user_id', 'employee_no', 'hire_date', 'created_at', 'campus_id', 'designation_id'])
                 ->with(['user:id,name', 'campus:id,name', 'designation:id,name'])
                 ->visibleTo($viewer)
-                ->whereNotNull('hire_date')
-                ->orderByDesc('hire_date')
+                ->orderByRaw('COALESCE(hire_date, DATE(created_at)) DESC')
+                ->orderByDesc('id')
                 ->take(5)
                 ->get(),
             'summary' => [
                 'active_staff' => (clone $activeStaff)->count(),
                 'monthly_salary' => $maySeeSalary
-                    ? (float) (clone $activeStaff)->get()->sum(fn (StaffProfile $profile) => $profile->net_salary)
+                    ? (float) (clone $activeStaff)->get()->sum(fn (StaffProfile $profile) => $this->salary->grossOn($profile, $today))
                     : null,
                 'pending_payroll' => $pendingPayroll,
                 'present_today' => StaffAttendance::whereDate('attendance_date', $today)
@@ -206,17 +211,9 @@ class StaffController extends Controller
         return auth()->user()?->isSuperAdmin() ? ['developer', 'owner'] : ['developer', 'owner', 'campus_admin'];
     }
 
-    public function storeDesignation(Request $request)
+    public function storeDesignation(SaveDesignationRequest $request)
     {
-        $excluded = $this->excludedDesignationRoles();
-
-        $data = $request->validate([
-            'name' => 'required|string|max:100|unique:staff_designations,name',
-            'description' => 'nullable|string|max:255',
-            'role' => ['nullable', 'string', Rule::exists('roles', 'name')->where(fn ($q) => $q->where('scope_level', '!=', Role::SCOPE_SELF)->whereNotIn('name', $excluded))],
-        ]);
-
-        $designation = StaffDesignation::create($data + ['is_active' => true]);
+        $designation = StaffDesignation::create($request->safe()->except('is_active') + ['is_active' => true]);
 
         return response()->json([
             'success' => true,
@@ -225,18 +222,9 @@ class StaffController extends Controller
         ]);
     }
 
-    public function updateDesignation(Request $request, StaffDesignation $designation)
+    public function updateDesignation(SaveDesignationRequest $request, StaffDesignation $designation)
     {
-        $excluded = $this->excludedDesignationRoles();
-
-        $data = $request->validate([
-            'name' => 'required|string|max:100|unique:staff_designations,name,'.$designation->id,
-            'description' => 'nullable|string|max:255',
-            'role' => ['nullable', 'string', Rule::exists('roles', 'name')->where(fn ($q) => $q->where('scope_level', '!=', Role::SCOPE_SELF)->whereNotIn('name', $excluded))],
-            'is_active' => 'boolean',
-        ]);
-
-        $designation->update($data);
+        $designation->update($request->validated());
 
         return response()->json([
             'success' => true,
@@ -245,36 +233,30 @@ class StaffController extends Controller
         ]);
     }
 
-    public function storeStaff(Request $request)
+    /**
+     * A position nobody holds can go; one that is in use is blocked with a
+     * plain sentence rather than a database error.
+     */
+    public function destroyDesignation(StaffDesignation $designation)
     {
-        Gate::authorize('create', StaffProfile::class);
+        $inUse = StaffProfile::withTrashed()->where('designation_id', $designation->id)->count()
+            + StaffAssignment::where('designation_id', $designation->id)->count();
 
-        $data = $request->validate([
-            'name' => 'required|string|max:150',
-            'email' => 'nullable|email|max:150|unique:users,email',
-            'employee_no' => 'nullable|string|max:50|unique:staff_profiles,employee_no',
-            'designation_id' => 'nullable|exists:staff_designations,id',
-            'employment_type' => 'required|string|max:50',
-            'hire_date' => 'nullable|date',
-            'basic_salary' => 'required|numeric|min:0',
-            'allowance_amount' => 'nullable|numeric|min:0',
-            'payment_method' => 'required|string|max:50',
-            'bank_name' => 'nullable|string|max:150',
-            'account_no' => 'nullable|string|max:150',
-            'is_active' => 'boolean',
-            'cnic' => ['nullable', 'string', 'regex:/^[0-9]{5}-[0-9]{7}-[0-9]$/'],
-            'phone' => ['nullable', 'string', 'max:20', 'regex:/^[0-9+\-\s]+$/'],
-            'photo' => ['nullable', 'image', 'max:2048'],
-            'campus_id' => ['nullable', 'integer', 'exists:campuses,id'],
-            'create_login' => ['nullable', 'boolean'],
-            'role' => ['nullable', 'string', Rule::exists('roles', 'name')->where(fn ($q) => $q->where('scope_level', '!=', Role::SCOPE_SELF)->whereNotIn('name', $this->excludedDesignationRoles()))],
-            'documents' => 'nullable|array',
-            'documents.*.kind' => 'required_with:documents|string|max:50',
-            'documents.*.title' => 'required_with:documents|string|max:150',
-            'documents.*.issued_on' => 'nullable|date',
-            'documents.*.expires_on' => 'nullable|date|after:documents.*.issued_on',
-            'documents.*.file' => 'nullable|file|mimes:pdf,jpg,jpeg,png|max:5120',
-        ]);
+        if ($inUse > 0) {
+            return response()->json([
+                'success' => false,
+                'message' => "\"{$designation->name}\" is in use by {$inUse} staff record".($inUse === 1 ? '' : 's').'. Move them to another position first.',
+            ], 422);
+        }
+
+        $designation->delete();
+
+        return response()->json(['success' => true, 'message' => 'Designation deleted.']);
+    }
+
+    public function storeStaff(StoreStaffRequest $request)
+    {
+        $data = $request->validated();
 
         $profile = DB::transaction(function () use ($data, $request) {
             $employeeNo = $data['employee_no'] ?? $this->generateEmployeeNo();
@@ -358,27 +340,9 @@ class StaffController extends Controller
         ]);
     }
 
-    public function updateStaff(Request $request, StaffProfile $staffProfile)
+    public function updateStaff(UpdateStaffRequest $request, StaffProfile $staffProfile)
     {
-        Gate::authorize('update', $staffProfile);
-
-        $data = $request->validate([
-            'name' => 'required|string|max:150',
-            'email' => 'nullable|email|max:150|unique:users,email,'.$staffProfile->user_id,
-            'employee_no' => 'required|string|max:50|unique:staff_profiles,employee_no,'.$staffProfile->id,
-            'campus_id' => 'nullable|exists:campuses,id',
-            'department_id' => 'nullable|exists:staff_departments,id',
-            'designation_id' => 'nullable|exists:staff_designations,id',
-            'employment_type' => 'required|string|max:50',
-            'hire_date' => 'nullable|date',
-            'basic_salary' => 'required|numeric|min:0',
-            'allowance_amount' => 'nullable|numeric|min:0',
-            'deduction_amount' => 'nullable|numeric|min:0',
-            'payment_method' => 'required|string|max:50',
-            'bank_name' => 'nullable|string|max:150',
-            'account_no' => 'nullable|string|max:150',
-            'is_active' => 'boolean',
-        ]);
+        $data = $request->validated();
 
         DB::transaction(function () use ($staffProfile, $data) {
             $previousDesignationId = $staffProfile->designation_id;
@@ -446,6 +410,22 @@ class StaffController extends Controller
         ]);
 
         Gate::authorize('runPayroll', [StaffProfile::class, $data['campus_id'] ?? null]);
+
+        $existing = PayrollRun::query()
+            ->where('campus_id', $data['campus_id'] ?? null)
+            ->where('payroll_month_id', $data['payroll_month_id'])
+            ->where('payroll_year', $data['payroll_year'])
+            ->first();
+
+        if ($existing && ! $request->boolean('confirm_replace')) {
+            $monthName = Month::find($data['payroll_month_id'])?->name;
+
+            return response()->json([
+                'success' => false,
+                'requires_confirmation' => true,
+                'message' => "This will replace the existing run for {$monthName} {$data['payroll_year']}. Anything already paid is kept.",
+            ], 409);
+        }
 
         $run = $this->payroll->generateRun($data, auth()->id());
 

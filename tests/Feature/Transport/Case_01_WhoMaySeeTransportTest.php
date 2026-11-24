@@ -208,3 +208,19 @@ it('lets the owner reach every campus', function () {
 
     expect(TransportVehicle::visibleTo($this->world->school->actor)->pluck('id'))->toContain($other->id);
 });
+
+it('blocks a second route with the same name on a campus, but allows it on another', function () {
+    $manager = $this->world->person('Route Manager', ['transport.route.manage']);
+    $campus = $this->world->school->campus;
+
+    $payload = ['name' => 'North Route', 'monthly_fee' => 500, 'campus_id' => $campus->id];
+    $this->actingAs($manager)->postJson(route('transport.routes.store'), $payload)->assertOk();
+
+    $this->actingAs($manager)->postJson(route('transport.routes.store'), ['name' => 'north route'] + $payload)
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors('name');
+
+    $this->actingAs($manager)
+        ->postJson(route('transport.routes.store'), ['campus_id' => $this->world->school->otherCampus->id] + $payload)
+        ->assertOk();
+});

@@ -35,14 +35,17 @@
                         <div class="space-y-2">
                             <Label for="name">Name <span class="text-destructive">*</span></Label>
                             <Input id="name" v-model="form.name" placeholder="Staff name" />
+                            <InputError :message="errors.name" />
                         </div>
                         <div class="space-y-2">
                             <Label for="cnic">CNIC</Label>
-                            <Input id="cnic" v-model="form.cnic" placeholder="12345-1234567-1" maxlength="15" />
+                            <CnicInput id="cnic" v-model="form.cnic" />
+                            <InputError :message="errors.cnic" />
                         </div>
                         <div class="space-y-2">
                             <Label for="phone">Phone</Label>
                             <PhoneInput id="phone" v-model="form.phone" />
+                            <InputError :message="errors.phone" />
                         </div>
                         <div class="space-y-2">
                             <Label for="photo">Photo</Label>
@@ -51,31 +54,36 @@
                         <div v-if="campuses.length" class="space-y-2">
                             <Label for="campus_id">Campus</Label>
                             <CampusSelect id="campus_id" v-model="form.campus_id" :options="campusOptions" placeholder="Select campus" />
+                            <InputError :message="errors.campus_id" />
                         </div>
                         <div class="space-y-2">
                             <Label for="employee_no">Employee No</Label>
                             <Input id="employee_no" v-model="form.employee_no" placeholder="Made for you if empty" />
+                            <InputError :message="errors.employee_no" />
                         </div>
                         <div class="space-y-2">
                             <Label for="designation_id">Position</Label>
                             <SearchableSelect id="designation_id" v-model="form.designation_id" :options="designationOptions" placeholder="Select position" clearable />
                             <div class="flex gap-2">
                                 <Input v-model="newDesignation" placeholder="Not in the list? Type a new one" @keydown.enter.prevent="addDesignation" />
-                                <Button type="button" variant="outline" :disabled="!newDesignation.trim()" @click="addDesignation">Add</Button>
+                                <Button type="button" variant="outline" @click="addDesignation">Add</Button>
                             </div>
+                            <InputError :message="errors.designation_id || errors.new_designation" />
                         </div>
                         <div class="space-y-2">
-                            <Label for="employment_type">Employment Type</Label>
+                            <Label for="employment_type">Employment Type <span class="text-destructive">*</span></Label>
                             <SearchableSelect
                                 id="employment_type"
                                 v-model="form.employment_type"
                                 :options="employmentTypeOptions"
                                 placeholder="Select employment type"
                             />
+                            <InputError :message="errors.employment_type" />
                         </div>
                         <div class="space-y-2">
                             <Label for="hire_date">Hire Date</Label>
-                            <Input id="hire_date" v-model="form.hire_date" type="date" />
+                            <Input id="hire_date" v-model="form.hire_date" type="date" :max="today" />
+                            <InputError :message="errors.hire_date" />
                         </div>
                     </div>
                 </div>
@@ -93,6 +101,7 @@
                         <div class="space-y-2">
                             <Label for="email">Email</Label>
                             <Input id="email" v-model="form.email" type="email" placeholder="Leave empty to make one from the name" />
+                            <InputError :message="errors.email" />
                         </div>
                         <div v-if="linkedRoleLabel" class="space-y-2">
                             <Label>Access level</Label>
@@ -114,21 +123,24 @@
 
                     <div class="grid grid-cols-1 gap-4 md:grid-cols-3">
                         <div class="space-y-2">
-                            <Label for="basic_salary">Basic Salary</Label>
-                            <Input id="basic_salary" v-model="form.basic_salary" type="number" min="0" placeholder="e.g. 50000" />
+                            <Label for="basic_salary">Basic Salary <span class="text-destructive">*</span></Label>
+                            <Input id="basic_salary" v-model="form.basic_salary" type="number" min="0" max="10000000" placeholder="e.g. 50000" />
+                            <InputError :message="errors.basic_salary" />
                         </div>
                         <div class="space-y-2">
                             <Label for="allowance_amount">Allowance</Label>
-                            <Input id="allowance_amount" v-model="form.allowance_amount" type="number" min="0" placeholder="e.g. 5000" />
+                            <Input id="allowance_amount" v-model="form.allowance_amount" type="number" min="0" max="10000000" placeholder="e.g. 5000" />
+                            <InputError :message="errors.allowance_amount" />
                         </div>
                         <div class="space-y-2">
-                            <Label for="payment_method">Payment Method</Label>
+                            <Label for="payment_method">Payment Method <span class="text-destructive">*</span></Label>
                             <SearchableSelect
                                 id="payment_method"
                                 v-model="form.payment_method"
                                 :options="paymentMethodOptions"
                                 placeholder="Select payment method"
                             />
+                            <InputError :message="errors.payment_method" />
                         </div>
                         <template v-if="form.payment_method === 'bank'">
                             <div class="space-y-2">
@@ -184,11 +196,12 @@
                     </div>
                 </div>
 
+                <InputError :message="errors.form" />
                 <div class="flex flex-col justify-end gap-3 pt-4 sm:flex-row">
                     <Button type="button" variant="outline" @click="router.visit(route('staff.people.index'))">
                         Cancel
                     </Button>
-                    <Button type="submit" :disabled="processing || !isValid">
+                    <Button type="submit" :disabled="processing">
                         <Icon v-if="processing" icon="loader" class="mr-2 h-4 w-4 animate-spin" />
                         <Icon v-else icon="save" class="mr-2 h-4 w-4" />
                         Save
@@ -203,6 +216,8 @@
 import CampusSelect from '@/components/ui/CampusSelect.vue';
 import PhoneInput from '@/components/ui/PhoneInput.vue';
 import Icon from '@/components/Icon.vue';
+import InputError from '@/components/InputError.vue';
+import CnicInput from '@/components/ui/CnicInput.vue';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
@@ -210,7 +225,6 @@ import SearchableSelect from '@/components/ui/searchable-select/SearchableSelect
 import AppLayout from '@/layouts/AppLayout.vue';
 import type { BreadcrumbItem } from '@/types';
 import LoginDetails from '@/components/Staff/LoginDetails.vue';
-import { useFormValidity } from '@/composables/useFormValidity';
 import { alert } from '@/utils';
 import { Head, router } from '@inertiajs/vue3';
 import axios from 'axios';
@@ -259,7 +273,10 @@ const onPhoto = (event: Event) => {
 const addDesignation = async () => {
     const name = newDesignation.value.trim();
 
+    delete errors.new_designation;
+
     if (!name) {
+        errors.new_designation = 'Name is required.';
         return;
     }
 
@@ -269,7 +286,7 @@ const addDesignation = async () => {
         form.designation_id = String(response.data.designation.id);
         newDesignation.value = '';
     } catch (error: any) {
-        alert.error(error?.response?.data?.errors?.name?.[0] || 'Could not add. Please try again.');
+        errors.new_designation = error?.response?.data?.errors?.name?.[0] || 'Could not add. Please try again.';
     }
 };
 
@@ -344,9 +361,29 @@ const onDocumentFile = (typeId: number, event: Event) => {
     documents[typeId].file = target.files?.[0] ?? null;
 };
 
-const { isValid } = useFormValidity(form, ['name']);
+const errors = reactive<Record<string, string>>({});
+const today = new Date().toISOString().slice(0, 10);
+
+const clearErrors = () => Object.keys(errors).forEach((key) => delete errors[key]);
+
+/** Catches the two required fields before a round trip, so every message shows at once. */
+const checkRequired = (): boolean => {
+    clearErrors();
+    if (!form.name.trim()) {
+        errors.name = 'Name is required.';
+    }
+    if (form.basic_salary === '' || form.basic_salary === null) {
+        errors.basic_salary = 'Basic salary is required.';
+    }
+
+    return Object.keys(errors).length === 0;
+};
 
 const submitStaff = async () => {
+    if (!checkRequired()) {
+        return;
+    }
+
     processing.value = true;
 
     try {
@@ -399,8 +436,14 @@ const submitStaff = async () => {
         createdLogin.value = response.data.login ?? null;
         created.value = { id: response.data.staff.id };
     } catch (error: any) {
-        const errors = error?.response?.data?.errors;
-        alert.error((errors && (Object.values(errors).flat()[0] as string)) || error?.response?.data?.message || 'Could not save. Please try again.');
+        const serverErrors = error?.response?.data?.errors as Record<string, string[]> | undefined;
+        if (serverErrors) {
+            Object.entries(serverErrors).forEach(([key, messages]) => {
+                errors[key] = messages[0];
+            });
+        } else {
+            errors.form = error?.response?.data?.message || 'Could not save. Please try again.';
+        }
     } finally {
         processing.value = false;
     }

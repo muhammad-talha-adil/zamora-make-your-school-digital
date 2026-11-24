@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import CnicInput from '@/components/ui/CnicInput.vue';
+import InputError from '@/components/InputError.vue';
 import PhoneInput from '@/components/ui/PhoneInput.vue';
 import { Head, router, usePage } from '@inertiajs/vue3';
 import axios from 'axios';
@@ -213,13 +215,29 @@ const giveLogin = async () => {
     }
 };
 
+const personalErrors = reactive<Record<string, string>>({});
+const employmentErrors = reactive<Record<string, string>>({});
+
+const fillErrors = (target: Record<string, string>, error: any, fallback: string) => {
+    Object.keys(target).forEach((key) => delete target[key]);
+    const serverErrors = error?.response?.data?.errors as Record<string, string[]> | undefined;
+    if (serverErrors) {
+        Object.entries(serverErrors).forEach(([key, messages]) => {
+            target[key] = messages[0];
+        });
+    } else {
+        target.form = error?.response?.data?.message || fallback;
+    }
+};
+
 const savePersonal = async () => {
+    Object.keys(personalErrors).forEach((key) => delete personalErrors[key]);
     try {
         await axios.put(route('staff.people.personal', props.staff.id), personalForm);
         alert.success('Details saved.');
         router.reload({ only: ['staff'] });
     } catch (error: any) {
-        alert.error(error?.response?.data?.message || 'Failed to save details.');
+        fillErrors(personalErrors, error, 'Failed to save details.');
     }
 };
 
@@ -268,13 +286,24 @@ const employmentForm = reactive({
 const savingEmployment = ref(false);
 
 const saveEmployment = async () => {
+    Object.keys(employmentErrors).forEach((key) => delete employmentErrors[key]);
+    if (!employmentForm.name.trim()) {
+        employmentErrors.name = 'Name is required.';
+    }
+    if (employmentForm.basic_salary === '') {
+        employmentErrors.basic_salary = 'Basic salary is required.';
+    }
+    if (Object.keys(employmentErrors).length > 0) {
+        return;
+    }
+
     savingEmployment.value = true;
     try {
         await axios.put(route('staff.members.update', props.staff.id), employmentForm);
         alert.success('Employment details saved.');
         router.reload({ only: ['staff'] });
     } catch (error: any) {
-        alert.error(error?.response?.data?.message || 'Failed to save employment details.');
+        fillErrors(employmentErrors, error, 'Failed to save employment details.');
     } finally {
         savingEmployment.value = false;
     }
@@ -711,17 +740,20 @@ const activeJobsCount = computed(() => props.jobs.length);
                         <div class="grid gap-4 md:grid-cols-2">
                             <div>
                                 <label class="mb-2 block text-sm font-medium text-muted-foreground">CNIC</label>
-                                <Input v-model="personalForm.cnic" placeholder="00000-0000000-0" maxlength="15" :disabled="!props.can.edit" />
+                                <CnicInput v-model="personalForm.cnic" :disabled="!props.can.edit" />
+                                <InputError :message="personalErrors.cnic" />
                             </div>
                             <div>
                                 <label class="mb-2 block text-sm font-medium text-muted-foreground">Phone</label>
                                 <PhoneInput v-model="personalForm.phone" :disabled="!props.can.edit" />
+                                <InputError :message="personalErrors.phone" />
                             </div>
                         </div>
                         <div class="grid gap-4 md:grid-cols-2">
                             <div>
                                 <label class="mb-2 block text-sm font-medium text-muted-foreground">Date of Birth</label>
                                 <Input v-model="personalForm.dob" type="date" :max="new Date().toISOString().slice(0, 10)" :disabled="!props.can.edit" />
+                                <InputError :message="personalErrors.dob" />
                             </div>
                             <div>
                                 <label class="mb-2 block text-sm font-medium text-muted-foreground">Gender</label>
@@ -744,12 +776,14 @@ const activeJobsCount = computed(() => props.jobs.length);
                             <div>
                                 <label class="mb-2 block text-sm font-medium text-muted-foreground">Phone</label>
                                 <PhoneInput v-model="personalForm.emergency_contact_phone" :disabled="!props.can.edit" />
+                                <InputError :message="personalErrors.emergency_contact_phone" />
                             </div>
                             <div>
                                 <label class="mb-2 block text-sm font-medium text-muted-foreground">Relationship to Staff Member</label>
                                 <Input v-model="personalForm.emergency_contact_relation" placeholder="e.g. Father, Spouse, Sibling" :disabled="!props.can.edit" />
                             </div>
                         </div>
+                        <InputError :message="personalErrors.form" />
                         <Button v-if="props.can.edit" @click="savePersonal">
                             <Icon icon="save" class="h-4 w-4" />
                             Save Details
@@ -798,16 +832,19 @@ const activeJobsCount = computed(() => props.jobs.length);
                     <div class="space-y-4">
                         <div class="grid gap-4 md:grid-cols-2">
                             <div>
-                                <label class="mb-2 block text-sm font-medium text-muted-foreground">Name</label>
+                                <label class="mb-2 block text-sm font-medium text-muted-foreground">Name <span class="text-destructive">*</span></label>
                                 <Input v-model="employmentForm.name" placeholder="Full name" />
+                                <InputError :message="employmentErrors.name" />
                             </div>
                             <div>
                                 <label class="mb-2 block text-sm font-medium text-muted-foreground">Email</label>
                                 <Input v-model="employmentForm.email" type="email" placeholder="name@school.com" />
+                                <InputError :message="employmentErrors.email" />
                             </div>
                             <div>
                                 <label class="mb-2 block text-sm font-medium text-muted-foreground">Employee No</label>
                                 <Input v-model="employmentForm.employee_no" placeholder="Auto if left empty" />
+                                <InputError :message="employmentErrors.employee_no" />
                             </div>
                             <div v-if="showCampusField">
                                 <label class="mb-2 block text-sm font-medium text-muted-foreground">Campus</label>
@@ -818,27 +855,32 @@ const activeJobsCount = computed(() => props.jobs.length);
                                 <SearchableSelect v-model="employmentForm.designation_id" :options="designationOptions" placeholder="Select designation" clearable />
                             </div>
                             <div>
-                                <label class="mb-2 block text-sm font-medium text-muted-foreground">Employment Type</label>
+                                <label class="mb-2 block text-sm font-medium text-muted-foreground">Employment Type <span class="text-destructive">*</span></label>
                                 <SearchableSelect v-model="employmentForm.employment_type" :options="employmentTypeOptions" placeholder="Select employment type" />
+                                <InputError :message="employmentErrors.employment_type" />
                             </div>
                             <div>
                                 <label class="mb-2 block text-sm font-medium text-muted-foreground">Hire Date</label>
-                                <Input v-model="employmentForm.hire_date" type="date" />
+                                <Input v-model="employmentForm.hire_date" type="date" :max="new Date().toISOString().slice(0, 10)" />
+                                <InputError :message="employmentErrors.hire_date" />
                             </div>
                         </div>
 
                         <div class="grid gap-4 md:grid-cols-3">
                             <div>
-                                <label class="mb-2 block text-sm font-medium text-muted-foreground">Basic Salary</label>
-                                <Input v-model="employmentForm.basic_salary" type="number" min="0" placeholder="e.g. 50000" />
+                                <label class="mb-2 block text-sm font-medium text-muted-foreground">Basic Salary <span class="text-destructive">*</span></label>
+                                <Input v-model="employmentForm.basic_salary" type="number" min="0" max="10000000" placeholder="e.g. 50000" />
+                                <InputError :message="employmentErrors.basic_salary" />
                             </div>
                             <div>
                                 <label class="mb-2 block text-sm font-medium text-muted-foreground">Allowance</label>
-                                <Input v-model="employmentForm.allowance_amount" type="number" min="0" placeholder="e.g. 5000" />
+                                <Input v-model="employmentForm.allowance_amount" type="number" min="0" max="10000000" placeholder="e.g. 5000" />
+                                <InputError :message="employmentErrors.allowance_amount" />
                             </div>
                             <div>
-                                <label class="mb-2 block text-sm font-medium text-muted-foreground">Payment Method</label>
+                                <label class="mb-2 block text-sm font-medium text-muted-foreground">Payment Method <span class="text-destructive">*</span></label>
                                 <SearchableSelect v-model="employmentForm.payment_method" :options="paymentMethodOptions" placeholder="Select payment method" />
+                                <InputError :message="employmentErrors.payment_method" />
                             </div>
                             <template v-if="employmentForm.payment_method === 'bank'">
                                 <div>
@@ -857,6 +899,7 @@ const activeJobsCount = computed(() => props.jobs.length);
                             Staff member is active
                         </label>
 
+                        <InputError :message="employmentErrors.form" />
                         <Button :disabled="savingEmployment" @click="saveEmployment">
                             <Icon icon="save" class="h-4 w-4" />
                             Save Employment Details

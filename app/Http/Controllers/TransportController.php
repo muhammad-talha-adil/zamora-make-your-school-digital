@@ -180,6 +180,7 @@ class TransportController extends Controller
             'stop_ids.*' => 'exists:transport_stops,id',
             'notes' => 'nullable|string',
         ]);
+        $this->assertRouteNameFree($data['name'], $data['campus_id'] ?? null);
 
         $route = DB::transaction(function () use ($data) {
             $route = TransportRoute::create([
@@ -225,6 +226,7 @@ class TransportController extends Controller
             'notes' => 'nullable|string',
             'is_active' => 'boolean',
         ]);
+        $this->assertRouteNameFree($data['name'], $data['campus_id'] ?? null, $route->id);
 
         DB::transaction(function () use ($route, $data) {
             $route->update([
@@ -250,6 +252,21 @@ class TransportController extends Controller
             'message' => 'Route updated successfully.',
             'route' => $route->fresh(['campus', 'vehicle', 'stops']),
         ]);
+    }
+
+    private function assertRouteNameFree(string $name, ?int $campusId, ?int $ignoreId = null): void
+    {
+        $taken = TransportRoute::query()
+            ->where('campus_id', $campusId)
+            ->whereRaw('LOWER(name) = ?', [mb_strtolower(trim($name))])
+            ->when($ignoreId, fn ($query) => $query->where('id', '!=', $ignoreId))
+            ->exists();
+
+        if ($taken) {
+            throw ValidationException::withMessages([
+                'name' => 'A route named "'.trim($name).'" already exists on this campus. Please use a different name.',
+            ]);
+        }
     }
 
     public function storeAssignment(Request $request)
@@ -396,6 +413,7 @@ class TransportController extends Controller
         $totalAmount = 0;
 
         $mergedCount = 0;
+        $mergedAmount = 0.0;
         $blockedCount = 0;
 
         foreach ($assignments as $assignment) {
@@ -426,23 +444,15 @@ class TransportController extends Controller
 
             if ($voucher && $this->studentBillingService->attachTransportChargeToVoucher($charge, $voucher)) {
                 $mergedCount++;
+                $mergedAmount += (float) $charge->net_amount;
             }
-        }
-
-        $notes = [];
-        if ($mergedCount > 0) {
-            $notes[] = "{$mergedCount} added to the month's existing voucher";
-        }
-        if ($blockedCount > 0) {
-            $notes[] = "{$blockedCount} skipped because that month's voucher is already paid, cancelled or carried forward";
         }
 
         return response()->json([
             'success' => true,
-            'message' => ($generated > 0
-                ? "Generated {$generated} transport dues successfully."
-                : 'No new transport dues were generated for the selected period.')
-                .($notes === [] ? '' : ' ('.implode('; ', $notes).'.)'),
+            'message' => 'Added Rs '.number_format($mergedAmount).' transport to '.$mergedCount.' existing '
+                .($mergedCount === 1 ? 'voucher' : 'vouchers').', created '.$generated.' new '
+                .($generated === 1 ? 'due' : 'dues').', skipped '.$blockedCount.'.',
             'merged_count' => $mergedCount,
             'blocked_count' => $blockedCount,
             'generated_count' => $generated,

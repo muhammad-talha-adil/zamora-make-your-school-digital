@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Staff;
 
 use App\Http\Controllers\Concerns\ResolvesOwnStaffProfile;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Staff\UpdateStaffPersonalRequest;
 use App\Models\Campus;
 use App\Models\Gender;
 use App\Models\Permission;
@@ -213,21 +214,9 @@ class StaffProfileController extends Controller
      * None of this had anywhere to live: neither `staff_profiles` nor `users`
      * carried a CNIC, a phone number or an emergency contact.
      */
-    public function updatePersonal(Request $request, StaffProfile $staffProfile)
+    public function updatePersonal(UpdateStaffPersonalRequest $request, StaffProfile $staffProfile)
     {
-        Gate::authorize('update', $staffProfile);
-
-        $validated = $request->validate([
-            'cnic' => ['nullable', 'string', 'regex:/^[0-9]{5}-[0-9]{7}-[0-9]$/'],
-            'phone' => ['nullable', 'string', 'max:20', 'regex:/^[0-9+\-\s]+$/'],
-            'dob' => ['nullable', 'date', 'before:today'],
-            'gender_id' => ['nullable', 'integer', 'exists:genders,id'],
-            'blood_group' => ['nullable', 'string', 'max:5'],
-            'address' => ['nullable', 'string', 'max:500'],
-            'emergency_contact_name' => ['nullable', 'string', 'max:150'],
-            'emergency_contact_phone' => ['nullable', 'string', 'max:20'],
-            'emergency_contact_relation' => ['nullable', 'string', 'max:50'],
-        ]);
+        $validated = $request->validated();
 
         $staffProfile->update($validated);
 

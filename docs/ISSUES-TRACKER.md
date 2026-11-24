@@ -67,8 +67,8 @@ Every page under `resources/js/pages/` that renders a data table or paginated li
 
 | Vue file | Route | Model / table |
 |---|---|---|
-| `resources/js/pages/Staff/People/Index.vue` | `staff.people.index` → `/staff/people` | `StaffProfile` (staff module tables from `build_staff_module_foundation`) |
-| `resources/js/pages/Staff/People/Show.vue` | `staff.people.show` → `/staff/people/{staffProfile}` | `StaffProfile` + related tabs |
+| `resources/js/pages/Staff/People/Index.vue` | `staff.people.index` → `/staff` | `StaffProfile` (staff module tables from `build_staff_module_foundation`) |
+| `resources/js/pages/Staff/People/Show.vue` | `staff.people.show` → `/staff/{staffProfile}` | `StaffProfile` + related tabs |
 | `resources/js/pages/Staff/Teaching/Index.vue` | `staff.teaching.index` / `.page` → `/staff/teaching` | `TeacherClassAssignment` (`teacher_class_assignments`) |
 | `resources/js/pages/Staff/Attendance/Index.vue` | `staff.attendance.page` → `/staff/attendance` | staff attendance tables |
 | `resources/js/pages/Staff/Payroll/Index.vue` | `staff.payroll.page` → `/staff/payroll` | payroll tables (staff module) |

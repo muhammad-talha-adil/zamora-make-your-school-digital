@@ -100,6 +100,10 @@ $app = Application::configure(basePath: $basePath)
             return Inertia::render($pages[$status], [
                 'status' => $status,
                 'message' => $message !== '' ? $message : null,
+                'debug' => config('app.debug') && $status >= 500 ? [
+                    'message' => $exception->getMessage(),
+                    'file' => $exception->getFile().':'.$exception->getLine(),
+                ] : null,
             ])->toResponse($request)->setStatusCode($status);
         });
     })->create();

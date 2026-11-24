@@ -1,5 +1,6 @@
 <script setup lang="ts">
 import { Head, router } from '@inertiajs/vue3';
+import { computed } from 'vue';
 import { route } from 'ziggy-js';
 import AppLayout from '@/layouts/AppLayout.vue';
 import type { BreadcrumbItem } from '@/types';
@@ -135,6 +136,12 @@ const sourceModuleLabel = (item: FeeVoucher['items'][number]) => {
     }
     return source.charAt(0).toUpperCase() + source.slice(1);
 };
+
+const transportAddedAmount = computed(() =>
+    props.voucher.items
+        .filter((item) => (item.source_module ?? item.student_account_charge?.source_module)?.toLowerCase() === 'transport')
+        .reduce((sum, item) => sum + Number(item.net_amount), 0),
+);
 
 const handleCancel = () => {
     if (confirm('Are you sure you want to cancel this voucher?')) {
@@ -280,6 +287,13 @@ const handleCancel = () => {
                             </table>
                         </div>
                     </div>
+
+                    <p
+                        v-if="transportAddedAmount > 0 && voucher.payments?.length"
+                        class="rounded-lg border border-info/30 bg-info/10 p-3 text-sm text-foreground"
+                    >
+                        {{ formatCurrency(transportAddedAmount) }} of transport was added to this voucher, so its total includes it. Payments already received are kept.
+                    </p>
 
                     <div v-if="voucher.concessions?.length" class="bg-card rounded-lg border border-border p-4 md:p-6">
                         <h2 class="text-lg font-semibold mb-2">Concession</h2>

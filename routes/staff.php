@@ -34,9 +34,13 @@ $middleware = ['web', 'auth'];
 Route::prefix('staff')->name('staff.')->middleware([...$middleware, 'campus.exists'])->group(function () {
 
     // ---------------------------------------------------------------- today
-    Route::get('/', [StaffController::class, 'index'])
+    Route::get('/dashboard', [StaffController::class, 'index'])
         ->name('index')
         ->middleware('permission:staff.view');
+
+    // Old `/staff/people...` bookmarks keep working.
+    Route::get('/people/{path?}', fn (?string $path = null) => redirect('/staff'.($path ? '/'.$path : ''), 301))
+        ->where('path', '.*');
 
     // ------------------------------------------- departments & designations
     Route::post('/departments', [StaffController::class, 'storeDepartment'])
@@ -51,6 +55,9 @@ Route::prefix('staff')->name('staff.')->middleware([...$middleware, 'campus.exis
         ->middleware('permission:staff.department.manage');
     Route::put('/designations/{designation}', [StaffController::class, 'updateDesignation'])
         ->name('designations.update')
+        ->middleware('permission:staff.department.manage');
+    Route::delete('/designations/{designation}', [StaffController::class, 'destroyDesignation'])
+        ->name('designations.destroy')
         ->middleware('permission:staff.department.manage');
 
     // The full lookup panel — departments, designations and document types.
@@ -76,12 +83,11 @@ Route::prefix('staff')->name('staff.')->middleware([...$middleware, 'campus.exis
     Route::put('/members/{staffProfile}', [StaffController::class, 'updateStaff'])
         ->name('members.update')
         ->middleware('permission:staff.manage');
-    // Activate/deactivate is a status-changing, sensitive action — the acting
-    // user's own password is re-verified server-side (see
-    // RequiresPasswordConfirmation) before it takes effect.
+    // Activate/deactivate: the screen asks a plain yes/no; `staff.manage`
+    // (and the campus check in the policy) is the gate.
     Route::patch('/members/{staffProfile}/toggle', [StaffController::class, 'toggleStaff'])
         ->name('members.toggle')
-        ->middleware(['permission:staff.manage', 'password.confirm.server']);
+        ->middleware('permission:staff.manage');
 
     // ------------------------------------------------------------- payroll
     // Generating and releasing are two abilities: the person who works the
@@ -126,55 +132,65 @@ Route::prefix('staff')->name('staff.')->middleware([...$middleware, 'campus.exis
         Route::get('/me/dashboard', [StaffSelfServiceController::class, 'dashboard'])->name('me.dashboard')
             ->middleware('permission:staff.view.own');
 
-        Route::get('/people', 'index')->name('people.index')
+        Route::get('/', 'index')->name('people.index')
             ->middleware('permission:staff.view');
         Route::get('/create', 'create')->name('people.create')
             ->middleware('permission:staff.manage');
-        Route::get('/people/list', 'list')->name('people.list')
+        Route::get('/list', 'list')->name('people.list')
             ->middleware('permission:staff.view');
         // ID cards — same shape as the student list's `/id-cards`.
-        Route::get('/people/id-cards', 'idCards')->name('people.id-cards')
+        Route::get('/id-cards', 'idCards')->name('people.id-cards')
             ->middleware('permission:staff.view');
-        Route::get('/people/{staffProfile}', 'show')->name('people.show')
-            ->middleware('permission:staff.view|staff.view.own');
+        Route::get('/{staffProfile}', 'show')->name('people.show')
+            ->middleware('permission:staff.view|staff.view.own')
+            ->whereNumber('staffProfile');
 
         // Who this person is.
-        Route::put('/people/{staffProfile}/personal', 'updatePersonal')->name('people.personal')
-            ->middleware('permission:staff.manage');
+        Route::put('/{staffProfile}/personal', 'updatePersonal')->name('people.personal')
+            ->middleware('permission:staff.manage')
+            ->whereNumber('staffProfile');
 
         // One person, many jobs — the blocking fix from the plan.
-        Route::post('/people/{staffProfile}/jobs', 'addJob')->name('people.jobs.add')
-            ->middleware('permission:staff.manage');
+        Route::post('/{staffProfile}/jobs', 'addJob')->name('people.jobs.add')
+            ->middleware('permission:staff.manage')
+            ->whereNumber('staffProfile');
         Route::patch('/jobs/{assignment}/primary', 'makeJobPrimary')->name('jobs.primary')
             ->middleware('permission:staff.manage');
         Route::patch('/jobs/{assignment}/end', 'endJob')->name('jobs.end')
             ->middleware('permission:staff.manage');
 
         // Joining, leaving, coming back.
-        Route::post('/people/{staffProfile}/leave', 'leave')->name('people.leave')
-            ->middleware('permission:staff.manage');
-        Route::post('/people/{staffProfile}/rejoin', 'rejoin')->name('people.rejoin')
-            ->middleware('permission:staff.manage');
+        Route::post('/{staffProfile}/leave', 'leave')->name('people.leave')
+            ->middleware('permission:staff.manage')
+            ->whereNumber('staffProfile');
+        Route::post('/{staffProfile}/rejoin', 'rejoin')->name('people.rejoin')
+            ->middleware('permission:staff.manage')
+            ->whereNumber('staffProfile');
 
         // The personal file.
-        Route::post('/people/{staffProfile}/qualifications', 'addQualification')
-            ->name('people.qualifications.add')->middleware('permission:staff.manage');
+        Route::post('/{staffProfile}/qualifications', 'addQualification')
+            ->name('people.qualifications.add')->middleware('permission:staff.manage')
+            ->whereNumber('staffProfile');
         Route::delete('/qualifications/{qualification}', 'removeQualification')
             ->name('qualifications.remove')->middleware('permission:staff.manage');
-        Route::post('/people/{staffProfile}/documents', 'addDocument')
-            ->name('people.documents.add')->middleware('permission:staff.manage');
+        Route::post('/{staffProfile}/documents', 'addDocument')
+            ->name('people.documents.add')->middleware('permission:staff.manage')
+            ->whereNumber('staffProfile');
         Route::delete('/documents/{document}', 'removeDocument')
             ->name('documents.remove')->middleware('permission:staff.manage');
 
         // Per-staff-member direct permission grants — role-independent,
         // campus-scoped the same way every other `update` action on a
         // StaffProfile is (StaffProfilePolicy::update).
-        Route::get('/people/{staffProfile}/permissions', 'permissions')
-            ->name('people.permissions')->middleware('permission:staff.manage');
-        Route::post('/people/{staffProfile}/login', 'issueLogin')
-            ->name('people.login')->middleware('permission:staff.manage');
-        Route::put('/people/{staffProfile}/permissions', 'updatePermissions')
-            ->name('people.permissions.update')->middleware('permission:staff.manage');
+        Route::get('/{staffProfile}/permissions', 'permissions')
+            ->name('people.permissions')->middleware('permission:staff.manage')
+            ->whereNumber('staffProfile');
+        Route::post('/{staffProfile}/login', 'issueLogin')
+            ->name('people.login')->middleware('permission:staff.manage')
+            ->whereNumber('staffProfile');
+        Route::put('/{staffProfile}/permissions', 'updatePermissions')
+            ->name('people.permissions.update')->middleware('permission:staff.manage')
+            ->whereNumber('staffProfile');
     });
 
     // ================================================================
@@ -199,15 +215,18 @@ Route::prefix('staff')->name('staff.')->middleware([...$middleware, 'campus.exis
         Route::get('/teaching/exams', 'examPapers')->name('teaching.exams')
             ->middleware('permission:staff.view|staff.view.own');
 
-        Route::post('/people/{staffProfile}/classes', 'store')->name('teaching.assign')
-            ->middleware('permission:staff.manage');
+        Route::post('/{staffProfile}/classes', 'store')->name('teaching.assign')
+            ->middleware('permission:staff.manage')
+            ->whereNumber('staffProfile');
         Route::delete('/classes/{assignment}', 'destroy')->name('teaching.unassign')
             ->middleware('permission:staff.manage');
 
-        Route::post('/people/{staffProfile}/subjects', 'allowSubject')->name('teaching.subjects.add')
-            ->middleware('permission:staff.manage');
-        Route::delete('/people/{staffProfile}/subjects/{subjectId}', 'disallowSubject')
-            ->name('teaching.subjects.remove')->middleware('permission:staff.manage');
+        Route::post('/{staffProfile}/subjects', 'allowSubject')->name('teaching.subjects.add')
+            ->middleware('permission:staff.manage')
+            ->whereNumber('staffProfile');
+        Route::delete('/{staffProfile}/subjects/{subjectId}', 'disallowSubject')
+            ->name('teaching.subjects.remove')->middleware('permission:staff.manage')
+            ->whereNumber('staffProfile');
     });
 
     // ================================================================

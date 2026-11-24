@@ -624,10 +624,14 @@ const submitStop = async () => {
     }
 };
 
+const routeNameError = ref('');
+
 const submitRoute = async () => {
     if (submitting.value) {
         return;
     }
+
+    routeNameError.value = '';
 
     submitting.value = true;
 
@@ -651,7 +655,12 @@ const submitRoute = async () => {
         resetRouteForm();
         reloadPage(['routes', 'summary']);
     } catch (error: any) {
-        alert.error(error?.response?.data?.message || 'Failed to save route.');
+        const nameErrors = error?.response?.data?.errors?.name;
+        if (nameErrors?.length) {
+            routeNameError.value = nameErrors[0];
+        } else {
+            alert.error(error?.response?.data?.message || 'Failed to save route.');
+        }
     } finally {
         submitting.value = false;
     }
@@ -915,6 +924,7 @@ const generateDues = async () => {
                         <div>
                             <label class="mb-2 block text-sm font-medium text-muted-foreground">Route Name</label>
                             <Input v-model="routeForm.name" placeholder="North Route" />
+                            <p v-if="routeNameError" class="mt-1 text-sm text-destructive">{{ routeNameError }}</p>
                         </div>
                         <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-1">
                             <div>

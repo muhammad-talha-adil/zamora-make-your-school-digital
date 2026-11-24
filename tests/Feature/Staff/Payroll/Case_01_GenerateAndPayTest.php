@@ -69,10 +69,34 @@ it('regenerating a run for the same month replaces the old items', function () {
     $this->actingAs($actor)->postJson(route('staff.payroll.generate'), [
         'payroll_month_id' => $this->april->id,
         'payroll_year' => 2026,
+    ])->assertStatus(409)->assertJsonPath('requires_confirmation', true);
+
+    $this->actingAs($actor)->postJson(route('staff.payroll.generate'), [
+        'payroll_month_id' => $this->april->id,
+        'payroll_year' => 2026,
+        'confirm_replace' => true,
     ])->assertSuccessful();
 
     expect(PayrollRun::count())->toBe(1);
     expect(PayrollRun::first()->items()->count())->toBe(2);
+});
+
+it('regenerating keeps items that are already paid and counts them in the totals', function () {
+    $this->world->person('Zainab Ali', salary: 50000);
+    $actor = $this->world->school->actor;
+    $payload = ['payroll_month_id' => $this->april->id, 'payroll_year' => 2026];
+
+    $this->actingAs($actor)->postJson(route('staff.payroll.generate'), $payload)->assertSuccessful();
+    $paid = PayrollRunItem::firstOrFail();
+    $this->actingAs($actor)->postJson(route('staff.payroll.items.pay', $paid), ['payment_method' => 'bank'])->assertSuccessful();
+
+    $this->world->person('Bilal Khan', salary: 40000);
+
+    $this->actingAs($actor)->postJson(route('staff.payroll.generate'), $payload + ['confirm_replace' => true])->assertSuccessful();
+
+    expect(PayrollRunItem::count())->toBe(2);
+    expect($paid->fresh())->not->toBeNull()->and($paid->fresh()->status)->toBe('paid');
+    expect((float) PayrollRun::first()->total_net)->toBe(90000.0);
 });
 
 it('marks an item paid and closes the run once every item is paid', function () {

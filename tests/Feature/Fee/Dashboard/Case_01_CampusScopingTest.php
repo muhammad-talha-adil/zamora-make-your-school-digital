@@ -120,3 +120,42 @@ it('scopes payments to the viewer\'s campus too', function () {
     $response->assertOk();
     expect((float) $response->viewData('page')['props']['stats']['totalCollected'])->toBe(1000.0);
 });
+
+it('renders with recent payments and overdue vouchers under either campus', function (string $campusKey) {
+    $campusId = $this->world->school->{$campusKey}->id;
+    $voucher = raiseVoucherIn($this->world, $campusId, 'V-DASH-OD-'.$campusKey);
+    $voucher->update(['status' => VoucherStatus::OVERDUE]);
+    FeePayment::create([
+        'receipt_no' => 'R-DASH-'.$campusKey,
+        'student_id' => $this->world->student->id,
+        'student_enrollment_record_id' => $this->world->enrollment->id,
+        'campus_id' => $campusId,
+        'received_amount' => 500,
+        'payment_date' => now()->toDateString(),
+        'payment_method' => 'cash',
+        'status' => 'posted',
+        'received_by' => $this->world->school->actor->id,
+    ]);
+
+    $viewer = User::create([
+        'name' => 'Dash Viewer',
+        'username' => 'dash.viewer.'.uniqid(),
+        'email' => 'dash.viewer.'.uniqid().'@school.test',
+        'password' => bcrypt('password'),
+        'is_active' => true,
+    ]);
+    $viewer->givePermissionTo('fee.view');
+    app(PermissionRegistrar::class)->forgetCachedPermissions();
+    StaffProfile::create([
+        'user_id' => $viewer->id,
+        'employee_no' => 'EMP-DASH-'.$campusKey,
+        'campus_id' => $campusId,
+        'employment_type' => 'permanent',
+        'hire_date' => '2026-04-01',
+        'is_active' => true,
+    ]);
+
+    $response = $this->actingAs($viewer)->get(route('fee.dashboard'));
+
+    $response->assertOk();
+})->with(['campus' => ['campus'], 'other campus' => ['otherCampus']]);

@@ -36,7 +36,7 @@ Non-teaching staff get a smaller `staffBasics` set (`RolesSeeder.php:113-117`):
 `portal.staff.access, staff.view.own`.
 
 ### Own profile - works, but needs a known ID
-- `GET /staff/people/{staffProfile}` (`StaffProfileController::show`) is gated
+- `GET /staff/{staffProfile}` (`StaffProfileController::show`) is gated
   `permission:staff.view|staff.view.own` (`routes/staff.php:87`). A teacher with only
   `staff.view.own` can open **their own** profile if they know their `staffProfile` ID - there is
   no `/staff/me` alias that resolves it automatically from the logged-in user.
@@ -125,7 +125,7 @@ Non-teaching staff get a smaller `staffBasics` set (`RolesSeeder.php:113-117`):
 
 - **Real, working routes already accepting `staff.view.own`** (need only a menu link + a
   convenience "me" wrapper, not new backend logic):
-  - `GET /staff/people/{staffProfile}` - own profile (`routes/staff.php:87`)
+  - `GET /staff/{staffProfile}` - own profile (`routes/staff.php:87`)
   - `GET /staff/attendance/people/{staffProfile}` + `/summary` - own attendance
     (`routes/staff.php:157-159`)
   - `GET /staff/salary/people/{staffProfile}` - own salary (`routes/staff.php:177`)

@@ -142,6 +142,10 @@ const closeDesignationModal = () => {
 
 const submitDesignation = async () => {
     designationErrors.value = {};
+    if (!designationForm.value.name.trim()) {
+        designationErrors.value = { name: 'Name is required.' };
+        return;
+    }
     const payload = { ...designationForm.value, role: designationForm.value.role || null };
 
     try {
@@ -160,6 +164,22 @@ const submitDesignation = async () => {
         } else {
             alert.error(error?.response?.data?.message || 'Failed to save designation.');
         }
+    }
+};
+
+const deleteDesignation = async (designation: Lookup) => {
+    const result = await alert.confirm(`Delete "${designation.name}"?`, 'Delete Designation', 'Yes, delete it!');
+
+    if (!result.isConfirmed) {
+        return;
+    }
+
+    try {
+        await axios.delete(route('staff.designations.destroy', designation.id));
+        alert.success('Designation deleted.');
+        reload(['designations']);
+    } catch (error: any) {
+        alert.error(error?.response?.data?.message || 'Could not delete this designation.');
     }
 };
 
@@ -328,6 +348,7 @@ const deactivateDocumentType = async (type: Lookup) => {
                         <div class="flex justify-end pt-2">
                             <RowActions>
                                 <RowAction kind="edit" @click="openEditDesignation(designation)" />
+                                <RowAction kind="delete" @click="deleteDesignation(designation)" />
                             </RowActions>
                         </div>
                     </div>
@@ -364,6 +385,7 @@ const deactivateDocumentType = async (type: Lookup) => {
                                     <td class="px-4 py-3 text-right">
                                         <RowActions>
                                             <RowAction kind="edit" @click="openEditDesignation(designation)" />
+                                            <RowAction kind="delete" @click="deleteDesignation(designation)" />
                                         </RowActions>
                                     </td>
                                 </tr>
@@ -516,7 +538,7 @@ const deactivateDocumentType = async (type: Lookup) => {
                     </div>
                     <DialogFooter>
                         <Button type="button" variant="outline" @click="closeDesignationModal">Cancel</Button>
-                        <Button type="submit" :disabled="!designationForm.name.trim()">{{ editingDesignation ? 'Save Changes' : 'Add' }}</Button>
+                        <Button type="submit">{{ editingDesignation ? 'Save Changes' : 'Add' }}</Button>
                     </DialogFooter>
                 </form>
             </DialogContent>

@@ -1015,7 +1015,7 @@ Caught by the project owner, not by any review pass: the admin Staff sidebar
 had exactly one item, "Dashboard" — Staff Directory, Teaching Assignments, and
 Payroll were all fully built (across the module's earlier 8-phase rebuild) but
 never linked in `database/seeders/MenuSeeder.php`. Linked all three
-(`/staff/people`, `/staff/teaching`, `/staff/payroll`); "Add Staff" was
+(`/staff`, `/staff/teaching`, `/staff/payroll`); "Add Staff" was
 already a dialog on the Directory page, nothing new needed there.
 
 Two further gaps, confirmed with the project owner before building:

@@ -89,9 +89,9 @@ class StaffProfile extends Model
     ];
 
     protected $casts = [
-        'dob' => 'date',
-        'hire_date' => 'date',
-        'confirmation_date' => 'date',
+        'dob' => 'date:Y-m-d',
+        'hire_date' => 'date:Y-m-d',
+        'confirmation_date' => 'date:Y-m-d',
         'basic_salary' => 'decimal:2',
         'allowance_amount' => 'decimal:2',
         'deduction_amount' => 'decimal:2',
@@ -321,7 +321,7 @@ class StaffProfile extends Model
      */
     public function scopeVisibleTo($query, ?User $user)
     {
-        if (! $user || $user->isSuperAdmin()) {
+        if (! $user) {
             return $query;
         }
 

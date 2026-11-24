@@ -404,7 +404,7 @@ class MenuSeeder extends Seeder
             'order' => 3,
             'parent_id' => $staff->id,
             'is_active' => true,
-            'url' => '/staff/people',
+            'url' => '/staff',
             // staff.view: campus_admin only among non-admin roles.
             'role' => 'developer,owner,campus_admin',
         ]);

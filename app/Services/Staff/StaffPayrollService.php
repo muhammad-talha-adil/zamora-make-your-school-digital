@@ -70,11 +70,25 @@ class StaffPayrollService
             // Force, not soft: `payroll_run_items` carries a unique
             // (payroll_run_id, staff_profile_id) index, so a soft-deleted row
             // still blocks the fresh one a regeneration writes in its place.
-            $run->items()->forceDelete();
+            //
+            // Items already paid (fully or in part) are never touched: they
+            // stay as they were, count in the totals, and their staff are
+            // skipped below.
+            $run->items()
+                ->where(fn ($q) => $q->where('amount_paid', '<=', 0)->whereNotIn('status', ['paid', 'partial']))
+                ->forceDelete();
 
             $totals = ['gross' => 0.0, 'deductions' => 0.0, 'net' => 0.0];
 
-            foreach ($staffProfiles as $profile) {
+            $kept = $run->items()->get();
+            foreach ($kept as $keptItem) {
+                $totals['gross'] += (float) $keptItem->gross_salary + (float) $keptItem->allowance_amount;
+                $totals['deductions'] += (float) $keptItem->deduction_amount;
+                $totals['net'] += (float) $keptItem->net_salary;
+            }
+            $keptStaffIds = $kept->pluck('staff_profile_id')->all();
+
+            foreach ($staffProfiles->reject(fn (StaffProfile $p) => in_array($p->id, $keptStaffIds, true)) as $profile) {
                 $figures = $this->figuresFor($profile, $from, $to);
 
                 $item = $run->items()->create([

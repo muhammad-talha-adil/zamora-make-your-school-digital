@@ -94,6 +94,8 @@ const filters = reactive({
 const staff = ref<Paginated<StaffRow>>({ data: [], current_page: 1, last_page: 1, total: 0 });
 const loading = ref(false);
 
+const hasFilters = computed(() => Boolean(filters.search || filters.campus_id || filters.designation_id || filters.status !== 'active'));
+const designationOptions = computed(() => props.designations.map((designation) => ({ value: String(designation.id), label: designation.name })));
 const campusOptions = computed(() => props.campuses.map((campus) => ({ value: String(campus.id), label: campus.name })));
 
 const loadStaff = async (page = 1) => {
@@ -119,13 +121,10 @@ onMounted(() => loadStaff());
 
 
 const toggleStaff = async (member: StaffRow) => {
-    // Activate/deactivate is a sensitive action: the confirm dialog also
-    // collects the acting user's password, which `RequiresPasswordConfirmation`
-    // re-verifies server-side before the toggle is applied.
-    const result = await alert.confirmWithPassword(
+    const result = await alert.confirm(
         `Do you want to ${member.is_active ? 'deactivate' : 'activate'} ${member.user?.name ?? 'this staff member'}?`,
         'Update Staff Status',
-        member.is_active ? 'Deactivate' : 'Activate',
+        member.is_active ? 'Yes, deactivate' : 'Yes, activate',
     );
 
     if (!result.isConfirmed) {
@@ -133,11 +132,11 @@ const toggleStaff = async (member: StaffRow) => {
     }
 
     try {
-        await axios.patch(route('staff.members.toggle', member.id), { password: result.password });
+        await axios.patch(route('staff.members.toggle', member.id));
         alert.success('Staff status updated successfully.');
         loadStaff(staff.value.current_page);
     } catch (error: any) {
-        alert.error(error?.response?.data?.errors?.password?.[0] || error?.response?.data?.message || 'Failed to update staff status.');
+        alert.error(error?.response?.data?.message || 'Failed to update staff status.');
     }
 };
 </script>
@@ -166,7 +165,7 @@ const toggleStaff = async (member: StaffRow) => {
             </div>
 
             <div class="rounded-2xl border border-border bg-card p-4 shadow-sm">
-                <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-4">
+                <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
                     <div class="xl:col-span-2">
                         <label class="mb-2 block text-sm font-medium text-muted-foreground">Search</label>
                         <Input v-model="filters.search" placeholder="Name, employee no, CNIC, phone..." />
@@ -174,6 +173,10 @@ const toggleStaff = async (member: StaffRow) => {
                     <div>
                         <label class="mb-2 block text-sm font-medium text-muted-foreground">Campus</label>
                         <SearchableSelect v-model="filters.campus_id" :options="campusOptions" placeholder="All Campuses" clearable />
+                    </div>
+                    <div>
+                        <label class="mb-2 block text-sm font-medium text-muted-foreground">Position</label>
+                        <SearchableSelect v-model="filters.designation_id" :options="designationOptions" placeholder="All Positions" clearable />
                     </div>
                     <div>
                         <label class="mb-2 block text-sm font-medium text-muted-foreground">Status</label>
@@ -223,7 +226,7 @@ const toggleStaff = async (member: StaffRow) => {
                                 </td>
                             </tr>
                             <tr v-if="!loading && staff.data.length === 0">
-                                <td colspan="7" class="px-4 py-10 text-center text-sm text-muted-foreground">No staff members found.</td>
+                                <td colspan="7" class="px-4 py-10 text-center text-sm text-muted-foreground">{{ hasFilters ? 'No staff match these filters. Clear a filter to see more.' : 'No staff members yet. Use Add Staff to add the first one.' }}</td>
                             </tr>
                         </tbody>
                     </table>

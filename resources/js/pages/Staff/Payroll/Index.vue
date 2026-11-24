@@ -16,6 +16,7 @@ import {
     DialogHeader,
     DialogTitle,
 } from '@/components/ui/dialog';
+import CampusSelect from '@/components/ui/CampusSelect.vue';
 import SearchableSelect from '@/components/ui/searchable-select/SearchableSelect.vue';
 import { alert } from '@/utils';
 import GiveAdvanceDialog from '@/components/Staff/GiveAdvanceDialog.vue';
@@ -52,6 +53,7 @@ interface PayrollRun {
     id: number;
     title: string;
     campus_id?: number | null;
+    payroll_month_id?: number;
     payroll_year: number;
     status: string;
     total_gross: number | string;
@@ -121,8 +123,29 @@ const filteredRuns = computed(() => {
 });
 
 const generatePayroll = async () => {
+    const campusId = payrollForm.campus_id || null;
+    const existing = props.payrollRuns.find(
+        (run) =>
+            String(run.campus_id ?? '') === String(campusId ?? '') &&
+            String(run.payroll_month_id) === String(payrollForm.payroll_month_id) &&
+            String(run.payroll_year) === String(payrollForm.payroll_year),
+    );
+    const monthName = props.months.find((m) => String(m.id) === String(payrollForm.payroll_month_id))?.name ?? '';
+
+    if (existing) {
+        const result = await alert.confirm(
+            `This will replace the existing run for ${monthName} ${payrollForm.payroll_year}. Anything already paid is kept.`,
+            'Replace Payroll Run',
+            'Yes, replace it',
+        );
+
+        if (!result.isConfirmed) {
+            return;
+        }
+    }
+
     try {
-        await axios.post(route('staff.payroll.generate'), { ...payrollForm, campus_id: payrollForm.campus_id || null });
+        await axios.post(route('staff.payroll.generate'), { ...payrollForm, campus_id: campusId, confirm_replace: Boolean(existing) });
         alert.success('Payroll generated successfully.');
         router.reload({ only: ['payrollRuns'] });
     } catch (error: any) {
@@ -199,7 +222,7 @@ const onAdvanceGiven = () => {
                 <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-5">
                     <div>
                         <label class="mb-2 block text-sm font-medium text-muted-foreground">Campus</label>
-                        <SearchableSelect v-model="payrollForm.campus_id" :options="campusOptions" placeholder="All Campuses" clearable />
+                        <CampusSelect v-model="payrollForm.campus_id" :options="campusOptions" placeholder="All Campuses" clearable />
                     </div>
                     <div>
                         <label class="mb-2 block text-sm font-medium text-muted-foreground">Month</label>
