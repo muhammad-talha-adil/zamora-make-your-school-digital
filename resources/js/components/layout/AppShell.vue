@@ -285,10 +285,9 @@
         </div>
 
         <slot />
-      </main>
 
-      <!-- Footer -->
-      <FooterBar />
+        <FooterBar class="-mx-4 -mb-4 mt-6 sm:-mx-6 sm:-mb-6" />
+      </main>
     </div>
   </div>
 </template>
