@@ -65,6 +65,7 @@ const toggleLine = (voucherId: number) => {
 
 const total = computed(() => lines.filter((line) => line.enabled).reduce((sum, line) => sum + Number(line.amount || 0), 0));
 const isSubmitting = ref(false);
+const futureDateMessage = computed(() => (form.payment_date > today ? 'Payment date cannot be in the future.' : ''));
 
 const page = usePage();
 const paymentDateError = computed(() => {
@@ -98,6 +99,10 @@ const submit = () => {
         return;
     }
 
+    if (futureDateMessage.value) {
+        return;
+    }
+
     isSubmitting.value = true;
 
     router.post(route('fee.payments.store-family'), {
@@ -125,8 +130,8 @@ const submit = () => {
             <div class="grid gap-4 rounded-lg border border-border bg-card p-4 md:grid-cols-2">
                 <div>
                     <Label for="family_date">Payment date</Label>
-                    <Input id="family_date" v-model="form.payment_date" type="date" :max="today" required />
-                    <p v-if="paymentDateError" class="text-sm text-destructive">{{ paymentDateError }}</p>
+                    <Input id="family_date" v-model="form.payment_date" type="date" required />
+                    <p v-if="futureDateMessage || paymentDateError" class="text-sm text-destructive">{{ futureDateMessage || paymentDateError }}</p>
                 </div>
                 <div>
                     <Label for="family_method">Method</Label>

@@ -7,6 +7,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Fee\FeePayment;
 use App\Models\Fee\FeeVoucher;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Inertia\Inertia;
@@ -197,8 +198,16 @@ class FeeReportController extends Controller
         $query = FeeVoucher::with(['student.user:id,name', 'voucherMonth', 'schoolClass:id,name', 'section:id,name'])
             ->visibleTo($request->user())
             ->whereIn('status', ['unpaid', 'partial', 'overdue'])
-            ->where('balance_amount', '>', 0)
-            ->whereDate('due_date', '<', now()->toDateString());
+            ->where('balance_amount', '>', 0);
+
+        $cutoff = $request->filled('min_days_overdue')
+            ? now()->subDays((int) $request->min_days_overdue)->toDateString()
+            : now()->subDay()->toDateString();
+
+        $query->where(function ($due) use ($cutoff) {
+            $due->whereDate('due_date', '<=', $cutoff)
+                ->orWhereHas('items.feeHead', fn ($head) => $head->where('code', 'PREVIOUS_BALANCE'));
+        });
 
         // Apply filters
         if ($request->filled('campus_id')) {
@@ -209,19 +218,17 @@ class FeeReportController extends Controller
             $query->where('class_id', $request->class_id);
         }
 
-        if ($request->filled('min_days_overdue')) {
-            // `DATEDIFF(NOW(), due_date)` is MySQL-only syntax — SQLite (this
-            // suite's test database) has no such function at all. "At least N
-            // days overdue" is the same question as "due on or before today
-            // minus N days", asked in a way every driver understands.
-            $cutoff = now()->subDays((int) $request->min_days_overdue)->toDateString();
-            $query->whereDate('due_date', '<=', $cutoff);
-        }
-
         $defaulters = $query->orderBy('due_date')->paginate(50);
         $defaulters->getCollection()->each(function (FeeVoucher $voucher): void {
             $voucher->student?->append(['name', 'registration_number']);
-            $voucher->setAttribute('days_overdue', (int) $voucher->due_date->copy()->startOfDay()->diffInDays(today()));
+            $earliestDue = FeeVoucher::query()
+                ->where('student_id', $voucher->student_id)
+                ->whereIn('status', ['unpaid', 'partial', 'overdue', 'adjusted'])
+                ->where('balance_amount', '>', 0)
+                ->whereDate('due_date', '<', now()->toDateString())
+                ->min('due_date');
+            $dueDate = $earliestDue ? Carbon::parse($earliestDue)->min($voucher->due_date) : $voucher->due_date;
+            $voucher->setAttribute('days_overdue', max(0, (int) $dueDate->copy()->startOfDay()->diffInDays(today())));
             $voucher->setAttribute('class_name', trim($voucher->schoolClass?->name.' '.$voucher->section?->name));
         });
 

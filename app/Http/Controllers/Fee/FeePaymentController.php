@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\Fee;
 
 use App\Enums\Fee\PaymentStatus;
+use App\Enums\Fee\VoucherStatus;
 use App\Enums\Fee\WalletDirection;
 use App\Enums\Fee\WalletTransactionType;
 use App\Http\Controllers\Controller;
@@ -113,7 +114,11 @@ class FeePaymentController extends Controller
             $unpaidVouchers = $this->getUnpaidVouchersForStudent((int) $studentId);
         }
 
+        $carriedForward = $this->carriedForwardNotice($request->integer('voucher_id') ?: null);
+
         return Inertia::render('Fee/Payments/Create', [
+            'carriedForwardNotice' => $carriedForward['notice'] ?? null,
+            'carriedForwardTo' => $carriedForward['voucher'] ?? null,
             'unpaidVouchers' => $unpaidVouchers,
             'studentId' => $studentId,
             'preselectedVoucherId' => $request->integer('voucher_id') ?: null,
@@ -125,6 +130,30 @@ class FeePaymentController extends Controller
                 'class_name' => trim(($selectedStudent->currentEnrollment?->class?->name ?? '').' '.($selectedStudent->currentEnrollment?->section?->name ?? '')) ?: null,
             ] : null,
         ]);
+    }
+
+    /**
+     * Tells the cashier when the voucher they opened was carried into a newer one.
+     *
+     * @return array{notice?: string, voucher?: array{id: int, voucher_no: string}|null}
+     */
+    protected function carriedForwardNotice(?int $voucherId): array
+    {
+        $old = $voucherId ? FeeVoucher::query()->visibleTo(request()->user())->find($voucherId) : null;
+
+        if (! $old || $old->status !== VoucherStatus::ADJUSTED) {
+            return [];
+        }
+
+        $newer = null;
+        if (preg_match('/carried forward to voucher (\S+?)\.?(\s|$)/', (string) $old->notes, $match)) {
+            $newer = FeeVoucher::query()->where('student_id', $old->student_id)->where('voucher_no', $match[1])->first(['id', 'voucher_no']);
+        }
+
+        return [
+            'notice' => 'This voucher was carried forward into a newer voucher. Pay that one instead.',
+            'voucher' => $newer ? ['id' => $newer->id, 'voucher_no' => $newer->voucher_no] : null,
+        ];
     }
 
     /**

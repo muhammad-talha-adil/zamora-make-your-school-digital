@@ -21,12 +21,14 @@ class RepairFeeVouchers extends Command
 
         FeeVoucher::query()
             ->with('voucherMonth')
-            ->whereIn('status', [VoucherStatus::UNPAID, VoucherStatus::PARTIAL, VoucherStatus::OVERDUE])
+            ->whereIn('status', [VoucherStatus::UNPAID, VoucherStatus::PARTIAL, VoucherStatus::OVERDUE, VoucherStatus::ADJUSTED])
             ->each(function (FeeVoucher $voucher) use (&$totalsFixed, &$datesFixed, &$removedFines) {
                 $before = [(float) $voucher->net_amount, (float) $voucher->balance_amount, (float) $voucher->gross_amount, (float) $voucher->fine_amount];
                 $dueDate = Carbon::create($voucher->voucher_year, $voucher->voucherMonth->month_number, 10)->startOfDay();
 
-                if (! $voucher->due_date || ! $voucher->due_date->isSameDay($dueDate)) {
+                $isOpen = $voucher->status !== VoucherStatus::ADJUSTED;
+
+                if ($isOpen && (! $voucher->due_date || ! $voucher->due_date->isSameDay($dueDate))) {
                     $datesFixed++;
                     $this->line("{$voucher->voucher_no}: due date -> {$dueDate->toDateString()}");
 
@@ -47,7 +49,12 @@ class RepairFeeVouchers extends Command
                     return;
                 }
 
-                $voucher->recalculateTotals();
+                if ($isOpen) {
+                    $voucher->recalculateTotals();
+                } else {
+                    $this->recalculateClosedTotals($voucher);
+                }
+                $voucher->refresh();
                 $after = [(float) $voucher->net_amount, (float) $voucher->balance_amount, (float) $voucher->gross_amount, (float) $voucher->fine_amount];
 
                 if ($before !== $after) {
@@ -56,6 +63,9 @@ class RepairFeeVouchers extends Command
                 }
             });
 
+        $grossFixed = $this->fixStoredGross();
+
+        $this->info("Gross/fine fixed on other vouchers: {$grossFixed}.");
         $this->info("Totals fixed: {$totalsFixed}. Due dates fixed: {$datesFixed}. Auto late fees removed: {$removedFines}.");
 
         return self::SUCCESS;
@@ -67,11 +77,14 @@ class RepairFeeVouchers extends Command
      */
     protected function removeAutoLateFees(FeeVoucher $voucher): int
     {
-        if ((float) $voucher->paid_amount > 0 || $voucher->paymentAllocations()->exists()) {
+        $items = $voucher->items()->where('description', 'like', 'Late Fee - voucher %')->get()
+            ->reject(fn ($item) => $voucher->paymentAllocations()->where('fee_voucher_item_id', $item->id)->exists());
+
+        $lateTotal = (float) $items->sum('net_amount');
+
+        if ($items->isEmpty() || (float) $voucher->paid_amount > (float) $voucher->net_amount - $lateTotal) {
             return 0;
         }
-
-        $items = $voucher->items()->where('description', 'like', 'Late Fee - voucher %')->get();
 
         foreach ($items as $item) {
             $item->studentAccountCharge?->delete();
@@ -80,5 +93,54 @@ class RepairFeeVouchers extends Command
         }
 
         return $items->count();
+    }
+
+    /**
+     * Adjusted and paid vouchers keep their balance; only the shown totals follow the items.
+     */
+    protected function recalculateClosedTotals(FeeVoucher $voucher): void
+    {
+        $items = $voucher->items()->with('feeHead:id,code')->get();
+        $lateFees = $items->filter(fn ($item) => $item->feeHead?->code === 'LATE_FINE' || str_starts_with((string) $item->description, 'Late fee') || str_starts_with((string) $item->description, 'Late Fee'));
+
+        $voucher->update([
+            'gross_amount' => $items->diff($lateFees)->sum('amount'),
+            'discount_amount' => $items->sum('discount_amount'),
+            'fine_amount' => $lateFees->sum('net_amount'),
+            'net_amount' => round((float) $items->sum('net_amount'), 2),
+        ]);
+    }
+
+    /**
+     * Paid and cancelled vouchers: fix stale gross/fine shown on screens.
+     */
+    protected function fixStoredGross(): int
+    {
+        $fixed = 0;
+
+        FeeVoucher::query()
+            ->whereIn('status', [VoucherStatus::PAID, VoucherStatus::CANCELLED])
+            ->each(function (FeeVoucher $voucher) use (&$fixed) {
+                $items = $voucher->items()->with('feeHead:id,code')->get();
+
+                if ($items->isEmpty()) {
+                    return;
+                }
+
+                $late = $items->filter(fn ($item) => $item->feeHead?->code === 'LATE_FINE' || str_starts_with(strtolower((string) $item->description), 'late fee'));
+                $gross = (float) $items->diff($late)->sum('amount');
+                $fine = (float) $late->sum('net_amount');
+
+                if (round($gross, 2) !== round((float) $voucher->gross_amount, 2) || round($fine, 2) !== round((float) $voucher->fine_amount, 2)) {
+                    $fixed++;
+                    $this->line("{$voucher->voucher_no}: gross {$voucher->gross_amount} -> {$gross}, fine {$voucher->fine_amount} -> {$fine}");
+
+                    if (! $this->option('dry-run')) {
+                        $voucher->update(['gross_amount' => $gross, 'fine_amount' => $fine]);
+                    }
+                }
+            });
+
+        return $fixed;
     }
 }

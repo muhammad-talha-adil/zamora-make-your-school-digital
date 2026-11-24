@@ -438,6 +438,7 @@ class StudentService
             'annual' => $totals['yearly'],
             'one_time' => $totals['once'],
             'discount' => round($discount, 2),
+            'outstanding' => round((float) $student->feeVouchers()->whereIn('status', ['unpaid', 'partial', 'overdue'])->sum('balance_amount'), 2),
             'vouchers' => $vouchers,
         ];
     }

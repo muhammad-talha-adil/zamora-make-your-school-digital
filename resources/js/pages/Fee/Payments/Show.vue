@@ -22,6 +22,9 @@ interface FeePayment {
     received_amount: number;
     allocated_amount: number;
     excess_amount: number;
+    late_fee_amount?: number | string | null;
+    concession_amount?: number | string | null;
+    concession_reason?: string | null;
     status: string;
     received_by: { id: number; name: string };
     allocations: Array<{
@@ -257,6 +260,14 @@ const submitReverse = () => {
                             <div class="flex flex-wrap gap-2 justify-between">
                                 <span class="text-muted-foreground">Received Amount</span>
                                 <span class="font-medium text-lg">{{ formatCurrency(payment.received_amount) }}</span>
+                            </div>
+                            <div v-if="Number(payment.late_fee_amount) > 0" class="flex flex-wrap gap-2 justify-between">
+                                <span class="text-muted-foreground">Late fee included</span>
+                                <span>{{ formatCurrency(Number(payment.late_fee_amount)) }}</span>
+                            </div>
+                            <div v-if="Number(payment.concession_amount) > 0" class="flex flex-wrap gap-2 justify-between">
+                                <span class="text-muted-foreground">Concession given ({{ payment.concession_reason || 'no reason' }})</span>
+                                <span>{{ formatCurrency(Number(payment.concession_amount)) }}</span>
                             </div>
                             <div class="flex flex-wrap gap-2 justify-between text-primary">
                                 <span>Allocated to Vouchers</span>

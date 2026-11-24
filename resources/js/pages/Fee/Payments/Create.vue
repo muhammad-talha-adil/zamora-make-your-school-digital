@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Head, router, usePage } from '@inertiajs/vue3';
+import { Head, Link, router, usePage } from '@inertiajs/vue3';
 import { computed, reactive, ref, watch } from 'vue';
 import { route } from 'ziggy-js';
 import axios from 'axios';
@@ -59,6 +59,8 @@ interface Props {
     studentId: number | null;
     preselectedVoucherId?: number | null;
     selectedStudent?: StudentSearchResult | null;
+    carriedForwardNotice?: string | null;
+    carriedForwardTo?: { id: number; voucher_no: string } | null;
 }
 
 interface SiblingPayment {
@@ -98,6 +100,12 @@ const searchResults = ref<StudentSearchResult[]>([]);
 const isSearching = ref(false);
 const isLoadingVouchers = ref(false);
 const isSubmitting = ref(false);
+const showSubmitError = (errors: Record<string, string>) => {
+    submitError.value = String(Object.values(errors)[0] ?? 'Could not record the payment.');
+    alert.error(submitError.value);
+};
+const notice = computed(() => props.carriedForwardNotice ?? '');
+const noticeVoucher = computed(() => props.carriedForwardTo ?? null);
 
 const page = usePage();
 const paymentDateError = computed(() => {
@@ -109,6 +117,8 @@ const paymentDateError = computed(() => {
 const now = new Date();
 const today = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
 const selectedStudent = ref<StudentSearchResult | null>(props.selectedStudent || null);
+const futureDateMessage = computed(() => (form.payment_date > today ? 'Payment date cannot be in the future.' : ''));
+const submitError = ref('');
 
 // Sibling bulk payment (#115): let the cashier settle several siblings'
 // vouchers in one go instead of repeating this whole form per child.
@@ -383,6 +393,11 @@ const submitForm = () => {
         return;
     }
 
+    if (futureDateMessage.value) {
+        return;
+    }
+
+    submitError.value = '';
     isSubmitting.value = true;
 
     const sharedFields = {
@@ -422,6 +437,7 @@ const submitForm = () => {
         ];
 
         router.post(route('fee.payments.store-bulk'), { payments }, {
+            onError: showSubmitError,
             onFinish: () => {
                 isSubmitting.value = false;
             },
@@ -438,6 +454,7 @@ const submitForm = () => {
         concession_reason: Number(form.concession) > 0 ? form.concession_reason : '',
         charges,
     }, {
+        onError: showSubmitError,
         onFinish: () => {
             isSubmitting.value = false;
         },
@@ -460,6 +477,11 @@ const submitForm = () => {
             </div>
 
             <form @submit.prevent="submitForm" class="max-w-7xl space-y-6">
+                <div v-if="notice" class="rounded-md border border-warning/40 bg-warning/10 px-4 py-3 text-sm text-foreground">
+                    {{ notice }}
+                    <Link v-if="noticeVoucher" :href="route('fee.vouchers.show', noticeVoucher.id)" class="font-medium underline">Open {{ noticeVoucher.voucher_no }}</Link>
+                </div>
+                <p v-if="submitError" class="rounded-md border border-destructive/40 bg-destructive/10 px-4 py-3 text-sm text-destructive">{{ submitError }}</p>
                 <div class="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-4">
                     <div class="md:col-span-2 xl:col-span-4">
                         <Label for="student_search">Student or Voucher No *</Label>
@@ -509,10 +531,9 @@ const submitForm = () => {
                             id="payment_date"
                             v-model="form.payment_date"
                             type="date"
-                            :max="today"
                             required
                         />
-                        <p v-if="paymentDateError" class="text-sm text-destructive">{{ paymentDateError }}</p>
+                        <p v-if="futureDateMessage || paymentDateError" class="text-sm text-destructive">{{ futureDateMessage || paymentDateError }}</p>
                     </div>
 
                     <div>

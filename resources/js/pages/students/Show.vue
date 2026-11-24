@@ -269,7 +269,11 @@
                             Fee
                         </h3>
                         <p class="mb-4 text-sm text-muted-foreground">{{ student.fee_summary.structure_title || 'No fee structure' }}</p>
-                        <div class="grid grid-cols-2 gap-3 md:grid-cols-4">
+                        <div class="grid grid-cols-2 gap-3 md:grid-cols-5">
+                            <div>
+                                <p class="text-xs text-muted-foreground">Outstanding balance</p>
+                                <p class="text-sm font-semibold" :class="student.fee_summary.outstanding > 0 ? 'text-destructive' : 'text-foreground'">{{ formatCurrency(student.fee_summary.outstanding ?? 0) }}</p>
+                            </div>
                             <div>
                                 <p class="text-xs text-muted-foreground">Monthly</p>
                                 <p class="text-sm font-medium text-foreground">{{ formatCurrency(student.fee_summary.monthly) }}</p>
@@ -507,6 +511,7 @@ interface Props {
         fee_summary?: {
             structure_title: string | null;
             monthly_net?: number;
+            outstanding?: number;
             monthly: number;
             annual: number;
             one_time: number;
