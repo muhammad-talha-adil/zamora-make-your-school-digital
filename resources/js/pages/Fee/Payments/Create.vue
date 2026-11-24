@@ -674,11 +674,18 @@ const submitForm = () => {
                     </div>
 
                     <div v-else class="overflow-x-auto">
-                        <table class="min-w-[560px] w-full divide-y divide-border">
-                            <thead class="bg-muted">
+                        <table class="min-w-[520px] w-full table-fixed divide-y divide-border">
+                            <colgroup>
+<col class="w-12" />
+<col class="w-20" />
+<col />
+<col class="w-28" />
+<col class="w-36" />
+</colgroup>
+<thead class="bg-muted">
                                 <tr>
-                                    <th class="px-4 py-3 text-left text-xs font-semibold uppercase text-muted-foreground">
-                                        Select
+                                    <th class="px-3 py-3 text-center text-xs font-semibold uppercase text-muted-foreground">
+                                        Pick
                                     </th>
                                     <th class="px-4 py-3 text-left text-xs font-semibold uppercase text-muted-foreground">
                                         Module
@@ -716,7 +723,7 @@ const submitForm = () => {
                                         :key="item.id"
                                         class="hover:bg-accent"
                                     >
-                                        <td class="px-4 py-3 align-top">
+                                        <td class="px-3 py-3 text-center align-top">
                                             <input
                                                 type="checkbox"
                                                 :checked="getChargeAllocation(voucher.id, item.id)?.enabled"
@@ -734,10 +741,10 @@ const submitForm = () => {
                                             </span>
                                         </td>
                                         <td class="px-4 py-3 align-top">
-                                            <div class="font-medium text-foreground">
+                                            <div class="break-words font-medium text-foreground">
                                                 {{ item.fee_head_name || item.description }}
                                             </div>
-                                            <div class="text-sm text-muted-foreground">
+                                            <div class="break-words text-sm text-muted-foreground">
                                                 {{ item.description }}
                                             </div>
                                         </td>
@@ -753,12 +760,12 @@ const submitForm = () => {
                                                 step="0.01"
                                                 min="0"
                                                 :disabled="!getChargeAllocation(voucher.id, item.id)?.enabled"
-                                                class="ml-auto w-28 text-right"
+                                                class="ml-auto w-full max-w-[8rem] text-right"
                                                 placeholder="0.00"
                                             />
                                             <p v-if="chargeErrors[`${voucher.id}-${item.id}`]" class="mt-1 text-right text-xs text-destructive">{{ chargeErrors[`${voucher.id}-${item.id}`] }}</p>
                                             <p class="mt-1 text-right text-[11px] text-muted-foreground">
-                                                Amount to settle now for this due
+                                                Pay now
                                             </p>
                                         </td>
                                     </tr>
