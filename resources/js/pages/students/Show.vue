@@ -36,7 +36,7 @@
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <!-- Student Profile Card -->
                 <div class="lg:col-span-1">
-                    <div class="bg-card rounded-lg border border-border p-6 text-center sticky top-4">
+                    <div class="bg-card rounded-lg border border-border p-6 text-center lg:sticky lg:top-4">
                         <!-- Student Photo -->
                         <div class="mb-4">
                             <div v-if="student?.image_url" class="h-32 w-32 mx-auto rounded-full overflow-hidden border-4 border-border">
@@ -80,7 +80,7 @@
 
                         <!-- Quick Info -->
                         <div class="mt-6 pt-6 border-t border-border text-left">
-                            <div class="space-y-3">
+                            <div class="grid gap-x-6 gap-y-3 sm:grid-cols-2 lg:grid-cols-1">
                                 <div class="flex items-center gap-3">
                                     <Icon icon="calendar" class="h-5 w-5 text-muted-foreground shrink-0" />
                                     <div>
