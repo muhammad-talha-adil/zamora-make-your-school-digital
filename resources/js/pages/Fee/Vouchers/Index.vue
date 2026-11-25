@@ -320,16 +320,6 @@ const isOverdueVoucher = (voucher: FeeVoucher) => {
             <div class="bg-card rounded-lg border border-border p-4">
                 <div class="grid grid-cols-1 md:grid-cols-5 gap-4">
                     <div class="space-y-2">
-                    <Label for="filter-campus">Campus</Label>
-                    <SearchableSelect
-                        id="filter-campus"
-                        v-model="filters.campus_id"
-                        :options="campusOptions"
-                        placeholder="All Campuses"
-                        clearable
-                    />
-                    </div>
-                    <div class="space-y-2">
                     <Label for="filter-class">Class</Label>
                     <SearchableSelect
                         id="filter-class"

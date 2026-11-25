@@ -187,15 +187,6 @@ const openPage = (url: string | null) => {
 
             <div class="rounded-2xl border border-border bg-card p-4 shadow-sm md:p-6">
                 <div class="grid gap-4 md:grid-cols-2 xl:grid-cols-6">
-                    <div>
-                        <label class="mb-2 block text-sm font-medium text-muted-foreground">Campus</label>
-                        <SearchableSelect
-                            v-model="filters.campus_id"
-                            :options="campusOptions"
-                            placeholder="All Campuses"
-                            clearable
-                        />
-                    </div>
 
                     <div>
                         <label class="mb-2 block text-sm font-medium text-muted-foreground">System</label>

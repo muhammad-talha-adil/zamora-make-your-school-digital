@@ -194,7 +194,8 @@
                         <Icon v-if="isSubmitting" icon="loader" class="mr-1 animate-spin" />
                         {{ isSubmitting ? 'Submitting...' : 'Submit Attendance' }}
                     </Button>
-                    <p v-if="markError" class="mt-2 text-sm text-destructive">{{ markError }}</p>
+                    <p class="mt-2 text-xs text-muted-foreground">Students left on Select will not be saved.</p>
+                <p v-if="markError" class="mt-2 text-sm text-destructive">{{ markError }}</p>
                 </div>
             </div>
 
@@ -479,7 +480,7 @@ const submitAttendance = () => {
     formData.session_id = Number(selectedSessionId.value) || 0;
     formData.class_id = Number(selectedClassId.value) || 0;
     formData.section_id = selectedSectionId.value === 'all' ? 0 : (Number(selectedSectionId.value) || 0);
-    router.post(route('attendance.store'), { ...formData, stay: true }, {
+    router.post(route('attendance.store'), { ...formData, attendances: formData.attendances.filter((a) => a.attendance_status_id), stay: true }, {
         preserveScroll: true,
         onError: (errors) => {
             if (errors.attendance_date) {

@@ -352,8 +352,8 @@ class AttendanceController extends Controller
 
         // Pre-select values if provided in request
         $selectedCampusId = $request->user()->campusId() ?? ($request->filled('campus_id') ? $request->campus_id : null);
-        $selectedSessionId = $request->filled('session_id') ? $request->session_id : null;
-        $selectedClassId = $request->filled('class_id') ? $request->class_id : null;
+        $selectedSessionId = $request->filled('session_id') ? (int) $request->session_id : null;
+        $selectedClassId = $request->filled('class_id') ? (int) $request->class_id : null;
         // Handle empty string for "all sections" - use special value to indicate all sections
         $selectedSectionId = $request->filled('section_id') ? $request->section_id : 'all';
         $selectedDate = $request->filled('date') ? $request->date : now()->toDateString();
@@ -1147,7 +1147,10 @@ class AttendanceController extends Controller
             'user',
             'studentGuardians.guardian.user',
             'enrollmentRecords' => fn ($q) => $q->overlappingPeriod($startDate, $endDate)
+                ->where('class_id', $request->class_id)
+                ->when($request->filled('section_id'), fn ($q) => $q->where('section_id', $request->section_id))
                 ->with(['campus', 'class', 'section'])
+                ->orderByRaw('leave_date is null desc')
                 ->orderByDesc('admission_date'),
         ])
             ->whereHas('enrollmentRecords', function ($q) use ($request, $startDate, $endDate) {

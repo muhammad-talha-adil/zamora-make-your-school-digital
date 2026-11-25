@@ -413,16 +413,6 @@ const loadStocksPage = (url: string) => fetchStocks(url);
 
             <div class="rounded-lg border border-border bg-card p-4">
                 <div class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-5">
-                    <div class="space-y-2">
-                        <Label for="campus-filter">Campus</Label>
-                        <SearchableSelect
-                            id="campus-filter"
-                            v-model="campusFilter"
-                            :options="campusOptions"
-                            placeholder="All Campuses"
-                            clearable
-                        />
-                    </div>
 
                     <div v-if="['types', 'items'].includes(activeTab)" class="space-y-2">
                         <Label for="status-filter">Status</Label>
@@ -566,7 +556,6 @@ const loadStocksPage = (url: string) => fetchStocks(url);
                             <tr>
                                 <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Sr#</th>
                                 <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Name</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Campus</th>
                                 <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Items</th>
                                 <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Status</th>
                                 <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">Actions</th>
@@ -576,7 +565,6 @@ const loadStocksPage = (url: string) => fetchStocks(url);
                             <tr v-for="(type, index) in inventoryTypesData" :key="type.id" class="transition-colors hover:bg-accent">
                                 <td class="px-4 py-3 text-sm text-muted-foreground">{{ ((paginationTypes.from || 1) - 1) + index + 1 }}</td>
                                 <td class="px-4 py-3 text-sm font-medium text-foreground">{{ type.name }}</td>
-                                <td class="px-4 py-3 text-sm text-muted-foreground">{{ type.campus_name }}</td>
                                 <td class="px-4 py-3 text-sm text-muted-foreground">{{ type.items_count }}</td>
                                 <td class="px-4 py-3">
                                     <StatusToggle :active="type.is_active" @toggle="toggleTypeStatus(type)" />
@@ -607,7 +595,6 @@ const loadStocksPage = (url: string) => fetchStocks(url);
                                 <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Sr#</th>
                                 <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Name</th>
                                 <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Type</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Campus</th>
                                 <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Current Stock</th>
                                 <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Status</th>
                                 <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">Actions</th>
@@ -621,7 +608,6 @@ const loadStocksPage = (url: string) => fetchStocks(url);
                                     <div v-if="item.description" class="text-xs text-muted-foreground">{{ item.description }}</div>
                                 </td>
                                 <td class="px-4 py-3 text-sm text-muted-foreground">{{ item.inventory_type_name }}</td>
-                                <td class="px-4 py-3 text-sm text-muted-foreground">{{ item.campus_name }}</td>
                                 <td class="px-4 py-3 text-sm text-muted-foreground">{{ item.current_stock ?? 0 }}</td>
                                 <td class="px-4 py-3">
                                     <StatusToggle :active="item.is_active" @toggle="toggleItemStatus(item)" />
@@ -652,7 +638,6 @@ const loadStocksPage = (url: string) => fetchStocks(url);
                             <tr>
                                 <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Sr#</th>
                                 <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Item</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Campus</th>
                                 <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Quantity</th>
                                 <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Available</th>
                                 <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Reserved</th>
@@ -664,7 +649,6 @@ const loadStocksPage = (url: string) => fetchStocks(url);
                             <tr v-for="(stock, index) in stocksData" :key="stock.id" class="transition-colors hover:bg-accent">
                                 <td class="px-4 py-3 text-sm text-muted-foreground">{{ ((paginationStocks.from || 1) - 1) + index + 1 }}</td>
                                 <td class="px-4 py-3 text-sm font-medium text-foreground">{{ stock.item_name }}</td>
-                                <td class="px-4 py-3 text-sm text-muted-foreground">{{ stock.campus_name }}</td>
                                 <td class="px-4 py-3 text-sm text-muted-foreground">{{ stock.quantity }}</td>
                                 <td class="px-4 py-3 text-sm font-semibold" :class="stock.available_quantity <= 0 ? 'text-destructive' : stock.is_low_stock ? 'text-warning' : 'text-success'">
                                     {{ stock.available_quantity }}
@@ -690,7 +674,6 @@ const loadStocksPage = (url: string) => fetchStocks(url);
                                 <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">#</th>
                                 <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Date</th>
                                 <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Item</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Campus</th>
                                 <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Type</th>
                                 <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Qty</th>
                                 <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Before / After</th>
@@ -703,7 +686,6 @@ const loadStocksPage = (url: string) => fetchStocks(url);
                                 <td class="px-4 py-3 text-sm text-muted-foreground">{{ adjustmentIndex + 1 }}</td>
                                 <td class="px-4 py-3 text-sm text-muted-foreground">{{ formatDateTime(adjustment.created_at) }}</td>
                                 <td class="px-4 py-3 text-sm font-medium text-foreground">{{ adjustment.item_name }}</td>
-                                <td class="px-4 py-3 text-sm text-muted-foreground">{{ adjustment.campus_name }}</td>
                                 <td class="px-4 py-3">
                                     <span :class="['rounded-full px-2 py-1 text-xs font-medium', getAdjustmentBadge(adjustment.type)]">
                                         {{ formatAdjustmentType(adjustment.type) }}

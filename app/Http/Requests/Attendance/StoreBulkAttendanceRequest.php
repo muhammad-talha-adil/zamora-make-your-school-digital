@@ -56,6 +56,8 @@ class StoreBulkAttendanceRequest extends FormRequest
         $leaveStatusId = $service->getStatusId(AttendanceStatusCode::LEAVE->value);
 
         if (! $leaveStatusId) {
+            $this->merge(['attendances' => $this->withoutUnmarkedRows($rows)]);
+
             return;
         }
 
@@ -69,7 +71,18 @@ class StoreBulkAttendanceRequest extends FormRequest
             }
         }
 
-        $this->merge(['attendances' => $rows]);
+        $this->merge(['attendances' => $this->withoutUnmarkedRows($rows)]);
+    }
+
+    /**
+     * Rows left without a status are skipped; only marked rows are saved.
+     *
+     * @param  array<int, array<string, mixed>>  $rows
+     * @return array<int, array<string, mixed>>
+     */
+    private function withoutUnmarkedRows(array $rows): array
+    {
+        return array_values(array_filter($rows, fn ($row) => is_array($row) && ! empty($row['attendance_status_id'])));
     }
 
     /**

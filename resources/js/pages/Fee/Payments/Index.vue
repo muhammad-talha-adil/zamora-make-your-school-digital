@@ -181,15 +181,6 @@ const paymentMethodOptions = [
             <div class="rounded-lg border border-border bg-card p-4">
                 <div class="grid grid-cols-1 gap-4 md:grid-cols-5">
                     <div class="space-y-2">
-                        <Label for="filter-campus">Campus</Label>
-                        <SearchableSelect
-                            v-model="filters.campus_id"
-                            :options="campusOptions"
-                            placeholder="All Campuses"
-                            clearable
-                        />
-                    </div>
-                    <div class="space-y-2">
                         <Label for="filter-date-from">From Date</Label>
                         <Input
                             id="filter-date-from"
@@ -254,7 +245,6 @@ const paymentMethodOptions = [
                         </span>
                     </div>
                     <div class="grid grid-cols-1 gap-x-6 gap-y-1 border-t border-border pt-2 text-sm text-muted-foreground sm:grid-cols-2 md:grid-cols-5">
-                        <div>Campus: {{ payment.campus?.name || 'N/A' }}</div>
                         <div>Date: {{ formatDate(payment.payment_date) }}</div>
                         <div>Method: {{ getPaymentMethodLabel(payment.payment_method) }}</div>
                         <div>Amount: {{ formatCurrency(payment.received_amount) }}</div>
@@ -285,9 +275,6 @@ const paymentMethodOptions = [
                                 </th>
                                 <th scope="col" class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                                     Student
-                                </th>
-                                <th scope="col" class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">
-                                    Campus
                                 </th>
                                 <th scope="col" class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">
                                     Date
@@ -326,11 +313,6 @@ const paymentMethodOptions = [
                                     </div>
                                     <div class="text-xs text-muted-foreground">
                                         {{ payment.student?.registration_number || 'N/A' }}
-                                    </div>
-                                </td>
-                                <td class="whitespace-nowrap px-4 py-3">
-                                    <div class="text-sm text-muted-foreground">
-                                        {{ payment.campus?.name || 'N/A' }}
                                     </div>
                                 </td>
                                 <td class="whitespace-nowrap px-4 py-3">

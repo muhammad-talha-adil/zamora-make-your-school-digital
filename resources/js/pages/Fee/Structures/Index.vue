@@ -346,7 +346,6 @@ const deleteStructure = (structure: FeeStructure) => {
                         <StatusToggle :active="structure.status === 'active'" :inactive-label="structure.status === 'draft' ? 'Draft' : 'Inactive'" @toggle="toggleStatus(structure)" />
                     </div>
                     <div class="text-sm text-muted-foreground space-y-1 pt-2 border-t border-border">
-                        <div>Campus: {{ structure.campus?.name || '-' }}</div>
                         <div>
                             Class:
                             {{ structure.class?.name || 'All Classes' }}

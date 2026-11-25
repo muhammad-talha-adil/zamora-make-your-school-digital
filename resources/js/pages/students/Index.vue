@@ -154,10 +154,6 @@
                     </div>
                     <div class="text-sm text-muted-foreground space-y-1 pt-2 border-t border-border">
                         <div class="flex items-center gap-2">
-                            <Icon icon="building" class="h-4 w-4" />
-                            <span>{{ getEnrollment(student).campus?.name || 'N/A' }}</span>
-                        </div>
-                        <div class="flex items-center gap-2">
                             <Icon icon="book" class="h-4 w-4" />
                             <span>{{ getEnrollment(student).class?.name || 'N/A' }} - {{ getEnrollment(student).section?.name || 'N/A' }}</span>
                         </div>
