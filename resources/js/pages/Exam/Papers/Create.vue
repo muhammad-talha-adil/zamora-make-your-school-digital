@@ -123,7 +123,7 @@
                         <table class="min-w-full divide-y divide-border">
                             <thead class="bg-muted">
                                 <tr>
-                                    <th class="px-3 py-3 text-left text-xs font-semibold text-muted-foreground uppercase w-12">Sr#</th>
+                                    <th class="px-3 py-3 text-left text-xs font-semibold text-muted-foreground uppercase w-12">#</th>
                                     <th class="px-3 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Subject</th>
                                     <th class="px-3 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Date</th>
                                     <th class="px-3 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Time</th>
@@ -132,7 +132,7 @@
                                     <th class="px-3 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Counts as</th>
                                     <th class="px-3 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Status</th>
                                     <th class="px-3 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Scope</th>
-                                    <th class="px-3 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Action</th>
+                                    <th class="px-3 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Actions</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-border bg-card">
@@ -171,7 +171,7 @@
                                             </div>
                                         </template>
                                         <template v-else>
-                                            {{ paper.start_time }} - {{ paper.end_time }}
+                                            {{ formatTime(paper.start_time) }} - {{ formatTime(paper.end_time) }}
                                         </template>
                                     </td>
                                     <td class="px-3 py-3 whitespace-nowrap text-sm text-foreground">
@@ -305,12 +305,12 @@
                                     </span>
                                 </div>
                             </div>
-                            <div class="grid grid-cols-3 gap-2 text-xs text-muted-foreground">
+                            <div class="grid grid-cols-1 gap-1 text-xs text-muted-foreground sm:grid-cols-2 2xl:grid-cols-3">
                                 <div>
                                     <span class="font-medium">Date:</span> {{ formatDate(paper.paper_date) }}
                                 </div>
                                 <div>
-                                    <span class="font-medium">Time:</span> {{ paper.start_time }} - {{ paper.end_time }}
+                                    <span class="font-medium">Time:</span> {{ formatTime(paper.start_time) }} - {{ formatTime(paper.end_time) }}
                                 </div>
                                 <div>
                                     <span class="font-medium">Marks:</span> {{ paper.total_marks }}/{{ paper.passing_marks }}
@@ -1176,12 +1176,18 @@ const loadRemainingSubjects = async (examId: string, classId: string, sectionId:
     }
 };
 
+const formatTime = (time: string) => {
+    if (!time) return '';
+    const [h, m] = time.split(':').map(Number);
+    return `${String(h % 12 || 12).padStart(2, '0')}:${String(m).padStart(2, '0')} ${h >= 12 ? 'PM' : 'AM'}`;
+};
+
 const formatDate = (date: string) => {
     if (!date) return '';
-    return new Date(date).toLocaleDateString('en-US', {
+    return new Date(date).toLocaleDateString('en-GB', {
         year: 'numeric',
         month: 'short',
-        day: 'numeric'
+        day: '2-digit'
     });
 };
 
