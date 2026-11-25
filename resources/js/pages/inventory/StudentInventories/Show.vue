@@ -120,11 +120,7 @@ defineOptions({
                 </div>
 
                 <!-- Summary Stats -->
-                <div class="grid grid-cols-2 sm:grid-cols-4 gap-4">
-                    <div class="p-4 bg-primary/10 rounded-lg text-center">
-                        <div class="text-sm text-muted-foreground">Campus</div>
-                        <div class="text-lg font-semibold text-foreground">{{ studentInventory.campus_name || 'N/A' }}</div>
-                    </div>
+                <div class="grid grid-cols-2 sm:grid-cols-3 gap-4">
                     <div class="p-4 bg-success/10 rounded-lg text-center">
                         <div class="text-sm text-muted-foreground">Total Quantity</div>
                         <div class="text-2xl font-bold text-foreground">{{ totalQuantity }}</div>

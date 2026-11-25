@@ -305,7 +305,34 @@
                                     </span>
                                 </div>
                             </div>
-                            <div class="grid grid-cols-1 gap-1 text-xs text-muted-foreground sm:grid-cols-2 2xl:grid-cols-3">
+                            <div v-if="editingPaperId === paper.id" class="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                                <div class="space-y-1" :data-invalid="!!editErrors.paper_date">
+                                    <Label class="text-xs">Date <span class="text-destructive">*</span></Label>
+                                    <Input v-model="editingPaper.paper_date" type="date" class="h-9" />
+                                    <InputError :message="editErrors.paper_date" />
+                                </div>
+                                <div class="space-y-1" :data-invalid="!!editErrors.start_time">
+                                    <Label class="text-xs">Start time <span class="text-destructive">*</span></Label>
+                                    <Input v-model="editingPaper.start_time" type="time" class="h-9" />
+                                    <InputError :message="editErrors.start_time" />
+                                </div>
+                                <div class="space-y-1" :data-invalid="!!editErrors.end_time">
+                                    <Label class="text-xs">End time <span class="text-destructive">*</span></Label>
+                                    <Input v-model="editingPaper.end_time" type="time" class="h-9" />
+                                    <InputError :message="editErrors.end_time" />
+                                </div>
+                                <div class="space-y-1" :data-invalid="!!editErrors.total_marks">
+                                    <Label class="text-xs">Total marks <span class="text-destructive">*</span></Label>
+                                    <Input v-model="editingPaper.total_marks" type="number" min="0" class="h-9" />
+                                    <InputError :message="editErrors.total_marks" />
+                                </div>
+                                <div class="space-y-1" :data-invalid="!!editErrors.passing_marks">
+                                    <Label class="text-xs">Passing marks <span class="text-destructive">*</span></Label>
+                                    <Input v-model="editingPaper.passing_marks" type="number" min="0" class="h-9" />
+                                    <InputError :message="editErrors.passing_marks" />
+                                </div>
+                            </div>
+                            <div v-else class="grid grid-cols-1 gap-1 text-xs text-muted-foreground sm:grid-cols-2 2xl:grid-cols-3">
                                 <div>
                                     <span class="font-medium">Date:</span> {{ formatDate(paper.paper_date) }}
                                 </div>
@@ -768,7 +795,7 @@
 
 <script setup lang="ts">
 import { Head, router } from '@inertiajs/vue3';
-import { ref, reactive, computed, watch, onMounted } from 'vue';
+import { ref, reactive, computed, watch, onMounted, nextTick } from 'vue';
 import { route } from 'ziggy-js';
 import axios from 'axios';
 import { AlertCircle } from 'lucide-vue-next';
@@ -777,6 +804,7 @@ import type { BreadcrumbItem } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
+import InputError from '@/components/InputError.vue';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import Icon from '@/components/Icon.vue';
 import SearchableSelect from '@/components/ui/searchable-select/SearchableSelect.vue';
@@ -976,7 +1004,11 @@ const toggleSelectAll = () => {
 };
 
 // Edit functions
+const editErrors = ref<Record<string, string>>({});
+
 const startEdit = (paper: any) => {
+    editErrors.value = {};
+    editingPaper.subject_role = paper.subject_role;
     editingPaperId.value = paper.id;
     editingPaper.paper_date = String(paper.paper_date ?? '').slice(0, 10);
     editingPaper.start_time = String(paper.start_time ?? '').slice(0, 5);
@@ -993,6 +1025,24 @@ const cancelEdit = () => {
 };
 
 const saveEditedPaper = async (paperId: number) => {
+    const errs: Record<string, string> = {};
+    const blank = (v: unknown) => v === '' || v === null || v === undefined;
+    if (blank(editingPaper.paper_date)) errs.paper_date = 'Date is required.';
+    if (blank(editingPaper.start_time)) errs.start_time = 'Start time is required.';
+    if (blank(editingPaper.end_time)) errs.end_time = 'End time is required.';
+    if (!errs.start_time && !errs.end_time && editingPaper.end_time <= editingPaper.start_time) errs.end_time = 'End time must be after start time.';
+    if (blank(editingPaper.total_marks)) errs.total_marks = 'Total marks is required.';
+    else if (Number(editingPaper.total_marks) < 1) errs.total_marks = 'Total marks must be at least 1.';
+    if (blank(editingPaper.passing_marks)) errs.passing_marks = 'Passing marks is required.';
+    else if (Number(editingPaper.passing_marks) < 0) errs.passing_marks = 'Passing marks cannot be negative.';
+    else if (!errs.total_marks && Number(editingPaper.passing_marks) > Number(editingPaper.total_marks)) errs.passing_marks = 'Passing marks cannot exceed total marks.';
+    editErrors.value = errs;
+    if (Object.keys(errs).length > 0) {
+        alert.warning(Object.values(errs)[0]);
+        await nextTick();
+        document.querySelector('[data-invalid="true"]')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return;
+    }
     savingEdited.value = true;
     try {
         await axios.put(route('exam.papers.update', paperId), {
@@ -1022,6 +1072,10 @@ const saveEditedPaper = async (paperId: number) => {
         cancelEdit();
     } catch (error: any) {
         console.error('Error updating paper:', error);
+        const serverErrors = error.response?.data?.errors;
+        if (serverErrors) {
+            editErrors.value = Object.fromEntries(Object.entries(serverErrors).map(([k, v]) => [k, String(Array.isArray(v) ? v[0] : v)]));
+        }
         const firstError = error.response?.data?.errors ? String(Object.values(error.response.data.errors).flat()[0]) : null;
         alert.warning(firstError || error.response?.data?.message || 'Could not update this paper. Please try again.');
     } finally {

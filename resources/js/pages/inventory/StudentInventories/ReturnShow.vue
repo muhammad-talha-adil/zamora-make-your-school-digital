@@ -113,12 +113,6 @@ const goBack = () => {
                         </p>
                     </div>
                     <div>
-                        <label class="text-sm font-medium text-muted-foreground">Campus</label>
-                        <p class="text-lg font-semibold text-foreground">
-                            {{ props.returnRecord.campus_name }}
-                        </p>
-                    </div>
-                    <div>
                         <label class="text-sm font-medium text-muted-foreground">Return Date</label>
                         <p class="text-lg font-semibold text-foreground">
                             {{ formatDate(props.returnRecord.return_date) }}

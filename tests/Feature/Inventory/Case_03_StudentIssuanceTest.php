@@ -123,3 +123,28 @@ it('refuses to return more than remains assigned', function () {
 
     expect($this->world->stockAt()->fresh()->reserved_quantity)->toBe(4);
 });
+
+it('rejects zero or negative quantities when assigning', function (int $quantity) {
+    $this->actingAs($this->world->school->actor)
+        ->postJson(route('inventory.student-inventory.assign'), inventoryAssignPayload($this->world, $this->student, $quantity))
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors('items.0.quantity');
+
+    expect(StudentInventory::count())->toBe(0);
+})->with([-2, -1, 0]);
+
+it('rejects zero or negative quantities when returning', function (int $quantity) {
+    $this->actingAs($this->world->school->actor)
+        ->post(route('inventory.student-inventory.assign'), inventoryAssignPayload($this->world, $this->student, 4));
+    $record = StudentInventory::firstOrFail();
+    $item = $record->items->first();
+
+    $this->actingAs($this->world->school->actor)
+        ->postJson(route('inventory.student-inventory.return.process'), [
+            'student_inventory_record_id' => $record->id,
+            'items' => [['student_inventory_item_id' => $item->id, 'quantity' => $quantity]],
+            'return_date' => now()->toDateString(),
+        ])
+        ->assertUnprocessable()
+        ->assertJsonValidationErrors('items.0.quantity');
+})->with([-2, -1, 0]);

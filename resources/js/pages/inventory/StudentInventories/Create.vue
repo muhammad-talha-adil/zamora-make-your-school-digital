@@ -568,7 +568,8 @@ const submitForm = () => {
                                     v-model.number="item.quantity"
                                     type="number"
                                     min="1"
-                                                                        placeholder="Qty"
+                                    data-allow-negative
+                                    placeholder="Qty"
                                     class="h-10"
                                     :class="{ 'border-destructive': errors[`items.${index}.quantity`] }"
                                 />

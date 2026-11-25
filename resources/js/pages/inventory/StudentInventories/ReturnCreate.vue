@@ -2,7 +2,7 @@
 import { Head, router } from '@inertiajs/vue3';
 import { alert, formatCurrency } from '@/utils';
 import axios from 'axios';
-import { ref, computed, reactive, onMounted } from 'vue';
+import { ref, computed, reactive, onMounted, nextTick } from 'vue';
 
 // Components
 import AppLayout from '@/layouts/AppLayout.vue';
@@ -206,7 +206,28 @@ const goBack = () => {
 const submitForm = () => {
     // Filter to only items with quantity > 0
     const itemsToReturn = selectedItems.value;
-    
+
+    const rowErrors: Record<string, string> = {};
+    form.items.forEach((item, index) => {
+        if (!item.selected) {
+            return;
+        }
+        const remaining = props.studentInventory.items.find(i => i.id === item.student_inventory_item_id)?.remaining_quantity ?? 0;
+        if ((item.quantity as unknown) === '' || item.quantity === null) {
+            rowErrors[`items.${index}.quantity`] = 'Quantity is required.';
+        } else if (item.quantity < 1) {
+            rowErrors[`items.${index}.quantity`] = 'Quantity must be at least 1.';
+        } else if (item.quantity > remaining) {
+            rowErrors[`items.${index}.quantity`] = `Only ${remaining} can be returned.`;
+        }
+    });
+    if (Object.keys(rowErrors).length > 0) {
+        errors.value = rowErrors;
+        alert.warning(Object.values(rowErrors)[0]);
+        nextTick(() => document.querySelector('[data-invalid="true"]')?.scrollIntoView({ behavior: 'smooth', block: 'center' }));
+        return;
+    }
+
     if (itemsToReturn.length === 0) {
         alert.warning('Please select at least one item to return.');
         return;
@@ -255,6 +276,11 @@ const submitForm = () => {
     .finally(() => {
         processing.value = false;
     });
+};
+
+const qtyError = (id: number): string | undefined => {
+    const index = form.items.findIndex(f => f.student_inventory_item_id === id);
+    return errors.value[`items.${index}.quantity`];
 };
 
 const getFormItem = (id: number) => form.items.find((f) => f.student_inventory_item_id === id);
@@ -315,12 +341,6 @@ onMounted(async () => {
                             <label class="text-sm font-medium text-muted-foreground">Class - Section</label>
                             <p class="text-lg font-semibold text-foreground">
                                 {{ props.studentInventory.class_name }} - {{ props.studentInventory.section_name }}
-                            </p>
-                        </div>
-                        <div>
-                            <label class="text-sm font-medium text-muted-foreground">Campus</label>
-                            <p class="text-lg font-semibold text-foreground">
-                                {{ props.studentInventory.campus_name }}
                             </p>
                         </div>
                     </div>
@@ -390,10 +410,13 @@ onMounted(async () => {
                                             @update:model-value="(val) => updateItemQuantity(item.id, Number(val))"
                                             type="number"
                                             min="0"
+                                            data-allow-negative
+                                            :data-invalid="!!qtyError(item.id)"
                                             :max="item.remaining_quantity"
                                             :disabled="!form.items.find(f => f.student_inventory_item_id === item.id)?.selected"
                                             class="w-20 h-9"
                                         />
+<InputError :message="qtyError(item.id)" />
                                     </td>
                                     <td class="px-3 py-4">
                                         <Input
@@ -484,10 +507,13 @@ onMounted(async () => {
                                         @update:model-value="(val) => updateItemQuantity(item.id, Number(val))"
                                         type="number"
                                         min="0"
+                                        data-allow-negative
+                                        :data-invalid="!!qtyError(item.id)"
                                         :max="item.remaining_quantity"
                                         :disabled="!getFormItem(item.id)?.selected"
                                         class="h-9"
                                     />
+<InputError :message="qtyError(item.id)" />
                                 </div>
                                 <div class="space-y-1">
                                     <Label class="text-xs text-muted-foreground">Return Price</Label>

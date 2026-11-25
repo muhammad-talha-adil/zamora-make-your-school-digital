@@ -366,6 +366,7 @@ const deleteItem = (item: InventoryItemRow) => {
         axios.delete(route('inventory.items.destroy', item.id)).then(() => {
             alert.success('Inventory item deleted.');
             fetchInventoryItems();
+            fetchInventoryTypes();
             refreshFormLists();
         }).catch((err) => {
             alert.warning(err.response?.data?.message || 'This item could not be deleted. Please try again.');
@@ -559,7 +560,7 @@ const loadStocksPage = (url: string) => fetchStocks(url);
                                 v-if="activeTab === 'items'"
                                 :campuses="props.campuses"
                                 :inventory-types="props.allInventoryTypes"
-                                @saved="fetchInventoryItems(); refreshFormLists()"
+                                @saved="fetchInventoryItems(); fetchInventoryTypes(); refreshFormLists()"
                             />
                             <AdjustmentForm
                                 v-if="activeTab === 'adjustments'"
@@ -672,7 +673,7 @@ const loadStocksPage = (url: string) => fetchStocks(url);
                                             trigger="Edit"
                                             variant="outline"
                                             size="sm"
-                                            @saved="fetchInventoryItems(); refreshFormLists()"
+                                            @saved="fetchInventoryItems(); fetchInventoryTypes(); refreshFormLists()"
                                         />
                                         <Button variant="outline" size="sm" @click="deleteItem(item)">
                                             <Icon icon="trash-2" class="h-4 w-4 text-destructive" />

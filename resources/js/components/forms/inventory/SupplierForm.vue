@@ -247,11 +247,12 @@ const submit = () => {
                 is_active: form.value.is_active,
             })
             .then(() => {
+                const savedName = form.value.name;
                 alert.success('Supplier updated successfully!');
                 closeModal();
                 emit('saved', {
                     id: props.supplier!.id,
-                    name: form.value.name,
+                    name: savedName,
                 });
             })
             .catch((err) => {
@@ -287,11 +288,12 @@ const submit = () => {
                 is_active: form.value.is_active,
             })
             .then((response) => {
+                const savedName = response.data.supplier?.name || form.value.name;
                 alert.success('Supplier created successfully!');
                 closeModal();
                 emit('saved', {
                     id: response.data.supplier?.id || response.data.id,
-                    name: form.value.name,
+                    name: savedName,
                 });
             })
             .catch((err) => {
