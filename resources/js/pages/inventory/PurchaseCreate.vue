@@ -78,8 +78,14 @@ const supplierModalOpen = ref(false);
 const itemsLoadedOnce = ref(false);
 
 // Dynamic suppliers list
+const addedSuppliers = ref<Array<{ id: number; name: string; campus_id: number | null }>>([]);
 const localSuppliers = computed(() => {
     const baseSuppliers = [...props.suppliers];
+    addedSuppliers.value.forEach((added) => {
+        if (!baseSuppliers.some((s) => s.id === added.id)) {
+            baseSuppliers.push(added as (typeof baseSuppliers)[number]);
+        }
+    });
     
     // In edit mode, always include the current purchase's supplier
     if (props.purchase && props.purchase.supplier) {
@@ -125,8 +131,8 @@ const filteredLocalSuppliers = computed(() => {
 // Handle new supplier created
 const handleSupplierCreated = (supplier?: { id: number; name: string }) => {
     if (!supplier) return;
-    if (!localSuppliers.value.find(s => s.id === supplier.id)) {
-        localSuppliers.value.push(supplier);
+    if (!addedSuppliers.value.some((s) => s.id === supplier.id)) {
+        addedSuppliers.value.push({ id: supplier.id, name: supplier.name, campus_id: form.campus_id ? Number(form.campus_id) : null });
     }
     form.supplier_id = supplier.id;
     supplierModalOpen.value = false;
@@ -138,13 +144,11 @@ const inventoryItems = ref<InventoryItem[]>([]);
 // Fetch inventory items based on selected campus and supplier
 const fetchInventoryItems = async () => {
     const campusId = form.campus_id;
-    const supplierId = form.supplier_id;
     loadingItems.value = true;
     
     try {
         const params = new URLSearchParams();
         if (campusId) params.append('campus_id', String(campusId));
-        if (supplierId) params.append('supplier_id', String(supplierId));
         
         const response = await axios.get(`/inventory/items/all?${params.toString()}`);
         const items = Array.isArray(response.data) ? response.data : [];
@@ -490,6 +494,7 @@ initializeForm();
                                         <Input
                                             v-model.number="item.quantity"
                                             type="number"
+                                            data-allow-negative
                                             min="1"
                                             placeholder="Qty"
                                             class="h-10"

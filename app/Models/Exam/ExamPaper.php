@@ -36,7 +36,7 @@ class ExamPaper extends Model
 
     protected $casts = [
         'subject_role' => SubjectRole::class,
-        'paper_date' => 'date',
+        'paper_date' => 'date:Y-m-d',
         'start_time' => 'string',
         'end_time' => 'string',
         'total_marks' => 'decimal:2',

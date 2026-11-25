@@ -77,7 +77,7 @@ class InventoryItem extends Model
      */
     public function studentInventory()
     {
-        return $this->hasMany(StudentInventory::class);
+        return $this->hasMany(StudentInventoryItem::class);
     }
 
     /**

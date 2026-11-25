@@ -396,7 +396,14 @@ class InventoryItemsController extends Controller
         $campusId = $this->resolveCampusId($request);
 
         // Get stats - global scope ensures only active, non-deleted items
-        $typesCount = InventoryType::when($campusId, fn ($q) => $q->where('campus_id', $campusId))->count();
+        $typesQuery = fn () => InventoryType::query()->when($campusId, fn ($q) => $q->forCampus($campusId));
+        $typesCount = $typesQuery()->count();
+        $byType = $typesQuery()
+            ->withCount(['inventoryItems as items_count' => fn ($q) => $q->when($campusId, fn ($iq) => $iq->where('campus_id', $campusId))])
+            ->orderBy('name')
+            ->get()
+            ->map(fn ($type) => ['id' => $type->id, 'name' => $type->name, 'items_count' => (int) $type->items_count])
+            ->values();
         $itemsCount = InventoryItem::when($campusId, fn ($q) => $q->where('campus_id', $campusId))->count();
 
         $stocks = InventoryStock::when($campusId, fn ($q) => $q->where('campus_id', $campusId))
@@ -416,7 +423,13 @@ class InventoryItemsController extends Controller
             'available_quantity' => $s->available_quantity,
             'low_stock_threshold' => $s->low_stock_threshold ?? 10,
             'campus_name' => $s->campus?->name,
-        ])->take(10);
+        ])->values()->take(10)->values();
+
+        $stockStatus = [
+            'healthy' => $stocks->filter(fn ($s) => ! $s->isLowStock())->count(),
+            'low' => $stocks->filter(fn ($s) => $s->isLowStock() && ! $s->isOutOfStock())->count(),
+            'out' => $stocks->filter(fn ($s) => $s->isOutOfStock())->count(),
+        ];
 
         $purchasesCount = Purchase::when($campusId, fn ($q) => $q->where('campus_id', $campusId))->count();
         $totalPurchaseValue = Purchase::when($campusId, fn ($q) => $q->where('campus_id', $campusId))->sum('total_amount');
@@ -478,6 +491,8 @@ class InventoryItemsController extends Controller
                 'pendingReturns' => $pendingReturns,
             ],
             'low_stock_items' => $lowStockItemsList,
+            'by_type' => $byType,
+            'stock_status' => $stockStatus,
             'recent_activities' => $recentActivities,
             'recent_purchases' => $recentPurchasesWithItems->map(fn ($p) => [
                 'id' => $p->id,

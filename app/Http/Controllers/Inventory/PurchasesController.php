@@ -88,7 +88,7 @@ class PurchasesController extends Controller
             }
         }
 
-        $purchasesQuery = Purchase::with(['campus:id,name', 'supplier:id,name', 'purchaseItems.inventoryItem:id,name'])
+        $purchasesQuery = Purchase::with(['campus:id,name', 'supplier:id,name', 'purchaseItems.inventoryItem' => fn ($q) => $q->withoutGlobalScopes()->select('id', 'name')])
             ->select(['id', 'purchase_id', 'supplier_id', 'purchase_date', 'total_amount', 'campus_id', 'created_at'])
             ->when($campusId, fn ($q) => $q->where('campus_id', $campusId))
             ->when($query, function ($q) use ($query) {
@@ -113,7 +113,7 @@ class PurchasesController extends Controller
             ->map(function ($purchase) {
                 // Get item names from purchase items
                 $itemNames = $purchase->purchaseItems
-                    ->pluck('inventoryItem.name')
+                    ->map(fn ($purchaseItem) => $purchaseItem->inventoryItem?->name ?? ($purchaseItem->item_snapshot['item_name'] ?? null))
                     ->filter()
                     ->take(3)
                     ->implode(', ');

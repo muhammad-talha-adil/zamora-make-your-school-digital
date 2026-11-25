@@ -19,7 +19,8 @@ export const formatCurrency = (amount: number | undefined | null): string => {
  * Format date to readable string
  */
 export const formatDate = (date: string | Date): string => {
-    const d = typeof date === 'string' ? new Date(date) : date;
+    const dateOnly = typeof date === 'string' ? date.match(/^(\d{4})-(\d{2})-(\d{2})$/) : null;
+    const d = dateOnly ? new Date(Number(dateOnly[1]), Number(dateOnly[2]) - 1, Number(dateOnly[3])) : typeof date === 'string' ? new Date(date) : date;
     return d.toLocaleDateString('en-GB', {
         year: 'numeric',
         month: 'short',

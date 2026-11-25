@@ -116,14 +116,14 @@ class InventoryAdjustmentsController extends Controller
             'campus_id' => 'required|exists:campuses,id',
             'inventory_item_id' => 'required|exists:inventory_items,id',
             'type' => 'required|in:add,subtract,set',
-            'quantity' => 'required|integer|min:0',
+            'quantity' => $request->type === 'set' ? 'required|integer|min:0' : 'required|integer|min:1',
             'reason' => 'required|string|max:500',
             'reference_number' => 'nullable|string|max:100',
         ], [
             'inventory_item_id.required' => 'Item is required.',
             'quantity.required' => 'Quantity is required.',
             'quantity.integer' => 'Quantity must be a whole number.',
-            'quantity.min' => 'Quantity cannot be negative.',
+            'quantity.min' => $request->type === 'set' ? 'Quantity cannot be negative.' : 'Quantity must be at least 1.',
             'reason.required' => 'Reason is required.',
         ]);
 

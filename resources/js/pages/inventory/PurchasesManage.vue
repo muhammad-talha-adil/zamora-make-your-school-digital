@@ -333,7 +333,7 @@ fetchPurchases();
                                     <th class="px-3 md:px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase whitespace-nowrap">Purchase ID</th>
                                     <th class="px-3 md:px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase whitespace-nowrap">Date</th>
                                     <th class="px-3 md:px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase whitespace-nowrap">Supplier</th>
-                                    <th class="px-3 md:px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase whitespace-nowrap hidden 2xl:table-cell">Items</th>
+                                    <th class="px-3 md:px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase whitespace-nowrap">Items</th>
                                     <th class="px-3 md:px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase whitespace-nowrap">Total</th>
                                     <th class="px-3 md:px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase whitespace-nowrap">Actions</th>
                                 </tr>
@@ -344,7 +344,7 @@ fetchPurchases();
                                     <td class="px-3 md:px-6 py-4 whitespace-nowrap text-sm font-bold text-primary">{{ purchase.purchase_id || '#' + purchase.id }}</td>
                                     <td class="px-3 md:px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">{{ formatDate(purchase.purchase_date) }}</td>
                                     <td class="px-3 md:px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">{{ purchase.supplier?.name || '-' }}</td>
-                                    <td class="px-3 md:px-6 py-4 text-sm text-muted-foreground hidden 2xl:table-cell min-w-48">
+                                    <td class="px-3 md:px-6 py-4 text-sm text-muted-foreground min-w-48">
                                         <span v-if="purchase.items_count > 0">{{ purchase.item_names || '-' }}</span>
                                         <span v-else class="text-muted-foreground">-</span>
                                     </td>

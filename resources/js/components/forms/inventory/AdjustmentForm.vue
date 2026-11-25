@@ -128,7 +128,7 @@ const submitForm = () => {
     if (form.quantity === null || (form.quantity as unknown) === '' || Number.isNaN(quantity)) {
         missing.quantity = 'Quantity is required.';
     } else if (quantity < 0 || (form.type !== 'set' && quantity === 0)) {
-        missing.quantity = quantity < 0 ? 'Quantity cannot be negative.' : 'Quantity must be at least 1.';
+        missing.quantity = form.type === 'set' && quantity < 0 ? 'Quantity cannot be negative.' : 'Quantity must be at least 1.';
     } else if (form.type === 'subtract' && selectedItem.value && quantity > (selectedItem.value.current_stock ?? 0)) {
         missing.quantity = `Only ${selectedItem.value.current_stock ?? 0} in stock.`;
     }
@@ -259,6 +259,7 @@ const submitForm = () => {
                             :id="`quantity-${form.type}`"
                             v-model.number="form.quantity"
                             type="number"
+                            data-allow-negative
                             placeholder="Qty"
                             class="h-11"
                             :class="{ 'border-destructive': errors.quantity }"

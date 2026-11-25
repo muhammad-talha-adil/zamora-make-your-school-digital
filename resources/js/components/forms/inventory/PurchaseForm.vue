@@ -632,6 +632,7 @@ watch(() => form.purchase_items.length, (len) => {
                                         <Input
                                             v-model.number="item.quantity"
                                             type="number"
+                                            data-allow-negative
                                             min="1"
                                             class="h-10"
                                             required

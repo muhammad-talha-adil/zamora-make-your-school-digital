@@ -284,6 +284,15 @@ const applyFilters = () => {
     fetchAdjustments();
 };
 
+const initialTab = new URLSearchParams(window.location.search).get('tab');
+if (initialTab === 'adjustments' || initialTab === 'items' || initialTab === 'types') {
+    onTabChangeOnLoad(initialTab);
+}
+
+function onTabChangeOnLoad(tab: 'items' | 'adjustments' | 'types'): void {
+    activeTab.value = tab;
+}
+
 const onTabChange = (tab: 'stocks' | 'items' | 'adjustments' | 'types') => {
     activeTab.value = tab;
     searchQuery.value = '';
@@ -725,7 +734,7 @@ const loadStocksPage = (url: string) => fetchStocks(url);
                                 <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground whitespace-nowrap">Before / After</th>
                                 <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground whitespace-nowrap">Reference</th>
                                 <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground whitespace-nowrap">Reason</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground whitespace-nowrap hidden 2xl:table-cell">By</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground whitespace-nowrap">By</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-border bg-card">
@@ -745,7 +754,7 @@ const loadStocksPage = (url: string) => fetchStocks(url);
                                 <td class="px-4 py-3 text-sm text-muted-foreground">{{ adjustment.previous_quantity }} / {{ adjustment.new_quantity }}</td>
                                 <td class="px-4 py-3 text-sm text-muted-foreground">{{ adjustment.reference_number || '-' }}</td>
                                 <td class="px-4 py-3 text-sm text-muted-foreground min-w-40">{{ adjustment.reason }}</td>
-                                <td class="px-4 py-3 text-sm whitespace-nowrap text-muted-foreground hidden 2xl:table-cell">{{ adjustment.user_name || '-' }}</td>
+                                <td class="px-4 py-3 text-sm whitespace-nowrap text-muted-foreground">{{ adjustment.user_name || '-' }}</td>
                             </tr>
                         </tbody>
                     </table>

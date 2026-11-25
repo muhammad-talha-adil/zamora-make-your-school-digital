@@ -147,6 +147,12 @@ const closeModal = () => {
 
 const submitForm = () => {
     // Filter to only items with quantity > 0
+    const hasInvalidQuantity = form.value.items.some((item) => item.quantity < 0 || !Number.isInteger(Number(item.quantity)));
+    if (hasInvalidQuantity) {
+        alert.warning('Quantity must be at least 1.');
+        return;
+    }
+
     const itemsToReturn = selectedItems.value;
     
     if (itemsToReturn.length === 0) {
@@ -274,6 +280,7 @@ const submitForm = () => {
                                     <Input 
                                         v-model.number="form.items.find(f => f.student_inventory_item_id === item.id)!.quantity"
                                         type="number"
+                                        data-allow-negative
                                         min="0"
                                         :max="item.remaining_quantity"
                                         class="h-8"

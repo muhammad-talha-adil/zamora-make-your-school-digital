@@ -177,6 +177,8 @@ const lowStockItems = ref<LowStockItem[]>([]);
 const recentPurchases = ref<RecentPurchase[]>([]);
 const campuses = ref<Campus[]>([]);
 const inventoryTypes = ref<InventoryType[]>([]);
+const typeBreakdown = ref<Array<{ id: number; name: string; items_count: number }>>([]);
+const stockStatusCounts = ref({ healthy: 0, low: 0, out: 0 });
 const inventoryItems = ref<InventoryItem[]>([]);
 const students = ref<Student[]>([]);
 const suppliers = ref<Supplier[]>([]);
@@ -322,21 +324,18 @@ const statCards = computed(() => [
     },
 ]);
 
-// Computed stock status - based on actual items with stock data
+// Stock status percentages come from the same dashboard payload as the Low Stock card
 const stockStatus = computed(() => {
-    const items = inventoryItems.value;
-    if (items.length === 0) {
+    const { healthy, low, out } = stockStatusCounts.value;
+    const total = healthy + low + out;
+    if (total === 0) {
         return { healthy: 0, low: 0, outOfStock: 0 };
     }
-    
-    const healthy = items.filter(item => (item.available_stock ?? 0) > (item.low_stock_threshold ?? 10)).length;
-    const low = items.filter(item => (item.available_stock ?? 0) > 0 && (item.available_stock ?? 0) <= (item.low_stock_threshold ?? 10)).length;
-    const outOfStock = items.filter(item => (item.available_stock ?? 0) <= 0).length;
-    
+
     return {
-        healthy: Math.round((healthy / items.length) * 100),
-        low: Math.round((low / items.length) * 100),
-        outOfStock: Math.round((outOfStock / items.length) * 100),
+        healthy: Math.round((healthy / total) * 100),
+        low: Math.round((low / total) * 100),
+        outOfStock: Math.round((out / total) * 100),
     };
 });
 
@@ -409,6 +408,8 @@ const fetchAllData = async () => {
         // Ensure lowStockItems is always an array
         recentActivities.value = Array.isArray(dashboardData.recent_activities) ? dashboardData.recent_activities : [];
         lowStockItems.value = Array.isArray(dashboardData.low_stock_items) ? dashboardData.low_stock_items : [];
+        typeBreakdown.value = Array.isArray(dashboardData.by_type) ? dashboardData.by_type : [];
+        stockStatusCounts.value = dashboardData.stock_status || { healthy: 0, low: 0, out: 0 };
         recentPurchases.value = Array.isArray(dashboardData.recent_purchases) ? dashboardData.recent_purchases : [];
         
         // Fetch common data with campus filter
@@ -476,6 +477,11 @@ const openModal = (key: string) => {
         return;
     }
     
+    if (key === 'adjustment') {
+        router.get('/inventory/items-stock', { tab: 'adjustments' });
+        return;
+    }
+
     const ref = formRefs[key];
     if (ref.value?.$el) {
         const button = ref.value.$el.querySelector('button') as HTMLButtonElement;
@@ -697,23 +703,23 @@ const openModal = (key: string) => {
                         <div v-if="loading" class="space-y-3" aria-label="Loading types">
                             <div v-for="i in 3" :key="i" class="h-10 bg-muted rounded animate-pulse"></div>
                         </div>
-                        <div v-else-if="inventoryTypes.length === 0" class="text-center py-6 text-muted-foreground text-sm">
+                        <div v-else-if="typeBreakdown.length === 0" class="text-center py-6 text-muted-foreground text-sm">
                             <Icon icon="inbox" :size="32" class="mx-auto mb-2 text-muted-foreground" />
                             <p>No types found</p>
                         </div>
                         <div v-else class="space-y-2">
                             <div class="flex flex-wrap gap-2 justify-between items-center p-2 rounded bg-card">
                                 <span class="text-sm text-muted-foreground">Total Types</span>
-                                <span class="text-sm font-semibold text-foreground">{{ inventoryTypes.length }}</span>
+                                <span class="text-sm font-semibold text-foreground">{{ typeBreakdown.length }}</span>
                             </div>
                             <div 
-                                v-for="type in inventoryTypes.slice(0, 4)" 
+                                v-for="type in typeBreakdown.slice(0, 4)" 
                                 :key="type.id"
                                 class="flex flex-wrap gap-2 justify-between items-center p-2 rounded bg-card"
                             >
                                 <span class="text-sm text-muted-foreground truncate max-w-37.5" :title="type.name">{{ type.name }}</span>
                                 <span class="text-sm font-semibold text-foreground">
-                                    {{ inventoryItems.filter(item => item.inventory_type_id === type.id).length }}
+                                    {{ type.items_count }}
                                 </span>
                             </div>
                         </div>
@@ -728,9 +734,9 @@ const openModal = (key: string) => {
                         <div v-if="loading" class="space-y-4" aria-label="Loading stock status">
                             <div v-for="i in 3" :key="i" class="h-6 bg-muted rounded animate-pulse"></div>
                         </div>
-                        <div v-else-if="inventoryItems.length === 0" class="text-center py-6 text-muted-foreground text-sm">
+                        <div v-else-if="stockStatusCounts.healthy + stockStatusCounts.low + stockStatusCounts.out === 0" class="text-center py-6 text-muted-foreground text-sm">
                             <Icon icon="inbox" :size="32" class="mx-auto mb-2 text-muted-foreground" />
-                            <p>No items found</p>
+                            <p>No stock recorded yet</p>
                         </div>
                         <template v-else>
                             <!-- Healthy -->

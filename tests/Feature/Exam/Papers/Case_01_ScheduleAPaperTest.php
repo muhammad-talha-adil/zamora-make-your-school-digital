@@ -55,6 +55,24 @@ it('updates a paper through the real endpoint', function () {
     expect((float) $paper->fresh()->total_marks)->toBe(120.0);
 });
 
+it('saves a changed date and times from the exact payload the inline editor sends', function () {
+    $paper = $this->world->paper('Mathematics');
+    $newDate = now()->addDays(20)->toDateString();
+
+    $this->putJson(route('exam.papers.update', $paper->id), [
+        'paper_date' => $newDate,
+        'start_time' => '10:30',
+        'end_time' => '12:30',
+        'total_marks' => '100',
+        'passing_marks' => '40',
+    ])->assertSuccessful();
+
+    $fresh = ExamPaper::find($paper->id);
+    expect($fresh->paper_date->toDateString())->toBe($newDate)
+        ->and(substr((string) $fresh->start_time, 0, 5))->toBe('10:30')
+        ->and(substr((string) $fresh->end_time, 0, 5))->toBe('12:30');
+});
+
 it('bulk-creates papers through the real endpoint', function () {
     $science = Subject::firstOrCreate(['name' => 'Science'], ['short_name' => 'SCI', 'is_active' => true]);
     $urdu = Subject::firstOrCreate(['name' => 'Urdu'], ['short_name' => 'URD', 'is_active' => true]);

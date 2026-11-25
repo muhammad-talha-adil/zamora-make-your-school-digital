@@ -2,7 +2,7 @@
 import { usePage } from '@inertiajs/vue3';
 import type { Ref } from 'vue';
 import { router } from '@inertiajs/vue3';
-import { ref, computed } from 'vue';
+import { ref, computed, nextTick } from 'vue';
 import { requiredErrors, useClearErrorsOnEdit, useFormValidity } from '@/composables/useFormValidity';
 import { alert, formatCurrency } from '@/utils';
 
@@ -179,10 +179,19 @@ const closeModal = () => {
 };
 
 const submitForm = () => {
-    const missing = requiredErrors(form, ['campus_id', 'student_id', 'inventory_item_id', 'assigned_date']);
+    const missing: Record<string, string> = requiredErrors(form, ['campus_id', 'student_id', 'inventory_item_id', 'assigned_date']);
+    const assignQuantity = Number(form.value.quantity);
+    if ((form.value.quantity as unknown) === '' || form.value.quantity === null || Number.isNaN(assignQuantity)) {
+        missing.quantity = 'Quantity is required.';
+    } else if (assignQuantity < 1) {
+        missing.quantity = 'Quantity must be at least 1.';
+    }
     if (Object.keys(missing).length > 0) {
         errors.value = missing as typeof errors.value;
         alert.warning('Please check the highlighted fields.');
+        nextTick(() => {
+            document.querySelector('[data-invalid="true"]')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        });
         return;
     }
 
@@ -287,7 +296,7 @@ const submitForm = () => {
 
                     <!-- Quantity and Date -->
                     <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
-                        <div class="space-y-2">
+                        <div class="space-y-2" :data-invalid="!!errors.quantity">
                             <Label for="quantity" class="flex items-center gap-2">
                                 <div class="p-1 bg-muted rounded">
                                     <Icon icon="hash" class="h-3.5 w-3.5 text-muted-foreground" />
@@ -298,11 +307,11 @@ const submitForm = () => {
                                 id="quantity"
                                 v-model.number="form.quantity"
                                 type="number"
+                                data-allow-negative
                                 min="1"
                                 :max="selectedItem?.available_stock || 999"
                                 class="h-11"
                                 :class="{ 'border-destructive': errors.quantity }"
-                                required
                             />
                             <InputError :message="errors.quantity" />
                         </div>
