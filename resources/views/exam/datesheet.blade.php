@@ -73,6 +73,13 @@
             page-break-inside: avoid;
         }
         .signatures div { border-top: 1px solid #444; padding-top: 6px; font-size: 11.5px; }
+        @media (max-width: 640px) {
+            body { padding: 8px; }
+            .sheet { padding: 14px 12px; max-width: 100%; }
+            .head h1 { font-size: 17px; }
+            table { display: block; max-width: 100%; overflow-x: auto; }
+            .signatures { gap: 16px; }
+        }
         @media print {
             .noprint { display: none; }
             body { background: #fff; padding: 0; font-size: 11px; }
@@ -139,7 +146,7 @@
                         <td>
                             {{ $paper['class'] ?? 'All classes' }}{{ $paper['section'] ? ' — '.$paper['section'] : '' }}
                         </td>
-                        <td class="mid">{{ $paper['start_time'] }} &ndash; {{ $paper['end_time'] }}</td>
+                        <td class="mid">{{ \Illuminate\Support\Carbon::parse($paper['start_time'])->format('h:i A') }} &ndash; {{ \Illuminate\Support\Carbon::parse($paper['end_time'])->format('h:i A') }}</td>
                         <td class="mid">{{ $paper['duration'] ?? '—' }}</td>
                         <td class="num">{{ rtrim(rtrim(number_format($paper['total_marks'], 2), '0'), '.') }}</td>
                         <td class="num">{{ rtrim(rtrim(number_format($paper['passing_marks'], 2), '0'), '.') }}</td>

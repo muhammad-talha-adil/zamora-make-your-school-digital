@@ -10,6 +10,7 @@ use App\Models\Exam\ExamStudentRegistration;
 use App\Models\Exam\GradeSystemItem;
 use App\Services\Exam\GradeResolver;
 use Illuminate\Http\Request;
+use Illuminate\Support\Carbon;
 use Inertia\Inertia;
 
 class ExamDashboardController extends Controller
@@ -109,9 +110,9 @@ class ExamDashboardController extends Controller
                     'subject_name' => $paper->subject?->name,
                     'class_name' => $paper->class?->name,
                     'section_name' => $paper->section?->name,
-                    'paper_date' => $paper->paper_date?->format('Y-m-d'),
-                    'start_time' => $paper->start_time,
-                    'end_time' => $paper->end_time,
+                    'paper_date' => $paper->paper_date?->format('d M Y'),
+                    'start_time' => $this->clock($paper->start_time),
+                    'end_time' => $this->clock($paper->end_time),
                     'total_marks' => $paper->total_marks,
                     'status' => $paper->status,
                 ];
@@ -133,8 +134,8 @@ class ExamDashboardController extends Controller
                     'subject_name' => $paper->subject?->name,
                     'class_name' => $paper->class?->name,
                     'section_name' => $paper->section?->name,
-                    'start_time' => $paper->start_time,
-                    'end_time' => $paper->end_time,
+                    'start_time' => $this->clock($paper->start_time),
+                    'end_time' => $this->clock($paper->end_time),
                     'total_marks' => $paper->total_marks,
                 ];
             });
@@ -263,5 +264,13 @@ class ExamDashboardController extends Controller
                 $examId ? Exam::find($examId)?->session_id : null
             ),
         ]);
+    }
+
+    /**
+     * A paper time as "09:00 AM", without the seconds the database keeps.
+     */
+    private function clock(?string $time): ?string
+    {
+        return $time ? Carbon::parse($time)->format('h:i A') : null;
     }
 }

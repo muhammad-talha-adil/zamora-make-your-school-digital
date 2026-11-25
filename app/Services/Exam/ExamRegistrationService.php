@@ -74,6 +74,7 @@ class ExamRegistrationService
                         'class_id' => $enrollment->class_id,
                         'section_id' => $enrollment->section_id,
                         'enrollment_id' => $enrollment->id,
+                        'roll_no_snapshot' => $enrollment->roll_number,
                         'status' => 'registered',
                         'created_at' => $now,
                         'updated_at' => $now,

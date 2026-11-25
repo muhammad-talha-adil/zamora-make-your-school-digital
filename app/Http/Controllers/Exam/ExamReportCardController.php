@@ -12,6 +12,7 @@ use App\Models\Session;
 use App\Services\Exam\AnnualResultService;
 use App\Services\Exam\DatesheetService;
 use App\Services\Exam\ExamPositionService;
+use App\Services\Exam\ExamRegistrationService;
 use App\Services\Exam\ReportCardService;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
@@ -30,7 +31,8 @@ class ExamReportCardController extends Controller
         private ReportCardService $cards,
         private ExamPositionService $positions,
         private AnnualResultService $annual,
-        private DatesheetService $datesheets
+        private DatesheetService $datesheets,
+        private ExamRegistrationService $registrations
     ) {}
 
     /**
@@ -234,6 +236,13 @@ class ExamReportCardController extends Controller
 
         $exam = Exam::visibleTo($request->user())->with('examType')->findOrFail($examId);
         $this->authorize('view', $exam);
+
+        $this->registrations->generateFromEnrollments(
+            $exam->id,
+            $validated['class_id'] ?? null,
+            $validated['section_id'] ?? null,
+            $request->user()->campusId()
+        );
 
         $registrations = ExamStudentRegistration::with(['student.user', 'class', 'section'])
             ->where('exam_id', $exam->id)

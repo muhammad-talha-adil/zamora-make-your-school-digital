@@ -138,7 +138,12 @@ class ExamPaperController extends Controller
      */
     public function update(UpdateExamPaperRequest $request, $id)
     {
-        $paper = ExamPaper::findOrFail($id);
+        $paper = ExamPaper::with('exam')->findOrFail($id);
+
+        if ($paper->exam?->is_locked) {
+            return response()->json(['message' => 'This exam is locked, so its papers cannot be changed.'], 422);
+        }
+
         $this->authorize('update', $paper);
 
         $validated = $request->validated();
@@ -269,8 +274,17 @@ class ExamPaperController extends Controller
      */
     public function destroy($id)
     {
-        $paper = ExamPaper::findOrFail($id);
+        $paper = ExamPaper::with('exam')->findOrFail($id);
+
+        if ($paper->exam?->is_locked) {
+            return response()->json(['message' => 'This exam is locked, so its papers cannot be removed.'], 422);
+        }
+
         $this->authorize('delete', $paper);
+
+        if ($paper->examResultLines()->exists()) {
+            return response()->json(['message' => 'Marks are already entered for this paper, so it cannot be deleted. Cancel it instead.'], 422);
+        }
 
         $paper->delete();
 

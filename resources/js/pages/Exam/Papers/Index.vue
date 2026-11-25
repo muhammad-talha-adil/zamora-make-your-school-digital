@@ -83,7 +83,8 @@
                                     <div class="text-sm text-muted-foreground">{{ paperIndex + 1 }}</div>
                                 </td>
                                 <td class="px-4 py-3 whitespace-nowrap">
-                                    <div class="text-sm text-foreground">{{ formatDate(paper.paper_date) }}</div>
+                                    <Input v-if="editingId === paper.id" v-model="draft.paper_date" type="date" class="h-8 w-40" />
+                                    <div v-else class="text-sm text-foreground">{{ formatDate(paper.paper_date) }}</div>
                                 </td>
                                 <td class="px-4 py-3 whitespace-nowrap">
                                     <div class="text-sm font-medium text-foreground">{{ paper.subject?.name }}</div>
@@ -111,10 +112,22 @@
                                     </div>
                                 </td>
                                 <td class="px-4 py-3 whitespace-nowrap">
-                                    <div class="text-sm text-muted-foreground">{{ paper.start_time }} - {{ paper.end_time }}</div>
+                                    <template v-if="editingId === paper.id">
+                                        <div class="flex items-center gap-1">
+                                            <Input v-model="draft.start_time" type="time" class="h-8 w-28" />
+                                            <span>-</span>
+                                            <Input v-model="draft.end_time" type="time" class="h-8 w-28" />
+                                        </div>
+                                    </template>
+                                    <div v-else class="text-sm text-muted-foreground">{{ formatTime(paper.start_time) }} - {{ formatTime(paper.end_time) }}</div>
                                 </td>
                                 <td class="px-4 py-3 whitespace-nowrap">
-                                    <div class="text-sm text-muted-foreground">{{ paper.total_marks }} / {{ paper.passing_marks }}</div>
+                                    <div v-if="editingId === paper.id" class="flex items-center gap-1">
+                                        <Input v-model="draft.total_marks" type="number" min="1" class="h-8 w-20" placeholder="Total" />
+                                        <span>/</span>
+                                        <Input v-model="draft.passing_marks" type="number" min="0" class="h-8 w-20" placeholder="Pass" />
+                                    </div>
+                                    <div v-else class="text-sm text-muted-foreground">{{ paper.total_marks }} / {{ paper.passing_marks }}</div>
                                 </td>
                                 <td class="px-4 py-3 whitespace-nowrap">
                                     <span
@@ -129,9 +142,14 @@
                                 </td>
                                 <td class="px-4 py-3 text-sm font-medium whitespace-nowrap">
                                     <div class="flex flex-wrap gap-2 justify-end">
-                                        <Button variant="outline" size="sm" @click="router.visit(route('exam.papers.edit-page', paper.id))" class="min-h-8">
-                                            <Icon icon="eye" class="mr-1 h-3 w-3" />View
-                                        </Button>
+                                        <template v-if="editingId === paper.id">
+                                            <Button size="sm" :disabled="saving" @click="saveEdit(paper)" class="min-h-8">Save</Button>
+                                            <Button variant="outline" size="sm" :disabled="saving" @click="editingId = null" class="min-h-8">Cancel</Button>
+                                        </template>
+                                        <template v-else>
+                                            <Button variant="outline" size="sm" @click="startEdit(paper)" class="min-h-8">Edit</Button>
+                                            <Button variant="outline" size="sm" @click="removePaper(paper)" class="min-h-8 text-destructive">Delete</Button>
+                                        </template>
                                     </div>
                                 </td>
                             </tr>
@@ -158,7 +176,11 @@ import { Label } from '@/components/ui/label';
 import Icon from '@/components/Icon.vue';
 import FilterCard from '@/components/FilterCard.vue';
 import SearchableSelect from '@/components/ui/searchable-select/SearchableSelect.vue';
-import { formatDate } from '@/utils';
+import { Input } from '@/components/ui/input';
+import axios from 'axios';
+import { ref } from 'vue';
+import { alert } from '@/utils';
+import { formatDate, formatTime } from '@/utils/format';
 
 interface Exam {
     id: number;
@@ -232,6 +254,54 @@ const applyFilters = () => {
     router.visit(route('exam.papers.index-page', query), {
         preserveState: true,
     });
+};
+
+const editingId = ref<number | null>(null);
+const saving = ref(false);
+const draft = reactive({ paper_date: '', start_time: '', end_time: '', total_marks: '', passing_marks: '' });
+
+const startEdit = (paper: Paper) => {
+    editingId.value = paper.id;
+    draft.paper_date = String(paper.paper_date).slice(0, 10);
+    draft.start_time = String(paper.start_time).slice(0, 5);
+    draft.end_time = String(paper.end_time).slice(0, 5);
+    draft.total_marks = String(Number(paper.total_marks));
+    draft.passing_marks = String(Number(paper.passing_marks));
+};
+
+const errorText = (error: any, fallback: string): string => {
+    const errors = error.response?.data?.errors;
+    if (errors) {
+        return String(Object.values(errors).flat()[0]);
+    }
+    return error.response?.data?.message || fallback;
+};
+
+const saveEdit = async (paper: Paper) => {
+    saving.value = true;
+    try {
+        await axios.put(route('exam.papers.update', paper.id), { ...draft });
+        alert.success('Paper updated.');
+        editingId.value = null;
+        router.reload({ only: ['papers'], preserveScroll: true });
+    } catch (error: any) {
+        alert.warning(errorText(error, 'Could not update this paper. Please try again.'));
+    } finally {
+        saving.value = false;
+    }
+};
+
+const removePaper = async (paper: Paper) => {
+    if (!window.confirm(`Delete the ${paper.subject?.name ?? 'paper'} paper?`)) {
+        return;
+    }
+    try {
+        await axios.delete(route('exam.papers.destroy', paper.id));
+        alert.success('Paper deleted.');
+        router.reload({ only: ['papers'], preserveScroll: true });
+    } catch (error: any) {
+        alert.warning(errorText(error, 'Could not delete this paper. Please try again.'));
+    }
 };
 
 watch(() => [filters.exam_id, filters.class_id], applyFilters);

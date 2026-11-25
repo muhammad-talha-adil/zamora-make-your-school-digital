@@ -35,4 +35,17 @@ class UpdateExamPaperRequest extends FormRequest
             'subject_role' => ['nullable', Rule::enum(SubjectRole::class)],
         ];
     }
+
+    /**
+     * @return array<string, string>
+     */
+    public function messages(): array
+    {
+        return [
+            'end_time.after' => 'The paper must end after it starts.',
+            'passing_marks.lte' => 'Passing marks cannot be more than total marks.',
+            'total_marks.min' => 'Total marks must be at least 1.',
+            'paper_date.date' => 'Please choose a valid date.',
+        ];
+    }
 }

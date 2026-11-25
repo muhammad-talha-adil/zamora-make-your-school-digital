@@ -101,6 +101,13 @@
         }
         .signatures div { border-top: 1px solid #444; padding-top: 6px; font-size: 11.5px; }
         .printed { margin-top: 14px; text-align: center; font-size: 10.5px; color: #888; }
+        @media (max-width: 640px) {
+            body { padding: 8px; }
+            .card { padding: 14px 12px; max-width: 100%; }
+            .head h1 { font-size: 17px; }
+            table { display: block; max-width: 100%; overflow-x: auto; }
+            .signatures { gap: 16px; }
+        }
         @media print {
             .noprint { display: none; }
             body { background: #fff; padding: 0; }
@@ -130,7 +137,7 @@
                 <p class="sub">{{ $card['school']->address }}</p>
             @endif
             @if ($card['campus'])
-                <p class="sub">{{ $card['campus']->name }} Campus</p>
+                <p class="sub">{{ \Illuminate\Support\Str::contains(strtolower($card['campus']->name), 'campus') ? $card['campus']->name : $card['campus']->name.' Campus' }}</p>
             @endif
             <h2>{{ $card['exam']?->name }} &mdash; Result Card</h2>
         </div>

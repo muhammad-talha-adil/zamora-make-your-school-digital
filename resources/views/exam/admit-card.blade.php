@@ -28,6 +28,13 @@
         .signatures { display: grid; grid-template-columns: repeat(2, 1fr); gap: 40px; margin-top: 30px; text-align: center; }
         .signatures div { border-top: 1px solid #444; padding-top: 6px; font-size: 11.5px; }
         .empty { padding: 30px; text-align: center; color: #777; background: #fff; border: 1px dashed #ccc; max-width: 760px; margin: 0 auto; }
+        @media (max-width: 640px) {
+            body { padding: 8px; }
+            .card { padding: 14px 12px; max-width: 100%; }
+            .head h1 { font-size: 17px; }
+            table { display: block; max-width: 100%; overflow-x: auto; }
+            .signatures { gap: 16px; }
+        }
         @media print {
             body { background: #fff; padding: 0; }
             .bar { display: none; }
@@ -73,7 +80,7 @@
                             <td>{{ \Illuminate\Support\Carbon::parse($day['date'])->format('d M Y') }}</td>
                             <td>{{ $day['day_name'] }}</td>
                             <td>{{ $paper['subject'] ?? '—' }}</td>
-                            <td class="mid">{{ $paper['start_time'] }} &ndash; {{ $paper['end_time'] }}</td>
+                            <td class="mid">{{ \Illuminate\Support\Carbon::parse($paper['start_time'])->format('h:i A') }} &ndash; {{ \Illuminate\Support\Carbon::parse($paper['end_time'])->format('h:i A') }}</td>
                         </tr>
                     @endforeach
                 @endforeach
