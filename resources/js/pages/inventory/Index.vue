@@ -513,22 +513,22 @@ const openModal = (key: string) => {
 
             <!-- Stats Cards Grid -->
             <section aria-label="Inventory Statistics">
-                <div class="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3 md:gap-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 2xl:grid-cols-5 gap-3 md:gap-4">
                     <article 
                         v-for="stat in statCards" 
                         :key="stat.title"
-                        class="group bg-card rounded-xl border border-border p-4 md:p-5 hover:shadow-lg hover:border-border transition-all duration-200"
+                        class="group flex flex-col justify-between bg-card rounded-xl border border-border p-4 md:p-5 hover:shadow-lg hover:border-border transition-all duration-200"
                     >
-                        <div class="flex flex-wrap gap-2 items-start justify-between">
-                            <div>
+                        <div class="flex gap-2 items-start justify-between">
+                            <div class="min-w-0">
                                 <p class="text-xs md:text-sm font-medium text-muted-foreground uppercase tracking-wide">
                                     {{ stat.title }}
                                 </p>
-                                <p class="mt-2 text-2xl md:text-3xl font-bold" :class="stat.color">
+                                <p class="mt-2 text-2xl md:text-3xl font-bold truncate" :class="stat.color">
                                     {{ loading ? '...' : stat.value }}
                                 </p>
                             </div>
-                            <div :class="['p-2.5 rounded-lg transition-transform group-hover:scale-110', stat.bgColor]">
+                            <div :class="['shrink-0 p-2.5 rounded-lg transition-transform group-hover:scale-110', stat.bgColor]">
                                 <Icon :icon="stat.icon" :class="`h-5 w-5 md:h-6 md:w-6 ${stat.color}`" />
                             </div>
                         </div>
