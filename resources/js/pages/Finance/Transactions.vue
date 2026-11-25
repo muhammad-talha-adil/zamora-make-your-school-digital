@@ -287,7 +287,7 @@ const openPage = (url: string | null) => {
                                 <td class="px-6 py-4 text-sm text-muted-foreground">
                                     <div>{{ transaction.student_name || 'No student linked' }}</div>
                                     <div class="text-xs text-muted-foreground">
-                                        {{ transaction.counterparty_name || transaction.campus_name || '-' }}
+                                        {{ transaction.counterparty_name || '-' }}
                                     </div>
                                 </td>
                                 <td class="px-6 py-4 text-sm text-muted-foreground">

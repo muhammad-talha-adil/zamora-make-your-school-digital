@@ -1,11 +1,10 @@
 <script setup lang="ts">
 import { Head } from '@inertiajs/vue3';
-import { ref, computed, watch } from 'vue';
+import { computed } from 'vue';
 import { router } from '@inertiajs/vue3';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { Button } from '@/components/ui/button';
 import LineChart from '@/components/charts/LineChart.vue';
-import SearchableSelect from '@/components/ui/searchable-select/SearchableSelect.vue';
 import type { BreadcrumbItem } from '@/types';
 
 interface Props {
@@ -41,8 +40,6 @@ const todaySummary = computed(() => props.today_summary || { income: 0, expense:
 const monthSummary = computed(() => props.month_summary || { income: 0, expense: 0, balance: 0 });
 const studentReceivables = computed(() => props.student_receivables || { total_open: 0, fee_open: 0, inventory_open: 0, transport_open: 0 });
 const operationsSummary = computed(() => props.operations_summary || { pending_salary_payable: 0, transport_expense_month: 0 });
-const campuses = computed(() => props.campuses || []);
-const campusOptions = computed(() => campuses.value.map((c) => ({ value: c.id, label: c.name })));
 const weeklyTrend = computed(() => props.weekly_trend || []);
 const incomeTrendPoints = computed(() =>
     weeklyTrend.value.map((point) => ({
@@ -56,9 +53,6 @@ const expenseTrendPoints = computed(() =>
         value: point.expense,
     })),
 );
-
-// Form state
-const selectedCampus = ref(props.selected_campus);
 
 // Breadcrumbs
 const breadcrumbItems: BreadcrumbItem[] = [
@@ -75,15 +69,6 @@ const formatMoney = (amount: number | null | undefined) => {
         minimumFractionDigits: 0,
     }).format(amount);
 };
-
-// Change campus
-const changeCampus = () => {
-    const params: Record<string, string> = {};
-    if (selectedCampus.value) params.campus_id = String(selectedCampus.value);
-    router.get('/finance', params);
-};
-
-watch(selectedCampus, changeCampus);
 
 // Navigate to route
 const navigateTo = (path: string) => {
@@ -105,15 +90,6 @@ const navigateTo = (path: string) => {
                     <p class="mt-1 text-sm text-muted-foreground">
                         Overview of your financial transactions
                     </p>
-                </div>
-                <div class="flex items-center gap-2">
-                    <SearchableSelect
-                        v-model="selectedCampus"
-                        :options="campusOptions"
-                        placeholder="All Campuses"
-                        clearable
-                        class="w-48"
-                    />
                 </div>
             </div>
 

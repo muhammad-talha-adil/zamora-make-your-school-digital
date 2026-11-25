@@ -52,6 +52,14 @@ class StoreBulkAttendanceRequest extends FormRequest
             return;
         }
 
+        foreach ($rows as $index => $row) {
+            foreach (['check_in', 'check_out'] as $field) {
+                if (is_array($row) && ! empty($row[$field]) && preg_match('/^\d{2}:\d{2}:\d{2}$/', (string) $row[$field])) {
+                    $rows[$index][$field] = substr((string) $row[$field], 0, 5);
+                }
+            }
+        }
+
         $service = app(AttendanceService::class);
         $leaveStatusId = $service->getStatusId(AttendanceStatusCode::LEAVE->value);
 

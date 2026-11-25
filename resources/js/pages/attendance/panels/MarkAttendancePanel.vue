@@ -187,7 +187,7 @@
         <!-- No Students Message -->
         <div v-else-if="selectedClassId && selectedSectionId" class="bg-card rounded-lg border border-border p-6 md:p-8 text-center">
             <Icon icon="users" class="h-10 w-10 md:h-12 md:w-12 text-muted-foreground mx-auto mb-3 md:mb-4" />
-            <p class="text-sm md:text-base text-muted-foreground">{{ isFutureSelected ? 'Attendance cannot be marked for a future date.' : 'No students found for the selected class and section.' }}</p>
+            <p class="text-sm md:text-base text-muted-foreground">{{ isFutureSelected ? 'Attendance cannot be marked for a future date.' : 'No students enrolled in this class on this date.' }}</p>
         </div>
     </div>
 </template>
@@ -472,8 +472,10 @@ const submitAttendance = () => {
         onError: (errors) => {
             if (errors.attendance_date) {
                 futureDateError.value = errors.attendance_date;
-                alert.warning(errors.attendance_date);
             }
+            const first = Object.values(errors)[0];
+            markError.value = String(first ?? 'Could not save attendance.');
+            alert.warning(markError.value);
         },
         onSuccess: () => router.visit(route('attendance.index')),
     });

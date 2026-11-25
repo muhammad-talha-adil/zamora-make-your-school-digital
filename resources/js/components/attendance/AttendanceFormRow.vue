@@ -40,7 +40,7 @@
                 :options="statusOptions"
                 :disabled="disabled"
                 placeholder="Select"
-                class="min-w-[100px]"
+                class="min-w-[150px]"
             />
         </td>
 

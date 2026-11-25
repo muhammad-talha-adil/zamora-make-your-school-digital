@@ -123,7 +123,7 @@
                                     <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">#</th>
                                     <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Student</th>
                                     <th class="hidden 2xl:table-cell px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Reg No</th>
-                                    <th class="hidden 2xl:table-cell px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Campus / Class / Section</th>
+                                    <th class="hidden 2xl:table-cell px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Class / Section</th>
                                     <th class="hidden 2xl:table-cell px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Guardian</th>
                                     <th class="px-4 py-3 text-center text-xs font-semibold text-muted-foreground uppercase">Present</th>
                                     <th class="px-4 py-3 text-center text-xs font-semibold text-muted-foreground uppercase">Absent</th>

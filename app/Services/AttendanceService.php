@@ -439,8 +439,8 @@ class AttendanceService
                     'attendance_status_id' => $record->attendance_status_id,
                     'attendance_status_code' => $record->attendanceStatus?->code,
                     'leave_type_id' => $record->leave_type_id,
-                    'check_in' => $record->check_in,
-                    'check_out' => $record->check_out,
+                    'check_in' => $record->check_in ? substr((string) $record->check_in, 0, 5) : null,
+                    'check_out' => $record->check_out ? substr((string) $record->check_out, 0, 5) : null,
                     'remarks' => $record->remarks,
                     'student_leave_id' => $record->student_leave_id,
                 ];

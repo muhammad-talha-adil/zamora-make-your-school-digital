@@ -1188,7 +1188,6 @@ class AttendanceController extends Controller
             // The placement they held during the month being reported on.
             $enrollment = $student->enrollmentRecords->first();
             $enrollmentInfo = $enrollment ? (
-                ($enrollment->campus ? $enrollment->campus->name : '').' / '.
                 ($enrollment->class ? $enrollment->class->name : '').' / '.
                 ($enrollment->section ? $enrollment->section->name : '')
             ) : '';
