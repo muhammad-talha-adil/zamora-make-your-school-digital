@@ -172,7 +172,7 @@ const submitForm = () => {
                 {{ trigger }}
             </Button>
         </DialogTrigger>
-        <DialogContent class="sm:max-w-lg">
+        <DialogContent class="sm:max-w-2xl">
             <DialogHeader>
                 <DialogTitle class="flex items-center gap-2">
                     <div class="p-2 bg-primary/10 rounded-lg">
