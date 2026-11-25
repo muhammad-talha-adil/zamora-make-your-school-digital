@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { headerCampusId } from '@/utils/campus';
 import { Head, router } from '@inertiajs/vue3';
 import { alert, formatCurrency } from '@/utils';
 import { ref, watch, computed } from 'vue';
@@ -72,7 +71,7 @@ watch(showItemForm, (open) => {
 
 // Filter states
 const showDeleted = ref(false);
-const campusFilter = ref(props.filters?.campus_id || headerCampusId());
+const campusFilter = ref('');
 const typeFilter = ref('');
 const perPage = ref(25);
 const inventoryItemsData = ref(props.inventoryItems.data || []);
@@ -229,13 +228,6 @@ const getStockStatus = (quantity: number) => {
             <!-- Filters -->
             <FilterCard class="flex flex-wrap gap-2 items-center">
                 <SearchableSelect
-                    v-model="campusFilter"
-                    :options="campusOptions"
-                    placeholder="All Campuses"
-                    clearable
-                    class="w-full sm:w-48"
-                />
-                <SearchableSelect
                     v-model="typeFilter"
                     :options="typeOptions"
                     placeholder="All Types"
@@ -268,9 +260,7 @@ const getStockStatus = (quantity: number) => {
                     <table class="min-w-full divide-y divide-border">
                         <thead class="bg-muted">
                             <tr>
-                                <th scope="col" class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">
-                                    Sr#
-                                </th>
+                                <th scope="col" class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">#</th>
                                 <th scope="col" class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">
                                     Item
                                 </th>
@@ -292,6 +282,9 @@ const getStockStatus = (quantity: number) => {
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-border bg-card">
+                            <tr v-if="!(inventoryItemsData)?.length">
+                                <td colspan="12" class="px-4 py-8 text-center text-sm text-muted-foreground">No inventory items yet.</td>
+                            </tr>
                             <tr v-for="(item, index) in inventoryItemsData" :key="item.id" class="transition-colors hover:bg-accent">
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <div class="text-sm text-muted-foreground">

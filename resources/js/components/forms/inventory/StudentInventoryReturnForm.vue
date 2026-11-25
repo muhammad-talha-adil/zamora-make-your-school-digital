@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { usePage } from '@inertiajs/vue3';
 import { router } from '@inertiajs/vue3';
 import { ref, computed, watch } from 'vue';
 import { alert, formatCurrency } from '@/utils';
@@ -149,7 +150,7 @@ const submitForm = () => {
     const itemsToReturn = selectedItems.value;
     
     if (itemsToReturn.length === 0) {
-        alert.error('Please select at least one item to return.');
+        alert.warning('Please select at least one item to return.');
         return;
     }
 
@@ -182,7 +183,7 @@ const submitForm = () => {
             const firstError = Object.values(response.data.errors)[0];
             alert.warning(Array.isArray(firstError) ? firstError[0] : firstError);
         } else {
-            alert.error('Failed to process return. Please check the errors.');
+            alert.warning('Failed to process return. Please check the errors.');
         }
     })
     .finally(() => {

@@ -73,33 +73,36 @@
                 <table class="min-w-full divide-y divide-border">
                     <thead class="bg-muted">
                         <tr>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                            <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider whitespace-nowrap">
                                 #
                             </th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                            <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider whitespace-nowrap">
                                 Date
                             </th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                            <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider whitespace-nowrap">
                                 Item
                             </th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                            <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider whitespace-nowrap">
                                 Type
                             </th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                            <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider whitespace-nowrap">
                                 Quantity Change
                             </th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                            <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider whitespace-nowrap">
                                 Reason
                             </th>
-                            <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                            <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider whitespace-nowrap">
                                 By
                             </th>
-                            <th class="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider">
+                            <th class="px-6 py-3 text-right text-xs font-medium text-muted-foreground uppercase tracking-wider whitespace-nowrap">
                                 Actions
                             </th>
                         </tr>
                     </thead>
                     <tbody class="bg-card divide-y divide-border">
+                        <tr v-if="!(props.adjustments.data)?.length">
+                            <td colspan="12" class="px-4 py-8 text-center text-sm text-muted-foreground">No adjustments yet.</td>
+                        </tr>
                         <tr v-for="(adjustment, adjustmentIndex) in props.adjustments.data" :key="adjustment.id" class="hover:bg-accent">
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
                                 {{ ((props.adjustments.from || 1) - 1) + adjustmentIndex + 1 }}

@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import type { Ref } from 'vue';
-import CampusSelect from '@/components/ui/CampusSelect.vue';
 import axios from 'axios';
 import { alert } from '@/utils';
 import { ref, computed, reactive } from 'vue';
@@ -63,7 +62,7 @@ const showCampusField = computed(() => !academicScope.value?.isCampusRestricted)
 
 // Form data
 const form = reactive({
-    campus_id: academicScope.value?.campusId || props.campuses[0]?.id || '',
+    campus_id: academicScope.value?.campusId || ((usePage().props as any).academicScope?.campusId ?? props.campuses[0]?.id) || '',
     inventory_item_id: '',
     type: 'add' as 'add' | 'subtract' | 'set',
     quantity: 0,
@@ -111,7 +110,7 @@ const onCampusChange = () => {
 };
 
 const resetForm = () => {
-    form.campus_id = academicScope.value?.campusId || props.campuses[0]?.id || '';
+    form.campus_id = academicScope.value?.campusId || ((usePage().props as any).academicScope?.campusId ?? props.campuses[0]?.id) || '';
     form.inventory_item_id = '';
     form.type = 'add';
     form.quantity = 0;
@@ -149,7 +148,7 @@ const submitForm = () => {
             } else if (err.response?.data?.message) {
                 alert.error(err.response.data.message);
             } else {
-                alert.error('Failed to create adjustment. Please check the errors.');
+                alert.warning('Failed to create adjustment. Please check the errors.');
             }
         })
         .finally(() => {
@@ -181,22 +180,6 @@ const submitForm = () => {
                 <div class="bg-card rounded-lg border p-5 space-y-4">
                     <!-- Campus (school-wide users only; a campus-restricted
                          user's own campus is forced server-side anyway) -->
-                    <div v-if="showCampusField" class="space-y-2">
-                        <Label for="campus_id" class="flex items-center gap-2">
-                            <div class="p-1 bg-muted rounded">
-                                <Icon icon="building" class="h-3.5 w-3.5 text-muted-foreground" />
-                            </div>
-                            Campus <span class="text-destructive">*</span>
-                        </Label>
-                        <CampusSelect
-                            id="campus_id"
-                            v-model="form.campus_id"
-                            :options="campusOptions"
-                            placeholder="Select Campus"
-                            @update:model-value="onCampusChange"
-                        />
-                        <InputError :message="errors.campus_id" />
-                    </div>
 
                     <!-- Inventory Item -->
                     <div class="space-y-2">

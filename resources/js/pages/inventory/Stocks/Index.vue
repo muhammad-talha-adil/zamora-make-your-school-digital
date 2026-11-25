@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { headerCampusId } from '@/utils/campus';
 import { Head } from '@inertiajs/vue3';
 import { ref, watch, computed, reactive } from 'vue';
 import axios from 'axios';
@@ -62,7 +61,7 @@ const props = defineProps<Props>();
 
 // Filter states
 const perPage = ref(25);
-const campusFilter = ref(headerCampusId());
+const campusFilter = ref('');
 const campusOptions = computed(() => props.campuses.map((campus) => ({ value: campus.id, label: campus.name })));
 
 watch(campusFilter, () => fetchStocks());
@@ -266,13 +265,6 @@ const summaryStats = computed(() => {
 
             <!-- Filters -->
             <div class="flex flex-col sm:flex-row gap-2 md:gap-3 items-center">
-                <SearchableSelect
-                    v-model="campusFilter"
-                    :options="campusOptions"
-                    placeholder="All Campuses"
-                    clearable
-                    class="w-full sm:w-44 md:w-48"
-                />
                 <label class="flex items-center gap-2 text-sm text-muted-foreground min-h-10 px-2">
                     <input 
                         type="checkbox" 
@@ -357,14 +349,9 @@ const summaryStats = computed(() => {
                     <table class="min-w-full divide-y divide-border">
                         <thead class="bg-muted">
                             <tr>
-                                <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">
-                                    Sr#
-                                </th>
+                                <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">#</th>
                                 <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">
                                     Item
-                                </th>
-                                <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">
-                                    Campus
                                 </th>
                                 <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">
                                     Qty
@@ -387,6 +374,9 @@ const summaryStats = computed(() => {
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-border bg-card">
+                            <tr v-if="!(stocksData)?.length">
+                                <td colspan="12" class="px-4 py-8 text-center text-sm text-muted-foreground">No stocks yet.</td>
+                            </tr>
                             <tr v-for="(stock, index) in stocksData" :key="stock.id" class="transition-colors hover:bg-accent">
                                 <td class="px-4 py-3 whitespace-nowrap">
                                     <div class="text-sm text-muted-foreground">

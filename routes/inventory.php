@@ -10,6 +10,7 @@ use App\Http\Controllers\Inventory\PurchaseReturnsController;
 use App\Http\Controllers\Inventory\PurchasesController;
 use App\Http\Controllers\Inventory\StudentInventoriesController;
 use App\Http\Controllers\Inventory\SuppliersController;
+use App\Http\Middleware\UseHeaderCampus;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -24,7 +25,7 @@ use Illuminate\Support\Facades\Route;
 | suppliers and student issuances regardless of role.
 */
 
-Route::middleware(['auth', 'verified'])->group(function () {
+Route::middleware(['auth', 'verified', UseHeaderCampus::class])->group(function () {
     // ==================== INVENTORY DASHBOARD ====================
     Route::get('/inventory/dashboard-data', [InventoryItemsController::class, 'getDashboardData'])
         ->name('inventory.dashboard-data')

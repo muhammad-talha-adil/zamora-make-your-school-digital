@@ -1,7 +1,6 @@
 <script setup lang="ts">
-import { headerCampusId } from '@/utils/campus';
 import { Head, router } from '@inertiajs/vue3';
-import { computed, ref, watch } from 'vue';
+import { ref, watch } from 'vue';
 import axios from 'axios';
 import AppLayout from '@/layouts/AppLayout.vue';
 import { Button } from '@/components/ui/button';
@@ -10,7 +9,6 @@ import { Badge } from '@/components/ui/badge';
 import type { BreadcrumbItem } from '@/types';
 import { formatDate } from '@/utils/date';
 import { formatCurrency } from '@/utils/currency';
-import SearchableSelect from '@/components/ui/searchable-select/SearchableSelect.vue';
 
 interface Props {
     studentInventories: any;
@@ -22,13 +20,6 @@ interface Props {
 
 const props = defineProps<Props>();
 const activeTab = ref('assigned');
-const campusFilter = ref(Number(headerCampusId()) || props.campuses[0]?.id || '');
-const campusOptions = computed(() => props.campuses.map((campus) => ({ value: campus.id, label: campus.name })));
-
-watch(campusFilter, () => {
-    if (activeTab.value === 'assigned') fetchStudentInventories();
-    if (activeTab.value === 'returns') fetchReturns();
-});
 
 // Pagination state
 const studentInventoriesPagination = ref({ current_page: 1, last_page: 1, per_page: 20, total: 0, from: 0, to: 0 });
@@ -56,8 +47,6 @@ const fetchStudentInventories = () => {
         page: studentInventoriesPagination.value.current_page,
         per_page: studentInventoriesPagination.value.per_page,
     };
-    if (campusFilter.value) params.campus_id = campusFilter.value;
-    
     axios.get('/inventory/student-inventory/all', { params }).then((response) => {
         const result = response.data;
         studentInventoriesData.value = result.data || result || [];
@@ -74,8 +63,6 @@ const fetchReturns = () => {
         page: returnsPagination.value.current_page,
         per_page: returnsPagination.value.per_page,
     };
-    if (campusFilter.value) params.campus_id = campusFilter.value;
-    
     axios.get('/inventory/returns/all', { params }).then((response) => {
         const result = response.data;
         returnsData.value = result.data || result || [];
@@ -129,17 +116,6 @@ watch(activeTab, (newTab) => {
     }
 });
 
-// Watch for campus filter changes
-watch(campusFilter, () => {
-    if (activeTab.value === 'assigned') {
-        studentInventoriesPagination.value.current_page = 1;
-        fetchStudentInventories();
-    } else if (activeTab.value === 'returns') {
-        returnsPagination.value.current_page = 1;
-        fetchReturns();
-    }
-});
-
 // Initial fetch on mount
 fetchStudentInventories();
 </script>
@@ -161,7 +137,7 @@ fetchStudentInventories();
 
             <!-- Tabs -->
             <div class="border-b border-border">
-                <nav class="-mb-px flex space-x-8 overflow-x-auto">
+                <nav class="-mb-px flex space-x-8 overflow-x-auto flex-nowrap [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                     <button
                         @click="activeTab = 'assigned'"
                         :class="[
@@ -190,17 +166,7 @@ fetchStudentInventories();
             </div>
 
             <!-- Filters & Actions Bar -->
-            <div class="flex flex-wrap items-center justify-between gap-3 mb-4">
-                <div class="flex flex-wrap gap-3 flex-1">
-                    <SearchableSelect
-                        v-model="campusFilter"
-                        :options="campusOptions"
-                        placeholder="All Campuses"
-                        clearable
-                        class="w-full sm:w-48"
-                    />
-                </div>
-                
+            <div class="flex flex-wrap items-center justify-end gap-3">
                 <Button v-if="activeTab === 'assigned'" @click="router.get('/inventory/student-inventory/create')" class="min-h-11">
                     <Icon icon="user-plus" class="mr-2" />
                     Assign to Student
@@ -213,19 +179,21 @@ fetchStudentInventories();
                     <table class="min-w-full divide-y divide-border">
                         <thead class="bg-muted">
                             <tr>
-                                <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Sr#</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Student</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Reg #</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Campus</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Items</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Total Qty</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Amount</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Date</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Status</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Actions</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase whitespace-nowrap">#</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase whitespace-nowrap">Student</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase whitespace-nowrap hidden 2xl:table-cell">Reg #</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase whitespace-nowrap">Items</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase whitespace-nowrap hidden 2xl:table-cell">Total Qty</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase whitespace-nowrap">Amount</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase whitespace-nowrap">Date</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase whitespace-nowrap">Status</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase whitespace-nowrap">Actions</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-border bg-card">
+                            <tr v-if="studentInventoriesData.length === 0">
+                                <td colspan="8" class="px-4 py-8 text-center text-sm text-muted-foreground">{{ 'No items assigned yet.' }}</td>
+                            </tr>
                             <tr v-for="(record, index) in studentInventoriesData" :key="record.id" class="hover:bg-accent">
                                 <td class="px-4 py-4 whitespace-nowrap text-sm font-medium text-foreground">{{ String(Number(studentInventoriesPagination.from || 1) + Number(index)) }}</td>
                                 <td class="px-4 py-4 whitespace-nowrap text-sm font-medium text-foreground">
@@ -234,8 +202,7 @@ fetchStudentInventories();
                                         {{ record.class_name }}{{ record.class_name && record.section_name ? ' - ' : '' }}{{ record.section_name }}
                                     </div>
                                 </td>
-                                <td class="px-4 py-4 whitespace-nowrap text-sm text-muted-foreground">{{ record.registration_number || '-' }}</td>
-                                <td class="px-4 py-4 whitespace-nowrap text-sm text-muted-foreground">{{ record.campus_name || '-' }}</td>
+                                <td class="px-4 py-4 whitespace-nowrap text-sm hidden 2xl:table-cell text-muted-foreground">{{ record.registration_number || '-' }}</td>
                                 <td class="px-4 py-4 whitespace-nowrap text-sm text-foreground">
                                     <div class="flex flex-col">
                                         <span>{{ getItemDisplayText(record) }}</span>
@@ -244,7 +211,7 @@ fetchStudentInventories();
                                         </span>
                                     </div>
                                 </td>
-                                <td class="px-4 py-4 whitespace-nowrap text-sm text-muted-foreground">{{ getTotalItemsCount(record) }}</td>
+                                <td class="px-4 py-4 whitespace-nowrap text-sm hidden 2xl:table-cell text-muted-foreground">{{ getTotalItemsCount(record) }}</td>
                                 <td class="px-4 py-4 whitespace-nowrap text-sm font-bold text-foreground">{{ formatCurrency(Math.abs(record.final_amount)) }}</td>
                                 <td class="px-4 py-4 whitespace-nowrap text-sm text-muted-foreground">{{ formatDate(record.assigned_date) }}</td>
                                 <td class="px-4 py-4 whitespace-nowrap">
@@ -274,29 +241,31 @@ fetchStudentInventories();
                     <table class="min-w-full divide-y divide-border">
                         <thead class="bg-muted">
                             <tr>
-                                <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">#</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Return ID</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Student</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Reg #</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Total Qty</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Total Amount</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Return Date</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Status</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Campus</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Actions</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase whitespace-nowrap">#</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase whitespace-nowrap hidden 2xl:table-cell">Return ID</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase whitespace-nowrap">Student</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase whitespace-nowrap hidden 2xl:table-cell">Reg #</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase whitespace-nowrap hidden 2xl:table-cell">Total Qty</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase whitespace-nowrap">Total Amount</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase whitespace-nowrap">Return Date</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase whitespace-nowrap">Status</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase whitespace-nowrap">Actions</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-border bg-card">
+                            <tr v-if="returnsData.length === 0">
+                                <td colspan="8" class="px-4 py-8 text-center text-sm text-muted-foreground">{{ 'No returns yet.' }}</td>
+                            </tr>
                             <tr v-for="(returnItem, returnIndex) in returnsData" :key="returnItem.id" class="hover:bg-accent">
                                 <td class="px-4 py-4 whitespace-nowrap text-sm text-muted-foreground">{{ returnIndex + 1 }}</td>
-                                <td class="px-4 py-4 whitespace-nowrap text-sm font-medium text-foreground">{{ returnItem.return_id || 'N/A' }}</td>
+                                <td class="px-4 py-4 whitespace-nowrap text-sm hidden 2xl:table-cell font-medium text-foreground">{{ returnItem.return_id || 'N/A' }}</td>
                                 <td class="px-4 py-4 whitespace-nowrap text-sm font-medium text-foreground">
                                     {{ returnItem.student_name || returnItem.student?.name || 'N/A' }}
                                 </td>
-                                <td class="px-4 py-4 whitespace-nowrap text-sm text-muted-foreground">
+                                <td class="px-4 py-4 whitespace-nowrap text-sm hidden 2xl:table-cell text-muted-foreground">
                                     {{ returnItem.registration_number || returnItem.student?.registration_number || '-' }}
                                 </td>
-                                <td class="px-4 py-4 whitespace-nowrap text-sm text-muted-foreground">{{ returnItem.total_quantity }}</td>
+                                <td class="px-4 py-4 whitespace-nowrap text-sm hidden 2xl:table-cell text-muted-foreground">{{ returnItem.total_quantity }}</td>
                                 <td class="px-4 py-4 whitespace-nowrap text-sm font-bold text-foreground">{{ formatCurrency(returnItem.total_amount) }}</td>
                                 <td class="px-4 py-4 whitespace-nowrap text-sm text-muted-foreground">{{ formatDate(returnItem.return_date) }}</td>
                                 <td class="px-4 py-4 whitespace-nowrap">
@@ -304,7 +273,6 @@ fetchStudentInventories();
                                         {{ getStatusBadge(returnItem.status).label }}
                                     </Badge>
                                 </td>
-                                <td class="px-4 py-4 whitespace-nowrap text-sm text-muted-foreground">{{ returnItem.campus_name }}</td>
                                 <td class="px-4 py-4 whitespace-nowrap">
                                     <Button variant="outline" size="sm" @click="router.visit(`/inventory/student-inventory/return/${returnItem.id}/view`)">
                                         <Icon icon="eye" class="h-4 w-4" />

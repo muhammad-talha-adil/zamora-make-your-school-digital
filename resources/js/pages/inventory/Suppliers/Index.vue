@@ -124,6 +124,9 @@
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-border bg-card">
+                            <tr v-if="!(props.suppliers.data)?.length">
+                                <td colspan="12" class="px-4 py-8 text-center text-sm text-muted-foreground">No suppliers yet.</td>
+                            </tr>
                             <tr v-for="(supplier, supplierIndex) in props.suppliers.data" :key="supplier.id" class="transition-colors hover:bg-accent">
                                 <td class="px-4 py-3 whitespace-nowrap text-sm text-muted-foreground">
                                     {{ ((props.suppliers.from || 1) - 1) + supplierIndex + 1 }}

@@ -1,6 +1,6 @@
 <script setup lang="ts">
+import { usePage } from '@inertiajs/vue3';
 import type { Ref } from 'vue';
-import CampusSelect from '@/components/ui/CampusSelect.vue';
 import axios from 'axios';
 import { alert } from '@/utils';
 import { ref, computed, reactive, watch } from 'vue';
@@ -118,7 +118,7 @@ const emit = defineEmits<{
 
 // Form data
 const form = reactive({
-    campus_id: props.campuses[0]?.id || '',
+    campus_id: ((usePage().props as any).academicScope?.campusId ?? props.campuses[0]?.id) || '',
     supplier_id: null as number | null,
     purchase_id: null as number | null,
     return_date: new Date().toISOString().split('T')[0],
@@ -368,7 +368,7 @@ const getItemPurchaseRate = (itemIndex: number): number => {
 };
 
 const resetForm = () => {
-    form.campus_id = props.campuses[0]?.id || '';
+    form.campus_id = ((usePage().props as any).academicScope?.campusId ?? props.campuses[0]?.id) || '';
     form.supplier_id = null;
     form.purchase_id = null;
     form.return_date = new Date().toISOString().split('T')[0];
@@ -440,29 +440,29 @@ const validateItems = (): boolean => {
         const item = form.items[i];
         
         if (!item.inventory_item_id) {
-            alert.error(`Please select an item for row ${i + 1}`);
+            alert.warning(`Please select an item for row ${i + 1}`);
             return false;
         }
         
         if (item.quantity <= 0) {
-            alert.error(`Please enter a valid quantity for row ${i + 1}`);
+            alert.warning(`Please enter a valid quantity for row ${i + 1}`);
             return false;
         }
         
         const maxQty = getItemMaxQuantity(i);
         if (item.quantity > maxQty) {
-            alert.error(`Quantity for row ${i + 1} cannot exceed available stock (${maxQty})`);
+            alert.warning(`Quantity for row ${i + 1} cannot exceed available stock (${maxQty})`);
             return false;
         }
         
         if (item.unit_price <= 0) {
-            alert.error(`Please enter a valid unit price for row ${i + 1}`);
+            alert.warning(`Please enter a valid unit price for row ${i + 1}`);
             return false;
         }
         
         // If "Other" reason is selected, custom reason is required
         if (item.reason_id === otherReasonId.value && !item.custom_reason.trim()) {
-            alert.error(`Please specify the reason for row ${i + 1}`);
+            alert.warning(`Please specify the reason for row ${i + 1}`);
             return false;
         }
     }
@@ -586,23 +586,6 @@ watch(() => form.purchase_id, (newPurchaseId) => {
                 <div class="bg-card rounded-lg border p-5 space-y-4">
                     <!-- Campus, Supplier, Purchase Row -->
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <!-- Campus -->
-                        <div class="space-y-2">
-                            <Label for="campus_id" class="flex items-center gap-2">
-                                <div class="p-1 bg-muted rounded">
-                                    <Icon icon="building" class="h-3.5 w-3.5 text-muted-foreground" />
-                                </div>
-                                Campus <span class="text-destructive">*</span>
-                            </Label>
-                            <CampusSelect
-                                id="campus_id"
-                                v-model="form.campus_id"
-                                :options="campusOptions"
-                                placeholder="Select Campus"
-                                @update:model-value="onCampusChange"
-                            />
-                            <InputError :message="errors.campus_id" />
-                        </div>
 
                         <!-- Supplier -->
                         <div class="space-y-2">

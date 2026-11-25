@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { headerCampusId } from '@/utils/campus';
 import { Head, router } from '@inertiajs/vue3';
 import { alert, formatCurrency } from '@/utils';
 import { computed, ref, watch } from 'vue';
@@ -53,7 +52,7 @@ const props = defineProps<Props>();
 
 // Filter states
 const perPage = ref(10);
-const campusFilter = ref(headerCampusId());
+const campusFilter = ref('');
 const campusOptions = computed(() => props.campuses.map((campus) => ({ value: campus.id, label: campus.name })));
 const statusFilter = ref('');
 const statusOptions = [
@@ -192,13 +191,6 @@ const formatDate = (date: string) => {
             <!-- Filters -->
             <FilterCard class="flex flex-wrap gap-3">
                 <SearchableSelect
-                    v-model="campusFilter"
-                    :options="campusOptions"
-                    placeholder="All Campuses"
-                    clearable
-                    class="w-full sm:w-48"
-                />
-                <SearchableSelect
                     v-model="statusFilter"
                     :options="statusOptions"
                     placeholder="All Status"
@@ -240,6 +232,9 @@ const formatDate = (date: string) => {
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-border bg-card">
+                            <tr v-if="!(studentInventoriesData)?.length">
+                                <td colspan="12" class="px-4 py-8 text-center text-sm text-muted-foreground">No student inventories yet.</td>
+                            </tr>
                             <tr v-for="(item, index) in studentInventoriesData" :key="item.id" class="transition-colors hover:bg-accent">
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <div class="text-sm text-muted-foreground">

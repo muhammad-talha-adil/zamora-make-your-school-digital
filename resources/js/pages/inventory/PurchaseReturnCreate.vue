@@ -337,28 +337,28 @@ const validateItems = (): boolean => {
         const item = form.items[i];
         
         if (!item.inventory_item_id) {
-            alert.error(`Please select an item for row ${i + 1}`);
+            alert.warning(`Please select an item for row ${i + 1}`);
             return false;
         }
         
         if (item.quantity <= 0) {
-            alert.error(`Please enter a valid quantity for row ${i + 1}`);
+            alert.warning(`Please enter a valid quantity for row ${i + 1}`);
             return false;
         }
         
         const maxQty = getItemMaxQuantity(i);
         if (item.quantity > maxQty) {
-            alert.error(`Quantity for row ${i + 1} cannot exceed available stock (${maxQty})`);
+            alert.warning(`Quantity for row ${i + 1} cannot exceed available stock (${maxQty})`);
             return false;
         }
         
         if (item.unit_price <= 0) {
-            alert.error(`Please enter a valid unit price for row ${i + 1}`);
+            alert.warning(`Please enter a valid unit price for row ${i + 1}`);
             return false;
         }
         
         if (item.reason_id === otherReasonId.value && !item.custom_reason.trim()) {
-            alert.error(`Please specify the reason for row ${i + 1}`);
+            alert.warning(`Please specify the reason for row ${i + 1}`);
             return false;
         }
     }
@@ -368,17 +368,17 @@ const validateItems = (): boolean => {
 const submitForm = () => {
     // Validate required fields
     if (!form.campus_id) {
-        alert.error('Please select a campus');
+        alert.warning('Please select a campus');
         return;
     }
     
     if (!form.supplier_id) {
-        alert.error('Please select a supplier');
+        alert.warning('Please select a supplier');
         return;
     }
     
     if (!form.purchase_id) {
-        alert.error('Please select an original purchase order');
+        alert.warning('Please select an original purchase order');
         return;
     }
     
@@ -611,14 +611,14 @@ onMounted(async () => {
                             <table class="min-w-full divide-y divide-border">
                                 <thead class="bg-muted">
                                     <tr>
-                                        <th class="px-2 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Item</th>
-                                        <th class="px-2 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Available</th>
-                                        <th class="px-2 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Quantity</th>
-                                        <th class="px-2 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Unit Price</th>
-                                        <th class="px-2 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Original Price</th>
-                                        <th class="px-2 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Total</th>
-                                        <th class="px-2 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Reason</th>
-                                        <th class="px-2 py-3"></th>
+                                        <th class="px-2 py-3 text-left text-xs font-medium text-muted-foreground uppercase whitespace-nowrap">Item</th>
+                                        <th class="px-2 py-3 text-left text-xs font-medium text-muted-foreground uppercase whitespace-nowrap">Available</th>
+                                        <th class="px-2 py-3 text-left text-xs font-medium text-muted-foreground uppercase whitespace-nowrap">Quantity</th>
+                                        <th class="px-2 py-3 text-left text-xs font-medium text-muted-foreground uppercase whitespace-nowrap">Unit Price</th>
+                                        <th class="px-2 py-3 text-left text-xs font-medium text-muted-foreground uppercase whitespace-nowrap">Original Price</th>
+                                        <th class="px-2 py-3 text-left text-xs font-medium text-muted-foreground uppercase whitespace-nowrap">Total</th>
+                                        <th class="px-2 py-3 text-left text-xs font-medium text-muted-foreground uppercase whitespace-nowrap">Reason</th>
+                                        <th class="px-2 py-3 whitespace-nowrap"></th>
                                     </tr>
                                 </thead>
                                 <tbody class="divide-y divide-border">

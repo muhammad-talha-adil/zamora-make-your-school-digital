@@ -180,19 +180,22 @@ defineOptions({
                     <table class="min-w-full divide-y divide-border">
                         <thead class="bg-muted">
                             <tr>
-                                <th class="px-3 md:px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Sr#</th>
-                                <th class="px-3 md:px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Item</th>
-                                <th class="px-3 md:px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Description</th>
-                                <th class="px-3 md:px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Qty</th>
-                                <th class="px-3 md:px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Returned</th>
-                                <th class="px-3 md:px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Remaining</th>
-                                <th class="px-3 md:px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Unit Price</th>
-                                <th class="px-3 md:px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Total</th>
-                                <th class="px-3 md:px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Assigned Date</th>
-                                <th class="px-3 md:px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Status</th>
+                                <th class="px-3 md:px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase whitespace-nowrap">#</th>
+                                <th class="px-3 md:px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase whitespace-nowrap">Item</th>
+                                <th class="px-3 md:px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase whitespace-nowrap">Description</th>
+                                <th class="px-3 md:px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase whitespace-nowrap">Qty</th>
+                                <th class="px-3 md:px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase whitespace-nowrap">Returned</th>
+                                <th class="px-3 md:px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase whitespace-nowrap">Remaining</th>
+                                <th class="px-3 md:px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase whitespace-nowrap">Unit Price</th>
+                                <th class="px-3 md:px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase whitespace-nowrap">Total</th>
+                                <th class="px-3 md:px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase whitespace-nowrap">Assigned Date</th>
+                                <th class="px-3 md:px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase whitespace-nowrap">Status</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-border bg-card">
+                            <tr v-if="!(studentInventory.items)?.length">
+                                <td colspan="12" class="px-4 py-8 text-center text-sm text-muted-foreground">No items yet.</td>
+                            </tr>
                             <tr v-for="(item, index) in studentInventory.items" :key="item.id" class="hover:bg-accent">
                                 <td class="px-3 md:px-6 py-4 text-sm text-foreground">{{ index + 1 }}</td>
                                 <td class="px-3 md:px-6 py-4 text-sm text-foreground">

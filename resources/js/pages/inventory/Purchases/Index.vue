@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { headerCampusId } from '@/utils/campus';
 import { Head, router } from '@inertiajs/vue3';
 import { alert, formatCurrency } from '@/utils';
 import { ref, watch, computed } from 'vue';
@@ -51,7 +50,7 @@ const props = defineProps<Props>();
 
 // Filter states
 const perPage = ref(10);
-const campusFilter = ref(headerCampusId());
+const campusFilter = ref('');
 const campusOptions = computed(() => props.campuses.map((campus) => ({ value: campus.id, label: campus.name })));
 
 watch(campusFilter, () => fetchPurchases());
@@ -213,13 +212,6 @@ const summaryStats = computed(() => {
 
             <!-- Filters -->
             <div class="flex flex-col sm:flex-row gap-2 md:gap-3">
-                <SearchableSelect
-                    v-model="campusFilter"
-                    :options="campusOptions"
-                    placeholder="All Campuses"
-                    clearable
-                    class="w-full sm:w-44 md:w-48"
-                />
             </div>
 
             <!-- Mobile Card View (visible only on small screens) -->
@@ -273,9 +265,6 @@ const summaryStats = computed(() => {
                                     Date
                                 </th>
                                 <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">
-                                    Campus
-                                </th>
-                                <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">
                                     Items
                                 </th>
                                 <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">
@@ -287,6 +276,9 @@ const summaryStats = computed(() => {
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-border bg-card">
+                            <tr v-if="!(purchasesData)?.length">
+                                <td colspan="12" class="px-4 py-8 text-center text-sm text-muted-foreground">No purchases yet.</td>
+                            </tr>
                             <tr v-for="purchase in purchasesData" :key="purchase.id" class="transition-colors hover:bg-accent">
                                 <td class="px-4 py-3 whitespace-nowrap">
                                     <div class="text-sm text-muted-foreground">

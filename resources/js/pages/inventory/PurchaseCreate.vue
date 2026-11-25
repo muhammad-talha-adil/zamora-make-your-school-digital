@@ -1,8 +1,7 @@
 <script setup lang="ts">
-import CampusSelect from '@/components/ui/CampusSelect.vue';
-import { Head } from '@inertiajs/vue3';
+import { Head, usePage } from '@inertiajs/vue3';
 import { router } from '@inertiajs/vue3';
-import { ref, computed, reactive, watch } from 'vue';
+import { ref, computed, reactive, watch, nextTick } from 'vue';
 import { alert, formatCurrency } from '@/utils';
 import axios from 'axios';
 
@@ -55,7 +54,7 @@ const breadcrumbItems: BreadcrumbItem[] = [
 
 // Form data
 const form = reactive({
-    campus_id: '' as string | number,
+    campus_id: (usePage().props as any).academicScope?.campusId ?? '' as string | number,
     supplier_id: null as number | null,
     purchase_date: new Date().toISOString().split('T')[0],
     note: '',
@@ -229,7 +228,7 @@ const initializeForm = () => {
         
         fetchInventoryItems();
     } else {
-        form.campus_id = '';
+        form.campus_id = (usePage().props as any).academicScope?.campusId ?? '';
         form.supplier_id = null;
         form.purchase_date = new Date().toISOString().split('T')[0];
         form.note = '';
@@ -282,19 +281,32 @@ const goBack = () => {
 };
 
 const submitForm = () => {
-    const validItems = form.purchase_items.filter(item => item.inventory_item_id > 0);
-    
+    const validItems = form.purchase_items;
+    const rowErrors: Record<string, string> = {};
+
     if (validItems.length === 0) {
-        alert.error('Please add at least one item to the purchase.');
+        alert.warning('Please add at least one item to the purchase.');
         return;
     }
 
-    const hasInvalidItems = validItems.some(item => 
-        !item.inventory_item_id || item.quantity <= 0 || item.purchase_rate <= 0
-    );
-    
-    if (hasInvalidItems) {
-        alert.error('Please fill in all required fields for each item (Item, Quantity, Purchase Rate).');
+    validItems.forEach((item, index) => {
+        if (!item.inventory_item_id) {
+            rowErrors[`purchase_items.${index}.inventory_item_id`] = 'Item is required.';
+        }
+        if (!item.quantity || item.quantity <= 0) {
+            rowErrors[`purchase_items.${index}.quantity`] = item.quantity < 0 ? 'Quantity cannot be negative.' : 'Quantity is required.';
+        }
+        if (!item.purchase_rate || item.purchase_rate <= 0) {
+            rowErrors[`purchase_items.${index}.purchase_rate`] = 'Purchase rate is required.';
+        }
+    });
+
+    if (Object.keys(rowErrors).length > 0) {
+        errors.value = rowErrors;
+        alert.warning('Please check the highlighted fields.');
+        nextTick(() => {
+            document.querySelector('[data-invalid="true"]')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        });
         return;
     }
 
@@ -317,12 +329,11 @@ const submitForm = () => {
             .catch((err) => {
                 if (err.response?.data?.errors) {
                     errors.value = err.response.data.errors;
-                    const firstError = Object.values(err.response.data.errors)[0] as string;
-                    alert.warning(firstError);
+                    alert.warning('Please check the highlighted fields.');
                 } else if (err.response?.data?.message) {
                     alert.error(err.response.data.message);
                 } else {
-                    alert.error('Failed to update purchase. Please check the errors.');
+                    alert.warning('Failed to update purchase. Please check the errors.');
                 }
             })
             .finally(() => {
@@ -337,12 +348,11 @@ const submitForm = () => {
             .catch((err) => {
                 if (err.response?.data?.errors) {
                     errors.value = err.response.data.errors;
-                    const firstError = Object.values(err.response.data.errors)[0] as string;
-                    alert.warning(firstError);
+                    alert.warning('Please check the highlighted fields.');
                 } else if (err.response?.data?.message) {
                     alert.error(err.response.data.message);
                 } else {
-                    alert.error('Failed to create purchase. Please check the errors.');
+                    alert.warning('Failed to create purchase. Please check the errors.');
                 }
             })
             .finally(() => {
@@ -390,20 +400,6 @@ initializeForm();
                     <h2 class="text-lg font-semibold">Basic Information</h2>
                     
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div class="space-y-2">
-                            <Label for="campus_id" class="flex items-center gap-2">
-                                <Icon icon="building" class="h-4 w-4" />
-                                Campus <span class="text-destructive">*</span>
-                            </Label>
-                            <CampusSelect
-                                id="campus_id"
-                                v-model="form.campus_id"
-                                :options="campusOptions"
-                                placeholder="Select Campus"
-                                class="h-11"
-                            />
-                            <InputError :message="errors.campus_id" />
-                        </div>
                         <div class="space-y-2">
                             <Label for="supplier_id" class="flex items-center gap-2">
                                 <Icon icon="truck" class="h-4 w-4" />
@@ -469,35 +465,39 @@ initializeForm();
                         <div v-for="(item, index) in form.purchase_items" :key="index" class="p-3 md:p-4 bg-muted rounded-lg">
                             <div class="flex flex-col gap-4">
                                 <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
-                                    <div class="space-y-2">
+                                    <div class="space-y-2" :data-invalid="!!errors[`purchase_items.${index}.inventory_item_id`]">
                                         <Label class="text-xs">Item <span class="text-destructive">*</span></Label>
                                         <SearchableSelect
                                             v-model="item.inventory_item_id"
                                             :options="availableItemOptions"
-                                            :placeholder="loadingItems ? 'Loading...' : 'Select Item'"
+                                            :placeholder="loadingItems ? 'Loading...' : 'Select item'"
                                         />
                                         <InputError :message="errors[`purchase_items.${index}.inventory_item_id`]" />
                                     </div>
-                                    <div class="space-y-2">
+                                    <div class="space-y-2" :data-invalid="!!errors[`purchase_items.${index}.quantity`]">
                                         <Label class="text-xs">Quantity <span class="text-destructive">*</span></Label>
                                         <Input
                                             v-model.number="item.quantity"
                                             type="number"
                                             min="1"
+                                            placeholder="Qty"
                                             class="h-10"
-                                            required
+                                            :class="{ 'border-destructive': errors[`purchase_items.${index}.quantity`] }"
                                         />
+                                        <InputError :message="errors[`purchase_items.${index}.quantity`]" />
                                     </div>
-                                    <div class="space-y-2">
+                                    <div class="space-y-2" :data-invalid="!!errors[`purchase_items.${index}.purchase_rate`]">
                                         <Label class="text-xs">Purchase Rate <span class="text-destructive">*</span></Label>
                                         <Input
                                             v-model.number="item.purchase_rate"
                                             type="number"
                                             step="0.01"
                                             min="0"
+                                            placeholder="Rate"
                                             class="h-10"
-                                            required
+                                            :class="{ 'border-destructive': errors[`purchase_items.${index}.purchase_rate`] }"
                                         />
+                                        <InputError :message="errors[`purchase_items.${index}.purchase_rate`]" />
                                     </div>
                                     <div class="space-y-2">
                                         <Label class="text-xs">Sale Rate</Label>

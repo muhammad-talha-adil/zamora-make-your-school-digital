@@ -112,8 +112,8 @@
         <table class="min-w-full divide-y divide-border">
           <thead class="bg-muted">
             <tr>
-              <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Purchase Date</th>
-              <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Amount</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase whitespace-nowrap">Purchase Date</th>
+              <th class="px-6 py-3 text-left text-xs font-medium text-muted-foreground uppercase whitespace-nowrap">Amount</th>
             </tr>
           </thead>
           <tbody class="divide-y divide-border">

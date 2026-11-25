@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import type { Ref } from 'vue';
-import CampusSelect from '@/components/ui/CampusSelect.vue';
 import { ref, watch, computed } from 'vue';
 import { usePage } from '@inertiajs/vue3';
 import { alert } from '@/utils';
@@ -122,8 +121,8 @@ watch(() => props.campuses, (newCampuses) => {
     if (newCampuses.length > 0 && !props.inventoryType && form.value.campus_id === null) {
         // Default to 'all' for new inventory types — or, for a
         // campus-restricted user, to their own (only) campus.
-        form.value.campus_id = academicScope.value?.isCampusRestricted
-            ? String(academicScope.value.campusId ?? '')
+        form.value.campus_id = academicScope.value?.campusId
+            ? String(academicScope.value.campusId)
             : 'all';
     }
 }, { immediate: true });
@@ -199,7 +198,7 @@ const submit = () => {
     // Final validation before submit
     if (nameExistsError.value) {
         processing.value = false;
-        alert.error('Please fix the validation errors before submitting.');
+        alert.warning('Please fix the validation errors before submitting.');
         return;
     }
 
@@ -256,7 +255,7 @@ const resetForm = () => {
         name: '',
         // Default to 'all campuses' for new types — or, for a
         // campus-restricted user, to their own (only) campus.
-        campus_id: academicScope.value?.isCampusRestricted ? String(academicScope.value.campusId ?? '') : 'all',
+        campus_id: academicScope.value?.campusId ? String(academicScope.value.campusId) : 'all',
         original_name: '',
     };
     errors.value = {};
@@ -314,22 +313,6 @@ const resetForm = () => {
                         </p>
                     </div>
 
-                    <!-- Campus -->
-                    <div v-if="showCampusField" class="space-y-2">
-                        <Label for="campus" class="flex items-center gap-2">
-                            <div class="p-1 bg-muted rounded">
-                                <Icon icon="building" class="h-3.5 w-3.5 text-muted-foreground" />
-                            </div>
-                            Campus <span class="text-destructive">*</span>
-                        </Label>
-                        <CampusSelect
-                            id="campus"
-                            v-model="form.campus_id"
-                            :options="campusOptions"
-                            placeholder="Select Campus"
-                        />
-                        <InputError :message="errors.campus_id" />
-                    </div>
                 </div>
 
                 <!-- Actions -->

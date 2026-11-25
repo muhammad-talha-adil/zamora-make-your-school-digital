@@ -193,12 +193,12 @@ const deleteReturn = () => {
                     <table class="min-w-full divide-y divide-border">
                         <thead class="bg-muted">
                             <tr>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase">#</th>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Item</th>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Quantity</th>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Unit Price</th>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Total</th>
-                                <th class="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase">Reason</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase whitespace-nowrap">#</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase whitespace-nowrap">Item</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase whitespace-nowrap">Quantity</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase whitespace-nowrap">Unit Price</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase whitespace-nowrap">Total</th>
+                                <th class="px-4 py-3 text-left text-xs font-medium text-muted-foreground uppercase whitespace-nowrap">Reason</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-border bg-card">

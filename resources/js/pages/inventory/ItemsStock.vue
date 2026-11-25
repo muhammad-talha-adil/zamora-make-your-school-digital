@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { headerCampusId } from '@/utils/campus';
 import { Head } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 import { route } from 'ziggy-js';
@@ -99,7 +98,7 @@ interface Props {
 const props = defineProps<Props>();
 
 const activeTab = ref<'stocks' | 'items' | 'adjustments' | 'types'>('stocks');
-const campusFilter = ref(headerCampusId());
+const campusFilter = ref('');
 const statusFilter = ref<'active' | 'inactive'>('active');
 const searchQuery = ref('');
 const lowStockOnly = ref(false);
@@ -355,7 +354,7 @@ const loadStocksPage = (url: string) => fetchStocks(url);
             </div>
 
             <div class="border-b border-border">
-                <nav class="-mb-px grid grid-cols-2 gap-x-4 gap-y-1 md:grid-cols-4">
+                <nav class="-mb-px flex flex-nowrap gap-x-4 overflow-x-auto whitespace-nowrap [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                     <button
                         type="button"
                         @click="onTabChange('stocks')"
@@ -412,7 +411,7 @@ const loadStocksPage = (url: string) => fetchStocks(url);
             </div>
 
             <div class="rounded-lg border border-border bg-card p-4">
-                <div class="grid grid-cols-1 gap-4 md:grid-cols-2 xl:grid-cols-5">
+                <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 2xl:grid-cols-4">
 
                     <div v-if="['types', 'items'].includes(activeTab)" class="space-y-2">
                         <Label for="status-filter">Status</Label>
@@ -432,7 +431,7 @@ const loadStocksPage = (url: string) => fetchStocks(url);
                         />
                     </div>
 
-                    <div v-if="activeTab === 'stocks'" class="space-y-2 md:col-span-2 xl:col-span-2">
+                    <div v-if="activeTab === 'stocks'" class="space-y-2 sm:col-span-2">
                         <Label for="stock-search-filter">Search</Label>
                         <Input
                             id="stock-search-filter"
@@ -463,7 +462,7 @@ const loadStocksPage = (url: string) => fetchStocks(url);
                         />
                     </div>
 
-                    <div v-if="['types', 'items'].includes(activeTab)" class="space-y-2 md:col-span-3">
+                    <div v-if="['types', 'items'].includes(activeTab)" class="space-y-2 sm:col-span-2 2xl:col-span-2">
                         <Label for="search-filter">Search</Label>
                         <Input
                             id="search-filter"
@@ -472,7 +471,7 @@ const loadStocksPage = (url: string) => fetchStocks(url);
                         />
                     </div>
 
-                    <div class="flex flex-col gap-3 md:col-span-2 xl:col-span-5 xl:flex-row xl:items-end xl:justify-between">
+                    <div class="flex flex-col gap-3 sm:col-span-2 2xl:col-span-4 2xl:flex-row 2xl:items-end 2xl:justify-between">
                         <div class="flex flex-wrap items-end gap-2">
                             <Button @click="applyFilters">
                                 <Icon icon="search" class="mr-2 h-4 w-4" />
@@ -554,14 +553,17 @@ const loadStocksPage = (url: string) => fetchStocks(url);
                     <table class="min-w-full divide-y divide-border">
                         <thead class="bg-muted">
                             <tr>
-                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Sr#</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Name</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Items</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Status</th>
-                                <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">Actions</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground whitespace-nowrap">#</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground whitespace-nowrap">Name</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground whitespace-nowrap">Items</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground whitespace-nowrap">Status</th>
+                                <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground whitespace-nowrap">Actions</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-border bg-card">
+                            <tr v-if="!(inventoryTypesData)?.length">
+                                <td colspan="12" class="px-4 py-8 text-center text-sm text-muted-foreground">No inventory types yet.</td>
+                            </tr>
                             <tr v-for="(type, index) in inventoryTypesData" :key="type.id" class="transition-colors hover:bg-accent">
                                 <td class="px-4 py-3 text-sm text-muted-foreground">{{ ((paginationTypes.from || 1) - 1) + index + 1 }}</td>
                                 <td class="px-4 py-3 text-sm font-medium text-foreground">{{ type.name }}</td>
@@ -592,15 +594,18 @@ const loadStocksPage = (url: string) => fetchStocks(url);
                     <table class="min-w-full divide-y divide-border">
                         <thead class="bg-muted">
                             <tr>
-                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Sr#</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Name</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Type</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Current Stock</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Status</th>
-                                <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground">Actions</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground whitespace-nowrap">#</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground whitespace-nowrap">Name</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground whitespace-nowrap">Type</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground whitespace-nowrap">Current Stock</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground whitespace-nowrap">Status</th>
+                                <th class="px-4 py-3 text-right text-xs font-semibold uppercase tracking-wider text-muted-foreground whitespace-nowrap">Actions</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-border bg-card">
+                            <tr v-if="!(inventoryItemsData)?.length">
+                                <td colspan="12" class="px-4 py-8 text-center text-sm text-muted-foreground">No inventory items yet.</td>
+                            </tr>
                             <tr v-for="(item, index) in inventoryItemsData" :key="item.id" class="transition-colors hover:bg-accent">
                                 <td class="px-4 py-3 text-sm text-muted-foreground">{{ ((paginationItems.from || 1) - 1) + index + 1 }}</td>
                                 <td class="px-4 py-3">
@@ -636,25 +641,28 @@ const loadStocksPage = (url: string) => fetchStocks(url);
                     <table class="min-w-full divide-y divide-border">
                         <thead class="bg-muted">
                             <tr>
-                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Sr#</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Item</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Quantity</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Available</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Reserved</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Threshold</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Status</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground whitespace-nowrap">#</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground whitespace-nowrap">Item</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground whitespace-nowrap">Quantity</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground whitespace-nowrap">Available</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground whitespace-nowrap hidden 2xl:table-cell">Reserved</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground whitespace-nowrap hidden 2xl:table-cell">Threshold</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground whitespace-nowrap">Status</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-border bg-card">
+                            <tr v-if="!(stocksData)?.length">
+                                <td colspan="12" class="px-4 py-8 text-center text-sm text-muted-foreground">No stocks yet.</td>
+                            </tr>
                             <tr v-for="(stock, index) in stocksData" :key="stock.id" class="transition-colors hover:bg-accent">
                                 <td class="px-4 py-3 text-sm text-muted-foreground">{{ ((paginationStocks.from || 1) - 1) + index + 1 }}</td>
-                                <td class="px-4 py-3 text-sm font-medium text-foreground">{{ stock.item_name }}</td>
-                                <td class="px-4 py-3 text-sm text-muted-foreground">{{ stock.quantity }}</td>
+                                <td class="px-4 py-3 text-sm font-medium text-foreground min-w-40">{{ stock.item_name }}</td>
+                                <td class="px-4 py-3 text-sm whitespace-nowrap text-muted-foreground">{{ stock.quantity }}</td>
                                 <td class="px-4 py-3 text-sm font-semibold" :class="stock.available_quantity <= 0 ? 'text-destructive' : stock.is_low_stock ? 'text-warning' : 'text-success'">
                                     {{ stock.available_quantity }}
                                 </td>
-                                <td class="px-4 py-3 text-sm text-muted-foreground">{{ stock.reserved_quantity }}</td>
-                                <td class="px-4 py-3 text-sm text-muted-foreground">{{ stock.low_stock_threshold }}</td>
+                                <td class="px-4 py-3 text-sm whitespace-nowrap hidden 2xl:table-cell text-muted-foreground">{{ stock.reserved_quantity }}</td>
+                                <td class="px-4 py-3 text-sm whitespace-nowrap hidden 2xl:table-cell text-muted-foreground">{{ stock.low_stock_threshold }}</td>
                                 <td class="px-4 py-3">
                                     <span :class="['rounded-full px-2 py-1 text-xs font-medium', getStockStatusBadge(stock).className]">
                                         {{ getStockStatusBadge(stock).label }}
@@ -671,17 +679,20 @@ const loadStocksPage = (url: string) => fetchStocks(url);
                     <table class="min-w-full divide-y divide-border">
                         <thead class="bg-muted">
                             <tr>
-                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">#</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Date</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Item</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Type</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Qty</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Before / After</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Reference</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground">Reason</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground whitespace-nowrap">#</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground whitespace-nowrap">Date</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground whitespace-nowrap">Item</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground whitespace-nowrap">Type</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground whitespace-nowrap">Qty</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground whitespace-nowrap">Before / After</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground whitespace-nowrap">Reference</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground whitespace-nowrap">Reason</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-border bg-card">
+                            <tr v-if="!(adjustmentsData)?.length">
+                                <td colspan="12" class="px-4 py-8 text-center text-sm text-muted-foreground">No adjustments yet.</td>
+                            </tr>
                             <tr v-for="(adjustment, adjustmentIndex) in adjustmentsData" :key="adjustment.id" class="transition-colors hover:bg-accent">
                                 <td class="px-4 py-3 text-sm text-muted-foreground">{{ adjustmentIndex + 1 }}</td>
                                 <td class="px-4 py-3 text-sm text-muted-foreground">{{ formatDateTime(adjustment.created_at) }}</td>

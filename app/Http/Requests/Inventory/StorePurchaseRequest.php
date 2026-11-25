@@ -50,6 +50,12 @@ class StorePurchaseRequest extends FormRequest
             'supplier_id.exists' => 'The selected supplier does not exist.',
             'purchase_items.required' => 'At least one purchase item is required.',
             'purchase_items.min' => 'At least one purchase item is required.',
+            'purchase_items.*.inventory_item_id.required' => 'Item is required.',
+            'purchase_items.*.quantity.required' => 'Quantity is required.',
+            'purchase_items.*.quantity.min' => 'Quantity must be at least 1.',
+            'purchase_items.*.quantity.integer' => 'Quantity must be a whole number.',
+            'purchase_items.*.purchase_rate.required' => 'Purchase rate is required.',
+            'purchase_items.*.purchase_rate.min' => 'Purchase rate cannot be negative.',
             'purchase_items.*.inventory_item_id.exists' => 'The selected item does not belong to the selected campus.',
         ];
     }

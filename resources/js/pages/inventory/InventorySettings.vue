@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { headerCampusId } from '@/utils/campus';
 import { Head, router } from '@inertiajs/vue3';
 import { alert, formatCurrency } from '@/utils';
 import { ref, computed, watch } from 'vue';
@@ -81,7 +80,7 @@ const props = defineProps<Props>();
 const activeTab = ref('types');
 
 // Types state
-const campusFilter = ref(props.filters?.campus_id || headerCampusId());
+const campusFilter = ref('');
 const inventoryTypesData = ref(props.inventoryTypes.data || []);
 const paginationTypes = ref(props.inventoryTypes);
 const perPageTypes = ref(25);
@@ -331,7 +330,7 @@ const loadTypesPage = (url: string) => {
 
             <!-- Tabs -->
             <div class="border-b border-border">
-                <nav class="-mb-px flex space-x-4 md:space-x-8 overflow-x-auto">
+                <nav class="-mb-px flex space-x-4 md:space-x-8 overflow-x-auto flex-nowrap [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                     <button
                         @click="activeTab = 'types'"
                         :class="[
@@ -377,13 +376,6 @@ const loadTypesPage = (url: string) => {
 
                 <!-- Types Filters -->
                 <FilterCard class="flex flex-col sm:flex-row gap-2 items-center">
-                    <SearchableSelect
-                        v-model="campusFilter"
-                        :options="campusOptions"
-                        placeholder="All Campuses"
-                        clearable
-                        class="w-full sm:w-44 md:w-48"
-                    />
                     <div class="flex-1"></div>
                     <div class="flex items-center gap-2">
                         <label class="text-sm text-muted-foreground">Show:</label>
@@ -443,24 +435,23 @@ const loadTypesPage = (url: string) => {
                         <table class="min-w-full divide-y divide-border">
                             <thead class="bg-muted">
                                 <tr>
-                                    <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">Sr#</th>
+                                    <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">#</th>
                                     <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">Name</th>
-                                    <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">Campus</th>
                                     <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">Items</th>
                                     <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">Status</th>
                                     <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">Actions</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-border bg-card">
+                                <tr v-if="!(inventoryTypesData)?.length">
+                                    <td colspan="12" class="px-4 py-8 text-center text-sm text-muted-foreground">No inventory types yet.</td>
+                                </tr>
                                 <tr v-for="(type, index) in inventoryTypesData" :key="type.id" class="transition-colors hover:bg-accent">
                                     <td class="px-4 py-3 whitespace-nowrap text-sm text-muted-foreground">
                                         {{ (paginationTypes.from || 0) + index }}
                                     </td>
                                     <td class="px-4 py-3 whitespace-nowrap text-sm font-medium text-foreground">
                                         {{ type.name }}
-                                    </td>
-                                    <td class="px-4 py-3 whitespace-nowrap text-sm text-muted-foreground">
-                                        {{ type.campus_name || 'N/A' }}
                                     </td>
                                     <td class="px-4 py-3 whitespace-nowrap">
                                         <Badge variant="secondary">{{ type.items_count }} items</Badge>
@@ -532,13 +523,6 @@ const loadTypesPage = (url: string) => {
                 <!-- Items Filters -->
                 <FilterCard class="flex flex-col sm:flex-row gap-2 items-center">
                     <SearchableSelect
-                        v-model="campusFilter"
-                        :options="campusOptions"
-                        placeholder="All Campuses"
-                        clearable
-                        class="w-full sm:w-44 md:w-48"
-                    />
-                    <SearchableSelect
                         v-model="typeFilter"
                         :options="typeOptions"
                         placeholder="All Types"
@@ -606,7 +590,7 @@ const loadTypesPage = (url: string) => {
                         <table class="min-w-full divide-y divide-border">
                             <thead class="bg-muted">
                                 <tr>
-                                    <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">Sr#</th>
+                                    <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">#</th>
                                     <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">Item</th>
                                     <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">Type</th>
                                     <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">Rates</th>
@@ -616,6 +600,9 @@ const loadTypesPage = (url: string) => {
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-border bg-card">
+                                <tr v-if="!(inventoryItemsData)?.length">
+                                    <td colspan="12" class="px-4 py-8 text-center text-sm text-muted-foreground">No inventory items yet.</td>
+                                </tr>
                                 <tr v-for="(item, index) in inventoryItemsData" :key="item.id" class="transition-colors hover:bg-accent">
                                     <td class="px-4 py-3 whitespace-nowrap text-sm text-muted-foreground">
                                         {{ (paginationItems.from || 0) + index }}

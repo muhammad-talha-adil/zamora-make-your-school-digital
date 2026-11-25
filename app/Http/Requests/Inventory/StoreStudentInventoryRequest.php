@@ -78,6 +78,9 @@ class StoreStudentInventoryRequest extends FormRequest
     public function messages(): array
     {
         return [
+            'items.*.quantity.required' => 'Quantity is required.',
+            'items.*.inventory_item_id.required' => 'Item is required.',
+            'student_id.required' => 'Student is required.',
             'quantity.min' => 'Quantity must be at least 1.',
             'items.min' => 'At least one item is required.',
             'items.*.inventory_item_id.exists' => 'The selected item must belong to the campus and be active.',

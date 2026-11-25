@@ -149,7 +149,13 @@ class InventoryItemsController extends Controller
     {
         Gate::authorize('delete', $inventoryItem);
 
-        // Perform soft delete
+        if ($inventoryItem->purchaseItems()->exists() || $inventoryItem->studentInventory()->exists()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'This item has already been used in purchases or student issues, so it cannot be deleted. You can make it inactive instead.',
+            ], 422);
+        }
+
         $inventoryItem->delete();
 
         return response()->json(['success' => true, 'message' => 'Inventory item deleted successfully.']);

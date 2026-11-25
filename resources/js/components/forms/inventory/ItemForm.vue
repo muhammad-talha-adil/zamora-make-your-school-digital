@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { usePage } from '@inertiajs/vue3';
 import type { Ref } from 'vue';
 import axios from 'axios';
 import { alert } from '@/utils';
@@ -71,7 +72,7 @@ const form = ref<{
     description: string;
     is_active: boolean;
 }>({
-    campus_id: props.inventoryItem?.campus_id || props.campuses[0]?.id || '',
+    campus_id: props.inventoryItem?.campus_id || ((usePage().props as any).academicScope?.campusId ?? props.campuses[0]?.id) || '',
     inventory_type_id: props.inventoryItem?.inventory_type_id || '',
     name: props.inventoryItem?.name || '',
     description: props.inventoryItem?.description || '',
@@ -137,7 +138,7 @@ const dialogOpen = computed({
 // Methods
 const resetForm = () => {
     form.value = {
-        campus_id: props.campuses[0]?.id || '',
+        campus_id: ((usePage().props as any).academicScope?.campusId ?? props.campuses[0]?.id) || '',
         inventory_type_id: '',
         name: '',
         description: '',
@@ -186,7 +187,7 @@ const submitForm = () => {
                 } else if (err.response?.data?.message) {
                     alert.error(err.response.data.message);
                 } else {
-                    alert.error('Failed to update item. Please check the errors.');
+                    alert.warning('Failed to update item. Please check the errors.');
                 }
             })
             .finally(() => {
@@ -208,7 +209,7 @@ const submitForm = () => {
                 } else if (err.response?.data?.message) {
                     alert.error(err.response.data.message);
                 } else {
-                    alert.error('Failed to create item. Please check the errors.');
+                    alert.warning('Failed to create item. Please check the errors.');
                 }
             })
             .finally(() => {

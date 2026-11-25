@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { headerCampusId } from '@/utils/campus';
 import { formatPhone } from '@/utils/phone';
 import { Head } from '@inertiajs/vue3';
 import { computed, ref, watch } from 'vue';
@@ -26,7 +25,7 @@ interface Props {
 
 const props = defineProps<Props>();
 const activeTab = ref('purchases');
-const campusFilter = ref(headerCampusId());
+const campusFilter = ref('');
 const campusOptions = computed(() => props.campuses.map((campus) => ({ value: campus.id, label: campus.name })));
 
 watch(campusFilter, () => {
@@ -223,7 +222,7 @@ fetchPurchases();
 
             <!-- Tabs - Horizontal scroll on mobile -->
             <div class="border-b border-border overflow-x-auto">
-                <nav class="-mb-px flex min-w-full space-x-8">
+                <nav class="-mb-px flex flex-nowrap space-x-8 overflow-x-auto whitespace-nowrap [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
                     <button
                         @click="activeTab = 'purchases'"
                         :class="[
@@ -268,14 +267,6 @@ fetchPurchases();
                 <!-- Filters Row with horizontal scroll on mobile -->
                 <div class="overflow-x-auto pb-2 -mx-4 px-4 sm:mx-0 sm:px-0">
                     <div class="flex items-center gap-2 min-w-max">
-                        <!-- Campus Dropdown -->
-                        <SearchableSelect
-                            v-model="campusFilter"
-                            :options="campusOptions"
-                            placeholder="All Campuses"
-                            clearable
-                            class="w-32 md:w-36 shrink-0"
-                        />
 
                         <!-- Date Range Filter (Purchases) -->
                         <DateRangePicker
@@ -338,14 +329,13 @@ fetchPurchases();
                         <table class="min-w-full divide-y divide-border">
                             <thead class="bg-muted">
                                 <tr>
-                                    <th class="px-3 md:px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Sr#</th>
-                                    <th class="px-3 md:px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Purchase ID</th>
-                                    <th class="px-3 md:px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Date</th>
-                                    <th class="px-3 md:px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Campus</th>
-                                    <th class="px-3 md:px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Supplier</th>
-                                    <th class="px-3 md:px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Items</th>
-                                    <th class="px-3 md:px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Total</th>
-                                    <th class="px-3 md:px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Actions</th>
+                                    <th class="px-3 md:px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase whitespace-nowrap">#</th>
+                                    <th class="px-3 md:px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase whitespace-nowrap">Purchase ID</th>
+                                    <th class="px-3 md:px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase whitespace-nowrap">Date</th>
+                                    <th class="px-3 md:px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase whitespace-nowrap">Supplier</th>
+                                    <th class="px-3 md:px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase whitespace-nowrap hidden 2xl:table-cell">Items</th>
+                                    <th class="px-3 md:px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase whitespace-nowrap">Total</th>
+                                    <th class="px-3 md:px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase whitespace-nowrap">Actions</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-border bg-card">
@@ -353,9 +343,8 @@ fetchPurchases();
                                     <td class="px-3 md:px-6 py-4 whitespace-nowrap text-sm font-medium text-foreground">{{ purchasesPagination.from + index }}</td>
                                     <td class="px-3 md:px-6 py-4 whitespace-nowrap text-sm font-bold text-primary">{{ purchase.purchase_id || '#' + purchase.id }}</td>
                                     <td class="px-3 md:px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">{{ formatDate(purchase.purchase_date) }}</td>
-                                    <td class="px-3 md:px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">{{ purchase.campus_name || 'All Campuses' }}</td>
                                     <td class="px-3 md:px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">{{ purchase.supplier?.name || '-' }}</td>
-                                    <td class="px-3 md:px-6 py-4 text-sm text-muted-foreground">
+                                    <td class="px-3 md:px-6 py-4 text-sm text-muted-foreground hidden 2xl:table-cell min-w-48">
                                         <span v-if="purchase.items_count > 0">{{ purchase.item_names || '-' }}</span>
                                         <span v-else class="text-muted-foreground">-</span>
                                     </td>
@@ -426,14 +415,13 @@ fetchPurchases();
                         <table class="min-w-full divide-y divide-border">
                             <thead class="bg-muted">
                                 <tr>
-                                    <th class="px-3 md:px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Sr#</th>
-                                    <th class="px-3 md:px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Name</th>
-                                    <th class="px-3 md:px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Contact</th>
-                                    <th class="px-3 md:px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Phone</th>
-                                    <th class="px-3 md:px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Email</th>
-                                    <th class="px-3 md:px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Campus</th>
-                                    <th class="px-3 md:px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Status</th>
-                                    <th class="px-3 md:px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Actions</th>
+                                    <th class="px-3 md:px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase whitespace-nowrap">#</th>
+                                    <th class="px-3 md:px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase whitespace-nowrap">Name</th>
+                                    <th class="px-3 md:px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase whitespace-nowrap">Contact</th>
+                                    <th class="px-3 md:px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase whitespace-nowrap">Phone</th>
+                                    <th class="px-3 md:px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase whitespace-nowrap">Email</th>
+                                    <th class="px-3 md:px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase whitespace-nowrap">Status</th>
+                                    <th class="px-3 md:px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase whitespace-nowrap">Actions</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-border bg-card">
@@ -443,7 +431,6 @@ fetchPurchases();
                                     <td class="px-3 md:px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">{{ supplier.contact_person || '-' }}</td>
                                     <td class="px-3 md:px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">{{ formatPhone(supplier.phone) || '-' }}</td>
                                     <td class="px-3 md:px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">{{ supplier.email || '-' }}</td>
-                                    <td class="px-3 md:px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">{{ supplier.campus?.name || 'All Campuses' }}</td>
                                     <td class="px-3 md:px-6 py-4 whitespace-nowrap">
                                         <StatusToggle :active="supplier.is_active" @toggle="toggleActiveSupplier(supplier)" />
                                     </td>
@@ -507,14 +494,13 @@ fetchPurchases();
                         <table class="min-w-full divide-y divide-border">
                             <thead class="bg-muted">
                                 <tr>
-                                    <th class="px-3 md:px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Sr#</th>
-                                    <th class="px-3 md:px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Return ID</th>
-                                    <th class="px-3 md:px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Date</th>
-                                    <th class="px-3 md:px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Campus</th>
-                                    <th class="px-3 md:px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Supplier</th>
-                                    <th class="px-3 md:px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Items</th>
-                                    <th class="px-3 md:px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Total</th>
-                                    <th class="px-3 md:px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Actions</th>
+                                    <th class="px-3 md:px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase whitespace-nowrap">#</th>
+                                    <th class="px-3 md:px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase whitespace-nowrap">Return ID</th>
+                                    <th class="px-3 md:px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase whitespace-nowrap">Date</th>
+                                    <th class="px-3 md:px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase whitespace-nowrap">Supplier</th>
+                                    <th class="px-3 md:px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase whitespace-nowrap">Items</th>
+                                    <th class="px-3 md:px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase whitespace-nowrap">Total</th>
+                                    <th class="px-3 md:px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase whitespace-nowrap">Actions</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-border bg-card">
@@ -522,7 +508,6 @@ fetchPurchases();
                                     <td class="px-3 md:px-6 py-4 whitespace-nowrap text-sm font-medium text-foreground">{{ returnsPagination.from + index }}</td>
                                     <td class="px-3 md:px-6 py-4 whitespace-nowrap text-sm font-bold text-primary">{{ returnItem.purchase_return_id || '#' + returnItem.id }}</td>
                                     <td class="px-3 md:px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">{{ formatDate(returnItem.return_date) }}</td>
-                                    <td class="px-3 md:px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">{{ returnItem.campus_name || 'All Campuses' }}</td>
                                     <td class="px-3 md:px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">{{ returnItem.supplier?.name || '-' }}</td>
                                     <td class="px-3 md:px-6 py-4 text-sm text-muted-foreground">
                                         <span v-if="returnItem.items_count > 0">{{ returnItem.item_names || '-' }}</span>

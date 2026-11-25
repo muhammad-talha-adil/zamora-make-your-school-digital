@@ -1,6 +1,6 @@
 <script setup lang="ts">
+import { usePage } from '@inertiajs/vue3';
 import type { Ref } from 'vue';
-import CampusSelect from '@/components/ui/CampusSelect.vue';
 import { router } from '@inertiajs/vue3';
 import { ref, computed } from 'vue';
 import { requiredErrors, useClearErrorsOnEdit, useFormValidity } from '@/composables/useFormValidity';
@@ -66,7 +66,7 @@ const emit = defineEmits<{
 
 // Form data
 const form = ref({
-    campus_id: props.campuses[0]?.id || '',
+    campus_id: ((usePage().props as any).academicScope?.campusId ?? props.campuses[0]?.id) || '',
     student_id: '',
     inventory_item_id: '',
     quantity: 1,
@@ -162,7 +162,7 @@ const onDiscountPercentageChange = () => {
 
 const resetForm = () => {
     form.value = {
-        campus_id: props.campuses[0]?.id || '',
+        campus_id: ((usePage().props as any).academicScope?.campusId ?? props.campuses[0]?.id) || '',
         student_id: '',
         inventory_item_id: '',
         quantity: 1,
@@ -186,7 +186,7 @@ const submitForm = () => {
     }
 
     if (form.value.quantity > (selectedItem.value?.available_stock || 0)) {
-        alert.error('Quantity exceeds available stock. Please reduce the quantity.');
+        alert.warning('Quantity exceeds available stock. Please reduce the quantity.');
         return;
     }
 
@@ -206,7 +206,7 @@ const submitForm = () => {
                 const firstError = Object.values(errors.value)[0];
                 alert.warning(firstError);
             } else {
-                alert.error('Failed to assign inventory. Please check the errors.');
+                alert.warning('Failed to assign inventory. Please check the errors.');
             }
         },
         onFinish: () => {
@@ -237,22 +237,6 @@ const submitForm = () => {
             <form novalidate @submit.prevent="submitForm" class="space-y-5">
                 <!-- Form Card -->
                 <div class="bg-card rounded-lg border p-5 space-y-4">
-                    <!-- Campus -->
-                    <div class="space-y-2">
-                        <Label for="campus_id" class="flex items-center gap-2">
-                            <div class="p-1 bg-muted rounded">
-                                <Icon icon="building" class="h-3.5 w-3.5 text-muted-foreground" />
-                            </div>
-                            Campus <span class="text-destructive">*</span>
-                        </Label>
-                        <CampusSelect
-                            id="campus_id"
-                            v-model="form.campus_id"
-                            :options="campusOptions"
-                            placeholder="Select Campus"
-                        />
-                        <InputError :message="errors.campus_id" />
-                    </div>
 
                     <!-- Student -->
                     <div class="space-y-2">

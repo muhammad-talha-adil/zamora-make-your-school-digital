@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { headerCampusId } from '@/utils/campus';
 import { Head, router } from '@inertiajs/vue3';
 import { formatCurrency } from '@/utils';
 import { computed, ref, watch } from 'vue';
@@ -47,7 +46,7 @@ interface Props {
 const props = defineProps<Props>();
 
 const perPage = ref(10);
-const campusFilter = ref(headerCampusId());
+const campusFilter = ref('');
 const campusOptions = computed(() => props.campuses.map((campus) => ({ value: campus.id, label: campus.name })));
 const returnsData = ref(props.returns.data || []);
 const pagination = ref(props.returns);
@@ -158,13 +157,6 @@ const viewReturn = (returnItem: any) => {
             </div>
 
             <FilterCard class="flex flex-wrap gap-3">
-                <SearchableSelect
-                    v-model="campusFilter"
-                    :options="campusOptions"
-                    placeholder="All Campuses"
-                    clearable
-                    class="w-full sm:w-48"
-                />
             </FilterCard>
 
             <div class="overflow-hidden rounded-lg border border-border bg-card shadow-sm">
@@ -183,6 +175,9 @@ const viewReturn = (returnItem: any) => {
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-border bg-card">
+                            <tr v-if="!(returnsData)?.length">
+                                <td colspan="12" class="px-4 py-8 text-center text-sm text-muted-foreground">No returns yet.</td>
+                            </tr>
                             <tr v-for="(returnItem, index) in returnsData" :key="returnItem.id" class="transition-colors hover:bg-accent">
                                 <td class="px-6 py-4 whitespace-nowrap text-sm text-muted-foreground">
                                     {{ (pagination.from || 0) + index }}

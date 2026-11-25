@@ -208,7 +208,7 @@ const submitForm = () => {
     const itemsToReturn = selectedItems.value;
     
     if (itemsToReturn.length === 0) {
-        alert.error('Please select at least one item to return.');
+        alert.warning('Please select at least one item to return.');
         return;
     }
 
@@ -249,7 +249,7 @@ const submitForm = () => {
             const firstError = Object.values(response.data.errors)[0];
             alert.warning(Array.isArray(firstError) ? firstError[0] : firstError);
         } else {
-            alert.error('Failed to process return. Please check the errors.');
+            alert.warning('Failed to process return. Please check the errors.');
         }
     })
     .finally(() => {
@@ -332,7 +332,7 @@ onMounted(async () => {
                         <table class="min-w-full divide-y divide-border whitespace-nowrap">
                             <thead class="bg-muted">
                                 <tr>
-                                    <th class="px-3 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider w-10">
+                                    <th class="px-3 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider w-10 whitespace-nowrap">
                                         <input 
                                             type="checkbox" 
                                             :checked="allSelected"
@@ -341,15 +341,15 @@ onMounted(async () => {
                                             class="h-4 w-4 rounded border-border text-primary focus:ring-primary"
                                         />
                                     </th>
-                                    <th class="px-3 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Item</th>
-                                    <th class="px-3 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Unit Price</th>
-                                    <th class="px-3 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Qty Assigned</th>
-                                    <th class="px-3 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Already Returned</th>
-                                    <th class="px-3 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Remaining</th>
-                                    <th class="px-3 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Return Qty</th>
-                                    <th class="px-3 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Return Price</th>
-                                    <th class="px-3 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Reason</th>
-                                    <th class="px-3 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider">Refund</th>
+                                    <th class="px-3 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider whitespace-nowrap">Item</th>
+                                    <th class="px-3 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider whitespace-nowrap">Unit Price</th>
+                                    <th class="px-3 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider whitespace-nowrap">Qty Assigned</th>
+                                    <th class="px-3 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider whitespace-nowrap">Already Returned</th>
+                                    <th class="px-3 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider whitespace-nowrap">Remaining</th>
+                                    <th class="px-3 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider whitespace-nowrap">Return Qty</th>
+                                    <th class="px-3 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider whitespace-nowrap">Return Price</th>
+                                    <th class="px-3 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider whitespace-nowrap">Reason</th>
+                                    <th class="px-3 py-3 text-left text-xs font-medium text-muted-foreground uppercase tracking-wider whitespace-nowrap">Refund</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-border">

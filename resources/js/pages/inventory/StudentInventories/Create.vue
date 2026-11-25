@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import axios from 'axios';
-import { ref, computed, watch, onMounted } from 'vue';
+import { ref, computed, watch, onMounted, nextTick } from 'vue';
 import { router } from '@inertiajs/vue3';
 import { Head } from '@inertiajs/vue3';
 import { alert, formatCurrency } from '@/utils';
@@ -370,28 +370,39 @@ const handleStudentChange = (value: number | string | null) => {
 };
 
 const submitForm = () => {
-    // Filter valid items
-    const validItems = form.value.items.filter(item => 
-        item.inventory_item_id && item.quantity > 0
-    );
-    
-    if (validItems.length === 0) {
-        alert.error('Please add at least one item to assign.');
-        return;
-    }
+    const validItems = form.value.items;
+    const rowErrors: Record<string, string> = {};
 
     if (!form.value.student_id) {
-        alert.error('Please select a student.');
+        rowErrors.student_id = 'Student is required.';
+    }
+
+    validItems.forEach((item, index) => {
+        const itemDetails = item.inventory_item_id ? getItemDetails(item) : null;
+        if (!item.inventory_item_id) {
+            rowErrors[`items.${index}.inventory_item_id`] = 'Item is required.';
+        }
+        if (!item.quantity) {
+            rowErrors[`items.${index}.quantity`] = 'Quantity is required.';
+        } else if (item.quantity < 0) {
+            rowErrors[`items.${index}.quantity`] = 'Quantity cannot be negative.';
+        } else if (itemDetails && item.quantity > (itemDetails.available_stock || 0)) {
+            rowErrors[`items.${index}.quantity`] = `Only ${itemDetails.available_stock || 0} in stock.`;
+        }
+    });
+
+    if (validItems.length === 0) {
+        alert.warning('Please add at least one item to assign.');
         return;
     }
 
-    // Validate quantities against stock
-    for (const item of validItems) {
-        const itemDetails = getItemDetails(item);
-        if (itemDetails && item.quantity > (itemDetails.available_stock || 0)) {
-            alert.error(`Quantity exceeds available stock for ${itemDetails.name}. Available: ${itemDetails.available_stock}`);
-            return;
-        }
+    if (Object.keys(rowErrors).length > 0) {
+        errors.value = rowErrors;
+        alert.warning('Please check the highlighted fields.');
+        nextTick(() => {
+            document.querySelector('[data-invalid="true"]')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        });
+        return;
     }
 
     processing.value = true;
@@ -418,12 +429,12 @@ const submitForm = () => {
         .catch((err) => {
             if (err.response?.data?.errors) {
                 errors.value = err.response.data.errors;
-                const firstError = Object.values(err.response.data.errors)[0] as string;
-                alert.warning(firstError);
+                
+                alert.warning('Please check the highlighted fields.');
             } else if (err.response?.data?.message) {
                 alert.error(err.response.data.message);
             } else {
-                alert.error('Failed to assign inventory. Please check the errors.');
+                alert.warning('Failed to assign inventory. Please check the errors.');
             }
         })
         .finally(() => {
@@ -540,27 +551,28 @@ const submitForm = () => {
                             </div>
 
                             <!-- Item Selection -->
-                            <div class="col-span-2 sm:col-span-3 md:col-span-2 space-y-2">
+                            <div class="col-span-2 sm:col-span-3 md:col-span-2 space-y-2" :data-invalid="!!errors[`items.${index}.inventory_item_id`]">
                                 <Label class="text-xs">Item <span class="text-destructive">*</span></Label>
                                 <SearchableSelect
                                     v-model="item.inventory_item_id"
                                     :options="getItemOptionsForRow(item)"
-                                    :placeholder="loadingItems ? 'Loading...' : 'Select Item'"
+                                    :placeholder="loadingItems ? 'Loading...' : 'Select item'"
                                 />
                                 <InputError :message="errors[`items.${index}.inventory_item_id`]" />
                             </div>
 
                             <!-- Quantity -->
-                            <div class="col-span-1 sm:col-span-1 md:col-span-1 space-y-2">
+                            <div class="col-span-1 sm:col-span-1 md:col-span-1 space-y-2" :data-invalid="!!errors[`items.${index}.quantity`]">
                                 <Label class="text-xs">Qty <span class="text-destructive">*</span></Label>
                                 <Input
                                     v-model.number="item.quantity"
                                     type="number"
                                     min="1"
-                                    :max="getItemDetails(item)?.available_stock || 0"
+                                                                        placeholder="Qty"
                                     class="h-10"
-                                    required
+                                    :class="{ 'border-destructive': errors[`items.${index}.quantity`] }"
                                 />
+                                <InputError :message="errors[`items.${index}.quantity`]" />
                             </div>
 
                             <!-- Sale Price (Read-only) -->

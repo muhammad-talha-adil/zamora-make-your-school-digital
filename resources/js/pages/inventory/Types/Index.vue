@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import { headerCampusId } from '@/utils/campus';
 import { Head, router } from '@inertiajs/vue3';
 import { alert } from '@/utils';
 import { computed, ref, watch } from 'vue';
@@ -51,7 +50,7 @@ const props = defineProps<Props>();
 // Filter states
 const showInactive = ref(props.filters?.show_inactive || false);
 const perPage = ref(25);
-const campusFilter = ref(props.filters?.campus_id || headerCampusId());
+const campusFilter = ref('');
 const inventoryTypesData = ref(props.inventoryTypes.data || []);
 const pagination = ref(props.inventoryTypes);
 
@@ -196,13 +195,6 @@ const handleSaved = () => {
 
             <!-- Filters -->
             <FilterCard class="flex flex-wrap gap-3 items-center">
-                <SearchableSelect
-                    v-model="campusFilter"
-                    :options="campusOptions"
-                    placeholder="All Campuses"
-                    clearable
-                    class="w-full sm:w-48"
-                />
                 <Button
                     :variant="showInactive ? 'default' : 'outline'"
                     size="sm"
@@ -224,14 +216,9 @@ const handleSaved = () => {
                     <table class="min-w-full divide-y divide-border">
                         <thead class="bg-muted">
                             <tr>
-                                <th scope="col" class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">
-                                    Sr#
-                                </th>
+                                <th scope="col" class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">#</th>
                                 <th scope="col" class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">
                                     Name
-                                </th>
-                                <th scope="col" class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">
-                                    Campus
                                 </th>
                                 <th scope="col" class="px-6 py-4 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">
                                     Items
@@ -245,6 +232,9 @@ const handleSaved = () => {
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-border bg-card">
+                            <tr v-if="!(inventoryTypesData)?.length">
+                                <td colspan="12" class="px-4 py-8 text-center text-sm text-muted-foreground">No inventory types yet.</td>
+                            </tr>
                             <tr v-for="(type, index) in inventoryTypesData" :key="type.id" class="transition-colors hover:bg-accent">
                                 <td class="px-6 py-4 whitespace-nowrap">
                                     <div class="text-sm text-muted-foreground">

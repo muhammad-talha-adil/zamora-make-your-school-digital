@@ -161,16 +161,19 @@ const goBack = () => {
                     <table class="min-w-full divide-y divide-border">
                         <thead class="bg-muted">
                             <tr>
-                                <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Sr#</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Item</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Qty</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Unit Price</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Return Price</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Total</th>
-                                <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Reason</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase whitespace-nowrap">#</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase whitespace-nowrap">Item</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase whitespace-nowrap">Qty</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase whitespace-nowrap">Unit Price</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase whitespace-nowrap">Return Price</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase whitespace-nowrap">Total</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase whitespace-nowrap">Reason</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-border bg-card">
+                            <tr v-if="!(props.returnRecord.items)?.length">
+                                <td colspan="12" class="px-4 py-8 text-center text-sm text-muted-foreground">No return record.items yet.</td>
+                            </tr>
                             <tr v-for="(item, index) in props.returnRecord.items" :key="item.id" class="hover:bg-accent">
                                 <td class="px-4 py-4 whitespace-nowrap text-sm font-medium text-foreground">{{ index + 1 }}</td>
                                 <td class="px-4 py-4 whitespace-nowrap">

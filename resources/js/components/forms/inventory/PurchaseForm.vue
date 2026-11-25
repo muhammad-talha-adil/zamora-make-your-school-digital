@@ -1,6 +1,5 @@
 <script setup lang="ts">
 import type { Ref } from 'vue';
-import CampusSelect from '@/components/ui/CampusSelect.vue';
 import axios from 'axios';
 import { ref, computed, reactive, watch, nextTick } from 'vue';
 import { usePage } from '@inertiajs/vue3';
@@ -312,7 +311,7 @@ const initializeForm = () => {
         fetchInventoryItems();
     } else {
         // Create mode - reset to defaults
-        form.campus_id = academicScope.value?.campusId || props.campuses[0]?.id || '';
+        form.campus_id = academicScope.value?.campusId || ((usePage().props as any).academicScope?.campusId ?? props.campuses[0]?.id) || '';
         form.supplier_id = null;
         form.purchase_date = new Date().toISOString().split('T')[0];
         form.note = '';
@@ -435,7 +434,7 @@ const submitForm = () => {
     const validItems = form.purchase_items.filter(item => item.inventory_item_id > 0);
     
     if (validItems.length === 0) {
-        alert.error('Please add at least one item to the purchase.');
+        alert.warning('Please add at least one item to the purchase.');
         return;
     }
 
@@ -445,7 +444,7 @@ const submitForm = () => {
     );
     
     if (hasInvalidItems) {
-        alert.error('Please fill in all required fields for each item (Item, Quantity, Purchase Rate).');
+        alert.warning('Please fill in all required fields for each item (Item, Quantity, Purchase Rate).');
         return;
     }
 
@@ -476,7 +475,7 @@ const submitForm = () => {
                 } else if (err.response?.data?.message) {
                     alert.error(err.response.data.message);
                 } else {
-                    alert.error('Failed to update purchase. Please check the errors.');
+                    alert.warning('Failed to update purchase. Please check the errors.');
                 }
             })
             .finally(() => {
@@ -498,7 +497,7 @@ const submitForm = () => {
                 } else if (err.response?.data?.message) {
                     alert.error(err.response.data.message);
                 } else {
-                    alert.error('Failed to create purchase. Please check the errors.');
+                    alert.warning('Failed to create purchase. Please check the errors.');
                 }
             })
             .finally(() => {
@@ -538,21 +537,6 @@ watch(() => form.purchase_items.length, (len) => {
                 <div class="bg-card rounded-lg border p-5 space-y-4">
                     <!-- Basic Info -->
                     <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div v-if="showCampusField" class="space-y-2">
-                            <Label for="campus_id" class="flex items-center gap-2">
-                                <div class="p-1 bg-muted rounded">
-                                    <Icon icon="building" class="h-3.5 w-3.5 text-muted-foreground" />
-                                </div>
-                                Campus <span class="text-destructive">*</span>
-                            </Label>
-                            <CampusSelect
-                                id="campus_id"
-                                v-model="form.campus_id"
-                                :options="campusOptions"
-                                placeholder="Select Campus"
-                            />
-                            <InputError :message="errors.campus_id" />
-                        </div>
                         <div class="space-y-2">
                             <Label for="supplier_id" class="flex items-center gap-2">
                                 <div class="p-1 bg-muted rounded">

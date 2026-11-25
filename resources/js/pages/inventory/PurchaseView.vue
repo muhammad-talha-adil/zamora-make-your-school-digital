@@ -143,11 +143,11 @@ onMounted(() => {
                         <table class="min-w-full divide-y divide-border">
                             <thead class="bg-muted">
                                 <tr>
-                                    <th class="px-3 md:px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Item</th>
-                                    <th class="px-3 md:px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Quantity</th>
-                                    <th class="px-3 md:px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Purchase Rate</th>
-                                    <th class="px-3 md:px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Sale Rate</th>
-                                    <th class="px-3 md:px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase">Total</th>
+                                    <th class="px-3 md:px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase whitespace-nowrap">Item</th>
+                                    <th class="px-3 md:px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase whitespace-nowrap">Quantity</th>
+                                    <th class="px-3 md:px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase whitespace-nowrap">Purchase Rate</th>
+                                    <th class="px-3 md:px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase whitespace-nowrap">Sale Rate</th>
+                                    <th class="px-3 md:px-6 py-3 text-left text-xs font-semibold text-muted-foreground uppercase whitespace-nowrap">Total</th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-border bg-card">
