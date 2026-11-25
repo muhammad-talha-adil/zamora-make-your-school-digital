@@ -16,6 +16,7 @@ use App\Models\Student;
 use App\Models\StudentEnrollmentRecord;
 use App\Services\Exam\ExamGraceService;
 use App\Services\Exam\ExamMarkingService;
+use App\Services\Exam\GradeResolver;
 use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Inertia\Inertia;
@@ -38,7 +39,7 @@ class ExamMarkingController extends Controller
         $gradeSystems = GradeSystem::orderBy('name')->get();
 
         return Inertia::render('Exam/Marking/Select', [
-            'exams' => Exam::all(),
+            'exams' => Exam::visibleTo($request->user())->get(),
             'campuses' => Campus::all(),
             'classes' => SchoolClass::visibleTo($request->user())->get(),
             'sections' => Section::all(),
@@ -74,7 +75,7 @@ class ExamMarkingController extends Controller
         $gradeSystems = GradeSystem::orderBy('name')->get();
 
         return Inertia::render('Exam/Marking/Grid', [
-            'exams' => Exam::all()->toArray(),
+            'exams' => Exam::visibleTo($request->user())->get()->toArray(),
             'campuses' => Campus::all()->toArray(),
             'classes' => SchoolClass::visibleTo($request->user())->get()->toArray(),
             'sections' => Section::all()->toArray(),
@@ -99,9 +100,8 @@ class ExamMarkingController extends Controller
         $campusId = $request->query('campus_id');
         $classId = $request->query('class_id');
         $sectionId = $request->query('section_id');
-        $gradeSystemId = $request->query('grade_system_id');
 
-        $exam = Exam::findOrFail($examId);
+        $exam = Exam::visibleTo(request()->user())->findOrFail($examId);
 
         $this->authorize('viewAny', ExamResultHeader::class);
 
@@ -193,27 +193,16 @@ class ExamMarkingController extends Controller
         })->with('resultHeader')->get()
             ->groupBy('resultHeader.student_id');
 
-        // Get grade system - use selected one or fall back to default/active
-        $gradeSystem = null;
-        if ($gradeSystemId) {
-            $gradeSystem = GradeSystem::with('gradeSystemItems')->find($gradeSystemId);
-        }
-
-        // Fall back to default or active grade system
-        if (! $gradeSystem) {
-            $gradeSystem = GradeSystem::where('is_default', true)
-                ->orWhere('is_active', true)
-                ->first();
-            if ($gradeSystem) {
-                $gradeSystem->load('gradeSystemItems');
-            }
-        }
-
-        $gradeItems = $gradeSystem?->gradeSystemItems ?? [];
-
         // Build response
-        $gridData = $students->map(function ($student) use ($papers, $existingMarks, $gradeItems) {
-            $enrollment = $student->enrollmentRecords->first();
+        $grades = app(GradeResolver::class);
+
+        $gridData = $students->map(function ($student) use ($papers, $existingMarks, $grades, $exam) {
+            // The class the child is in now, in this exam's session — not
+            // whichever enrollment happens to come first.
+            $enrollment = $student->enrollmentRecords
+                ->filter(fn ($record) => (int) $record->session_id === (int) $exam->session_id)
+                ->sortBy(fn ($record) => $record->leave_date === null ? 0 : 1)
+                ->first() ?? $student->enrollmentRecords->first();
 
             // Use all papers for this exam (no filtering by scope)
             $applicablePapers = $papers;
@@ -240,22 +229,15 @@ class ExamMarkingController extends Controller
 
             $percentage = $totalMaxMarks > 0 ? round(($totalObtained / $totalMaxMarks) * 100, 2) : 0;
 
-            // Calculate grade
-            $grade = null;
-            foreach ($gradeItems as $item) {
-                if ($percentage >= $item->min_percentage) {
-                    $grade = $item;
-                    if ($item->max_percentage !== null && $percentage <= $item->max_percentage) {
-                        break;
-                    }
-                }
-            }
+            // The same scale the results page reads, so the two never differ.
+            $grade = $totalMaxMarks > 0
+                ? $grades->itemFor((float) $percentage, $enrollment?->campus_id, $exam->session_id)
+                : null;
 
             return [
                 'student' => [
                     'id' => $student->id,
                     'name' => $student->user?->name ?? 'Unknown',
-                    'campus' => $enrollment?->campus?->name ?? 'N/A',
                     'class' => $enrollment?->class?->name ?? 'N/A',
                     'section' => $enrollment?->section?->name ?? 'N/A',
                 ],
@@ -277,9 +259,36 @@ class ExamMarkingController extends Controller
                 'scope_type' => $p->scope_type,
             ]),
             'students' => $gridData,
+            'grade_bands' => $this->gradeBands($exam, $request->user()?->campusId()),
             'is_locked' => $exam->is_locked,
             'total_max_marks' => $totalMaxMarksAllPapers,
         ]);
+    }
+
+    /**
+     * The grading bands the grid shows live grades from, so what a teacher
+     * sees while typing is what the results page will say.
+     *
+     * @return array<int, array{min: float, max: float, letter: string}>
+     */
+    private function gradeBands(Exam $exam, ?int $campusId): array
+    {
+        $system = app(GradeResolver::class)->systemFor($campusId, $exam->session_id);
+
+        if (! $system) {
+            return [];
+        }
+
+        return $system->gradeSystemItems()
+            ->orderBy('sort_order')
+            ->orderByDesc('min_percentage')
+            ->get()
+            ->map(fn ($item) => [
+                'min' => (float) $item->min_percentage,
+                'max' => (float) $item->max_percentage,
+                'letter' => $item->grade_letter,
+            ])
+            ->all();
     }
 
     /**
@@ -584,7 +593,7 @@ class ExamMarkingController extends Controller
             return response()->json([]);
         }
 
-        $exam = Exam::findOrFail($examId);
+        $exam = Exam::visibleTo(request()->user())->findOrFail($examId);
 
         $studentsQuery = Student::whereHas('enrollmentRecords', function ($q) use ($exam, $classId, $sectionId) {
             $q->where('session_id', $exam->session_id)

@@ -94,9 +94,18 @@ it('refuses to reopen a cancelled exam', function () {
     expect($this->world->exam->fresh()->status)->toBe(Exam::STATUS_CANCELLED);
 });
 
-it('refuses to skip active and go straight from scheduled to marking', function () {
+it('lets a scheduled exam go straight to marking', function () {
     $this->patchJson(route('exam.status', $this->world->exam->id), ['status' => 'marking'])
-        ->assertStatus(422);
+        ->assertSuccessful();
 
-    expect($this->world->exam->fresh()->status)->toBe(Exam::STATUS_SCHEDULED);
+    expect($this->world->exam->fresh()->status)->toBe(Exam::STATUS_MARKING);
+});
+
+it('stamps the publish time when published from the status list', function () {
+    $this->world->exam->update(['status' => 'marking']);
+
+    $this->patchJson(route('exam.status', $this->world->exam->id), ['status' => 'published'])
+        ->assertSuccessful();
+
+    expect($this->world->exam->fresh()->published_at)->not->toBeNull();
 });

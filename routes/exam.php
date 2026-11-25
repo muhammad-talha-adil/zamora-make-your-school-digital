@@ -9,9 +9,10 @@ use App\Http\Controllers\Exam\ExamReportCardController;
 use App\Http\Controllers\Exam\ExamResultController;
 use App\Http\Controllers\Exam\ExamRevaluationController;
 use App\Http\Controllers\Exam\ExamSettingsController;
+use App\Http\Middleware\UseHeaderCampus;
 use Illuminate\Support\Facades\Route;
 
-Route::prefix('exams')->name('exam.')->middleware(['web', 'auth'])->group(function () {
+Route::prefix('exams')->name('exam.')->middleware(['web', 'auth', UseHeaderCampus::class])->group(function () {
 
     // ========================================
     // PAGE ROUTES - Specific routes first (before /{id})
@@ -108,6 +109,11 @@ Route::prefix('exams')->name('exam.')->middleware(['web', 'auth'])->group(functi
         Route::get('/annual-results', 'annualForSection')
             ->name('results.annual-section')
             ->middleware('permission:exam.result.view');
+
+        // One admit card per child, a page each.
+        Route::get('/{examId}/admit-cards', 'admitCards')
+            ->name('admit-cards')
+            ->middleware('permission:exam.paper.view|exam.registration.manage');
 
         // The sheet pinned to the notice board.
         Route::get('/{examId}/datesheet', 'datesheet')

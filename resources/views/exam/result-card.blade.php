@@ -102,6 +102,7 @@
         .signatures div { border-top: 1px solid #444; padding-top: 6px; font-size: 11.5px; }
         .printed { margin-top: 14px; text-align: center; font-size: 10.5px; color: #888; }
         @media print {
+            .noprint { display: none; }
             body { background: #fff; padding: 0; }
             .card {
                 border: 1px solid #222;
@@ -115,6 +116,7 @@
     </style>
 </head>
 <body>
+<div class="noprint" style="max-width:820px;margin:0 auto 12px;text-align:right"><button type="button" onclick="window.print()" style="background:#1d4ed8;color:#fff;border:0;border-radius:6px;padding:8px 18px;font-size:14px;cursor:pointer">Print</button></div>
 @foreach ($cards as $card)
     @php
         $totals = $card['totals'];

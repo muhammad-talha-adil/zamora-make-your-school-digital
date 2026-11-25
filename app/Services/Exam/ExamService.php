@@ -3,6 +3,7 @@
 namespace App\Services\Exam;
 
 use App\Models\Exam\Exam;
+use App\Models\User;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
@@ -22,9 +23,9 @@ class ExamService
         Exam::STATUS_COMPLETED,
     ];
 
-    public function list(array $filters = [])
+    public function list(array $filters = [], ?User $viewer = null)
     {
-        $query = Exam::with(['examType', 'session']);
+        $query = Exam::with(['examType', 'session'])->visibleTo($viewer);
 
         if (isset($filters['search']) && ! empty($filters['search'])) {
             $query->where('name', 'like', '%'.$filters['search'].'%');
@@ -59,6 +60,7 @@ class ExamService
                 $data['start_date'] ?? null,
                 $data['end_date'] ?? null
             );
+            $data['campus_id'] ??= auth()->user()?->campusId();
 
             $exam = Exam::create($data);
 
@@ -134,7 +136,7 @@ class ExamService
      * @var array<string, array<int, string>>
      */
     private const VALID_TRANSITIONS = [
-        Exam::STATUS_SCHEDULED => [Exam::STATUS_ACTIVE, Exam::STATUS_CANCELLED],
+        Exam::STATUS_SCHEDULED => [Exam::STATUS_ACTIVE, Exam::STATUS_MARKING, Exam::STATUS_CANCELLED],
         Exam::STATUS_ACTIVE => [Exam::STATUS_MARKING, Exam::STATUS_CANCELLED],
         Exam::STATUS_MARKING => [Exam::STATUS_ACTIVE, Exam::STATUS_PUBLISHED, Exam::STATUS_CANCELLED],
         Exam::STATUS_PUBLISHED => [Exam::STATUS_COMPLETED],
@@ -162,6 +164,10 @@ class ExamService
             );
         }
 
+        if ($status === Exam::STATUS_PUBLISHED && $exam->status !== $status) {
+            return $this->publishFromDropdown($exam);
+        }
+
         return DB::transaction(function () use ($exam, $status) {
             $exam->update(['status' => $status]);
             $exam = $exam->fresh(['examType', 'session']);
@@ -174,6 +180,22 @@ class ExamService
 
             return $exam;
         });
+    }
+
+    /**
+     * Choosing "Published" in the list is a decision to publish, so it goes
+     * through the same path as the publish button and the timestamp moves too.
+     */
+    private function publishFromDropdown(Exam $exam): Exam
+    {
+        $exam = app(ExamLifecycleService::class)->publish($exam, auth()->user(), true);
+        $exam->load(['examType', 'session']);
+        $exam->paper_count = $exam->examPapers()->count();
+        $exam->result_count = $exam->resultHeaders()->whereHas('examResultLines', function ($query) {
+            $query->whereNotNull('obtained_marks');
+        })->count();
+
+        return $exam;
     }
 
     public function delete(Exam $exam)

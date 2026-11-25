@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import type { Ref } from 'vue';
-import { router } from '@inertiajs/vue3';
+import { router, usePage } from '@inertiajs/vue3';
 import { computed, ref, watch } from 'vue';
 import { route } from 'ziggy-js';
 import { alert } from '@/utils';
@@ -60,11 +60,18 @@ const formatDateForInput = (date: string | null | undefined): string => {
     return date;
 };
 
+// The session the school is running now, so nobody has to pick it.
+const activeSessionId = (): string => {
+    const id = (usePage().props as { academicScope?: { activeSessionId: number | null } }).academicScope?.activeSessionId;
+
+    return id ? String(id) : '';
+};
+
 // Form data - ensure session_id is always a string for consistent comparison
 const form = ref({
     name: props.exam?.name || '',
     exam_type_id: props.exam?.exam_type_id?.toString() || '',
-    session_id: props.exam?.session_id?.toString() || '',
+    session_id: props.exam?.session_id?.toString() || activeSessionId(),
     start_date: formatDateForInput(props.exam?.start_date || ''),
     end_date: formatDateForInput(props.exam?.end_date || ''),
 });
@@ -98,6 +105,7 @@ const submit = () => {
     const missing = requiredErrors(form, ['name', 'exam_type_id', 'session_id', 'start_date', 'end_date']);
     if (Object.keys(missing).length > 0) {
         errors.value = missing as typeof errors.value;
+        alert.warning('Please fill in the required fields.');
         return;
     }
 
@@ -126,8 +134,7 @@ const submit = () => {
             },
             onError: (err: Record<string, string>) => {
                 errors.value = err;
-                // Don't show alert popup - errors are displayed inline with InputError component
-                // This avoids z-index issues with the Dialog component
+                alert.warning(Object.values(err)[0] ?? 'Please check the form.');
             },
             onFinish: () => {
                 processing.value = false;
@@ -147,8 +154,7 @@ const submit = () => {
             },
             onError: (err: Record<string, string>) => {
                 errors.value = err;
-                // Don't show alert popup - errors are displayed inline with InputError component
-                // This avoids z-index issues with the Dialog component
+                alert.warning(Object.values(err)[0] ?? 'Please check the form.');
             },
             onFinish: () => {
                 processing.value = false;
@@ -161,7 +167,7 @@ const resetForm = () => {
     form.value = {
         name: '',
         exam_type_id: '',
-        session_id: '',
+        session_id: activeSessionId(),
         start_date: '',
         end_date: '',
     };
@@ -195,7 +201,7 @@ const resetForm = () => {
                                 id="name"
                                 v-model="form.name"
                                 type="text"
-                                placeholder="Enter exam name"
+                                placeholder="e.g. Mid Term 2026"
                                 :class="{ 'border-destructive': errors.name }"
                             />
                             <InputError :message="errors.name" />

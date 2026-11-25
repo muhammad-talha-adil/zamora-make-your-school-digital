@@ -8,9 +8,11 @@ use App\Models\Exam\Exam;
 use App\Models\Exam\ExamResultHeader;
 use App\Models\SchoolClass;
 use App\Models\Section;
+use App\Services\Exam\ExamPositionService;
 use App\Services\Exam\ReportCardService;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Collection;
 use Inertia\Inertia;
 
 class ExamResultController extends Controller
@@ -23,7 +25,7 @@ class ExamResultController extends Controller
     public function indexPage(Request $request)
     {
         return Inertia::render('Exam/Results/Index', [
-            'exams' => Exam::all(),
+            'exams' => Exam::visibleTo($request->user())->get(),
             'campuses' => Campus::all(),
             'classes' => SchoolClass::visibleTo($request->user())->get(),
             'sections' => Section::all(),
@@ -147,7 +149,13 @@ class ExamResultController extends Controller
         }
 
         // Get total count before pagination for sorting
-        $allResults = $query->get()->map(function ($header) {
+        $headers = $query->get();
+
+        // Position is read from what publishing stored; until then it is
+        // worked out from the marks as they stand, 1, 2, 2, 4.
+        $livePositions = $this->livePositions($headers);
+
+        $allResults = $headers->map(function ($header) use ($livePositions) {
             $totalMaxMarks = $header->examResultLines->sum('total_marks_snapshot');
 
             return [
@@ -176,9 +184,9 @@ class ExamResultController extends Controller
                     ->map(fn ($line) => $line->examPaper?->subject?->name)
                     ->filter()
                     ->values(),
-                'position_in_section' => $header->position_in_section,
+                'position_in_section' => $header->position_in_section ?? $livePositions[$header->id]['position'] ?? null,
                 'position_in_class' => $header->position_in_class,
-                'ranked_out_of' => $header->ranked_out_of,
+                'ranked_out_of' => $header->ranked_out_of ?? $livePositions[$header->id]['out_of'] ?? null,
 
                 'exam_id' => $header->exam_id,
             ];
@@ -223,6 +231,29 @@ class ExamResultController extends Controller
             'pagination' => $pagination,
             'total' => $total,
         ]);
+    }
+
+    /**
+     * Position of each result among its own class and section, for results
+     * whose position has not been stored yet.
+     *
+     * @param  Collection<int, ExamResultHeader>  $headers
+     * @return array<int, array{position: int, out_of: int}>
+     */
+    private function livePositions($headers): array
+    {
+        $positions = app(ExamPositionService::class);
+        $live = [];
+
+        $rankable = $headers->filter(fn (ExamResultHeader $header) => $header->total_obtained_cache !== null);
+
+        foreach ($rankable->groupBy(fn ($header) => $header->class_id.':'.($header->section_id ?? 'none')) as $group) {
+            foreach ($positions->rank($group) as $id => $position) {
+                $live[$id] = ['position' => $position, 'out_of' => $group->count()];
+            }
+        }
+
+        return $live;
     }
 
     /**

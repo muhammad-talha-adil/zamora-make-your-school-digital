@@ -62,19 +62,6 @@
                         <p v-if="validationErrors.exam_id" class="text-xs text-destructive">{{ validationErrors.exam_id }}</p>
                     </div>
 
-                    <!-- Campus Selection -->
-                    <div v-if="!isCampusLocked" class="space-y-2">
-                        <Label for="campus_id">Campus *</Label>
-                        <SearchableSelect
-                            id="campus_id"
-                            v-model="cascadeCampusId"
-                            :options="campusOptions"
-                            placeholder="Select Campus"
-                            :class="{ 'border-destructive': validationErrors.campus_id }"
-                        />
-                        <p v-if="validationErrors.campus_id" class="text-xs text-destructive">{{ validationErrors.campus_id }}</p>
-                    </div>
-
                     <!-- Class Selection -->
                     <div class="space-y-2">
                         <Label for="class_id">Class *</Label>
@@ -383,7 +370,7 @@
                             <Button 
                                 variant="outline" 
                                 @click="saveAllPapers" 
-                                :disabled="savingAll || !hasAnyValidPaper"
+                                :disabled="savingAll"
                             >
                                 <Icon icon="save" class="mr-1" />
                                 {{ savingAll ? 'Saving...' : 'Save All Papers' }}
@@ -524,6 +511,7 @@
                                         <input
                                             type="checkbox"
                                             v-model="paper.selected"
+                                            @change="onRowToggled(paper)"
                                             :disabled="paper.saved || paper.exists"
                                             class="w-4 h-4 rounded border-border"
                                         />
@@ -541,6 +529,9 @@
                                         <div v-if="paper.error" class="text-xs text-destructive">
                                             {{ paper.error }}
                                         </div>
+                                        <div v-for="(message, field) in paper.errors" :key="field" class="text-xs text-destructive whitespace-normal min-w-40">
+                                            {{ message }}
+                                        </div>
                                     </td>
                                     <td class="px-2 py-2 whitespace-nowrap">
                                         <Input 
@@ -548,7 +539,7 @@
                                             type="date" 
                                             :disabled="!paper.selected"
                                             class="w-full h-7 text-xs"
-                                            :class="{ 'border-destructive': !paper.paper_date && paper.touched, 'opacity-50': !paper.selected }"
+                                            :class="{ 'border-destructive': paper.errors?.paper_date, 'opacity-50': !paper.selected }"
                                             :min="examDateRange?.start_date"
                                             :max="examDateRange?.end_date"
                                         />
@@ -580,7 +571,7 @@
                                             placeholder="100"
                                             :disabled="!paper.selected"
                                             class="w-full h-7 text-xs"
-                                            :class="{ 'border-destructive': !paper.total_marks && paper.touched, 'opacity-50': !paper.selected }"
+                                            :class="{ 'border-destructive': paper.errors?.total_marks, 'opacity-50': !paper.selected }"
                                         />
                                     </td>
                                     <td class="px-2 py-2 whitespace-nowrap">
@@ -592,7 +583,7 @@
                                             placeholder="33"
                                             :disabled="!paper.selected"
                                             class="w-full h-7 text-xs"
-                                            :class="{ 'border-destructive': !paper.passing_marks && paper.touched, 'opacity-50': !paper.selected }"
+                                            :class="{ 'border-destructive': paper.errors?.passing_marks, 'opacity-50': !paper.selected }"
                                         />
                                     </td>
                                     <td class="px-2 py-2 whitespace-nowrap text-center">
@@ -620,7 +611,7 @@
                                             size="sm" 
                                             variant="outline"
                                             @click="saveSinglePaper(index)"
-                                            :disabled="savingIndex === index || !isPaperValid(paper) || paper.saved"
+                                            :disabled="savingIndex === index || paper.saved"
                                             class="h-6 w-6 p-0"
                                         >
                                             <Icon icon="save" class="h-3 w-3" />
@@ -642,6 +633,9 @@
                             <div class="flex flex-wrap gap-2 justify-between items-start">
                                 <div class="text-sm font-medium text-foreground">
                                     {{ index + 1 }}. {{ paper.subject_name }}
+                                    <div v-for="(message, field) in paper.errors" :key="field" class="text-xs font-normal text-destructive">
+                                        {{ message }}
+                                    </div>
                                 </div>
                                 <span 
                                     v-if="paper.saved"
@@ -706,7 +700,7 @@
                                         step="0.01"
                                         placeholder="100"
                                         class="w-full h-8 text-xs"
-                                        :class="{ 'border-destructive': !paper.total_marks && paper.touched }"
+                                        :class="{ 'border-destructive': paper.errors?.total_marks }"
                                     />
                                 </div>
                                 <div class="col-span-2">
@@ -718,7 +712,7 @@
                                         step="0.01"
                                         placeholder="33"
                                         class="w-full h-8 text-xs"
-                                        :class="{ 'border-destructive': !paper.passing_marks && paper.touched }"
+                                        :class="{ 'border-destructive': paper.errors?.passing_marks }"
                                     />
                                 </div>
                             </div>
@@ -728,7 +722,7 @@
                                     size="sm" 
                                     variant="outline"
                                     @click="saveSinglePaper(index)"
-                                    :disabled="savingIndex === index || !isPaperValid(paper) || paper.saved"
+                                    :disabled="savingIndex === index || paper.saved"
                                 >
                                     <Icon icon="save" class="h-3 w-3 mr-1" />
                                     {{ paper.saved ? 'Saved' : 'Save' }}
@@ -787,6 +781,8 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import Icon from '@/components/Icon.vue';
 import SearchableSelect from '@/components/ui/searchable-select/SearchableSelect.vue';
 import { useCascadingAcademicSelect } from '@/composables/useCascadingAcademicSelect';
+import { headerCampusId } from '@/utils/campus';
+import { alert } from '@/utils';
 
 interface Exam {
     id: number;
@@ -862,9 +858,11 @@ const { selectedCampusId: cascadeCampusId, selectedClassId: cascadeClassId, isCa
     sessionStorageKey: 'exam-papers',
 });
 
-if (isCampusLocked.value && lockedCampusId.value) {
-    filters.campus_id = String(lockedCampusId.value);
-    cascadeCampusId.value = lockedCampusId.value;
+// Papers always belong to the campus picked in the header.
+const headerCampus = headerCampusId() || (isCampusLocked.value && lockedCampusId.value ? String(lockedCampusId.value) : '');
+if (headerCampus) {
+    filters.campus_id = headerCampus;
+    cascadeCampusId.value = Number(headerCampus);
 }
 
 watch(() => filters.campus_id, (value) => { cascadeCampusId.value = value; });
@@ -873,7 +871,6 @@ watch(() => filters.class_id, (value) => { cascadeClassId.value = value; });
 watch(cascadeClassId, (value) => { filters.class_id = String(value ?? ''); });
 
 const examOptions = computed(() => props.exams.map((exam) => ({ value: exam.id, label: exam.name })));
-const campusOptions = computed(() => props.campuses.map((campus) => ({ value: campus.id, label: campus.name })));
 const classOptions = computed(() => availableClasses.value.map((cls: SchoolClass) => ({ value: cls.id, label: cls.name })));
 const sectionOptions = computed(() => [
     { value: 'all', label: 'All Sections' },
@@ -907,8 +904,8 @@ const globalSettings = reactive({
     start_time: '09:00',
     end_time: '12:00',
     paper_date: '',
-    total_marks: '',
-    passing_marks: '',
+    total_marks: '100',
+    passing_marks: '33',
     // Most papers are compulsory; the school says otherwise for the few.
     subject_role: 'core',
 });
@@ -931,6 +928,7 @@ interface SubjectPaper {
     exists: boolean;
     touched: boolean;
     error?: string;
+    errors?: Record<string, string>;
     paper_id?: number; // ID for existing papers (for updates)
     selected: boolean; // Checkbox for selecting paper to add
 }
@@ -955,19 +953,6 @@ const derivedScopeType = computed(() => {
     // Default to CLASS if class is selected (most common case)
     return 'CLASS';
 });
-const hasAnyValidPaper = computed(() => {
-    return subjectPapers.value.some(paper => 
-        paper.selected &&
-        !paper.saved && 
-        !paper.exists &&
-        paper.paper_date && 
-        paper.start_time && 
-        paper.end_time && 
-        paper.total_marks && 
-        paper.passing_marks
-    );
-});
-
 const savedCount = computed(() => subjectPapers.value.filter(p => p.saved).length);
 const pendingCount = computed(() => subjectPapers.value.filter(p => !p.saved && !p.exists).length);
 const existingCount = computed(() => subjectPapers.value.filter(p => p.exists).length);
@@ -1170,8 +1155,8 @@ const loadRemainingSubjects = async (examId: string, classId: string, sectionId:
                 paper_date: '',
                 start_time: '09:00',
                 end_time: '12:00',
-                total_marks: '',
-                passing_marks: '',
+                total_marks: '100',
+                passing_marks: '33',
                 saved: false,
                 exists: false,
                 touched: false,
@@ -1257,8 +1242,8 @@ const loadPapersOrSubjects = async () => {
                 paper_date: '',
                 start_time: '09:00',
                 end_time: '12:00',
-                total_marks: '',
-                passing_marks: '',
+                total_marks: '100',
+                passing_marks: '33',
                 saved: false,
                 exists: subject.exists || false,
                 touched: false,
@@ -1289,11 +1274,64 @@ const isPaperValid = (paper: SubjectPaper): boolean => {
         paper.passing_marks);
 };
 
+/** "5 Dec 2026" for messages. */
+const prettyDate = (date: string): string =>
+    new Date(`${date}T00:00:00`).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+
+/**
+ * What is wrong with one row, in plain words, keyed by field.
+ */
+const paperProblems = (paper: SubjectPaper): Record<string, string> => {
+    const problems: Record<string, string> = {};
+    const range = examDateRange.value;
+
+    if (!paper.paper_date) {
+        problems.paper_date = 'Date is required.';
+    } else if (range && (paper.paper_date < range.start_date || paper.paper_date > range.end_date)) {
+        problems.paper_date = `Date must be between ${prettyDate(range.start_date)} and ${prettyDate(range.end_date)}.`;
+    }
+
+    if (!paper.start_time || !paper.end_time) {
+        problems.start_time = 'Start and end time are required.';
+    } else if (paper.end_time <= paper.start_time) {
+        problems.start_time = 'End time must be after start time.';
+    }
+
+    const total = Number(paper.total_marks);
+    const pass = Number(paper.passing_marks);
+
+    if (!paper.total_marks || !(total > 0)) {
+        problems.total_marks = 'Total marks is required.';
+    }
+
+    if (paper.passing_marks === '' || paper.passing_marks === null) {
+        problems.passing_marks = 'Pass marks is required.';
+    } else if (total > 0 && pass > total) {
+        problems.passing_marks = 'Pass marks cannot be more than total marks.';
+    }
+
+    return problems;
+};
+
+/** Checking a row fills the usual 100 / 33 so it is ready to save. */
+const onRowToggled = (paper: SubjectPaper) => {
+    if (!paper.selected) {
+        paper.errors = undefined;
+        return;
+    }
+
+    if (!paper.total_marks) paper.total_marks = '100';
+    if (!paper.passing_marks) paper.passing_marks = '33';
+};
+
 const saveSinglePaper = async (index: number) => {
     const paper = subjectPapers.value[index];
-    
-    if (!isPaperValid(paper)) {
+
+    paper.errors = paperProblems(paper);
+
+    if (Object.keys(paper.errors).length > 0) {
         paper.touched = true;
+        alert.warning(Object.values(paper.errors)[0]);
         return;
     }
 
@@ -1380,27 +1418,30 @@ const saveSinglePaper = async (index: number) => {
 };
 
 const saveAllPapers = async () => {
-    const validPapers = subjectPapers.value.filter(p => 
-        p.selected &&
-        !p.saved && 
-        !p.exists &&
-        isPaperValid(p)
-    );
+    errorMessage.value = '';
+    const pendingSelected = subjectPapers.value.filter(p => p.selected && !p.saved && !p.exists);
 
-    if (validPapers.length === 0) {
-        // Tell the office why nothing happened, instead of the button looking
-        // broken (issue #86): either nothing is selected, or a selected row
-        // is missing a required field.
-        const pendingSelected = subjectPapers.value.filter(p => p.selected && !p.saved && !p.exists);
-        if (pendingSelected.length === 0) {
-            errorMessage.value = 'No papers are selected. Check the papers you want to save.';
-        } else {
-            pendingSelected.forEach(p => { p.touched = true; });
-            errorMessage.value = 'Selected papers are missing a date, time or marks. Fill them in or set the global values above.';
-        }
+    if (pendingSelected.length === 0) {
+        errorMessage.value = 'No papers are selected. Check the papers you want to save.';
+        alert.warning(errorMessage.value);
 
         return;
     }
+
+    let firstProblem = '';
+    pendingSelected.forEach((p) => {
+        p.errors = paperProblems(p);
+        p.touched = true;
+        firstProblem ||= Object.values(p.errors)[0] ?? '';
+    });
+
+    if (firstProblem) {
+        alert.warning(firstProblem);
+
+        return;
+    }
+
+    const validPapers = pendingSelected;
 
     savingAll.value = true;
 
@@ -1484,6 +1525,11 @@ const saveAllPapers = async () => {
             if (data.date_overlap_count > 0) messages.push(`${data.date_overlap_count} failed (date overlap)`);
             
             successMessage.value = messages.join('. ');
+            if (data.created_count > 0) {
+                alert.success(`${data.created_count} paper(s) saved.`);
+            } else if (messages.length > 0) {
+                alert.warning(messages.join('. '));
+            }
         }
     } catch (error: any) {
         console.error('Error saving all papers:', error);

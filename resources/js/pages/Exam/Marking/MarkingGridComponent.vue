@@ -116,13 +116,13 @@
                     <thead class="bg-muted">
                         <tr>
                             <th class="px-2 md:px-3 py-3 text-center text-xs font-medium text-muted-foreground uppercase min-w-[50px] md:min-w-[60px]">
-                                Sr#
+                                #
                             </th>
                             <th class="px-2 md:px-3 py-3 text-left text-xs font-medium text-muted-foreground uppercase sticky left-0 bg-muted min-w-[160px] md:min-w-[200px] z-10">
                                 Student
                             </th>
                             <th class="px-2 md:px-3 py-3 text-left text-xs font-medium text-muted-foreground uppercase min-w-[120px] md:min-w-[150px]">
-                                Campus / Class / Section
+                                Class / Section
                             </th>
                             <th 
                                 v-for="paper in papers" 
@@ -157,7 +157,6 @@
                                 <div class="truncate max-w-[150px] md:max-w-none">{{ student.student.name }}</div>
                             </td>
                             <td class="px-2 md:px-3 py-2 md:py-3 text-xs md:text-sm text-muted-foreground">
-                                <div class="hidden md:block">{{ student.student.campus }}</div>
                                 <div>{{ student.student.class }} - {{ student.student.section }}</div>
                             </td>
                             <td 
@@ -206,7 +205,7 @@
                                 <Button 
                                     size="sm" 
                                     @click="saveRow(student)"
-                                    :disabled="isLocked || !student.hasChanges || hasStudentErrors(student)"
+                                    :disabled="isLocked || !student.hasChanges"
                                     variant="outline"
                                     class="text-xs"
                                 >
@@ -282,7 +281,6 @@ interface StudentData {
     student: {
         id: number;
         name: string;
-        campus: string;
         class: string;
         section: string;
     };
@@ -296,6 +294,7 @@ interface StudentData {
 }
 
 interface GridData {
+    grade_bands?: Array<{ min: number; max: number; letter: string }>;
     papers: Paper[];
     students: StudentData[];
     is_locked: boolean;
@@ -305,7 +304,6 @@ interface GridData {
 
 interface Props {
     exams: Array<{id: number; name: string}>;
-    campuses: Array<{id: number; name: string}>;
     classes: Array<{id: number; name: string}>;
     sections: Array<{id: number; name: string; class_id: number}>;
     gradeSystems: Array<{id: number; name: string; is_default: boolean}>;
@@ -334,6 +332,7 @@ const students = ref<StudentData[]>([]);
 const isLocked = ref(false);
 const totalMaxMarks = ref(0);
 const fieldErrors = ref<Record<string, string>>({});
+const gradeBands = ref<Array<{ min: number; max: number; letter: string }>>([]);
 const gradeSystemId = ref<number | null>(props.filters.grade_system_id ?? null);
 const gradeSystemOptions = computed(() =>
     props.gradeSystems.map((gs) => ({ value: gs.id, label: gs.is_default ? `${gs.name} (Default)` : gs.name }))
@@ -421,20 +420,15 @@ function getGradeClass(grade: string): string {
     return 'bg-destructive/10 text-destructive';
 }
 
+/** Same bands the results page reads, sent by the server with the grid. */
 function calculateGrade(percentage: number): string {
     if (percentage === 0) {
         return 'N/A';
     }
-    if (percentage >= 90) return 'A+';
-    if (percentage >= 80) return 'A';
-    if (percentage >= 75) return 'A-';
-    if (percentage >= 70) return 'B+';
-    if (percentage >= 65) return 'B';
-    if (percentage >= 60) return 'B-';
-    if (percentage >= 55) return 'C+';
-    if (percentage >= 50) return 'C';
-    if (percentage >= 40) return 'D';
-    return 'F+';
+
+    const band = gradeBands.value.find((b) => b.min <= percentage && percentage <= b.max);
+
+    return band?.letter ?? 'N/A';
 }
 
 function updateMarks(student: StudentData, paperId: number, event: Event, maxMarks: number) {
@@ -449,12 +443,11 @@ function updateMarks(student: StudentData, paperId: number, event: Event, maxMar
     
     if (value !== null && !isNaN(value)) {
         if (value < 0) {
-            setFieldError(student.student.id, paperId, 'Cannot be negative');
-            return;
+            setFieldError(student.student.id, paperId, 'Min 0');
         }
         if (value > maxMarks) {
-            setFieldError(student.student.id, paperId, `Max: ${maxMarks}`);
-            return;
+            // Keep what was typed and say why it cannot be saved yet.
+            setFieldError(student.student.id, paperId, `Max ${maxMarks}`);
         }
     }
     
@@ -518,6 +511,7 @@ async function loadGridData() {
         }
         
         papers.value = data.papers;
+        gradeBands.value = data.grade_bands ?? [];
         totalMaxMarks.value = data.total_max_marks || 0;
         
         students.value = data.students.map((s: StudentData) => {
@@ -566,7 +560,7 @@ async function saveRow(student: StudentData) {
     if (isLocked.value) return;
     
     if (hasStudentErrors(student)) {
-        alert.error('Please fix validation errors before saving');
+        alert.warning('Some marks are above the maximum. Please fix them first.');
         return;
     }
     
@@ -592,7 +586,7 @@ async function saveBulk() {
     
     const errorKeys = Object.keys(fieldErrors.value);
     if (errorKeys.length > 0) {
-        alert.error('Please fix validation errors before saving');
+        alert.warning('Some marks are above the maximum. Please fix them first.');
         return;
     }
     

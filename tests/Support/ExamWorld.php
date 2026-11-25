@@ -51,6 +51,7 @@ class ExamWorld
         ]);
 
         $this->exam = Exam::create([
+            'campus_id' => $this->school->campus->id,
             'session_id' => $this->school->session->id,
             'exam_type_id' => $this->examType->id,
             'name' => 'First Term 2026',

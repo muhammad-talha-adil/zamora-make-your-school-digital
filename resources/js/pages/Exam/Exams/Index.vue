@@ -97,7 +97,7 @@
                     <div class="text-sm text-muted-foreground space-y-1 pt-2 border-t border-border">
                         <div class="flex items-center gap-2">
                             <Icon icon="calendar" class="h-4 w-4" />
-                            <span>{{ exam.start_date_formatted }} - {{ exam.end_date_formatted }}</span>
+                            <span>{{ prettyDate(exam.start_date_formatted) }} - {{ prettyDate(exam.end_date_formatted) }}</span>
                         </div>
                         <div class="flex items-center gap-2">
                             <Icon icon="clock" class="h-4 w-4" />
@@ -138,6 +138,20 @@
                         >
                             <Icon icon="bar-chart-2" class="mr-1" />Results
                         </Button>
+                        <a
+                            :href="route('exam.datesheet', exam.id)"
+                            target="_blank"
+                            class="inline-flex min-h-8 shrink-0 items-center justify-center rounded-md border border-border bg-background px-3 text-xs font-medium hover:bg-accent"
+                        >
+                            <Icon icon="calendar" class="mr-1 h-3 w-3" />Date Sheet
+                        </a>
+                        <a
+                            :href="route('exam.admit-cards', exam.id)"
+                            target="_blank"
+                            class="inline-flex min-h-8 shrink-0 items-center justify-center rounded-md border border-border bg-background px-3 text-xs font-medium hover:bg-accent"
+                        >
+                            <Icon icon="printer" class="mr-1 h-3 w-3" />Admit Cards
+                        </a>
                         <ExamForm
                             :exam="exam"
                             :exam-types="props.examTypes"
@@ -152,7 +166,7 @@
                     </div>
                 </div>
                 <div v-if="examsData.length === 0" class="text-center py-8 text-muted-foreground">
-                    No exams found.
+                    No exams yet. Create your first exam.
                 </div>
             </div>
 
@@ -163,7 +177,7 @@
                         <thead class="bg-muted">
                             <tr>
                                 <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase w-12">
-                                    Sr#
+                                    #
                                 </th>
                                 <th scope="col" class="px-4 py-3 text-left text-xs font-semibold tracking-wider text-muted-foreground uppercase">
                                     Exam Name
@@ -200,7 +214,7 @@
                                     <div class="text-sm text-muted-foreground">{{ exam.session?.name }}</div>
                                 </td>
                                 <td class="px-4 py-3 whitespace-nowrap">
-                                    <div class="text-sm text-muted-foreground">{{ exam.start_date_formatted }} - {{ exam.end_date_formatted }}</div>
+                                    <div class="text-sm text-muted-foreground">{{ prettyDate(exam.start_date_formatted) }} - {{ prettyDate(exam.end_date_formatted) }}</div>
                                 </td>
                                 <td class="px-4 py-3 whitespace-nowrap">
                                     <div class="flex items-center gap-2">
@@ -264,6 +278,20 @@
                                         >
                                             <Icon icon="bar-chart-2" class="mr-1 h-3 w-3" />Results
                                         </Button>
+                                        <a
+                                            :href="route('exam.datesheet', exam.id)"
+                                            target="_blank"
+                                            class="inline-flex min-h-8 items-center justify-center rounded-md border border-border bg-background px-3 text-xs font-medium hover:bg-accent"
+                                        >
+                                            <Icon icon="calendar" class="mr-1 h-3 w-3" />Date Sheet
+                                        </a>
+                                        <a
+                                            :href="route('exam.admit-cards', exam.id)"
+                                            target="_blank"
+                                            class="inline-flex min-h-8 items-center justify-center rounded-md border border-border bg-background px-3 text-xs font-medium hover:bg-accent"
+                                        >
+                                            <Icon icon="printer" class="mr-1 h-3 w-3" />Admit Cards
+                                        </a>
                                         <ExamForm
                                             :exam="exam"
                                             :exam-types="props.examTypes"
@@ -276,6 +304,11 @@
                                             @saved="fetchExams"
                                         />
                                     </div>
+                                </td>
+                            </tr>
+                            <tr v-if="examsData.length === 0">
+                                <td colspan="7" class="px-4 py-10 text-center text-sm text-muted-foreground">
+                                    No exams yet. Create your first exam.
                                 </td>
                             </tr>
                         </tbody>
@@ -291,6 +324,7 @@ import { Head, router } from '@inertiajs/vue3';
 import { computed, reactive, ref, watch } from 'vue';
 import { route } from 'ziggy-js';
 import axios from 'axios';
+import { alert } from '@/utils';
 import AppLayout from '@/layouts/AppLayout.vue';
 import type { BreadcrumbItem } from '@/types';
 import { Button } from '@/components/ui/button';
@@ -319,6 +353,13 @@ const examStatusOptions = [
     { value: 'completed', label: 'Completed' },
     { value: 'cancelled', label: 'Cancelled' },
 ];
+
+/** "01 Dec 2026" instead of 2026-12-01. */
+const prettyDate = (date?: string | null): string => {
+    if (!date) return '-';
+
+    return new Date(`${date}T00:00:00`).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+};
 
 // Local state for exams (real-time updates)
 const examsData = ref<Exam[]>(props.exams);
@@ -453,9 +494,7 @@ const saveStatus = async (exam: Exam) => {
                 examsData.value[index].status = response.data.data?.status || exam.status;
             }
             // Show success toast
-            window.dispatchEvent(new CustomEvent('toast', {
-                detail: { type: 'success', message: 'Status updated successfully!' }
-            }));
+            alert.success('Status updated successfully!');
             // Refresh the exams prop in the background so paper/result counts and
             // action-button states stay correct without a manual page refresh.
             router.reload({ only: ['exams'], preserveScroll: true });
@@ -469,9 +508,7 @@ const saveStatus = async (exam: Exam) => {
         }
         // Show error toast
         const errorMessage = error.response?.data?.message || 'Failed to update status';
-        window.dispatchEvent(new CustomEvent('toast', {
-            detail: { type: 'error', message: errorMessage }
-        }));
+        alert.warning(errorMessage);
     } finally {
         savingStatus.value = null;
     }

@@ -33,7 +33,7 @@ class ExamRevaluationController extends Controller
     public function indexPage(Request $request)
     {
         return Inertia::render('Exam/Revaluations/Index', [
-            'exams' => Exam::all(),
+            'exams' => Exam::visibleTo($request->user())->get(),
             'campuses' => Campus::all(),
             'classes' => SchoolClass::visibleTo($request->user())->get(),
             'can' => [

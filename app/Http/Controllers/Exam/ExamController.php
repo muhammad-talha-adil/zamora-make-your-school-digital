@@ -10,6 +10,7 @@ use App\Models\Exam\ExamType;
 use App\Models\Session;
 use App\Services\Exam\ExamLifecycleService;
 use App\Services\Exam\ExamService;
+use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\Request;
 use Inertia\Inertia;
 use Inertia\Response;
@@ -31,12 +32,12 @@ class ExamController extends Controller
         $this->authorize('viewAny', Exam::class);
 
         $filters = $request->all();
-        $exams = $this->examService->list($filters);
+        $exams = $this->examService->list($filters, $request->user());
 
         return Inertia::render('Exam/Exams/Index', [
             'exams' => $exams,
             'filters' => $filters,
-            'examTypes' => ExamType::where('is_active', true)->get(),
+            'examTypes' => $this->activeExamTypes(),
             'sessions' => Session::where('is_active', true)->get(),
         ]);
     }
@@ -49,9 +50,22 @@ class ExamController extends Controller
         $this->authorize('create', Exam::class);
 
         return Inertia::render('Exam/Exams/Create', [
-            'examTypes' => ExamType::where('is_active', true)->get(),
+            'examTypes' => $this->activeExamTypes(),
             'sessions' => Session::where('is_active', true)->get(),
         ]);
+    }
+
+    /**
+     * The exam types a school can pick from, starting it off with the usual
+     * ones when it has none yet.
+     */
+    private function activeExamTypes(): Collection
+    {
+        if (! ExamType::query()->exists()) {
+            ExamType::ensureDefaults();
+        }
+
+        return ExamType::where('is_active', true)->get();
     }
 
     /**
@@ -60,6 +74,7 @@ class ExamController extends Controller
     public function showPage($id): Response
     {
         $exam = Exam::with(['examType', 'session', 'examPapers.subject', 'examPapers.class', 'examPapers.section'])
+            ->visibleTo(request()->user())
             ->findOrFail($id);
 
         $this->authorize('view', $exam);
@@ -74,7 +89,7 @@ class ExamController extends Controller
      */
     public function editPage($id): Response
     {
-        $exam = Exam::findOrFail($id);
+        $exam = Exam::visibleTo(request()->user())->findOrFail($id);
         $this->authorize('update', $exam);
 
         $examData = $exam->toArray();
@@ -85,7 +100,7 @@ class ExamController extends Controller
 
         return Inertia::render('Exam/Exams/Edit', [
             'exam' => $examData,
-            'examTypes' => ExamType::where('is_active', true)->get(),
+            'examTypes' => $this->activeExamTypes(),
             'sessions' => Session::where('is_active', true)->get(),
         ]);
     }
@@ -96,7 +111,7 @@ class ExamController extends Controller
     public function index(Request $request)
     {
         $filters = $request->all();
-        $exams = $this->examService->list($filters);
+        $exams = $this->examService->list($filters, $request->user());
 
         return response()->json(['data' => $exams]);
     }
@@ -146,12 +161,14 @@ class ExamController extends Controller
             'status' => 'required|string|in:scheduled,active,marking,published,completed,cancelled',
         ]);
 
-        $exam = Exam::findOrFail($id);
+        $exam = Exam::visibleTo($request->user())->findOrFail($id);
         $this->authorize('update', $exam);
 
         try {
             $exam = $this->examService->changeStatus($exam, $request->status);
         } catch (\InvalidArgumentException $e) {
+            return response()->json(['message' => $e->getMessage()], 422);
+        } catch (\RuntimeException $e) {
             return response()->json(['message' => $e->getMessage()], 422);
         }
 

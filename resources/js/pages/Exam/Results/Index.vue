@@ -15,7 +15,7 @@
 
             <!-- Exam Selection Panel -->
             <div class="bg-card rounded-lg border border-border p-4 md:p-6">
-                <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-6">
+                <div class="grid gap-4 md:grid-cols-2 lg:grid-cols-5">
                     <!-- Exam Selection -->
                     <div class="md:col-span-2 lg:col-span-1 space-y-2">
                         <Label for="exam">
@@ -26,18 +26,6 @@
                             :options="examOptions"
                             :disabled="isExamLocked"
                             placeholder="Select Exam"
-                            class="w-full"
-                        />
-                    </div>
-
-                    <!-- Campus Filter -->
-                    <div class="space-y-2">
-                        <Label for="campus">Campus</Label>
-                        <SearchableSelect
-                            v-model="campusFilterValue"
-                            :options="campusOptions"
-                            placeholder="All Campuses"
-                            clearable
                             class="w-full"
                         />
                     </div>
@@ -237,15 +225,18 @@
                             </div>
                             <div class="text-sm text-muted-foreground space-y-1">
                                 <div class="flex flex-wrap gap-2">
-                                    <span v-if="result.campus" class="bg-muted px-2 py-0.5 rounded text-xs">
-                                        {{ result.campus.name }}
-                                    </span>
                                     <span class="bg-muted px-2 py-0.5 rounded text-xs">
                                         {{ result.class?.name }}
                                     </span>
                                     <span v-if="result.section" class="bg-muted px-2 py-0.5 rounded text-xs">
                                         {{ result.section.name }}
                                     </span>
+                                </div>
+                                <div class="flex flex-wrap gap-2 items-center">
+                                    <Button variant="outline" size="sm" @click="printCard(result.id)">
+                                        <Printer class="h-4 w-4 mr-1" />
+                                        Report Card
+                                    </Button>
                                 </div>
                                 <div class="flex flex-wrap gap-2 justify-between items-center">
                                     <span>Marks: {{ result.total_obtained }}/{{ result.total_max_marks }}</span>
@@ -262,44 +253,38 @@
                         <table class="min-w-full divide-y divide-border">
                             <thead class="bg-muted">
                                 <tr>
-                                    <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider w-16">
-                                        Rank
+                                    <th class="px-3 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                                        #
                                     </th>
-                                    <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                                    <th class="px-3 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                                         Student
                                     </th>
-                                    <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                                        Campus
+                                    <th class="px-3 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                                        Class / Section
                                     </th>
-                                    <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                                        Class
-                                    </th>
-                                    <th class="px-4 py-3 text-left text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                                        Section
-                                    </th>
-                                    <th class="px-4 py-3 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                                    <th class="px-3 py-3 text-right hidden 2xl:table-cell text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                                         Total Marks
                                     </th>
-                                    <th class="px-4 py-3 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                                    <th class="px-3 py-3 text-right hidden 2xl:table-cell text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                                         Obtained
                                     </th>
-                                    <th class="px-4 py-3 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                                        Percentage
+                                    <th class="px-3 py-3 text-right text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                                        %
                                     </th>
-                                    <th class="px-4 py-3 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                                    <th class="px-3 py-3 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                                         Grade
                                     </th>
-                                    <th class="px-4 py-3 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                                    <th class="px-3 py-3 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                                         Position
                                     </th>
-                                    <th class="px-4 py-3 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                                    <th class="px-3 py-3 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                                         Result
                                     </th>
-                                    <th class="px-4 py-3 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                                    <th class="px-3 py-3 text-center hidden 2xl:table-cell text-xs font-semibold text-muted-foreground uppercase tracking-wider">
                                         Status
                                     </th>
-                                    <th class="px-4 py-3 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wider">
-                                        Card
+                                    <th class="px-3 py-3 text-center text-xs font-semibold text-muted-foreground uppercase tracking-wider">
+                                        Actions
                                     </th>
                                 </tr>
                             </thead>
@@ -310,70 +295,51 @@
                                     class="hover:bg-accent transition-colors"
                                     :class="{ 'bg-warning/10': isTopper(index) }"
                                 >
-                                    <td class="px-4 py-3 whitespace-nowrap">
+                                    <td class="px-3 py-3 whitespace-nowrap">
                                         <div class="flex items-center justify-center w-7 h-7 rounded-full text-sm font-bold"
                                             :class="getRankClass(index)"
                                         >
-                                            {{ (pagination.from || 0) + index + 1 }}
+                                            {{ (pagination.from || 1) + index }}
                                         </div>
                                     </td>
-                                    <td class="px-4 py-3 whitespace-nowrap">
-                                        <div class="text-sm font-medium text-foreground">
-                                            {{ result.student }}
-                                        </div>
+                                    <td class="px-3 py-3 whitespace-nowrap">
+                                        <div class="text-sm font-medium text-foreground">{{ result.student }}</div>
                                     </td>
-                                    <td class="px-4 py-3 whitespace-nowrap">
+                                    <td class="px-3 py-3 whitespace-nowrap">
                                         <div class="text-sm text-muted-foreground">
-                                            {{ result.campus?.name || 'N/A' }}
+                                            {{ result.class?.name || 'N/A' }}<span v-if="result.section"> - {{ result.section.name }}</span>
                                         </div>
                                     </td>
-                                    <td class="px-4 py-3 whitespace-nowrap">
-                                        <div class="text-sm text-muted-foreground">
-                                            {{ result.class?.name || 'N/A' }}
-                                        </div>
+                                    <td class="px-3 py-3 whitespace-nowrap text-right hidden 2xl:table-cell">
+                                        <div class="text-sm text-muted-foreground">{{ result.total_max_marks }}</div>
                                     </td>
-                                    <td class="px-4 py-3 whitespace-nowrap">
-                                        <div class="text-sm text-muted-foreground">
-                                            {{ result.section?.name || 'N/A' }}
-                                        </div>
+                                    <td class="px-3 py-3 whitespace-nowrap text-right hidden 2xl:table-cell">
+                                        <div class="text-sm font-medium text-foreground">{{ result.total_obtained }}</div>
                                     </td>
-                                    <td class="px-4 py-3 whitespace-nowrap text-right">
-                                        <div class="text-sm text-muted-foreground">
-                                            {{ result.total_max_marks }}
-                                        </div>
-                                    </td>
-                                    <td class="px-4 py-3 whitespace-nowrap text-right">
-                                        <div class="text-sm font-medium text-foreground">
-                                            {{ result.total_obtained }}
-                                        </div>
-                                    </td>
-                                    <td class="px-4 py-3 whitespace-nowrap text-right">
+                                    <td class="px-3 py-3 whitespace-nowrap text-right">
                                         <div class="text-sm font-semibold" :class="getScoreColorClass(result.percentage)">
                                             {{ result.percentage }}%
                                         </div>
+                                        <div class="text-[10px] text-muted-foreground 2xl:hidden">
+                                            {{ result.total_obtained }}/{{ result.total_max_marks }}
+                                        </div>
                                     </td>
-                                    <td class="px-4 py-3 whitespace-nowrap text-center">
-                                        <span 
+                                    <td class="px-3 py-3 whitespace-nowrap text-center">
+                                        <span
                                             class="px-2 py-1 rounded text-xs font-medium"
                                             :class="getGradeClass(result.overallGradeItem?.grade_letter)"
                                         >
                                             {{ result.overallGradeItem?.grade_letter || 'N/A' }}
                                         </span>
                                     </td>
-
-                                    <!-- "Position: 3rd of 42" is on every card
-                                         printed in this country. Blank rather
-                                         than invented where the results have
-                                         not been published yet. -->
-                                    <td class="px-4 py-3 whitespace-nowrap text-center">
+                                    <td class="px-3 py-3 whitespace-nowrap text-center">
                                         <span v-if="result.position_in_section" class="text-sm font-medium">
                                             {{ ordinal(result.position_in_section) }}
                                             <span class="text-muted-foreground text-xs">of {{ result.ranked_out_of }}</span>
                                         </span>
                                         <span v-else class="text-muted-foreground text-sm">&mdash;</span>
                                     </td>
-
-                                    <td class="px-4 py-3 whitespace-nowrap text-center">
+                                    <td class="px-3 py-3 whitespace-nowrap text-center">
                                         <span
                                             class="px-2 py-1 rounded text-xs font-medium"
                                             :class="{
@@ -389,14 +355,8 @@
                                             {{ failReason(result) }}
                                         </div>
                                     </td>
-
-                                    <td class="px-4 py-3 whitespace-nowrap text-center">
-                                        <Button variant="ghost" size="sm" @click="printCard(result.id)">
-                                            <Printer class="h-4 w-4" />
-                                        </Button>
-                                    </td>
-                                    <td class="px-4 py-3 whitespace-nowrap text-center">
-                                        <span 
+                                    <td class="px-3 py-3 whitespace-nowrap text-center hidden 2xl:table-cell">
+                                        <span
                                             class="px-2 py-1 rounded text-xs font-medium"
                                             :class="{
                                                 'bg-warning/10 text-warning': result.status === 'draft',
@@ -406,6 +366,12 @@
                                         >
                                             {{ result.status }}
                                         </span>
+                                    </td>
+                                    <td class="px-3 py-3 whitespace-nowrap text-center">
+                                        <Button variant="outline" size="sm" @click="printCard(result.id)">
+                                            <Printer class="h-4 w-4 mr-1" />
+                                            Report Card
+                                        </Button>
                                     </td>
                                 </tr>
                             </tbody>
@@ -612,9 +578,6 @@ const examOptions = computed(() =>
     props.exams.map((exam) => ({ value: exam.id, label: exam.name }))
 );
 
-const campusOptions = computed(() =>
-    filterOptions.campuses.map((campus) => ({ value: String(campus.id), label: campus.name }))
-);
 
 const classOptions = computed(() =>
     filterOptions.classes.map((cls) => ({ value: String(cls.id), label: cls.name }))
@@ -624,10 +587,6 @@ const sectionOptions = computed(() =>
     filterOptions.sections.map((section) => ({ value: String(section.id), label: section.name }))
 );
 
-const campusFilterValue = computed({
-    get: () => (filters.campus_id === 'all' ? null : filters.campus_id),
-    set: (value) => { filters.campus_id = value ?? 'all'; },
-});
 
 const classFilterValue = computed({
     get: () => (filters.class_id === 'all' ? null : filters.class_id),

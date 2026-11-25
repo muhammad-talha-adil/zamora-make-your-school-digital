@@ -8,7 +8,7 @@
                     Marking - Select Options
                 </h1>
                 <p class="mt-1 text-xs md:text-sm text-muted-foreground">
-                    Choose exam, campus, class and section to enter marks
+                    Choose exam, class and section to enter marks
                 </p>
             </div>
 
@@ -30,17 +30,6 @@
                             :options="examOptions"
                             :disabled="isExamPreSelected"
                             placeholder="Select Exam"
-                        />
-                    </div>
-
-                    <div class="space-y-2">
-                        <Label for="campus">Campus</Label>
-                        <SearchableSelect
-                            id="campus"
-                            v-model="selected.campusId"
-                            :options="campusOptions"
-                            placeholder="All Campuses"
-                            clearable
                         />
                     </div>
 
@@ -69,7 +58,6 @@
                 <div class="mt-6 flex justify-start">
                     <Button 
                         @click="loadMarkingGrid" 
-                        :disabled="!selected.examId || !selected.classId"
                     >
                         <Icon icon="edit-3" class="mr-1" />
                         Load Marking Grid
@@ -81,7 +69,6 @@
             <MarkingGridComponent
                 v-if="showGrid"
                 :exams="exams"
-                :campuses="campuses"
                 :classes="classes"
                 :sections="sections || []"
                 :grade-systems="gradeSystems || []"
@@ -97,6 +84,7 @@
 import { Head } from '@inertiajs/vue3';
 import { reactive, computed, ref, watch } from 'vue';
 import AppLayout from '@/layouts/AppLayout.vue';
+import { alert } from '@/utils';
 import type { BreadcrumbItem } from '@/types';
 import { Button } from '@/components/ui/button';
 import { Label } from '@/components/ui/label';
@@ -105,11 +93,6 @@ import SearchableSelect from '@/components/ui/searchable-select/SearchableSelect
 import MarkingGridComponent from './MarkingGridComponent.vue';
 
 interface Exam {
-    id: number;
-    name: string;
-}
-
-interface Campus {
     id: number;
     name: string;
 }
@@ -133,7 +116,6 @@ interface GradeSystem {
 
 interface Props {
     exams: Exam[];
-    campuses: Campus[];
     classes: SchoolClass[];
     sections?: Section[];
     gradeSystems?: GradeSystem[];
@@ -156,7 +138,6 @@ const breadcrumbItems: BreadcrumbItem[] = [
 
 const selected = reactive({
     examId: '' as string | number,
-    campusId: '' as string | number,
     classId: '' as string | number,
     sectionId: 'ALL' as string | number,
 });
@@ -164,7 +145,6 @@ const selected = reactive({
 // Current filters for the grid component
 const currentFilters = computed(() => ({
     exam_id: selected.examId ? Number(selected.examId) : null,
-    campus_id: selected.campusId ? Number(selected.campusId) : null,
     class_id: selected.classId ? Number(selected.classId) : null,
     section_id: selected.sectionId && selected.sectionId !== 'ALL' ? Number(selected.sectionId) : null,
     grade_system_id: props.gradeSystems?.find(gs => gs.is_default)?.id ?? null,
@@ -183,7 +163,6 @@ const filteredSections = computed(() => {
 });
 
 const examOptions = computed(() => props.exams.map((exam) => ({ value: exam.id, label: exam.name })));
-const campusOptions = computed(() => props.campuses.map((campus) => ({ value: campus.id, label: campus.name })));
 const classOptions = computed(() => props.classes.map((cls) => ({ value: cls.id, label: cls.name })));
 const sectionOptions = computed(() => [
     { value: 'ALL', label: 'All Sections' },
@@ -191,9 +170,17 @@ const sectionOptions = computed(() => [
 ]);
 
 const loadMarkingGrid = () => {
-    if (selected.examId && selected.classId) {
-        showGrid.value = true;
+    if (!selected.examId) {
+        alert.warning('Exam is required.');
+        return;
     }
+
+    if (!selected.classId) {
+        alert.warning('Class is required.');
+        return;
+    }
+
+    showGrid.value = true;
 };
 
 const handleSaveComplete = () => {
@@ -203,7 +190,6 @@ const handleSaveComplete = () => {
 
 const handleFiltersReset = () => {
     // Reset filters to default values after save
-    selected.campusId = '';
     selected.classId = '';
     selected.sectionId = 'ALL';
     showGrid.value = false;

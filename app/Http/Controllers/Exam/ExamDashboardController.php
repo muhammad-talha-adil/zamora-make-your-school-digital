@@ -41,7 +41,7 @@ class ExamDashboardController extends Controller
         // ============================
 
         // Total exams count
-        $totalExams = Exam::count();
+        $totalExams = Exam::visibleTo($viewer)->count();
 
         // Total papers count
         $totalPapers = ExamPaper::visibleTo($viewer)->count();
@@ -53,7 +53,7 @@ class ExamDashboardController extends Controller
         $totalResults = ExamResultHeader::visibleTo($viewer)->count();
 
         // Exams by status
-        $examsByStatus = Exam::select('status')
+        $examsByStatus = Exam::visibleTo($viewer)->select('status')
             ->selectRaw('COUNT(*) as count')
             ->groupBy('status')
             ->get()
@@ -72,7 +72,7 @@ class ExamDashboardController extends Controller
         // ============================
         // Recent Exams
         // ============================
-        $recentExams = Exam::with(['examType', 'session'])
+        $recentExams = Exam::visibleTo($viewer)->with(['examType', 'session'])
             ->orderBy('created_at', 'desc')
             ->limit(5)
             ->get()
@@ -142,7 +142,7 @@ class ExamDashboardController extends Controller
         // ============================
         // Active Exams
         // ============================
-        $activeExams = Exam::with(['examType'])
+        $activeExams = Exam::visibleTo($viewer)->with(['examType'])
             ->whereIn('status', ['scheduled', 'active', 'marking'])
             ->orderBy('start_date', 'desc')
             ->limit(5)

@@ -125,8 +125,15 @@ class ExamPaper extends Model
      */
     public function scopeVisibleTo($query, ?User $user)
     {
-        if (! $user || $user->isSuperAdmin()) {
+        if (! $user) {
             return $query;
+        }
+
+        // The owner sees every class, but only of the campus in the header.
+        if ($user->isSuperAdmin()) {
+            $campusId = $user->campusId();
+
+            return $campusId !== null ? $query->where('campus_id', $campusId) : $query;
         }
 
         $campusId = $user->campusId();

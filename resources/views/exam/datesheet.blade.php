@@ -74,6 +74,7 @@
         }
         .signatures div { border-top: 1px solid #444; padding-top: 6px; font-size: 11.5px; }
         @media print {
+            .noprint { display: none; }
             body { background: #fff; padding: 0; font-size: 11px; }
             .sheet { border: 1px solid #222; border-radius: 0; margin: 0; max-width: none; padding: 14px 20px; }
             .head h1 { font-size: 18px; }
@@ -87,6 +88,7 @@
     </style>
 </head>
 <body>
+<div class="noprint" style="max-width:820px;margin:0 auto 12px;text-align:right"><button type="button" onclick="window.print()" style="background:#1d4ed8;color:#fff;border:0;border-radius:6px;padding:8px 18px;font-size:14px;cursor:pointer">Print</button></div>
 <div class="sheet">
     <div class="head">
         <h1>{{ $school?->name ?? 'School' }}</h1>

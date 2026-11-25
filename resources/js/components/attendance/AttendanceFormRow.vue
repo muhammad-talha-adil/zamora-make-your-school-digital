@@ -80,8 +80,8 @@
                 />
             </div>
             <div v-else-if="isOnLeave" class="text-sm">
-                <span class="px-2 py-1 text-xs font-medium rounded bg-warning/10 text-warning">
-                    {{ leaveReason }}
+                <span class="px-2 py-1 text-xs font-medium rounded bg-warning/10 text-warning" :title="leaveReason">
+                    Approved leave today - mark Leave?
                 </span>
             </div>
             <div v-else class="text-sm text-muted-foreground">-</div>
@@ -133,7 +133,7 @@ const isOnLeave = computed(() => !!props.student.student_leaves?.some((leave: St
 
 const leaveReason = computed(() => {
     const approvedLeave = props.student.student_leaves?.find((leave: StudentLeave) => leave.status === 'approved');
-    return approvedLeave?.reason || 'Approved Leave';
+    return approvedLeave?.reason || 'Approved leave';
 });
 
 /**

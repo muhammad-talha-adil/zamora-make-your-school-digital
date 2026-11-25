@@ -38,12 +38,13 @@ class ExamPaperController extends Controller
         $papers = ExamPaper::with(['exam', 'subject', 'class', 'section', 'campus'])
             ->when($examId, fn ($q) => $q->where('exam_id', $examId))
             ->when($classId, fn ($q) => $q->where('class_id', $classId))
+            ->visibleTo($request->user())
             ->orderBy('paper_date')
             ->get();
 
         return Inertia::render('Exam/Papers/Index', [
             'papers' => $papers,
-            'exams' => Exam::all(),
+            'exams' => Exam::visibleTo($request->user())->get(),
             'campuses' => Campus::all(),
             'classes' => SchoolClass::visibleTo($request->user())->get(),
             'subjects' => Subject::all(),
@@ -60,7 +61,7 @@ class ExamPaperController extends Controller
     public function createPage(Request $request): Response
     {
         return Inertia::render('Exam/Papers/Create', [
-            'exams' => Exam::all(),
+            'exams' => Exam::visibleTo($request->user())->get(),
             'campuses' => Campus::all(),
             'classes' => SchoolClass::visibleTo($request->user())->get(),
             'sections' => Section::all(),
@@ -78,7 +79,7 @@ class ExamPaperController extends Controller
 
         return Inertia::render('Exam/Papers/Edit', [
             'paper' => $paper,
-            'exams' => Exam::all(),
+            'exams' => Exam::visibleTo($request->user())->get(),
             'campuses' => Campus::all(),
             'classes' => SchoolClass::visibleTo($request->user())->get(),
             'sections' => Section::all(),
@@ -639,7 +640,7 @@ class ExamPaperController extends Controller
 
         if ($existingPaper) {
             return response()->json([
-                'message' => 'A paper for this subject already exists in the selected exam, campus, class, and section combination.',
+                'message' => 'This subject already has a paper in this exam for this class.',
                 'error' => 'duplicate',
                 'exists' => true,
                 'paper' => $existingPaper,
@@ -832,7 +833,7 @@ class ExamPaperController extends Controller
             if ($existingPaper) {
                 $skippedPapers[] = [
                     'subject_id' => $paper['subject_id'],
-                    'reason' => 'A paper for this subject already exists in the selected exam, campus, class, and section combination.',
+                    'reason' => 'This subject already has a paper in this exam for this class.',
                     'error' => 'duplicate',
                     'existing_paper' => $existingPaper,
                 ];

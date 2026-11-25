@@ -38,7 +38,7 @@ class ExamRegistrationController extends Controller
 
         return Inertia::render('Exam/Registrations/Index', [
             'registrations' => $registrations,
-            'exams' => Exam::all(),
+            'exams' => Exam::visibleTo($request->user())->get(),
             'classes' => SchoolClass::visibleTo($request->user())->get(),
             'sections' => Section::all(),
             'filters' => [

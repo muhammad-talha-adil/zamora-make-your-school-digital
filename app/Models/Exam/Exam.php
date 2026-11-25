@@ -2,7 +2,9 @@
 
 namespace App\Models\Exam;
 
+use App\Models\Campus;
 use App\Models\Session;
+use App\Models\User;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -35,6 +37,7 @@ class Exam extends Model
     ];
 
     protected $fillable = [
+        'campus_id',
         'session_id',
         'exam_type_id',
         'name',
@@ -75,6 +78,28 @@ class Exam extends Model
     public function examType(): BelongsTo
     {
         return $this->belongsTo(ExamType::class);
+    }
+
+    /**
+     * Get the campus this exam was created under.
+     */
+    public function campus(): BelongsTo
+    {
+        return $this->belongsTo(Campus::class);
+    }
+
+    /**
+     * Narrows a list to the campus this user is looking at.
+     */
+    public function scopeVisibleTo($query, ?User $user)
+    {
+        $campusId = $user?->campusId();
+
+        if ($campusId !== null) {
+            $query->where('exams.campus_id', $campusId);
+        }
+
+        return $query;
     }
 
     /**

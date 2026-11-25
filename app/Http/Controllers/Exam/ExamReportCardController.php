@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Exam;
 use App\Http\Controllers\Controller;
 use App\Models\Exam\Exam;
 use App\Models\Exam\ExamResultHeader;
+use App\Models\Exam\ExamStudentRegistration;
 use App\Models\School;
 use App\Models\SchoolClass;
 use App\Models\Session;
@@ -217,6 +218,54 @@ class ExamReportCardController extends Controller
             'sheet' => $sheet,
             'school' => School::where('is_active', true)->first(),
             'heading' => $this->datesheetHeading($sheet),
+        ]);
+    }
+
+    /**
+     * Admit cards (print): one per registered child, with the date sheet of
+     * their class on it.
+     */
+    public function admitCards(Request $request, int|string $examId)
+    {
+        $validated = $request->validate([
+            'class_id' => ['nullable', 'integer', 'exists:school_classes,id'],
+            'section_id' => ['nullable', 'integer', 'exists:sections,id'],
+        ]);
+
+        $exam = Exam::visibleTo($request->user())->with('examType')->findOrFail($examId);
+        $this->authorize('view', $exam);
+
+        $registrations = ExamStudentRegistration::with(['student.user', 'class', 'section'])
+            ->where('exam_id', $exam->id)
+            ->where('status', '!=', 'withdrawn')
+            ->when($validated['class_id'] ?? null, fn ($q, $id) => $q->where('class_id', $id))
+            ->when($validated['section_id'] ?? null, fn ($q, $id) => $q->where('section_id', $id))
+            ->visibleTo($request->user())
+            ->orderBy('class_id')
+            ->orderBy('section_id')
+            ->orderBy('roll_no_snapshot')
+            ->get();
+
+        $sheets = [];
+        $cards = $registrations->map(function (ExamStudentRegistration $registration) use ($exam, $request, &$sheets) {
+            $sheets[$registration->class_id] ??= $this->datesheets->forExam(
+                $exam,
+                (int) $registration->class_id,
+                null,
+                null,
+                $request->user()
+            );
+
+            return [
+                'registration' => $registration,
+                'sheet' => $sheets[$registration->class_id],
+            ];
+        });
+
+        return response()->view('exam.admit-card', [
+            'exam' => $exam,
+            'cards' => $cards,
+            'school' => School::where('is_active', true)->first(),
         ]);
     }
 
