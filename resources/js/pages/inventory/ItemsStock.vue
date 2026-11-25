@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { Head } from '@inertiajs/vue3';
+import { Head, router } from '@inertiajs/vue3';
 import { computed, ref } from 'vue';
 import { route } from 'ziggy-js';
 import axios from 'axios';
@@ -196,7 +196,7 @@ const formatAdjustmentType = (type: string) => {
 };
 
 const formatDateTime = (value: string) => {
-    return new Date(value).toLocaleString('en-PK', {
+    return new Date(value).toLocaleString('en-GB', {
         year: 'numeric',
         month: 'short',
         day: 'numeric',
@@ -328,6 +328,38 @@ const toggleItemStatus = (item: InventoryItemRow) => {
             fetchInventoryItems();
         }).catch(() => {
             alert.error('Failed to update inventory item status.');
+        });
+    });
+};
+
+const refreshFormLists = () => {
+    router.reload({ only: ['allInventoryTypes', 'allInventoryItems'] });
+};
+
+const deleteType = (type: InventoryTypeRow) => {
+    alert.confirm(`Delete "${type.name}"? This cannot be undone.`, 'Delete Inventory Type').then((result) => {
+        if (!result.isConfirmed) return;
+
+        axios.delete(route('inventory.types.destroy', type.id)).then(() => {
+            alert.success('Inventory type deleted.');
+            fetchInventoryTypes();
+            refreshFormLists();
+        }).catch((err) => {
+            alert.warning(err.response?.data?.message || 'This type could not be deleted. Please try again.');
+        });
+    });
+};
+
+const deleteItem = (item: InventoryItemRow) => {
+    alert.confirm(`Delete "${item.name}"? This cannot be undone.`, 'Delete Inventory Item').then((result) => {
+        if (!result.isConfirmed) return;
+
+        axios.delete(route('inventory.items.destroy', item.id)).then(() => {
+            alert.success('Inventory item deleted.');
+            fetchInventoryItems();
+            refreshFormLists();
+        }).catch((err) => {
+            alert.warning(err.response?.data?.message || 'This item could not be deleted. Please try again.');
         });
     });
 };
@@ -510,13 +542,13 @@ const loadStocksPage = (url: string) => fetchStocks(url);
                             <InventoryTypeForm
                                 v-if="activeTab === 'types'"
                                 :campuses="props.campuses"
-                                @saved="fetchInventoryTypes()"
+                                @saved="fetchInventoryTypes(); refreshFormLists()"
                             />
                             <ItemForm
                                 v-if="activeTab === 'items'"
                                 :campuses="props.campuses"
                                 :inventory-types="props.allInventoryTypes"
-                                @saved="fetchInventoryItems()"
+                                @saved="fetchInventoryItems(); refreshFormLists()"
                             />
                             <AdjustmentForm
                                 v-if="activeTab === 'adjustments'"
@@ -579,8 +611,11 @@ const loadStocksPage = (url: string) => fetchStocks(url);
                                             trigger="Edit"
                                             variant="outline"
                                             size="sm"
-                                            @saved="fetchInventoryTypes()"
+                                            @saved="fetchInventoryTypes(); refreshFormLists()"
                                         />
+                                        <Button variant="outline" size="sm" @click="deleteType(type)">
+                                            <Icon icon="trash-2" class="h-4 w-4 text-destructive" />
+                                        </Button>
                                     </div>
                                 </td>
                             </tr>
@@ -626,8 +661,11 @@ const loadStocksPage = (url: string) => fetchStocks(url);
                                             trigger="Edit"
                                             variant="outline"
                                             size="sm"
-                                            @saved="fetchInventoryItems()"
+                                            @saved="fetchInventoryItems(); refreshFormLists()"
                                         />
+                                        <Button variant="outline" size="sm" @click="deleteItem(item)">
+                                            <Icon icon="trash-2" class="h-4 w-4 text-destructive" />
+                                        </Button>
                                     </div>
                                 </td>
                             </tr>
@@ -687,6 +725,7 @@ const loadStocksPage = (url: string) => fetchStocks(url);
                                 <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground whitespace-nowrap">Before / After</th>
                                 <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground whitespace-nowrap">Reference</th>
                                 <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground whitespace-nowrap">Reason</th>
+                                <th class="px-4 py-3 text-left text-xs font-semibold uppercase tracking-wider text-muted-foreground whitespace-nowrap hidden 2xl:table-cell">By</th>
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-border bg-card">
@@ -702,10 +741,11 @@ const loadStocksPage = (url: string) => fetchStocks(url);
                                         {{ formatAdjustmentType(adjustment.type) }}
                                     </span>
                                 </td>
-                                <td class="px-4 py-3 text-sm text-muted-foreground">{{ adjustment.quantity }}</td>
+                                <td class="px-4 py-3 text-sm whitespace-nowrap font-semibold" :class="adjustment.type === 'subtract' ? 'text-destructive' : 'text-success'">{{ adjustment.type === 'subtract' ? '-' : adjustment.type === 'add' ? '+' : '=' }}{{ adjustment.quantity }}</td>
                                 <td class="px-4 py-3 text-sm text-muted-foreground">{{ adjustment.previous_quantity }} / {{ adjustment.new_quantity }}</td>
                                 <td class="px-4 py-3 text-sm text-muted-foreground">{{ adjustment.reference_number || '-' }}</td>
-                                <td class="px-4 py-3 text-sm text-muted-foreground">{{ adjustment.reason }}</td>
+                                <td class="px-4 py-3 text-sm text-muted-foreground min-w-40">{{ adjustment.reason }}</td>
+                                <td class="px-4 py-3 text-sm whitespace-nowrap text-muted-foreground hidden 2xl:table-cell">{{ adjustment.user_name || '-' }}</td>
                             </tr>
                         </tbody>
                     </table>

@@ -271,6 +271,10 @@ class ExamReportCardController extends Controller
             ];
         });
 
+        if ($cards->contains(fn ($card) => $card['sheet']['paper_count'] > 0)) {
+            $cards = $cards->filter(fn ($card) => $card['sheet']['paper_count'] > 0)->values();
+        }
+
         return response()->view('exam.admit-card', [
             'exam' => $exam,
             'cards' => $cards,

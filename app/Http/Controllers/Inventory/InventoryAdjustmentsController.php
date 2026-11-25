@@ -13,6 +13,7 @@ use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
+use Illuminate\Validation\ValidationException;
 use Inertia\Response;
 
 class InventoryAdjustmentsController extends Controller
@@ -65,7 +66,7 @@ class InventoryAdjustmentsController extends Controller
             }
         }
 
-        $adjustments = InventoryAdjustment::with(['campus:id,name', 'inventoryItem:id,name'])
+        $adjustments = InventoryAdjustment::with(['campus:id,name', 'inventoryItem:id,name', 'user:id,name'])
             ->when($campusId, fn ($q) => $q->where('campus_id', $campusId))
             ->when($request->get('item_id'), fn ($q) => $q->where('inventory_item_id', $request->get('item_id')))
             ->when($request->get('type'), fn ($q) => $q->where('type', $request->get('type')))
@@ -87,6 +88,7 @@ class InventoryAdjustmentsController extends Controller
                     'new_quantity' => $adjustment->new_quantity,
                     'reason' => $adjustment->reason,
                     'reference_number' => $adjustment->reference_number,
+                    'user_name' => $adjustment->user?->name,
                     'created_at' => $adjustment->created_at,
                 ];
             })
@@ -117,7 +119,27 @@ class InventoryAdjustmentsController extends Controller
             'quantity' => 'required|integer|min:0',
             'reason' => 'required|string|max:500',
             'reference_number' => 'nullable|string|max:100',
+        ], [
+            'inventory_item_id.required' => 'Item is required.',
+            'quantity.required' => 'Quantity is required.',
+            'quantity.integer' => 'Quantity must be a whole number.',
+            'quantity.min' => 'Quantity cannot be negative.',
+            'reason.required' => 'Reason is required.',
         ]);
+
+        if ($request->type !== 'set' && (int) $request->quantity < 1) {
+            throw ValidationException::withMessages(['quantity' => 'Quantity must be at least 1.']);
+        }
+
+        if ($request->type === 'subtract') {
+            $onHand = (int) InventoryStock::where('campus_id', $request->campus_id)
+                ->where('inventory_item_id', $request->inventory_item_id)
+                ->value('quantity');
+
+            if ((int) $request->quantity > $onHand) {
+                throw ValidationException::withMessages(['quantity' => "Only {$onHand} in stock."]);
+            }
+        }
 
         // A campus-restricted user must not be able to adjust another
         // campus's stock by posting a different campus_id.
@@ -185,6 +207,10 @@ class InventoryAdjustmentsController extends Controller
                     'reference_number' => $request->reference_number,
                 ]);
             });
+
+            if ($request->expectsJson()) {
+                return response()->json(['success' => true, 'message' => 'Stock adjustment created successfully.']);
+            }
 
             return redirect()->route('inventory.adjustments.index')
                 ->with('success', 'Stock adjustment created successfully. Stock has been updated.');

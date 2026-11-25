@@ -160,7 +160,7 @@ const calculateFinalPrice = (item: any) => {
 };
 
 const formatDate = (date: string) => {
-    return new Date(date).toLocaleDateString('en-US', {
+    return new Date(date).toLocaleDateString('en-GB', {
         year: 'numeric',
         month: 'short',
         day: 'numeric',

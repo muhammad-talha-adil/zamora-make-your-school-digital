@@ -427,6 +427,7 @@ const submitForm = () => {
     const missing = requiredErrors(form, ['campus_id', 'supplier_id', 'purchase_date', 'purchase_items']);
     if (Object.keys(missing).length > 0) {
         errors.value = missing as typeof errors.value;
+        alert.warning('Please check the highlighted fields.');
         return;
     }
 
@@ -536,7 +537,7 @@ watch(() => form.purchase_items.length, (len) => {
                 <!-- Form Card -->
                 <div class="bg-card rounded-lg border p-5 space-y-4">
                     <!-- Basic Info -->
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 2xl:grid-cols-3 gap-4">
                         <div class="space-y-2">
                             <Label for="supplier_id" class="flex items-center gap-2">
                                 <div class="p-1 bg-muted rounded">
@@ -608,7 +609,7 @@ watch(() => form.purchase_items.length, (len) => {
 
                         <div v-else class="space-y-4">
                             <div v-for="(item, index) in form.purchase_items" :key="index" class="flex items-start gap-4 p-4 bg-muted rounded-lg">
-                                <div class="flex-1 grid grid-cols-1 md:grid-cols-4 gap-4">
+                                <div class="flex-1 grid grid-cols-1 sm:grid-cols-2 2xl:grid-cols-4 gap-4">
                                     <div class="space-y-2">
                                         <Label class="text-xs">Item <span class="text-destructive">*</span></Label>
                                         <div class="relative">
@@ -713,7 +714,7 @@ watch(() => form.purchase_items.length, (len) => {
 
                 <!-- Actions -->
                 <div class="flex flex-wrap justify-end gap-3 pt-2">
-                    <Button type="submit" :disabled="processing || loadingItems || !isValid" class="h-10">
+                    <Button type="submit" :disabled="processing" class="h-10">
                         <Icon v-if="processing" icon="loader" class="mr-2 h-4 w-4 animate-spin" />
                         <Icon v-else icon="check" class="mr-2 h-4 w-4" />
                         {{ isEditMode ? 'Update Purchase' : 'Create Purchase' }}

@@ -44,6 +44,7 @@ interface Props {
     variant?: ButtonVariants['variant'];
     size?: ButtonVariants['size'];
     open?: boolean;
+    hideTrigger?: boolean;
 }
 
 const props = withDefaults(defineProps<Props>(), {
@@ -216,9 +217,10 @@ const checkDuplicateName = async () => {
 };
 
 const submit = () => {
-    const missing = requiredErrors(form, ['name', 'campus_id']);
+    const missing = requiredErrors(form, ['name'], { name: 'Name' });
     if (Object.keys(missing).length > 0) {
         errors.value = missing as typeof errors.value;
+        alert.warning('Please check the highlighted fields.');
         return;
     }
 
@@ -338,7 +340,7 @@ const resetForm = () => {
 
 <template>
     <Dialog v-model:open="dialogOpen">
-        <DialogTrigger as-child>
+        <DialogTrigger v-if="!hideTrigger" as-child>
             <Button :variant="props.variant" :size="props.size">
                 <Icon v-if="props.supplier" icon="edit" class="mr-1" />
                 <Icon v-else icon="plus" class="mr-1" />

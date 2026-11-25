@@ -37,15 +37,25 @@ class InventoryPageController extends Controller
         return Inertia::render('inventory/InventorySettings', [
             'inventoryTypes' => InventoryType::with(['campus:id,name'])
                 ->select('id', 'name', 'campus_id', 'is_active', 'created_at')
-                ->when($campusId, fn ($q) => $q->where('campus_id', $campusId))
+                ->when($campusId, fn ($q) => $q->forCampus($campusId))
                 ->withCount('inventoryItems')
                 ->orderBy('name')
-                ->paginate(20),
+                ->paginate(20)
+                ->through(function ($type) {
+                    $type->items_count = $type->inventory_items_count;
+
+                    return $type;
+                }),
             'inventoryItems' => InventoryItem::with(['campus:id,name', 'inventoryType:id,name'])
                 ->when($campusId, fn ($q) => $q->where('campus_id', $campusId))
-                ->withCount('inventoryStock')
+                ->withSum('inventoryStock as current_stock', 'quantity')
                 ->orderBy('name')
-                ->paginate(20),
+                ->paginate(20)
+                ->through(function ($item) {
+                    $item->current_stock = (int) $item->current_stock;
+
+                    return $item;
+                }),
             'campuses' => Campus::orderBy('name')->get(),
         ]);
     }
@@ -59,17 +69,16 @@ class InventoryPageController extends Controller
         // this page's campus filter — scoping them to the page's $campusId
         // would empty the dialog's item list whenever the two disagree. A
         // campus-restricted user must still never see another campus's data.
-        $restrictedCampusId = $request->user()?->isCampusRestricted() ? $request->user()->campusId() : null;
 
         $allTypes = InventoryType::with(['campus:id,name'])
             ->select('id', 'name', 'campus_id', 'is_active')
-            ->when($restrictedCampusId, fn ($q) => $q->where('campus_id', $restrictedCampusId))
+            ->when($campusId, fn ($q) => $q->forCampus($campusId))
             ->orderBy('name')
             ->get();
 
         $allItems = InventoryItem::with(['campus:id,name', 'inventoryType:id,name', 'inventoryStock'])
             ->select('id', 'name', 'description', 'campus_id', 'inventory_type_id', 'is_active')
-            ->when($restrictedCampusId, fn ($q) => $q->where('campus_id', $restrictedCampusId))
+            ->when($campusId, fn ($q) => $q->where('campus_id', $campusId))
             ->orderBy('name')
             ->get()
             ->map(function ($item) {
@@ -82,7 +91,7 @@ class InventoryPageController extends Controller
                     'inventory_type_id' => $item->inventory_type_id,
                     'inventory_type_name' => $item->inventoryType?->name,
                     'is_active' => $item->is_active,
-                    'current_stock' => (int) $item->inventoryStock->sum('available_quantity'),
+                    'current_stock' => (int) $item->inventoryStock->sum('quantity'),
                 ];
             })
             ->values();
@@ -112,15 +121,25 @@ class InventoryPageController extends Controller
         return Inertia::render('inventory/ItemsStock', [
             'inventoryTypes' => InventoryType::with(['campus:id,name'])
                 ->select('id', 'name', 'campus_id', 'is_active', 'created_at')
-                ->when($campusId, fn ($q) => $q->where('campus_id', $campusId))
+                ->when($campusId, fn ($q) => $q->forCampus($campusId))
                 ->withCount('inventoryItems')
                 ->orderBy('name')
-                ->paginate(20),
+                ->paginate(20)
+                ->through(function ($type) {
+                    $type->items_count = $type->inventory_items_count;
+
+                    return $type;
+                }),
             'inventoryItems' => InventoryItem::with(['campus:id,name', 'inventoryType:id,name'])
                 ->when($campusId, fn ($q) => $q->where('campus_id', $campusId))
-                ->withCount('inventoryStock')
+                ->withSum('inventoryStock as current_stock', 'quantity')
                 ->orderBy('name')
-                ->paginate(20),
+                ->paginate(20)
+                ->through(function ($item) {
+                    $item->current_stock = (int) $item->current_stock;
+
+                    return $item;
+                }),
             'inventoryStocks' => $stocks,
             'allInventoryTypes' => $allTypes,
             'allInventoryItems' => $allItems,

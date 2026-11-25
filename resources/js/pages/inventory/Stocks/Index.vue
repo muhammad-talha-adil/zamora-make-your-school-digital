@@ -230,7 +230,7 @@ const summaryStats = computed(() => {
             </div>
 
             <!-- Summary Stats -->
-            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-2 md:gap-4">
+            <div class="grid grid-cols-2 sm:grid-cols-3 2xl:grid-cols-5 gap-2 md:gap-4">
                 <Card class="min-h-20">
                     <CardContent class="p-3 md:p-4">
                         <div class="text-lg md:text-2xl font-bold">{{ summaryStats.totalItems }}</div>

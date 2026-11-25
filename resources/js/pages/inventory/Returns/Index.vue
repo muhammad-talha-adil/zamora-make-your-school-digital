@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { formatDate } from '@/utils/date';
 import { Head, router } from '@inertiajs/vue3';
 import { formatCurrency } from '@/utils';
 import { computed, ref, watch } from 'vue';
@@ -91,13 +92,6 @@ watch(() => props.returns, (newReturns) => {
     pagination.value = newReturns;
 }, { deep: true });
 
-const formatDate = (date: string) => {
-    return new Date(date).toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'short',
-        day: 'numeric',
-    });
-};
 
 const calculateFinalPrice = (item: any) => {
     let price = item.unit_price_snapshot;
@@ -137,7 +131,7 @@ const viewReturn = (returnItem: any) => {
                 </Button>
             </div>
 
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 2xl:grid-cols-4 gap-4">
                 <div class="bg-card rounded-lg p-4 shadow-sm border border-border">
                     <div class="text-sm text-muted-foreground">Total Returns</div>
                     <div class="text-2xl font-bold">{{ pagination.total }}</div>

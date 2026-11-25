@@ -382,10 +382,10 @@ const submitForm = () => {
         if (!item.inventory_item_id) {
             rowErrors[`items.${index}.inventory_item_id`] = 'Item is required.';
         }
-        if (!item.quantity) {
+        if ((item.quantity as unknown) === '' || item.quantity === null) {
             rowErrors[`items.${index}.quantity`] = 'Quantity is required.';
-        } else if (item.quantity < 0) {
-            rowErrors[`items.${index}.quantity`] = 'Quantity cannot be negative.';
+        } else if (item.quantity <= 0) {
+            rowErrors[`items.${index}.quantity`] = 'Quantity must be at least 1.';
         } else if (itemDetails && item.quantity > (itemDetails.available_stock || 0)) {
             rowErrors[`items.${index}.quantity`] = `Only ${itemDetails.available_stock || 0} in stock.`;
         }
@@ -468,7 +468,7 @@ const submitForm = () => {
             <div class="bg-card rounded-lg border p-6 space-y-4">
                 <h2 class="text-lg font-semibold mb-4">Assignment Details</h2>
                 
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 2xl:grid-cols-3 gap-4">
 
                     <!-- Student -->
                     <div class="space-y-2">

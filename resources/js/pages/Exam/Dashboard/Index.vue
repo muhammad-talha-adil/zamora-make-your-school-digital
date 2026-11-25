@@ -216,7 +216,7 @@
                                     </div>
                                     <div>
                                         <p class="font-semibold text-foreground">{{ exam.name }}</p>
-                                        <p class="text-sm text-muted-foreground">{{ exam.exam_type }} • {{ exam.start_date }} to {{ exam.end_date }}</p>
+                                        <p class="text-sm text-muted-foreground">{{ exam.exam_type }} • {{ formatDate(exam.start_date) }} to {{ formatDate(exam.end_date) }}</p>
                                         <div class="flex gap-3 mt-1 text-xs">
                                             <span class="text-muted-foreground">{{ exam.papers_count }} papers</span>
                                             <span class="text-muted-foreground">|</span>
@@ -424,6 +424,7 @@ import { route } from 'ziggy-js'
 import AppLayout from '@/layouts/AppLayout.vue'
 import SearchableSelect from '@/components/ui/searchable-select/SearchableSelect.vue'
 import type { BreadcrumbItem } from '@/types'
+import { formatDate } from '@/utils/format'
 
 interface Exam {
   id: number

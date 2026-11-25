@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { formatCurrency } from '@/utils/currency';
 import { Head, usePage } from '@inertiajs/vue3';
 import { router } from '@inertiajs/vue3';
 import { alert } from '@/utils';
@@ -199,12 +200,6 @@ const totalAmount = computed(() => {
     }, 0);
 });
 
-const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-PK', {
-        style: 'currency',
-        currency: 'PKR',
-    }).format(amount);
-};
 
 // Check if item reason is "Other"
 const isOtherReason = (reasonId: number | null): boolean => {
@@ -534,8 +529,7 @@ onMounted(async () => {
                 <div class="bg-card rounded-lg border p-4 md:p-5 space-y-4">
                     <h2 class="text-lg font-semibold">Return Information</h2>
                     
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <!-- Supplier -->
+                    <div class="grid grid-cols-1 sm:grid-cols-2 2xl:grid-cols-3 gap-4">
                         <div class="space-y-2">
                             <Label for="supplier_id" class="flex items-center gap-2">
                                 <Icon icon="truck" class="h-4 w-4" />

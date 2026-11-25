@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { formatCurrency } from '@/utils/currency';
 import { usePage } from '@inertiajs/vue3';
 import type { Ref } from 'vue';
 import axios from 'axios';
@@ -237,12 +238,6 @@ const totalAmount = computed(() => {
     }, 0);
 });
 
-const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-PK', {
-        style: 'currency',
-        currency: 'PKR',
-    }).format(amount);
-};
 
 // Check if item reason is "Other"
 const isOtherReason = (reasonId: number | null): boolean => {
@@ -473,6 +468,7 @@ const submitForm = () => {
     const missing = requiredErrors(form, ['campus_id', 'supplier_id', 'return_date']);
     if (Object.keys(missing).length > 0) {
         errors.value = missing as typeof errors.value;
+        alert.warning('Please check the highlighted fields.');
         return;
     }
 
@@ -585,7 +581,7 @@ watch(() => form.purchase_id, (newPurchaseId) => {
                 <!-- Form Card -->
                 <div class="bg-card rounded-lg border p-5 space-y-4">
                     <!-- Campus, Supplier, Purchase Row -->
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 2xl:grid-cols-3 gap-4">
 
                         <!-- Supplier -->
                         <div class="space-y-2">
@@ -805,7 +801,7 @@ watch(() => form.purchase_id, (newPurchaseId) => {
 
                 <!-- Actions -->
                 <div class="flex flex-wrap justify-end gap-3 pt-2">
-                    <Button type="submit" :disabled="processing || loading || form.items.length === 0 || !isValid" class="h-10">
+                    <Button type="submit" :disabled="processing || loading" class="h-10">
                         <Icon v-if="processing" icon="loader" class="mr-2 h-4 w-4 animate-spin" />
                         <Icon v-else icon="check" class="mr-2 h-4 w-4" />
                         {{ isEditMode ? 'Update Return' : 'Create Return' }}

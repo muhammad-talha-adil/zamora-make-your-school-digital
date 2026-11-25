@@ -37,7 +37,7 @@ class InventoryReturnsController extends Controller
             'returns' => ReturnModel::with([
                 'campus:id,name',
                 'studentInventory.student' => function ($q) {
-                    $q->select('id', 'registration_no');
+                    $q->select('id', 'user_id', 'registration_no');
                 },
                 'studentInventory.student.user' => function ($q) {
                     $q->select('id', 'name');
@@ -89,7 +89,7 @@ class InventoryReturnsController extends Controller
         $returns = ReturnModel::with([
             'campus:id,name',
             'studentInventory.student' => function ($q) {
-                $q->select('id', 'registration_no');
+                $q->select('id', 'user_id', 'registration_no');
             },
             'studentInventory.student.user' => function ($q) {
                 $q->select('id', 'name');

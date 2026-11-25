@@ -75,6 +75,7 @@ const idempotencyKey = ref<string | null>(null);
 
 // Supplier modal state
 const supplierModalOpen = ref(false);
+const itemsLoadedOnce = ref(false);
 
 // Dynamic suppliers list
 const localSuppliers = computed(() => {
@@ -176,6 +177,7 @@ const fetchInventoryItems = async () => {
         }
         
         inventoryItems.value = Array.from(itemsMap.values());
+        itemsLoadedOnce.value = true;
     } catch (err) {
         console.error('Failed to fetch inventory items:', err);
         inventoryItems.value = [];
@@ -284,7 +286,15 @@ const submitForm = () => {
     const validItems = form.purchase_items;
     const rowErrors: Record<string, string> = {};
 
+    if (!form.supplier_id) {
+        rowErrors.supplier_id = 'Supplier is required.';
+    }
+    if (!form.purchase_date) {
+        rowErrors.purchase_date = 'Purchase date is required.';
+    }
+
     if (validItems.length === 0) {
+        errors.value = { ...rowErrors, purchase_items: 'Please add at least one item to the purchase.' };
         alert.warning('Please add at least one item to the purchase.');
         return;
     }
@@ -293,8 +303,8 @@ const submitForm = () => {
         if (!item.inventory_item_id) {
             rowErrors[`purchase_items.${index}.inventory_item_id`] = 'Item is required.';
         }
-        if (!item.quantity || item.quantity <= 0) {
-            rowErrors[`purchase_items.${index}.quantity`] = item.quantity < 0 ? 'Quantity cannot be negative.' : 'Quantity is required.';
+        if (item.quantity === null || (item.quantity as unknown) === '' || item.quantity <= 0) {
+            rowErrors[`purchase_items.${index}.quantity`] = (item.quantity as unknown) === '' || item.quantity === null ? 'Quantity is required.' : 'Quantity must be at least 1.';
         }
         if (!item.purchase_rate || item.purchase_rate <= 0) {
             rowErrors[`purchase_items.${index}.purchase_rate`] = 'Purchase rate is required.';
@@ -376,7 +386,7 @@ initializeForm();
     <AppLayout :breadcrumbs="breadcrumbItems">
         <Head :title="isEditMode ? 'Edit Purchase' : 'Create Purchase'" />
 
-        <div class="space-y-6 p-4 md:p-6">
+        <div class="space-y-6 p-4 md:p-6 min-w-0 max-w-full overflow-x-hidden">
             <!-- Header -->
             <div class="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3">
                 <div>
@@ -399,8 +409,8 @@ initializeForm();
                 <div class="bg-card rounded-lg border p-4 md:p-5 space-y-4">
                     <h2 class="text-lg font-semibold">Basic Information</h2>
                     
-                    <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div class="space-y-2">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                        <div class="space-y-2 min-w-0" :data-invalid="!!errors.supplier_id">
                             <Label for="supplier_id" class="flex items-center gap-2">
                                 <Icon icon="truck" class="h-4 w-4" />
                                 Supplier <span class="text-destructive">*</span>
@@ -428,7 +438,7 @@ initializeForm();
                             </div>
                             <InputError :message="errors.supplier_id" />
                         </div>
-                        <div class="space-y-2">
+                        <div class="space-y-2 min-w-0">
                             <Label for="purchase_date" class="flex items-center gap-2">
                                 <Icon icon="calendar" class="h-4 w-4" />
                                 Purchase Date <span class="text-destructive">*</span>
@@ -437,7 +447,7 @@ initializeForm();
                                 id="purchase_date"
                                 v-model="form.purchase_date"
                                 type="date"
-                                class="h-11"
+                                class="h-11 w-full min-w-0"
                                 :class="{ 'border-destructive': errors.purchase_date }"
                                 required
                             />
@@ -459,12 +469,13 @@ initializeForm();
                     <div v-if="form.purchase_items.length === 0" class="text-center py-8 text-muted-foreground border rounded-lg">
                         <Icon icon="shopping-cart" :size="48" class="mx-auto mb-2 text-muted-foreground" />
                         <p>No items added yet. Click "Add Item" to start.</p>
+                        <InputError :message="errors.purchase_items" class="mt-2" />
                     </div>
 
                     <div v-else class="space-y-4">
                         <div v-for="(item, index) in form.purchase_items" :key="index" class="p-3 md:p-4 bg-muted rounded-lg">
                             <div class="flex flex-col gap-4">
-                                <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
+                                <div class="grid grid-cols-1 sm:grid-cols-2 2xl:grid-cols-4 gap-3">
                                     <div class="space-y-2" :data-invalid="!!errors[`purchase_items.${index}.inventory_item_id`]">
                                         <Label class="text-xs">Item <span class="text-destructive">*</span></Label>
                                         <SearchableSelect
@@ -521,9 +532,9 @@ initializeForm();
                             </div>
                         </div>
                         
-                        <div v-if="availableItems.length === 0 && !loadingItems" class="text-center py-4 text-warning bg-warning/10 rounded-lg">
+                        <div v-if="itemsLoadedOnce && availableItems.length === 0 && !loadingItems" class="text-center py-4 text-warning bg-warning/10 rounded-lg">
                             <Icon icon="alert-triangle" class="mr-2 h-4 w-4 inline" />
-                            No inventory items found. Please add items in Inventory Settings first.
+                            No inventory items found yet. <a href="/inventory/items-stock" class="underline font-medium">Add item</a>
                         </div>
                     </div>
                 </div>
@@ -562,7 +573,7 @@ initializeForm();
                 </div>
 
                 <!-- Actions -->
-                <div class="flex flex-col sm:flex-row justify-end gap-3 pt-2">
+                <div class="flex flex-wrap justify-end gap-3 pt-2">
                     <Button type="button" variant="outline" @click="goBack" class="w-full sm:w-auto h-10">
                         <Icon icon="x" class="mr-2 h-4 w-4" />
                         Cancel
@@ -579,6 +590,7 @@ initializeForm();
             <SupplierForm
                 :campuses="props.campuses"
                 :open="supplierModalOpen"
+                hide-trigger
                 @update:open="supplierModalOpen = $event"
                 @saved="handleSupplierCreated"
             />

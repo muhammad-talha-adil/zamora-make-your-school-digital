@@ -119,7 +119,7 @@
           <tbody class="divide-y divide-border">
             <tr v-for="purchase in supplier.purchases" :key="purchase.id" class="hover:bg-accent">
               <td class="px-6 py-4 whitespace-nowrap text-sm text-foreground">
-                {{ new Date(purchase.purchase_date).toLocaleDateString() }}
+                {{ formatDate(purchase.purchase_date) }}
               </td>
               <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-foreground">
                 {{ formatCurrency(purchase.total_amount) }}
@@ -138,6 +138,8 @@
 </template>
 
 <script setup lang="ts">
+import { formatDate } from '@/utils/date';
+import { formatCurrency } from '@/utils/currency';
 import { formatPhone } from '@/utils/phone';
 const props = defineProps({
   supplier: {
@@ -153,18 +155,5 @@ const props = defineProps({
   },
 })
 
-const formatCurrency = (amount: number) => {
-  return new Intl.NumberFormat('en-PK', {
-    style: 'currency',
-    currency: 'PKR',
-  }).format(amount)
-}
 
-const formatDate = (date: string) => {
-  return new Date(date).toLocaleDateString('en-PK', {
-    year: 'numeric',
-    month: 'short',
-    day: 'numeric',
-  })
-}
 </script>

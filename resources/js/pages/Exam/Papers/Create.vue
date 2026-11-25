@@ -1018,11 +1018,12 @@ const saveEditedPaper = async (paperId: number) => {
             };
         }
         
-        successMessage.value = 'Paper updated successfully!';
+        alert.success('Paper updated.');
         cancelEdit();
     } catch (error: any) {
         console.error('Error updating paper:', error);
-        errorMessage.value = error.response?.data?.message || 'Failed to update paper';
+        const firstError = error.response?.data?.errors ? String(Object.values(error.response.data.errors).flat()[0]) : null;
+        alert.warning(firstError || error.response?.data?.message || 'Could not update this paper. Please try again.');
     } finally {
         savingEdited.value = false;
     }
@@ -1032,7 +1033,8 @@ const saveEditedPaper = async (paperId: number) => {
  * Delete an existing paper
  */
 const deletePaper = async (paperId: number) => {
-    if (!confirm('Are you sure you want to delete this paper? This action cannot be undone.')) {
+    const confirmed = await alert.confirm('Delete this paper? This cannot be undone.', 'Delete Paper');
+    if (!confirmed.isConfirmed) {
         return;
     }
     
@@ -1052,10 +1054,10 @@ const deletePaper = async (paperId: number) => {
             paper.paper_id = undefined;
         }
         
-        successMessage.value = 'Paper deleted successfully!';
+        alert.success('Paper deleted.');
     } catch (error: any) {
         console.error('Error deleting paper:', error);
-        errorMessage.value = error.response?.data?.message || 'Failed to delete paper';
+        alert.warning(error.response?.data?.message || 'Could not delete this paper. Please try again.');
     } finally {
         deletingPaperId.value = null;
     }
@@ -1187,7 +1189,7 @@ const formatDate = (date: string) => {
     return new Date(date).toLocaleDateString('en-GB', {
         year: 'numeric',
         month: 'short',
-        day: '2-digit'
+        day: 'numeric'
     });
 };
 

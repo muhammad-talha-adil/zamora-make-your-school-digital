@@ -17,7 +17,7 @@ export function formatCurrency(
     return new Intl.NumberFormat('en-PK', {
         style: 'currency',
         currency: 'PKR',
-        minimumFractionDigits: 2,
+        minimumFractionDigits: 0,
         maximumFractionDigits: 2,
         ...options,
     }).format(numAmount);

@@ -19,7 +19,7 @@
 
             <!-- Filters -->
             <FilterCard>
-                <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+                <div class="grid grid-cols-1 sm:grid-cols-2 2xl:grid-cols-4 gap-4">
                     <div>
                         <label class="block text-sm font-medium text-muted-foreground mb-1">Campus</label>
                         <SearchableSelect
@@ -102,7 +102,7 @@
                                 <span class="text-sm font-medium text-primary">{{ returnItem.return_number }}</span>
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-foreground">
-                                {{ new Date(returnItem.return_date).toLocaleDateString() }}
+                                {{ formatDate(returnItem.return_date) }}
                             </td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm text-foreground">
                                 {{ returnItem.supplier?.name || '-' }}
@@ -147,6 +147,7 @@
 </template>
 
 <script setup lang="ts">
+import { formatDate } from '@/utils/date';
 import { Head, router, Link } from '@inertiajs/vue3';
 import TablePagination from '@/components/tables/TablePagination.vue';
 import { computed, reactive, watch } from 'vue';

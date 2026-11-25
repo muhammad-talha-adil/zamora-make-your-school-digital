@@ -53,7 +53,7 @@ class StudentInventoriesController extends Controller
             'studentInventories' => StudentInventory::with([
                 'campus:id,name',
                 'student' => function ($q) {
-                    $q->select('id', 'registration_no');
+                    $q->select('id', 'user_id', 'registration_no');
                 },
                 'student.user' => function ($q) {
                     $q->select('id', 'name');
@@ -110,7 +110,7 @@ class StudentInventoriesController extends Controller
         $inventories = StudentInventory::with([
             'campus:id,name',
             'student' => function ($q) {
-                $q->select('id', 'registration_no');
+                $q->select('id', 'user_id', 'registration_no');
             },
             'student.user' => function ($q) {
                 $q->select('id', 'name');

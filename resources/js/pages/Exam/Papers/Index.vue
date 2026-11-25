@@ -292,7 +292,8 @@ const saveEdit = async (paper: Paper) => {
 };
 
 const removePaper = async (paper: Paper) => {
-    if (!window.confirm(`Delete the ${paper.subject?.name ?? 'paper'} paper?`)) {
+    const confirmed = await alert.confirm(`Delete the ${paper.subject?.name ?? 'paper'} paper? This cannot be undone.`, 'Delete Paper');
+    if (!confirmed.isConfirmed) {
         return;
     }
     try {

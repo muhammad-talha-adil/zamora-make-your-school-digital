@@ -276,6 +276,7 @@ class InventoryItemsController extends Controller
 
         $query = InventoryItem::with(['campus:id,name', 'inventoryType:id,name'])
             ->withCount('inventoryStock')
+            ->withSum('inventoryStock as current_stock', 'quantity')
             ->when($campusId, fn ($q) => $q->where('campus_id', $campusId))
             ->when($search, fn ($q) => $q->whereRaw('LOWER(name) LIKE ?', ['%'.strtolower($search).'%']))
             ->when($status === 'active', fn ($q) => $q->where('is_active', true))
@@ -294,6 +295,7 @@ class InventoryItemsController extends Controller
                     'inventory_type_id' => $item->inventory_type_id,
                     'inventory_type_name' => $item->inventoryType?->name ?? 'Unknown',
                     'inventory_stock_count' => $item->inventory_stock_count,
+                    'current_stock' => (int) $item->current_stock,
                     'is_active' => $item->is_active,
                     'created_at' => $item->created_at,
                     'updated_at' => $item->updated_at,

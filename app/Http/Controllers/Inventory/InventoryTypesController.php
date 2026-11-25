@@ -129,7 +129,13 @@ class InventoryTypesController extends Controller
     {
         Gate::authorize('delete', $inventoryType);
 
-        // Perform soft delete
+        if ($inventoryType->inventoryItems()->exists()) {
+            return response()->json([
+                'success' => false,
+                'message' => 'This type still has items, so it cannot be deleted. Remove or move its items first, or make it inactive.',
+            ], 422);
+        }
+
         $inventoryType->delete();
 
         return response()->json(['success' => true, 'message' => 'Inventory type deleted successfully.']);

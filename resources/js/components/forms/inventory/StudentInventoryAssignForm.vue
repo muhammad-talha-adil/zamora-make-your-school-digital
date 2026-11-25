@@ -182,6 +182,7 @@ const submitForm = () => {
     const missing = requiredErrors(form, ['campus_id', 'student_id', 'inventory_item_id', 'assigned_date']);
     if (Object.keys(missing).length > 0) {
         errors.value = missing as typeof errors.value;
+        alert.warning('Please check the highlighted fields.');
         return;
     }
 

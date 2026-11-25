@@ -504,19 +504,6 @@ const openModal = (key: string) => {
                     </p>
                 </div>
                 <div class="flex items-center gap-3">
-                    <!-- Campus Selector -->
-                    <div class="flex items-center gap-2">
-                        <label for="campus-select" class="text-sm font-medium text-muted-foreground">
-                            Campus:
-                        </label>
-                        <SearchableSelect
-                            id="campus-select"
-                            v-model="selectedCampusId"
-                            :options="campusOptions"
-                            placeholder="All Campuses"
-                            clearable
-                        />
-                    </div>
                     <Button variant="outline" size="sm" @click="fetchAllData" class="gap-2">
                         <Icon icon="refresh" class="h-4 w-4" />
                         <span class="hidden sm:inline">Refresh</span>

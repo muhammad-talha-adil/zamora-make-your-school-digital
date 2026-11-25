@@ -2,9 +2,9 @@
 import type { Ref } from 'vue';
 import axios from 'axios';
 import { alert } from '@/utils';
-import { ref, computed, reactive } from 'vue';
+import { ref, computed, reactive, nextTick } from 'vue';
 import { usePage } from '@inertiajs/vue3';
-import { requiredErrors, useClearErrorsOnEdit, useFormValidity } from '@/composables/useFormValidity';
+import { requiredErrors, useClearErrorsOnEdit } from '@/composables/useFormValidity';
 
 // Components
 import InputError from '@/components/InputError.vue';
@@ -70,10 +70,8 @@ const form = reactive({
     reference_number: '',
 });
 
-const { isValid } = useFormValidity(form, ['campus_id', 'inventory_item_id', 'type', 'reason']);
-useClearErrorsOnEdit(form, errors as Ref<Record<string, string>>);
-
 const errors = ref<Record<string, string>>({});
+useClearErrorsOnEdit(form, errors as Ref<Record<string, string>>);
 const processing = ref(false);
 
 // Modal state
@@ -125,9 +123,19 @@ const closeModal = () => {
 };
 
 const submitForm = () => {
-    const missing = requiredErrors(form, ['campus_id', 'inventory_item_id', 'type', 'reason']);
+    const missing: Record<string, string> = requiredErrors(form, ['campus_id', 'inventory_item_id', 'type', 'reason'], { inventory_item_id: 'Item', reason: 'Reason' });
+    const quantity = Number(form.quantity);
+    if (form.quantity === null || (form.quantity as unknown) === '' || Number.isNaN(quantity)) {
+        missing.quantity = 'Quantity is required.';
+    } else if (quantity < 0 || (form.type !== 'set' && quantity === 0)) {
+        missing.quantity = quantity < 0 ? 'Quantity cannot be negative.' : 'Quantity must be at least 1.';
+    } else if (form.type === 'subtract' && selectedItem.value && quantity > (selectedItem.value.current_stock ?? 0)) {
+        missing.quantity = `Only ${selectedItem.value.current_stock ?? 0} in stock.`;
+    }
     if (Object.keys(missing).length > 0) {
-        errors.value = missing as typeof errors.value;
+        errors.value = missing;
+        alert.warning('Please check the highlighted fields.');
+        nextTick(() => document.querySelector('[data-invalid="true"]')?.scrollIntoView({ behavior: 'smooth', block: 'center' }));
         return;
     }
 
@@ -143,8 +151,7 @@ const submitForm = () => {
         .catch((err) => {
             if (err.response?.data?.errors) {
                 errors.value = err.response.data.errors;
-                const firstError = Object.values(err.response.data.errors)[0];
-                alert.warning(firstError);
+                alert.warning('Please check the highlighted fields.');
             } else if (err.response?.data?.message) {
                 alert.error(err.response.data.message);
             } else {
@@ -182,7 +189,7 @@ const submitForm = () => {
                          user's own campus is forced server-side anyway) -->
 
                     <!-- Inventory Item -->
-                    <div class="space-y-2">
+                    <div class="space-y-2" :data-invalid="!!errors.inventory_item_id">
                         <Label for="inventory_item_id" class="flex items-center gap-2">
                             <div class="p-1 bg-muted rounded">
                                 <Icon icon="box" class="h-3.5 w-3.5 text-muted-foreground" />
@@ -193,7 +200,7 @@ const submitForm = () => {
                             id="inventory_item_id"
                             v-model="form.inventory_item_id"
                             :options="itemOptions"
-                            placeholder="Select Item"
+                            placeholder="Select item"
                         />
                         <InputError :message="errors.inventory_item_id" />
                     </div>
@@ -241,7 +248,7 @@ const submitForm = () => {
                     </div>
 
                     <!-- Quantity -->
-                    <div class="space-y-2">
+                    <div class="space-y-2" :data-invalid="!!errors.quantity">
                         <Label :for="`quantity-${form.type}`" class="flex items-center gap-2">
                             <div class="p-1 bg-muted rounded">
                                 <Icon icon="hash" class="h-3.5 w-3.5 text-muted-foreground" />
@@ -252,10 +259,9 @@ const submitForm = () => {
                             :id="`quantity-${form.type}`"
                             v-model.number="form.quantity"
                             type="number"
-                            min="0"
+                            placeholder="Qty"
                             class="h-11"
                             :class="{ 'border-destructive': errors.quantity }"
-                            required
                         />
                         <InputError :message="errors.quantity" />
 
@@ -292,8 +298,7 @@ const submitForm = () => {
                             rows="3"
                             class="w-full rounded-md border border-border bg-card text-foreground px-3 py-2 min-h-20"
                             :class="{ 'border-destructive': errors.reason }"
-                            placeholder="Provide a detailed reason for this adjustment..."
-                            required
+                            placeholder="Provide a detailed reason for this adjustment..." 
                         ></textarea>
                         <InputError :message="errors.reason" />
                     </div>

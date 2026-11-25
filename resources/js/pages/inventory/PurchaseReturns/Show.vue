@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { formatDate } from '@/utils/date';
+import { formatCurrency } from '@/utils/currency';
 import { Head } from '@inertiajs/vue3';
 import { router } from '@inertiajs/vue3';
 // import { ref } from 'vue';
@@ -55,20 +57,7 @@ const breadcrumbItems: BreadcrumbItem[] = [
     { title: `Return #${props.return.id}`, href: '#' },
 ];
 
-const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-PK', {
-        style: 'currency',
-        currency: 'PKR',
-    }).format(amount);
-};
 
-const formatDate = (date: string) => {
-    return new Date(date).toLocaleDateString('en-PK', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-    });
-};
 
 const goBack = () => {
     router.visit('/inventory/purchases-manage?tab=returns');

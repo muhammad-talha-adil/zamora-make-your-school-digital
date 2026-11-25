@@ -29,20 +29,21 @@ it('adds to stock', function () {
     expect($this->world->stockAt()->fresh()->quantity)->toBe(15);
 });
 
-it('subtracts from stock without going below zero', function () {
+it('refuses to subtract more than is in stock, with a friendly message', function () {
     $this->world->stockAt()->update(['quantity' => 5]);
 
     $this->actingAs($this->world->school->actor)
-        ->post(route('inventory.adjustments.store'), [
+        ->postJson(route('inventory.adjustments.store'), [
             'campus_id' => $this->world->school->campus->id,
             'inventory_item_id' => $this->world->item->id,
             'type' => 'subtract',
             'quantity' => 20,
             'reason' => 'Damaged stock write-off',
         ])
-        ->assertRedirect();
+        ->assertUnprocessable()
+        ->assertJsonPath('errors.quantity.0', 'Only 5 in stock.');
 
-    expect($this->world->stockAt()->fresh()->quantity)->toBe(0);
+    expect($this->world->stockAt()->fresh()->quantity)->toBe(5);
 });
 
 it('keeps reserved_quantity from exceeding quantity when a set adjustment lowers stock', function () {

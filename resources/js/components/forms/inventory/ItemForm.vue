@@ -3,7 +3,7 @@ import { usePage } from '@inertiajs/vue3';
 import type { Ref } from 'vue';
 import axios from 'axios';
 import { alert } from '@/utils';
-import { ref, watch, computed } from 'vue';
+import { ref, computed, nextTick } from 'vue';
 import { requiredErrors, useClearErrorsOnEdit, useFormValidity } from '@/composables/useFormValidity';
 
 // Components
@@ -90,37 +90,12 @@ const isEditing = computed(() => {
 const { isValid } = useFormValidity(form, ['inventory_type_id', 'name']);
 useClearErrorsOnEdit(form, errors as Ref<Record<string, string>>);
 
-// Filter inventory types based on selected campus
-const filteredInventoryTypes = computed(() => {
-    if (!form.value.campus_id) {
-        return props.inventoryTypes;
-    }
-    return props.inventoryTypes.filter((type: any) => {
-        // Show types that are for the selected campus or for all campuses
-        // (null). Loose-compared since the campus select's v-model can hand
-        // back a string while `type.campus_id` comes from the API as a
-        // number — a strict `===` silently excluded every real type.
-        return type.campus_id === null || String(type.campus_id) === String(form.value.campus_id);
-    });
-});
-
 const inventoryTypeOptions = computed(() =>
-    filteredInventoryTypes.value.map((type: any) => ({
+    props.inventoryTypes.map((type: any) => ({
         value: type.id,
-        label: type.campus_id === null ? `${type.name} (All Campuses)` : type.name,
+        label: type.name,
     })),
 );
-
-// Watch for campus changes to reset inventory type
-watch(() => form.value.campus_id, () => {
-    if (form.value.inventory_type_id) {
-        // Check if the selected type is still valid for the new campus
-        const validType = filteredInventoryTypes.value.find((t: any) => t.id === form.value.inventory_type_id);
-        if (!validType) {
-            form.value.inventory_type_id = '';
-        }
-    }
-});
 
 // Modal states
 const internalOpen = ref(false);
@@ -153,9 +128,11 @@ const closeModal = () => {
 };
 
 const submitForm = () => {
-    const missing = requiredErrors(form, ['inventory_type_id', 'name']);
+    const missing = requiredErrors(form, ['inventory_type_id', 'name'], { inventory_type_id: 'Type', name: 'Name' });
     if (Object.keys(missing).length > 0) {
         errors.value = missing as typeof errors.value;
+        alert.warning('Please check the highlighted fields.');
+        nextTick(() => document.querySelector('[data-invalid="true"]')?.scrollIntoView({ behavior: 'smooth', block: 'center' }));
         return;
     }
 
@@ -182,8 +159,7 @@ const submitForm = () => {
             .catch((err) => {
                 if (err.response?.data?.errors) {
                     errors.value = err.response.data.errors;
-                    const firstError = Object.values(err.response.data.errors)[0];
-                    alert.warning(firstError);
+                    alert.warning('Please check the highlighted fields.');
                 } else if (err.response?.data?.message) {
                     alert.error(err.response.data.message);
                 } else {
@@ -204,8 +180,7 @@ const submitForm = () => {
             .catch((err) => {
                 if (err.response?.data?.errors) {
                     errors.value = err.response.data.errors;
-                    const firstError = Object.values(err.response.data.errors)[0];
-                    alert.warning(firstError);
+                    alert.warning('Please check the highlighted fields.');
                 } else if (err.response?.data?.message) {
                     alert.error(err.response.data.message);
                 } else {
@@ -250,7 +225,7 @@ const submitForm = () => {
                          every other campus-scoped create/edit form). -->
 
                     <!-- Inventory Type -->
-                    <div class="space-y-2">
+                    <div class="space-y-2" :data-invalid="!!errors.inventory_type_id">
                         <Label for="inventory_type_id" class="flex items-center gap-2">
                             <div class="p-1 bg-muted rounded">
                                 <Icon icon="tag" class="h-3.5 w-3.5 text-muted-foreground" />
@@ -261,14 +236,13 @@ const submitForm = () => {
                             id="inventory_type_id"
                             v-model="form.inventory_type_id"
                             :options="inventoryTypeOptions"
-                            :placeholder="form.campus_id ? 'Select Type' : 'Select Campus First'"
-                            :disabled="!form.campus_id"
+                            placeholder="Select type"
                         />
                         <InputError :message="errors.inventory_type_id" />
                     </div>
 
                     <!-- Item Name -->
-                    <div class="space-y-2">
+                    <div class="space-y-2" :data-invalid="!!errors.name">
                         <Label for="name" class="flex items-center gap-2">
                             <div class="p-1 bg-muted rounded">
                                 <Icon icon="box" class="h-3.5 w-3.5 text-muted-foreground" />

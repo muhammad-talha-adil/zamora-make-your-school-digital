@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { formatDate } from '@/utils/date';
 import { Head, router } from '@inertiajs/vue3';
 import { formatCurrency } from '@/utils';
 import AppLayout from '@/layouts/AppLayout.vue';
@@ -50,13 +51,6 @@ const breadcrumbItems: BreadcrumbItem[] = [
     { title: props.purchase.purchase_id || `Purchase #${props.purchase.id}`, href: '#' },
 ];
 
-const formatDate = (date: string) => {
-    return new Date(date).toLocaleDateString('en-US', {
-        year: 'numeric',
-        month: 'long',
-        day: 'numeric',
-    });
-};
 
 const paymentStatusVariant = (status: string) => {
     switch (status) {

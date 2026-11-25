@@ -185,9 +185,10 @@ const checkDuplicateName = async () => {
 
 // Methods
 const submit = () => {
-    const missing = requiredErrors(form, ['name', 'campus_id']);
+    const missing = requiredErrors(form, ['name'], { name: 'Name' });
     if (Object.keys(missing).length > 0) {
         errors.value = missing as typeof errors.value;
+        alert.warning('Please check the highlighted fields.');
         return;
     }
 
@@ -317,7 +318,7 @@ const resetForm = () => {
 
                 <!-- Actions -->
                 <div class="flex flex-wrap justify-end gap-3 pt-2">
-                    <Button type="submit" :disabled="processing || !!nameExistsError || !isValid" class="h-10">
+                    <Button type="submit" :disabled="processing" class="h-10">
                         <Icon v-if="processing" icon="loader" class="mr-2 h-4 w-4 animate-spin" />
                         <Icon v-else :icon="inventoryType ? 'check' : 'plus'" class="mr-2 h-4 w-4" />
                         {{ inventoryType ? 'Update Type' : 'Create Type' }}

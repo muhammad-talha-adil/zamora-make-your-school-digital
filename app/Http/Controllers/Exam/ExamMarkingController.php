@@ -44,7 +44,7 @@ class ExamMarkingController extends Controller
             'classes' => SchoolClass::visibleTo($request->user())->get(),
             'sections' => Section::all(),
             'gradeSystems' => $gradeSystems,
-            'preSelectedExamId' => $request->get('exam_id'),
+            'preSelectedExamId' => $request->filled('exam_id') ? (int) $request->get('exam_id') : null,
         ]);
     }
 

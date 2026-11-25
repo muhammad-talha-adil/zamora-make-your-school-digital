@@ -143,7 +143,7 @@ const cancelPurchase = (purchase: any) => {
 };
 
 const formatDate = (date: string) => {
-    return new Date(date).toLocaleDateString('en-US', {
+    return new Date(date).toLocaleDateString('en-GB', {
         year: 'numeric',
         month: 'short',
         day: 'numeric',
@@ -191,7 +191,7 @@ const summaryStats = computed(() => {
             </div>
 
             <!-- Summary -->
-            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 md:gap-4">
+            <div class="grid grid-cols-1 sm:grid-cols-2 2xl:grid-cols-4 gap-2 md:gap-4">
                 <div class="bg-card rounded-lg p-4 shadow-sm border border-border">
                     <div class="text-xs md:text-sm text-muted-foreground">Total Purchases</div>
                     <div class="text-xl md:text-2xl font-bold">{{ summaryStats.totalPurchases }}</div>

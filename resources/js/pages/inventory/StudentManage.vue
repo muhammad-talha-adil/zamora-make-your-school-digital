@@ -198,6 +198,7 @@ fetchStudentInventories();
                                 <td class="px-4 py-4 whitespace-nowrap text-sm font-medium text-foreground">{{ String(Number(studentInventoriesPagination.from || 1) + Number(index)) }}</td>
                                 <td class="px-4 py-4 whitespace-nowrap text-sm font-medium text-foreground">
                                     <div>{{ record.student_name }}</div>
+                                    <div class="text-xs text-muted-foreground">{{ record.registration_number }}</div>
                                     <div class="text-xs text-muted-foreground" v-if="record.class_name || record.section_name">
                                         {{ record.class_name }}{{ record.class_name && record.section_name ? ' - ' : '' }}{{ record.section_name }}
                                     </div>
@@ -261,6 +262,7 @@ fetchStudentInventories();
                                 <td class="px-4 py-4 whitespace-nowrap text-sm hidden 2xl:table-cell font-medium text-foreground">{{ returnItem.return_id || 'N/A' }}</td>
                                 <td class="px-4 py-4 whitespace-nowrap text-sm font-medium text-foreground">
                                     {{ returnItem.student_name || returnItem.student?.name || 'N/A' }}
+                                    <div class="text-xs font-normal text-muted-foreground">{{ returnItem.registration_number || returnItem.student?.registration_number }}</div>
                                 </td>
                                 <td class="px-4 py-4 whitespace-nowrap text-sm hidden 2xl:table-cell text-muted-foreground">
                                     {{ returnItem.registration_number || returnItem.student?.registration_number || '-' }}

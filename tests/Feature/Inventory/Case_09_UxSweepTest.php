@@ -46,3 +46,26 @@ it('returns friendly per-row messages for an incomplete purchase', function () {
         ->assertUnprocessable()
         ->assertJsonValidationErrors(['purchase_items.0.quantity', 'purchase_items.0.purchase_rate']);
 });
+
+it('rejects a zero add adjustment with a specific message', function () {
+    session(['viewing_campus_id' => $this->world->school->campus->id]);
+
+    $this->actingAs($this->owner)
+        ->postJson(route('inventory.adjustments.store'), [
+            'campus_id' => $this->world->school->campus->id,
+            'inventory_item_id' => $this->world->item->id,
+            'type' => 'add',
+            'quantity' => 0,
+            'reason' => 'Count',
+        ])
+        ->assertUnprocessable()
+        ->assertJsonPath('errors.quantity.0', 'Quantity must be at least 1.');
+});
+
+it('refuses to delete a type that still has items', function () {
+    session(['viewing_campus_id' => $this->world->school->campus->id]);
+
+    $this->actingAs($this->owner)
+        ->deleteJson(route('inventory.types.destroy', $this->world->type))
+        ->assertUnprocessable();
+});
