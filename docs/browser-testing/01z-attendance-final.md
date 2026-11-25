@@ -18,5 +18,15 @@ A8 Attendance Time (check-in/out) bhara ho to dobara save par error nahi?
 A9 Regression: khali Submit inline+toast, Staff attendance report, Payroll list/slip net ek jaise.
 A10 Baqi list pages par Campus filter/column ek nazar (Exams, Staff, Transport, Fee, Inventory, Finance reports): sirf list do.
 
-AAKHIR: table (A1-A10) + LOG BLOCK + DATA CREATED + CONFUSING + 2 lines: "Attendance SATISFIED/NOT + top 3", "Agla module (Exams) ke liye ready? (haan/nahi)".
+PART 2 - Exams (pehli nazar, naya module; fix nahi, sirf report)
+E1 Sidebar Exams ke saare submenus kholo: koi 500/404/console error? List do.
+E2 Exams list: columns, "#" aur "Actions" header, Campus filter/column nahi, empty state friendly?
+E3 Naya exam/term banao ("T-z Exam 1"): khali submit par inline "X is required." + chhota toast (bada modal nahi), dialog data na udey. Phir sahi bharo: kitne clicks? Fields auto-fill (session/class)?
+E4 Exam ke andar subjects/schedule/date add karo: khali submit, duplicate, past date ka behaviour.
+E5 Marks entry (Class 1, ek subject): sab students aate hain? Max marks se zyada number par friendly error? Save ke baad reload par marks wahi?
+E6 Result/grade/report card/print: numbers (total, %, grade) sahi? 1014px aur 400px par overflow?
+E7 Header Johar: sirf Johar ka exam data; wapas Gulberg.
+E8 Confusing/missing: kya aisa kuch hai jo school owner ko chahiye (admit card, date sheet, result print)?
+
+AAKHIR: table (A1-A10, E1-E8) + LOG BLOCK + DATA CREATED + CONFUSING + 2 lines: "Attendance SATISFIED/NOT + top 3", "Exams SATISFIED/NOT + top 3".
 ```
