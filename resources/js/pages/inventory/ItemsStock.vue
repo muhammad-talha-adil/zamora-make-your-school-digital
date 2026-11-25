@@ -483,7 +483,7 @@ const loadStocksPage = (url: string) => fetchStocks(url);
                         />
                     </div>
 
-                    <div v-if="activeTab === 'adjustments'" class="space-y-2 md:col-span-2">
+                    <div v-if="activeTab === 'adjustments'" class="space-y-2 sm:col-span-2 2xl:col-span-2">
                         <Label for="adjustment-item-filter">Item</Label>
                         <SearchableSelect
                             id="adjustment-item-filter"
@@ -503,7 +503,7 @@ const loadStocksPage = (url: string) => fetchStocks(url);
                         />
                     </div>
 
-                    <div class="flex flex-col gap-3 sm:col-span-2 2xl:col-span-4 2xl:flex-row 2xl:items-end 2xl:justify-between">
+                    <div class="flex flex-wrap items-end justify-between gap-3 sm:col-span-2 2xl:col-span-4">
                         <div class="flex flex-wrap items-end gap-2">
                             <Button @click="applyFilters">
                                 <Icon icon="search" class="mr-2 h-4 w-4" />
