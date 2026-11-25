@@ -473,7 +473,7 @@ class MenuSeeder extends Seeder
             'icon' => 'calendar-clock',
             'type' => 'main',
             'order' => 8,
-            'is_active' => true,
+            'is_active' => false,
             'role' => 'developer,owner,campus_admin,teacher',
         ]);
 
@@ -483,7 +483,7 @@ class MenuSeeder extends Seeder
             'type' => 'main',
             'order' => 1,
             'parent_id' => $timetable->id,
-            'is_active' => true,
+            'is_active' => false,
             'url' => '/timetable',
             'role' => 'developer,owner,campus_admin,teacher',
         ]);
