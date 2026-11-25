@@ -125,3 +125,10 @@ Har module ke liye pehle poora sweep: agent code mein hi pehle woh checks chalay
 - "Mark All Present shows Select" not reproduced from code; rows now replaced immutably and warn if the status is missing. Re-check in browser.
 - Duplicate route labels: older data may hold same-name routes (no data deleted); labels now include vehicle and fee.
 - Platform-wide: other raw `alert.error(` calls on non-validation failures still use the big modal by design.
+
+## Deferred (inventory/exams pass d5b061d)
+- Per-row inline validation + scroll-to-first-invalid in PurchaseReturnCreate/Form, ReturnCreate and other inventory dialogs.
+- Dead campusFilter refs / unused `campuses` props in inventory pages.
+- Load/Show/Add button-row + hide-below-2xl columns on remaining inventory tables; 400px dialog check.
+- Papers: resubmit existing subject to show duplicate message.
+- Timetable menu hidden (migration 2026_11_26_100000); review module later.
