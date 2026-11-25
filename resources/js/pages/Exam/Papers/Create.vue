@@ -119,7 +119,7 @@
                     </h3>
                     
                     <!-- Desktop Table View -->
-                    <div class="hidden md:block overflow-x-auto rounded-lg border border-border">
+                    <div class="hidden 2xl:block overflow-x-auto rounded-lg border border-border">
                         <table class="min-w-full divide-y divide-border">
                             <thead class="bg-muted">
                                 <tr>
@@ -286,7 +286,7 @@
                     </div>
 
                     <!-- Mobile Card View -->
-                    <div class="md:hidden space-y-2">
+                    <div class="2xl:hidden space-y-2">
                         <div 
                             v-for="(paper, index) in existingPapers" 
                             :key="paper.id"
@@ -458,7 +458,7 @@
                     </div>
 
                     <!-- Papers Table - Desktop -->
-                    <div class="hidden md:block overflow-x-auto rounded-lg border border-border">
+                    <div class="hidden 2xl:block overflow-x-auto rounded-lg border border-border">
                         <table class="min-w-full divide-y divide-border">
                             <thead class="bg-muted">
                                 <tr>
@@ -472,7 +472,7 @@
                                         />
                                     </th>
                                     <th class="px-2 py-3 text-left text-xs font-semibold text-muted-foreground uppercase w-10">
-                                        Sr#
+                                        #
                                     </th>
                                     <th class="px-2 py-3 text-left text-xs font-semibold text-muted-foreground uppercase min-w-32">
                                         Subject
@@ -623,7 +623,7 @@
                     </div>
 
                     <!-- Papers Cards - Mobile -->
-                    <div class="md:hidden space-y-3">
+                    <div class="2xl:hidden space-y-3">
                         <div 
                             v-for="(paper, index) in subjectPapers" 
                             :key="paper.subject_id"
@@ -978,9 +978,9 @@ const toggleSelectAll = () => {
 // Edit functions
 const startEdit = (paper: any) => {
     editingPaperId.value = paper.id;
-    editingPaper.paper_date = paper.paper_date;
-    editingPaper.start_time = paper.start_time;
-    editingPaper.end_time = paper.end_time;
+    editingPaper.paper_date = String(paper.paper_date ?? '').slice(0, 10);
+    editingPaper.start_time = String(paper.start_time ?? '').slice(0, 5);
+    editingPaper.end_time = String(paper.end_time ?? '').slice(0, 5);
     editingPaper.total_marks = paper.total_marks;
     editingPaper.passing_marks = paper.passing_marks;
     isEditing.value = true;
