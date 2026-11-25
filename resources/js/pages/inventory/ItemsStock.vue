@@ -488,6 +488,7 @@ const loadStocksPage = (url: string) => fetchStocks(url);
                             v-model="adjustmentTypeFilter"
                             :options="adjustmentTypeOptions"
                             placeholder="All Types"
+                            class="w-full"
                             clearable
                         />
                     </div>
@@ -499,6 +500,7 @@ const loadStocksPage = (url: string) => fetchStocks(url);
                             v-model="adjustmentItemFilter"
                             :options="adjustmentItemOptions"
                             placeholder="All Items"
+                            class="w-full"
                             clearable
                         />
                     </div>
@@ -722,7 +724,7 @@ const loadStocksPage = (url: string) => fetchStocks(url);
             </div>
 
             <div v-if="activeTab === 'adjustments'" class="overflow-hidden rounded-lg border border-border bg-card shadow-sm">
-                <div class="overflow-x-auto">
+                <div class="hidden overflow-x-auto 2xl:block">
                     <table class="min-w-full divide-y divide-border">
                         <thead class="bg-muted">
                             <tr>
@@ -743,7 +745,7 @@ const loadStocksPage = (url: string) => fetchStocks(url);
                             </tr>
                             <tr v-for="(adjustment, adjustmentIndex) in adjustmentsData" :key="adjustment.id" class="transition-colors hover:bg-accent">
                                 <td class="px-4 py-3 text-sm text-muted-foreground">{{ adjustmentIndex + 1 }}</td>
-                                <td class="px-4 py-3 text-sm text-muted-foreground">{{ formatDateTime(adjustment.created_at) }}</td>
+                                <td class="px-4 py-3 text-sm whitespace-nowrap text-muted-foreground">{{ formatDateTime(adjustment.created_at) }}</td>
                                 <td class="px-4 py-3 text-sm font-medium text-foreground">{{ adjustment.item_name }}</td>
                                 <td class="px-4 py-3">
                                     <span :class="['rounded-full px-2 py-1 text-xs font-medium', getAdjustmentBadge(adjustment.type)]">
@@ -758,6 +760,26 @@ const loadStocksPage = (url: string) => fetchStocks(url);
                             </tr>
                         </tbody>
                     </table>
+                </div>
+                <div class="divide-y divide-border 2xl:hidden">
+                    <div v-for="adjustment in adjustmentsData" :key="adjustment.id" class="space-y-2 p-4">
+                        <div class="flex items-start justify-between gap-3">
+                            <div class="min-w-0">
+                                <div class="text-sm font-medium text-foreground break-words">{{ adjustment.item_name }}</div>
+                                <div class="whitespace-nowrap text-xs text-muted-foreground">{{ formatDateTime(adjustment.created_at) }}</div>
+                            </div>
+                            <div class="flex flex-col items-end gap-1">
+                                <span class="whitespace-nowrap text-sm font-semibold" :class="adjustment.type === 'subtract' ? 'text-destructive' : 'text-success'">{{ adjustment.type === 'subtract' ? '-' : adjustment.type === 'add' ? '+' : '=' }}{{ adjustment.quantity }}</span>
+                                <span :class="['rounded-full px-2 py-1 text-xs font-medium', getAdjustmentBadge(adjustment.type)]">{{ formatAdjustmentType(adjustment.type) }}</span>
+                            </div>
+                        </div>
+                        <div class="grid grid-cols-2 gap-2 text-sm sm:grid-cols-3">
+                            <div><div class="text-xs text-muted-foreground">Before / After</div>{{ adjustment.previous_quantity }} / {{ adjustment.new_quantity }}</div>
+                            <div><div class="text-xs text-muted-foreground">Reference</div>{{ adjustment.reference_number || '-' }}</div>
+                            <div><div class="text-xs text-muted-foreground">By</div>{{ adjustment.user_name || '-' }}</div>
+                        </div>
+                        <div v-if="adjustment.reason" class="text-sm text-muted-foreground break-words"><span class="text-xs">Reason: </span>{{ adjustment.reason }}</div>
+                    </div>
                 </div>
                 <div v-if="loadingAdjustments" class="py-8 text-center text-muted-foreground">
                     Loading adjustments...
