@@ -257,6 +257,8 @@ const submitForm = () => {
     });
 };
 
+const getFormItem = (id: number) => form.items.find((f) => f.student_inventory_item_id === id);
+
 // Initialize items with quantities
 onMounted(async () => {
     // Set form values from props
@@ -328,7 +330,7 @@ onMounted(async () => {
                 <div class="bg-card rounded-lg border p-4 md:p-5 space-y-4">
                     <h2 class="text-lg font-semibold">Select Items to Return</h2>
 
-                    <div class="border rounded-lg overflow-x-auto">
+                    <div class="hidden 2xl:block border rounded-lg overflow-x-auto">
                         <table class="min-w-full divide-y divide-border whitespace-nowrap">
                             <thead class="bg-muted">
                                 <tr>
@@ -448,6 +450,100 @@ onMounted(async () => {
                                 </tr>
                             </tbody>
                         </table>
+                    </div>
+
+                    <div class="space-y-3 2xl:hidden">
+                        <div
+                            v-for="item in props.studentInventory.items.filter(i => i.remaining_quantity > 0)"
+                            :key="item.id"
+                            class="rounded-lg border p-4 space-y-4"
+                        >
+                            <div class="flex items-start gap-3">
+                                <input
+                                    type="checkbox"
+                                    :checked="getFormItem(item.id)?.selected || false"
+                                    @change="toggleItemSelection(item.id)"
+                                    class="mt-1 h-4 w-4 rounded border-border text-primary focus:ring-primary"
+                                />
+                                <div class="min-w-0">
+                                    <div class="text-sm font-medium text-foreground break-words">{{ item.item_name_snapshot }}</div>
+                                    <div v-if="item.description_snapshot" class="text-xs text-muted-foreground break-words">{{ item.description_snapshot }}</div>
+                                </div>
+                            </div>
+                            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 text-sm">
+                                <div><div class="text-xs text-muted-foreground">Unit Price</div>{{ formatCurrency(item.unit_price_snapshot) }}</div>
+                                <div><div class="text-xs text-muted-foreground">Qty Assigned</div>{{ item.quantity }}</div>
+                                <div><div class="text-xs text-muted-foreground">Already Returned</div>{{ item.returned_quantity }}</div>
+                                <div><div class="text-xs text-muted-foreground">Remaining</div><span class="font-medium">{{ item.remaining_quantity }}</span></div>
+                            </div>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+                                <div class="space-y-1">
+                                    <Label class="text-xs text-muted-foreground">Return Qty</Label>
+                                    <Input
+                                        :model-value="getItemQuantity(item.id)"
+                                        @update:model-value="(val) => updateItemQuantity(item.id, Number(val))"
+                                        type="number"
+                                        min="0"
+                                        :max="item.remaining_quantity"
+                                        :disabled="!getFormItem(item.id)?.selected"
+                                        class="h-9"
+                                    />
+                                </div>
+                                <div class="space-y-1">
+                                    <Label class="text-xs text-muted-foreground">Return Price</Label>
+                                    <Input
+                                        :model-value="getFormItem(item.id)?.return_price || ''"
+                                        @update:model-value="(val) => {
+                                            const formItem = getFormItem(item.id);
+                                            if (formItem) formItem.return_price = val ? Number(val) : null;
+                                        }"
+                                        type="number"
+                                        min="0"
+                                        step="0.01"
+                                        placeholder="Price"
+                                        :disabled="!getFormItem(item.id)?.selected"
+                                        class="h-9"
+                                    />
+                                </div>
+                                <div class="space-y-1">
+                                    <Label class="text-xs text-muted-foreground">Reason</Label>
+                                    <Input
+                                        v-if="isOtherReason(getFormItem(item.id)?.reason_id)"
+                                        :model-value="getFormItem(item.id)?.custom_reason || ''"
+                                        @update:model-value="(val: string | number) => {
+                                            const formItem = getFormItem(item.id);
+                                            if (formItem) formItem.custom_reason = String(val);
+                                        }"
+                                        type="text"
+                                        placeholder="Reason..."
+                                        :disabled="!getFormItem(item.id)?.selected"
+                                        class="h-9"
+                                    />
+                                    <ComboboxInput
+                                        v-else
+                                        :model-value="getFormItem(item.id)?.reason_id"
+                                        @update:model-value="(val: string | number | null) => {
+                                            const formItem = getFormItem(item.id);
+                                            if (formItem) formItem.reason_id = val !== null ? (typeof val === 'number' ? val : parseInt(String(val))) : null;
+                                        }"
+                                        :initial-items="reasonsData"
+                                        placeholder="Reason"
+                                        value-type="id"
+                                        :disabled="!getFormItem(item.id)?.selected"
+                                        class-min-width="min-w-0"
+                                    />
+                                </div>
+                                <div class="space-y-1">
+                                    <Label class="text-xs text-muted-foreground">Refund</Label>
+                                    <div class="h-9 flex items-center text-sm font-medium text-foreground">
+                                        {{ formatCurrency(getFinalPrice(item, getFormItem(item.id)) * getItemQuantity(item.id)) }}
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <p v-if="props.studentInventory.items.every(i => i.remaining_quantity === 0)" class="py-6 text-center text-muted-foreground">
+                            All items have been returned.
+                        </p>
                     </div>
                 </div>
 

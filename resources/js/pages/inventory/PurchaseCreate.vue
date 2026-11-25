@@ -129,13 +129,14 @@ const filteredLocalSuppliers = computed(() => {
 });
 
 // Handle new supplier created
-const handleSupplierCreated = (supplier?: { id: number; name: string }) => {
+const handleSupplierCreated = async (supplier?: { id: number; name: string }) => {
     if (!supplier) return;
     if (!addedSuppliers.value.some((s) => s.id === supplier.id)) {
         addedSuppliers.value.push({ id: supplier.id, name: supplier.name, campus_id: form.campus_id ? Number(form.campus_id) : null });
     }
-    form.supplier_id = supplier.id;
     supplierModalOpen.value = false;
+    await nextTick();
+    form.supplier_id = supplier.id;
 };
 
 // Dynamic inventory items
